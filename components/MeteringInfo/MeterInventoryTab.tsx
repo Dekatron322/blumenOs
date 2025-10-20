@@ -334,21 +334,21 @@ const MeterInventoryTab: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <div className="size-3 rounded-full bg-green-500"></div>
                   <span className="text-sm font-medium text-gray-700">Good (80%+)</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">65,420 meters</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                  <div className="size-3 rounded-full bg-yellow-500"></div>
                   <span className="text-sm font-medium text-gray-700">Fair (50-80%)</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">18,230 meters</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                  <div className="size-3 rounded-full bg-red-500"></div>
                   <span className="text-sm font-medium text-gray-700">Poor (Less than 50%)</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">5,770 meters</span>
@@ -358,7 +358,7 @@ const MeterInventoryTab: React.FC = () => {
 
           {/* Today's Readings */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Today's Readings</h3>
+            <h3 className="mb-4 text-lg font-semibold">Today&apos;s Readings</h3>
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-900">84,230</div>
               <p className="mt-2 text-sm text-gray-600">of 89,420 smart meters</p>

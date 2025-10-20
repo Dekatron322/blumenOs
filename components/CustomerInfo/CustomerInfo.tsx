@@ -62,7 +62,7 @@ const CustomTabs = ({
 
 const TransactionTableSkeleton = () => {
   return (
-    <div className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+    <div className="w-full overflow-x-auto border-x bg-[#FFFFFF]">
       <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
         <thead className="border-t">
           <tr>
@@ -123,7 +123,7 @@ const TransactionTableSkeleton = () => {
 
 const CryptoAssetsSkeleton = () => {
   return (
-    <div className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+    <div className="w-full overflow-x-auto border-x bg-[#FFFFFF]">
       <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
         <thead>
           <tr>
@@ -932,7 +932,7 @@ const CustomerInfo = () => {
                   <TransactionTableSkeleton />
                 ) : (
                   <>
-                    <div className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+                    <div className="w-full overflow-x-auto border-x bg-[#FFFFFF]">
                       <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                         <thead className="border-t">
                           <tr>
@@ -1115,7 +1115,7 @@ const CustomerInfo = () => {
                 {isLoadingCrypto || isFetchingCrypto ? (
                   <CryptoAssetsSkeleton />
                 ) : (
-                  <div className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+                  <div className="w-full overflow-x-auto border-x bg-[#FFFFFF]">
                     <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                       <thead>
                         <tr>

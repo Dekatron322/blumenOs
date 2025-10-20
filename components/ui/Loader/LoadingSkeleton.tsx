@@ -36,7 +36,7 @@ const LoadingSkeleton = () => {
             <div className="h-10 w-24 animate-pulse rounded bg-gray-200"></div>
           </div>
 
-          <div className="mt-4 w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+          <div className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]">
             <div className="min-w-[800px]">
               {/* Table Header Skeleton */}
               <div className="flex border-t">

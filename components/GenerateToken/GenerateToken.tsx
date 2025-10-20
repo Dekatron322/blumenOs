@@ -1,6 +1,6 @@
 "use client"
 
-import { MobileIcon, WebPortalIcon, CardIcon, UssdIcon, NoTokenIcon } from "components/Icons/Icons"
+import { CardIcon, MobileIcon, NoTokenIcon, UssdIcon, WebPortalIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { motion } from "framer-motion"
@@ -229,7 +229,7 @@ const GenerateToken = () => {
                       <ButtonModule type="submit" variant="primary" size="lg" className="flex-1" disabled={isLoading}>
                         {isLoading ? (
                           <div className="flex items-center justify-center gap-2">
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                            <div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                             Generating...
                           </div>
                         ) : (
@@ -251,7 +251,7 @@ const GenerateToken = () => {
                       <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-green-900">Token Generated Successfully!</h3>
                         <div className="rounded-full bg-green-100 p-1">
-                          <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="size-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>

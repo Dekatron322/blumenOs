@@ -5,18 +5,18 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import {
-  DashboardIcon,
-  MeteringIcon,
+  AgentIcon,
+  AnalyticsIcon,
+  AssetsIcon,
+  AuditIcon,
   BillingIcon,
+  DashboardIcon,
+  FieldIcon,
+  MeteringIcon,
+  OutageIcon,
+  PaymentIcon,
   ServiceIcon,
   TokenIcon,
-  PaymentIcon,
-  AgentIcon,
-  AssetsIcon,
-  OutageIcon,
-  AnalyticsIcon,
-  FieldIcon,
-  AuditIcon,
 } from "./Icons"
 
 const links = [

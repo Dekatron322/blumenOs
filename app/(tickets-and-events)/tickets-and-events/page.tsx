@@ -278,7 +278,7 @@ const TicketsTable: React.FC<{ tickets: Ticket[] }> = ({ tickets }) => {
         </div>
       ) : (
         <>
-          <div className="w-full overflow-x-auto border-l border-r bg-[#ffffff]">
+          <div className="w-full overflow-x-auto border-x bg-[#ffffff]">
             <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>

@@ -1,26 +1,10 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import TotalAssets from "public/total-assets"
-import TransactionIcon from "public/transaction-icon"
-import AccountIcon from "public/accounts-icon"
-import CustomerIcon from "public/customer-icon"
 import { ProfitChart } from "components/Dashboard/ProfitChart"
 import { useEffect, useState } from "react"
-import { ButtonModule } from "components/ui/Button/Button"
 import { useRouter } from "next/navigation"
-import {
-  FiDollarSign,
-  FiUsers,
-  FiZap,
-  FiCreditCard,
-  FiBarChart2,
-  FiTrendingUp,
-  FiActivity,
-  FiDatabase,
-  FiCpu,
-  FiDownload,
-} from "react-icons/fi"
+import { FiDollarSign } from "react-icons/fi"
 import {
   BillingIcon,
   CollectionIcon,
@@ -145,11 +129,11 @@ export default function Dashboard() {
   const TrendIndicator = ({ value, positive }: { value: string; positive: boolean }) => (
     <span className={`inline-flex items-center ${positive ? "text-green-500" : "text-red-500"}`}>
       {positive ? (
-        <svg className="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="mr-1 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
         </svg>
       ) : (
-        <svg className="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="mr-1 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       )}
@@ -412,7 +396,7 @@ export default function Dashboard() {
 
             {/* Additional Financial Metric */}
             <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card title="Arrears Collected (MTD)" icon={<FiDollarSign className="h-6 w-6" />}>
+              <Card title="Arrears Collected (MTD)" icon={<FiDollarSign className="size-6" />}>
                 <div className="mb-2 flex items-center justify-between border-b py-2">
                   <Text>Via Prepaid Deductions</Text>
                   <Text className="text-xs">Month to Date</Text>

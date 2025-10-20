@@ -289,7 +289,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
               <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-blue-100 p-2">
-                    <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -308,7 +308,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
               <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-green-100 p-2">
-                    <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -333,7 +333,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
               <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-purple-100 p-2">
-                    <svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -352,7 +352,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
               <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-orange-100 p-2">
-                    <svg className="h-4 w-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

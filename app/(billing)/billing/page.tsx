@@ -27,7 +27,7 @@ const SkeletonLoader = () => {
           }}
         >
           <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="h-6 w-6 rounded-full bg-gray-200"></div>
+            <div className="size-6 rounded-full bg-gray-200"></div>
             <div className="h-4 w-32 rounded bg-gray-200"></div>
           </div>
           <div className="flex flex-col gap-3 pt-4">
@@ -120,7 +120,7 @@ const TableSkeleton = () => {
                   </div>
                 </div>
               </div>
-              <div className="h-6 w-6 rounded bg-gray-200"></div>
+              <div className="size-6 rounded bg-gray-200"></div>
             </div>
 
             <div className="mt-4 space-y-2">
@@ -151,13 +151,13 @@ const TableSkeleton = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
           <div className="flex gap-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-7 w-7 rounded bg-gray-200"></div>
+              <div key={i} className="size-7 rounded bg-gray-200"></div>
             ))}
           </div>
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
         </div>
 
         <div className="h-4 w-24 rounded bg-gray-200"></div>
@@ -189,7 +189,7 @@ const ListSkeleton = () => {
           <div key={index} className="border-b bg-white p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+                <div className="size-10 rounded-full bg-gray-200"></div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-40 rounded bg-gray-200"></div>
@@ -214,7 +214,7 @@ const ListSkeleton = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-9 w-20 rounded bg-gray-200"></div>
-                  <div className="h-6 w-6 rounded bg-gray-200"></div>
+                  <div className="size-6 rounded bg-gray-200"></div>
                 </div>
               </div>
             </div>
@@ -230,13 +230,13 @@ const ListSkeleton = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
           <div className="flex gap-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-7 w-7 rounded bg-gray-200"></div>
+              <div key={i} className="size-7 rounded bg-gray-200"></div>
             ))}
           </div>
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
         </div>
 
         <div className="h-4 w-24 rounded bg-gray-200"></div>
@@ -460,7 +460,7 @@ export default function MeteringDashboard() {
                                   <p className="text-grey-200">Status:</p>
                                   <div className="flex items-center gap-1">
                                     <div
-                                      className={`h-2 w-2 rounded-full ${
+                                      className={`size-2 rounded-full ${
                                         readSuccessRate >= 90
                                           ? "bg-green-500"
                                           : readSuccessRate >= 80

@@ -51,7 +51,7 @@ const SummaryCardSkeleton = () => (
   <div className="animate-pulse border-b-4 border-gray-300 bg-white p-6">
     <div className="mb-4 flex items-center justify-between">
       <div className="h-4 w-24 rounded bg-gray-300"></div>
-      <div className="h-5 w-5 rounded bg-gray-300"></div>
+      <div className="size-5 rounded bg-gray-300"></div>
     </div>
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -80,7 +80,7 @@ const BreakdownCardSkeleton = () => (
 
 const TableSkeleton = () => {
   return (
-    <div className="w-full overflow-x-auto border-l border-r bg-[#ffffff]">
+    <div className="w-full overflow-x-auto border-x bg-[#ffffff]">
       <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
         <thead>
           <tr>
@@ -255,9 +255,9 @@ export default function CryptoTransactions() {
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
                   className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:border-gray-400"
                 >
-                  <CalendarIcon className="h-4 w-4 text-gray-600" />
+                  <CalendarIcon className="size-4 text-gray-600" />
                   <span className="text-gray-700">{getTimeFilterLabel()}</span>
-                  <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+                  <ChevronDownIcon className="size-4 text-gray-500" />
                 </button>
 
                 {isFilterOpen && (
@@ -308,7 +308,7 @@ export default function CryptoTransactions() {
               <div className="rounded-lg border-b-4 border-green-500 bg-white p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-600">BUY CRYPTO</h3>
-                  <IncomingIcon className="h-5 w-5 text-gray-400" />
+                  <IncomingIcon className="size-5 text-gray-400" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -328,7 +328,7 @@ export default function CryptoTransactions() {
               <div className="rounded-lg border-b-4 border-red-500 bg-white p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-600">SELL CRYPTO</h3>
-                  <OutgoingIcon className="h-5 w-5 text-gray-400" />
+                  <OutgoingIcon className="size-5 text-gray-400" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">

@@ -289,7 +289,7 @@ export default function Dashboard() {
                   </div>
 
                   {activeTab === "master" ? (
-                    <div className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+                    <div className="w-full overflow-x-auto border-x bg-[#FFFFFF]">
                       <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                         <thead>
                           <tr>
@@ -424,7 +424,7 @@ export default function Dashboard() {
                       </table>
                     </div>
                   ) : (
-                    <div className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]">
+                    <div className="w-full overflow-x-auto border-x bg-[#FFFFFF]">
                       <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                         <thead>
                           <tr>

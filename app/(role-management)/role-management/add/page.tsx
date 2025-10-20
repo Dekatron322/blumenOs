@@ -662,7 +662,7 @@ const AddNewEmployee: React.FC = () => {
                       }`}
                     >
                       <div
-                        className={`h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                        className={`size-4 transform rounded-full bg-white shadow-md transition-transform ${
                           permissions[key as keyof typeof permissions] ? "translate-x-5" : "translate-x-0"
                         }`}
                       />

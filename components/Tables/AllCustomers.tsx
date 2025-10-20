@@ -1,7 +1,7 @@
 import React, { useState } from "react"
-import { RxCaretSort, RxCross2, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineCheckBoxOutlineBlank, MdGridView, MdFormatListBulleted } from "react-icons/md"
-import { PiEnvelope, PiNoteBold, PiPhone } from "react-icons/pi"
+import { RxCross2, RxDotsVertical } from "react-icons/rx"
+import { MdFormatListBulleted, MdGridView } from "react-icons/md"
+import { PiNoteBold } from "react-icons/pi"
 import Image from "next/image"
 import { IoMdFunnel } from "react-icons/io"
 import { IoFunnelOutline } from "react-icons/io5"
@@ -432,7 +432,7 @@ const AllCustomers = () => {
     <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
             <span className="text-sm font-semibold text-blue-600">
               {customer.name
                 .split(" ")

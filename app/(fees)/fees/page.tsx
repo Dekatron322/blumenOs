@@ -38,13 +38,13 @@ const SkeletonRow = () => (
   <tr>
     <td className="whitespace-nowrap border-b px-4 py-3">
       <div className="flex items-center gap-2">
-        <div className="h-4 w-4 animate-pulse rounded bg-gray-200"></div>
+        <div className="size-4 animate-pulse rounded bg-gray-200"></div>
         <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
       </div>
     </td>
     <td className="whitespace-nowrap border-b px-4 py-3">
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200"></div>
+        <div className="size-8 animate-pulse rounded-full bg-gray-200"></div>
         <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
       </div>
     </td>
@@ -80,7 +80,7 @@ const SkeletonRow = () => (
 
 const SkeletonTable = () => (
   <>
-    <div className="w-full overflow-x-auto border-l border-r bg-[#ffffff]">
+    <div className="w-full overflow-x-auto border-x bg-[#ffffff]">
       <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
         <thead>
           <tr>
@@ -98,9 +98,9 @@ const SkeletonTable = () => (
             ].map((header) => (
               <th key={header} className="whitespace-nowrap border-b p-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-pulse rounded bg-gray-200"></div>
+                  <div className="size-4 animate-pulse rounded bg-gray-200"></div>
                   {header}
-                  <div className="h-4 w-4 animate-pulse rounded bg-gray-200"></div>
+                  <div className="size-4 animate-pulse rounded bg-gray-200"></div>
                 </div>
               </th>
             ))}
@@ -114,7 +114,7 @@ const SkeletonTable = () => (
       </table>
     </div>
     <div className="flex items-center justify-between border-t py-3">
-      <div className="h-4 w-40 animate-pulse rounded bg-gray-200"></div>
+      <div className="size-40 animate-pulse rounded bg-gray-200"></div>
       <div className="flex gap-2">
         <div className="size-7 animate-pulse rounded-md bg-gray-200"></div>
         <div className="size-7 animate-pulse rounded-md bg-gray-200"></div>
@@ -543,7 +543,7 @@ const CryptoFeesTable: React.FC<{
         </div>
       ) : (
         <>
-          <div className="w-full overflow-x-auto border-l border-r bg-[#ffffff]">
+          <div className="w-full overflow-x-auto border-x bg-[#ffffff]">
             <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
@@ -620,7 +620,7 @@ const CryptoFeesTable: React.FC<{
                 {filteredCryptoFees.map((fee, index) => (
                   <tr key={index}>
                     <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                      <img src={fee.logo} alt={fee.name} className="h-8 w-8 rounded-full" />
+                      <img src={fee.logo} alt={fee.name} className="size-8 rounded-full" />
                     </td>
                     <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
                       {fee.name}

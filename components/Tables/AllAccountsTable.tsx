@@ -238,7 +238,7 @@ const LoadingSkeleton = () => {
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto border-l border-r bg-[#f9f9f9]">
+      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
@@ -292,7 +292,7 @@ const LoadingSkeleton = () => {
       </div>
 
       <div className="flex items-center justify-between border-t py-3">
-        <div className="h-4 w-48 rounded bg-gray-200">
+        <div className="size-48 rounded bg-gray-200">
           <motion.div
             className="size-full rounded bg-gray-300"
             initial={{ opacity: 0.3 }}
@@ -476,7 +476,7 @@ const CustomersTable: React.FC = () => {
       ) : (
         <>
           <motion.div
-            className="w-full overflow-x-auto border-l border-r bg-[#FFFFFF]"
+            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
