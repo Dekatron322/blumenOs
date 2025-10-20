@@ -1,6 +1,5 @@
 import SideBar from "components/Sidebar/Sidebar"
 import { NotificationProvider } from "components/ui/Notification/Notification"
-import ProtectedRoute from "lib/protectedRoutes"
 import { Metadata } from "next"
 import "styles/tailwind.css"
 
