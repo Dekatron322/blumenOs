@@ -435,7 +435,7 @@ export default function BillingDashboard() {
                                 <div className="text-green-600">
                                   <TokenGeneratedIcon />
                                 </div>
-                                <span className="font-medium">Today's Collections</span>
+                                <span className="font-medium">Today&apos;s Collections</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
