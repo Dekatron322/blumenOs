@@ -8,9 +8,12 @@ import { motion } from "framer-motion"
 import {
   BillingIcon,
   CustomeraIcon,
+  MetersProgrammedIcon,
   PlusIcon,
   PostpaidIcon,
   RefreshCircleIcon,
+  TamperIcon,
+  TokenGeneratedIcon,
   VendingIcon,
 } from "components/Icons/Icons"
 import AllCustomers from "components/Tables/AllCustomers"
@@ -404,7 +407,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-blue-600">
-                                  <SmartMeterIcon />
+                                  <TokenGeneratedIcon />
                                 </div>
                                 <span className="font-medium">Smart Meters</span>
                               </div>
@@ -429,7 +432,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-green-600">
-                                  <ConventionalMeterIcon />
+                                  <MetersProgrammedIcon />
                                 </div>
                                 <span className="font-medium">Conventional</span>
                               </div>
@@ -456,7 +459,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-green-600">
-                                  <SuccessIcon />
+                                  <VendingIcon />
                                 </div>
                                 <span className="font-medium">Read Success</span>
                               </div>
@@ -496,7 +499,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-red-600">
-                                  <AlertIcon />
+                                  <TamperIcon />
                                 </div>
                                 <span className="font-medium">Alerts</span>
                               </div>
@@ -522,55 +525,55 @@ export default function MeteringDashboard() {
                     </motion.div>
 
                     {/* Additional Metrics Summary
-                    <motion.div
-                      className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <div className="rounded-lg bg-blue-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-blue-800">Total Meters</p>
-                            <p className="text-2xl font-bold text-blue-900">{formatNumber(totalMeters)}</p>
-                          </div>
-                          <div className="rounded-full bg-blue-100 p-2">
-                            <SmartMeterIcon />
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-blue-600">All installed meters in the system</p>
-                      </div>
-
-                      <div className="rounded-lg bg-green-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-green-800">AMI Coverage</p>
-                            <p className="text-2xl font-bold text-green-900">
-                              {totalMeters > 0 ? Math.round((smartMeters / totalMeters) * 100) : 0}%
-                            </p>
-                          </div>
-                          <div className="rounded-full bg-green-100 p-2">
-                            <SuccessIcon />
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-green-600">Advanced Metering Infrastructure penetration</p>
-                      </div>
-
-                      <div className="rounded-lg bg-orange-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-orange-800">Avg. Daily Reads</p>
-                            <p className="text-2xl font-bold text-orange-900">
-                              {formatNumber(Math.round(totalMeters * 0.87))}
-                            </p>
-                          </div>
-                          <div className="rounded-full bg-orange-100 p-2">
-                            <ConventionalMeterIcon />
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-orange-600">Successful meter readings per day</p>
-                      </div>
-                    </motion.div> */}
+                                      <motion.div
+                                        className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.2 }}
+                                      >
+                                        <div className="rounded-lg bg-blue-50 p-4">
+                                          <div className="flex items-center justify-between">
+                                            <div>
+                                              <p className="text-sm font-medium text-blue-800">Total Meters</p>
+                                              <p className="text-2xl font-bold text-blue-900">{formatNumber(totalMeters)}</p>
+                                            </div>
+                                            <div className="rounded-full bg-blue-100 p-2">
+                                              <SmartMeterIcon />
+                                            </div>
+                                          </div>
+                                          <p className="mt-2 text-xs text-blue-600">All installed meters in the system</p>
+                                        </div>
+                  
+                                        <div className="rounded-lg bg-green-50 p-4">
+                                          <div className="flex items-center justify-between">
+                                            <div>
+                                              <p className="text-sm font-medium text-green-800">AMI Coverage</p>
+                                              <p className="text-2xl font-bold text-green-900">
+                                                {totalMeters > 0 ? Math.round((smartMeters / totalMeters) * 100) : 0}%
+                                              </p>
+                                            </div>
+                                            <div className="rounded-full bg-green-100 p-2">
+                                              <SuccessIcon />
+                                            </div>
+                                          </div>
+                                          <p className="mt-2 text-xs text-green-600">Advanced Metering Infrastructure penetration</p>
+                                        </div>
+                  
+                                        <div className="rounded-lg bg-orange-50 p-4">
+                                          <div className="flex items-center justify-between">
+                                            <div>
+                                              <p className="text-sm font-medium text-orange-800">Avg. Daily Reads</p>
+                                              <p className="text-2xl font-bold text-orange-900">
+                                                {formatNumber(Math.round(totalMeters * 0.87))}
+                                              </p>
+                                            </div>
+                                            <div className="rounded-full bg-orange-100 p-2">
+                                              <ConventionalMeterIcon />
+                                            </div>
+                                          </div>
+                                          <p className="mt-2 text-xs text-orange-600">Successful meter readings per day</p>
+                                        </div>
+                                      </motion.div> */}
 
                     <motion.div
                       initial={{ opacity: 0 }}
