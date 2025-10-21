@@ -1,83 +1,654 @@
 "use client"
-import DashboardNav from "components/Navbar/DashboardNav"
-import { PaymentInfo } from "utils"
-import PaymentTable from "components/Tables/PaymentTable"
 
-interface PaymentAccount {
-  id: number
-  src: any
-  name: string
-  balance: string
+import DashboardNav from "components/Navbar/DashboardNav"
+import ArrowIcon from "public/arrow-icon"
+import { useState } from "react"
+import { motion } from "framer-motion"
+import {
+  AlertIcon,
+  BankIcon,
+  MetersProgrammedIcon,
+  MobileMoneyIcon,
+  PdfFileIcon,
+  PlayIcon,
+  PosIcon,
+  TamperIcon,
+  TokenGeneratedIcon,
+  VendingIcon,
+} from "components/Icons/Icons"
+import InstallMeterModal from "components/ui/Modal/install-meter-modal"
+import BillingInfo from "components/BillingInfo/BillingInfo"
+import { ButtonModule } from "components/ui/Button/Button"
+import PaymentInfo from "components/PaymentInfo/PaymentInfo"
+
+// Enhanced Skeleton Loader Component for Cards
+const SkeletonLoader = () => {
+  return (
+    <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
+      {[...Array(4)].map((_, index) => (
+        <motion.div
+          key={index}
+          className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+          initial={{ opacity: 0.6 }}
+          animate={{
+            opacity: [0.6, 1, 0.6],
+            transition: {
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            },
+          }}
+        >
+          <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+            <div className="size-6 rounded-full bg-gray-200"></div>
+            <div className="h-4 w-32 rounded bg-gray-200"></div>
+          </div>
+          <div className="flex flex-col gap-3 pt-4">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="flex w-full justify-between">
+                <div className="h-4 w-24 rounded bg-gray-200"></div>
+                <div className="h-4 w-16 rounded bg-gray-200"></div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  )
 }
 
-export default function PreOrder() {
+// Enhanced Skeleton for Customer Categories
+const CategoriesSkeleton = () => {
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full">
-        <div className="flex  w-full flex-col">
-          <DashboardNav />
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between border-b px-16 py-4">
-              <p className="text-2xl font-medium">Payments</p>
-              <div className="flex gap-4">
-                <button className="button-oulined" type="button">
-                  <img src="/DashboardImages/Export.png" alt="dekalo" className="icon-style" />
-                  <img src="/DashboardImages/Export-dark.png" alt="dekalo" className="dark-icon-style " />
-                  <p>Export Data</p>
-                </button>
-                <button className="button-oulined" type="button">
-                  <img src="/DashboardImages/BellSimple.png" alt="dekalo" className="icon-style" />
-                  <img src="/DashboardImages/BellSimple-dark.png" alt="dekalo" className="dark-icon-style" />
-                  <p>Send Payment Reminder </p>
-                </button>
-                <button className="button-oulined" type="button">
-                  <img src="/DashboardImages/MailStar.png" alt="dekalo" className="icon-style" />
-                  <img src="/DashboardImages/MailStar-dark.png" alt="dekalo" className="dark-icon-style" />
-                  <p>Start Email Campaign</p>
-                </button>
+    <div className="w-80 rounded-md border bg-white p-5">
+      <div className="border-b pb-4">
+        <div className="h-6 w-40 rounded bg-gray-200"></div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {[...Array(6)].map((_, index) => (
+          <div key={index} className="rounded-lg border bg-white p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-12 rounded bg-gray-200"></div>
+                <div className="h-5 w-20 rounded bg-gray-200"></div>
+              </div>
+              <div className="h-4 w-16 rounded bg-gray-200"></div>
+            </div>
+            <div className="mt-3 space-y-1">
+              <div className="flex justify-between">
+                <div className="h-4 w-20 rounded bg-gray-200"></div>
+                <div className="h-4 w-16 rounded bg-gray-200"></div>
               </div>
             </div>
+          </div>
+        ))}
+      </div>
 
-            <div className="max-sm-my-4 flex w-full gap-6 px-16  max-md:flex-col max-md:px-0 max-sm:px-3 md:my-8">
+      {/* Summary Skeleton */}
+      <div className="mt-6 rounded-lg bg-gray-50 p-3">
+        <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
+        <div className="space-y-1">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex justify-between">
+              <div className="h-4 w-24 rounded bg-gray-200"></div>
+              <div className="h-4 w-12 rounded bg-gray-200"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Enhanced Skeleton for the table and grid view
+const TableSkeleton = () => {
+  return (
+    <div className="flex-1 rounded-md border bg-white p-5">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between border-b pb-4">
+        <div className="h-8 w-40 rounded bg-gray-200"></div>
+        <div className="flex gap-4">
+          <div className="h-10 w-80 rounded bg-gray-200"></div>
+          <div className="flex gap-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid View Skeleton */}
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, index) => (
+          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+                <div>
+                  <div className="h-5 w-32 rounded bg-gray-200"></div>
+                  <div className="mt-1 flex gap-2">
+                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="size-6 rounded bg-gray-200"></div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <div className="h-4 w-20 rounded bg-gray-200"></div>
+                  <div className="h-4 w-16 rounded bg-gray-200"></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 border-t pt-3">
+              <div className="h-4 w-full rounded bg-gray-200"></div>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <div className="h-9 flex-1 rounded bg-gray-200"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination Skeleton */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-16 rounded bg-gray-200"></div>
+          <div className="h-8 w-16 rounded bg-gray-200"></div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded bg-gray-200"></div>
+          <div className="flex gap-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-7 rounded bg-gray-200"></div>
+            ))}
+          </div>
+          <div className="size-8 rounded bg-gray-200"></div>
+        </div>
+
+        <div className="h-4 w-24 rounded bg-gray-200"></div>
+      </div>
+    </div>
+  )
+}
+
+// List View Skeleton
+const ListSkeleton = () => {
+  return (
+    <div className="flex-1 rounded-md border bg-white p-5">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between border-b pb-4">
+        <div className="h-8 w-40 rounded bg-gray-200"></div>
+        <div className="flex gap-4">
+          <div className="h-10 w-80 rounded bg-gray-200"></div>
+          <div className="flex gap-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* List View Skeleton */}
+      <div className="divide-y">
+        {[...Array(5)].map((_, index) => (
+          <div key={index} className="border-b bg-white p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="size-10 rounded-full bg-gray-200"></div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    <div className="h-5 w-40 rounded bg-gray-200"></div>
+                    <div className="flex gap-2">
+                      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
+                    ))}
+                  </div>
+                  <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="h-4 w-24 rounded bg-gray-200"></div>
+                  <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-20 rounded bg-gray-200"></div>
+                  <div className="size-6 rounded bg-gray-200"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination Skeleton */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-16 rounded bg-gray-200"></div>
+          <div className="h-8 w-16 rounded bg-gray-200"></div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded bg-gray-200"></div>
+          <div className="flex gap-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-7 rounded bg-gray-200"></div>
+            ))}
+          </div>
+          <div className="size-8 rounded bg-gray-200"></div>
+        </div>
+
+        <div className="h-4 w-24 rounded bg-gray-200"></div>
+      </div>
+    </div>
+  )
+}
+
+// Main Loading Component
+const LoadingState = ({ showCategories = true }) => {
+  return (
+    <div className="flex-3 relative mt-5 flex items-start gap-6">
+      {showCategories ? (
+        <>
+          <TableSkeleton />
+          <CategoriesSkeleton />
+        </>
+      ) : (
+        <div className="w-full">
+          <TableSkeleton />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Payment Channel Interface
+interface PaymentChannel {
+  name: string
+  status: "active" | "inactive"
+  amount: number
+  transactions: number
+  share: number
+  color?: string
+  bgColor?: string
+  icon: JSX.Element
+}
+
+// Generate mock billing data
+const generateBillingData = () => {
+  return {
+    todaysCollections: 250000000, // ₦250M
+    collectionEfficiency: 87.3,
+    outstandingDebt: 2840000000, // ₦2.84B
+    paymentsToday: 13630,
+  }
+}
+
+// Generate payment channels data
+const generatePaymentChannels = (): PaymentChannel[] => {
+  return [
+    {
+      name: "Bank Transfer",
+      status: "active",
+      amount: 895000,
+      transactions: 3420,
+      share: 35.8,
+      color: "bg-blue-500",
+      icon: <BankIcon />,
+    },
+    {
+      name: "Mobile Money",
+      status: "active",
+      amount: 678000,
+      transactions: 5680,
+      share: 27.1,
+      color: "bg-green-500",
+      icon: <MobileMoneyIcon />,
+    },
+    {
+      name: "POS/Agent",
+      status: "active",
+      amount: 524000,
+      transactions: 2890,
+      share: 21,
+      color: "bg-purple-500",
+      icon: <PosIcon />,
+    },
+    {
+      name: "Online Cards",
+      status: "active",
+      amount: 402000,
+      transactions: 1640,
+      share: 16.1,
+      color: "bg-orange-500",
+      icon: <AlertIcon />,
+    },
+  ]
+}
+
+export default function BillingDashboard() {
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [billingData, setBillingData] = useState(generateBillingData())
+  const [paymentChannels] = useState<PaymentChannel[]>(generatePaymentChannels())
+
+  // Use mock data
+  const { todaysCollections, collectionEfficiency, outstandingDebt, paymentsToday } = billingData
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000000) {
+      return `₦${(amount / 1000000000).toFixed(2)}B`
+    } else if (amount >= 1000000) {
+      return `₦${(amount / 1000000).toFixed(0)}M`
+    } else if (amount >= 1000) {
+      return `₦${(amount / 1000).toFixed(0)}K`
+    }
+    return `₦${amount}`
+  }
+
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString()
+  }
+
+  const handleAddCustomerSuccess = async () => {
+    setIsAddCustomerModalOpen(false)
+    // Refresh data after adding customer
+    setBillingData(generateBillingData())
+  }
+
+  const handleRefreshData = () => {
+    setIsLoading(true)
+    setTimeout(() => {
+      setBillingData(generateBillingData())
+      setIsLoading(false)
+    }, 1000)
+  }
+
+  return (
+    <section className="size-full">
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+        <div className="flex w-full flex-col">
+          <DashboardNav />
+          <div className="container mx-auto flex flex-col">
+            {/* Page Header - Always Visible */}
+            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+              <div>
+                <h4 className="text-2xl font-semibold">Collections & Payments</h4>
+                <p>Payment processing, reconciliation, and receivables management</p>
+              </div>
+
+              <motion.div
+                className="flex items-center justify-end gap-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <ButtonModule variant="primary" size="md" className="mt-2" icon={<PdfFileIcon />}>
+                  Export Report
+                </ButtonModule>
+              </motion.div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                <div className="flex w-full gap-6 max-lg:grid max-lg:grid-cols-2">
-                  {PaymentInfo.map((account: PaymentAccount, index: number) => (
-                    <div key={account.id} className="flex w-full cursor-pointer gap-2">
-                      <div
-                        // onClick={() => handlePaymentClick(account.id)}
-                        className="small-card  rounded-md p-2 transition duration-500 md:border"
-                      >
-                        <div className=" flex items-center justify-between max-sm:mb-2">
-                          <img src={account.src} width={32} height={32} alt="" />
-                          <img src="/DashboardImages/CaretRight.png" alt="" className="icon-style" />
-                          <img src="/DashboardImages/CaretRight-dark.png" alt="" className="dark-icon-style" />
-                        </div>
+                {isLoading ? (
+                  // Loading State
+                  <>
+                    <SkeletonLoader />
+                    <LoadingState showCategories={true} />
+                  </>
+                ) : (
+                  // Loaded State - Billing Dashboard
+                  <>
+                    <motion.div
+                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <div className="flex w-full max-sm:flex-col">
+                        <div className="w-full">
+                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
+                            {/* Today's Collections Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="text-green-600">
+                                  <TokenGeneratedIcon />
+                                </div>
+                                <span className="font-medium">Today's Collections</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Amount:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatCurrency(todaysCollections)}
+                                  </p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Trend:</p>
+                                  <p className="text-secondary font-medium">
+                                    <span className="text-green-500">↑ 8%</span> from yesterday
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
 
-                        <h5 className="my-2 font-medium text-[#727272]">{account.name}</h5>
-                        <div className="flex items-end justify-between">
-                          <div>
-                            <h5 className="text-3xl font-medium max-sm:text-lg  ">{account.balance}</h5>
-                          </div>
-                        </div>
+                            {/* Collection Efficiency Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="text-blue-600">
+                                  <MetersProgrammedIcon />
+                                </div>
+                                <span className="font-medium">Collection Efficiency</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Rate:</p>
+                                  <p className="text-secondary text-xl font-bold">{collectionEfficiency}%</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Status:</p>
+                                  <div className="flex items-center gap-1">
+                                    <div
+                                      className={`size-2 rounded-full ${
+                                        collectionEfficiency >= 85
+                                          ? "bg-green-500"
+                                          : collectionEfficiency >= 75
+                                          ? "bg-yellow-500"
+                                          : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <p className="text-secondary font-medium">
+                                      {collectionEfficiency >= 85
+                                        ? "Excellent"
+                                        : collectionEfficiency >= 75
+                                        ? "Good"
+                                        : "Needs Attention"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
 
-                        <div className="mt-2 flex items-center gap-4">
-                          <div className="flex items-center justify-center gap-3 rounded-full bg-[#EEF5F0] px-4 py-2 text-[#589E67]">
-                            <img src="/DashboardImages/TrendUp.png" />
-                            <p className="text-xs font-medium">2.4%</p>
-                            <p className="text-xs font-medium">From Last Month</p>
+                            {/* Outstanding Debt Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="text-orange-600">
+                                  <VendingIcon />
+                                </div>
+                                <span className="font-medium">Outstanding Debt</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Total:</p>
+                                  <p className="text-secondary text-xl font-bold">{formatCurrency(outstandingDebt)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Aging:</p>
+                                  <p className="text-secondary font-medium">
+                                    <span className="text-orange-500">45% over 90 days</span>
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Payments Today Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="text-purple-600">
+                                  <TamperIcon />
+                                </div>
+                                <span className="font-medium">Payments Today</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Transactions:</p>
+                                  <div className="flex gap-1">
+                                    <p className="text-secondary text-xl font-bold">{formatNumber(paymentsToday)}</p>
+                                    <ArrowIcon />
+                                  </div>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Avg. Value:</p>
+                                  <p className="text-secondary font-medium">
+                                    {formatCurrency(todaysCollections / paymentsToday)}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    </motion.div>
 
-                <PaymentTable />
+                    {/* Payment Channels Performance Section */}
+                    <motion.div
+                      className="mt-6"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold">Payment Channels Performance (Today)</h3>
+                        <p className="text-sm text-gray-600">Real-time performance across all payment channels</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {paymentChannels.map((channel, index) => (
+                          <motion.div
+                            key={channel.name}
+                            className="rounded-lg border bg-white p-4 shadow-sm"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`rounded-full p-2 ${(
+                                    channel.bgColor ??
+                                    channel.color ??
+                                    "bg-blue-500"
+                                  ).replace("bg-", "bg-")} bg-opacity-10`}
+                                >
+                                  <div
+                                    className={(channel.bgColor ?? channel.color ?? "bg-blue-500").replace(
+                                      "bg-",
+                                      "text-"
+                                    )}
+                                  >
+                                    {channel.icon}
+                                  </div>
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-gray-900">{channel.name}</h4>
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className={`size-2 rounded-full ${
+                                        channel.status === "active" ? "bg-green-500" : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <span className="text-sm capitalize text-gray-600">{channel.status}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                              <div>
+                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(channel.amount)}</p>
+                                <p className="text-sm text-gray-600">
+                                  {formatNumber(channel.transactions)} transactions
+                                </p>
+                              </div>
+
+                              <div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Share of total</span>
+                                  <span className="font-semibold text-gray-900">{channel.share}%</span>
+                                </div>
+                                <div className="mt-1 h-2 w-full rounded-full bg-gray-200">
+                                  <div
+                                    className={`h-2 rounded-full ${channel.color}`}
+                                    style={{ width: `${channel.share}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                      className="mt-6"
+                    >
+                      <PaymentInfo />
+                    </motion.div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+      <InstallMeterModal
+        isOpen={isAddCustomerModalOpen}
+        onRequestClose={() => setIsAddCustomerModalOpen(false)}
+        onSuccess={handleAddCustomerSuccess}
+      />
     </section>
   )
 }
