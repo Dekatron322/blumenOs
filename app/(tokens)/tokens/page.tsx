@@ -322,21 +322,6 @@ export default function AllTransactions() {
                 <h4 className="text-2xl font-semibold">Prepaid & Token Vending</h4>
                 <p>STS token generation and prepaid meter management</p>
               </div>
-
-              <motion.div
-                className="flex items-center justify-end"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <button
-                  onClick={handleRefreshData}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
-                >
-                  <RefreshCircleIcon />
-                  Refresh Data
-                </button>
-              </motion.div>
             </div>
 
             {/* Main Content Area */}

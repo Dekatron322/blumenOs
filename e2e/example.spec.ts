@@ -3,5 +3,5 @@ import { expect, test } from "@playwright/test"
 test("has title", async ({ page }) => {
   await page.goto("./")
 
-  await expect(page).toHaveTitle(/Ultra Admin Dashboard/)
+  await expect(page).toHaveTitle(/BlumenOS Admin Dashboard/)
 })

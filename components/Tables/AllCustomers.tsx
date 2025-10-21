@@ -420,7 +420,7 @@ const AllCustomers = () => {
       </div>
 
       <div className="mt-3 flex gap-2 ">
-        <Link href={`/customers/${customer.id}`} className="button-oulined flex-1 justify-center text-center">
+        <Link href="#" className="button-oulined flex-1 justify-center text-center">
           <VscEye className="size-4" />
           View Details
         </Link>
@@ -478,47 +478,58 @@ const AllCustomers = () => {
             {customer.balance > 0 && <div className="text-red-600">Balance: ₦{customer.balance.toLocaleString()}</div>}
           </div>
           <div className="flex items-center gap-2">
-            <Link href={`/customers/${customer.id}`} className="button-oulined">
+            <Link href="#" className="button-oulined">
               <VscEye className="size-4" />
               View
             </Link>
-            <RxDotsVertical
-              onClick={() => toggleDropdown(parseInt(customer.id))}
-              className="cursor-pointer text-gray-400 hover:text-gray-600"
-            />
+            <div className="relative">
+              <RxDotsVertical
+                onClick={() => toggleDropdown(parseInt(customer.id))}
+                className="cursor-pointer text-gray-400 hover:text-gray-600"
+              />
+              {activeDropdown === parseInt(customer.id) && (
+                <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
+                  <ul className="text-sm">
+                    <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
+                      <VscEye />
+                      Update Status
+                    </li>
+                    <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
+                      <WiTime3 /> Send Reminder
+                    </li>
+                    <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
+                      <GoXCircle /> Suspend Account
+                    </li>
+                    <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                      <PiNoteBold />
+                      Export Data
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {activeDropdown === parseInt(customer.id) && (
-        <div className="modal-style z-100 absolute right-5 mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-          <ul className="text-sm">
-            <li
-              className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-              onClick={handleStatusOrder}
-            >
-              <VscEye />
-              Update Status
-            </li>
-            <li
-              onClick={handleCancelReminderOrder}
-              className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-            >
-              <WiTime3 /> Send Reminder
-            </li>
-            <li
-              className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-              onClick={handleCancelOrder}
-            >
-              <GoXCircle /> Suspend Account
-            </li>
-            <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-              <PiNoteBold />
-              Export Data
-            </li>
-          </ul>
-        </div>
-      )}
+      {/* <div className="modal-style z-100 absolute right-5 mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
+        <ul className="text-sm">
+          <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
+            <VscEye />
+            Update Status
+          </li>
+          <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
+            <WiTime3 /> Send Reminder
+          </li>
+          <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
+            <GoXCircle /> Suspend Account
+          </li>
+          <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
+            <PiNoteBold />
+            Export Data
+          </li>
+        </ul>
+      </div> */}
     </div>
   )
 
