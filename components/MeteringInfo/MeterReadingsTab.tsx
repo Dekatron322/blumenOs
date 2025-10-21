@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { SearchModule } from "components/ui/Search/search-module"
 
 interface MeterReading {
   meterId: string
@@ -428,23 +429,14 @@ const MeterReadingsTable: React.FC = () => {
       >
         <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Meter Readings</p>
         <div className="flex gap-4">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchText}
-              onChange={handleSearch}
-              placeholder="Search by Meter ID or Customer..."
-              className="h-10 w-64 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {searchText && (
-              <button
-                onClick={handleCancelSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+          <SearchModule
+            value={searchText}
+            onChange={handleSearch}
+            onCancel={handleCancelSearch}
+            placeholder="Search by Meter ID or Customer..."
+            className="w-[380px]"
+            bgClassName="bg-white"
+          />
         </div>
       </motion.div>
 

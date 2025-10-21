@@ -39,7 +39,7 @@ export const PasswordInputModule: React.FC<PasswordInputProps> = ({
         ${
           isFocused
             ? "bg-[#FBFAFC] focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a]"
-            : "bg-white"
+            : "bg-[#f3f4f6]"
         }
         transition-all duration-200
       `}

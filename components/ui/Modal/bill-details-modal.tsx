@@ -81,7 +81,7 @@ const BillDetailsModal: React.FC<BillDetailsModalProps> = ({ isOpen, onRequestCl
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex w-full items-center justify-between bg-[#F5F8FA] p-6">
+        <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Bill Details</h2>
             <p className="mt-1 text-sm text-gray-600">Bill ID: {bill.id}</p>

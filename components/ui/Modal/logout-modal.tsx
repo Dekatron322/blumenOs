@@ -56,7 +56,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onRequestClose, onCon
         className="relative w-[400px] max-w-md overflow-hidden rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F5F8FA] p-6">
+        <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
           <h2 className="text-xl font-bold text-gray-900">Confirm Logout</h2>
           <button
             onClick={onRequestClose}

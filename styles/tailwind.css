@@ -504,7 +504,7 @@ body {
   @apply bg-[#64748B];
 }
 .bg-grey-100 {
-  @apply bg-[#F5F8FA];
+  @apply bg-[#F3F4F6];
 }
 .bg-grey-300 {
   @apply bg-[#94A3B8];

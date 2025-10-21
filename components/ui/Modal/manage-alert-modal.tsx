@@ -79,7 +79,7 @@ const ManageAlertModal: React.FC<ManageAlertModalProps> = ({ isOpen, onRequestCl
         className="relative w-[500px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F5F8FA] p-6">
+        <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
           <h2 className="text-xl font-bold text-gray-900">Manage Alert</h2>
           <button
             onClick={onRequestClose}
@@ -160,7 +160,7 @@ const ManageAlertModal: React.FC<ManageAlertModalProps> = ({ isOpen, onRequestCl
                 rows={4}
                 value={formData.resolutionNotes}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-[#F3F4F6] px-3 py-2 text-sm placeholder-gray-400 focus:border-[#0a0a0a] focus:outline-none focus:ring-1 focus:ring-[#0a0a0a]"
                 placeholder="Describe the resolution steps, findings, or any relevant information..."
                 required
               />

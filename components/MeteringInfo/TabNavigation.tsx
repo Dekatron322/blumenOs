@@ -64,15 +64,15 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }
 
   return (
     <div className="w-fit rounded-md bg-white px-2 py-2">
-      <nav className="-mb-px flex space-x-4">
+      <nav className="-mb-px flex space-x-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 whitespace-nowrap px-1 py-2 text-sm font-medium ${
+            className={`flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-sm font-medium transition-all duration-200 ease-in-out ${
               activeTab === tab.id
-                ? "rounded-md bg-[#0a0a0a] px-2 text-[#FFFFFF]"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                ? " bg-[#0a0a0a]  text-[#FFFFFF]"
+                : " border-transparent  text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700 "
             }`}
           >
             {tab.icon}

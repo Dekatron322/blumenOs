@@ -104,7 +104,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
       className="min-w-[1000px] max-w-4xl overflow-hidden rounded-md bg-white shadow-lg outline-none"
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto flex items-center justify-center p-4"
     >
-      <div className="flex w-full items-center justify-between bg-[#F5F8FA] p-4">
+      <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-4">
         <h2 className="text-lg font-bold">Add New Customer</h2>
         <div onClick={onRequestClose} className="cursor-pointer">
           <CloseIcon />

@@ -1,7 +1,7 @@
 const InsightIcon = () => {
   return (
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="26" height="26" rx="13" fill="#F5F8FA" />
+      <rect width="26" height="26" rx="13" fill="#F3F4F6" />
       <path
         d="M10.75 20.5H15.25C19 20.5 20.5 19 20.5 15.25V10.75C20.5 7 19 5.5 15.25 5.5H10.75C7 5.5 5.5 7 5.5 10.75V15.25C5.5 19 7 20.5 10.75 20.5Z"
         stroke="#384860"

@@ -8,7 +8,7 @@ export interface IconProps {
 const AccountIcon: React.FC<IconProps> = ({ className = "" }) => {
   return (
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="26" height="26" rx="13" fill="#F5F8FA" />
+      <rect width="26" height="26" rx="13" fill="#F3F4F6" />
       <path
         d="M13.75 11.3125H9.25C8.9425 11.3125 8.6875 11.0575 8.6875 10.75C8.6875 10.4425 8.9425 10.1875 9.25 10.1875H13.75C14.0575 10.1875 14.3125 10.4425 14.3125 10.75C14.3125 11.0575 14.0575 11.3125 13.75 11.3125Z"
         fill="#384860"

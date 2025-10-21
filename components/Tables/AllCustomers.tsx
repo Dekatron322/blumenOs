@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { RxCross2, RxDotsVertical } from "react-icons/rx"
+import { RxDotsVertical } from "react-icons/rx"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { PiNoteBold } from "react-icons/pi"
 import Image from "next/image"
@@ -10,6 +10,7 @@ import { GoXCircle } from "react-icons/go"
 import { WiTime3 } from "react-icons/wi"
 import { VscEye } from "react-icons/vsc"
 import { LiaTimesSolid } from "react-icons/lia"
+import { SearchModule } from "components/ui/Search/search-module"
 import { FiXCircle } from "react-icons/fi"
 import { FaRegCheckCircle } from "react-icons/fa"
 import Dropdown from "components/Dropdown/Dropdown"
@@ -566,18 +567,12 @@ const AllCustomers = () => {
         <div className="flex items-center justify-between  py-4">
           <p className="text-2xl font-medium">All Customers</p>
           <div className="flex gap-4">
-            <div className="flex h-[37px] w-[380px] items-center justify-between gap-3 rounded-md border px-3 py-1 text-[#707070]">
-              <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-              <input
-                type="text"
-                id="search"
-                placeholder="Search by name, account number, or meter number"
-                className="h-[50px] w-full bg-transparent outline-none"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-              {searchText && <RxCross2 onClick={handleCancelSearch} style={{ cursor: "pointer" }} />}
-            </div>
+            <SearchModule
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onCancel={handleCancelSearch}
+              placeholder="Search by name, account number, or meter number"
+            />
 
             <div className="flex gap-2">
               <button
