@@ -4,9 +4,10 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { PlusIcon } from "components/Icons/Icons"
+import { MetersProgrammedIcon, PlayIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import BillingInfo from "components/BillingInfo/BillingInfo"
+import { ButtonModule } from "components/ui/Button/Button"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -263,43 +264,6 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Custom Icons for Meter Types
-const SmartMeterIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-const ConventionalMeterIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM4 12C4 7.58 7.58 4 12 4C14.76 4 17.14 5.47 18.43 7.57L12 14V4C7.58 4 4 7.58 4 12ZM20 12C20 16.42 16.42 20 12 20C9.24 20 6.86 18.53 5.57 16.43L12 10V20C16.42 20 20 16.42 20 12Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-const SuccessIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.29 16.29L5.7 12.7C5.31 12.31 5.31 11.68 5.7 11.29C6.09 10.9 6.72 10.9 7.11 11.29L10 14.17L16.88 7.29C17.27 6.9 17.9 6.9 18.29 7.29C18.68 7.68 18.68 8.31 18.29 8.7L10.7 16.29C10.32 16.68 9.68 16.68 9.29 16.29Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-const AlertIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
 // Generate mock meter data
 const generateMeterData = () => {
   return {
@@ -347,8 +311,8 @@ export default function MeteringDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Metering & AMI</h4>
-                <p>Advanced Metering Infrastructure and meter management</p>
+                <h4 className="text-2xl font-semibold">Billing Engine</h4>
+                <p>Tariff management, bill generation, and billing cycles</p>
               </div>
 
               <motion.div
@@ -357,13 +321,9 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <button
-                  onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
-                >
-                  <PlusIcon />
-                  Install Meter
-                </button>
+                <ButtonModule variant="outline" size="md" className="mt-2" icon={<PlayIcon />}>
+                  Start Billing Run
+                </ButtonModule>
               </motion.div>
             </div>
 
@@ -395,7 +355,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-blue-600">
-                                  <SmartMeterIcon />
+                                  <TokenGeneratedIcon />
                                 </div>
                                 <span className="font-medium">Smart Meters</span>
                               </div>
@@ -420,7 +380,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-green-600">
-                                  <ConventionalMeterIcon />
+                                  <MetersProgrammedIcon />
                                 </div>
                                 <span className="font-medium">Conventional</span>
                               </div>
@@ -447,7 +407,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-green-600">
-                                  <SuccessIcon />
+                                  <VendingIcon />
                                 </div>
                                 <span className="font-medium">Read Success</span>
                               </div>
@@ -487,7 +447,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-red-600">
-                                  <AlertIcon />
+                                  <TamperIcon />
                                 </div>
                                 <span className="font-medium">Alerts</span>
                               </div>
