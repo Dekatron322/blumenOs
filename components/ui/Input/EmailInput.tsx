@@ -43,7 +43,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
         ${
           isFocused
             ? "bg-[#FBFAFC] focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a]"
-            : "bg-white"
+            : "bg-[#f3f4f6]"
         }
         ${disabled ? "bg-gray-100" : ""}
         transition-all duration-200

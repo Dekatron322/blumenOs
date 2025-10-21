@@ -69,7 +69,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
         className={`
           flex h-[46px] cursor-pointer items-center justify-between rounded-md border px-3
           py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
-          ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#f58634]" : "bg-white"}
+          ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#f58634]" : "bg-[#f3f4f6]"}
           ${disabled ? "cursor-not-allowed bg-[#a0a0a0]" : ""}
           transition-all duration-200
         `}

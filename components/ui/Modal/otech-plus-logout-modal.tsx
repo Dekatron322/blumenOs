@@ -31,7 +31,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onRequestClose, onCon
       className="mt-20 w-[350px] max-w-md overflow-hidden rounded-md bg-white shadow-lg outline-none"
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 overflow-hidden flex items-center justify-center"
     >
-      <div className="flex w-full items-center justify-between bg-[#F5F8FA] p-4">
+      <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-4">
         <h2 className="text-lg font-bold">Confirm Logout</h2>
         <div onClick={onRequestClose} className="cursor-pointer">
           <CloseIcon />

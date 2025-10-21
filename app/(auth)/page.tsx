@@ -120,7 +120,7 @@ const SignIn: React.FC = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="size-4 rounded border-gray-300 text-[#0a0a0a] focus:ring-[#0a0a0a]"
+                    className="size-4 rounded border-gray-300  text-[#0a0a0a] focus:ring-[#0a0a0a]"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                     Remember me

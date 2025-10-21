@@ -8,7 +8,7 @@ export interface IconProps {
 const TotalBusinesses: React.FC<IconProps> = ({ className = "" }) => {
   return (
     <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="44" height="44" rx="22" fill="#F5F8FA" />
+      <rect width="44" height="44" rx="22" fill="#F3F4F6" />
       <path d="M19 27V21L17 23" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       <path d="M19 21L21 23" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       <path

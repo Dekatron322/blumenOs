@@ -100,7 +100,7 @@ const InstallMeterModal: React.FC<InstallMeterModalProps> = ({ isOpen, onRequest
         className="relative w-[600px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F5F8FA] p-6">
+        <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
           <h2 className="text-xl font-bold text-gray-900">Schedule Meter Installation</h2>
           <button
             onClick={onRequestClose}
