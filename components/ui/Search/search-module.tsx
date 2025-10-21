@@ -22,6 +22,8 @@ interface SearchModuleProps {
     value: string
     label: string
   }[]
+
+  bgClassName?: string
 }
 
 export const SearchModule: React.FC<SearchModuleProps> = ({
@@ -37,6 +39,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
     { value: "email", label: "Email" },
     { value: "phone", label: "Phone" },
   ],
+  bgClassName = "bg-[#f3f4f6]",
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -67,7 +70,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
   return (
     <div
-      className={`flex h-[37px] w-[380px] items-center justify-between gap-3 rounded-md border bg-white px-0 text-[#707070] transition-all duration-200 focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] ${className}`}
+      className={`flex h-[37px] w-[380px] items-center justify-between gap-3 rounded-md border px-0 text-[#707070] transition-all duration-200 focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] ${bgClassName} ${className}`}
     >
       {/* Search type dropdown */}
       {onSearchTypeChange && (
@@ -83,7 +86,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
           {/* Dropdown popover */}
           {isDropdownOpen && (
-            <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
+            <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border bg-[#f3f4f6] shadow-lg">
               {searchTypeOptions.map((option) => (
                 <div
                   key={option.value}
