@@ -2,7 +2,7 @@
 import Link from "next/link"
 import React, { useState } from "react"
 import { Links } from "./Links"
-import { LogoIcon } from "./Icons"
+
 import Image from "next/image"
 import clsx from "clsx"
 
