@@ -44,7 +44,7 @@ const links = [
 
   {
     name: "Collections & Payments",
-    href: "/payments",
+    href: "/payment",
     icon: PaymentIcon,
   },
 
