@@ -50,7 +50,7 @@ const links = [
 
   {
     name: "Agent Managment",
-    href: "/agent-managment",
+    href: "/agent-management",
     icon: AgentIcon,
   },
   {
