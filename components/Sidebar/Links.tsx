@@ -22,7 +22,7 @@ import {
 const links = [
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon },
   {
-    name: "Customers Managment",
+    name: "Customers Management",
     href: "/customers",
     icon: ServiceIcon,
   },
