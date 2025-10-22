@@ -49,18 +49,18 @@ const links = [
   },
 
   {
-    name: "Agent Managment",
+    name: "Agent Management",
     href: "/agent-management",
     icon: AgentIcon,
   },
   {
-    name: "Asset Managment",
-    href: "/assets-managment",
+    name: "Asset Management",
+    href: "/assets-management",
     icon: AssetsIcon,
   },
   {
-    name: "Outage Managment",
-    href: "/outage-managment",
+    name: "Outage Management",
+    href: "/outage-management",
     icon: OutageIcon,
   },
   {
