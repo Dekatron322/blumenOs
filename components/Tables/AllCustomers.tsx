@@ -564,9 +564,9 @@ const AllCustomers = () => {
     <div className="flex-3 relative mt-5 flex items-start gap-6">
       {/* Main Content - Customers List/Grid */}
       <div className={`rounded-md border bg-white p-5 ${showCategories ? "flex-1" : "w-full"}`}>
-        <div className="flex items-center justify-between  py-4">
+        <div className="flex flex-col   py-2">
           <p className="text-2xl font-medium">All Customers</p>
-          <div className="flex gap-4">
+          <div className="mt-2 flex gap-4">
             <SearchModule
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
