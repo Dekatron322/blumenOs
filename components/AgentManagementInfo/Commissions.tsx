@@ -1,6 +1,6 @@
 import React from "react"
 import { motion } from "framer-motion"
-import { RateIcon, UserIcon, MapIcon, PostpaidIcon } from "components/Icons/Icons"
+import { MapIcon, PostpaidIcon, RateIcon, UserIcon } from "components/Icons/Icons"
 
 const Commissions = () => {
   return (
