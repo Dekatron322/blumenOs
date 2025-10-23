@@ -194,27 +194,27 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                 <div className="rounded-lg border bg-[#f9f9f9] p-4">
                   <h4 className="mb-4 font-semibold text-gray-900">Account Information</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Account Number:</span>
                       <p className="font-medium">{customer.accountNumber}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Customer Type:</span>
                       <p className="font-medium">{customer.customerType}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Service Band:</span>
                       <p className="font-medium">{customer.serviceBand}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Tariff Class:</span>
                       <p className="font-medium">{customer.tariffClass}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Business Unit:</span>
                       <p className="font-medium">{customer.businessUnit}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Region:</span>
                       <p className="font-medium">{customer.region}</p>
                     </div>
@@ -225,17 +225,17 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                 <div className="rounded-lg border bg-[#f9f9f9] p-4">
                   <h4 className="mb-4 font-semibold text-gray-900">Contact Information</h4>
                   <div className="grid grid-cols-1 gap-4 text-sm">
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Phone Number:</span>
                       <p className="font-medium">{customer.phoneNumber}</p>
                     </div>
                     {customer.email && (
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-gray-600">Email:</span>
                         <p className="font-medium text-blue-600">{customer.email}</p>
                       </div>
                     )}
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Address:</span>
                       <p className="font-medium">{customer.address}</p>
                     </div>
@@ -297,11 +297,11 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                 <div className="rounded-lg border bg-[#f9f9f9] p-4">
                   <h4 className="mb-4 font-semibold text-gray-900">Account Timeline</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Created:</span>
                       <p className="font-medium">{new Date(customer.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Last Updated:</span>
                       <p className="font-medium">{new Date(customer.updatedAt).toLocaleDateString()}</p>
                     </div>
