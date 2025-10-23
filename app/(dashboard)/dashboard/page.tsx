@@ -1,7 +1,7 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { ProfitChart } from "components/Dashboard/ProfitChart"
+
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { FiDollarSign } from "react-icons/fi"
@@ -18,6 +18,7 @@ import {
   TokenGeneratedIcon,
   VendingIcon,
 } from "components/Icons/Icons"
+import ProfitChart from "components/Dashboard/ProfitChart"
 
 // Time filter types
 type TimeFilter = "day" | "week" | "month" | "all"
@@ -441,7 +442,7 @@ export default function Dashboard() {
                 }`}
               >
                 <div className="mt-4 h-64">
-                  <ProfitChart timeFilter={timeFilter} />
+                  <ProfitChart />
                 </div>
               </Card>
             </div>
