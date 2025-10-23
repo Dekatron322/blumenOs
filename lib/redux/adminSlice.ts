@@ -248,30 +248,6 @@ export const adminApi = createApi({
     }),
 
     // Bank List Endpoint
-    getBankList: builder.query<BankListResponse, void>({
-      query: () => ({
-        url: API_ENDPOINTS.BANKS.LIST,
-        method: "GET",
-      }),
-    }),
-
-    // Account Verification Endpoint
-    verifyAccount: builder.mutation<AccountVerificationResponse, AccountVerificationRequest>({
-      query: (verificationData) => ({
-        url: API_ENDPOINTS.BANKS.VERIFY,
-        method: "POST",
-        body: verificationData,
-      }),
-    }),
-
-    // Withdrawal Endpoint
-    withdraw: builder.mutation<WithdrawResponse, WithdrawRequest>({
-      query: (withdrawData) => ({
-        url: API_ENDPOINTS.DASHBOARD.WITHDRAW,
-        method: "POST",
-        body: withdrawData,
-      }),
-    }),
   }),
 })
 
@@ -283,7 +259,4 @@ export const {
   useGetAdminByIdQuery,
   useUpdateAdminPermissionMutation,
   useNotifyUserMutation,
-  useGetBankListQuery,
-  useVerifyAccountMutation,
-  useWithdrawMutation,
 } = adminApi
