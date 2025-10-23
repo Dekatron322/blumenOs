@@ -20,7 +20,7 @@ const Commissions = () => {
           {/* Commission Overview Cards */}
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Total Commissions */}
-            <div className="rounded-lg border border-gray-200 p-4">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-blue-100 p-2">
                   <RateIcon />
@@ -33,7 +33,7 @@ const Commissions = () => {
             </div>
 
             {/* Paid Out */}
-            <div className="rounded-lg border border-gray-200 p-4">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-green-100 p-2">
                   <PostpaidIcon />
@@ -46,7 +46,7 @@ const Commissions = () => {
             </div>
 
             {/* Pending Payment */}
-            <div className="rounded-lg border border-gray-200 p-4">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-orange-100 p-2">
                   <PostpaidIcon />
@@ -62,7 +62,7 @@ const Commissions = () => {
           {/* Agent Commissions List */}
           <div className="space-y-4">
             {/* Agent 1 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ const Commissions = () => {
             </div>
 
             {/* Agent 2 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -120,7 +120,7 @@ const Commissions = () => {
             </div>
 
             {/* Agent 3 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">

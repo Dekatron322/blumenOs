@@ -90,10 +90,7 @@ const RecentPayments = () => {
           {/* Payments List */}
           <div className="space-y-4">
             {payments.map((payment, index) => (
-              <div
-                key={index}
-                className="rounded-lg border border-gray-200 bg-[#f3f4f6] p-4 transition-all duration-200 hover:border-blue-300 hover:shadow-sm"
-              >
+              <div key={index} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
                 <div className="flex w-full items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">

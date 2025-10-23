@@ -114,7 +114,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
           {/* Agents List */}
           <div className="space-y-4">
             {/* Agent 1 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
             </div>
 
             {/* Agent 2 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
             </div>
 
             {/* Agent 3 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -311,7 +311,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
+              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-blue-100 p-2">
                     <AddAgentIcon />
@@ -323,7 +323,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 </div>
               </button>
 
-              <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
+              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-green-100 p-2">
                     <RouteIcon />
@@ -335,7 +335,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 </div>
               </button>
 
-              <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
+              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm ">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-purple-100 p-2">
                     <FloatIcon />
@@ -347,7 +347,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 </div>
               </button>
 
-              <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
+              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9]  p-4 hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-orange-100 p-2">
                     <TargetIcon />
