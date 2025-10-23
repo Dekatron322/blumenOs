@@ -68,55 +68,55 @@ const DashboardNav = () => {
   }, [])
 
   // Dashboard menu items with permission checks
-  const menuItems = [
-    {
-      name: "Dashboard",
-      path: "/dashboard",
-      show: user?.admin?.permission?.canViewDashboard,
-    },
-    {
-      name: "Customers",
-      path: "/customers",
-      show: user?.admin?.permission?.canViewUsers,
-    },
-    {
-      name: "Transactions",
-      path: "/transactions",
-      show: user?.admin?.permission?.canViewTransactions,
-      dropdown: true,
-    },
-    {
-      name: "Crypto",
-      path: "/crypto",
-      show: user?.admin?.permission?.canViewTransactions,
-    },
-    // {
-    //   name: "Virtual Cards",
-    //   path: "/virtual-accounts",
-    //   show: user?.admin?.permission?.canViewTransactions,
-    // },
-    // {
-    //   name: "Tickets & Events",
-    //   path: "/tickets-and-events",
-    //   show: true,
-    // },
-    {
-      name: "Role Management",
-      path: "/role-management",
-      show: user?.admin?.permission?.canManageSystemSettings,
-    },
-    {
-      name: "Fees",
-      path: "/fees",
-      show: user?.admin?.permission?.canManageSystemSettings,
-    },
+  // const menuItems = [
+  //   {
+  //     name: "Dashboard",
+  //     path: "/dashboard",
+  //     show: user?.admin?.permission?.canViewDashboard,
+  //   },
+  //   {
+  //     name: "Customers",
+  //     path: "/customers",
+  //     show: user?.admin?.permission?.canViewUsers,
+  //   },
+  //   {
+  //     name: "Transactions",
+  //     path: "/transactions",
+  //     show: user?.admin?.permission?.canViewTransactions,
+  //     dropdown: true,
+  //   },
+  //   {
+  //     name: "Crypto",
+  //     path: "/crypto",
+  //     show: user?.admin?.permission?.canViewTransactions,
+  //   },
+  // {
+  //   name: "Virtual Cards",
+  //   path: "/virtual-accounts",
+  //   show: user?.admin?.permission?.canViewTransactions,
+  // },
+  // {
+  //   name: "Tickets & Events",
+  //   path: "/tickets-and-events",
+  //   show: true,
+  // },
+  //   {
+  //     name: "Role Management",
+  //     path: "/role-management",
+  //     show: user?.admin?.permission?.canManageSystemSettings,
+  //   },
+  //   {
+  //     name: "Fees",
+  //     path: "/fees",
+  //     show: user?.admin?.permission?.canManageSystemSettings,
+  //   },
 
-    {
-      name: "Logs",
-      path: "/logs",
-      show: user?.admin?.isSuperAdmin === true,
-    },
-  ]
+  //   {
+  //     name: "Logs",
+  //     path: "/logs",
+  //     show: user?.admin?.isSuperAdmin === true,
+  //   },
+  // ]
 
   const transactionTypes = [
     { name: "Fiat Transactions", path: "/transactions" },
@@ -207,7 +207,7 @@ const DashboardNav = () => {
                       ? `${user.firstName} ${user.lastName}`
                       : user?.email || "Admin User"}
                   </span>
-                  <span className="text-xs text-gray-500">{user?.role || "Administrator"}</span>
+                  <span className="text-xs text-gray-500">{user?.roles?.[0] || "Administrator"}</span>
                 </div>
                 <ChevronDown
                   className={`size-4 text-gray-500 transition-transform ${isUserDropdownOpen ? "rotate-180" : ""}`}
