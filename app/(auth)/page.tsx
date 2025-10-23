@@ -12,13 +12,18 @@ import { initializeAuth, loginUser } from "lib/redux/authSlice"
 import { motion } from "framer-motion"
 
 const SignIn: React.FC = () => {
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
-  const { isAuthenticated, user, loading: authLoading } = useSelector((state: RootState) => state.auth)
+  const {
+    isAuthenticated,
+    user,
+    loading: authLoading,
+    error: authError,
+  } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
     dispatch(initializeAuth())
@@ -26,9 +31,22 @@ const SignIn: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
-      router.push("/dashboard")
+      notify("success", "Login successful!", {
+        description: "Redirecting to dashboard...",
+        duration: 3000,
+      })
+      setTimeout(() => router.push("/dashboard"), 1000)
     }
   }, [isAuthenticated, user, authLoading, router])
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError)
+      notify("error", "Login failed", {
+        description: authError,
+      })
+    }
+  }, [authError])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -36,17 +54,19 @@ const SignIn: React.FC = () => {
     setError(null)
 
     try {
-      // Mock successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const result = await dispatch(loginUser({ email, password }))
 
-      notify("success", "Login successful!", {
-        description: "Redirecting to dashboard...",
-        duration: 3000,
-      })
-
-      setTimeout(() => router.push("/dashboard"), 1000)
+      if (loginUser.rejected.match(result)) {
+        const errorPayload = result.payload as any
+        const errorMessage = errorPayload?.message || "Login failed. Please try again."
+        setError(errorMessage)
+        notify("error", "Login failed", {
+          description: errorMessage,
+        })
+      }
+      // If fulfilled, the useEffect above will handle the redirect
     } catch (error: any) {
-      const errorMessage = "Login failed. Please try again."
+      const errorMessage = "An unexpected error occurred. Please try again."
       setError(errorMessage)
       notify("error", "Login failed", {
         description: errorMessage,
@@ -56,15 +76,19 @@ const SignIn: React.FC = () => {
     }
   }
 
-  const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(event.target.value)
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(event.target.value)
+    // Clear error when user starts typing
+    if (error) setError(null)
   }
 
   const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value)
+    // Clear error when user starts typing
+    if (error) setError(null)
   }
 
-  const isButtonDisabled = loading || username.trim() === "" || password.trim() === ""
+  const isButtonDisabled = loading || authLoading || email.trim() === "" || password.trim() === ""
 
   return (
     <div className="relative flex min-h-screen grid-cols-1 bg-gradient-to-br from-[#ffffff]">
@@ -94,8 +118,8 @@ const SignIn: React.FC = () => {
                   label="Email Address"
                   type="email"
                   placeholder="your@email.com"
-                  value={username}
-                  onChange={handleUsernameChange}
+                  value={email}
+                  onChange={handleEmailChange}
                   required
                 />
               </motion.div>
@@ -152,7 +176,7 @@ const SignIn: React.FC = () => {
                   whileHover={!isButtonDisabled ? { scale: 1.01 } : {}}
                   whileTap={!isButtonDisabled ? { scale: 0.99 } : {}}
                 >
-                  {loading ? (
+                  {loading || authLoading ? (
                     <div className="flex items-center justify-center">
                       <svg
                         className="mr-2 size-5 animate-spin"
