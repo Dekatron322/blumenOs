@@ -72,7 +72,7 @@ const BankReconciliation: React.FC<BankReconciliationProps> = ({ onViewDetails, 
       {/* Status Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Reconciled Today */}
-        <div className="rounded-lg border bg-[#F3F4F6] p-6">
+        <div className="rounded-lg border bg-[#F9F9F9] p-6">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-500">Reconciled Today</h3>
             <div className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">Completed</div>
@@ -81,7 +81,7 @@ const BankReconciliation: React.FC<BankReconciliationProps> = ({ onViewDetails, 
         </div>
 
         {/* Pending Match */}
-        <div className="rounded-lg border bg-[#F3F4F6] p-6">
+        <div className="rounded-lg border bg-[#F9F9F9] p-6">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-500">Pending Match</h3>
             <div className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800">Processing</div>
@@ -90,7 +90,7 @@ const BankReconciliation: React.FC<BankReconciliationProps> = ({ onViewDetails, 
         </div>
 
         {/* Unmatched Items */}
-        <div className="rounded-lg border bg-[#F3F4F6] p-6">
+        <div className="rounded-lg border bg-[#F9F9F9] p-6">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-500">Unmatched Items</h3>
             <div className="rounded-full bg-red-100 px-2 py-1 text-xs text-red-800">Attention needed</div>
@@ -100,7 +100,7 @@ const BankReconciliation: React.FC<BankReconciliationProps> = ({ onViewDetails, 
       </div>
 
       {/* Today's Reconciliation Summary */}
-      <div className="rounded-lg border bg-[#F3F4F6] p-6">
+      <div className="rounded-lg border bg-[#F9F9F9] p-6">
         <h3 className="mb-4 text-lg font-semibold">Today&apos;s Reconciliation Summary</h3>
 
         <div className="grid gap-6 md:grid-cols-2">

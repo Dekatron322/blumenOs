@@ -83,7 +83,7 @@ const Performance = () => {
               </div>
               <p className="mt-1 text-lg font-semibold text-gray-700">{agent.targetPercentage}</p>
             </div>
-            <div className="flex flex-col rounded-lg bg-[#F3F4F6] p-4">
+            <div className="flex flex-col rounded-lg bg-[#F9F9F9] p-4">
               {/* Performance Metrics */}
               <div className="space-y-3">
                 <div className="flex justify-between">

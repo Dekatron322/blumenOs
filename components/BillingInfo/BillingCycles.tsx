@@ -84,7 +84,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
           {/* Billing Cycles List */}
           <div className="space-y-4">
             {/* Billing Cycle 1 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
             </div>
 
             {/* Billing Cycle 2 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
             </div>
 
             {/* Billing Cycle 3 */}
-            <div className="rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
               <div className="flex w-full items-start justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
