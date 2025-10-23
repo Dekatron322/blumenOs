@@ -5,8 +5,16 @@ import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
 import AddCustomerModal from "components/ui/Modal/add-customer-modal"
 import { motion } from "framer-motion"
-import { BillingIcon, CustomeraIcon, PostpaidIcon, RefreshCircleIcon, VendingIcon } from "components/Icons/Icons"
+import {
+  AddCustomerIcon,
+  BillingIcon,
+  CustomeraIcon,
+  PostpaidIcon,
+  RefreshCircleIcon,
+  VendingIcon,
+} from "components/Icons/Icons"
 import AllCustomers from "components/Tables/AllCustomers"
+import { ButtonModule } from "components/ui/Button/Button"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -309,6 +317,10 @@ export default function AllTransactions() {
     }, 1000)
   }
 
+  const handleOpenAddCustomerModal = () => {
+    setIsAddCustomerModalOpen(true)
+  }
+
   return (
     <section className="size-full">
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
@@ -323,18 +335,29 @@ export default function AllTransactions() {
               </div>
 
               <motion.div
-                className="flex items-center justify-end"
+                className="flex items-center justify-end gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <button
-                  onClick={handleRefreshData}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  onClick={handleOpenAddCustomerModal}
+                  icon={<AddCustomerIcon />}
+                  iconPosition="start"
                 >
-                  <RefreshCircleIcon />
+                  Add Customer
+                </ButtonModule>
+                <ButtonModule
+                  variant="primary"
+                  size="md"
+                  onClick={handleRefreshData}
+                  icon={<RefreshCircleIcon />}
+                  iconPosition="start"
+                >
                   Refresh Data
-                </button>
+                </ButtonModule>
               </motion.div>
             </div>
 

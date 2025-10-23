@@ -39,7 +39,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
     { value: "email", label: "Email" },
     { value: "phone", label: "Phone" },
   ],
-  bgClassName = "bg-[#f3f4f6]",
+  bgClassName = "bg-[#f9f9f9]",
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -86,7 +86,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
           {/* Dropdown popover */}
           {isDropdownOpen && (
-            <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border bg-[#f3f4f6] shadow-lg">
+            <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border bg-[#f9f9f9] shadow-lg">
               {searchTypeOptions.map((option) => (
                 <div
                   key={option.value}
