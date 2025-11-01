@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 
