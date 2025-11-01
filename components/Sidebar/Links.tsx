@@ -44,7 +44,7 @@ const links: LinkItem[] = [
     icon: MeteringIcon,
   },
   {
-    name: "Billing Engine",
+    name: "Postpaid Billing",
     href: "/billing",
     icon: BillingIcon,
   },
