@@ -304,13 +304,13 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                       </div>
                     </div>
                     {customer.prepaidAccount && (
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-gray-600">Prepaid Account:</span>
                         <p className="font-medium">Active</p>
                       </div>
                     )}
                     {customer.postpaidAccount && (
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-gray-600">Postpaid Account:</span>
                         <p className="font-medium">Active</p>
                       </div>
@@ -335,24 +335,24 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
+                            <div className="flex items-center gap-2">
                               <span className="text-gray-600">Feeder:</span>
                               <p className="font-medium">{asset.feederName}</p>
                             </div>
-                            <div>
+                            <div className="flex items-center gap-2">
                               <span className="text-gray-600">Transformer:</span>
                               <p className="font-medium">{asset.transformerCapacityKva}kVA</p>
                             </div>
-                            <div>
+                            <div className="flex items-center gap-2">
                               <span className="text-gray-600">DSS:</span>
                               <p className="font-medium">{asset.dssName}</p>
                             </div>
-                            <div>
+                            <div className="flex items-center gap-2">
                               <span className="text-gray-600">Area Office:</span>
                               <p className="font-medium">{asset.newAreaOffice}</p>
                             </div>
                             {asset.unitCodes && asset.unitCodes.length > 0 && (
-                              <div className="col-span-2">
+                              <div className="col-span-2 flex items-center gap-2">
                                 <span className="text-gray-600">Unit Codes:</span>
                                 <p className="font-medium">{asset.unitCodes.join(", ")}</p>
                               </div>
@@ -369,18 +369,18 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                   <h4 className="mb-4 font-semibold text-gray-900">Technical Information</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     {customer.feederId && (
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-gray-600">Feeder ID:</span>
                         <p className="font-medium">{customer.feederId}</p>
                       </div>
                     )}
                     {customer.transformerId && (
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-gray-600">Transformer ID:</span>
                         <p className="font-medium">{customer.transformerId}</p>
                       </div>
                     )}
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-600">Meters Installed:</span>
                       <p className="font-medium">{customer.meters?.length || 0}</p>
                     </div>
