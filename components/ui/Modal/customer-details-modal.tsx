@@ -31,10 +31,42 @@ interface Customer {
   postpaidAccount: any | null
 }
 
+interface Asset {
+  serialNo: number
+  supplyStructureType?: string
+  company: string
+  companyNercCode?: string
+  oldAreaOffice?: string
+  newAreaOffice?: string
+  newAreaOfficeNercCode?: string
+  oldKaedcoAoCode?: string
+  newKaedcoAoCode?: string
+  injectionSubstation?: string
+  injectionSubstationCode?: string
+  feederName?: string
+  feederNercCode?: string
+  feederKaedcoCode?: string
+  feederVoltageKv?: 11 | 33
+  htPoleNo?: string
+  dssName?: string
+  oldDssName?: string
+  dssNercCode?: string
+  dssCode?: string
+  transformerCapacityKva?: number
+  latitude?: number
+  longitude?: number
+  units?: number
+  unitCodes?: string[]
+  isDedicated?: boolean
+  status?: "ACTIVE" | "INACTIVE" | "NEW PROJECT" | "NON-EXISTENT" | string
+  remarks?: string
+}
+
 interface CustomerDetailsModalProps {
   isOpen: boolean
   onRequestClose: () => void
   customer: Customer | null
+  assets?: Asset[]
   onUpdateStatus?: () => void
   onSendReminder?: () => void
   onSuspendAccount?: () => void
@@ -44,6 +76,7 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
   isOpen,
   onRequestClose,
   customer,
+  assets = [],
   onUpdateStatus,
   onSendReminder,
   onSuspendAccount,
@@ -98,6 +131,21 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
     }
   }
 
+  const getAssetStatusStyle = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return { backgroundColor: "#EEF5F0", color: "#589E67" }
+      case "INACTIVE":
+        return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
+      case "NEW PROJECT":
+        return { backgroundColor: "#EDF2FE", color: "#4976F4" }
+      case "NON-EXISTENT":
+        return { backgroundColor: "#F7EDED", color: "#AF4B4B" }
+      default:
+        return { backgroundColor: "#F1F1F1", color: "#666666" }
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -117,7 +165,7 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 z-[1000] mb-6 h-full w-[600px] max-w-full bg-white shadow-2xl"
+            className="fixed right-0 top-0 z-[1000] mb-6 h-full w-[700px] max-w-full bg-white shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b bg-[#F9F9F9] p-6">
@@ -269,6 +317,52 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Assets Information */}
+                {assets.length > 0 && (
+                  <div className="rounded-lg border bg-[#f9f9f9] p-4">
+                    <h4 className="mb-4 font-semibold text-gray-900">Assets ({assets.length})</h4>
+                    <div className="space-y-4">
+                      {assets.map((asset, index) => (
+                        <div key={asset.serialNo} className="rounded border bg-white p-3">
+                          <div className="mb-2 flex items-center justify-between">
+                            <h5 className="font-medium text-gray-900">Asset #{asset.serialNo}</h5>
+                            <div
+                              style={getAssetStatusStyle(asset.status || "")}
+                              className="rounded-full px-2 py-1 text-xs"
+                            >
+                              {asset.status || "UNKNOWN"}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-gray-600">Feeder:</span>
+                              <p className="font-medium">{asset.feederName}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Transformer:</span>
+                              <p className="font-medium">{asset.transformerCapacityKva}kVA</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">DSS:</span>
+                              <p className="font-medium">{asset.dssName}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Area Office:</span>
+                              <p className="font-medium">{asset.newAreaOffice}</p>
+                            </div>
+                            {asset.unitCodes && asset.unitCodes.length > 0 && (
+                              <div className="col-span-2">
+                                <span className="text-gray-600">Unit Codes:</span>
+                                <p className="font-medium">{asset.unitCodes.join(", ")}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Technical Information */}
                 <div className="rounded-lg border bg-[#f9f9f9] p-4">

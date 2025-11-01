@@ -184,7 +184,7 @@ export function Links({ isCollapsed }: LinksProps) {
 
             {hasChildren && !isCollapsed && (
               <div
-                className={clsx("ml-4 overflow-hidden transition-all duration-500 ease-in-out", {
+                className={clsx(" overflow-hidden transition-all duration-500 ease-in-out", {
                   "max-h-0 opacity-0": !isExpanded,
                   "max-h-48 opacity-100": isExpanded,
                 })}
