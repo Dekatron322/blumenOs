@@ -34,7 +34,7 @@ const links: LinkItem[] = [
     href: "/customers",
     icon: ServiceIcon,
     children: [
-      { name: "View Customers", href: "/customers" },
+      { name: "View Customers", href: "/customers/view-customers" },
       { name: "Add Customers", href: "/customers/add-customers" },
     ],
   },
