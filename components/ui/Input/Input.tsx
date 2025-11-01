@@ -10,7 +10,7 @@ interface FormInputProps {
   value: string | number | any
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   className?: string
-  error?: boolean
+  error?: string | boolean
   required?: boolean
   disabled?: boolean
 }
@@ -23,7 +23,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
   name,
   onChange,
   className = "",
-  error = false,
+  error,
   required = false,
   disabled = false,
 }) => {
@@ -39,7 +39,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
         className={`
         flex h-[46px] items-center rounded-md border px-3
         py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
-        ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#0a0a0a]" : "bg-[#f3f4f6]"}
+        ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#0a0a0a]" : "bg-[#F9F9F9]"}
         ${disabled ? "bg-gray-100" : ""}
         transition-all duration-200
       `}
@@ -55,8 +55,15 @@ export const FormInputModule: React.FC<FormInputProps> = ({
           onBlur={() => setIsFocused(false)}
           required={required}
           disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${name}-error` : undefined}
         />
       </div>
+      {typeof error === "string" && error.length > 0 && (
+        <p id={`${name}-error`} className="mt-1 text-xs text-[#D14343]">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

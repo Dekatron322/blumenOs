@@ -1,80 +1,47 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
-import { API_CONFIG, API_ENDPOINTS } from "lib/config/api"
+import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
 // Interfaces
 interface Tokens {
   accessToken: string
   refreshToken: string
-  accessExpiry: string
-  refreshExpiry: string
-}
-
-interface Status {
-  value: number
-  label: string
-}
-
-interface Country {
-  id: number
-  name: string
-  callingCode: string
-  abbreviation: string
-  currency: null | string
-}
-
-interface Permission {
-  id: number
-  canViewUsers: boolean
-  canManageUsers: boolean
-  canManageAdmin: boolean
-  canViewDashboard: boolean
-  canViewTransactions: boolean
-  canManageSystemSettings: boolean
-}
-
-interface Admin {
-  id: number
-  isActive: boolean
-  isSuperAdmin: boolean
-  permission: Permission
 }
 
 interface User {
-  id: number
+  id: string
   firstName: string
   lastName: string
-  phoneNumber: string
-  tag: string
-  photo: string
-  referralUrl: string
-  dob: string
   email: string
-  role: string
-  status: Status
-  isVerified: boolean
-  country: Country
-  admin: Admin
+  phoneNumber: string | null
+  region: string
+  businessUnit: string
+  roles: string[]
+  status: string
 }
 
 interface LoginResponse {
-  tokens: Tokens
-  user: User
+  success: boolean
   message: string
+  data: {
+    token: string
+    refreshToken: string
+    user: User
+  }
 }
 
 interface RefreshTokenResponse {
-  tokens: {
-    accessToken: string
-    accessExpiry: string
-  }
+  success: boolean
   message: string
+  data: {
+    token: string
+    refreshToken: string
+  }
 }
 
 interface LoginCredentials {
-  username: string
+  email: string
   password: string
-  appId: string
 }
 
 interface AuthState {
@@ -118,9 +85,16 @@ const saveAuthState = (state: AuthState) => {
   }
 }
 
-// Check if token is expired
-const isTokenExpired = (expiryDate: string): boolean => {
-  return new Date() >= new Date(expiryDate)
+// Check if token is expired (you might want to decode JWT to check expiration)
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const [, payloadPart = ""] = token.split(".")
+    const payload = JSON.parse(atob(payloadPart)) as { exp?: number }
+    if (typeof payload.exp !== "number") return true
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
 }
 
 // Refresh token function
@@ -133,7 +107,7 @@ export const refreshAccessToken = createAsyncThunk("auth/refreshToken", async (_
       return rejectWithValue("No refresh token available")
     }
 
-    const response = await api.post<RefreshTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
+    const response = await api.post<RefreshTokenResponse>(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH_TOKEN), {
       refreshToken,
     })
 
@@ -148,43 +122,11 @@ export const refreshAccessToken = createAsyncThunk("auth/refreshToken", async (_
 
 // Add request interceptor to inject token
 api.interceptors.request.use(
-  async (config) => {
+  (config) => {
     const authState = loadAuthState()
 
     if (authState?.tokens?.accessToken) {
-      // Check if access token is expired
-      if (isTokenExpired(authState.tokens.accessExpiry)) {
-        try {
-          // Attempt to refresh the token
-          const response = await api.post<RefreshTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
-            refreshToken: authState.tokens.refreshToken,
-          })
-
-          // Update the stored tokens
-          const updatedTokens = {
-            ...authState.tokens,
-            accessToken: response.data.tokens.accessToken,
-            accessExpiry: response.data.tokens.accessExpiry,
-          }
-
-          // Save the updated tokens
-          const updatedState = {
-            ...authState,
-            tokens: updatedTokens,
-          }
-          saveAuthState(updatedState)
-
-          // Use the new access token
-          config.headers.Authorization = `Bearer ${response.data.tokens.accessToken}`
-        } catch (error) {
-          // Refresh failed, redirect to login or handle accordingly
-          console.error("Token refresh failed:", error)
-          // You might want to dispatch a logout action here
-        }
-      } else {
-        // Token is still valid, use it
-        config.headers.Authorization = `Bearer ${authState.tokens.accessToken}`
-      }
+      config.headers.Authorization = `Bearer ${authState.tokens.accessToken}`
     }
 
     return config
@@ -208,15 +150,14 @@ api.interceptors.response.use(
       if (authState?.tokens?.refreshToken) {
         try {
           // Attempt to refresh the token
-          const response = await api.post<RefreshTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
+          const response = await api.post<RefreshTokenResponse>(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH_TOKEN), {
             refreshToken: authState.tokens.refreshToken,
           })
 
           // Update the stored tokens
           const updatedTokens = {
-            ...authState.tokens,
-            accessToken: response.data.tokens.accessToken,
-            accessExpiry: response.data.tokens.accessExpiry,
+            accessToken: response.data.data.token,
+            refreshToken: response.data.data.refreshToken,
           }
 
           // Save the updated tokens
@@ -225,13 +166,16 @@ api.interceptors.response.use(
             tokens: updatedTokens,
           }
           saveAuthState(updatedState)
+
           // Update the authorization header and retry the original request
-          originalRequest.headers.Authorization = `Bearer ${response.data.tokens.accessToken}`
+          originalRequest.headers.Authorization = `Bearer ${response.data.data.token}`
           return api(originalRequest)
         } catch (refreshError) {
           // Refresh failed, redirect to login or handle accordingly
           console.error("Token refresh failed:", refreshError)
-          // You might want to dispatch a logout action here
+          // Clear auth state on refresh failure
+          localStorage.removeItem("authState")
+          window.location.href = "/login"
         }
       }
     }
@@ -253,7 +197,7 @@ const initialState: AuthState = persistedState || {
 
 export const loginUser = createAsyncThunk("auth/login", async (credentials: LoginCredentials, { rejectWithValue }) => {
   try {
-    const response = await api.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials)
+    const response = await api.post<LoginResponse>(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), credentials)
     return response.data
   } catch (error: any) {
     if (error.response) {
@@ -295,13 +239,16 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
         state.loading = false
         state.isAuthenticated = true
-        state.user = action.payload.user
-        state.tokens = action.payload.tokens
+        state.user = action.payload.data.user
+        state.tokens = {
+          accessToken: action.payload.data.token,
+          refreshToken: action.payload.data.refreshToken,
+        }
         saveAuthState(state)
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
-        state.error = (action.payload as string) || "Login failed"
+        state.error = (action.payload as any)?.message || "Login failed"
       })
       .addCase(refreshAccessToken.pending, (state) => {
         state.isRefreshing = true
@@ -310,15 +257,15 @@ const authSlice = createSlice({
       .addCase(refreshAccessToken.fulfilled, (state, action: PayloadAction<RefreshTokenResponse>) => {
         state.isRefreshing = false
         if (state.tokens) {
-          state.tokens.accessToken = action.payload.tokens.accessToken
-          state.tokens.accessExpiry = action.payload.tokens.accessExpiry
+          state.tokens.accessToken = action.payload.data.token
+          state.tokens.refreshToken = action.payload.data.refreshToken
           saveAuthState(state)
         }
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.isRefreshing = false
-        state.error = (action.payload as string) || "Token refresh failed"
-        // Optionally logout the user if refresh fails
+        state.error = (action.payload as any)?.message || "Token refresh failed"
+        // Logout the user if refresh fails
         state.user = null
         state.tokens = null
         state.isAuthenticated = false

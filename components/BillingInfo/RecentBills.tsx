@@ -177,7 +177,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
               {recentBills.map((bill) => (
                 <motion.div
                   key={bill.id}
-                  className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-300 hover:shadow-sm"
+                  className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm"
                   whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }}
                 >
                   <div className="flex w-full items-start justify-between gap-3">
@@ -211,6 +211,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                         onClick={() => handleViewDetails(bill)}
                         icon={<VscEye className="size-4" />}
                         iconPosition="start"
+                        className="bg-white"
                       >
                         View Details
                       </ButtonModule>

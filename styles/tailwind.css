@@ -131,15 +131,74 @@ body {
 }
 
 .dashboard-style {
-  @apply flex items-center whitespace-nowrap  border-black px-2 py-4  text-[#0a0a0a] transition  duration-300 hover:bg-[#888888] hover:text-[#ffffff] max-md:my-2 max-md:h-11 max-md:items-center max-sm:grow lg:justify-normal lg:space-x-2;
+  @apply relative flex items-center whitespace-nowrap rounded-xl px-4 py-3 
+         text-[#0a0a0a] transition-all duration-300 ease-out
+         hover:bg-[#0a0a0a] hover:text-white
+         max-md:my-2 max-md:h-11 max-md:items-center max-sm:grow 
+         lg:justify-normal lg:space-x-2;
 }
 
-/* [data-theme="dark"] .dashboard-style {
-  @apply text-[#FFFFFF];
-} */
+.dropdown-style {
+  @apply flex whitespace-nowrap rounded-lg px-3 py-2 text-[#0a0a0a] 
+         transition-all duration-300 ease-out
+         hover:bg-[#0a0a0a] hover:text-white
+         max-md:my-2 max-md:h-11 max-md:items-center max-sm:grow 
+         lg:justify-normal;
+}
+
+.active-dropdown {
+  @apply bg-gray-100 font-semibold text-[#0a0a0a]
+         max-md:my-2 max-md:rounded-md;
+}
 
 .active-dashboard {
-  @apply w-full bg-[#0a0a0a] font-extrabold text-[#ffffff] max-md:my-2 max-md:rounded-md max-md:bg-[#0a0a0a]   lg:bg-[#0a0a0a];
+  @apply bg-[#0a0a0a] font-semibold text-white shadow-sm
+         max-md:my-2 max-md:rounded-md;
+}
+
+/* Modern scrollbar for dropdown */
+.dropdown-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-container::-webkit-scrollbar-thumb {
+  background: #e5e5e5;
+  border-radius: 10px;
+}
+
+.dropdown-container::-webkit-scrollbar-thumb:hover {
+  background: #d4d4d4;
+}
+
+/* Smooth focus states */
+.dashboard-style:focus-visible,
+.dropdown-style:focus-visible {
+  @apply outline-none ring-2 ring-[#0a0a0a] ring-offset-2;
+}
+
+/* Enhanced hover effects */
+.dashboard-style::before {
+  content: "";
+  @apply absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full 
+         bg-[#0a0a0a] opacity-0 transition-all duration-300;
+}
+
+.active-dashboard::before {
+  @apply opacity-100;
+}
+
+.dashboard-style:hover::before {
+  @apply h-8 opacity-100;
+}
+
+/* Active state indicator for dropdown items */
+.active-dropdown::before {
+  content: "";
+  @apply absolute left-0 h-2 w-1 rounded-r-full bg-[#0a0a0a];
 }
 
 .tab-bg {
