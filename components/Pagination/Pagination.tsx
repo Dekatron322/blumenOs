@@ -8,20 +8,14 @@ interface PaginationProps {
   pageSize: number
 }
 
-const Pagination: React.FC<PaginationProps> = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-  totalRecords,
-  pageSize,
-}) => {
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange, totalRecords, pageSize }) => {
   const startRecord = (currentPage - 1) * pageSize + 1
   const endRecord = Math.min(currentPage * pageSize, totalRecords)
 
   const getPageNumbers = () => {
     const pages = []
     const maxVisiblePages = 5
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i)
@@ -31,25 +25,25 @@ const Pagination: React.FC<PaginationProps> = ({
         for (let i = 1; i <= 4; i++) {
           pages.push(i)
         }
-        pages.push('...')
+        pages.push("...")
         pages.push(totalPages)
       } else if (currentPage >= totalPages - 2) {
         pages.push(1)
-        pages.push('...')
+        pages.push("...")
         for (let i = totalPages - 3; i <= totalPages; i++) {
           pages.push(i)
         }
       } else {
         pages.push(1)
-        pages.push('...')
+        pages.push("...")
         for (let i = currentPage - 1; i <= currentPage + 1; i++) {
           pages.push(i)
         }
-        pages.push('...')
+        pages.push("...")
         pages.push(totalPages)
       }
     }
-    
+
     return pages
   }
 
@@ -65,7 +59,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -74,14 +68,14 @@ const Pagination: React.FC<PaginationProps> = ({
           {getPageNumbers().map((page, index) => (
             <button
               key={index}
-              onClick={() => typeof page === 'number' && onPageChange(page)}
-              disabled={page === '...'}
+              onClick={() => typeof page === "number" && onPageChange(page)}
+              disabled={page === "..."}
               className={`rounded-md px-3 py-1 text-sm ${
                 page === currentPage
-                  ? 'bg-[#0a0a0a] text-white'
-                  : page === '...'
-                  ? 'cursor-default'
-                  : 'border border-gray-300 hover:bg-gray-50'
+                  ? "bg-[#0a0a0a] text-white"
+                  : page === "..."
+                  ? "cursor-default"
+                  : "border border-gray-300 hover:bg-gray-50"
               }`}
             >
               {page}
@@ -92,7 +86,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>
