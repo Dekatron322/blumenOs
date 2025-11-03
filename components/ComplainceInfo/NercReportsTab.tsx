@@ -58,10 +58,10 @@ const mockReports: RegulatoryReport[] = [
 
 const LoadingSkeleton: React.FC = () => (
   <motion.div
-    className="flex-1 mt-5 flex flex-col rounded-md border bg-white p-5"
+    className="mt-5 flex flex-1 flex-col rounded-md border bg-white p-5"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    transition={{ duration: 0.25 }}
+    transition={{ duration: 0.3 }}
   >
     <div className="items-center justify-between border-b py-2 md:flex md:py-4">
       <div className="h-8 w-56 rounded bg-gray-200" />
@@ -71,7 +71,7 @@ const LoadingSkeleton: React.FC = () => (
       </div>
     </div>
 
-    <div className="w-full overflow-x-auto border-x bg-[#f9f9f9] mt-4">
+    <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
       <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
         <thead>
           <tr>
@@ -83,10 +83,10 @@ const LoadingSkeleton: React.FC = () => (
           </tr>
         </thead>
         <tbody>
-          {[...Array(5)].map((_, r) => (
-            <tr key={r}>
-              {[...Array(6)].map((__, c) => (
-                <td key={c} className="whitespace-nowrap border-b px-4 py-6">
+          {[...Array(5)].map((_, rowIndex) => (
+            <tr key={rowIndex}>
+              {[...Array(6)].map((_, cellIndex) => (
+                <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
                   <div className="h-4 w-full rounded bg-gray-200" />
                 </td>
               ))}
@@ -95,19 +95,29 @@ const LoadingSkeleton: React.FC = () => (
         </tbody>
       </table>
     </div>
+
+    <div className="flex items-center justify-between border-t py-3">
+      <div className="h-8 w-48 rounded bg-gray-200" />
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded bg-gray-200" />
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-8 w-8 rounded bg-gray-200" />
+        ))}
+      </div>
+    </div>
   </motion.div>
 )
 
 const getStatusStyles = (status: RegulatoryReport["status"]) => {
   switch (status) {
     case "submitted":
-      return { bg: "bg-[#ECFDF3]", text: "text-[#15803D]" }
+      return { backgroundColor: "#EEFDF4", color: "#15803D" }
     case "pending":
-      return { bg: "bg-[#FFF7ED]", text: "text-[#D97706]" }
+      return { backgroundColor: "#FFF7ED", color: "#D97706" }
     case "overdue":
-      return { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]" }
+      return { backgroundColor: "#FEF2F2", color: "#B91C1C" }
     default:
-      return { bg: "bg-gray-100", text: "text-gray-700" }
+      return { backgroundColor: "#F3F4F6", color: "#6B7280" }
   }
 }
 
@@ -193,9 +203,9 @@ const NercReportsTab: React.FC = () => {
   if (isError) return <div className="p-4 text-red-600">Error loading reports</div>
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }}>
-     <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
+      <motion.div
+        className="items-center justify-between py-2 md:flex"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -216,24 +226,52 @@ const NercReportsTab: React.FC = () => {
         </div>
       </motion.div>
 
-      <motion.div className="w-full overflow-x-auto border-x bg-white mt-4" initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }}>
-        <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+      <motion.div
+        className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
+        initial={{ y: 8, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35 }}
+      >
+        <table className="w-full min-w-[1100px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
               <th className="whitespace-nowrap border-b p-4 text-sm">
-                <div className="flex items-center gap-2"><MdOutlineCheckBoxOutlineBlank className="text-lg" /> Report Name</div>
+                <div className="flex items-center gap-2">
+                  <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                  Report Name
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("period")}>
-                <div className="flex items-center gap-2">Period <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("period")}
+              >
+                <div className="flex items-center gap-2">
+                  Period <RxCaretSort />
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("dueDate")}>
-                <div className="flex items-center gap-2">Due Date <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("dueDate")}
+              >
+                <div className="flex items-center gap-2">
+                  Due Date <RxCaretSort />
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("submittedOn")}>
-                <div className="flex items-center gap-2">Submitted On <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("submittedOn")}
+              >
+                <div className="flex items-center gap-2">
+                  Submitted On <RxCaretSort />
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("status")}>
-                <div className="flex items-center gap-2">Status <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("status")}
+              >
+                <div className="flex items-center gap-2">
+                  Status <RxCaretSort />
+                </div>
               </th>
               <th className="whitespace-nowrap border-b p-4 text-sm">Actions</th>
             </tr>
@@ -242,35 +280,59 @@ const NercReportsTab: React.FC = () => {
           <tbody>
             <AnimatePresence>
               {pageItems.map((r, idx) => {
-                const s = getStatusStyles(r.status)
+                const statusStyle = getStatusStyles(r.status)
                 return (
-                  <motion.tr key={r.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: idx * 0.02 }} exit={{ opacity: 0, y: -8 }}>
-                    <td className="whitespace-nowrap border-b px-4 py-6 text-sm font-medium">{r.name}</td>
-                    <td className="whitespace-nowrap border-b px-4 py-6 text-sm">{r.period}</td>
-                    <td className="whitespace-nowrap border-b px-4 py-6 text-sm">{r.dueDate}</td>
-                    <td className="whitespace-nowrap border-b px-4 py-6 text-sm">{r.submittedOn ?? <span className="text-gray-400">Not submitted</span>}</td>
-                    <td className="whitespace-nowrap border-b px-4 py-6 text-sm">
-                      <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${s.bg}`}>
-                        <span className={s.text}>{r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span>
-                      </div>
+                  <motion.tr
+                    key={r.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: idx * 0.03 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{r.name}</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">{r.period}</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">{r.dueDate}</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                      {r.submittedOn ?? <span className="text-gray-400">Not submitted</span>}
                     </td>
-                    <td className="whitespace-nowrap border-b px-4 py-6 text-sm">
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                      <motion.div
+                        style={statusStyle}
+                        className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium"
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              r.status === "submitted" ? "#15803D" : r.status === "pending" ? "#D97706" : "#B91C1C",
+                          }}
+                        />
+                        {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                      </motion.div>
+                    </td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                       {r.status === "submitted" ? (
-                        <button
+                        <motion.button
                           className="inline-flex items-center gap-2 rounded-md px-3 py-1 text-sm font-medium hover:bg-gray-100"
                           onClick={() => downloadReport(r)}
                           title="Download report"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           <FiDownload className="text-lg" />
-                        </button>
+                        </motion.button>
                       ) : (
-                        <button
-                          className={`rounded-md px-3 py-1 text-sm font-medium ${generatingId === r.id ? "bg-gray-100 text-gray-600" : "text-[#0B5394]"} hover:underline`}
+                        <motion.button
+                          className={`rounded-md px-3 py-1 text-sm font-medium ${
+                            generatingId === r.id ? "bg-gray-100 text-gray-600" : "text-[#0B5394]"
+                          } hover:underline`}
                           onClick={() => generateReport(r.id)}
                           disabled={!!generatingId}
+                          whileHover={{ scale: generatingId === r.id ? 1 : 1.05 }}
+                          whileTap={{ scale: generatingId === r.id ? 1 : 0.95 }}
                         >
                           {generatingId === r.id ? "Generating..." : "Generate"}
-                        </button>
+                        </motion.button>
                       )}
                     </td>
                   </motion.tr>
@@ -281,26 +343,82 @@ const NercReportsTab: React.FC = () => {
         </table>
       </motion.div>
 
-      <motion.div className="flex items-center justify-between border-t py-3 mt-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}>
+      <motion.div
+        className="mt-3 flex items-center justify-between border-t py-3"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="text-sm text-gray-700">
-          Showing {totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} entries
+          Showing {totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
+          {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} entries
         </div>
 
         <div className="flex items-center gap-2">
-          <motion.button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className={`flex items-center justify-center rounded-md p-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"}`} whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }} whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}>
+          <motion.button
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`flex items-center justify-center rounded-md p-2 ${
+              currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+            }`}
+            whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+            whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+          >
             <MdOutlineArrowBackIosNew />
           </motion.button>
 
-          {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-            let pageNum = i + 1
+          {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+            let pageNum
+            if (totalPages <= 5) {
+              pageNum = index + 1
+            } else if (currentPage <= 3) {
+              pageNum = index + 1
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + index
+            } else {
+              pageNum = currentPage - 2 + index
+            }
+
             return (
-              <motion.button key={i} onClick={() => paginate(pageNum)} className={`flex h-8 w-8 items-center justify-center rounded-md text-sm ${currentPage === pageNum ? "bg-[#0a0a0a] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.button
+                key={index}
+                onClick={() => paginate(pageNum)}
+                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm ${
+                  currentPage === pageNum ? "bg-[#0a0a0a] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.18, delay: index * 0.03 }}
+              >
                 {pageNum}
               </motion.button>
             )
           })}
 
-          <motion.button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className={`flex items-center justify-center rounded-md p-2 ${currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"}`} whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }} whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}>
+          {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+
+          {totalPages > 5 && currentPage < totalPages - 1 && (
+            <motion.button
+              onClick={() => paginate(totalPages)}
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {totalPages}
+            </motion.button>
+          )}
+
+          <motion.button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`flex items-center justify-center rounded-md p-2 ${
+              currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+            }`}
+            whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+            whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+          >
             <MdOutlineArrowForwardIos />
           </motion.button>
         </div>
@@ -308,21 +426,54 @@ const NercReportsTab: React.FC = () => {
 
       <AnimatePresence>
         {showReportPreview && (
-          <motion.div className="fixed inset-0 z-60 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div
+            className="z-60 fixed inset-0 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <div className="absolute inset-0 bg-black/40" onClick={() => setShowReportPreview(null)} />
-            <motion.div className="relative z-10 w-[720px] rounded-lg bg-white p-6" initial={{ scale: 0.98, y: 8 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 8 }}>
+            <motion.div
+              className="relative z-10 w-[720px] rounded-lg bg-white p-6"
+              initial={{ scale: 0.98, y: 8 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.98, y: 8 }}
+            >
               <h3 className="text-lg font-semibold">{showReportPreview.name}</h3>
-              <div className="mt-4 text-sm text-gray-700 grid grid-cols-2 gap-3">
-                <div><strong>Period:</strong> {showReportPreview.period}</div>
-                <div><strong>Due Date:</strong> {showReportPreview.dueDate}</div>
-                <div><strong>Submitted On:</strong> {showReportPreview.submittedOn ?? "Not submitted"}</div>
-                <div><strong>Status:</strong> {showReportPreview.status}</div>
-                <div className="col-span-2"><strong>Preview / Notes:</strong> This is where a brief summary or preview could appear; wire to real report response as needed.</div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <strong>Period:</strong> {showReportPreview.period}
+                </div>
+                <div>
+                  <strong>Due Date:</strong> {showReportPreview.dueDate}
+                </div>
+                <div>
+                  <strong>Submitted On:</strong> {showReportPreview.submittedOn ?? "Not submitted"}
+                </div>
+                <div>
+                  <strong>Status:</strong> {showReportPreview.status}
+                </div>
+                <div className="col-span-2">
+                  <strong>Preview / Notes:</strong> This is where a brief summary or preview could appear; wire to real
+                  report response as needed.
+                </div>
               </div>
 
               <div className="mt-6 flex justify-end gap-2">
-                <button className="rounded-md bg-gray-100 px-4 py-2 text-sm hover:bg-gray-200" onClick={() => setShowReportPreview(null)}>Close</button>
-                {showReportPreview.reportUrl && <button className="rounded-md bg-[#0B5394] px-4 py-2 text-sm text-white" onClick={() => window.open(showReportPreview.reportUrl || "", "_blank")}>Open Report</button>}
+                <button
+                  className="rounded-md bg-gray-100 px-4 py-2 text-sm hover:bg-gray-200"
+                  onClick={() => setShowReportPreview(null)}
+                >
+                  Close
+                </button>
+                {showReportPreview.reportUrl && (
+                  <button
+                    className="rounded-md bg-[#0B5394] px-4 py-2 text-sm text-white hover:opacity-95"
+                    onClick={() => window.open(showReportPreview!.reportUrl || "", "_blank")}
+                  >
+                    Open Report
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>

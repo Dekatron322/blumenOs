@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import DashboardNav from "components/Navbar/DashboardNav"
-import { PlusIcon, TamperIcon, VendingIcon } from "components/Icons/Icons"
+import { AuditIcon, ComplianceIcon, PlusIcon, TamperIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import ComplainceInfo from "components/ComplainceInfo/ComplainceInfo"
-import ExportIcon from "public/export-icon";
+import ExportIcon from "public/export-icon"
 import DocIcon from "public/doc-icon"
 import InfoIcon from "public/info-icon"
 
@@ -169,7 +169,7 @@ const TableSkeleton = () => {
 }
 
 // List View Skeleton
-  const _ListSkeleton = () => {
+const _ListSkeleton = () => {
   return (
     <div className="flex-1 rounded-md border bg-white p-5">
       {/* Header Skeleton */}
@@ -285,15 +285,12 @@ export default function ComplianceDashboard() {
   const [complianceData, setComplianceData] = useState(generateComplianceData())
 
   // Use mock data
-  const {
-    pendingNercReports,
-    flaggedActivities,
-  } = complianceData
+  const { pendingNercReports, flaggedActivities } = complianceData
 
   // Format numbers with commas
   const formatNumber = (num: number | undefined | null) => {
     if (num === undefined || num === null || isNaN(num)) {
-      return '0'
+      return "0"
     }
     return num.toLocaleString()
   }
@@ -331,12 +328,12 @@ export default function ComplianceDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                 <button
+                <button
                   onClick={() => setIsAddCustomerModalOpen(true)}
                   className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
                 >
                   <ExportIcon />
-                 Export Audit Logs
+                  Export Audit Logs
                 </button>
 
                 <button
@@ -346,7 +343,6 @@ export default function ComplianceDashboard() {
                   <PlusIcon />
                   Run Complaince Check
                 </button>
-              
               </motion.div>
             </div>
 
@@ -378,7 +374,7 @@ export default function ComplianceDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-blue-600">
-                                  <DocIcon />
+                                  <AuditIcon />
                                 </div>
                                 <span className="font-medium">Audit Events Today</span>
                               </div>
@@ -401,7 +397,7 @@ export default function ComplianceDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-green-600">
-                                  <InfoIcon />
+                                  <ComplianceIcon />
                                 </div>
                                 <span className="font-medium">Compliance Score</span>
                               </div>
@@ -431,12 +427,13 @@ export default function ComplianceDashboard() {
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-2xl font-bold">{formatNumber(pendingNercReports)}</p>
+                                  <p className="text-secondary text-2xl font-bold">
+                                    {formatNumber(pendingNercReports)}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200"></p>
                                   <div className="flex items-center gap-1">
-                                  
                                     <p className="text-secondary text-sm">Due in 5 Days</p>
                                   </div>
                                 </div>
@@ -461,7 +458,6 @@ export default function ComplianceDashboard() {
                                     <p className="text-secondary text-2xl font-bold">
                                       {formatNumber(flaggedActivities)}
                                     </p>
-                
                                   </div>
                                 </div>
                                 <div className="flex w-full justify-between">

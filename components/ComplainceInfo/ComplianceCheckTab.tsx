@@ -34,45 +34,62 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ entry, onViewReport }) 
         setIsOpen(false)
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
   }, [])
 
   const calculateDropdownPosition = () => {
     if (!dropdownRef.current) return
-    const rect = dropdownRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - rect.bottom
+
+    const buttonRect = dropdownRef.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - buttonRect.bottom
+    const spaceAbove = buttonRect.top
     const dropdownHeight = 120
-    if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) setDropdownDirection("top")
-    else setDropdownDirection("bottom")
+
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+      setDropdownDirection("top")
+    } else {
+      setDropdownDirection("bottom")
+    }
   }
 
-  const handleToggle = (e?: React.MouseEvent) => {
+  const handleButtonClick = (e?: React.MouseEvent) => {
     e?.preventDefault()
     calculateDropdownPosition()
-    setIsOpen((v) => !v)
+    setIsOpen(!isOpen)
+  }
+
+  const handleViewReport = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onViewReport(entry)
+    setIsOpen(false)
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <motion.button
-        className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100"
-        onClick={handleToggle}
+      <motion.div
+        className="focus::bg-gray-100 flex h-7 w-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
+        onClick={handleButtonClick}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Open actions"
+        role="button"
       >
         <RxDotsVertical />
-      </motion.button>
+      </motion.div>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
             style={
               dropdownDirection === "bottom"
                 ? {
                     top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 8
+                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 6
                       : 0,
                     right: dropdownRef.current
                       ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
@@ -80,26 +97,22 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ entry, onViewReport }) 
                   }
                 : {
                     bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 8
+                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 6
                       : 0,
                     right: dropdownRef.current
                       ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
                       : 0,
                   }
             }
-            initial={{ opacity: 0, scale: 0.96, y: dropdownDirection === "bottom" ? -6 : 6 }}
+            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -6 : 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: dropdownDirection === "bottom" ? -6 : 6 }}
-            transition={{ duration: 0.12 }}
+            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -6 : 6 }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
           >
             <div className="py-1">
               <button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={(e) => {
-                  e.preventDefault()
-                  onViewReport(entry)
-                  setIsOpen(false)
-                }}
+                onClick={handleViewReport}
               >
                 View Report
               </button>
@@ -122,10 +135,10 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ entry, onViewReport }) 
 
 const LoadingSkeleton: React.FC = () => (
   <motion.div
-    className="flex-1 mt-5 flex flex-col rounded-md border bg-white p-5"
+    className="mt-5 flex flex-1 flex-col rounded-md border bg-white p-5"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    transition={{ duration: 0.25 }}
+    transition={{ duration: 0.3 }}
   >
     <div className="items-center justify-between border-b py-2 md:flex md:py-4">
       <div className="h-8 w-56 rounded bg-gray-200" />
@@ -135,8 +148,8 @@ const LoadingSkeleton: React.FC = () => (
       </div>
     </div>
 
-    <div className="w-full overflow-x-auto border-x bg-[#f9f9f9] mt-4">
-      <table className="w-full min-w-[1100px] border-separate border-spacing-0 text-left">
+    <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
+      <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
         <thead>
           <tr>
             {[...Array(7)].map((_, i) => (
@@ -147,10 +160,10 @@ const LoadingSkeleton: React.FC = () => (
           </tr>
         </thead>
         <tbody>
-          {[...Array(5)].map((_, r) => (
-            <tr key={r}>
-              {[...Array(7)].map((__, c) => (
-                <td key={c} className="whitespace-nowrap border-b px-4 py-4">
+          {[...Array(5)].map((_, rowIndex) => (
+            <tr key={rowIndex}>
+              {[...Array(7)].map((_, cellIndex) => (
+                <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
                   <div className="h-4 w-full rounded bg-gray-200" />
                 </td>
               ))}
@@ -160,8 +173,8 @@ const LoadingSkeleton: React.FC = () => (
       </table>
     </div>
 
-    <div className="flex items-center justify-between border-t py-3 mt-3">
-      <div className="h-6 w-48 rounded bg-gray-200" />
+    <div className="flex items-center justify-between border-t py-3">
+      <div className="h-8 w-48 rounded bg-gray-200" />
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded bg-gray-200" />
         {[...Array(5)].map((_, i) => (
@@ -228,13 +241,13 @@ const mockCompliance: ComplianceEntry[] = [
 const getStatusStyle = (status: ComplianceEntry["status"]) => {
   switch (status) {
     case "passed":
-      return { bg: "bg-[#ECFDF3]", text: "text-[#15803D]" }
+      return { backgroundColor: "#EEFDF4", color: "#15803D" }
     case "warning":
-      return { bg: "bg-[#FFF7ED]", text: "text-[#D97706]" }
+      return { backgroundColor: "#FFF7ED", color: "#D97706" }
     case "failed":
-      return { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]" }
+      return { backgroundColor: "#FEF2F2", color: "#B91C1C" }
     default:
-      return { bg: "bg-gray-100", text: "text-gray-700" }
+      return { backgroundColor: "#F3F4F6", color: "#6B7280" }
   }
 }
 
@@ -294,13 +307,13 @@ const ComplianceChecksTab: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
       <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        className="items-center justify-between py-2 md:flex"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Complaince Checks</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Compliance Checks</p>
           <p className="text-sm text-gray-600">Automated compliance monitoring and validation</p>
         </div>
         <div className="flex gap-4">
@@ -308,34 +321,64 @@ const ComplianceChecksTab: React.FC = () => {
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
-            placeholder="Search audit trails..."
+            placeholder="Search compliance checks..."
             className="w-[380px]"
             bgClassName="bg-white"
           />
         </div>
       </motion.div>
 
-      <motion.div className="w-full overflow-x-auto border-x bg-white mt-4" initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.28 }}>
+      <motion.div
+        className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
+        initial={{ y: 8, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35 }}
+      >
         <table className="w-full min-w-[1100px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
               <th className="whitespace-nowrap border-b p-4 text-sm">
-                <div className="flex items-center gap-2"><MdOutlineCheckBoxOutlineBlank className="text-lg" /> Compliance Check</div>
+                <div className="flex items-center gap-2">
+                  <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                  Compliance Check
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("status")}>
-                <div className="flex items-center gap-2">Status <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("status")}
+              >
+                <div className="flex items-center gap-2">
+                  Status <RxCaretSort />
+                </div>
               </th>
               <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("score")}>
-                <div className="flex items-center gap-2">Score <RxCaretSort /></div>
+                <div className="flex items-center gap-2">
+                  Score <RxCaretSort />
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("threshold")}>
-                <div className="flex items-center gap-2">Threshold <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("threshold")}
+              >
+                <div className="flex items-center gap-2">
+                  Threshold <RxCaretSort />
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("issues")}>
-                <div className="flex items-center gap-2">Issues Found <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("issues")}
+              >
+                <div className="flex items-center gap-2">
+                  Issues Found <RxCaretSort />
+                </div>
               </th>
-              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("lastCheck")}>
-                <div className="flex items-center gap-2">Last Check <RxCaretSort /></div>
+              <th
+                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                onClick={() => toggleSort("lastCheck")}
+              >
+                <div className="flex items-center gap-2">
+                  Last Check <RxCaretSort />
+                </div>
               </th>
               <th className="whitespace-nowrap border-b p-4 text-sm">Actions</th>
             </tr>
@@ -343,34 +386,45 @@ const ComplianceChecksTab: React.FC = () => {
           <tbody>
             <AnimatePresence>
               {pageItems.map((entry, idx) => {
-                const s = getStatusStyle(entry.status)
+                const statusStyle = getStatusStyle(entry.status)
                 return (
-                  <motion.tr key={entry.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: idx * 0.02 }} exit={{ opacity: 0, y: -8 }}>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm font-medium">{entry.name}</td>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm">
-                      <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${s.bg}`}>
-                        {entry.status === "passed" ? <AiOutlineCheckCircle className="text-base" /> : <AiOutlineExclamationCircle className="text-base" />}
-                        <span className={`${s.text}`}>{entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}</span>
-                      </div>
+                  <motion.tr
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: idx * 0.03 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{entry.name}</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                      <motion.div
+                        style={statusStyle}
+                        className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium"
+                      >
+                        {entry.status === "passed" ? (
+                          <AiOutlineCheckCircle className="text-base" />
+                        ) : (
+                          <AiOutlineExclamationCircle className="text-base" />
+                        )}
+                        {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+                      </motion.div>
                     </td>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm font-semibold text-[#16A34A]">{entry.score}%</td>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm text-gray-700">{entry.threshold}%</td>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm">
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-[#16A34A]">
+                      {entry.score}%
+                    </td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-700">{entry.threshold}%</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                       {entry.issues === 0 ? (
                         <span className="text-gray-500">None</span>
                       ) : (
-                        <span className="inline-flex items-center justify-center rounded-full bg-[#FEF2F2] px-3 py-1 text-sm font-medium text-[#B91C1C]">{entry.issues}</span>
+                        <span className="inline-flex items-center justify-center rounded-full bg-[#FEF2F2] px-3 py-1 text-sm font-medium text-[#B91C1C]">
+                          {entry.issues}
+                        </span>
                       )}
                     </td>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm text-gray-700">{entry.lastCheck}</td>
-                    <td className="whitespace-nowrap border-b px-4 py-4 text-sm">
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-700">{entry.lastCheck}</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                       <div className="flex items-center gap-2">
-                        <button
-                          className="text-sm font-medium text-[#0B5394] hover:underline"
-                          onClick={() => openReport(entry)}
-                        >
-                          View Report
-                        </button>
                         <ActionDropdown entry={entry} onViewReport={openReport} />
                       </div>
                     </td>
@@ -382,16 +436,24 @@ const ComplianceChecksTab: React.FC = () => {
         </table>
       </motion.div>
 
-      <motion.div className="flex items-center justify-between border-t py-3 mt-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+      <motion.div
+        className="mt-3 flex items-center justify-between border-t py-3"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="text-sm text-gray-700">
-          Showing {totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} entries
+          Showing {totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
+          {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} entries
         </div>
 
         <div className="flex items-center gap-2">
           <motion.button
             onClick={() => paginate(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`flex items-center justify-center rounded-md p-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"}`}
+            className={`flex items-center justify-center rounded-md p-2 ${
+              currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+            }`}
             whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
             whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
           >
@@ -400,21 +462,28 @@ const ComplianceChecksTab: React.FC = () => {
 
           {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
             let pageNum
-            if (totalPages <= 5) pageNum = index + 1
-            else if (currentPage <= 3) pageNum = index + 1
-            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + index
-            else pageNum = currentPage - 2 + index
+            if (totalPages <= 5) {
+              pageNum = index + 1
+            } else if (currentPage <= 3) {
+              pageNum = index + 1
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + index
+            } else {
+              pageNum = currentPage - 2 + index
+            }
 
             return (
               <motion.button
                 key={index}
                 onClick={() => paginate(pageNum)}
-                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm ${currentPage === pageNum ? "bg-[#0a0a0a] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm ${
+                  currentPage === pageNum ? "bg-[#0a0a0a] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.18, delay: index * 0.02 }}
+                transition={{ duration: 0.18, delay: index * 0.03 }}
               >
                 {pageNum}
               </motion.button>
@@ -424,7 +493,12 @@ const ComplianceChecksTab: React.FC = () => {
           {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
 
           {totalPages > 5 && currentPage < totalPages - 1 && (
-            <motion.button onClick={() => paginate(totalPages)} className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.button
+              onClick={() => paginate(totalPages)}
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               {totalPages}
             </motion.button>
           )}
@@ -432,7 +506,9 @@ const ComplianceChecksTab: React.FC = () => {
           <motion.button
             onClick={() => paginate(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`flex items-center justify-center rounded-md p-2 ${currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"}`}
+            className={`flex items-center justify-center rounded-md p-2 ${
+              currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+            }`}
             whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
             whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
           >
@@ -443,21 +519,54 @@ const ComplianceChecksTab: React.FC = () => {
 
       <AnimatePresence>
         {selectedEntry && (
-          <motion.div className="fixed inset-0 z-60 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div
+            className="z-60 fixed inset-0 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedEntry(null)} />
-            <motion.div className="relative z-10 w-[720px] rounded-lg bg-white p-6" initial={{ scale: 0.98, y: 8 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 8 }}>
+            <motion.div
+              className="relative z-10 w-[720px] rounded-lg bg-white p-6"
+              initial={{ scale: 0.98, y: 8 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.98, y: 8 }}
+            >
               <h3 className="text-lg font-semibold">Compliance Report — {selectedEntry.name}</h3>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div><strong>Score:</strong> {selectedEntry.score}%</div>
-                <div><strong>Threshold:</strong> {selectedEntry.threshold}%</div>
-                <div><strong>Issues Found:</strong> {selectedEntry.issues || "None"}</div>
-                <div><strong>Last Check:</strong> {selectedEntry.lastCheck}</div>
-                <div className="col-span-2"><strong>Details:</strong> Brief summary of the compliance check would appear here — you can wire this to the real report response.</div>
+                <div>
+                  <strong>Score:</strong> {selectedEntry.score}%
+                </div>
+                <div>
+                  <strong>Threshold:</strong> {selectedEntry.threshold}%
+                </div>
+                <div>
+                  <strong>Issues Found:</strong> {selectedEntry.issues || "None"}
+                </div>
+                <div>
+                  <strong>Last Check:</strong> {selectedEntry.lastCheck}
+                </div>
+                <div className="col-span-2">
+                  <strong>Details:</strong> Brief summary of the compliance check would appear here — you can wire this
+                  to the real report response.
+                </div>
               </div>
 
               <div className="mt-6 flex justify-end gap-2">
-                <button className="rounded-md bg-gray-100 px-4 py-2 text-sm hover:bg-gray-200" onClick={() => setSelectedEntry(null)}>Close</button>
-                <button className="rounded-md bg-[#0B5394] px-4 py-2 text-sm text-white hover:opacity-95" onClick={() => { if (selectedEntry.reportUrl) window.open(selectedEntry.reportUrl, "_blank") }}>Open Report</button>
+                <button
+                  className="rounded-md bg-gray-100 px-4 py-2 text-sm hover:bg-gray-200"
+                  onClick={() => setSelectedEntry(null)}
+                >
+                  Close
+                </button>
+                <button
+                  className="rounded-md bg-[#0B5394] px-4 py-2 text-sm text-white hover:opacity-95"
+                  onClick={() => {
+                    if (selectedEntry.reportUrl) window.open(selectedEntry.reportUrl, "_blank")
+                  }}
+                >
+                  Open Report
+                </button>
               </div>
             </motion.div>
           </motion.div>
