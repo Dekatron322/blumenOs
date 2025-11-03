@@ -29,7 +29,7 @@ const SideBar = () => {
           </Link>
         </div>
 
-        <div className="mb-2 h-full border-b border-[#E4E4E4] lg:h-auto lg:space-y-1">
+        <div className="mb-2 h-full  lg:h-auto lg:space-y-1">
           <Links isCollapsed={isCollapsed} />
         </div>
       </div>

@@ -402,7 +402,9 @@ export default function MeteringDashboard() {
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(totalConsumption)} kWh</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(totalConsumption)} kWh
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">This Month:</p>
@@ -452,9 +454,7 @@ export default function MeteringDashboard() {
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Rating:</p>
                                   <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">
-                                      {customerSatisfaction}/5
-                                    </p>
+                                    <p className="text-secondary text-xl font-bold">{customerSatisfaction}/5</p>
                                     <ArrowIcon />
                                   </div>
                                 </div>

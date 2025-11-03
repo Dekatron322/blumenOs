@@ -8,7 +8,6 @@ import { GoXCircle } from "react-icons/go"
 import { WiTime3 } from "react-icons/wi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
-import { useGetCustomersQuery } from "lib/redux/customerSlice"
 import { AnimatePresence, motion } from "framer-motion"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import UpdateStatusModal from "components/ui/Modal/update-status-modal"
@@ -46,6 +45,133 @@ interface CustomerCategory {
   customerCount: number
   rate: string
   type: "residential" | "commercial"
+}
+
+interface Asset {
+  serialNo: number
+  supplyStructureType?: string
+  company: string
+  companyNercCode?: string
+  oldAreaOffice?: string
+  newAreaOffice?: string
+  newAreaOfficeNercCode?: string
+  oldKaedcoAoCode?: string
+  newKaedcoAoCode?: string
+  injectionSubstation?: string
+  injectionSubstationCode?: string
+  feederName?: string
+  feederNercCode?: string
+  feederKaedcoCode?: string
+  feederVoltageKv?: 11 | 33
+  htPoleNo?: string
+  dssName?: string
+  oldDssName?: string
+  dssNercCode?: string
+  dssCode?: string
+  transformerCapacityKva?: number
+  latitude?: number
+  longitude?: number
+  units?: number
+  unitCodes?: string[]
+  isDedicated?: boolean
+  status?: "ACTIVE" | "INACTIVE" | "NEW PROJECT" | "NON-EXISTENT" | string
+  remarks?: string
+}
+
+// Sample data for generating random customers
+const sampleCustomerData = {
+  customerName: "BASIRU ATIKU ILLELA",
+  customerAccountNo: undefined,
+  customerAddress1: "OPP MURTALA ZAKI ILLELA AREA",
+  customerCity: "Tambuwal",
+  customerState: "SOKOTO",
+  telephoneNumber: undefined,
+  tariff: "R2SP",
+  feederName: "TAMBUWAL",
+  transformers: "NAMAKKA S/S",
+  dtNumber: "TAM011",
+  technicalEngineer: "MUSTAPHA SHAAIBU",
+  employeeNo: ";02694",
+  areaOffice: "SOKOTO",
+  serviceCenter: "TAMBUWAL",
+  storedAverage: 140,
+}
+
+const regions = ["North", "South", "East", "West", "Central"]
+const serviceBands = ["Band A", "Band B", "Band C", "Band D"]
+const tariffClasses = ["R1", "R2", "R3", "C1", "C2", "C3"]
+const businessUnits = ["Unit A", "Unit B", "Unit C", "Unit D"]
+const statuses: ("ACTIVE" | "INACTIVE" | "SUSPENDED")[] = ["ACTIVE", "INACTIVE", "SUSPENDED"]
+const customerTypes: ("PREPAID" | "POSTPAID")[] = ["PREPAID", "POSTPAID"]
+
+// Generate random customer data
+const generateRandomCustomers = (count: number): Customer[] => {
+  return Array.from({ length: count }, (_, index) => {
+    const id = `cust-${Date.now()}-${index}`
+    const status = statuses[Math.floor(Math.random() * statuses.length)]!
+    const customerType = customerTypes[Math.floor(Math.random() * customerTypes.length)]!
+    const region = regions[Math.floor(Math.random() * regions.length)]!
+    const serviceBand = serviceBands[Math.floor(Math.random() * serviceBands.length)]!
+    const tariffClass = tariffClasses[Math.floor(Math.random() * tariffClasses.length)]!
+    const businessUnit = businessUnits[Math.floor(Math.random() * businessUnits.length)]!
+
+    return {
+      id,
+      accountNumber: `ACC${10000 + index}`,
+      customerName: `Customer ${index + 1}`,
+      customerType,
+      serviceBand,
+      tariffClass,
+      region,
+      businessUnit,
+      feederId: Math.random() > 0.5 ? `FEEDER-${100 + index}` : null,
+      transformerId: Math.random() > 0.5 ? `TRANS-${200 + index}` : null,
+      address: `Address ${index + 1}, ${region} Region`,
+      phoneNumber: `+234${800000000 + index}`,
+      email: `customer${index + 1}@example.com`,
+      status,
+      outstandingArrears: (Math.random() * 10000).toFixed(2),
+      createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      meters: [],
+      prepaidAccount: customerType === "PREPAID" ? { balance: (Math.random() * 5000).toFixed(2) } : null,
+      postpaidAccount: customerType === "POSTPAID" ? { lastBill: (Math.random() * 5000).toFixed(2) } : null,
+    }
+  })
+}
+
+// Generate random assets
+const generateRandomAssets = (count: number): Asset[] => {
+  return Array.from({ length: count }, (_, index) => ({
+    serialNo: index + 1,
+    supplyStructureType: ["OVERHEAD", "UNDERGROUND"][Math.floor(Math.random() * 2)],
+    company: "KAEDCO",
+    companyNercCode: "NERC001",
+    oldAreaOffice: `Old Office ${index + 1}`,
+    newAreaOffice: `New Office ${index + 1}`,
+    newAreaOfficeNercCode: `NERC-AO-${index + 1}`,
+    oldKaedcoAoCode: `OLD-KAEDCO-${index + 1}`,
+    newKaedcoAoCode: `NEW-KAEDCO-${index + 1}`,
+    injectionSubstation: `Substation ${index + 1}`,
+    injectionSubstationCode: `SUB-${index + 1}`,
+    feederName: `Feeder ${index + 1}`,
+    feederNercCode: `NERC-FEEDER-${index + 1}`,
+    feederKaedcoCode: `KAEDCO-FEEDER-${index + 1}`,
+    feederVoltageKv: ([11, 33] as const)[Math.floor(Math.random() * 2)],
+    htPoleNo: `POLE-${index + 1}`,
+    dssName: `DSS-${index + 1}`,
+    oldDssName: `OLD-DSS-${index + 1}`,
+    dssNercCode: `NERC-DSS-${index + 1}`,
+    dssCode: `DSS-CODE-${index + 1}`,
+    transformerCapacityKva: [100, 200, 300, 500][Math.floor(Math.random() * 4)],
+    latitude: 11.5 + Math.random(),
+    longitude: 4.5 + Math.random(),
+    units: Math.floor(Math.random() * 4) + 1,
+    unitCodes: Array.from({ length: Math.floor(Math.random() * 4) + 1 }, (_, i) => `UNIT-${i + 1}`),
+    isDedicated: Math.random() > 0.5,
+    status: ["ACTIVE", "INACTIVE", "NEW PROJECT", "NON-EXISTENT"][Math.floor(Math.random() * 4)],
+    remarks: Math.random() > 0.7 ? "Some remarks here" : undefined,
+  }))
 }
 
 // Skeleton Components
@@ -236,24 +362,49 @@ const AllCustomers = () => {
   const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid")
   const [showCategories, setShowCategories] = useState(true)
-  const [selectedRegion, setSelectedRegion] = useState<string>("")
+  const [selectedRegion, setSelectedRegion] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [customersData, setCustomersData] = useState<any>(null)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
   // Modal states - only one modal can be open at a time
   const [activeModal, setActiveModal] = useState<"details" | "suspend" | "reminder" | "status" | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [customerAssets, setCustomerAssets] = useState<Asset[]>([])
 
-  // API call with pagination and filtering
-  const {
-    data: customersData,
-    isLoading,
-    error,
-  } = useGetCustomersQuery({
-    page: currentPage,
-    limit: rowsPerPage,
-    region: selectedRegion || undefined,
-  })
+  // Generate random data on component mount
+  useEffect(() => {
+    setIsLoading(true)
+    // Simulate API call delay
+    const timer = setTimeout(() => {
+      const totalRecords = 50
+      const totalPages = Math.ceil(totalRecords / rowsPerPage)
+      const customers = generateRandomCustomers(rowsPerPage)
+
+      setCustomersData({
+        data: {
+          customers,
+          pagination: {
+            totalRecords,
+            totalPages,
+            currentPage,
+            limit: rowsPerPage,
+          },
+        },
+      })
+      setIsLoading(false)
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [currentPage, rowsPerPage])
+
+  // Generate assets when customer is selected
+  useEffect(() => {
+    if (selectedCustomer) {
+      setCustomerAssets(generateRandomAssets(3))
+    }
+  }, [selectedCustomer])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -377,11 +528,15 @@ const AllCustomers = () => {
     setSearchText("")
   }
 
-  // Filter customers based on search text
+  // Filter customers based on search text and region
   const filteredCustomers =
-    customersData?.data?.customers?.filter((customer: Customer) =>
-      Object.values(customer).some((value) => value?.toString().toLowerCase().includes(searchText.toLowerCase()))
-    ) || []
+    customersData?.data?.customers?.filter((customer: Customer) => {
+      const matchesSearch =
+        searchText === "" ||
+        Object.values(customer).some((value) => value?.toString().toLowerCase().includes(searchText.toLowerCase()))
+      const matchesRegion = selectedRegion === "" || customer.region === selectedRegion
+      return matchesSearch && matchesRegion
+    }) || []
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setRowsPerPage(Number(event.target.value))
@@ -735,14 +890,6 @@ const AllCustomers = () => {
     )
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-lg text-red-600">Error loading customers</div>
-      </div>
-    )
-  }
-
   return (
     <>
       <div className="flex-3 relative mt-5 flex items-start gap-6">
@@ -917,6 +1064,7 @@ const AllCustomers = () => {
         isOpen={activeModal === "details"}
         onRequestClose={closeAllModals}
         customer={selectedCustomer}
+        assets={customerAssets}
         onUpdateStatus={handleOpenStatusModal}
         onSendReminder={handleOpenReminderModal}
         onSuspendAccount={handleOpenSuspendModal}

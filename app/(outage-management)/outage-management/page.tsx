@@ -402,7 +402,9 @@ export default function MeteringDashboard() {
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Scheduled:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(scheduledMaintenance)}</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(scheduledMaintenance)}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Emergency:</p>
