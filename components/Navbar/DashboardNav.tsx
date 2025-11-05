@@ -125,7 +125,7 @@ const DashboardNav = () => {
 
   return (
     <>
-      <nav className="containerbg hidden border-b  md:block">
+      <nav className="containerbg sticky top-0 z-50 hidden w-full border-b bg-white md:block">
         <div className="flexBetween container mx-auto px-16 py-2 max-sm:px-3">
           <SearchModule
             value={searchText}
@@ -241,7 +241,7 @@ const DashboardNav = () => {
         </div>
       </nav>
 
-      <nav className="block border-b bg-[#E9F0FF] px-16 py-4 max-md:px-3 md:hidden">
+      <nav className="sticky top-0 z-50 block border-b bg-[#E9F0FF] px-16 py-4 max-md:px-3 md:hidden">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
             <UltraIcon />

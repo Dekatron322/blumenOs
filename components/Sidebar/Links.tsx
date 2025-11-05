@@ -39,14 +39,14 @@ const links: LinkItem[] = [
     ],
   },
   {
-    name: "Metering & AMI",
-    href: "/metering",
-    icon: MeteringIcon,
-  },
-  {
     name: "Postpaid Billing",
     href: "/billing",
     icon: BillingIcon,
+  },
+  {
+    name: "Metering & AMI",
+    href: "/metering",
+    icon: MeteringIcon,
   },
   {
     name: "Prepaid & Tokens",
@@ -62,11 +62,24 @@ const links: LinkItem[] = [
     name: "Agent Management",
     href: "/agent-management",
     icon: AgentIcon,
+    children: [
+      { name: "Overview", href: "/agent-management/overview" },
+      { name: "View All Agents", href: "/agent-management/all-agents" },
+      { name: "Add New Agent", href: "/agent-management/add-new-agent" },
+    ],
   },
   {
     name: "Asset Management",
     href: "/assets-management",
     icon: AssetsIcon,
+    children: [
+      { name: "Asset Report", href: "/assets-management/overview" },
+      { name: "Area Offices", href: "/assets-management/area-offices" },
+      { name: "Injection Substation", href: "/assets-management/injection-substations" },
+      { name: "Feeders", href: "/assets-management/feeders" },
+      { name: "Poles", href: "/assets-management/poles" },
+      { name: "Distribution Stations", href: "/assets-management/distribution-stations" },
+    ],
   },
   {
     name: "Outage Management",
@@ -96,10 +109,10 @@ interface LinksProps {
 
 export function Links({ isCollapsed }: LinksProps) {
   const pathname = usePathname()
-  const [expandedLink, setExpandedLink] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
-  const handleExpand = (linkName: string) => {
-    setExpandedLink(expandedLink === linkName ? null : linkName)
+  const handleExpand = (linkName: string, next: boolean) => {
+    setExpanded((prev) => ({ ...prev, [linkName]: next }))
   }
 
   return (
@@ -110,7 +123,7 @@ export function Links({ isCollapsed }: LinksProps) {
         const childActive = hasChildren ? link.children!.some((c) => pathname.startsWith(c.href)) : false
         const isActive = link.href ? pathname.startsWith(link.href) : false
         const isLinkActive = hasChildren ? childActive || isActive : isActive
-        const isExpanded = expandedLink === link.name
+        const isExpanded = hasChildren ? expanded[link.name] ?? childActive : false
 
         return (
           <div key={link.name} className="group">
@@ -126,7 +139,7 @@ export function Links({ isCollapsed }: LinksProps) {
               {hasChildren ? (
                 <button
                   type="button"
-                  onClick={() => handleExpand(link.name)}
+                  onClick={() => handleExpand(link.name, !isExpanded)}
                   className="flex w-full items-center justify-between gap-3 px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
@@ -151,13 +164,23 @@ export function Links({ isCollapsed }: LinksProps) {
                     </p>
                   </div>
                   {!isCollapsed && (
-                    <div
-                      className={clsx("h-1.5 w-1.5 rotate-45 border-r-2 border-t-2 transition-all duration-300", {
-                        "border-white": isLinkActive,
-                        "border-[#0a0a0a] group-hover:border-white": !isLinkActive,
-                        "rotate-135": isExpanded,
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={clsx("h-4 w-4 transform transition-colors transition-transform duration-300", {
+                        "text-white": isLinkActive,
+                        "text-[#0a0a0a] group-hover:text-white": !isLinkActive,
+                        "rotate-180": isExpanded,
                       })}
-                    />
+                    >
+                      {/* Chevron down, rotates to up when expanded */}
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
                   )}
                 </button>
               ) : (
@@ -186,7 +209,7 @@ export function Links({ isCollapsed }: LinksProps) {
               <div
                 className={clsx(" overflow-hidden transition-all duration-500 ease-in-out", {
                   "max-h-0 opacity-0": !isExpanded,
-                  "max-h-48 opacity-100": isExpanded,
+                  "max-h-72 opacity-100": isExpanded,
                 })}
               >
                 <div className="ml-8 border-l-2 border-gray-200 py-2 pl-4">
