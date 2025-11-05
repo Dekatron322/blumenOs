@@ -2,32 +2,8 @@
 
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import {
-  ArrowLeft,
-  Edit3,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Zap,
-  User,
-  Building,
-  CreditCard,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Download,
-  Share2,
-  FileText,
-  BarChart3,
-  Settings,
-  Activity,
-  Shield,
-  Bell,
-  Power,
-} from "lucide-react"
+import { motion } from "framer-motion"
+import { AlertCircle, CheckCircle, Clock, Edit3, Mail, MapPin, Phone, Power, Share2, User } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import UpdateStatusModal from "components/ui/Modal/update-status-modal"
@@ -277,15 +253,15 @@ const CustomerDetailsPage = () => {
 
                   <div className="flex items-center gap-3">
                     <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
-                      <ExportOutlineIcon className="h-4 w-4" />
+                      <ExportOutlineIcon className="size-4" />
                       Export
                     </ButtonModule>
                     <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
-                      <Share2 className="h-4 w-4" />
+                      <Share2 className="size-4" />
                       Share
                     </ButtonModule>
                     <ButtonModule variant="primary" size="sm" className="flex items-center gap-2">
-                      <Edit3 className="h-4 w-4" />
+                      <Edit3 className="size-4" />
                       Edit
                     </ButtonModule>
                   </div>
@@ -314,7 +290,7 @@ const CustomerDetailsPage = () => {
                         <div
                           className={`absolute -right-1 bottom-1 ${statusConfig.bg} ${statusConfig.border} rounded-full border-2 p-1.5`}
                         >
-                          <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
+                          <StatusIcon className={`size-4 ${statusConfig.color}`} />
                         </div>
                       </div>
 
@@ -344,7 +320,7 @@ const CustomerDetailsPage = () => {
                           {customer.email}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
-                          <MapOutlineIcon className="h-4 w-4" />
+                          <MapOutlineIcon className="size-4" />
                           {customer.region}
                         </div>
                       </div>
@@ -384,7 +360,7 @@ const CustomerDetailsPage = () => {
                         className="w-full justify-start gap-3"
                         onClick={() => openModal("suspend")}
                       >
-                        <Power className="h-4 w-4" />
+                        <Power className="size-4" />
                         Suspend Account
                       </ButtonModule>
                     </div>
@@ -440,7 +416,7 @@ const CustomerDetailsPage = () => {
                     className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <User className="h-5 w-5" />
+                      <User className="size-5" />
                       Account Information
                     </h3>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -486,14 +462,14 @@ const CustomerDetailsPage = () => {
                     className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <MapOutlineIcon className="h-5 w-5" />
+                      <MapOutlineIcon className="size-5" />
                       Contact & Location
                     </h3>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                            <Phone className="h-5 w-5 text-blue-600" />
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
+                            <Phone className="size-5 text-blue-600" />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Phone Number</label>
@@ -501,8 +477,8 @@ const CustomerDetailsPage = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                            <Mail className="h-5 w-5 text-green-600" />
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
+                            <Mail className="size-5 text-green-600" />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Email Address</label>
@@ -512,8 +488,8 @@ const CustomerDetailsPage = () => {
                       </div>
                       <div className="space-y-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-                            <MapPin className="h-5 w-5 text-purple-600" />
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
+                            <MapPin className="size-5 text-purple-600" />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Full Address</label>
@@ -532,15 +508,15 @@ const CustomerDetailsPage = () => {
                     className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <MeterOutlineIcon className="h-5 w-5" />
+                      <MeterOutlineIcon className="size-5" />
                       Assets & Equipment
                     </h3>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       {assets.map((asset, index) => (
                         <div key={asset.serialNo} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                           <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-                              <MeterOutlineIcon className="h-6 w-6 text-blue-600" />
+                            <div className="flex size-12 items-center justify-center rounded-lg bg-blue-100">
+                              <MeterOutlineIcon className="size-6 text-blue-600" />
                             </div>
                             <div>
                               <h4 className="font-semibold text-gray-900">Asset #{asset.serialNo}</h4>
@@ -584,7 +560,7 @@ const CustomerDetailsPage = () => {
                     className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <MeteringOutlineIcon className="h-5 w-5" />
+                      <MeteringOutlineIcon className="size-5" />
                       Meter Information
                     </h3>
                     <div className="space-y-4">
@@ -594,8 +570,8 @@ const CustomerDetailsPage = () => {
                           className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                              <MeterOutlineIcon className="h-5 w-5 text-green-600" />
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
+                              <MeterOutlineIcon className="size-5 text-green-600" />
                             </div>
                             <div>
                               <h4 className="font-semibold text-gray-900">{meter.id}</h4>
@@ -621,14 +597,14 @@ const CustomerDetailsPage = () => {
                     className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <CalendarOutlineIcon className="h-5 w-5" />
+                      <CalendarOutlineIcon className="size-5" />
                       Account Timeline
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                            <CalendarOutlineIcon className="h-5 w-5 text-blue-600" />
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
+                            <CalendarOutlineIcon className="size-5 text-blue-600" />
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900">Account Created</h4>
@@ -646,8 +622,8 @@ const CustomerDetailsPage = () => {
                       </div>
                       <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                            <CalendarOutlineIcon className="h-5 w-5 text-green-600" />
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
+                            <CalendarOutlineIcon className="size-5 text-green-600" />
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900">Last Updated</h4>
@@ -700,7 +676,7 @@ const LoadingSkeleton = () => (
             <div className="text-center">
               <div className="mx-auto mb-4 h-24 w-24 rounded-2xl bg-gray-200"></div>
               <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
-              <div className="mx-auto mb-4 h-4 w-48 rounded bg-gray-200"></div>
+              <div className="mx-auto mb-4 size-48 rounded bg-gray-200"></div>
               <div className="mb-6 flex justify-center gap-2">
                 <div className="h-6 w-20 rounded-full bg-gray-200"></div>
                 <div className="h-6 w-20 rounded-full bg-gray-200"></div>

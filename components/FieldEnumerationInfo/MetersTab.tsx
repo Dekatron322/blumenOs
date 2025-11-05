@@ -602,8 +602,8 @@ const MetersTab: React.FC = () => {
                     >
                       <td className="whitespace-nowrap border-b px-4 py-4">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                          <div className="size-10 flex-shrink-0">
+                            <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
                               <span className="text-sm font-medium text-blue-600">{meter.serialNumber.slice(-2)}</span>
                             </div>
                           </div>

@@ -50,7 +50,7 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({ isOpen, onReq
             {/* Warning Icon */}
             <div className="mb-6 flex items-center justify-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50">
-                <svg className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="size-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

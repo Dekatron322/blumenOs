@@ -191,7 +191,7 @@ const CustomerCardSkeleton = () => (
   >
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+        <div className="size-12 rounded-full bg-gray-200"></div>
         <div>
           <div className="h-5 w-32 rounded bg-gray-200"></div>
           <div className="mt-1 flex gap-2">
@@ -558,7 +558,7 @@ const AllCustomers = () => {
     <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
             <span className="font-semibold text-blue-600">
               {customer.customerName
                 .split(" ")
