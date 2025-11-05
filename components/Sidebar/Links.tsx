@@ -145,7 +145,7 @@ export function Links({ isCollapsed }: LinksProps) {
                   <div className="flex items-center gap-3">
                     <div
                       className={clsx(
-                        "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-300",
+                        "flex size-8 items-center justify-center rounded-lg transition-all duration-300",
                         {
                           "bg-white text-[#0a0a0a] shadow-lg": isLinkActive,
                           "bg-gray-100 text-[#0a0a0a] group-hover:bg-white group-hover:text-[#0a0a0a]": !isLinkActive,
@@ -172,7 +172,7 @@ export function Links({ isCollapsed }: LinksProps) {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={clsx("h-4 w-4 transform transition-colors transition-transform duration-300", {
+                      className={clsx("size-4 transform transition-colors  duration-300", {
                         "text-white": isLinkActive,
                         "text-[#0a0a0a] group-hover:text-white": !isLinkActive,
                         "rotate-180": isExpanded,
@@ -186,7 +186,7 @@ export function Links({ isCollapsed }: LinksProps) {
               ) : (
                 <Link href={link.href || "#"} className="flex w-full items-center gap-3 px-4 py-3">
                   <div
-                    className={clsx("flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-300", {
+                    className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
                       "bg-white text-[#0a0a0a] shadow-lg": isLinkActive,
                       "bg-gray-100 text-[#0a0a0a] group-hover:bg-white group-hover:text-[#0a0a0a]": !isLinkActive,
                     })}

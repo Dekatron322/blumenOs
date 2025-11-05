@@ -71,7 +71,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ entry, onViewReport }) 
   return (
     <div className="relative" ref={dropdownRef}>
       <motion.div
-        className="focus::bg-gray-100 flex h-7 w-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
+        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
         onClick={handleButtonClick}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -176,9 +176,9 @@ const LoadingSkeleton: React.FC = () => (
     <div className="flex items-center justify-between border-t py-3">
       <div className="h-8 w-48 rounded bg-gray-200" />
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded bg-gray-200" />
+        <div className="size-8 rounded bg-gray-200" />
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 w-8 rounded bg-gray-200" />
+          <div key={i} className="size-8 rounded bg-gray-200" />
         ))}
       </div>
     </div>
@@ -476,7 +476,7 @@ const ComplianceChecksTab: React.FC = () => {
               <motion.button
                 key={index}
                 onClick={() => paginate(pageNum)}
-                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm ${
+                className={`flex size-8 items-center justify-center rounded-md text-sm ${
                   currentPage === pageNum ? "bg-[#0a0a0a] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
                 whileHover={{ scale: 1.05 }}
@@ -495,7 +495,7 @@ const ComplianceChecksTab: React.FC = () => {
           {totalPages > 5 && currentPage < totalPages - 1 && (
             <motion.button
               onClick={() => paginate(totalPages)}
-              className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className="flex size-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

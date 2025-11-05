@@ -1,26 +1,10 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import {
-  AddAgentIcon,
-  BillsIcon,
-  CycleIcon,
-  DateIcon,
-  FloatIcon,
-  MapIcon,
-  PerformanceIcon,
-  PhoneIcon,
-  PlusIcon,
-  RateIcon,
-  RevenueGeneratedIcon,
-  RouteIcon,
-  StatusIcon,
-  TargetIcon,
-  UserIcon,
-} from "components/Icons/Icons"
+import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
