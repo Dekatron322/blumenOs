@@ -13,10 +13,13 @@ const SideBar = () => {
     <div
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(false)}
-      className={clsx("sidebar relative z-[60] flex h-full flex-col border-r border-[#E4E4E4] max-sm:hidden", {
-        "w-20": isCollapsed,
-        "w-64": !isCollapsed,
-      })}
+      className={clsx(
+        "sidebar relative z-[60] flex h-screen flex-col overflow-hidden border-r border-[#E4E4E4] max-sm:hidden",
+        {
+          "w-20": isCollapsed,
+          "w-64": !isCollapsed,
+        }
+      )}
     >
       <div className="flex-1 border-0 border-red-700 lg:mt-2">
         <div className="flex items-center gap-2 border-b border-[#E4E4E4] px-7 py-2 transition-opacity lg:block">

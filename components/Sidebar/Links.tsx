@@ -72,6 +72,14 @@ const links: LinkItem[] = [
     name: "Asset Management",
     href: "/assets-management",
     icon: AssetsIcon,
+    children: [
+      { name: "Asset Report", href: "/assets-management/overview" },
+      { name: "Area Offices", href: "/assets-management/area-offices" },
+      { name: "Injection Substation", href: "/assets-management/injection-substations" },
+      { name: "Feeders", href: "/assets-management/feeders" },
+      { name: "Poles", href: "/assets-management/poles" },
+      { name: "Distribution Stations", href: "/assets-management/distribution-stations" },
+    ],
   },
   {
     name: "Outage Management",
@@ -201,7 +209,7 @@ export function Links({ isCollapsed }: LinksProps) {
               <div
                 className={clsx(" overflow-hidden transition-all duration-500 ease-in-out", {
                   "max-h-0 opacity-0": !isExpanded,
-                  "max-h-48 opacity-100": isExpanded,
+                  "max-h-72 opacity-100": isExpanded,
                 })}
               >
                 <div className="ml-8 border-l-2 border-gray-200 py-2 pl-4">
