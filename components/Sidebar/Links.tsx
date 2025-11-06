@@ -82,9 +82,15 @@ const links: LinkItem[] = [
     ],
   },
   {
-    name: "Outage Management",
+    name: "Outage Mngt",
     href: "/outage-management",
     icon: OutageIcon,
+    children: [
+      { name: "Overview", href: "/outage-management/overview" },
+      { name: "View Outages", href: "/outage-management/view-outages" },
+      { name: "View Maintenance", href: "/outage-management/view-maintenance" },
+      { name: "View Reports", href: "/outage-management/view-reports" },
+    ],
   },
   {
     name: "Analytics & Reports",
