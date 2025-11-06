@@ -69,6 +69,16 @@ const links: LinkItem[] = [
     ],
   },
   {
+    name: "Vendor Mngt",
+    href: "/vendor-management",
+    icon: AgentIcon,
+    children: [
+      { name: "Overview", href: "/vendor-management/overview" },
+      { name: "View All Vendors", href: "/vendor-management/all-vendors" },
+      { name: "Add New Vendor", href: "/vendor-management/add-new-vendor" },
+    ],
+  },
+  {
     name: "Asset Management",
     href: "/assets-management",
     icon: AssetsIcon,

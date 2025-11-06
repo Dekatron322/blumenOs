@@ -535,7 +535,13 @@ export const ExportOutlineIcon: React.FC<{ color?: string; className?: string; s
       strokeLinejoin="round"
     />
     <path d="M12 15.0001V3.62012" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M15.35 5.85L12 2.5L8.65002 5.85"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 )
 
