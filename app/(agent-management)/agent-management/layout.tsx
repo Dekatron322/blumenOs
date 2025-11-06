@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     // <ProtectedRoute>
-    <div className="flex h-auto w-screen flex-col-reverse border-0 border-blue-700 bg-gradient-to-br from-gray-100 to-gray-200 lg:flex-row">
+    <div className="flex h-screen w-screen flex-col-reverse border-0 border-blue-700 bg-gradient-to-br from-gray-100 to-gray-200 lg:flex-row">
       <div className="">
         <SideBar />
       </div>
