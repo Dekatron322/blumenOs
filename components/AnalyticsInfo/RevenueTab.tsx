@@ -583,27 +583,27 @@ const RevenueTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">{data.period}</div>
                         <div className="text-sm text-gray-500">{data.customerCount} customers</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">₦{data.totalRevenue.toLocaleString()}</div>
                         <div className="text-sm text-gray-500">Avg: ₦{data.averageBill.toLocaleString()}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">₦{data.prepaidRevenue.toLocaleString()}</div>
                         <div className="text-sm text-gray-500">
                           {((data.prepaidRevenue / data.totalRevenue) * 100).toFixed(1)}%
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">₦{data.postpaidRevenue.toLocaleString()}</div>
                         <div className="text-sm text-gray-500">
                           {((data.postpaidRevenue / data.totalRevenue) * 100).toFixed(1)}%
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getCollectionRateStyle(data.collectionRate)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -627,7 +627,7 @@ const RevenueTab: React.FC = () => {
                           Outstanding: ₦{data.outstandingAmount.toLocaleString()}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getGrowthRateStyle(data.growthRate)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"

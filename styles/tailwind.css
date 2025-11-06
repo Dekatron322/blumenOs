@@ -210,7 +210,7 @@ body {
 }
 
 .small-card {
-  @apply h-auto w-full rounded-md border-[#E4E4E4] bg-[#ffffff]  px-4 py-4 max-lg:mb-0  max-sm:h-auto max-sm:px-[14px];
+  @apply h-auto w-full rounded-md border-[#E4E4E4] bg-[#ffffff]  p-4 max-lg:mb-0  max-sm:h-auto max-sm:px-[14px];
 }
 
 .new-card {
