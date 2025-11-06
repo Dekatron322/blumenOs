@@ -630,11 +630,11 @@ const PerformanceTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">{data.metric}</div>
                         <div className="text-sm text-gray-500">{data.description}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">
                           {data.currentValue}
                           {data.unit}
@@ -644,13 +644,13 @@ const PerformanceTab: React.FC = () => {
                           {data.unit}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">
                           {data.targetValue}
                           {data.unit}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getStatusStyle(data.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -673,7 +673,7 @@ const PerformanceTab: React.FC = () => {
                           {data.status.charAt(0).toUpperCase() + data.status.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getTrendStyle(data.trend)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -690,7 +690,7 @@ const PerformanceTab: React.FC = () => {
                           {data.trend.charAt(0).toUpperCase() + data.trend.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           className={`text-sm font-medium ${
                             data.changePercentage > 0

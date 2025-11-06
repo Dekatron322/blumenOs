@@ -682,16 +682,16 @@ const MaintenanceTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">{item.title}</div>
                         <div className="text-sm text-gray-500">{item.description}</div>
                         <div className="text-sm text-gray-500">ID: {item.id}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{item.equipment}</div>
                         <div className="text-sm text-gray-500">{item.location}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex flex-col gap-1">
                           <motion.div
                             style={getTypeStyle(item.type)}
@@ -737,7 +737,7 @@ const MaintenanceTab: React.FC = () => {
                           </motion.div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getStatusStyle(item.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -760,7 +760,7 @@ const MaintenanceTab: React.FC = () => {
                           {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">
                           Scheduled: {new Date(item.scheduledDate).toLocaleString()}
                         </div>

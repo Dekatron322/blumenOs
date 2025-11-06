@@ -195,9 +195,9 @@ const CustomerDetailsPage = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="text-center">
-          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+          <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">Customer Not Found</h1>
-          <p className="mb-6 text-gray-600">The customer you're looking for doesn't exist.</p>
+          <p className="mb-6 text-gray-600">The customer you&apos;re looking for doesn&apos;t exist.</p>
           <ButtonModule variant="primary" onClick={() => router.back()}>
             Back to Customers
           </ButtonModule>

@@ -667,7 +667,7 @@ const ReportsTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">{report.title}</div>
                         <div className="text-sm text-gray-500">{report.description}</div>
                         <div className="text-sm text-gray-500">ID: {report.id}</div>
@@ -682,7 +682,7 @@ const ReportsTab: React.FC = () => {
                           ))}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex flex-col gap-1">
                           <motion.div
                             style={getTypeStyle(report.type)}
@@ -710,7 +710,7 @@ const ReportsTab: React.FC = () => {
                           <div className="text-sm text-gray-500">{report.period}</div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getStatusStyle(report.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -733,7 +733,7 @@ const ReportsTab: React.FC = () => {
                           {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{getFormatIcon(report.format)}</span>
                           <div>
@@ -745,7 +745,7 @@ const ReportsTab: React.FC = () => {
                           Generated: {new Date(report.generatedDate).toLocaleDateString()}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{report.downloadCount} downloads</div>
                         {report.lastDownloaded && (
                           <div className="text-sm text-gray-500">
