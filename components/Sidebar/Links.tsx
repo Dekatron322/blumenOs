@@ -113,11 +113,11 @@ const links: LinkItem[] = [
       { name: "Performance Analytics", href: "/analytics/performance-analytics" },
     ],
   },
-  {
-    name: "Field Enumeration",
-    href: "/field-enumeration",
-    icon: FieldIcon,
-  },
+  // {
+  //   name: "Field Enumeration",
+  //   href: "/field-enumeration",
+  //   icon: FieldIcon,
+  // },
   {
     name: "Complaince & Audit",
     href: "/complaince",
