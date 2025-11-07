@@ -3,12 +3,12 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
-
 import { motion } from "framer-motion"
-import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import MeteringInfo from "components/MeteringInfo/MeteringInfo"
+import { MetersProgrammedIcon, PlayIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import AnalyticsInfo from "components/AnalyticsInfo/AnalyticsInfo"
+import BillingInfo from "components/BillingInfo/BillingInfo"
+import { ButtonModule } from "components/ui/Button/Button"
+import AllBills from "components/BillingInfo/AllBills"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -113,7 +113,7 @@ const TableSkeleton = () => {
           <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+                <div className="size-12 rounded-full bg-gray-200"></div>
                 <div>
                   <div className="h-5 w-32 rounded bg-gray-200"></div>
                   <div className="mt-1 flex gap-2">
@@ -265,36 +265,24 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock analytics data
-const generateAnalyticsData = () => {
+// Generate mock meter data
+const generateMeterData = () => {
   return {
-    totalRevenue: 45000000,
-    monthlyRevenue: 15000000,
-    totalConsumption: 2500000,
-    monthlyConsumption: 850000,
-    systemAvailability: 99.2,
-    customerSatisfaction: 4.6,
-    collectionRate: 96.5,
-    performanceScore: 94.8,
+    smartMeters: 89420,
+    conventionalMeters: 29514,
+    readSuccessRate: 94.2,
+    alerts: 847,
+    totalMeters: 89420 + 29514,
   }
 }
 
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [analyticsData, setAnalyticsData] = useState(generateAnalyticsData())
+  const [meterData, setMeterData] = useState(generateMeterData())
 
   // Use mock data
-  const {
-    totalRevenue,
-    monthlyRevenue,
-    totalConsumption,
-    monthlyConsumption,
-    systemAvailability,
-    customerSatisfaction,
-    collectionRate,
-    performanceScore,
-  } = analyticsData
+  const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -303,14 +291,14 @@ export default function MeteringDashboard() {
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after generating report
-    setAnalyticsData(generateAnalyticsData())
+    // Refresh data after adding customer
+    setMeterData(generateMeterData())
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
     setTimeout(() => {
-      setAnalyticsData(generateAnalyticsData())
+      setMeterData(generateMeterData())
       setIsLoading(false)
     }, 1000)
   }
@@ -324,8 +312,8 @@ export default function MeteringDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Analytics & Reports</h4>
-                <p>Business intelligence and regulatory reporting</p>
+                <h4 className="text-2xl font-semibold">Billing Engine</h4>
+                <p>Tariff management, bill generation, and billing cycles</p>
               </div>
 
               <motion.div
@@ -334,13 +322,9 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <button
-                  onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
-                >
-                  <PlusIcon />
-                  Generate Report
-                </button>
+                <ButtonModule variant="outline" size="md" className="mt-2" icon={<PlayIcon />}>
+                  Start Billing Run
+                </ButtonModule>
               </motion.div>
             </div>
 
@@ -354,128 +338,14 @@ export default function MeteringDashboard() {
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Asset Management Dashboard
+                  // Loaded State - Redesigned Metering Dashboard
                   <>
-                    <motion.div
-                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="flex w-full max-sm:flex-col">
-                        <div className="w-full">
-                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Total Revenue Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-blue-600">
-                                  <TokenGeneratedIcon />
-                                </div>
-                                <span className="font-medium">Total Revenue</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">₦{formatNumber(totalRevenue)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">This Month:</p>
-                                  <p className="text-secondary font-medium">₦{formatNumber(monthlyRevenue)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Total Consumption Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <MetersProgrammedIcon />
-                                </div>
-                                <span className="font-medium">Total Consumption</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">
-                                    {formatNumber(totalConsumption)} kWh
-                                  </p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">This Month:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(monthlyConsumption)} kWh</p>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* System Performance Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <VendingIcon />
-                                </div>
-                                <span className="font-medium">System Performance</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Availability:</p>
-                                  <p className="text-secondary text-xl font-bold">{systemAvailability}%</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Score:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">{performanceScore}%</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Customer Satisfaction Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-yellow-600">
-                                  <TamperIcon />
-                                </div>
-                                <span className="font-medium">Customer Satisfaction</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Rating:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">{customerSatisfaction}/5</p>
-                                    <ArrowIcon />
-                                  </div>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Collection Rate:</p>
-                                  <p className="text-secondary font-medium">{collectionRate}%</p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
                     >
-                      <AnalyticsInfo />
+                      <AllBills />
                     </motion.div>
                   </>
                 )}

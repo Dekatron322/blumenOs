@@ -628,10 +628,10 @@ const CustomersTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                          <div className="size-10 shrink-0">
+                            <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
                               <span className="text-sm font-medium text-blue-600">
                                 {customer.name
                                   .split(" ")
@@ -648,12 +648,12 @@ const CustomersTab: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{customer.email}</div>
                         <div className="text-sm text-gray-500">{customer.phone}</div>
                         <div className="text-sm text-gray-500">{customer.address}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getAccountTypeStyle(customer.accountType)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -674,7 +674,7 @@ const CustomersTab: React.FC = () => {
                           {customer.accountType.charAt(0).toUpperCase() + customer.accountType.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getStatusStyle(customer.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -695,7 +695,7 @@ const CustomersTab: React.FC = () => {
                           {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div
                           className={`text-sm font-medium ${customer.balance > 0 ? "text-red-600" : "text-green-600"}`}
                         >

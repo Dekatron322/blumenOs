@@ -3,23 +3,12 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
+
 import { motion } from "framer-motion"
-import {
-  AlertIcon,
-  BankIcon,
-  MetersProgrammedIcon,
-  MobileMoneyIcon,
-  PdfFileIcon,
-  PlayIcon,
-  PosIcon,
-  TamperIcon,
-  TokenGeneratedIcon,
-  VendingIcon,
-} from "components/Icons/Icons"
+import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
+import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import BillingInfo from "components/BillingInfo/BillingInfo"
-import { ButtonModule } from "components/ui/Button/Button"
-import PaymentInfo from "components/PaymentInfo/PaymentInfo"
+import AnalyticsInfo from "components/AnalyticsInfo/AnalyticsInfo"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -124,7 +113,7 @@ const TableSkeleton = () => {
           <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+                <div className="size-12 rounded-full bg-gray-200"></div>
                 <div>
                   <div className="h-5 w-32 rounded bg-gray-200"></div>
                   <div className="mt-1 flex gap-2">
@@ -276,90 +265,36 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Payment Channel Interface
-interface PaymentChannel {
-  name: string
-  status: "active" | "inactive"
-  amount: number
-  transactions: number
-  share: number
-  color?: string
-  bgColor?: string
-  icon: JSX.Element
-}
-
-// Generate mock billing data
-const generateBillingData = () => {
+// Generate mock analytics data
+const generateAnalyticsData = () => {
   return {
-    todaysCollections: 250000000, // ₦250M
-    collectionEfficiency: 87.3,
-    outstandingDebt: 2840000000, // ₦2.84B
-    paymentsToday: 13630,
+    totalRevenue: 45000000,
+    monthlyRevenue: 15000000,
+    totalConsumption: 2500000,
+    monthlyConsumption: 850000,
+    systemAvailability: 99.2,
+    customerSatisfaction: 4.6,
+    collectionRate: 96.5,
+    performanceScore: 94.8,
   }
 }
 
-// Generate payment channels data
-const generatePaymentChannels = (): PaymentChannel[] => {
-  return [
-    {
-      name: "Bank Transfer",
-      status: "active",
-      amount: 895000,
-      transactions: 3420,
-      share: 35.8,
-      color: "bg-blue-500",
-      icon: <BankIcon />,
-    },
-    {
-      name: "Mobile Money",
-      status: "active",
-      amount: 678000,
-      transactions: 5680,
-      share: 27.1,
-      color: "bg-green-500",
-      icon: <MobileMoneyIcon />,
-    },
-    {
-      name: "POS/Agent",
-      status: "active",
-      amount: 524000,
-      transactions: 2890,
-      share: 21,
-      color: "bg-purple-500",
-      icon: <PosIcon />,
-    },
-    {
-      name: "Online Cards",
-      status: "active",
-      amount: 402000,
-      transactions: 1640,
-      share: 16.1,
-      color: "bg-orange-500",
-      icon: <AlertIcon />,
-    },
-  ]
-}
-
-export default function BillingDashboard() {
+export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [billingData, setBillingData] = useState(generateBillingData())
-  const [paymentChannels] = useState<PaymentChannel[]>(generatePaymentChannels())
+  const [analyticsData, setAnalyticsData] = useState(generateAnalyticsData())
 
   // Use mock data
-  const { todaysCollections, collectionEfficiency, outstandingDebt, paymentsToday } = billingData
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000000) {
-      return `₦${(amount / 1000000000).toFixed(2)}B`
-    } else if (amount >= 1000000) {
-      return `₦${(amount / 1000000).toFixed(0)}M`
-    } else if (amount >= 1000) {
-      return `₦${(amount / 1000).toFixed(0)}K`
-    }
-    return `₦${amount}`
-  }
+  const {
+    totalRevenue,
+    monthlyRevenue,
+    totalConsumption,
+    monthlyConsumption,
+    systemAvailability,
+    customerSatisfaction,
+    collectionRate,
+    performanceScore,
+  } = analyticsData
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -368,14 +303,14 @@ export default function BillingDashboard() {
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after adding customer
-    setBillingData(generateBillingData())
+    // Refresh data after generating report
+    setAnalyticsData(generateAnalyticsData())
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
     setTimeout(() => {
-      setBillingData(generateBillingData())
+      setAnalyticsData(generateAnalyticsData())
       setIsLoading(false)
     }, 1000)
   }
@@ -389,8 +324,8 @@ export default function BillingDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Collections & Payments</h4>
-                <p>Payment processing, reconciliation, and receivables management</p>
+                <h4 className="text-2xl font-semibold">Analytics & Reports</h4>
+                <p>Business intelligence and regulatory reporting</p>
               </div>
 
               <motion.div
@@ -399,9 +334,13 @@ export default function BillingDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule variant="primary" size="md" className="mt-2" icon={<PdfFileIcon />}>
-                  Export Report
-                </ButtonModule>
+                <button
+                  onClick={() => setIsAddCustomerModalOpen(true)}
+                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
+                >
+                  <PlusIcon />
+                  Generate Report
+                </button>
               </motion.div>
             </div>
 
@@ -415,7 +354,7 @@ export default function BillingDashboard() {
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Billing Dashboard
+                  // Loaded State - Asset Management Dashboard
                   <>
                     <motion.div
                       className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
@@ -426,206 +365,107 @@ export default function BillingDashboard() {
                       <div className="flex w-full max-sm:flex-col">
                         <div className="w-full">
                           <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Today's Collections Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <TokenGeneratedIcon />
-                                </div>
-                                <span className="font-medium">Today&apos;s Collections</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Amount:</p>
-                                  <p className="text-secondary text-xl font-bold">
-                                    {formatCurrency(todaysCollections)}
-                                  </p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Trend:</p>
-                                  <p className="text-secondary font-medium">
-                                    <span className="text-green-500">↑ 8%</span> from yesterday
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Collection Efficiency Card */}
+                            {/* Total Revenue Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-blue-600">
-                                  <MetersProgrammedIcon />
+                                  <TokenGeneratedIcon />
                                 </div>
-                                <span className="font-medium">Collection Efficiency</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Rate:</p>
-                                  <p className="text-secondary text-xl font-bold">{collectionEfficiency}%</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div
-                                      className={`size-2 rounded-full ${
-                                        collectionEfficiency >= 85
-                                          ? "bg-green-500"
-                                          : collectionEfficiency >= 75
-                                          ? "bg-yellow-500"
-                                          : "bg-red-500"
-                                      }`}
-                                    ></div>
-                                    <p className="text-secondary font-medium">
-                                      {collectionEfficiency >= 85
-                                        ? "Excellent"
-                                        : collectionEfficiency >= 75
-                                        ? "Good"
-                                        : "Needs Attention"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Outstanding Debt Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-orange-600">
-                                  <VendingIcon />
-                                </div>
-                                <span className="font-medium">Outstanding Debt</span>
+                                <span className="font-medium">Total Revenue</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatCurrency(outstandingDebt)}</p>
+                                  <p className="text-secondary text-xl font-bold">₦{formatNumber(totalRevenue)}</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Aging:</p>
-                                  <p className="text-secondary font-medium">
-                                    <span className="text-orange-500">45% over 90 days</span>
-                                  </p>
+                                  <p className="text-grey-200">This Month:</p>
+                                  <p className="text-secondary font-medium">₦{formatNumber(monthlyRevenue)}</p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Payments Today Card */}
+                            {/* Total Consumption Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-purple-600">
-                                  <TamperIcon />
+                                <div className="text-green-600">
+                                  <MetersProgrammedIcon />
                                 </div>
-                                <span className="font-medium">Payments Today</span>
+                                <span className="font-medium">Total Consumption</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Transactions:</p>
+                                  <p className="text-grey-200">Total:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(totalConsumption)} kWh
+                                  </p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">This Month:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(monthlyConsumption)} kWh</p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* System Performance Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="text-green-600">
+                                  <VendingIcon />
+                                </div>
+                                <span className="font-medium">System Performance</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Availability:</p>
+                                  <p className="text-secondary text-xl font-bold">{systemAvailability}%</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Score:</p>
+                                  <div className="flex items-center gap-1">
+                                    <div className="size-2 rounded-full bg-green-500"></div>
+                                    <p className="text-secondary font-medium">{performanceScore}%</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Customer Satisfaction Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="text-yellow-600">
+                                  <TamperIcon />
+                                </div>
+                                <span className="font-medium">Customer Satisfaction</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Rating:</p>
                                   <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">{formatNumber(paymentsToday)}</p>
+                                    <p className="text-secondary text-xl font-bold">{customerSatisfaction}/5</p>
                                     <ArrowIcon />
                                   </div>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Avg. Value:</p>
-                                  <p className="text-secondary font-medium">
-                                    {formatCurrency(todaysCollections / paymentsToday)}
-                                  </p>
+                                  <p className="text-grey-200">Collection Rate:</p>
+                                  <p className="text-secondary font-medium">{collectionRate}%</p>
                                 </div>
                               </div>
                             </motion.div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Payment Channels Performance Section */}
-                    <motion.div
-                      className="mt-6"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <div className="mb-4">
-                        <h3 className="text-lg font-semibold">Payment Channels Performance (Today)</h3>
-                        <p className="text-sm text-gray-600">Real-time performance across all payment channels</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {paymentChannels.map((channel, index) => (
-                          <motion.div
-                            key={channel.name}
-                            className="rounded-lg border bg-white p-4 shadow-sm"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`rounded-full p-2 ${(
-                                    channel.bgColor ??
-                                    channel.color ??
-                                    "bg-blue-500"
-                                  ).replace("bg-", "bg-")} bg-opacity-10`}
-                                >
-                                  <div
-                                    className={(channel.bgColor ?? channel.color ?? "bg-blue-500").replace(
-                                      "bg-",
-                                      "text-"
-                                    )}
-                                  >
-                                    {channel.icon}
-                                  </div>
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-gray-900">{channel.name}</h4>
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className={`size-2 rounded-full ${
-                                        channel.status === "active" ? "bg-green-500" : "bg-red-500"
-                                      }`}
-                                    ></div>
-                                    <span className="text-sm capitalize text-gray-600">{channel.status}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 space-y-3">
-                              <div>
-                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(channel.amount)}</p>
-                                <p className="text-sm text-gray-600">
-                                  {formatNumber(channel.transactions)} transactions
-                                </p>
-                              </div>
-
-                              <div>
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">Share of total</span>
-                                  <span className="font-semibold text-gray-900">{channel.share}%</span>
-                                </div>
-                                <div className="mt-1 h-2 w-full rounded-full bg-gray-200">
-                                  <div
-                                    className={`h-2 rounded-full ${channel.color}`}
-                                    style={{ width: `${channel.share}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
                       </div>
                     </motion.div>
 
@@ -635,7 +475,7 @@ export default function BillingDashboard() {
                       transition={{ duration: 0.5, delay: 0.3 }}
                       className="mt-6"
                     >
-                      <PaymentInfo />
+                      <AnalyticsInfo />
                     </motion.div>
                   </>
                 )}

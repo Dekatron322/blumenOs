@@ -13,6 +13,7 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import UpdateStatusModal from "components/ui/Modal/update-status-modal"
 import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import CustomerDetailsModal from "components/ui/Modal/customer-details-modal"
+import { useRouter } from "next/navigation"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -190,7 +191,7 @@ const CustomerCardSkeleton = () => (
   >
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+        <div className="size-12 rounded-full bg-gray-200"></div>
         <div>
           <div className="h-5 w-32 rounded bg-gray-200"></div>
           <div className="mt-1 flex gap-2">
@@ -360,11 +361,12 @@ const AllCustomers = () => {
   const [rowsPerPage, setRowsPerPage] = useState(6)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid")
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showCategories, setShowCategories] = useState(true)
   const [selectedRegion, setSelectedRegion] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [customersData, setCustomersData] = useState<any>(null)
+  const [isOpen, setIsOpen] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
@@ -372,6 +374,7 @@ const AllCustomers = () => {
   const [activeModal, setActiveModal] = useState<"details" | "suspend" | "reminder" | "status" | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [customerAssets, setCustomerAssets] = useState<Asset[]>([])
+  const router = useRouter()
 
   // Generate random data on component mount
   useEffect(() => {
@@ -438,8 +441,9 @@ const AllCustomers = () => {
   }
 
   // Specific modal handlers
-  const handleOpenDetailsModal = (customer: Customer) => {
-    openModal("details", customer)
+  const handleViewDetails = (customer: Customer) => {
+    // Navigate to customer details page
+    router.push(`/customers/${customer.id}`)
   }
 
   const handleOpenSuspendModal = () => {
@@ -554,7 +558,7 @@ const AllCustomers = () => {
     <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
             <span className="font-semibold text-blue-600">
               {customer.customerName
                 .split(" ")
@@ -649,7 +653,7 @@ const AllCustomers = () => {
 
       <div className="mt-3 flex gap-2">
         <button
-          onClick={() => handleOpenDetailsModal(customer)}
+          onClick={() => handleViewDetails(customer)}
           className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#f9f9f9]"
         >
           <VscEye className="size-4" />
@@ -716,7 +720,7 @@ const AllCustomers = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => handleOpenDetailsModal(customer)} className="button-oulined flex items-center gap-2">
+            <button onClick={() => handleViewDetails(customer)} className="button-oulined flex items-center gap-2">
               <VscEye className="size-4" />
               View
             </button>

@@ -815,8 +815,8 @@ const AddCustomerPage = () => {
                       {Object.keys(formErrors).length > 0 && (
                         <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
                           <div className="flex">
-                            <div className="flex-shrink-0">
-                              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                            <div className="shrink-0">
+                              <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
                                 <path
                                   fillRule="evenodd"
                                   d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
@@ -894,7 +894,7 @@ const AddCustomerPage = () => {
                       {!csvFile ? (
                         <div>
                           <svg
-                            className="mx-auto h-12 w-12 text-gray-400"
+                            className="mx-auto size-12 text-gray-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -917,7 +917,7 @@ const AddCustomerPage = () => {
                       ) : (
                         <div>
                           <svg
-                            className="mx-auto h-12 w-12 text-green-500"
+                            className="mx-auto size-12 text-green-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -962,8 +962,8 @@ const AddCustomerPage = () => {
                     {csvErrors.length > 0 && (
                       <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
                         <div className="flex">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <div className="shrink-0">
+                            <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                               <path
                                 fillRule="evenodd"
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -1054,8 +1054,8 @@ const AddCustomerPage = () => {
                   className="mt-6 rounded-lg bg-blue-50 p-6"
                 >
                   <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="shrink-0">
+                      <svg className="size-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"

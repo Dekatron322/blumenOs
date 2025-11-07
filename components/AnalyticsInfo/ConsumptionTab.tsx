@@ -576,35 +576,35 @@ const ConsumptionTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">{data.period}</div>
                         <div className="text-sm text-gray-500">{data.customerCount} customers</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">
                           {data.totalConsumption.toLocaleString()} kWh
                         </div>
                         <div className="text-sm text-gray-500">Avg: {data.averageConsumption.toLocaleString()} kWh</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{data.residentialConsumption.toLocaleString()} kWh</div>
                         <div className="text-sm text-gray-500">
                           {((data.residentialConsumption / data.totalConsumption) * 100).toFixed(1)}%
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{data.commercialConsumption.toLocaleString()} kWh</div>
                         <div className="text-sm text-gray-500">
                           {((data.commercialConsumption / data.totalConsumption) * 100).toFixed(1)}%
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{data.industrialConsumption.toLocaleString()} kWh</div>
                         <div className="text-sm text-gray-500">
                           {((data.industrialConsumption / data.totalConsumption) * 100).toFixed(1)}%
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getLoadFactorStyle(data.loadFactor)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"

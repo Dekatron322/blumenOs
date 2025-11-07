@@ -648,16 +648,16 @@ const OutagesTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm font-medium text-gray-900">{outage.title}</div>
                         <div className="text-sm text-gray-500">{outage.description}</div>
                         <div className="text-sm text-gray-500">ID: {outage.id}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{outage.location}</div>
                         <div className="text-sm text-gray-500">{outage.affectedCustomers} customers affected</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex flex-col gap-1">
                           <motion.div
                             style={getStatusStyle(outage.status)}
@@ -705,7 +705,7 @@ const OutagesTab: React.FC = () => {
                           </motion.div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">
                           Started: {new Date(outage.startTime).toLocaleString()}
                         </div>
@@ -718,7 +718,7 @@ const OutagesTab: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{outage.cause}</div>
                         <div className="text-sm text-gray-500">Team: {outage.assignedTeam}</div>
                         <div className="text-sm text-gray-500">Reported by: {outage.reportedBy}</div>

@@ -600,10 +600,10 @@ const MetersTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                          <div className="size-10 shrink-0">
+                            <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
                               <span className="text-sm font-medium text-blue-600">{meter.serialNumber.slice(-2)}</span>
                             </div>
                           </div>
@@ -614,17 +614,17 @@ const MetersTab: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{meter.type}</div>
                         <div className="text-sm text-gray-500">
                           {meter.manufacturer} {meter.model}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{meter.location}</div>
                         <div className="text-sm text-gray-500">Installed: {meter.installationDate}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getStatusStyle(meter.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -647,7 +647,7 @@ const MetersTab: React.FC = () => {
                           {meter.status.charAt(0).toUpperCase() + meter.status.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{meter.lastReading.toLocaleString()} kWh</div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">

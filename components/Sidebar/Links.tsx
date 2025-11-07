@@ -36,17 +36,25 @@ const links: LinkItem[] = [
     children: [
       { name: "View Customers", href: "/customers/view-customers" },
       { name: "Add Customers", href: "/customers/add-customers" },
+      { name: "Field Enumeration", href: "/customers/field-enumeration" },
     ],
-  },
-  {
-    name: "Metering & AMI",
-    href: "/metering",
-    icon: MeteringIcon,
   },
   {
     name: "Postpaid Billing",
     href: "/billing",
     icon: BillingIcon,
+    children: [
+      { name: "Overview", href: "/billing/overview" },
+      { name: "Bills", href: "/billing/bills" },
+      { name: "Disputes", href: "/billing/disputes" },
+      { name: "Billing Jobs", href: "/billing/jobs" },
+    ],
+  },
+
+  {
+    name: "Metering & AMI",
+    href: "/metering",
+    icon: MeteringIcon,
   },
   {
     name: "Prepaid & Tokens",
@@ -54,35 +62,76 @@ const links: LinkItem[] = [
     icon: TokenIcon,
   },
   {
-    name: "Collections & Payments",
+    name: "Payments",
     href: "/payment",
     icon: PaymentIcon,
+    children: [
+      { name: "Overview", href: "/payment/overview" },
+      { name: "All Payment", href: "/payment/all-payment" },
+      { name: "Duning Mgt", href: "/payment/duning-mgt" },
+      { name: "Disputes", href: "/payment/disputes" },
+    ],
   },
   {
     name: "Agent Management",
     href: "/agent-management",
     icon: AgentIcon,
+    children: [
+      { name: "Overview", href: "/agent-management/overview" },
+      { name: "View All Agents", href: "/agent-management/all-agents" },
+      { name: "Add New Agent", href: "/agent-management/add-new-agent" },
+    ],
+  },
+  {
+    name: "Vendor Mngt",
+    href: "/vendor-management",
+    icon: AgentIcon,
+    children: [
+      { name: "Overview", href: "/vendor-management/overview" },
+      { name: "View All Vendors", href: "/vendor-management/all-vendors" },
+      { name: "Add New Vendor", href: "/vendor-management/add-new-vendor" },
+    ],
   },
   {
     name: "Asset Management",
     href: "/assets-management",
     icon: AssetsIcon,
+    children: [
+      { name: "Asset Report", href: "/assets-management/overview" },
+      { name: "Area Offices", href: "/assets-management/area-offices" },
+      { name: "Injection Substation", href: "/assets-management/injection-substations" },
+      { name: "Feeders", href: "/assets-management/feeders" },
+      { name: "Poles", href: "/assets-management/poles" },
+      { name: "Distribution Stations", href: "/assets-management/distribution-stations" },
+    ],
   },
   {
-    name: "Outage Management",
+    name: "Outage Mngt",
     href: "/outage-management",
     icon: OutageIcon,
+    children: [
+      { name: "Overview", href: "/outage-management/overview" },
+      { name: "View Outages", href: "/outage-management/view-outages" },
+      { name: "View Maintenance", href: "/outage-management/view-maintenance" },
+      { name: "View Reports", href: "/outage-management/view-reports" },
+    ],
   },
   {
     name: "Analytics & Reports",
     href: "/analytics",
     icon: AnalyticsIcon,
+    children: [
+      { name: "Overview", href: "/analytics/overview" },
+      { name: "Revenue Analytics", href: "/analytics/revenue-analytics" },
+      { name: "Consumption Analytics", href: "/analytics/consumption-analytics" },
+      { name: "Performance Analytics", href: "/analytics/performance-analytics" },
+    ],
   },
-  {
-    name: "Field Enumeration",
-    href: "/field-enumeration",
-    icon: FieldIcon,
-  },
+  // {
+  //   name: "Field Enumeration",
+  //   href: "/field-enumeration",
+  //   icon: FieldIcon,
+  // },
   {
     name: "Status Map",
     href: "/status-map",
@@ -92,6 +141,12 @@ const links: LinkItem[] = [
     name: "Complaince & Audit",
     href: "/complaince",
     icon: AuditIcon,
+    children: [
+      { name: "Overview", href: "/complaince/overview" },
+      { name: "Audit Trails", href: "/complaince/audit-trails" },
+      { name: "Complaince Checks", href: "/complaince/complaince-checks" },
+      { name: "NERC Reports", href: "/complaince/nerc-reports" },
+    ],
   },
  
 ]
@@ -102,10 +157,10 @@ interface LinksProps {
 
 export function Links({ isCollapsed }: LinksProps) {
   const pathname = usePathname()
-  const [expandedLink, setExpandedLink] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
-  const handleExpand = (linkName: string) => {
-    setExpandedLink(expandedLink === linkName ? null : linkName)
+  const handleExpand = (linkName: string, next: boolean) => {
+    setExpanded((prev) => ({ ...prev, [linkName]: next }))
   }
 
   return (
@@ -116,7 +171,7 @@ export function Links({ isCollapsed }: LinksProps) {
         const childActive = hasChildren ? link.children!.some((c) => pathname.startsWith(c.href)) : false
         const isActive = link.href ? pathname.startsWith(link.href) : false
         const isLinkActive = hasChildren ? childActive || isActive : isActive
-        const isExpanded = expandedLink === link.name
+        const isExpanded = hasChildren ? expanded[link.name] ?? childActive : false
 
         return (
           <div key={link.name} className="group">
@@ -132,13 +187,13 @@ export function Links({ isCollapsed }: LinksProps) {
               {hasChildren ? (
                 <button
                   type="button"
-                  onClick={() => handleExpand(link.name)}
+                  onClick={() => handleExpand(link.name, !isExpanded)}
                   className="flex w-full items-center justify-between gap-3 px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={clsx(
-                        "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-300",
+                        "flex size-8 items-center justify-center rounded-lg transition-all duration-300",
                         {
                           "bg-white text-[#0a0a0a] shadow-lg": isLinkActive,
                           "bg-gray-100 text-[#0a0a0a] group-hover:bg-white group-hover:text-[#0a0a0a]": !isLinkActive,
@@ -157,19 +212,29 @@ export function Links({ isCollapsed }: LinksProps) {
                     </p>
                   </div>
                   {!isCollapsed && (
-                    <div
-                      className={clsx("h-1.5 w-1.5 rotate-45 border-r-2 border-t-2 transition-all duration-300", {
-                        "border-white": isLinkActive,
-                        "border-[#0a0a0a] group-hover:border-white": !isLinkActive,
-                        "rotate-135": isExpanded,
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={clsx("size-4 transform transition-colors  duration-300", {
+                        "text-white": isLinkActive,
+                        "text-[#0a0a0a] group-hover:text-white": !isLinkActive,
+                        "rotate-180": isExpanded,
                       })}
-                    />
+                    >
+                      {/* Chevron down, rotates to up when expanded */}
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
                   )}
                 </button>
               ) : (
                 <Link href={link.href || "#"} className="flex w-full items-center gap-3 px-4 py-3">
                   <div
-                    className={clsx("flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-300", {
+                    className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
                       "bg-white text-[#0a0a0a] shadow-lg": isLinkActive,
                       "bg-gray-100 text-[#0a0a0a] group-hover:bg-white group-hover:text-[#0a0a0a]": !isLinkActive,
                     })}
@@ -192,7 +257,7 @@ export function Links({ isCollapsed }: LinksProps) {
               <div
                 className={clsx(" overflow-hidden transition-all duration-500 ease-in-out", {
                   "max-h-0 opacity-0": !isExpanded,
-                  "max-h-48 opacity-100": isExpanded,
+                  "max-h-72 opacity-100": isExpanded,
                 })}
               >
                 <div className="ml-8 border-l-2 border-gray-200 py-2 pl-4">

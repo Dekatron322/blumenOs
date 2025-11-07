@@ -661,10 +661,10 @@ const LocationsTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                          <div className="size-10 shrink-0">
+                            <div className="flex size-10 items-center justify-center rounded-full bg-green-100">
                               <span className="text-sm font-medium text-green-600">
                                 {location.name
                                   .split(" ")
@@ -680,13 +680,13 @@ const LocationsTab: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{location.address}</div>
                         <div className="text-sm text-gray-500">
                           {location.coordinates.latitude.toFixed(4)}, {location.coordinates.longitude.toFixed(4)}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="flex flex-col gap-1">
                           <motion.div
                             style={getTypeStyle(location.type)}
@@ -713,7 +713,7 @@ const LocationsTab: React.FC = () => {
                           <div className="text-sm text-gray-500">{location.district}</div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <motion.div
                           style={getStatusStyle(location.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
@@ -734,7 +734,7 @@ const LocationsTab: React.FC = () => {
                           {location.status.charAt(0).toUpperCase() + location.status.slice(1)}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-4">
+                      <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{location.metersCount} meters</div>
                         <div className="text-sm text-gray-500">{location.customersCount} customers</div>
                         <div className="text-sm text-gray-500">Next inspection: {location.nextInspection}</div>

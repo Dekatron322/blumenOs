@@ -8,7 +8,7 @@ import { motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import AssetManagementInfo from "components/AssetManagementInfo/AssetManagementInfo"
+import OutageManagementInfo from "components/OutageManagementInfo/OutageManagementInfo"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -113,7 +113,7 @@ const TableSkeleton = () => {
           <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+                <div className="size-12 rounded-full bg-gray-200"></div>
                 <div>
                   <div className="h-5 w-32 rounded bg-gray-200"></div>
                   <div className="mt-1 flex gap-2">
@@ -265,36 +265,36 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock asset data
-const generateAssetData = () => {
+// Generate mock outage management data
+const generateOutageData = () => {
   return {
-    totalTransformers: 247,
-    operationalTransformers: 215,
-    activeFeeders: 48,
-    operationalFeeders: 45,
-    substations: 12,
-    operationalSubstations: 12,
-    assetsUnderMaintenance: 15,
-    maintenanceStatus: "Scheduled work",
+    activeOutages: 8,
+    resolvedOutages: 45,
+    scheduledMaintenance: 12,
+    emergencyRepairs: 3,
+    affectedCustomers: 1250,
+    averageResolutionTime: 4.2,
+    systemAvailability: 99.2,
+    maintenanceStatus: "In progress",
   }
 }
 
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [assetData, setAssetData] = useState(generateAssetData())
+  const [outageData, setOutageData] = useState(generateOutageData())
 
   // Use mock data
   const {
-    totalTransformers,
-    operationalTransformers,
-    activeFeeders,
-    operationalFeeders,
-    substations,
-    operationalSubstations,
-    assetsUnderMaintenance,
+    activeOutages,
+    resolvedOutages,
+    scheduledMaintenance,
+    emergencyRepairs,
+    affectedCustomers,
+    averageResolutionTime,
+    systemAvailability,
     maintenanceStatus,
-  } = assetData
+  } = outageData
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -303,14 +303,14 @@ export default function MeteringDashboard() {
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after adding customer
-    setAssetData(generateAssetData())
+    // Refresh data after reporting outage
+    setOutageData(generateOutageData())
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
     setTimeout(() => {
-      setAssetData(generateAssetData())
+      setOutageData(generateOutageData())
       setIsLoading(false)
     }, 1000)
   }
@@ -324,8 +324,8 @@ export default function MeteringDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Asset Management</h4>
-                <p>Network infrastructure and equipment tracking</p>
+                <h4 className="text-2xl font-semibold">Outage Management</h4>
+                <p>Track and manage power outages across the network</p>
               </div>
 
               <motion.div
@@ -339,7 +339,7 @@ export default function MeteringDashboard() {
                   className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
                 >
                   <PlusIcon />
-                  Install Meter
+                  Report Outage
                 </button>
               </motion.div>
             </div>
@@ -365,53 +365,55 @@ export default function MeteringDashboard() {
                       <div className="flex w-full max-sm:flex-col">
                         <div className="w-full">
                           <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Total Transformers Card */}
+                            {/* Active Outages Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-blue-600">
+                                <div className="text-red-600">
                                   <TokenGeneratedIcon />
                                 </div>
-                                <span className="font-medium">Total Transformers</span>
+                                <span className="font-medium">Active Outages</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(totalTransformers)}</p>
+                                  <p className="text-grey-200">Current:</p>
+                                  <p className="text-secondary text-xl font-bold">{formatNumber(activeOutages)}</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Operational:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(operationalTransformers)}</p>
+                                  <p className="text-grey-200">Resolved Today:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(resolvedOutages)}</p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Active Feeders Card */}
+                            {/* Maintenance Activities Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
+                                <div className="text-yellow-600">
                                   <MetersProgrammedIcon />
                                 </div>
-                                <span className="font-medium">Active Feeders</span>
+                                <span className="font-medium">Maintenance Activities</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(activeFeeders)}</p>
+                                  <p className="text-grey-200">Scheduled:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(scheduledMaintenance)}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Operational:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(operationalFeeders)}</p>
+                                  <p className="text-grey-200">Emergency:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(emergencyRepairs)}</p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Substations Card */}
+                            {/* System Performance Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
@@ -420,40 +422,40 @@ export default function MeteringDashboard() {
                                 <div className="text-green-600">
                                   <VendingIcon />
                                 </div>
-                                <span className="font-medium">Substations</span>
+                                <span className="font-medium">System Performance</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(substations)}</p>
+                                  <p className="text-grey-200">Availability:</p>
+                                  <p className="text-secondary text-xl font-bold">{systemAvailability}%</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
+                                  <p className="text-grey-200">Avg Resolution:</p>
                                   <div className="flex items-center gap-1">
                                     <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">All operational</p>
+                                    <p className="text-secondary font-medium">{averageResolutionTime}h</p>
                                   </div>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Assets Under Maintenance Card */}
+                            {/* Customer Impact Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-yellow-600">
+                                <div className="text-orange-600">
                                   <TamperIcon />
                                 </div>
-                                <span className="font-medium">Under Maintenance</span>
+                                <span className="font-medium">Customer Impact</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Assets:</p>
+                                  <p className="text-grey-200">Affected:</p>
                                   <div className="flex gap-1">
                                     <p className="text-secondary text-xl font-bold">
-                                      {formatNumber(assetsUnderMaintenance)}
+                                      {formatNumber(affectedCustomers)}
                                     </p>
                                     <ArrowIcon />
                                   </div>
@@ -475,7 +477,7 @@ export default function MeteringDashboard() {
                       transition={{ duration: 0.5, delay: 0.3 }}
                       className="mt-6"
                     >
-                      <AssetManagementInfo />
+                      <OutageManagementInfo />
                     </motion.div>
                   </>
                 )}

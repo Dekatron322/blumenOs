@@ -3,12 +3,11 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
-
 import { motion } from "framer-motion"
-import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import MeteringInfo from "components/MeteringInfo/MeteringInfo"
+import { MetersProgrammedIcon, PlayIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import OutageManagementInfo from "components/OutageManagementInfo/OutageManagementInfo"
+import BillingInfo from "components/BillingInfo/BillingInfo"
+import { ButtonModule } from "components/ui/Button/Button"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -113,7 +112,7 @@ const TableSkeleton = () => {
           <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+                <div className="size-12 rounded-full bg-gray-200"></div>
                 <div>
                   <div className="h-5 w-32 rounded bg-gray-200"></div>
                   <div className="mt-1 flex gap-2">
@@ -265,36 +264,24 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock outage management data
-const generateOutageData = () => {
+// Generate mock meter data
+const generateMeterData = () => {
   return {
-    activeOutages: 8,
-    resolvedOutages: 45,
-    scheduledMaintenance: 12,
-    emergencyRepairs: 3,
-    affectedCustomers: 1250,
-    averageResolutionTime: 4.2,
-    systemAvailability: 99.2,
-    maintenanceStatus: "In progress",
+    smartMeters: 89420,
+    conventionalMeters: 29514,
+    readSuccessRate: 94.2,
+    alerts: 847,
+    totalMeters: 89420 + 29514,
   }
 }
 
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [outageData, setOutageData] = useState(generateOutageData())
+  const [meterData, setMeterData] = useState(generateMeterData())
 
   // Use mock data
-  const {
-    activeOutages,
-    resolvedOutages,
-    scheduledMaintenance,
-    emergencyRepairs,
-    affectedCustomers,
-    averageResolutionTime,
-    systemAvailability,
-    maintenanceStatus,
-  } = outageData
+  const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -303,14 +290,14 @@ export default function MeteringDashboard() {
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after reporting outage
-    setOutageData(generateOutageData())
+    // Refresh data after adding customer
+    setMeterData(generateMeterData())
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
     setTimeout(() => {
-      setOutageData(generateOutageData())
+      setMeterData(generateMeterData())
       setIsLoading(false)
     }, 1000)
   }
@@ -324,8 +311,8 @@ export default function MeteringDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Outage Management</h4>
-                <p>Track and manage power outages across the network</p>
+                <h4 className="text-2xl font-semibold">Billing Engine</h4>
+                <p>Tariff management, bill generation, and billing cycles</p>
               </div>
 
               <motion.div
@@ -334,13 +321,9 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <button
-                  onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
-                >
-                  <PlusIcon />
-                  Report Outage
-                </button>
+                <ButtonModule variant="outline" size="md" className="mt-2" icon={<PlayIcon />}>
+                  Start Billing Run
+                </ButtonModule>
               </motion.div>
             </div>
 
@@ -354,7 +337,7 @@ export default function MeteringDashboard() {
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Asset Management Dashboard
+                  // Loaded State - Redesigned Metering Dashboard
                   <>
                     <motion.div
                       className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
@@ -365,55 +348,59 @@ export default function MeteringDashboard() {
                       <div className="flex w-full max-sm:flex-col">
                         <div className="w-full">
                           <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Active Outages Card */}
+                            {/* Smart Meters Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-red-600">
+                                <div className="text-blue-600">
                                   <TokenGeneratedIcon />
                                 </div>
-                                <span className="font-medium">Active Outages</span>
+                                <span className="font-medium">Smart Meters</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Current:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(activeOutages)}</p>
+                                  <p className="text-grey-200">Installed:</p>
+                                  <p className="text-secondary text-xl font-bold">{formatNumber(smartMeters)}</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Resolved Today:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(resolvedOutages)}</p>
+                                  <p className="text-grey-200">Percentage:</p>
+                                  <p className="text-secondary font-medium">
+                                    {totalMeters > 0 ? `${Math.round((smartMeters / totalMeters) * 100)}%` : "0%"}
+                                  </p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Maintenance Activities Card */}
+                            {/* Conventional Meters Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-yellow-600">
+                                <div className="text-green-600">
                                   <MetersProgrammedIcon />
                                 </div>
-                                <span className="font-medium">Maintenance Activities</span>
+                                <span className="font-medium">Conventional</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Scheduled:</p>
-                                  <p className="text-secondary text-xl font-bold">
-                                    {formatNumber(scheduledMaintenance)}
-                                  </p>
+                                  <p className="text-grey-200">Installed:</p>
+                                  <p className="text-secondary text-xl font-bold">{formatNumber(conventionalMeters)}</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Emergency:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(emergencyRepairs)}</p>
+                                  <p className="text-grey-200">Percentage:</p>
+                                  <p className="text-secondary font-medium">
+                                    {totalMeters > 0
+                                      ? `${Math.round((conventionalMeters / totalMeters) * 100)}%`
+                                      : "0%"}
+                                  </p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* System Performance Card */}
+                            {/* Read Success Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
@@ -422,47 +409,61 @@ export default function MeteringDashboard() {
                                 <div className="text-green-600">
                                   <VendingIcon />
                                 </div>
-                                <span className="font-medium">System Performance</span>
+                                <span className="font-medium">Read Success</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Availability:</p>
-                                  <p className="text-secondary text-xl font-bold">{systemAvailability}%</p>
+                                  <p className="text-grey-200">Success Rate:</p>
+                                  <p className="text-secondary text-xl font-bold">{readSuccessRate}%</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Avg Resolution:</p>
+                                  <p className="text-grey-200">Status:</p>
                                   <div className="flex items-center gap-1">
-                                    <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">{averageResolutionTime}h</p>
+                                    <div
+                                      className={`size-2 rounded-full ${
+                                        readSuccessRate >= 90
+                                          ? "bg-green-500"
+                                          : readSuccessRate >= 80
+                                          ? "bg-yellow-500"
+                                          : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <p className="text-secondary font-medium">
+                                      {readSuccessRate >= 90
+                                        ? "Excellent"
+                                        : readSuccessRate >= 80
+                                        ? "Good"
+                                        : "Needs Attention"}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Customer Impact Card */}
+                            {/* Alerts Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-orange-600">
+                                <div className="text-red-600">
                                   <TamperIcon />
                                 </div>
-                                <span className="font-medium">Customer Impact</span>
+                                <span className="font-medium">Alerts</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Affected:</p>
+                                  <p className="text-grey-200">Active Alerts:</p>
                                   <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">
-                                      {formatNumber(affectedCustomers)}
-                                    </p>
+                                    <p className="text-secondary text-xl font-bold">{formatNumber(alerts)}</p>
                                     <ArrowIcon />
                                   </div>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
-                                  <p className="text-secondary font-medium">{maintenanceStatus}</p>
+                                  <p className="text-grey-200">Trend:</p>
+                                  <p className="text-secondary font-medium">
+                                    <span className="text-red-500">↑ 12%</span> from last week
+                                  </p>
                                 </div>
                               </div>
                             </motion.div>
@@ -471,13 +472,64 @@ export default function MeteringDashboard() {
                       </div>
                     </motion.div>
 
+                    {/* Additional Metrics Summary
+                    <motion.div
+                      className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      <div className="rounded-lg bg-blue-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">Total Meters</p>
+                            <p className="text-2xl font-bold text-blue-900">{formatNumber(totalMeters)}</p>
+                          </div>
+                          <div className="rounded-full bg-blue-100 p-2">
+                            <SmartMeterIcon />
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-blue-600">All installed meters in the system</p>
+                      </div>
+
+                      <div className="rounded-lg bg-green-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-green-800">AMI Coverage</p>
+                            <p className="text-2xl font-bold text-green-900">
+                              {totalMeters > 0 ? Math.round((smartMeters / totalMeters) * 100) : 0}%
+                            </p>
+                          </div>
+                          <div className="rounded-full bg-green-100 p-2">
+                            <SuccessIcon />
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-green-600">Advanced Metering Infrastructure penetration</p>
+                      </div>
+
+                      <div className="rounded-lg bg-orange-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-orange-800">Avg. Daily Reads</p>
+                            <p className="text-2xl font-bold text-orange-900">
+                              {formatNumber(Math.round(totalMeters * 0.87))}
+                            </p>
+                          </div>
+                          <div className="rounded-full bg-orange-100 p-2">
+                            <ConventionalMeterIcon />
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-orange-600">Successful meter readings per day</p>
+                      </div>
+                    </motion.div> */}
+
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.3 }}
                       className="mt-6"
                     >
-                      <OutageManagementInfo />
+                      <BillingInfo />
                     </motion.div>
                   </>
                 )}
