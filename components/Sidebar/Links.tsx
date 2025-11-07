@@ -55,9 +55,15 @@ const links: LinkItem[] = [
     icon: TokenIcon,
   },
   {
-    name: "Collections & Payments",
+    name: "Payments",
     href: "/payment",
     icon: PaymentIcon,
+    children: [
+      { name: "Overview", href: "/payment/overview" },
+      { name: "All Payment", href: "/payment/all-payment" },
+      { name: "Duning Mgt", href: "/payment/duning-mgt" },
+      { name: "Disputes", href: "/payment/disputes" },
+    ],
   },
   {
     name: "Agent Management",
