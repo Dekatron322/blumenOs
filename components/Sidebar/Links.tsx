@@ -106,6 +106,12 @@ const links: LinkItem[] = [
     name: "Analytics & Reports",
     href: "/analytics",
     icon: AnalyticsIcon,
+    children: [
+      { name: "Overview", href: "/analytics/overview" },
+      { name: "Revenue Analytics", href: "/analytics/revenue-analytics" },
+      { name: "Consumption Analytics", href: "/analytics/consumption-analytics" },
+      { name: "Performance Analytics", href: "/analytics/performance-analytics" },
+    ],
   },
   {
     name: "Field Enumeration",
@@ -116,6 +122,12 @@ const links: LinkItem[] = [
     name: "Complaince & Audit",
     href: "/complaince",
     icon: AuditIcon,
+    children: [
+      { name: "Overview", href: "/complaince/overview" },
+      { name: "Audit Trails", href: "/complaince/audit-trails" },
+      { name: "Complaince Checks", href: "/complaince/complaince-checks" },
+      { name: "NERC Reports", href: "/complaince/nerc-reports" },
+    ],
   },
 ]
 
