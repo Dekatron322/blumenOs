@@ -122,6 +122,12 @@ const links: LinkItem[] = [
     name: "Complaince & Audit",
     href: "/complaince",
     icon: AuditIcon,
+    children: [
+      { name: "Overview", href: "/complaince/overview" },
+      { name: "Audit Trails", href: "/complaince/audit-trails" },
+      { name: "Complaince Checks", href: "/complaince/complaince-checks" },
+      { name: "NERC Reports", href: "/complaince/nerc-reports" },
+    ],
   },
 ]
 
