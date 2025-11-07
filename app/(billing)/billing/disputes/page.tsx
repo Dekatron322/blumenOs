@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon, CycleIcon, StatusIcon } from "components/Icons/Icons"
+import { PlusIcon, UserIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
@@ -771,14 +771,14 @@ const PostpaidBillDisputes: React.FC = () => {
                           <table className="w-full min-w-[1400px] border-separate border-spacing-0 text-left">
                             <thead className="bg-gray-50">
                               <tr>
-                                <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   <div className="flex items-center gap-2">
                                     <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
                                     Customer
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("billingCycle")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -786,7 +786,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("disputedAmount")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -794,7 +794,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("status")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -802,7 +802,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("disputeType")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -810,7 +810,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("priority")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -818,7 +818,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("customerType")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -826,7 +826,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("submittedDate")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -834,7 +834,7 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("dueDate")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -842,14 +842,14 @@ const PostpaidBillDisputes: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("assignedTo")}
                                 >
                                   <div className="flex items-center gap-2">
                                     Assigned To <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
-                                <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   Actions
                                 </th>
                               </tr>

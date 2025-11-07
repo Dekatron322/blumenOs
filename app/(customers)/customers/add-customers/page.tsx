@@ -815,7 +815,7 @@ const AddCustomerPage = () => {
                       {Object.keys(formErrors).length > 0 && (
                         <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
                           <div className="flex">
-                            <div className="flex-shrink-0">
+                            <div className="shrink-0">
                               <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
                                 <path
                                   fillRule="evenodd"
@@ -962,7 +962,7 @@ const AddCustomerPage = () => {
                     {csvErrors.length > 0 && (
                       <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
                         <div className="flex">
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                               <path
                                 fillRule="evenodd"
@@ -1054,7 +1054,7 @@ const AddCustomerPage = () => {
                   className="mt-6 rounded-lg bg-blue-50 p-6"
                 >
                   <div className="flex items-start">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <svg className="size-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                           strokeLinecap="round"

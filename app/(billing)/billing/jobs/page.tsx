@@ -763,14 +763,14 @@ const BillingJobs: React.FC = () => {
                           <table className="w-full min-w-[1400px] border-separate border-spacing-0 text-left">
                             <thead className="bg-gray-50">
                               <tr>
-                                <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   <div className="flex items-center gap-2">
                                     <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
                                     Job Name
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("jobType")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -778,7 +778,7 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("status")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -786,7 +786,7 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("priority")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -794,7 +794,7 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("progress")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -802,7 +802,7 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("billingCycle")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -810,7 +810,7 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("initiatedBy")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -818,7 +818,7 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("scheduledTime")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -826,14 +826,14 @@ const BillingJobs: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("processedRecords")}
                                 >
                                   <div className="flex items-center gap-2">
                                     Records <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
-                                <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   Actions
                                 </th>
                               </tr>
