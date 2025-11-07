@@ -36,6 +36,7 @@ const links: LinkItem[] = [
     children: [
       { name: "View Customers", href: "/customers/view-customers" },
       { name: "Add Customers", href: "/customers/add-customers" },
+      { name: "Field Enumeration", href: "/customers/field-enumeration" },
     ],
   },
   {
