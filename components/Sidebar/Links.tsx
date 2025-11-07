@@ -84,10 +84,16 @@ const links: LinkItem[] = [
     icon: FieldIcon,
   },
   {
+    name: "Status Map",
+    href: "/status-map",
+    icon: PaymentIcon,
+  },
+  {
     name: "Complaince & Audit",
     href: "/complaince",
     icon: AuditIcon,
   },
+ 
 ]
 
 interface LinksProps {
