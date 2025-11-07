@@ -43,7 +43,14 @@ const links: LinkItem[] = [
     name: "Postpaid Billing",
     href: "/billing",
     icon: BillingIcon,
+    children: [
+      { name: "Overview", href: "/billing/overview" },
+      { name: "Bills", href: "/billing/bills" },
+      { name: "Disputes", href: "/billing/disputes" },
+      { name: "Billing Jobs", href: "/billing/jobs" },
+    ],
   },
+
   {
     name: "Metering & AMI",
     href: "/metering",
