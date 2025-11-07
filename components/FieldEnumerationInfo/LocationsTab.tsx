@@ -663,7 +663,7 @@ const LocationsTab: React.FC = () => {
                     >
                       <td className="whitespace-nowrap border-b p-4">
                         <div className="flex items-center">
-                          <div className="size-10 flex-shrink-0">
+                          <div className="size-10 shrink-0">
                             <div className="flex size-10 items-center justify-center rounded-full bg-green-100">
                               <span className="text-sm font-medium text-green-600">
                                 {location.name

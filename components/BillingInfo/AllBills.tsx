@@ -2,15 +2,7 @@
 import React, { useState } from "react"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
-import {
-  BillsIcon,
-  CycleIcon,
-  DateIcon,
-  RevenueGeneratedIcon,
-  StatusIcon,
-  MapIcon,
-  UserIcon,
-} from "components/Icons/Icons"
+import { MapIcon, UserIcon } from "components/Icons/Icons"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -200,33 +192,19 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
               <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Customer
-                    </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Customer</th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                       Billing Cycle
                     </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Amount
-                    </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Due Date
-                    </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Amount</th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Status</th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Due Date</th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                       Customer Type
                     </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Location
-                    </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Consumption
-                    </th>
-                    <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Location</th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Consumption</th>
+                    <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">

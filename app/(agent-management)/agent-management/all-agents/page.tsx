@@ -588,14 +588,14 @@ const AllAgents: React.FC = () => {
                         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                           <thead>
                             <tr>
-                              <th className="whitespace-nowrap border-b border-t p-4 text-sm">
+                              <th className="whitespace-nowrap border-y p-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <MdOutlineCheckBoxOutlineBlank className="text-lg" />
                                   Agent Name
                                 </div>
                               </th>
                               <th
-                                className="text-500 cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="text-500 cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("status")}
                               >
                                 <div className="flex items-center gap-2">
@@ -603,7 +603,7 @@ const AllAgents: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("phone")}
                               >
                                 <div className="flex items-center gap-2">
@@ -611,7 +611,7 @@ const AllAgents: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("location")}
                               >
                                 <div className="flex items-center gap-2">
@@ -619,7 +619,7 @@ const AllAgents: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("dailyCollection")}
                               >
                                 <div className="flex items-center gap-2">
@@ -627,7 +627,7 @@ const AllAgents: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("vendsToday")}
                               >
                                 <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ const AllAgents: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("floatBalance")}
                               >
                                 <div className="flex items-center gap-2">
@@ -643,14 +643,14 @@ const AllAgents: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("performance")}
                               >
                                 <div className="flex items-center gap-2">
                                   Performance <RxCaretSort />
                                 </div>
                               </th>
-                              <th className="whitespace-nowrap border-b border-t p-4 text-sm">
+                              <th className="whitespace-nowrap border-y p-4 text-sm">
                                 <div className="flex items-center gap-2">Actions</div>
                               </th>
                             </tr>

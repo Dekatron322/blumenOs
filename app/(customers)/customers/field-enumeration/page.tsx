@@ -643,14 +643,14 @@ const AllEnumerations: React.FC = () => {
                         <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
                           <thead>
                             <tr>
-                              <th className="whitespace-nowrap border-b border-t p-4 text-sm">
+                              <th className="whitespace-nowrap border-y p-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <MdOutlineCheckBoxOutlineBlank className="text-lg" />
                                   Field Agent
                                 </div>
                               </th>
                               <th
-                                className="text-500 cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="text-500 cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("location")}
                               >
                                 <div className="flex items-center gap-2">
@@ -658,7 +658,7 @@ const AllEnumerations: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("date")}
                               >
                                 <div className="flex items-center gap-2">
@@ -666,7 +666,7 @@ const AllEnumerations: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("metersEnumerated")}
                               >
                                 <div className="flex items-center gap-2">
@@ -674,7 +674,7 @@ const AllEnumerations: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("customersRegistered")}
                               >
                                 <div className="flex items-center gap-2">
@@ -682,7 +682,7 @@ const AllEnumerations: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("status")}
                               >
                                 <div className="flex items-center gap-2">
@@ -690,7 +690,7 @@ const AllEnumerations: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("progress")}
                               >
                                 <div className="flex items-center gap-2">
@@ -698,14 +698,14 @@ const AllEnumerations: React.FC = () => {
                                 </div>
                               </th>
                               <th
-                                className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm"
+                                className="cursor-pointer whitespace-nowrap border-y p-4 text-sm"
                                 onClick={() => toggleSort("qualityScore")}
                               >
                                 <div className="flex items-center gap-2">
                                   Quality Score <RxCaretSort />
                                 </div>
                               </th>
-                              <th className="whitespace-nowrap border-b border-t p-4 text-sm">
+                              <th className="whitespace-nowrap border-y p-4 text-sm">
                                 <div className="flex items-center gap-2">Actions</div>
                               </th>
                             </tr>

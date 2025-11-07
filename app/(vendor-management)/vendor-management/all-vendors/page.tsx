@@ -620,14 +620,14 @@ const AllVendors: React.FC = () => {
                           <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
                             <thead className="bg-gray-50">
                               <tr>
-                                <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   <div className="flex items-center gap-2">
                                     <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
                                     Vendor Name
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("status")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("phone")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -643,7 +643,7 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("location")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -651,7 +651,7 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("dailySales")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -659,7 +659,7 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("transactionsToday")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -667,7 +667,7 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("stockBalance")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -675,7 +675,7 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("performance")}
                                 >
                                   <div className="flex items-center gap-2">
@@ -683,14 +683,14 @@ const AllVendors: React.FC = () => {
                                   </div>
                                 </th>
                                 <th
-                                  className="cursor-pointer whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
                                   onClick={() => toggleSort("businessType")}
                                 >
                                   <div className="flex items-center gap-2">
                                     Business Type <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
-                                <th className="whitespace-nowrap border-b border-t p-4 text-sm font-semibold text-gray-900">
+                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   Actions
                                 </th>
                               </tr>
