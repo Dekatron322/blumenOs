@@ -553,7 +553,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[900px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative w-[650px] max-w-4xl  rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
@@ -590,7 +590,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
           </div>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto">
+        <div className="max-h-[70vh] ">
           {activeTab === "single" ? (
             <div className="mt-6 grid grid-cols-2 gap-6 px-6 pb-6">
               {/* Single Entry Form */}
