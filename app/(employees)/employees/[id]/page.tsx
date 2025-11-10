@@ -5,19 +5,19 @@ import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   AlertCircle,
+  Briefcase,
+  Calendar,
   CheckCircle,
   Clock,
+  DollarSign,
   Edit3,
   Mail,
   MapPin,
   Phone,
   Power,
   Share2,
-  User,
-  Calendar,
-  Briefcase,
-  DollarSign,
   Shield,
+  User,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
@@ -30,10 +30,10 @@ import {
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
+  NotificationOutlineIcon,
   PhoneOutlineIcon,
   SettingOutlineIcon,
   UpdateUserOutlineIcon,
-  NotificationOutlineIcon,
 } from "components/Icons/Icons"
 
 interface Employee {
