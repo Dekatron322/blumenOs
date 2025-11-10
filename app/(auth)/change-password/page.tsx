@@ -4,17 +4,10 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { PasswordInputModule } from "components/ui/Input/PasswordInput"
 import { ButtonModule } from "components/ui/Button/Button"
-import { FormInputModule } from "components/ui/Input/EmailInput"
 import { notify } from "components/ui/Notification/Notification"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import {
-  initializeAuth,
-  loginUser,
-  changePassword,
-  clearChangePasswordStatus,
-  resetMustChangePassword,
-} from "lib/redux/authSlice"
+import { changePassword, clearChangePasswordStatus, initializeAuth, resetMustChangePassword } from "lib/redux/authSlice"
 import { motion } from "framer-motion"
 
 const ChangePassword: React.FC = () => {
