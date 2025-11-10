@@ -33,4 +33,3 @@ const StatusMapInfo = () => {
 }
 
 export default StatusMapInfo
-

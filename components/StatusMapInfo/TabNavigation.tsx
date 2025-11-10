@@ -67,4 +67,3 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }
 }
 
 export default TabNavigation
-
