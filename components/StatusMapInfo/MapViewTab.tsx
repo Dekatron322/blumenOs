@@ -30,10 +30,7 @@ const MapViewTab = () => {
         <div className="rounded-md border bg-white p-4">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold">Filters</h3>
-            <button
-              onClick={handleReset}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
+            <button onClick={handleReset} className="text-sm text-blue-600 hover:text-blue-800">
               Reset
             </button>
           </div>
@@ -43,7 +40,7 @@ const MapViewTab = () => {
               <label className="mb-2 block text-sm font-medium">State</label>
               <div className="mt-3">
                 <div
-                  className="relative h-[46px] w-full cursor-pointer rounded-lg border px-3 max-sm:mb-2 modal-style border focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC]"
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setStateDropdownOpen(!stateDropdownOpen)
                     setFeederDropdownOpen(false)
@@ -91,7 +88,7 @@ const MapViewTab = () => {
               <label className="mb-2 block text-sm font-medium">Feeder</label>
               <div className="mt-3">
                 <div
-                  className="relative h-[46px] w-full cursor-pointer rounded-lg border px-3 max-sm:mb-2 modal-style border focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC]"
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setFeederDropdownOpen(!feederDropdownOpen)
                     setStateDropdownOpen(false)
@@ -139,7 +136,7 @@ const MapViewTab = () => {
               <label className="mb-2 block text-sm font-medium">Payment Status</label>
               <div className="mt-3">
                 <div
-                  className="relative h-[46px] w-full cursor-pointer rounded-lg border px-3 max-sm:mb-2 modal-style border focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC]"
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setPaymentStatusDropdownOpen(!paymentStatusDropdownOpen)
                     setStateDropdownOpen(false)
@@ -149,7 +146,9 @@ const MapViewTab = () => {
                   <div className="flex h-[46px] items-center justify-between">
                     <span className="text-sm">{selectedPaymentStatus}</span>
                     <svg
-                      className={`size-4 transition-transform ${paymentStatusDropdownOpen ? "rotate-180" : ""} text-black`}
+                      className={`size-4 transition-transform ${
+                        paymentStatusDropdownOpen ? "rotate-180" : ""
+                      } text-black`}
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -200,7 +199,7 @@ const MapViewTab = () => {
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
                     customersLayerEnabled ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
@@ -217,7 +216,7 @@ const MapViewTab = () => {
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
                     assetsLayerEnabled ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
@@ -232,20 +231,16 @@ const MapViewTab = () => {
         {/* Map Display */}
         <div className="relative h-[600px] w-full overflow-hidden rounded-md bg-gray-100">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <svg
-            viewBox="0 0 1000 600"
-            className="h-full w-full"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg viewBox="0 0 1000 600" className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
             {/* Background - Simplified world map focusing on West Africa */}
             <rect width="1000" height="600" fill="#e5e7eb" />
-            
+
             {/* Water bodies */}
             <path
               d="M0,0 L1000,0 L1000,600 L0,600 Z M200,150 Q300,200 400,150 T600,150 L800,200 L850,350 L700,500 L400,550 L200,500 Z"
               fill="#cbd5e1"
             />
-            
+
             {/* Land areas - Simplified West Africa */}
             <path
               d="M200,150 Q300,100 400,150 T600,150 L800,200 L850,350 L700,500 L400,550 L200,500 Z"
@@ -253,7 +248,7 @@ const MapViewTab = () => {
               stroke="#d1d5db"
               strokeWidth="2"
             />
-            
+
             {/* Feeder Zones - Green/Red gradients based on collection rate */}
             {customersLayerEnabled && (
               <>
@@ -263,7 +258,7 @@ const MapViewTab = () => {
                 <ellipse cx="450" cy="400" rx="60" ry="50" fill="rgba(34,197,94,0.5)" />
               </>
             )}
-            
+
             {/* Customer markers */}
             {customersLayerEnabled && (
               <>
@@ -273,47 +268,42 @@ const MapViewTab = () => {
                 <circle cx="480" cy="270" r="4" fill="#22c55e" />
                 <circle cx="520" cy="290" r="4" fill="#22c55e" />
                 <circle cx="440" cy="390" r="4" fill="#22c55e" />
-                
+
                 {/* Unpaid customers - Red dots */}
                 <circle cx="580" cy="310" r="4" fill="#ef4444" />
                 <circle cx="620" cy="330" r="4" fill="#ef4444" />
                 <circle cx="590" cy="350" r="4" fill="#ef4444" />
-                
+
                 {/* Partial customers - Orange dots */}
                 <circle cx="350" cy="350" r="4" fill="#f97316" />
                 <circle cx="470" cy="360" r="4" fill="#f97316" />
-                
+
                 {/* Unknown customers - Grey dots */}
                 <circle cx="300" cy="280" r="4" fill="#6b7280" />
               </>
             )}
-            
+
             {/* Asset markers */}
             {assetsLayerEnabled && (
               <>
                 {/* Feeder - Yellow lightning */}
                 <g transform="translate(500, 250)">
-                  <path
-                    d="M0,-10 L5,0 L2,0 L7,10 L2,10 L-3,0 L0,0 Z"
-                    fill="#eab308"
-                    stroke="#ca8a04"
-                    strokeWidth="1"
-                  />
+                  <path d="M0,-10 L5,0 L2,0 L7,10 L2,10 L-3,0 L0,0 Z" fill="#eab308" stroke="#ca8a04" strokeWidth="1" />
                 </g>
-                
+
                 {/* Substation - Grey building */}
                 <g transform="translate(450, 350)">
                   <rect x="-8" y="-6" width="16" height="12" fill="#6b7280" />
                   <rect x="-6" y="-4" width="4" height="3" fill="#9ca3af" />
                   <rect x="2" y="-4" width="4" height="3" fill="#9ca3af" />
                 </g>
-                
+
                 {/* Transformer - Brown */}
                 <g transform="translate(550, 400)">
                   <rect x="-6" y="-8" width="12" height="16" fill="#92400e" />
                   <circle cx="0" cy="0" r="3" fill="#a16207" />
                 </g>
-                
+
                 {/* Service Center - Grey building with antenna */}
                 <g transform="translate(600, 280)">
                   <rect x="-8" y="-6" width="16" height="12" fill="#6b7280" />
@@ -327,51 +317,18 @@ const MapViewTab = () => {
           {/* Map Controls */}
           <div className="absolute right-4 top-4 flex flex-col gap-2 rounded-md border bg-white p-1 shadow-lg">
             <button className="rounded p-1 hover:bg-gray-100">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 4V20M4 12H20"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
             <button className="rounded p-1 hover:bg-gray-100">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 5V19M5 12H19"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
             <button className="rounded p-1 hover:bg-gray-100">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 19V5M5 12H19"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 19V5M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -406,11 +363,7 @@ const MapViewTab = () => {
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M0,-10 L5,0 L2,0 L7,10 L2,10 L-3,0 L0,0 Z"
-                        fill="#eab308"
-                        transform="translate(12,12)"
-                      />
+                      <path d="M0,-10 L5,0 L2,0 L7,10 L2,10 L-3,0 L0,0 Z" fill="#eab308" transform="translate(12,12)" />
                     </svg>
                     <span>Feeder</span>
                   </div>
@@ -451,4 +404,3 @@ const MapViewTab = () => {
 }
 
 export default MapViewTab
-
