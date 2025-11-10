@@ -7,7 +7,6 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { useAddCustomerMutation } from "lib/redux/customerSlice"
 import { AddCustomerIcon, RefreshCircleIcon } from "components/Icons/Icons"
 
 interface CustomerFormData {
@@ -37,7 +36,6 @@ interface CSVCustomer {
 }
 
 const AddCustomerPage = () => {
-  const [addCustomer, { isLoading }] = useAddCustomerMutation()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -188,22 +186,6 @@ const AddCustomerPage = () => {
     setIsSubmitting(true)
 
     try {
-      const result = await addCustomer({
-        accountNumber: formData.accountNumber,
-        customerName: formData.customerName,
-        customerType: formData.customerType as "PREPAID" | "POSTPAID",
-        serviceBand: formData.serviceBand,
-        tariffClass: formData.tariffClass,
-        region: formData.region,
-        businessUnit: formData.businessUnit,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        status: "ACTIVE",
-      }).unwrap()
-
-      console.log("Customer added successfully:", result)
-
       notify("success", "Customer created successfully", {
         description: `${formData.customerName} (${formData.accountNumber}) has been added to the system`,
         duration: 5000,

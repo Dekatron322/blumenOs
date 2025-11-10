@@ -3,8 +3,6 @@
 import React, { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
-
-import { useAddCustomerMutation } from "lib/redux/customerSlice"
 import { FormSelectModule } from "../Input/FormSelectModule"
 import { ButtonModule } from "../Button/Button"
 import { FormInputModule } from "../Input/Input"
@@ -30,12 +28,12 @@ interface CSVCustomer {
 }
 
 const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestClose, onSuccess }) => {
-  const [addCustomer, { isLoading }] = useAddCustomerMutation()
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVCustomer[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
   const [isBulkLoading, setIsBulkLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -338,9 +336,6 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
         duration: 6000,
       })
 
-      // In a real implementation, you would send the data to your API here:
-      // await bulkAddCustomers(csvData).unwrap()
-
       // Reset form
       setCsvFile(null)
       setCsvData([])
@@ -372,22 +367,11 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
     }
 
     try {
-      const result = await addCustomer({
-        accountNumber: formData.accountNumber,
-        customerName: formData.customerName,
-        customerType: formData.customerType as "PREPAID" | "POSTPAID",
-        serviceBand: formData.serviceBand,
-        tariffClass: formData.tariffClass,
-        region: formData.region,
-        businessUnit: formData.businessUnit,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        status: "ACTIVE",
-      }).unwrap()
+      setIsSubmitting(true)
+      // Simulate processing delay
+      await new Promise((resolve) => setTimeout(resolve, 1200))
 
-      console.log("Customer added successfully:", result)
-
+      // Frontend-only: no API call, just notify success
       notify("success", "Customer created successfully", {
         description: `${formData.customerName} (${formData.accountNumber}) has been added to the system`,
         duration: 5000,
@@ -410,13 +394,8 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
 
       onRequestClose()
       if (onSuccess) onSuccess()
-    } catch (error: any) {
-      console.error("Failed to add customer:", error)
-      const errorMessage = error?.data?.message || "An unexpected error occurred while adding the customer"
-      notify("error", "Failed to add customer", {
-        description: errorMessage,
-        duration: 6000,
-      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -891,7 +870,7 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
             className="flex-1"
             size="lg"
             onClick={onRequestClose}
-            disabled={isLoading || isBulkLoading}
+            disabled={isSubmitting || isBulkLoading}
           >
             Cancel
           </ButtonModule>
@@ -901,9 +880,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
               className="flex-1"
               size="lg"
               onClick={handleSubmit}
-              disabled={!isFormValid() || isLoading}
+              disabled={!isFormValid() || isSubmitting}
             >
-              {isLoading ? "Adding Customer..." : "Add Customer"}
+              {isSubmitting ? "Adding Customer..." : "Add Customer"}
             </ButtonModule>
           ) : (
             <ButtonModule
