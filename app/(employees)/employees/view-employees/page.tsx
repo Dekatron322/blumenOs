@@ -7,11 +7,11 @@ import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
 import { motion } from "framer-motion"
 import {
   AddIcon,
-  PayrollIcon,
-  EmployeeIcon,
   ContractIcon,
-  RefreshCircleIcon,
   DepartmentIcon,
+  EmployeeIcon,
+  PayrollIcon,
+  RefreshCircleIcon,
 } from "components/Icons/Icons"
 import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
