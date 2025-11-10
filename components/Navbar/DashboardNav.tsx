@@ -23,7 +23,7 @@ const DashboardNav = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const [searchText, setSearchText] = useState("")
   const pathname = usePathname()
-  const user = useSelector((state: RootState) => state.auth.user)
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const userDropdownRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(false)
@@ -39,7 +39,7 @@ const DashboardNav = () => {
     setLoading(true)
     try {
       dispatch(logout())
-      router.push("/signin")
+      router.push("/")
     } finally {
       setLoading(false)
       setIsLogoutModalOpen(false)
@@ -67,61 +67,123 @@ const DashboardNav = () => {
     }
   }, [])
 
-  // Dashboard menu items with permission checks
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    const fullName = user?.fullName?.trim()
+    if (fullName) {
+      const names = fullName.split(/\s+/).filter(Boolean)
+      const first = names[0]
+      const second = names[1]
+      if (first && second) {
+        return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase()
+      }
+      return first?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "A"
+    }
+    return user?.email?.charAt(0).toUpperCase() || "A"
+  }
+
+  // Get primary role name
+  const getPrimaryRole = () => {
+    if (user?.roles && user.roles.length > 0) {
+      const roleName = user.roles?.[0]?.name
+      return roleName ?? "Administrator"
+    }
+    return "Administrator"
+  }
+
+  // Check if user has specific privilege
+  const hasPrivilege = (key: string, action?: string): boolean => {
+    if (!user?.privileges) return false
+
+    const privilege = user.privileges.find((p) => p.key === key)
+    if (!privilege) return false
+
+    if (action) {
+      return privilege.actions.includes(action)
+    }
+    return true
+  }
+
+  // Dashboard menu items with privilege-based access control
   // const menuItems = [
   //   {
   //     name: "Dashboard",
   //     path: "/dashboard",
-  //     show: user?.admin?.permission?.canViewDashboard,
+  //     show: hasPrivilege("dashboard", "R"), // Check if user can read dashboard
   //   },
   //   {
   //     name: "Customers",
   //     path: "/customers",
-  //     show: user?.admin?.permission?.canViewUsers,
+  //     show: hasPrivilege("customers", "R"),
   //   },
   //   {
-  //     name: "Transactions",
-  //     path: "/transactions",
-  //     show: user?.admin?.permission?.canViewTransactions,
-  //     dropdown: true,
+  //     name: "Agents",
+  //     path: "/agents",
+  //     show: hasPrivilege("agents", "R"),
   //   },
   //   {
-  //     name: "Crypto",
-  //     path: "/crypto",
-  //     show: user?.admin?.permission?.canViewTransactions,
+  //     name: "Assets",
+  //     path: "/assets",
+  //     show: hasPrivilege("assets", "R"),
   //   },
-  // {
-  //   name: "Virtual Cards",
-  //   path: "/virtual-accounts",
-  //   show: user?.admin?.permission?.canViewTransactions,
-  // },
-  // {
-  //   name: "Tickets & Events",
-  //   path: "/tickets-and-events",
-  //   show: true,
-  // },
+  //   {
+  //     name: "Vendors",
+  //     path: "/vendors",
+  //     show: hasPrivilege("vendors", "R"),
+  //   },
+  //   {
+  //     name: "Payments",
+  //     path: "/payments",
+  //     show: hasPrivilege("payments", "R"),
+  //   },
+  //   {
+  //     name: "Disputes",
+  //     path: "/disputes",
+  //     show: hasPrivilege("disputes", "R"),
+  //   },
+  //   {
+  //     name: "Outages",
+  //     path: "/outages",
+  //     show: hasPrivilege("outages", "R"),
+  //   },
+  //   {
+  //     name: "Maintenance",
+  //     path: "/maintenance",
+  //     show: hasPrivilege("maintenance", "R"),
+  //   },
+  //   {
+  //     name: "Billing",
+  //     path: "/billing",
+  //     show: hasPrivilege("billing-postpaid", "R"),
+  //   },
+  //   {
+  //     name: "User Management",
+  //     path: "/user-management",
+  //     show: hasPrivilege("identity-users", "R"),
+  //   },
   //   {
   //     name: "Role Management",
   //     path: "/role-management",
-  //     show: user?.admin?.permission?.canManageSystemSettings,
+  //     show: hasPrivilege("roles", "R"),
   //   },
   //   {
-  //     name: "Fees",
-  //     path: "/fees",
-  //     show: user?.admin?.permission?.canManageSystemSettings,
+  //     name: "Notifications",
+  //     path: "/notifications",
+  //     show: hasPrivilege("notifications", "R"),
   //   },
-
   //   {
-  //     name: "Logs",
-  //     path: "/logs",
-  //     show: user?.admin?.isSuperAdmin === true,
+  //     name: "System Settings",
+  //     path: "/system-settings",
+  //     show: hasPrivilege("system-settings", "R"),
   //   },
   // ]
 
-  const transactionTypes = [
-    { name: "Fiat Transactions", path: "/transactions" },
-    { name: "Crypto Transactions", path: "/transactions/crypto" },
-  ]
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/")
+    }
+  }, [isAuthenticated, router])
 
   return (
     <>
@@ -132,82 +194,39 @@ const DashboardNav = () => {
             onChange={(e) => setSearchText(e.target.value)}
             onCancel={handleCancelSearch}
           />
-          <div className=" flex items-center gap-10">
-            {/* {menuItems.map(
+          {/* <div className="flex items-center gap-10">
+            {menuItems.map(
               (item) =>
                 item.show && (
-                  <div key={item.name} className="relative" ref={item.dropdown ? dropdownRef : null}>
-                    {item.dropdown ? (
-                      <div className="relative inline-block text-left">
-                        <button
-                          type="button"
-                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                          className={`inline-flex items-center text-sm font-medium transition-all duration-300 ease-in-out ${
-                            pathname.startsWith("/transactions")
-                              ? "rounded-lg bg-[#e9f0ff] p-3 font-semibold text-[#003F9F]"
-                              : "text-gray-600 hover:text-[#2F6FE3]"
-                          }`}
-                        >
-                          {selectedTransactionType}
-                          <ChevronDown className="ml-1 size-4" />
-                        </button>
-
-                        {isDropdownOpen && (
-                          <div className="absolute left-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <div className="py-1">
-                              {transactionTypes.map((type) => (
-                                <Link
-                                  key={type.name}
-                                  href={type.path}
-                                  onClick={() => {
-                                    setSelectedTransactionType(type.name)
-                                    setIsDropdownOpen(false)
-                                  }}
-                                  className={`block px-4 py-2 text-sm ${
-                                    pathname === type.path
-                                      ? "bg-[#e9f0ff] text-[#003F9F]"
-                                      : "text-gray-700 hover:bg-gray-100"
-                                  }`}
-                                >
-                                  {type.name}
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <Link
-                        href={item.path}
-                        className={`text-sm font-medium transition-all duration-300 ease-in-out ${
-                          pathname === item.path
-                            ? "rounded-lg bg-[#e9f0ff] p-3 font-semibold text-[#003F9F]"
-                            : "text-gray-600 hover:text-[#2F6FE3]"
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    )}
+                  <div key={item.name} className="relative">
+                    <Link
+                      href={item.path}
+                      className={`text-sm font-medium transition-all duration-300 ease-in-out ${
+                        pathname === item.path
+                          ? "rounded-lg bg-[#e9f0ff] p-3 font-semibold text-[#003F9F]"
+                          : "text-gray-600 hover:text-[#2F6FE3]"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
                   </div>
                 )
-            )} */}
-          </div>
+            )}
+          </div> */}
           <div className="flex gap-4">
             <div className="relative flex content-center items-center justify-center gap-5" ref={userDropdownRef}>
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                 className="flex items-center gap-3 rounded-lg bg-gray-100 px-3 py-2 transition-colors hover:bg-gray-200"
               >
-                <div className="flex size-8 items-center justify-center rounded-full bg-[#0a0a0a] text-white">
-                  {user?.firstName ? user.firstName.charAt(0).toUpperCase() : <FiUser />}
+                <div className="flex size-8 items-center justify-center rounded-full bg-[#0a0a0a] font-medium text-white">
+                  {getUserInitials()}
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-sm font-medium text-gray-900">
-                    {user?.firstName && user?.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : user?.email || "Admin User"}
+                    {user?.fullName || user?.email || "Admin User"}
                   </span>
-                  <span className="text-xs text-gray-500">{user?.roles?.[0] || "Administrator"}</span>
+                  <span className="text-xs text-gray-500">{getPrimaryRole()}</span>
                 </div>
                 <ChevronDown
                   className={`size-4 text-gray-500 transition-transform ${isUserDropdownOpen ? "rotate-180" : ""}`}
@@ -216,19 +235,36 @@ const DashboardNav = () => {
 
               {isUserDropdownOpen && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-                  <div className=" pt-1">
+                  <div className="pt-1">
+                    {/* User Info Section */}
                     <div className="overflow-hidden border-b border-gray-100 px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Admin User"}
-                      </p>
+                      <p className="text-sm font-medium text-gray-900">{user?.fullName || "Admin User"}</p>
                       <p className="text-sm text-gray-500">{user?.email}</p>
+                      <p className="mt-1 text-xs text-gray-400">Account ID: {user?.accountId || "N/A"}</p>
+                      {user?.mustChangePassword && (
+                        <div className="mt-2 rounded bg-yellow-50 px-2 py-1">
+                          <p className="text-xs text-yellow-700">Password change required</p>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Profile Link */}
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50"
+                    >
+                      <FiUser className="size-4" />
+                      Profile Settings
+                    </Link>
+
+                    {/* Logout Button */}
                     <button
                       onClick={() => {
                         setIsLogoutModalOpen(true)
                         setIsUserDropdownOpen(false)
                       }}
-                      className="flex w-full items-center gap-2 px-4 py-3  text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-[#FDF3F3]"
+                      className="flex w-full items-center gap-2 px-4 py-3 text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-[#FDF3F3]"
                     >
                       <LogoutIcon />
                       Sign out
@@ -241,33 +277,79 @@ const DashboardNav = () => {
         </div>
       </nav>
 
+      {/* Mobile Navigation */}
       <nav className="sticky top-0 z-50 block border-b bg-[#E9F0FF] px-16 py-4 max-md:px-3 md:hidden">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
             <UltraIcon />
           </Link>
-          <FormatAlignLeftIcon onClick={toggleNav} style={{ cursor: "pointer" }} />
+          <div className="flex items-center gap-4">
+            {/* Mobile User Info */}
+            <div className="flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-full bg-[#0a0a0a] text-sm font-medium text-white">
+                {getUserInitials()}
+              </div>
+            </div>
+            <FormatAlignLeftIcon onClick={toggleNav} style={{ cursor: "pointer" }} />
+          </div>
         </div>
 
+        {/* Mobile Sidebar */}
         <div
-          className={`fixed left-0 top-0 z-50 h-full w-[250px] bg-[#ffffff] transition-transform duration-300 ${
+          className={`fixed left-0 top-0 z-50 h-full w-[250px] bg-white transition-transform duration-300 ${
             isNavOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-end p-4">
-            <RxCross2 className="text-white" onClick={toggleNav} style={{ cursor: "pointer" }} />
+          <div className="flex items-center justify-between border-b p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-8 items-center justify-center rounded-full bg-[#0a0a0a] text-sm font-medium text-white">
+                {getUserInitials()}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">{user?.fullName || "Admin User"}</p>
+                <p className="text-xs text-gray-500">{getPrimaryRole()}</p>
+              </div>
+            </div>
+            <RxCross2 className="cursor-pointer text-gray-500" onClick={toggleNav} />
           </div>
 
           <div className="mt-4 flex flex-col items-start space-y-2 p-4">
             <Links isCollapsed={false} />
 
-            <Link href="/logout" className="fixed bottom-2 mt-10 flex items-center gap-2 pb-4 text-white">
-              <Image src="/Icons/Logout.svg" width={20} height={20} alt="logout" />
-              <p className="mt-1">Sign Out</p>
-            </Link>
+            {/* Mobile Menu Items */}
+            {/* <div className="mt-4 w-full space-y-2">
+              {menuItems.map(
+                (item) =>
+                  item.show && (
+                    <Link
+                      key={item.name}
+                      href={item.path}
+                      onClick={toggleNav}
+                      className={`block w-full rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ease-in-out ${
+                        pathname === item.path ? "bg-[#e9f0ff] text-[#003F9F]" : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  )
+              )}
+            </div> */}
+
+            {/* Mobile Logout */}
+            <button
+              onClick={() => {
+                setIsLogoutModalOpen(true)
+                setIsNavOpen(false)
+              }}
+              className="fixed bottom-4 mt-10 flex items-center gap-2 rounded-lg px-3 py-2 text-red-600 hover:bg-red-50"
+            >
+              <LogoutIcon />
+              <span className="text-sm font-medium">Sign Out</span>
+            </button>
           </div>
         </div>
       </nav>
+
       <LogoutModal
         isOpen={isLogoutModalOpen}
         onRequestClose={() => setIsLogoutModalOpen(false)}
