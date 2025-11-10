@@ -40,6 +40,15 @@ const links: LinkItem[] = [
     ],
   },
   {
+    name: "Employees",
+    href: "/employees",
+    icon: ServiceIcon,
+    children: [
+      { name: "View Employees", href: "/employees/view-employees" },
+      { name: "Add Employees", href: "/employees/add-employees" },
+    ],
+  },
+  {
     name: "Postpaid Billing",
     href: "/billing",
     icon: BillingIcon,
@@ -73,7 +82,7 @@ const links: LinkItem[] = [
     ],
   },
   {
-    name: "Agent Management",
+    name: "Sales Rep",
     href: "/agent-management",
     icon: AgentIcon,
     children: [
@@ -148,7 +157,6 @@ const links: LinkItem[] = [
       { name: "NERC Reports", href: "/complaince/nerc-reports" },
     ],
   },
- 
 ]
 
 interface LinksProps {
@@ -188,7 +196,7 @@ export function Links({ isCollapsed }: LinksProps) {
                 <button
                   type="button"
                   onClick={() => handleExpand(link.name, !isExpanded)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-2"
                 >
                   <div className="flex items-center gap-3">
                     <div
