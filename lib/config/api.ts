@@ -3,8 +3,8 @@ type Environment = "STAGING" | "PRODUCTION"
 
 export const API_CONFIG = {
   // Environment-based base URLs
-  STAGING: "https://api-blumenos-com.onrender.com/api",
-  PRODUCTION: "https://api-blumenos-com.onrender.com/api",
+  STAGING: "https://blumenos.onrender.com",
+  PRODUCTION: "https://blumenos.onrender.com",
 
   // Current environment (change this to switch between staging/production)
   CURRENT_ENV: (process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING") as Environment,
@@ -19,14 +19,9 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: "/auth/login",
-    REFRESH_TOKEN: "/auth/refresh",
-  },
-
-  CUSTOMER: {
-    GET: "/customer",
-    ADD: "/customer",
-    UPDATE: "/customer/:id",
+    LOGIN: "/identity/auth/login",
+    REFRESH_TOKEN: "/identity/auth/refresh",
+    CHANGE_PASSWORD: "/identity/auth/change-password",
   },
 }
 

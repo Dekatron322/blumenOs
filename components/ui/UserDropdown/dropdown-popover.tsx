@@ -48,7 +48,7 @@ const UserDropdown = () => {
     setLoading(true)
     try {
       dispatch(logout())
-      router.push("/signin")
+      router.push("/")
     } finally {
       setLoading(false)
       setIsLogoutModalOpen(false)
@@ -57,9 +57,17 @@ const UserDropdown = () => {
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (!user) return "GU"
-    const { firstName, lastName } = user
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() || "GU"
+    const fullName = user?.fullName?.trim()
+    if (fullName) {
+      const names = fullName.split(/\s+/).filter(Boolean)
+      const first = names[0]
+      const second = names[1]
+      if (first && second) {
+        return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase()
+      }
+      return first?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "GU"
+    }
+    return user?.email?.charAt(0).toUpperCase() || "GU"
   }
 
   return (
@@ -80,7 +88,7 @@ const UserDropdown = () => {
               </div>
               <div className="flex flex-col gap-0">
                 <p className="m-0 inline-block font-bold leading-none text-[#202B3C]">
-                  {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Guest User"}
+                  {user?.fullName || "Guest User"}
                 </p>
                 <small className="text-grey-400 m-0 inline-block text-sm leading-none">
                   {user?.email || "No email"}
