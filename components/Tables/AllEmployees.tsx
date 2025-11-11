@@ -12,29 +12,28 @@ import { AnimatePresence, motion } from "framer-motion"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import UpdateStatusModal from "components/ui/Modal/update-status-modal"
 import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
-// import EmployeeDetailsModal from "components/ui/Modal/employee-details-modal"
 import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { fetchEmployees } from "lib/redux/employeeSlice"
 
 type SortOrder = "asc" | "desc" | null
 
 interface Employee {
-  id: string
-  employeeId: string
+  id: number
   fullName: string
-  position: string
-  department: string
   email: string
   phoneNumber: string
-  hireDate: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  salary: string
-  address: string
-  emergencyContact: string
-  supervisor: string
-  employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"
-  workLocation: string
-  createdAt: string
-  updatedAt: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  employeeId: string | null
+  position: string | null
+  employmentType: string | null
+  departmentId: number | null
+  departmentName: string | null
+  areaOfficeId: number | null
+  areaOfficeName: string | null
 }
 
 interface Department {
@@ -45,54 +44,10 @@ interface Department {
   location: string
 }
 
-// Sample data for generating random employees
+// Sample departments data
 const departments = ["HR", "Finance", "IT", "Operations", "Sales", "Marketing", "Customer Service"]
-const positions = [
-  "Manager",
-  "Senior Developer",
-  "Junior Developer",
-  "Accountant",
-  "HR Specialist",
-  "Sales Representative",
-  "Customer Support",
-  "Operations Manager",
-  "Marketing Coordinator",
-]
 const workLocations = ["Head Office", "Branch A", "Branch B", "Branch C", "Remote"]
-const employmentTypes: ("FULL_TIME" | "PART_TIME" | "CONTRACT")[] = ["FULL_TIME", "PART_TIME", "CONTRACT"]
-const statuses: ("ACTIVE" | "INACTIVE" | "SUSPENDED")[] = ["ACTIVE", "INACTIVE", "SUSPENDED"]
-
-// Generate random employee data
-const generateRandomEmployees = (count: number): Employee[] => {
-  return Array.from({ length: count }, (_, index) => {
-    const id = `emp-${Date.now()}-${index}`
-    const status = statuses[Math.floor(Math.random() * statuses.length)]!
-    const department = departments[Math.floor(Math.random() * departments.length)]!
-    const position = positions[Math.floor(Math.random() * positions.length)]!
-    const employmentType = employmentTypes[Math.floor(Math.random() * employmentTypes.length)]!
-    const workLocation = workLocations[Math.floor(Math.random() * workLocations.length)]!
-
-    return {
-      id,
-      employeeId: `EMP${10000 + index}`,
-      fullName: `Employee ${index + 1}`,
-      position,
-      department,
-      email: `employee${index + 1}@company.com`,
-      phoneNumber: `+234${800000000 + index}`,
-      hireDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000 * 5).toISOString(),
-      status,
-      salary: (Math.random() * 50000 + 30000).toFixed(2),
-      address: `Address ${index + 1}, City`,
-      emergencyContact: `+234${900000000 + index}`,
-      supervisor: `Supervisor ${Math.floor(Math.random() * 10) + 1}`,
-      employmentType,
-      workLocation,
-      createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  })
-}
+const employmentTypes = ["FULL_TIME", "PART_TIME", "CONTRACT"]
 
 // Skeleton Components
 const EmployeeCardSkeleton = () => (
@@ -275,16 +230,16 @@ const HeaderSkeleton = () => (
 )
 
 const AllEmployees = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const { employees, employeesLoading, employeesError, pagination } = useSelector((state: RootState) => state.employee)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
-  const [rowsPerPage, setRowsPerPage] = useState(6)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showDepartments, setShowDepartments] = useState(true)
   const [selectedDepartment, setSelectedDepartment] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [employeesData, setEmployeesData] = useState<any>(null)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
@@ -293,31 +248,15 @@ const AllEmployees = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const router = useRouter()
 
-  // Generate random data on component mount
+  // Fetch employees on component mount and when page changes
   useEffect(() => {
-    setIsLoading(true)
-    // Simulate API call delay
-    const timer = setTimeout(() => {
-      const totalRecords = 50
-      const totalPages = Math.ceil(totalRecords / rowsPerPage)
-      const employees = generateRandomEmployees(rowsPerPage)
-
-      setEmployeesData({
-        data: {
-          employees,
-          pagination: {
-            totalRecords,
-            totalPages,
-            currentPage,
-            limit: rowsPerPage,
-          },
-        },
+    dispatch(
+      fetchEmployees({
+        pageNumber: currentPage,
+        pageSize: pagination.pageSize,
       })
-      setIsLoading(false)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [currentPage, rowsPerPage])
+    )
+  }, [dispatch, currentPage, pagination.pageSize])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -384,20 +323,13 @@ const AllEmployees = () => {
     closeAllModals()
   }
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return { backgroundColor: "#EEF5F0", color: "#589E67" }
-      case "INACTIVE":
-        return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
-      case "SUSPENDED":
-        return { backgroundColor: "#F7EDED", color: "#AF4B4B" }
-      default:
-        return {}
-    }
+  const getStatusStyle = (isActive: boolean) => {
+    return isActive
+      ? { backgroundColor: "#EEF5F0", color: "#589E67" }
+      : { backgroundColor: "#F7EDED", color: "#AF4B4B" }
   }
 
-  const getEmploymentTypeStyle = (type: string) => {
+  const getEmploymentTypeStyle = (type: string | null) => {
     switch (type) {
       case "FULL_TIME":
         return { backgroundColor: "#EDF2FE", color: "#4976F4" }
@@ -410,28 +342,8 @@ const AllEmployees = () => {
     }
   }
 
-  const getSalaryStyle = (salary: string) => {
-    const amount = parseFloat(salary)
-    if (amount < 40000) {
-      return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
-    } else if (amount <= 60000) {
-      return { backgroundColor: "#EDF2FE", color: "#4976F4" }
-    } else {
-      return { backgroundColor: "#EEF5F0", color: "#589E67" }
-    }
-  }
-
-  const dotStyle = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return { backgroundColor: "#589E67" }
-      case "INACTIVE":
-        return { backgroundColor: "#D28E3D" }
-      case "SUSPENDED":
-        return { backgroundColor: "#AF4B4B" }
-      default:
-        return {}
-    }
+  const dotStyle = (isActive: boolean) => {
+    return isActive ? { backgroundColor: "#589E67" } : { backgroundColor: "#AF4B4B" }
   }
 
   const toggleSort = (column: keyof Employee) => {
@@ -446,24 +358,33 @@ const AllEmployees = () => {
 
   // Filter employees based on search text and department
   const filteredEmployees =
-    employeesData?.data?.employees?.filter((employee: Employee) => {
+    employees?.filter((employee: Employee) => {
       const matchesSearch =
         searchText === "" ||
         Object.values(employee).some((value) => value?.toString().toLowerCase().includes(searchText.toLowerCase()))
-      const matchesDepartment = selectedDepartment === "" || employee.department === selectedDepartment
+      const matchesDepartment =
+        selectedDepartment === "" || employee.departmentName?.toLowerCase().includes(selectedDepartment.toLowerCase())
       return matchesSearch && matchesDepartment
     }) || []
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setRowsPerPage(Number(event.target.value))
+    const newPageSize = Number(event.target.value)
+    dispatch(
+      fetchEmployees({
+        pageNumber: 1,
+        pageSize: newPageSize,
+      })
+    )
     setCurrentPage(1)
   }
 
-  const totalPages = employeesData?.data?.pagination?.totalPages || 1
-  const totalRecords = employeesData?.data?.pagination?.totalRecords || 0
+  const totalPages = pagination.totalPages || 1
+  const totalRecords = pagination.totalCount || 0
 
   const changePage = (page: number) => {
-    if (page > 0 && page <= totalPages) setCurrentPage(page)
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page)
+    }
   }
 
   const EmployeeCard = ({ employee }: { employee: Employee }) => (
@@ -482,24 +403,26 @@ const AllEmployees = () => {
             <h3 className="font-semibold text-gray-900">{employee.fullName}</h3>
             <div className="mt-1 flex items-center gap-2">
               <div
-                style={getStatusStyle(employee.status)}
+                style={getStatusStyle(employee.isActive)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
               >
-                <span className="size-2 rounded-full" style={dotStyle(employee.status)}></span>
-                {employee.status}
+                <span className="size-2 rounded-full" style={dotStyle(employee.isActive)}></span>
+                {employee.isActive ? "ACTIVE" : "INACTIVE"}
               </div>
-              <div style={getEmploymentTypeStyle(employee.employmentType)} className="rounded-full px-2 py-1 text-xs">
-                {employee.employmentType.replace("_", " ")}
-              </div>
+              {employee.employmentType && (
+                <div style={getEmploymentTypeStyle(employee.employmentType)} className="rounded-full px-2 py-1 text-xs">
+                  {employee.employmentType.replace("_", " ")}
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div className="relative" data-dropdown-root="employee-actions">
           <RxDotsVertical
-            onClick={() => toggleDropdown(employee.id)}
+            onClick={() => toggleDropdown(employee.id.toString())}
             className="cursor-pointer text-gray-400 hover:text-gray-600"
           />
-          {activeDropdown === employee.id && (
+          {activeDropdown === employee.id.toString() && (
             <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
               <ul className="text-sm">
                 <li
@@ -534,25 +457,23 @@ const AllEmployees = () => {
       <div className="mt-4 space-y-2 text-sm text-gray-600">
         <div className="flex justify-between">
           <span>Employee ID:</span>
-          <span className="font-medium">{employee.employeeId}</span>
+          <span className="font-medium">{employee.employeeId || "N/A"}</span>
         </div>
         <div className="flex justify-between">
           <span>Department:</span>
-          <span className="font-medium">{employee.department}</span>
+          <span className="font-medium">{employee.departmentName || "N/A"}</span>
         </div>
         <div className="flex justify-between">
           <span>Position:</span>
-          <span className="font-medium">{employee.position}</span>
+          <span className="font-medium">{employee.position || "N/A"}</span>
         </div>
         <div className="flex justify-between">
           <span>Work Location:</span>
-          <span className="font-medium">{employee.workLocation}</span>
+          <span className="font-medium">{employee.areaOfficeName || "N/A"}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Salary:</span>
-          <div style={getSalaryStyle(employee.salary)} className="rounded-full px-2 py-1 text-xs font-medium">
-            ₦{parseFloat(employee.salary).toLocaleString()}
-          </div>
+          <span>Account ID:</span>
+          <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">{employee.accountId}</div>
         </div>
       </div>
 
@@ -588,31 +509,33 @@ const AllEmployees = () => {
             <div className="flex items-center gap-3">
               <h3 className="truncate font-semibold text-gray-900">{employee.fullName}</h3>
               <div
-                style={getStatusStyle(employee.status)}
+                style={getStatusStyle(employee.isActive)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
               >
-                <span className="size-2 rounded-full" style={dotStyle(employee.status)}></span>
-                {employee.status}
+                <span className="size-2 rounded-full" style={dotStyle(employee.isActive)}></span>
+                {employee.isActive ? "ACTIVE" : "INACTIVE"}
               </div>
-              <div style={getEmploymentTypeStyle(employee.employmentType)} className="rounded-full px-2 py-1 text-xs">
-                {employee.employmentType.replace("_", " ")}
-              </div>
-              <div style={getSalaryStyle(employee.salary)} className="rounded-full px-2 py-1 text-xs font-medium">
-                Salary: ₦{parseFloat(employee.salary).toLocaleString()}
+              {employee.employmentType && (
+                <div style={getEmploymentTypeStyle(employee.employmentType)} className="rounded-full px-2 py-1 text-xs">
+                  {employee.employmentType.replace("_", " ")}
+                </div>
+              )}
+              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
+                Account: {employee.accountId}
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
               <span>
-                <strong>Employee ID:</strong> {employee.employeeId}
+                <strong>Employee ID:</strong> {employee.employeeId || "N/A"}
               </span>
               <span>
-                <strong>Department:</strong> {employee.department}
+                <strong>Department:</strong> {employee.departmentName || "N/A"}
               </span>
               <span>
-                <strong>Position:</strong> {employee.position}
+                <strong>Position:</strong> {employee.position || "N/A"}
               </span>
               <span>
-                <strong>Location:</strong> {employee.workLocation}
+                <strong>Location:</strong> {employee.areaOfficeName || "N/A"}
               </span>
             </div>
             <p className="mt-2 text-sm text-gray-500">{employee.email}</p>
@@ -621,7 +544,10 @@ const AllEmployees = () => {
 
         <div className="flex items-center gap-3">
           <div className="text-right text-sm">
-            <div className="font-medium text-gray-900">Hired: {new Date(employee.hireDate).toLocaleDateString()}</div>
+            <div className="font-medium text-gray-900">Phone: {employee.phoneNumber || "N/A"}</div>
+            <div className={`mt-1 text-xs ${employee.mustChangePassword ? "text-amber-600" : "text-gray-500"}`}>
+              {employee.mustChangePassword ? "Password Reset Required" : "Active"}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => handleViewDetails(employee)} className="button-oulined flex items-center gap-2">
@@ -630,10 +556,10 @@ const AllEmployees = () => {
             </button>
             <div className="relative" data-dropdown-root="employee-actions">
               <RxDotsVertical
-                onClick={() => toggleDropdown(employee.id)}
+                onClick={() => toggleDropdown(employee.id.toString())}
                 className="cursor-pointer text-gray-400 hover:text-gray-600"
               />
-              {activeDropdown === employee.id && (
+              {activeDropdown === employee.id.toString() && (
                 <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
                   <ul className="text-sm">
                     <li
@@ -738,7 +664,7 @@ const AllEmployees = () => {
     </div>
   )
 
-  if (isLoading) {
+  if (employeesLoading) {
     return (
       <div className="flex-3 relative mt-5 flex items-start gap-6">
         {/* Main Content Skeleton */}
@@ -808,7 +734,7 @@ const AllEmployees = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 onCancel={handleCancelSearch}
-                placeholder="Search by name, employee ID, or department"
+                placeholder="Search by name, email, or department"
                 className="max-w-[300px] "
               />
 
@@ -845,17 +771,16 @@ const AllEmployees = () => {
                   </option>
                 ))}
               </select>
-
-              <button className="button-oulined" type="button">
-                <IoMdFunnel />
-                <p>Sort By</p>
-              </button>
             </div>
           </div>
 
           {/* Employee Display Area */}
           <div className="w-full">
-            {viewMode === "grid" ? (
+            {filteredEmployees.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-gray-500">No employees found</p>
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredEmployees.map((employee: Employee) => (
                   <EmployeeCard key={employee.id} employee={employee} />
@@ -874,7 +799,7 @@ const AllEmployees = () => {
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <p>Show rows</p>
-              <select value={rowsPerPage} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
+              <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
                 <option value={6}>6</option>
                 <option value={12}>12</option>
                 <option value={18}>18</option>
@@ -953,7 +878,9 @@ const AllEmployees = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Active:</span>
-                    <span className="font-medium">{Math.round(totalRecords * 0.8).toLocaleString()}</span>
+                    <span className="font-medium">
+                      {employees.filter((emp) => emp.isActive).length.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Departments:</span>
@@ -967,15 +894,6 @@ const AllEmployees = () => {
       </div>
 
       {/* Modal Components - Only one modal can be open at a time */}
-      {/* <EmployeeDetailsModal
-        isOpen={activeModal === "details"}
-        onRequestClose={closeAllModals}
-        employee={selectedEmployee}
-        onUpdateStatus={handleOpenStatusModal}
-        onSendReminder={handleOpenReminderModal}
-        onSuspendAccount={handleOpenSuspendModal}
-      /> */}
-
       <SuspendAccountModal
         isOpen={activeModal === "suspend"}
         onRequestClose={closeAllModals}

@@ -52,12 +52,13 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+    const valueStr = String(value)
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: valueStr,
     }))
 
     // Clear error when user starts typing

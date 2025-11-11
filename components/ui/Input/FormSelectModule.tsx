@@ -5,9 +5,9 @@ import { ChevronDown } from "lucide-react"
 interface FormSelectModuleProps {
   label: string
   name: string
-  value: string
-  onChange: (e: ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string } }) => void
-  options: Array<{ value: string; label: string }>
+  value: string | number
+  onChange: (e: ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }) => void
+  options: Array<{ value: string | number; label: string }>
   required?: boolean
   disabled?: boolean
   className?: string
@@ -30,7 +30,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const selectedOption = options.find((option) => option.value === value)
 
-  const handleSelect = (value: string) => {
+  const handleSelect = (value: string | number) => {
     // Create a synthetic event that matches both possible types
     const syntheticEvent = {
       target: {
