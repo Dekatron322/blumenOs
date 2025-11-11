@@ -61,12 +61,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+    const stringValue = String(value)
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: stringValue,
     }))
 
     // Clear error when user starts typing

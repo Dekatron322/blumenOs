@@ -3,8 +3,8 @@ type Environment = "STAGING" | "PRODUCTION"
 
 export const API_CONFIG = {
   // Environment-based base URLs
-  STAGING: "https://blumenos.onrender.com",
-  PRODUCTION: "https://blumenos.onrender.com",
+  STAGING: "https://blumenos-e0fba1f74776.herokuapp.com",
+  PRODUCTION: "https://blumenos-e0fba1f74776.herokuapp.com",
 
   // Current environment (change this to switch between staging/production)
   CURRENT_ENV: (process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING") as Environment,
@@ -22,6 +22,20 @@ export const API_ENDPOINTS = {
     LOGIN: "/identity/auth/login",
     REFRESH_TOKEN: "/identity/auth/refresh",
     CHANGE_PASSWORD: "/identity/auth/change-password",
+  },
+
+  EMPLOYEE: {
+    EMPLOYEE: "/identity/users",
+    INVITE: "/identity/users/invite",
+  },
+  ROLES: {
+    GET: "/roles-management/roles",
+  },
+  AREA_OFFICE: {
+    GET: "/assets/area-offices",
+  },
+  DEPARTMENT: {
+    GET: "/departments",
   },
 }
 

@@ -1,134 +1,198 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useDispatch, useSelector } from "react-redux"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
 import { AddIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { inviteEmployees, clearInviteStatus, fetchEmployees } from "lib/redux/employeeSlice"
+import { fetchRoles } from "lib/redux/roleSlice"
+import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchDepartments, clearDepartments } from "lib/redux/departmentSlice"
 
 interface EmployeeFormData {
-  employeeId: string
   fullName: string
-  position: string
-  department: string
   email: string
   phoneNumber: string
-  hireDate: string
-  status: "" | "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  salary: string
-  address: string
+  roleIds: number[]
+  areaOfficeId: number
+  departmentId: number
+  employeeId: string
+  position: string
   emergencyContact: string
-  supervisor: string
-  employmentType: "" | "FULL_TIME" | "PART_TIME" | "CONTRACT"
-  workLocation: string
+  address: string
+  supervisorId: number
+  employmentType: string
+  isActive: boolean
 }
 
 interface CSVEmployee {
   employeeId: string
   fullName: string
-  position: string
-  department: string
   email: string
   phoneNumber: string
-  hireDate: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  salary: string
-  address: string
+  roleIds: number[]
+  areaOfficeId: number
+  departmentId: number
+  position: string
   emergencyContact: string
-  supervisor: string
-  employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"
-  workLocation: string
+  address: string
+  supervisorId: number
+  employmentType: string
+  isActive: boolean
 }
 
 const AddEmployeePage = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
+  const { inviteLoading, inviteError, inviteSuccess, invitedUsers, employees, employeesLoading, employeesError } =
+    useSelector((state: RootState) => state.employee)
+  const { roles, loading: rolesLoading, error: rolesError } = useSelector((state: RootState) => state.roles)
+  const {
+    areaOffices,
+    loading: areaOfficesLoading,
+    error: areaOfficesError,
+  } = useSelector((state: RootState) => state.areaOffices)
+  const {
+    departments,
+    loading: departmentsLoading,
+    error: departmentsError,
+  } = useSelector((state: RootState) => state.departments)
+
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVEmployee[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
-  const [isBulkLoading, setIsBulkLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<EmployeeFormData>({
-    employeeId: "",
     fullName: "",
-    position: "",
-    department: "",
     email: "",
     phoneNumber: "",
-    hireDate: "",
-    status: "ACTIVE",
-    salary: "",
-    address: "",
+    roleIds: [], // Start with empty array
+    areaOfficeId: 0, // Start with 0 for no selection
+    departmentId: 0, // Start with 0 for no selection
+    employeeId: "",
+    position: "",
     emergencyContact: "",
-    supervisor: "",
-    employmentType: "",
-    workLocation: "",
+    address: "",
+    supervisorId: 0, // Start with 0 (no selection)
+    employmentType: "FULL_TIME",
+    isActive: true,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  // Options for dropdowns
-  const departmentOptions = [
-    { value: "", label: "Select department" },
-    { value: "HR", label: "Human Resources" },
-    { value: "IT", label: "Information Technology" },
-    { value: "FIN", label: "Finance" },
-    { value: "SAL", label: "Sales" },
-    { value: "MKT", label: "Marketing" },
-    { value: "OPS", label: "Operations" },
-    { value: "CS", label: "Customer Service" },
-    { value: "R&D", label: "Research & Development" },
+  // Fetch roles, employees, area offices, and departments on component mount
+  useEffect(() => {
+    dispatch(
+      fetchRoles({
+        pageNumber: 1,
+        pageSize: 100, // Fetch a reasonable number of roles
+      })
+    )
+
+    dispatch(
+      fetchEmployees({
+        pageNumber: 1,
+        pageSize: 100, // Fetch a reasonable number of employees for supervisors
+      })
+    )
+
+    dispatch(
+      fetchAreaOffices({
+        pageNumber: 1,
+        pageSize: 100, // Fetch a reasonable number of area offices
+      })
+    )
+
+    dispatch(
+      fetchDepartments({
+        pageNumber: 1,
+        pageSize: 100, // Fetch a reasonable number of departments
+        isActive: true, // Only fetch active departments
+      })
+    )
+
+    // Cleanup function to clear states when component unmounts
+    return () => {
+      dispatch(clearAreaOffices())
+      dispatch(clearDepartments())
+    }
+  }, [dispatch])
+
+  // Generate role options from API response
+  const roleOptions = roles.map((role) => ({
+    value: role.id,
+    label: role.name,
+  }))
+
+  // Generate area office options from API response
+  const areaOfficeOptions = [
+    { value: 0, label: "Select area office" }, // Default option
+    ...areaOffices.map((areaOffice) => ({
+      value: areaOffice.id,
+      label: `${areaOffice.nameOfNewOAreaffice} (${areaOffice.newKaedcoCode})`,
+    })),
   ]
 
-  const positionOptions = [
-    { value: "", label: "Select position" },
-    { value: "Software Engineer", label: "Software Engineer" },
-    { value: "Senior Developer", label: "Senior Developer" },
-    { value: "Junior Developer", label: "Junior Developer" },
-    { value: "HR Specialist", label: "HR Specialist" },
-    { value: "Accountant", label: "Accountant" },
-    { value: "Sales Representative", label: "Sales Representative" },
-    { value: "Marketing Coordinator", label: "Marketing Coordinator" },
-    { value: "Operations Manager", label: "Operations Manager" },
-    { value: "Customer Support", label: "Customer Support" },
-    { value: "Product Manager", label: "Product Manager" },
-    { value: "Data Analyst", label: "Data Analyst" },
+  // Generate department options from API response
+  const departmentOptions = [
+    { value: 0, label: "Select department" }, // Default option
+    ...departments.map((department) => ({
+      value: department.id,
+      label: `${department.name}${department.description ? ` - ${department.description}` : ""}`,
+    })),
+  ]
+
+  // Generate supervisor options from employees API response
+  const supervisorOptions = [
+    { value: 0, label: "Select supervisor" }, // Default option
+    ...employees
+      .filter((employee) => employee.isActive) // Only show active employees as supervisors
+      .map((employee) => ({
+        value: employee.id,
+        label: `${employee.fullName} (${employee.email})`,
+      })),
   ]
 
   const employmentTypeOptions = [
-    { value: "", label: "Select employment type" },
     { value: "FULL_TIME", label: "Full Time" },
     { value: "PART_TIME", label: "Part Time" },
     { value: "CONTRACT", label: "Contract" },
   ]
 
-  const statusOptions = [
-    { value: "ACTIVE", label: "Active" },
-    { value: "INACTIVE", label: "Inactive" },
-    { value: "SUSPENDED", label: "Suspended" },
-  ]
-
-  const workLocationOptions = [
-    { value: "", label: "Select work location" },
-    { value: "Head Office", label: "Head Office" },
-    { value: "Branch A", label: "Branch A" },
-    { value: "Branch B", label: "Branch B" },
-    { value: "Branch C", label: "Branch C" },
-    { value: "Remote", label: "Remote" },
-    { value: "Hybrid", label: "Hybrid" },
+  const positionOptions = [
+    { value: "Software Engineer", label: "Software Engineer" },
+    { value: "Senior Developer", label: "Senior Developer" },
+    { value: "HR Specialist", label: "HR Specialist" },
+    { value: "Accountant", label: "Accountant" },
+    { value: "Sales Representative", label: "Sales Representative" },
+    { value: "Marketing Coordinator", label: "Marketing Coordinator" },
   ]
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+
+    // Handle number fields
+    let processedValue = value
+    if (["areaOfficeId", "departmentId", "supervisorId"].includes(name)) {
+      processedValue = Number(value)
+    } else if (name === "roleIds") {
+      processedValue = [Number(value)] // Single role for now, can be extended to multiple
+    } else if (name === "isActive") {
+      processedValue = value === "true" || value === true
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }))
 
     // Clear error when user starts typing
@@ -155,10 +219,6 @@ const AddEmployeePage = () => {
       errors.position = "Position is required"
     }
 
-    if (!formData.department.trim()) {
-      errors.department = "Department is required"
-    }
-
     if (!formData.email.trim()) {
       errors.email = "Email is required"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -171,16 +231,6 @@ const AddEmployeePage = () => {
       errors.phoneNumber = "Please enter a valid Nigerian phone number"
     }
 
-    if (!formData.hireDate.trim()) {
-      errors.hireDate = "Hire date is required"
-    }
-
-    if (!formData.salary.trim()) {
-      errors.salary = "Salary is required"
-    } else if (isNaN(parseFloat(formData.salary)) || parseFloat(formData.salary) <= 0) {
-      errors.salary = "Please enter a valid salary amount"
-    }
-
     if (!formData.address.trim()) {
       errors.address = "Address is required"
     }
@@ -189,16 +239,28 @@ const AddEmployeePage = () => {
       errors.emergencyContact = "Emergency contact is required"
     }
 
-    if (!formData.supervisor.trim()) {
-      errors.supervisor = "Supervisor is required"
-    }
-
     if (!formData.employmentType) {
       errors.employmentType = "Employment type is required"
     }
 
-    if (!formData.workLocation.trim()) {
-      errors.workLocation = "Work location is required"
+    // Validate role selection
+    if (formData.roleIds.length === 0 || formData.roleIds[0] === 0) {
+      errors.roleIds = "Role is required"
+    }
+
+    // Validate area office selection
+    if (formData.areaOfficeId === 0) {
+      errors.areaOfficeId = "Area office is required"
+    }
+
+    // Validate department selection
+    if (formData.departmentId === 0) {
+      errors.departmentId = "Department is required"
+    }
+
+    // Validate supervisor selection (optional field)
+    if (formData.supervisorId === 0) {
+      errors.supervisorId = "Please select a supervisor or choose 'No supervisor'"
     }
 
     setFormErrors(errors)
@@ -219,80 +281,76 @@ const AddEmployeePage = () => {
       return
     }
 
-    setIsSubmitting(true)
-
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Employee data ready:", {
-        employeeId: formData.employeeId,
-        fullName: formData.fullName,
-        position: formData.position,
-        department: formData.department,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        hireDate: formData.hireDate,
-        status: formData.status as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-        salary: formData.salary,
-        address: formData.address,
-        emergencyContact: formData.emergencyContact,
-        supervisor: formData.supervisor,
-        employmentType: formData.employmentType as "FULL_TIME" | "PART_TIME" | "CONTRACT",
-        workLocation: formData.workLocation,
-      })
+      const inviteData = {
+        users: [formData],
+      }
 
-      notify("success", "Employee created successfully", {
-        description: `${formData.fullName} (${formData.employeeId}) has been added to the system`,
-        duration: 5000,
-      })
+      const result = await dispatch(inviteEmployees(inviteData)).unwrap()
 
-      // Reset form
-      setFormData({
-        employeeId: "",
-        fullName: "",
-        position: "",
-        department: "",
-        email: "",
-        phoneNumber: "",
-        hireDate: "",
-        status: "ACTIVE",
-        salary: "",
-        address: "",
-        emergencyContact: "",
-        supervisor: "",
-        employmentType: "",
-        workLocation: "",
-      })
-      setFormErrors({})
+      if (result.isSuccess) {
+        notify("success", "Employee invited successfully", {
+          description: `${formData.fullName} has been invited to the system`,
+          duration: 5000,
+        })
+
+        // Show temporary passwords if available
+        if (result.data && result.data.length > 0) {
+          const tempPassword = result.data[0]!.temporaryPassword
+          notify("info", "Temporary password generated", {
+            description: `Temporary password: ${tempPassword}. Please share this with the employee securely.`,
+            duration: 8000,
+          })
+        }
+
+        // Reset form
+        setFormData({
+          fullName: "",
+          email: "",
+          phoneNumber: "",
+          roleIds: [],
+          areaOfficeId: 0,
+          departmentId: 0,
+          employeeId: "",
+          position: "",
+          emergencyContact: "",
+          address: "",
+          supervisorId: 0,
+          employmentType: "FULL_TIME",
+          isActive: true,
+        })
+        setFormErrors({})
+      }
     } catch (error: any) {
-      console.error("Failed to add employee:", error)
-      const errorMessage = error?.data?.message || "An unexpected error occurred while adding the employee"
-      notify("error", "Failed to add employee", {
-        description: errorMessage,
-        duration: 6000,
-      })
-    } finally {
-      setIsSubmitting(false)
+      console.error("Failed to invite employee:", error)
+      // Error is already handled in the slice, but we can show additional notification if needed
+      if (!error?.includes("Network error")) {
+        notify("error", "Failed to invite employee", {
+          description: error || "An unexpected error occurred",
+          duration: 6000,
+        })
+      }
     }
   }
 
   const handleReset = () => {
     setFormData({
-      employeeId: "",
       fullName: "",
-      position: "",
-      department: "",
       email: "",
       phoneNumber: "",
-      hireDate: "",
-      status: "ACTIVE",
-      salary: "",
-      address: "",
+      roleIds: [],
+      areaOfficeId: 0,
+      departmentId: 0,
+      employeeId: "",
+      position: "",
       emergencyContact: "",
-      supervisor: "",
-      employmentType: "",
-      workLocation: "",
+      address: "",
+      supervisorId: 0,
+      employmentType: "FULL_TIME",
+      isActive: true,
     })
     setFormErrors({})
+    dispatch(clearInviteStatus())
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -342,18 +400,17 @@ const AddEmployeePage = () => {
         const expectedHeaders = [
           "employeeid",
           "fullname",
-          "position",
-          "department",
           "email",
           "phonenumber",
-          "hiredate",
-          "status",
-          "salary",
-          "address",
+          "roleids",
+          "areaofficeid",
+          "departmentid",
+          "position",
           "emergencycontact",
-          "supervisor",
+          "address",
+          "supervisorid",
           "employmenttype",
-          "worklocation",
+          "isactive",
         ]
 
         const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
@@ -385,18 +442,17 @@ const AddEmployeePage = () => {
             parsedData.push({
               employeeId: row.employeeid,
               fullName: row.fullname,
-              position: row.position,
-              department: row.department,
               email: row.email,
               phoneNumber: row.phonenumber,
-              hireDate: row.hiredate,
-              status: row.status.toUpperCase() as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-              salary: row.salary,
-              address: row.address,
+              roleIds: [parseInt(row.roleids) || 1],
+              areaOfficeId: parseInt(row.areaofficeid) || 0,
+              departmentId: parseInt(row.departmentid) || 0,
+              position: row.position,
               emergencyContact: row.emergencycontact,
-              supervisor: row.supervisor,
-              employmentType: row.employmenttype.toUpperCase() as "FULL_TIME" | "PART_TIME" | "CONTRACT",
-              workLocation: row.worklocation,
+              address: row.address,
+              supervisorId: parseInt(row.supervisorid) || 0,
+              employmentType: row.employmenttype.toUpperCase(),
+              isActive: row.isactive?.toLowerCase() === "true",
             })
           }
         }
@@ -451,10 +507,6 @@ const AddEmployeePage = () => {
       errors.push(`Row ${rowNumber}: Position is required`)
     }
 
-    if (!row.department?.trim()) {
-      errors.push(`Row ${rowNumber}: Department is required`)
-    }
-
     if (!row.email?.trim()) {
       errors.push(`Row ${rowNumber}: Email is required`)
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
@@ -467,22 +519,6 @@ const AddEmployeePage = () => {
       errors.push(`Row ${rowNumber}: Please enter a valid Nigerian phone number`)
     }
 
-    if (!row.hiredate?.trim()) {
-      errors.push(`Row ${rowNumber}: Hire date is required`)
-    }
-
-    if (!row.status?.trim()) {
-      errors.push(`Row ${rowNumber}: Status is required`)
-    } else if (!["ACTIVE", "INACTIVE", "SUSPENDED"].includes(row.status.toUpperCase())) {
-      errors.push(`Row ${rowNumber}: Status must be ACTIVE, INACTIVE, or SUSPENDED`)
-    }
-
-    if (!row.salary?.trim()) {
-      errors.push(`Row ${rowNumber}: Salary is required`)
-    } else if (isNaN(parseFloat(row.salary)) || parseFloat(row.salary) <= 0) {
-      errors.push(`Row ${rowNumber}: Please enter a valid salary amount`)
-    }
-
     if (!row.address?.trim()) {
       errors.push(`Row ${rowNumber}: Address is required`)
     }
@@ -491,18 +527,36 @@ const AddEmployeePage = () => {
       errors.push(`Row ${rowNumber}: Emergency contact is required`)
     }
 
-    if (!row.supervisor?.trim()) {
-      errors.push(`Row ${rowNumber}: Supervisor is required`)
-    }
-
     if (!row.employmenttype?.trim()) {
       errors.push(`Row ${rowNumber}: Employment type is required`)
     } else if (!["FULL_TIME", "PART_TIME", "CONTRACT"].includes(row.employmenttype.toUpperCase())) {
       errors.push(`Row ${rowNumber}: Employment type must be FULL_TIME, PART_TIME, or CONTRACT`)
     }
 
-    if (!row.worklocation?.trim()) {
-      errors.push(`Row ${rowNumber}: Work location is required`)
+    // Validate role ID
+    if (!row.roleids?.trim()) {
+      errors.push(`Row ${rowNumber}: Role ID is required`)
+    } else if (isNaN(parseInt(row.roleids))) {
+      errors.push(`Row ${rowNumber}: Role ID must be a valid number`)
+    }
+
+    // Validate area office ID
+    if (!row.areaofficeid?.trim()) {
+      errors.push(`Row ${rowNumber}: Area office ID is required`)
+    } else if (isNaN(parseInt(row.areaofficeid))) {
+      errors.push(`Row ${rowNumber}: Area office ID must be a valid number`)
+    }
+
+    // Validate department ID
+    if (!row.departmentid?.trim()) {
+      errors.push(`Row ${rowNumber}: Department ID is required`)
+    } else if (isNaN(parseInt(row.departmentid))) {
+      errors.push(`Row ${rowNumber}: Department ID must be a valid number`)
+    }
+
+    // Validate supervisor ID (optional)
+    if (row.supervisorid?.trim() && isNaN(parseInt(row.supervisorid))) {
+      errors.push(`Row ${rowNumber}: Supervisor ID must be a valid number`)
     }
 
     return errors
@@ -525,38 +579,35 @@ const AddEmployeePage = () => {
       return
     }
 
-    setIsBulkLoading(true)
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const inviteData = {
+        users: csvData,
+      }
 
-      // Frontend-only implementation - log the data and show success message
-      console.log("Bulk employee data ready for upload:", csvData)
+      const result = await dispatch(inviteEmployees(inviteData)).unwrap()
 
-      notify("success", "Bulk upload ready", {
-        description: `${csvData.length} employees validated and ready for upload. Backend integration pending.`,
-        duration: 6000,
-      })
+      if (result.isSuccess) {
+        notify("success", "Employees invited successfully", {
+          description: `${csvData.length} employees have been invited to the system`,
+          duration: 6000,
+        })
 
-      // In a real implementation, you would send the data to your API here:
-      // await bulkAddEmployees(csvData).unwrap()
-
-      // Reset form
-      setCsvFile(null)
-      setCsvData([])
-      setCsvErrors([])
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        // Reset form
+        setCsvFile(null)
+        setCsvData([])
+        setCsvErrors([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
       }
     } catch (error: any) {
       console.error("Failed to process bulk upload:", error)
-      notify("error", "Bulk upload processing failed", {
-        description: "There was an error processing the bulk upload",
-        duration: 6000,
-      })
-    } finally {
-      setIsBulkLoading(false)
+      if (!error?.includes("Network error")) {
+        notify("error", "Bulk upload processing failed", {
+          description: error || "There was an error processing the bulk upload",
+          duration: 6000,
+        })
+      }
     }
   }
 
@@ -564,52 +615,58 @@ const AddEmployeePage = () => {
     const headers = [
       "employeeId",
       "fullName",
-      "position",
-      "department",
       "email",
       "phoneNumber",
-      "hireDate",
-      "status",
-      "salary",
-      "address",
+      "roleIds",
+      "areaOfficeId",
+      "departmentId",
+      "position",
       "emergencyContact",
-      "supervisor",
+      "address",
+      "supervisorId",
       "employmentType",
-      "workLocation",
+      "isActive",
     ]
+
+    // Use actual role IDs from the API for the template
+    const exampleRoleId = roles[0]?.id?.toString() ?? "1"
+    // Use actual area office IDs from the API for the template
+    const exampleAreaOfficeId = areaOffices[0]?.id?.toString() ?? "1"
+    // Use actual department IDs from the API for the template
+    const exampleDepartmentId = departments[0]?.id?.toString() ?? "1"
+    // Use actual employee IDs from the API for supervisors
+    const exampleSupervisorId = employees[0]?.id?.toString() ?? "0"
 
     const exampleData = [
       {
         employeeId: "EMP00123",
         fullName: "John Doe",
-        position: "Software Engineer",
-        department: "IT",
         email: "john.doe@company.com",
         phoneNumber: "08012345678",
-        hireDate: "2023-01-15",
-        status: "ACTIVE",
-        salary: "450000",
-        address: "123 Main Street, Lagos",
+        roleIds: exampleRoleId,
+        areaOfficeId: exampleAreaOfficeId,
+        departmentId: exampleDepartmentId,
+        position: "Software Engineer",
         emergencyContact: "08087654321",
-        supervisor: "Sarah Johnson",
+        address: "123 Main Street, Lagos",
+        supervisorId: exampleSupervisorId,
         employmentType: "FULL_TIME",
-        workLocation: "Head Office",
+        isActive: "true",
       },
       {
         employeeId: "EMP00124",
         fullName: "Jane Smith",
-        position: "HR Specialist",
-        department: "HR",
         email: "jane.smith@company.com",
         phoneNumber: "08087654321",
-        hireDate: "2023-03-20",
-        status: "ACTIVE",
-        salary: "380000",
-        address: "456 Broad Avenue, Abuja",
+        roleIds: exampleRoleId,
+        areaOfficeId: exampleAreaOfficeId,
+        departmentId: exampleDepartmentId,
+        position: "HR Specialist",
         emergencyContact: "08012345678",
-        supervisor: "Michael Chen",
+        address: "456 Broad Avenue, Abuja",
+        supervisorId: exampleSupervisorId,
         employmentType: "FULL_TIME",
-        workLocation: "Head Office",
+        isActive: "true",
       },
     ]
 
@@ -622,7 +679,7 @@ const AddEmployeePage = () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "employee_upload_template.csv"
+    a.download = "employee_invite_template.csv"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -639,18 +696,45 @@ const AddEmployeePage = () => {
       formData.employeeId.trim() !== "" &&
       formData.fullName.trim() !== "" &&
       formData.position.trim() !== "" &&
-      formData.department.trim() !== "" &&
       formData.email.trim() !== "" &&
       formData.phoneNumber.trim() !== "" &&
-      formData.hireDate.trim() !== "" &&
-      formData.salary.trim() !== "" &&
       formData.address.trim() !== "" &&
       formData.emergencyContact.trim() !== "" &&
-      formData.supervisor.trim() !== "" &&
       formData.employmentType !== "" &&
-      formData.workLocation.trim() !== ""
+      formData.roleIds.length > 0 &&
+      formData.roleIds[0] !== 0 &&
+      formData.areaOfficeId !== 0 &&
+      formData.departmentId !== 0 &&
+      formData.supervisorId !== 0
     )
   }
+
+  // Clear success/error states when switching tabs
+  React.useEffect(() => {
+    if (inviteSuccess || inviteError) {
+      dispatch(clearInviteStatus())
+    }
+  }, [activeTab, dispatch])
+
+  // Show error notification if area offices fail to load
+  useEffect(() => {
+    if (areaOfficesError) {
+      notify("error", "Failed to load area offices", {
+        description: areaOfficesError,
+        duration: 5000,
+      })
+    }
+  }, [areaOfficesError])
+
+  // Show error notification if departments fail to load
+  useEffect(() => {
+    if (departmentsError) {
+      notify("error", "Failed to load departments", {
+        description: departmentsError,
+        duration: 5000,
+      })
+    }
+  }, [departmentsError])
 
   return (
     <section className="size-full">
@@ -662,8 +746,8 @@ const AddEmployeePage = () => {
             {/* Page Header */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Add New Employee</h4>
-                <p className="text-gray-600">Create a new employee record in the system</p>
+                <h4 className="text-2xl font-semibold">Invite New Employee</h4>
+                <p className="text-gray-600">Invite a new employee to join the system</p>
               </div>
 
               <motion.div
@@ -685,7 +769,7 @@ const AddEmployeePage = () => {
                           if (fileInputRef.current) fileInputRef.current.value = ""
                         }
                   }
-                  disabled={isSubmitting || isBulkLoading}
+                  disabled={inviteLoading}
                 >
                   {activeTab === "single" ? "Reset Form" : "Clear CSV"}
                 </ButtonModule>
@@ -703,19 +787,19 @@ const AddEmployeePage = () => {
                   }
                   disabled={
                     activeTab === "single"
-                      ? !isFormValid() || isSubmitting
-                      : csvData.length === 0 || csvErrors.length > 0 || isBulkLoading
+                      ? !isFormValid() || inviteLoading
+                      : csvData.length === 0 || csvErrors.length > 0 || inviteLoading
                   }
                   icon={<AddIcon />}
                   iconPosition="start"
                 >
                   {activeTab === "single"
-                    ? isSubmitting
-                      ? "Adding Employee..."
-                      : "Add Employee"
-                    : isBulkLoading
+                    ? inviteLoading
+                      ? "Inviting Employee..."
+                      : "Invite Employee"
+                    : inviteLoading
                     ? "Processing..."
-                    : `Process ${csvData.length} Employees`}
+                    : `Invite ${csvData.length} Employees`}
                 </ButtonModule>
               </motion.div>
             </div>
@@ -732,7 +816,7 @@ const AddEmployeePage = () => {
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    Single Entry
+                    Single Invite
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
@@ -742,7 +826,7 @@ const AddEmployeePage = () => {
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    Bulk Upload (CSV)
+                    Bulk Invite (CSV)
                   </button>
                 </div>
               </div>
@@ -757,23 +841,24 @@ const AddEmployeePage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="rounded-b-lg rounded-tr-lg bg-white p-6 shadow-sm"
+                    className="rounded-b-lg  bg-white p-6 shadow-sm"
                   >
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Employee Information</h3>
-                      <p className="text-sm text-gray-600">
-                        Fill in all required fields to create a new employee record
-                      </p>
+                      <p className="text-sm text-gray-600">Fill in all required fields to invite a new employee</p>
                     </div>
 
                     {/* Employee Form */}
-                    <form onSubmit={handleSingleSubmit} className="space-y-6">
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Basic Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Basic Information</h4>
+                    <form onSubmit={handleSingleSubmit} className="space-y-8">
+                      {/* Section 1: Basic Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
+                          <p className="text-sm text-gray-600">Enter the employee's basic details</p>
+                        </div>
 
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                           <FormInputModule
                             label="Employee ID"
                             name="employeeId"
@@ -801,81 +886,124 @@ const AddEmployeePage = () => {
                             name="position"
                             value={formData.position}
                             onChange={handleInputChange}
-                            options={positionOptions}
+                            options={[{ value: "", label: "Select position" }, ...positionOptions]}
                             error={formErrors.position}
                             required
                           />
 
                           <FormSelectModule
                             label="Department"
-                            name="department"
-                            value={formData.department}
+                            name="departmentId"
+                            value={formData.departmentId}
                             onChange={handleInputChange}
-                            options={departmentOptions}
-                            error={formErrors.department}
+                            options={[
+                              { value: "", label: departmentsLoading ? "Loading departments..." : "Select department" },
+                              ...departmentOptions.filter((option) => option.value !== 0),
+                            ]}
+                            error={formErrors.departmentId}
                             required
+                            disabled={departmentsLoading}
                           />
                         </div>
+                      </div>
 
-                        {/* Employment Details */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Employment Details</h4>
+                      {/* Section 2: Employment Details */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Employment Details</h4>
+                          <p className="text-sm text-gray-600">Configure the employee's work arrangements</p>
+                        </div>
 
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                           <FormSelectModule
                             label="Employment Type"
                             name="employmentType"
                             value={formData.employmentType}
                             onChange={handleInputChange}
-                            options={employmentTypeOptions}
+                            options={[{ value: "", label: "Select employment type" }, ...employmentTypeOptions]}
                             error={formErrors.employmentType}
                             required
                           />
 
                           <FormSelectModule
-                            label="Status"
-                            name="status"
-                            value={formData.status}
+                            label="Role"
+                            name="roleIds"
+                            value={formData.roleIds[0] ?? ""}
                             onChange={handleInputChange}
-                            options={statusOptions}
+                            options={[
+                              { value: "", label: rolesLoading ? "Loading roles..." : "Select role" },
+                              ...roleOptions,
+                            ]}
+                            error={formErrors.roleIds}
                             required
+                            disabled={rolesLoading}
                           />
 
                           <FormSelectModule
-                            label="Work Location"
-                            name="workLocation"
-                            value={formData.workLocation}
+                            label="Area Office"
+                            name="areaOfficeId"
+                            value={formData.areaOfficeId}
                             onChange={handleInputChange}
-                            options={workLocationOptions}
-                            error={formErrors.workLocation}
+                            options={[
+                              {
+                                value: "",
+                                label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
+                              },
+                              ...areaOfficeOptions.filter((option) => option.value !== 0),
+                            ]}
+                            error={formErrors.areaOfficeId}
                             required
+                            disabled={areaOfficesLoading}
                           />
 
-                          <FormInputModule
-                            label="Hire Date"
-                            name="hireDate"
-                            type="date"
-                            value={formData.hireDate}
+                          <FormSelectModule
+                            label="Supervisor"
+                            name="supervisorId"
+                            value={formData.supervisorId}
                             onChange={handleInputChange}
-                            error={formErrors.hireDate}
+                            options={[
+                              { value: 0, label: employeesLoading ? "Loading supervisors..." : "Select supervisor" },
+                              ...supervisorOptions.filter((option) => option.value !== 0),
+                            ]}
+                            error={formErrors.supervisorId}
                             required
-                            placeholder={""}
+                            disabled={employeesLoading}
                           />
+
+                          <div className="md:col-span-2">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                              <FormSelectModule
+                                label="Status"
+                                name="isActive"
+                                value={formData.isActive.toString()}
+                                onChange={handleInputChange}
+                                options={[
+                                  { value: "true", label: "Active" },
+                                  { value: "false", label: "Inactive" },
+                                ]}
+                                required
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Compensation & Contact */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Compensation & Contact</h4>
+                      {/* Section 3: Contact Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Contact Information</h4>
+                          <p className="text-sm text-gray-600">Provide contact details and address information</p>
+                        </div>
 
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                           <FormInputModule
-                            label="Salary"
-                            name="salary"
-                            type="number"
-                            placeholder="Enter annual salary"
-                            value={formData.salary}
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            placeholder="Enter email address"
+                            value={formData.email}
                             onChange={handleInputChange}
-                            error={formErrors.salary}
+                            error={formErrors.email}
                             required
                           />
 
@@ -891,33 +1019,6 @@ const AddEmployeePage = () => {
                           />
 
                           <FormInputModule
-                            label="Email Address"
-                            name="email"
-                            type="email"
-                            placeholder="Enter email address"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            error={formErrors.email}
-                            required
-                          />
-                        </div>
-
-                        {/* Additional Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Additional Information</h4>
-
-                          <FormInputModule
-                            label="Address"
-                            name="address"
-                            type="text"
-                            placeholder="Enter complete address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            error={formErrors.address}
-                            required
-                          />
-
-                          <FormInputModule
                             label="Emergency Contact"
                             name="emergencyContact"
                             type="tel"
@@ -928,16 +1029,18 @@ const AddEmployeePage = () => {
                             required
                           />
 
-                          <FormInputModule
-                            label="Supervisor"
-                            name="supervisor"
-                            type="text"
-                            placeholder="Enter supervisor name"
-                            value={formData.supervisor}
-                            onChange={handleInputChange}
-                            error={formErrors.supervisor}
-                            required
-                          />
+                          <div className="md:col-span-2">
+                            <FormInputModule
+                              label="Address"
+                              name="address"
+                              type="text"
+                              placeholder="Enter complete address"
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              error={formErrors.address}
+                              required
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -974,7 +1077,7 @@ const AddEmployeePage = () => {
                           variant="dangerSecondary"
                           size="lg"
                           onClick={handleReset}
-                          disabled={isSubmitting}
+                          disabled={inviteLoading}
                           type="button"
                         >
                           Reset
@@ -983,9 +1086,9 @@ const AddEmployeePage = () => {
                           variant="primary"
                           size="lg"
                           type="submit"
-                          disabled={!isFormValid() || isSubmitting}
+                          disabled={!isFormValid() || inviteLoading}
                         >
-                          {isSubmitting ? "Adding Employee..." : "Add Employee"}
+                          {inviteLoading ? "Inviting Employee..." : "Invite Employee"}
                         </ButtonModule>
                       </div>
                     </form>
@@ -1079,8 +1182,8 @@ const AddEmployeePage = () => {
                               Choose Different File
                             </ButtonModule>
                             {csvErrors.length === 0 && csvData.length > 0 && (
-                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={isBulkLoading}>
-                                {isBulkLoading ? "Processing..." : `Process ${csvData.length} Employees`}
+                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={inviteLoading}>
+                                {inviteLoading ? "Processing..." : `Invite ${csvData.length} Employees`}
                               </ButtonModule>
                             )}
                           </div>
@@ -1139,10 +1242,22 @@ const AddEmployeePage = () => {
                                   Name
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                                  Email
+                                </th>
+                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   Position
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Department
+                                  Role ID
+                                </th>
+                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                                  Area Office ID
+                                </th>
+                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                                  Department ID
+                                </th>
+                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                                  Supervisor ID
                                 </th>
                               </tr>
                             </thead>
@@ -1156,10 +1271,22 @@ const AddEmployeePage = () => {
                                     {employee.fullName}
                                   </td>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                    {employee.email}
+                                  </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
                                     {employee.position}
                                   </td>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {employee.department}
+                                    {employee.roleIds[0]}
+                                  </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                    {employee.areaOfficeId}
+                                  </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                    {employee.departmentId}
+                                  </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                    {employee.supervisorId || "None"}
                                   </td>
                                 </tr>
                               ))}
