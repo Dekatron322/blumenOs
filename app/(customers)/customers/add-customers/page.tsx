@@ -101,12 +101,13 @@ const AddCustomerPage = () => {
   ]
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+    const valueStr = typeof value === "number" ? String(value) : value
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: valueStr,
     }))
 
     // Clear error when user starts typing
