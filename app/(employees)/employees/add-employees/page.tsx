@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState, useEffect } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -8,12 +8,12 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { AddIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { inviteEmployees, clearInviteStatus, fetchEmployees } from "lib/redux/employeeSlice"
+import { clearInviteStatus, fetchEmployees, inviteEmployees } from "lib/redux/employeeSlice"
 import { fetchRoles } from "lib/redux/roleSlice"
-import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
-import { fetchDepartments, clearDepartments } from "lib/redux/departmentSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
 
 interface EmployeeFormData {
   fullName: string
@@ -855,7 +855,7 @@ const AddEmployeePage = () => {
                       <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                         <div className="border-b pb-4">
                           <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
-                          <p className="text-sm text-gray-600">Enter the employee's basic details</p>
+                          <p className="text-sm text-gray-600">Enter the employee`&lsquo;s basic details</p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -911,7 +911,7 @@ const AddEmployeePage = () => {
                       <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                         <div className="border-b pb-4">
                           <h4 className="text-lg font-medium text-gray-900">Employment Details</h4>
-                          <p className="text-sm text-gray-600">Configure the employee's work arrangements</p>
+                          <p className="text-sm text-gray-600">Configure the employee`&lsquo;s work arrangements</p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
