@@ -58,12 +58,13 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onReq
   }, [customer])
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+    const valueStr = typeof value === "number" ? String(value) : value
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: valueStr,
     }))
   }
 

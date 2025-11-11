@@ -29,12 +29,12 @@ const ManageAlertModal: React.FC<ManageAlertModalProps> = ({ isOpen, onRequestCl
   const handleInputChange = (
     e:
       | React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-      | { target: { name: string; value: string } }
+      | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: String(value),
     }))
   }
 
