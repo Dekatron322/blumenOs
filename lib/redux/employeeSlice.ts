@@ -90,6 +90,16 @@ export interface UpdateEmployeeRequest {
   employmentType: string
 }
 
+// Interfaces for Reset Password
+export interface ResetPasswordRequest {
+  newPassword: string
+}
+
+export interface ResetPasswordResponse {
+  isSuccess: boolean
+  message: string
+}
+
 // Interfaces for Employee Invite
 interface InviteUserRequest {
   fullName: string
@@ -227,6 +237,11 @@ interface EmployeeState {
   activateError: string | null
   activateSuccess: boolean
 
+  // Reset Password state
+  resetPasswordLoading: boolean
+  resetPasswordError: string | null
+  resetPasswordSuccess: boolean
+
   // General employee state
   loading: boolean
   error: string | null
@@ -263,6 +278,9 @@ const initialState: EmployeeState = {
   activateLoading: false,
   activateError: null,
   activateSuccess: false,
+  resetPasswordLoading: false,
+  resetPasswordError: null,
+  resetPasswordSuccess: false,
   loading: false,
   error: null,
 }
@@ -461,6 +479,30 @@ export const activateEmployee = createAsyncThunk(
   }
 )
 
+export const resetEmployeePassword = createAsyncThunk(
+  "employee/resetEmployeePassword",
+  async ({ id, passwordData }: { id: number; passwordData: ResetPasswordRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.RESET_PASSWORD.replace("{id}", id.toString())
+      const response = await api.post<ResetPasswordResponse>(buildApiUrl(endpoint), passwordData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to reset password")
+      }
+
+      return {
+        employeeId: id,
+        message: response.data.message || "Password reset successfully",
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to reset password")
+      }
+      return rejectWithValue(error.message || "Network error during password reset")
+    }
+  }
+)
+
 // Employee slice
 const employeeSlice = createSlice({
   name: "employee",
@@ -516,6 +558,13 @@ const employeeSlice = createSlice({
       state.activateLoading = false
     },
 
+    // Clear reset password status
+    clearResetPasswordStatus: (state) => {
+      state.resetPasswordError = null
+      state.resetPasswordSuccess = false
+      state.resetPasswordLoading = false
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -525,6 +574,7 @@ const employeeSlice = createSlice({
       state.updateError = null
       state.deactivateError = null
       state.activateError = null
+      state.resetPasswordError = null
     },
 
     // Reset employee state
@@ -558,6 +608,9 @@ const employeeSlice = createSlice({
       state.activateLoading = false
       state.activateError = null
       state.activateSuccess = false
+      state.resetPasswordLoading = false
+      state.resetPasswordError = null
+      state.resetPasswordSuccess = false
       state.loading = false
       state.error = null
     },
@@ -796,6 +849,41 @@ const employeeSlice = createSlice({
         state.activateError = (action.payload as string) || "Failed to activate employee"
         state.activateSuccess = false
       })
+      // Reset password cases
+      .addCase(resetEmployeePassword.pending, (state) => {
+        state.resetPasswordLoading = true
+        state.resetPasswordError = null
+        state.resetPasswordSuccess = false
+      })
+      .addCase(
+        resetEmployeePassword.fulfilled,
+        (state, action: PayloadAction<{ employeeId: number; message: string }>) => {
+          state.resetPasswordLoading = false
+          state.resetPasswordSuccess = true
+          state.resetPasswordError = null
+
+          const { employeeId } = action.payload
+
+          // Update the employee's mustChangePassword status in the list
+          const index = state.employees.findIndex((emp) => emp.id === employeeId)
+          if (index !== -1) {
+            const employee = state.employees[index]
+            if (employee) {
+              employee.mustChangePassword = true
+            }
+          }
+
+          // Update employee details if it's the current one
+          if (state.employeeDetails && state.employeeDetails.id === employeeId) {
+            state.employeeDetails.mustChangePassword = true
+          }
+        }
+      )
+      .addCase(resetEmployeePassword.rejected, (state, action) => {
+        state.resetPasswordLoading = false
+        state.resetPasswordError = (action.payload as string) || "Failed to reset password"
+        state.resetPasswordSuccess = false
+      })
   },
 })
 
@@ -806,6 +894,7 @@ export const {
   clearUpdateStatus,
   clearDeactivateStatus,
   clearActivateStatus,
+  clearResetPasswordStatus,
   clearError,
   resetEmployeeState,
   setPagination,

@@ -21,6 +21,7 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import UpdateEmployeeModal from "components/ui/Modal/update-employee-modal"
 import ActivateAccountModal from "components/ui/Modal/activate-account-modal"
+import ResetPasswordModal from "components/ui/Modal/reset-password-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   CalendarOutlineIcon,
@@ -30,6 +31,7 @@ import {
   ExportOutlineIcon,
   MapOutlineIcon,
   NotificationOutlineIcon,
+  PasswordOutlineIcon,
   PhoneOutlineIcon,
   SettingOutlineIcon,
   UpdateUserOutlineIcon,
@@ -52,7 +54,9 @@ const EmployeeDetailsPage = () => {
     (state) => state.employee
   )
 
-  const [activeModal, setActiveModal] = useState<"suspend" | "activate" | "reminder" | "status" | "edit" | null>(null)
+  const [activeModal, setActiveModal] = useState<
+    "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword" | null
+  >(null)
   const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
@@ -99,7 +103,9 @@ const EmployeeDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "suspend" | "activate" | "reminder" | "status" | "edit") => setActiveModal(modalType)
+  const openModal = (
+    modalType: "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword"
+  ) => setActiveModal(modalType)
 
   const handleConfirmSuspend = () => {
     console.log("Employee suspended")
@@ -520,6 +526,14 @@ const EmployeeDetailsPage = () => {
                         Send Reminder
                       </ButtonModule>
                       <ButtonModule
+                        variant="primary"
+                        className="w-full justify-start gap-3"
+                        onClick={() => openModal("resetPassword")}
+                      >
+                        <PasswordOutlineIcon size={20} />
+                        Reset Password
+                      </ButtonModule>
+                      <ButtonModule
                         variant={employeeDetails.isActive ? "danger" : "primary"}
                         className="w-full justify-start gap-3"
                         onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
@@ -841,6 +855,14 @@ const EmployeeDetailsPage = () => {
         isOpen={activeModal === "reminder"}
         onRequestClose={closeAllModals}
         onConfirm={handleConfirmReminder}
+      />
+
+      <ResetPasswordModal
+        isOpen={activeModal === "resetPassword"}
+        onRequestClose={closeAllModals}
+        employeeId={employeeDetails.id}
+        employeeName={employeeDetails.fullName}
+        onSuccess={handleUpdateSuccess}
       />
 
       <UpdateEmployeeModal

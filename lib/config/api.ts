@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
     UPDATE_EMPLOYEE: "/identity/users/{id}",
     DEACTIVATE: "/identity/users/{id}/deactivate",
     ACTIVATE: "/identity/users/{id}/activate",
+    RESET_PASSWORD: "/identity/users/{id}/reset-password",
   },
 
   ROLES: {
