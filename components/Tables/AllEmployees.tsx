@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { fetchEmployees } from "lib/redux/employeeSlice"
+import { ChevronDown } from "lucide-react"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -240,6 +241,7 @@ const AllEmployees = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showDepartments, setShowDepartments] = useState(true)
   const [selectedDepartment, setSelectedDepartment] = useState("")
+  const [isDeptOpen, setIsDeptOpen] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
@@ -267,6 +269,9 @@ const AllEmployees = () => {
       const target = e.target as HTMLElement
       if (!target.closest('[data-dropdown-root="employee-actions"]')) {
         setActiveDropdown(null)
+      }
+      if (!target.closest('[data-dropdown-root="department-filter"]')) {
+        setIsDeptOpen(false)
       }
     }
     document.addEventListener("mousedown", onDocClick)
@@ -417,41 +422,6 @@ const AllEmployees = () => {
             </div>
           </div>
         </div>
-        <div className="relative" data-dropdown-root="employee-actions">
-          <RxDotsVertical
-            onClick={() => toggleDropdown(employee.id.toString())}
-            className="cursor-pointer text-gray-400 hover:text-gray-600"
-          />
-          {activeDropdown === employee.id.toString() && (
-            <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-              <ul className="text-sm">
-                <li
-                  className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                  onClick={() => handleOpenStatusModal(employee)}
-                >
-                  <VscEye />
-                  Update Status
-                </li>
-                <li
-                  className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                  onClick={handleOpenReminderModal}
-                >
-                  <WiTime3 /> Send Reminder
-                </li>
-                <li
-                  className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                  onClick={handleOpenSuspendModal}
-                >
-                  <GoXCircle /> Suspend Account
-                </li>
-                <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                  <PiNoteBold />
-                  Export Data
-                </li>
-              </ul>
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="mt-4 space-y-2 text-sm text-gray-600">
@@ -554,41 +524,6 @@ const AllEmployees = () => {
               <VscEye className="size-4" />
               View
             </button>
-            <div className="relative" data-dropdown-root="employee-actions">
-              <RxDotsVertical
-                onClick={() => toggleDropdown(employee.id.toString())}
-                className="cursor-pointer text-gray-400 hover:text-gray-600"
-              />
-              {activeDropdown === employee.id.toString() && (
-                <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-                  <ul className="text-sm">
-                    <li
-                      className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                      onClick={() => handleOpenStatusModal(employee)}
-                    >
-                      <VscEye />
-                      Update Status
-                    </li>
-                    <li
-                      className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                      onClick={handleOpenReminderModal}
-                    >
-                      <WiTime3 /> Send Reminder
-                    </li>
-                    <li
-                      className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                      onClick={handleOpenSuspendModal}
-                    >
-                      <GoXCircle /> Suspend Account
-                    </li>
-                    <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                      <PiNoteBold />
-                      Export Data
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -759,18 +694,52 @@ const AllEmployees = () => {
                 {showDepartments ? "Hide Departments" : "Show Departments"}
               </button>
 
-              <select
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="button-oulined"
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
+              <div className="relative" data-dropdown-root="department-filter">
+                <button
+                  type="button"
+                  className="button-oulined flex items-center gap-2"
+                  onClick={() => setIsDeptOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={isDeptOpen}
+                >
+                  <IoMdFunnel />
+                  <span>{selectedDepartment || "All Departments"}</span>
+                  <ChevronDown
+                    className={`size-4 text-gray-500 transition-transform ${isDeptOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {isDeptOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                          selectedDepartment === "" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedDepartment("")
+                          setIsDeptOpen(false)
+                        }}
+                      >
+                        All Departments
+                      </button>
+                      {departments.map((dept) => (
+                        <button
+                          key={dept}
+                          className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                            selectedDepartment === dept ? "bg-gray-50" : ""
+                          }`}
+                          onClick={() => {
+                            setSelectedDepartment(dept)
+                            setIsDeptOpen(false)
+                          }}
+                        >
+                          {dept}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -894,11 +863,13 @@ const AllEmployees = () => {
       </div>
 
       {/* Modal Components - Only one modal can be open at a time */}
-      <SuspendAccountModal
-        isOpen={activeModal === "suspend"}
-        onRequestClose={closeAllModals}
-        onConfirm={handleConfirmSuspend}
-      />
+      {/* <SuspendAccountModal
+  isOpen={activeModal === "suspend"}
+  onRequestClose={closeAllModals}
+  onConfirm={handleConfirmSuspend}
+  employeeId={employeeDetails.id} // Add this line - pass the actual employee ID
+  employeeName={employeeDetails.fullName} // Add this line - pass the employee name
+/> */}
 
       <SendReminderModal
         isOpen={activeModal === "reminder"}

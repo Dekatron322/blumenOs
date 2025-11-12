@@ -15,7 +15,6 @@ export const API_CONFIG = {
   },
 }
 
-// Centralized API Endpoints
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
@@ -28,13 +27,19 @@ export const API_ENDPOINTS = {
     EMPLOYEE: "/identity/users",
     INVITE: "/identity/users/invite",
     EMPLOYEE_DETAILS: "/identity/users/{id}",
+    UPDATE_EMPLOYEE: "/identity/users/{id}",
+    DEACTIVATE: "/identity/users/{id}/deactivate",
+    ACTIVATE: "/identity/users/{id}/activate",
   },
+
   ROLES: {
     GET: "/roles-management/roles",
   },
+
   AREA_OFFICE: {
     GET: "/assets/area-offices",
   },
+
   DEPARTMENT: {
     GET: "/departments",
   },

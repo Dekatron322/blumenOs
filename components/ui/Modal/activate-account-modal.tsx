@@ -4,11 +4,11 @@ import React from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
-import { deactivateEmployee } from "lib/redux/employeeSlice"
+import { activateEmployee } from "lib/redux/employeeSlice"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch } from "lib/hooks/useRedux"
 
-interface SuspendAccountModalProps {
+interface ActivateAccountModalProps {
   isOpen: boolean
   onRequestClose: () => void
   onConfirm?: () => void
@@ -17,7 +17,7 @@ interface SuspendAccountModalProps {
   onSuccess?: () => void
 }
 
-const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
+const ActivateAccountModal: React.FC<ActivateAccountModalProps> = ({
   isOpen,
   onRequestClose,
   onConfirm,
@@ -36,16 +36,16 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
 
       // If custom onConfirm is provided, use it
       if (onConfirm) {
-        await onConfirm() // Added await to ensure it completes
+        await onConfirm()
         onRequestClose()
         return
       }
 
-      // Otherwise, use the default deactivate employee action
-      const result = await dispatch(deactivateEmployee(employeeId))
+      // Otherwise, use the default activate employee action
+      const result = await dispatch(activateEmployee(employeeId))
 
-      if (deactivateEmployee.fulfilled.match(result)) {
-        notify("success", `Account for ${employeeName} has been deactivated successfully`)
+      if (activateEmployee.fulfilled.match(result)) {
+        notify("success", `Account for ${employeeName} has been activated successfully`)
         onSuccess?.()
       } else {
         throw new Error(result.payload as string)
@@ -53,7 +53,7 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
 
       onRequestClose()
     } catch (error: any) {
-      notify("error", error.message || "Failed to deactivate account")
+      notify("error", error.message || "Failed to activate account")
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +76,7 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Deactivate Account</h2>
+          <h2 className="text-xl font-bold text-gray-900">Activate Account</h2>
           <button
             onClick={onRequestClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
@@ -88,43 +88,37 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
 
         <div className="max-h-[70vh] overflow-y-auto">
           <div className="flex flex-col items-center px-6 pb-6 pt-6">
-            {/* Warning Icon */}
+            {/* Success Icon */}
             <div className="mb-6 flex items-center justify-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50">
-                <svg className="size-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
+                <svg className="size-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
             </div>
 
             {/* Message */}
-            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Deactivation</h3>
+            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Activation</h3>
             <p className="mb-2 text-center text-gray-600">
-              Are you sure you want to deactivate {employeeName} account?
+              Are you sure you want to activate {employeeName}'s account?
             </p>
             <p className="text-center text-sm text-gray-500">
-              The employee will not be able to access services until the account is reactivated.
+              The employee will be able to access all services once the account is activated.
             </p>
           </div>
         </div>
 
         <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <ButtonModule
-            variant="dangerSecondary"
-            className="flex-1"
-            size="lg"
-            onClick={onRequestClose}
-            disabled={isLoading}
-          >
+          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose} disabled={isLoading}>
             Cancel
           </ButtonModule>
-          <ButtonModule variant="danger" className="flex-1" size="lg" onClick={handleConfirm} disabled={isLoading}>
-            {isLoading ? "Deactivating..." : "Deactivate Account"}
+          <ButtonModule variant="primary" className="flex-1" size="lg" onClick={handleConfirm} disabled={isLoading}>
+            {isLoading ? "Activating..." : "Activate Account"}
           </ButtonModule>
         </div>
       </motion.div>
@@ -132,4 +126,4 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
   )
 }
 
-export default SuspendAccountModal
+export default ActivateAccountModal

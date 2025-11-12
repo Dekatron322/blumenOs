@@ -99,9 +99,7 @@ const AddNewVendor = () => {
   ]
 
   const handleInputChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-      | { target: { name: string; value: string | number } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
     const normalizedValue = String(value)

@@ -1074,11 +1074,11 @@ const AllCustomers = () => {
         onSuspendAccount={handleOpenSuspendModal}
       />
 
-      <SuspendAccountModal
+      {/* <SuspendAccountModal
         isOpen={activeModal === "suspend"}
         onRequestClose={closeAllModals}
         onConfirm={handleConfirmSuspend}
-      />
+      /> */}
 
       <SendReminderModal
         isOpen={activeModal === "reminder"}
