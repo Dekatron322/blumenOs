@@ -155,7 +155,6 @@ const EmployeeDetailsPage = () => {
       hour12: false,
     })
   }
- 
 
   const exportToPDF = async () => {
     if (!employeeDetails) return
