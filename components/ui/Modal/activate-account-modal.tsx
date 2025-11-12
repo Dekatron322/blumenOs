@@ -105,7 +105,7 @@ const ActivateAccountModal: React.FC<ActivateAccountModalProps> = ({
             {/* Message */}
             <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Activation</h3>
             <p className="mb-2 text-center text-gray-600">
-              Are you sure you want to activate {employeeName}'s account?
+              Are you sure you want to activate {employeeName}&apos;s account?
             </p>
             <p className="text-center text-sm text-gray-500">
               The employee will be able to access all services once the account is activated.

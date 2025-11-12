@@ -105,7 +105,7 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
             {/* Message */}
             <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Deactivation</h3>
             <p className="mb-2 text-center text-gray-600">
-              Are you sure you want to deactivate {employeeName} account?
+              Are you sure you want to deactivate {employeeName}&apos;s account?
             </p>
             <p className="text-center text-sm text-gray-500">
               The employee will not be able to access services until the account is reactivated.
