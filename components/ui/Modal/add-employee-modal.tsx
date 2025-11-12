@@ -1,13 +1,18 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
+import { useDispatch, useSelector } from "react-redux"
 import CloseIcon from "public/close-icon"
-
-import { FormSelectModule } from "../Input/FormSelectModule"
-import { ButtonModule } from "../Button/Button"
-import { FormInputModule } from "../Input/Input"
-import { notify } from "../Notification/Notification"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { ButtonModule } from "components/ui/Button/Button"
+import { FormInputModule } from "components/ui/Input/Input"
+import { notify } from "components/ui/Notification/Notification"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { clearInviteStatus, fetchEmployees, inviteEmployees } from "lib/redux/employeeSlice"
+import { fetchRoles } from "lib/redux/roleSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
 
 interface AddEmployeeModalProps {
   isOpen: boolean
@@ -15,62 +20,223 @@ interface AddEmployeeModalProps {
   onSuccess?: () => void
 }
 
+interface EmployeeFormData {
+  fullName: string
+  email: string
+  phoneNumber: string
+  roleIds: number[]
+  areaOfficeId: number
+  departmentId: number
+  employeeId: string
+  position: string
+  emergencyContact: string
+  address: string
+  supervisorId: number
+  employmentType: string
+  isActive: boolean
+}
+
 interface CSVEmployee {
   employeeId: string
   fullName: string
-  position: string
-  department: string
   email: string
   phoneNumber: string
-  hireDate: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  salary: string
-  address: string
+  roleIds: number[]
+  areaOfficeId: number
+  departmentId: number
+  position: string
   emergencyContact: string
-  supervisor: string
-  employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"
-  workLocation: string
+  address: string
+  supervisorId: number
+  employmentType: string
+  isActive: boolean
 }
 
 const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestClose, onSuccess }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
+  const { inviteLoading, inviteError, inviteSuccess, employees, employeesLoading } = useSelector(
+    (state: RootState) => state.employee
+  )
+  const { roles, loading: rolesLoading } = useSelector((state: RootState) => state.roles)
+  const { areaOffices, loading: areaOfficesLoading } = useSelector((state: RootState) => state.areaOffices)
+  const { departments, loading: departmentsLoading } = useSelector((state: RootState) => state.departments)
+
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVEmployee[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
-  const [isBulkLoading, setIsBulkLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formData, setFormData] = useState({
-    employeeId: "",
+  const [formData, setFormData] = useState<EmployeeFormData>({
     fullName: "",
-    position: "",
-    department: "",
     email: "",
     phoneNumber: "",
-    hireDate: "",
-    status: "ACTIVE" as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-    salary: "",
-    address: "",
+    roleIds: [],
+    areaOfficeId: 0,
+    departmentId: 0,
+    employeeId: "",
+    position: "",
     emergencyContact: "",
-    supervisor: "",
-    employmentType: "" as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "",
-    workLocation: "",
+    address: "",
+    supervisorId: 0,
+    employmentType: "",
+    isActive: true,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
+  // Fetch roles, employees, area offices, and departments on modal open
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(
+        fetchRoles({
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      )
+
+      dispatch(
+        fetchEmployees({
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      )
+
+      dispatch(
+        fetchAreaOffices({
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      )
+
+      dispatch(
+        fetchDepartments({
+          pageNumber: 1,
+          pageSize: 100,
+          isActive: true,
+        })
+      )
+    }
+
+    return () => {
+      dispatch(clearAreaOffices())
+      dispatch(clearDepartments())
+    }
+  }, [isOpen, dispatch])
+
+  // Handle success and error states
+  useEffect(() => {
+    if (inviteSuccess) {
+      notify("success", "Employees invited successfully", {
+        description: `${
+          activeTab === "single" ? "Employee" : csvData.length + " employees"
+        } has been invited to the system`,
+        duration: 5000,
+      })
+
+      if (onSuccess) onSuccess()
+      handleClose()
+    }
+
+    if (inviteError) {
+      notify("error", "Failed to invite employees", {
+        description: inviteError,
+        duration: 6000,
+      })
+    }
+  }, [inviteSuccess, inviteError, activeTab, csvData.length, onSuccess])
+
+  const handleClose = () => {
+    setFormData({
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      roleIds: [],
+      areaOfficeId: 0,
+      departmentId: 0,
+      employeeId: "",
+      position: "",
+      emergencyContact: "",
+      address: "",
+      supervisorId: 0,
+      employmentType: "FULL_TIME",
+      isActive: true,
+    })
+    setFormErrors({})
+    setCsvFile(null)
+    setCsvData([])
+    setCsvErrors([])
+    if (fileInputRef.current) fileInputRef.current.value = ""
+    dispatch(clearInviteStatus())
+    onRequestClose()
+  }
+
+  // Generate options from API response
+  const roleOptions = roles.map((role) => ({
+    value: role.id,
+    label: role.name,
+  }))
+
+  const areaOfficeOptions = [
+    { value: 0, label: "Select area office" },
+    ...areaOffices.map((areaOffice) => ({
+      value: areaOffice.id,
+      label: `${areaOffice.nameOfNewOAreaffice} (${areaOffice.newKaedcoCode})`,
+    })),
+  ]
+
+  const departmentOptions = [
+    { value: 0, label: "Select department" },
+    ...departments.map((department) => ({
+      value: department.id,
+      label: `${department.name}${department.description ? ` - ${department.description}` : ""}`,
+    })),
+  ]
+
+  const supervisorOptions = [
+    { value: 0, label: "Select supervisor" },
+    ...employees
+      .filter((employee) => employee.isActive)
+      .map((employee) => ({
+        value: employee.id,
+        label: `${employee.fullName} (${employee.email})`,
+      })),
+  ]
+
+  const employmentTypeOptions = [
+    { value: "FULL_TIME", label: "Full Time" },
+    { value: "PART_TIME", label: "Part Time" },
+    { value: "CONTRACT", label: "Contract" },
+  ]
+
+  const positionOptions = [
+    { value: "Software Engineer", label: "Software Engineer" },
+    { value: "Senior Developer", label: "Senior Developer" },
+    { value: "HR Specialist", label: "HR Specialist" },
+    { value: "Accountant", label: "Accountant" },
+    { value: "Sales Representative", label: "Sales Representative" },
+    { value: "Marketing Coordinator", label: "Marketing Coordinator" },
+  ]
+
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
-    const stringValue = String(value)
+
+    let processedValue = value
+    if (["areaOfficeId", "departmentId", "supervisorId"].includes(name)) {
+      processedValue = Number(value)
+    } else if (name === "roleIds") {
+      processedValue = [Number(value)]
+    } else if (name === "isActive") {
+      processedValue = value === "true" || value === true
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: stringValue,
+      [name]: processedValue,
     }))
 
-    // Clear error when user starts typing
     if (formErrors[name]) {
       setFormErrors((prev) => ({
         ...prev,
@@ -79,7 +245,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
     }
   }
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
     if (!formData.employeeId.trim()) {
@@ -94,10 +260,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       errors.position = "Position is required"
     }
 
-    if (!formData.department.trim()) {
-      errors.department = "Department is required"
-    }
-
     if (!formData.email.trim()) {
       errors.email = "Email is required"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -110,16 +272,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       errors.phoneNumber = "Please enter a valid Nigerian phone number"
     }
 
-    if (!formData.hireDate.trim()) {
-      errors.hireDate = "Hire date is required"
-    }
-
-    if (!formData.salary.trim()) {
-      errors.salary = "Salary is required"
-    } else if (isNaN(parseFloat(formData.salary)) || parseFloat(formData.salary) <= 0) {
-      errors.salary = "Please enter a valid salary amount"
-    }
-
     if (!formData.address.trim()) {
       errors.address = "Address is required"
     }
@@ -128,27 +280,54 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       errors.emergencyContact = "Emergency contact is required"
     }
 
-    if (!formData.supervisor.trim()) {
-      errors.supervisor = "Supervisor is required"
-    }
-
     if (!formData.employmentType) {
       errors.employmentType = "Employment type is required"
     }
 
-    if (!formData.workLocation.trim()) {
-      errors.workLocation = "Work location is required"
+    if (formData.roleIds.length === 0 || formData.roleIds[0] === 0) {
+      errors.roleIds = "Role is required"
+    }
+
+    if (formData.areaOfficeId === 0) {
+      errors.areaOfficeId = "Area office is required"
+    }
+
+    if (formData.departmentId === 0) {
+      errors.departmentId = "Department is required"
+    }
+
+    if (formData.supervisorId === 0) {
+      errors.supervisorId = "Please select a supervisor or choose 'No supervisor'"
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
 
+  const submitSingleEmployee = async () => {
+    if (!validateForm()) {
+      notify("error", "Please fix the form errors before submitting", {
+        description: "Some fields are missing or contain invalid data",
+        duration: 4000,
+      })
+      return
+    }
+
+    try {
+      const inviteData = {
+        users: [formData],
+      }
+
+      await dispatch(inviteEmployees(inviteData)).unwrap()
+    } catch (error: any) {
+      console.error("Failed to invite employee:", error)
+    }
+  }
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    // Validate file type
     if (!file.name.toLowerCase().endsWith(".csv")) {
       notify("error", "Invalid file type", {
         description: "Please select a CSV file",
@@ -157,7 +336,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       return
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       notify("error", "File too large", {
         description: "Please select a CSV file smaller than 10MB",
@@ -187,22 +365,20 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
 
         const headers = lines[0]!.split(",").map((header) => header.trim().toLowerCase())
 
-        // Validate headers
         const expectedHeaders = [
           "employeeid",
           "fullname",
-          "position",
-          "department",
           "email",
           "phonenumber",
-          "hiredate",
-          "status",
-          "salary",
-          "address",
+          "roleids",
+          "areaofficeid",
+          "departmentid",
+          "position",
           "emergencycontact",
-          "supervisor",
+          "address",
+          "supervisorid",
           "employmenttype",
-          "worklocation",
+          "isactive",
         ]
 
         const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
@@ -226,7 +402,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
             row[header] = values[index]
           })
 
-          // Validate row data
           const rowErrors = validateCSVRow(row, i + 1)
           if (rowErrors.length > 0) {
             errors.push(...rowErrors)
@@ -234,18 +409,17 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
             parsedData.push({
               employeeId: row.employeeid,
               fullName: row.fullname,
-              position: row.position,
-              department: row.department,
               email: row.email,
               phoneNumber: row.phonenumber,
-              hireDate: row.hiredate,
-              status: row.status.toUpperCase() as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-              salary: row.salary,
-              address: row.address,
+              roleIds: [parseInt(row.roleids) || 1],
+              areaOfficeId: parseInt(row.areaofficeid) || 0,
+              departmentId: parseInt(row.departmentid) || 0,
+              position: row.position,
               emergencyContact: row.emergencycontact,
-              supervisor: row.supervisor,
-              employmentType: row.employmenttype.toUpperCase() as "FULL_TIME" | "PART_TIME" | "CONTRACT",
-              workLocation: row.worklocation,
+              address: row.address,
+              supervisorId: parseInt(row.supervisorid) || 0,
+              employmentType: row.employmenttype.toUpperCase(),
+              isActive: row.isactive?.toLowerCase() === "true",
             })
           }
         }
@@ -300,10 +474,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       errors.push(`Row ${rowNumber}: Position is required`)
     }
 
-    if (!row.department?.trim()) {
-      errors.push(`Row ${rowNumber}: Department is required`)
-    }
-
     if (!row.email?.trim()) {
       errors.push(`Row ${rowNumber}: Email is required`)
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
@@ -316,22 +486,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       errors.push(`Row ${rowNumber}: Please enter a valid Nigerian phone number`)
     }
 
-    if (!row.hiredate?.trim()) {
-      errors.push(`Row ${rowNumber}: Hire date is required`)
-    }
-
-    if (!row.status?.trim()) {
-      errors.push(`Row ${rowNumber}: Status is required`)
-    } else if (!["ACTIVE", "INACTIVE", "SUSPENDED"].includes(row.status.toUpperCase())) {
-      errors.push(`Row ${rowNumber}: Status must be ACTIVE, INACTIVE, or SUSPENDED`)
-    }
-
-    if (!row.salary?.trim()) {
-      errors.push(`Row ${rowNumber}: Salary is required`)
-    } else if (isNaN(parseFloat(row.salary)) || parseFloat(row.salary) <= 0) {
-      errors.push(`Row ${rowNumber}: Please enter a valid salary amount`)
-    }
-
     if (!row.address?.trim()) {
       errors.push(`Row ${rowNumber}: Address is required`)
     }
@@ -340,18 +494,30 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       errors.push(`Row ${rowNumber}: Emergency contact is required`)
     }
 
-    if (!row.supervisor?.trim()) {
-      errors.push(`Row ${rowNumber}: Supervisor is required`)
-    }
-
     if (!row.employmenttype?.trim()) {
       errors.push(`Row ${rowNumber}: Employment type is required`)
-    } else if (!["FULL_TIME", "PART_TIME", "CONTRACT"].includes(row.employmenttype.toUpperCase())) {
-      errors.push(`Row ${rowNumber}: Employment type must be FULL_TIME, PART_TIME, or CONTRACT`)
     }
 
-    if (!row.worklocation?.trim()) {
-      errors.push(`Row ${rowNumber}: Work location is required`)
+    if (!row.roleids?.trim()) {
+      errors.push(`Row ${rowNumber}: Role ID is required`)
+    } else if (isNaN(parseInt(row.roleids))) {
+      errors.push(`Row ${rowNumber}: Role ID must be a valid number`)
+    }
+
+    if (!row.areaofficeid?.trim()) {
+      errors.push(`Row ${rowNumber}: Area office ID is required`)
+    } else if (isNaN(parseInt(row.areaofficeid))) {
+      errors.push(`Row ${rowNumber}: Area office ID must be a valid number`)
+    }
+
+    if (!row.departmentid?.trim()) {
+      errors.push(`Row ${rowNumber}: Department ID is required`)
+    } else if (isNaN(parseInt(row.departmentid))) {
+      errors.push(`Row ${rowNumber}: Department ID must be a valid number`)
+    }
+
+    if (row.supervisorid?.trim() && isNaN(parseInt(row.supervisorid))) {
+      errors.push(`Row ${rowNumber}: Supervisor ID must be a valid number`)
     }
 
     return errors
@@ -374,179 +540,69 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       return
     }
 
-    setIsBulkLoading(true)
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Frontend-only implementation - log the data and show success message
-      console.log("Bulk employee data ready for upload:", csvData)
-
-      notify("success", "Bulk upload ready", {
-        description: `${csvData.length} employees validated and ready for upload. Backend integration pending.`,
-        duration: 6000,
-      })
-
-      // In a real implementation, you would send the data to your API here:
-      // await bulkAddEmployees(csvData).unwrap()
-
-      // Reset form
-      setCsvFile(null)
-      setCsvData([])
-      setCsvErrors([])
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+      const inviteData = {
+        users: csvData,
       }
 
-      onRequestClose()
-      if (onSuccess) onSuccess()
+      await dispatch(inviteEmployees(inviteData)).unwrap()
     } catch (error: any) {
       console.error("Failed to process bulk upload:", error)
-      notify("error", "Bulk upload processing failed", {
-        description: "There was an error processing the bulk upload",
-        duration: 6000,
-      })
-    } finally {
-      setIsBulkLoading(false)
     }
-  }
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      notify("error", "Please fix the form errors before submitting", {
-        description: "Some fields are missing or contain invalid data",
-        duration: 4000,
-      })
-      return
-    }
-
-    try {
-      setIsSubmitting(true)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Employee data ready:", {
-        employeeId: formData.employeeId,
-        fullName: formData.fullName,
-        position: formData.position,
-        department: formData.department,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        hireDate: formData.hireDate,
-        status: formData.status,
-        salary: formData.salary,
-        address: formData.address,
-        emergencyContact: formData.emergencyContact,
-        supervisor: formData.supervisor,
-        employmentType: formData.employmentType as "FULL_TIME" | "PART_TIME" | "CONTRACT",
-        workLocation: formData.workLocation,
-      })
-
-      notify("success", "Employee created successfully", {
-        description: `${formData.fullName} (${formData.employeeId}) has been added to the system`,
-        duration: 5000,
-      })
-
-      // Reset form
-      setFormData({
-        employeeId: "",
-        fullName: "",
-        position: "",
-        department: "",
-        email: "",
-        phoneNumber: "",
-        hireDate: "",
-        status: "ACTIVE",
-        salary: "",
-        address: "",
-        emergencyContact: "",
-        supervisor: "",
-        employmentType: "",
-        workLocation: "",
-      })
-      setFormErrors({})
-
-      onRequestClose()
-      if (onSuccess) onSuccess()
-    } catch (error: any) {
-      console.error("Failed to add employee:", error)
-      const errorMessage = error?.data?.message || "An unexpected error occurred while adding the employee"
-      notify("error", "Failed to add employee", {
-        description: errorMessage,
-        duration: 6000,
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const isFormValid = () => {
-    return (
-      formData.employeeId.trim() &&
-      formData.fullName.trim() &&
-      formData.position.trim() &&
-      formData.department.trim() &&
-      formData.email.trim() &&
-      formData.phoneNumber.trim() &&
-      formData.hireDate.trim() &&
-      formData.salary.trim() &&
-      formData.address.trim() &&
-      formData.emergencyContact.trim() &&
-      formData.supervisor.trim() &&
-      formData.employmentType &&
-      formData.workLocation.trim()
-    )
   }
 
   const downloadTemplate = () => {
     const headers = [
       "employeeId",
       "fullName",
-      "position",
-      "department",
       "email",
       "phoneNumber",
-      "hireDate",
-      "status",
-      "salary",
-      "address",
+      "roleIds",
+      "areaOfficeId",
+      "departmentId",
+      "position",
       "emergencyContact",
-      "supervisor",
+      "address",
+      "supervisorId",
       "employmentType",
-      "workLocation",
+      "isActive",
     ]
+
+    const exampleRoleId = roles[0]?.id?.toString() ?? "1"
+    const exampleAreaOfficeId = areaOffices[0]?.id?.toString() ?? "1"
+    const exampleDepartmentId = departments[0]?.id?.toString() ?? "1"
+    const exampleSupervisorId = employees[0]?.id?.toString() ?? "0"
 
     const exampleData = [
       {
         employeeId: "EMP00123",
         fullName: "John Doe",
-        position: "Software Engineer",
-        department: "IT",
         email: "john.doe@company.com",
         phoneNumber: "08012345678",
-        hireDate: "2023-01-15",
-        status: "ACTIVE",
-        salary: "450000",
-        address: "123 Main Street, Lagos",
+        roleIds: exampleRoleId,
+        areaOfficeId: exampleAreaOfficeId,
+        departmentId: exampleDepartmentId,
+        position: "Software Engineer",
         emergencyContact: "08087654321",
-        supervisor: "Sarah Johnson",
+        address: "123 Main Street, Lagos",
+        supervisorId: exampleSupervisorId,
         employmentType: "FULL_TIME",
-        workLocation: "Head Office",
+        isActive: "true",
       },
       {
         employeeId: "EMP00124",
         fullName: "Jane Smith",
-        position: "HR Specialist",
-        department: "HR",
         email: "jane.smith@company.com",
         phoneNumber: "08087654321",
-        hireDate: "2023-03-20",
-        status: "ACTIVE",
-        salary: "380000",
-        address: "456 Broad Avenue, Abuja",
+        roleIds: exampleRoleId,
+        areaOfficeId: exampleAreaOfficeId,
+        departmentId: exampleDepartmentId,
+        position: "HR Specialist",
         emergencyContact: "08012345678",
-        supervisor: "Michael Chen",
+        address: "456 Broad Avenue, Abuja",
+        supervisorId: exampleSupervisorId,
         employmentType: "FULL_TIME",
-        workLocation: "Head Office",
+        isActive: "true",
       },
     ]
 
@@ -559,7 +615,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "employee_upload_template.csv"
+    a.download = "employee_invite_template.csv"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -571,53 +627,23 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
     })
   }
 
-  // Options for dropdowns
-  const departmentOptions = [
-    { value: "", label: "Select department" },
-    { value: "HR", label: "Human Resources" },
-    { value: "IT", label: "Information Technology" },
-    { value: "FIN", label: "Finance" },
-    { value: "SAL", label: "Sales" },
-    { value: "MKT", label: "Marketing" },
-    { value: "OPS", label: "Operations" },
-    { value: "CS", label: "Customer Service" },
-    { value: "R&D", label: "Research & Development" },
-  ]
-
-  const positionOptions = [
-    { value: "", label: "Select position" },
-    { value: "Software Engineer", label: "Software Engineer" },
-    { value: "Senior Developer", label: "Senior Developer" },
-    { value: "Junior Developer", label: "Junior Developer" },
-    { value: "HR Specialist", label: "HR Specialist" },
-    { value: "Accountant", label: "Accountant" },
-    { value: "Sales Representative", label: "Sales Representative" },
-    { value: "Marketing Coordinator", label: "Marketing Coordinator" },
-    { value: "Operations Manager", label: "Operations Manager" },
-    { value: "Customer Support", label: "Customer Support" },
-  ]
-
-  const employmentTypeOptions = [
-    { value: "", label: "Select employment type" },
-    { value: "FULL_TIME", label: "Full Time" },
-    { value: "PART_TIME", label: "Part Time" },
-    { value: "CONTRACT", label: "Contract" },
-  ]
-
-  const statusOptions = [
-    { value: "ACTIVE", label: "Active" },
-    { value: "INACTIVE", label: "Inactive" },
-    { value: "SUSPENDED", label: "Suspended" },
-  ]
-
-  const workLocationOptions = [
-    { value: "", label: "Select work location" },
-    { value: "Head Office", label: "Head Office" },
-    { value: "Branch A", label: "Branch A" },
-    { value: "Branch B", label: "Branch B" },
-    { value: "Branch C", label: "Branch C" },
-    { value: "Remote", label: "Remote" },
-  ]
+  const isFormValid = (): boolean => {
+    return (
+      formData.employeeId.trim() !== "" &&
+      formData.fullName.trim() !== "" &&
+      formData.position.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.phoneNumber.trim() !== "" &&
+      formData.address.trim() !== "" &&
+      formData.emergencyContact.trim() !== "" &&
+      formData.employmentType !== "" &&
+      formData.roleIds.length > 0 &&
+      formData.roleIds[0] !== 0 &&
+      formData.areaOfficeId !== 0 &&
+      formData.departmentId !== 0 &&
+      formData.supervisorId !== 0
+    )
+  }
 
   if (!isOpen) return null
 
@@ -627,7 +653,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      onClick={onRequestClose}
+      onClick={handleClose}
     >
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -640,7 +666,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
         <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
           <h2 className="text-xl font-bold text-gray-900">Add New Employee</h2>
           <button
-            onClick={onRequestClose}
+            onClick={handleClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
           >
             <CloseIcon />
@@ -673,7 +699,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
 
         <div className="max-h-[70vh] overflow-y-auto">
           {activeTab === "single" ? (
-            <div className="mt-6 grid grid-cols-3 gap-6 px-6 pb-6">
+            <div className="mt-6 grid grid-cols-2 gap-6 px-6 pb-6">
               {/* Single Entry Form */}
               <FormInputModule
                 label="Employee ID"
@@ -697,24 +723,29 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
                 required
               />
 
-              <FormSelectModule
+              <FormInputModule
                 label="Position"
                 name="position"
+                type="text"
+                placeholder="Enter employee position"
                 value={formData.position}
                 onChange={handleInputChange}
-                options={positionOptions}
                 error={formErrors.position}
                 required
               />
 
               <FormSelectModule
                 label="Department"
-                name="department"
-                value={formData.department}
+                name="departmentId"
+                value={formData.departmentId}
                 onChange={handleInputChange}
-                options={departmentOptions}
-                error={formErrors.department}
+                options={[
+                  { value: "", label: departmentsLoading ? "Loading departments..." : "Select department" },
+                  ...departmentOptions.filter((option) => option.value !== 0),
+                ]}
+                error={formErrors.departmentId}
                 required
+                disabled={departmentsLoading}
               />
 
               <FormInputModule
@@ -740,33 +771,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
               />
 
               <FormInputModule
-                label="Hire Date"
-                name="hireDate"
-                type="date"
-                value={formData.hireDate}
+                label="Emergency Contact"
+                name="emergencyContact"
+                type="tel"
+                placeholder="Enter emergency contact number"
+                value={formData.emergencyContact}
                 onChange={handleInputChange}
-                error={formErrors.hireDate}
-                required
-                placeholder={""}
-              />
-
-              <FormSelectModule
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                options={statusOptions}
-                required
-              />
-
-              <FormInputModule
-                label="Salary"
-                name="salary"
-                type="number"
-                placeholder="Enter salary amount"
-                value={formData.salary}
-                onChange={handleInputChange}
-                error={formErrors.salary}
+                error={formErrors.emergencyContact}
                 required
               />
 
@@ -782,44 +793,67 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
               />
 
               <FormInputModule
-                label="Emergency Contact"
-                name="emergencyContact"
-                type="tel"
-                placeholder="Enter emergency contact number"
-                value={formData.emergencyContact}
-                onChange={handleInputChange}
-                error={formErrors.emergencyContact}
-                required
-              />
-
-              <FormInputModule
-                label="Supervisor"
-                name="supervisor"
-                type="text"
-                placeholder="Enter supervisor name"
-                value={formData.supervisor}
-                onChange={handleInputChange}
-                error={formErrors.supervisor}
-                required
-              />
-
-              <FormSelectModule
                 label="Employment Type"
                 name="employmentType"
+                type="text"
+                placeholder="Enter employment type"
                 value={formData.employmentType}
                 onChange={handleInputChange}
-                options={employmentTypeOptions}
                 error={formErrors.employmentType}
                 required
               />
 
               <FormSelectModule
-                label="Work Location"
-                name="workLocation"
-                value={formData.workLocation}
+                label="Role"
+                name="roleIds"
+                value={formData.roleIds[0] ?? ""}
                 onChange={handleInputChange}
-                options={workLocationOptions}
-                error={formErrors.workLocation}
+                options={[{ value: "", label: rolesLoading ? "Loading roles..." : "Select role" }, ...roleOptions]}
+                error={formErrors.roleIds}
+                required
+                disabled={rolesLoading}
+              />
+
+              <FormSelectModule
+                label="Area Office"
+                name="areaOfficeId"
+                value={formData.areaOfficeId}
+                onChange={handleInputChange}
+                options={[
+                  {
+                    value: "",
+                    label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
+                  },
+                  ...areaOfficeOptions.filter((option) => option.value !== 0),
+                ]}
+                error={formErrors.areaOfficeId}
+                required
+                disabled={areaOfficesLoading}
+              />
+
+              <FormSelectModule
+                label="Supervisor"
+                name="supervisorId"
+                value={formData.supervisorId}
+                onChange={handleInputChange}
+                options={[
+                  { value: 0, label: employeesLoading ? "Loading supervisors..." : "Select supervisor" },
+                  ...supervisorOptions.filter((option) => option.value !== 0),
+                ]}
+                error={formErrors.supervisorId}
+                required
+                disabled={employeesLoading}
+              />
+
+              <FormSelectModule
+                label="Status"
+                name="isActive"
+                value={formData.isActive.toString()}
+                onChange={handleInputChange}
+                options={[
+                  { value: "true", label: "Active" },
+                  { value: "false", label: "Inactive" },
+                ]}
                 required
               />
 
@@ -914,8 +948,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
                         Choose Different File
                       </ButtonModule>
                       {csvErrors.length === 0 && csvData.length > 0 && (
-                        <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={isBulkLoading}>
-                          {isBulkLoading ? "Processing..." : `Process ${csvData.length} Employees`}
+                        <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={inviteLoading}>
+                          {inviteLoading ? "Processing..." : `Process ${csvData.length} Employees`}
                         </ButtonModule>
                       )}
                     </div>
@@ -978,10 +1012,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
                             Employee ID
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Name</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Email</th>
                           <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Position</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                            Department
-                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 bg-white">
@@ -989,8 +1021,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
                           <tr key={index}>
                             <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{employee.employeeId}</td>
                             <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{employee.fullName}</td>
+                            <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{employee.email}</td>
                             <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{employee.position}</td>
-                            <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{employee.department}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1012,8 +1044,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
             variant="dangerSecondary"
             className="flex-1"
             size="lg"
-            onClick={onRequestClose}
-            disabled={isSubmitting || isBulkLoading}
+            onClick={handleClose}
+            disabled={inviteLoading}
           >
             Cancel
           </ButtonModule>
@@ -1022,20 +1054,24 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
               variant="primary"
               className="flex-1"
               size="lg"
-              onClick={handleSubmit}
-              disabled={!isFormValid() || isSubmitting}
+              onClick={() => {
+                void submitSingleEmployee()
+              }}
+              disabled={!isFormValid() || inviteLoading}
             >
-              {isSubmitting ? "Adding Employee..." : "Add Employee"}
+              {inviteLoading ? "Adding Employee..." : "Add Employee"}
             </ButtonModule>
           ) : (
             <ButtonModule
               variant="primary"
               className="flex-1"
               size="lg"
-              onClick={handleBulkSubmit}
-              disabled={csvData.length === 0 || csvErrors.length > 0 || isBulkLoading}
+              onClick={() => {
+                void handleBulkSubmit()
+              }}
+              disabled={csvData.length === 0 || csvErrors.length > 0 || inviteLoading}
             >
-              {isBulkLoading ? "Processing..." : `Process ${csvData.length} Employees`}
+              {inviteLoading ? "Processing..." : `Process ${csvData.length} Employees`}
             </ButtonModule>
           )}
         </div>

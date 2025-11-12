@@ -529,8 +529,6 @@ const AddEmployeePage = () => {
 
     if (!row.employmenttype?.trim()) {
       errors.push(`Row ${rowNumber}: Employment type is required`)
-    } else if (!["FULL_TIME", "PART_TIME", "CONTRACT"].includes(row.employmenttype.toUpperCase())) {
-      errors.push(`Row ${rowNumber}: Employment type must be FULL_TIME, PART_TIME, or CONTRACT`)
     }
 
     // Validate role ID
@@ -881,12 +879,13 @@ const AddEmployeePage = () => {
                             required
                           />
 
-                          <FormSelectModule
+                          <FormInputModule
                             label="Position"
                             name="position"
+                            type="text"
+                            placeholder="Enter employee position"
                             value={formData.position}
                             onChange={handleInputChange}
-                            options={[{ value: "", label: "Select position" }, ...positionOptions]}
                             error={formErrors.position}
                             required
                           />
@@ -915,12 +914,13 @@ const AddEmployeePage = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormSelectModule
+                          <FormInputModule
                             label="Employment Type"
                             name="employmentType"
                             value={formData.employmentType}
                             onChange={handleInputChange}
-                            options={[{ value: "", label: "Select employment type" }, ...employmentTypeOptions]}
+                            type="text"
+                            placeholder="Enter employment type"
                             error={formErrors.employmentType}
                             required
                           />
