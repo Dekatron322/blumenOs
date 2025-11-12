@@ -53,6 +53,9 @@ const EmployeeDetailsPage = () => {
   const { employeeDetails, employeeDetailsLoading, employeeDetailsError, employeeDetailsSuccess } = useAppSelector(
     (state) => state.employee
   )
+  // Get current user to check privileges
+  const { user } = useAppSelector((state) => state.auth)
+  const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
   const [activeModal, setActiveModal] = useState<
     "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword" | null
@@ -103,9 +106,8 @@ const EmployeeDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (
-    modalType: "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword"
-  ) => setActiveModal(modalType)
+  const openModal = (modalType: "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword") =>
+    setActiveModal(modalType)
 
   const handleConfirmSuspend = () => {
     console.log("Employee suspended")
@@ -427,15 +429,22 @@ const EmployeeDetailsPage = () => {
                       {isExporting ? "Exporting..." : "Export"}
                     </ButtonModule>
 
-                    <ButtonModule
-                      variant="primary"
-                      size="sm"
-                      className="flex items-center gap-2"
-                      onClick={() => openModal("edit")}
-                    >
-                      <Edit3 className="size-4" />
-                      Edit
-                    </ButtonModule>
+                    {canUpdate ? (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => openModal("edit")}
+                      >
+                        <Edit3 className="size-4" />
+                        Edit
+                      </ButtonModule>
+                    ) : (
+                      <ButtonModule variant="primary" size="sm" className="flex items-center gap-2" disabled>
+                        <Edit3 className="size-4" />
+                        Update Request
+                      </ButtonModule>
+                    )}
                   </div>
                 </div>
               </div>
@@ -506,43 +515,45 @@ const EmployeeDetailsPage = () => {
                   </motion.div>
 
                   {/* Quick Actions */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <SettingOutlineIcon />
-                      Quick Actions
-                    </h3>
-                    <div className="space-y-3">
-                      <ButtonModule
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => openModal("reminder")}
-                      >
-                        <NotificationOutlineIcon />
-                        Send Reminder
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="primary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => openModal("resetPassword")}
-                      >
-                        <PasswordOutlineIcon size={20} />
-                        Reset Password
-                      </ButtonModule>
-                      <ButtonModule
-                        variant={employeeDetails.isActive ? "danger" : "primary"}
-                        className="w-full justify-start gap-3"
-                        onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
-                      >
-                        {employeeDetails.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
-                        {employeeDetails.isActive ? "Deactivate Account" : "Activate Account"}
-                      </ButtonModule>
-                    </div>
-                  </motion.div>
+                  {canUpdate && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    >
+                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+                        <SettingOutlineIcon />
+                        Quick Actions
+                      </h3>
+                      <div className="space-y-3">
+                        <ButtonModule
+                          variant="secondary"
+                          className="w-full justify-start gap-3"
+                          onClick={() => openModal("reminder")}
+                        >
+                          <NotificationOutlineIcon />
+                          Send Reminder
+                        </ButtonModule>
+                        <ButtonModule
+                          variant="primary"
+                          className="w-full justify-start gap-3"
+                          onClick={() => openModal("resetPassword")}
+                        >
+                          <PasswordOutlineIcon size={20} />
+                          Reset Password
+                        </ButtonModule>
+                        <ButtonModule
+                          variant={employeeDetails.isActive ? "danger" : "primary"}
+                          className="w-full justify-start gap-3"
+                          onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
+                        >
+                          {employeeDetails.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+                          {employeeDetails.isActive ? "Deactivate Account" : "Activate Account"}
+                        </ButtonModule>
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Roles & Privileges */}
                   {employeeDetails.roles && employeeDetails.roles.length > 0 && (

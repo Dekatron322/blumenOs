@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { ChevronDown } from "lucide-react"
+import { ExportCsvIcon } from "components/Icons/Icons"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -326,6 +327,63 @@ const AllEmployees = () => {
   const handleConfirmStatusChange = (status: string) => {
     console.log("Status changed to:", status)
     closeAllModals()
+  }
+
+  // CSV Export functionality
+  const exportToCSV = () => {
+    if (!employees || employees.length === 0) {
+      alert("No employee data to export")
+      return
+    }
+
+    // Define CSV headers
+    const headers = [
+      "ID",
+      "Full Name",
+      "Email",
+      "Phone Number",
+      "Account ID",
+      "Status",
+      "Password Reset Required",
+      "Employee ID",
+      "Position",
+      "Employment Type",
+      "Department",
+      "Work Location",
+    ]
+
+    // Convert employee data to CSV rows
+    const csvRows = employees.map((employee) => [
+      employee.id.toString(),
+      `"${employee.fullName.replace(/"/g, '""')}"`,
+      `"${employee.email}"`,
+      `"${employee.phoneNumber || "N/A"}"`,
+      `"${employee.accountId}"`,
+      employee.isActive ? "Active" : "Inactive",
+      employee.mustChangePassword ? "Yes" : "No",
+      `"${employee.employeeId || "N/A"}"`,
+      `"${employee.position || "N/A"}"`,
+      `"${employee.employmentType ? employee.employmentType.replace("_", " ") : "N/A"}"`,
+      `"${employee.departmentName || "N/A"}"`,
+      `"${employee.areaOfficeName || "N/A"}"`,
+    ])
+
+    // Combine headers and rows
+    const csvContent = [headers, ...csvRows].map((row) => row.join(",")).join("\n")
+
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+
+    link.setAttribute("href", url)
+    link.setAttribute("download", `employees_export_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   const getStatusStyle = (isActive: boolean) => {
@@ -663,7 +721,17 @@ const AllEmployees = () => {
         {/* Main Content - Employees List/Grid */}
         <div className={`rounded-md border bg-white p-5 ${showDepartments ? "flex-1" : "w-full"}`}>
           <div className="flex flex-col py-2">
-            <p className="text-2xl font-medium">All Employees</p>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-2xl font-medium">All Employees</p>
+              <button
+                className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE]  hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+                onClick={exportToCSV}
+                disabled={!employees || employees.length === 0}
+              >
+                <ExportCsvIcon color="#2563EB" size={20} />
+                <p className="text-sm text-[#2563EB]">Export CSV</p>
+              </button>
+            </div>
             <div className="mt-2 flex gap-4">
               <SearchModule
                 value={searchText}
@@ -693,6 +761,8 @@ const AllEmployees = () => {
               <button className="button-oulined" onClick={() => setShowDepartments(!showDepartments)}>
                 {showDepartments ? "Hide Departments" : "Show Departments"}
               </button>
+
+              {/* Export CSV Button */}
 
               <div className="relative" data-dropdown-root="department-filter">
                 <button
