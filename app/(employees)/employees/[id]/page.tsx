@@ -23,7 +23,7 @@ import {
   VerifyOutlineIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchEmployeeDetails, clearEmployeeDetails } from "lib/redux/employeeSlice"
+import { clearEmployeeDetails, fetchEmployeeDetails } from "lib/redux/employeeSlice"
 
 const EmployeeDetailsPage = () => {
   const params = useParams()
