@@ -24,7 +24,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ placeholder, value, onChange,
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="h-full w-full bg-transparent outline-none focus:outline-none"
+          className="size-full bg-transparent outline-none focus:outline-none"
         />
       </div>
     </div>

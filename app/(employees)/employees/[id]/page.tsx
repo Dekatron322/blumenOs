@@ -3,25 +3,9 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  AlertCircle,
-  Briefcase,
-  Calendar,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  Edit3,
-  Mail,
-  MapPin,
-  Phone,
-  Power,
-  Share2,
-  Shield,
-  User,
-} from "lucide-react"
+import { AlertCircle, CheckCircle, Edit3, Mail, MapPin, Phone, Power, Share2, Shield, User } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
-import UpdateStatusModal from "components/ui/Modal/update-status-modal"
 import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
@@ -30,7 +14,6 @@ import {
   EmailOutlineIcon,
   EmployeeInfoIcon,
   ExportOutlineIcon,
-  FinanceOutlineIcon,
   MapOutlineIcon,
   NotificationOutlineIcon,
   PhoneOutlineIcon,
@@ -40,7 +23,7 @@ import {
   VerifyOutlineIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchEmployeeDetails, EmployeeDetails, clearEmployeeDetails } from "lib/redux/employeeSlice"
+import { fetchEmployeeDetails, clearEmployeeDetails } from "lib/redux/employeeSlice"
 
 const EmployeeDetailsPage = () => {
   const params = useParams()

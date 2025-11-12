@@ -199,7 +199,7 @@ const MapViewTab = () => {
                 }`}
               >
                 <span
-                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white transition-transform ${
                     customersLayerEnabled ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
@@ -216,7 +216,7 @@ const MapViewTab = () => {
                 }`}
               >
                 <span
-                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white transition-transform ${
                     assetsLayerEnabled ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
@@ -231,7 +231,7 @@ const MapViewTab = () => {
         {/* Map Display */}
         <div className="relative h-[600px] w-full overflow-hidden rounded-md bg-gray-100">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <svg viewBox="0 0 1000 600" className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 1000 600" className="size-full" xmlns="http://www.w3.org/2000/svg">
             {/* Background - Simplified world map focusing on West Africa */}
             <rect width="1000" height="600" fill="#e5e7eb" />
 
@@ -340,19 +340,19 @@ const MapViewTab = () => {
                 <h4 className="mb-2 text-sm font-semibold">Customers</h4>
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                    <div className="size-3 rounded-full bg-green-500"></div>
                     <span>Paid</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                    <div className="size-3 rounded-full bg-red-500"></div>
                     <span>Unpaid</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+                    <div className="size-3 rounded-full bg-orange-500"></div>
                     <span>Partial</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-gray-500"></div>
+                    <div className="size-3 rounded-full bg-gray-500"></div>
                     <span>Unknown</span>
                   </div>
                 </div>
@@ -368,15 +368,15 @@ const MapViewTab = () => {
                     <span>Feeder</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-gray-500"></div>
+                    <div className="size-4 rounded bg-gray-500"></div>
                     <span>Substation</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-amber-900"></div>
+                    <div className="size-4 rounded bg-amber-900"></div>
                     <span>Transformer</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded bg-gray-500"></div>
+                    <div className="size-4 rounded bg-gray-500"></div>
                     <span>Service Center</span>
                   </div>
                 </div>
