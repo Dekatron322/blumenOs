@@ -23,6 +23,7 @@ export interface Employee {
 
 // Extended Employee interface for detailed view
 export interface EmployeeDetails {
+  lastLoginAt: any
   id: number
   fullName: string
   email: string
@@ -73,6 +74,22 @@ export interface EmployeesRequestParams {
   pageSize: number
 }
 
+// Interfaces for Employee Update
+export interface UpdateEmployeeRequest {
+  fullName: string
+  phoneNumber: string
+  isActive: boolean
+  roleIds: number[]
+  areaOfficeId: number
+  departmentId: number
+  employeeId: string
+  position: string
+  emergencyContact: string
+  address: string
+  supervisorId: number
+  employmentType: string
+}
+
 // Interfaces for Employee Invite
 interface InviteUserRequest {
   fullName: string
@@ -99,6 +116,7 @@ interface Role {
   name: string
   slug: string
   category: string
+  description?: string
 }
 
 interface Privilege {
@@ -145,7 +163,26 @@ interface InviteUsersResponse {
   data: InviteUserResponse[]
 }
 
-// Employee State
+// Update Employee Response Interface
+interface UpdateEmployeeResponse {
+  isSuccess: boolean
+  message: string
+  data: EmployeeDetails
+}
+
+// Deactivate Employee Response Interface
+interface DeactivateEmployeeResponse {
+  isSuccess: boolean
+  message: string
+}
+
+// Activate Employee Response Interface
+interface ActivateEmployeeResponse {
+  isSuccess: boolean
+  message: string
+}
+
+// Employee State - Mutable Redux state object
 interface EmployeeState {
   // Employees list state
   employees: Employee[]
@@ -175,6 +212,21 @@ interface EmployeeState {
   inviteSuccess: boolean
   invitedUsers: InviteUserResponse[] | null
 
+  // Update state
+  updateLoading: boolean
+  updateError: string | null
+  updateSuccess: boolean
+
+  // Deactivate state
+  deactivateLoading: boolean
+  deactivateError: string | null
+  deactivateSuccess: boolean
+
+  // Activate state
+  activateLoading: boolean
+  activateError: string | null
+  activateSuccess: boolean
+
   // General employee state
   loading: boolean
   error: string | null
@@ -202,6 +254,15 @@ const initialState: EmployeeState = {
   inviteError: null,
   inviteSuccess: false,
   invitedUsers: null,
+  updateLoading: false,
+  updateError: null,
+  updateSuccess: false,
+  deactivateLoading: false,
+  deactivateError: null,
+  deactivateSuccess: false,
+  activateLoading: false,
+  activateError: null,
+  activateSuccess: false,
   loading: false,
   error: null,
 }
@@ -244,7 +305,9 @@ export const fetchEmployeeById = createAsyncThunk<Employee, number, { rejectValu
         return rejectWithValue(response.data.message || "Failed to fetch employee")
       }
 
-      const employee = response.data.data?.[0]
+      // Fixed: Proper null check for data array
+      const employees = response.data.data || []
+      const employee = employees[0]
       if (!employee) {
         return rejectWithValue("Employee not found")
       }
@@ -269,6 +332,11 @@ export const fetchEmployeeDetails = createAsyncThunk(
         return rejectWithValue(response.data.message || "Failed to fetch employee details")
       }
 
+      // Fixed: Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Employee details not found")
+      }
+
       return response.data.data
     } catch (error: any) {
       if (error.response?.data) {
@@ -289,7 +357,11 @@ export const inviteEmployees = createAsyncThunk(
         return rejectWithValue(response.data.message || "Failed to invite employees")
       }
 
-      return response.data
+      // Fixed: Ensure data exists and provide fallback
+      return {
+        ...response.data,
+        data: response.data.data || [],
+      }
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to invite employees")
@@ -299,34 +371,31 @@ export const inviteEmployees = createAsyncThunk(
   }
 )
 
-export const updateEmployee = createAsyncThunk<
-  Employee,
-  { id: number; employeeData: Partial<Employee> },
-  { rejectValue: string }
->("employee/updateEmployee", async ({ id, employeeData }, { rejectWithValue }) => {
-  try {
-    const response = await api.put<EmployeesResponse>(
-      `${buildApiUrl(API_ENDPOINTS.EMPLOYEE.EMPLOYEE)}/${id}`,
-      employeeData
-    )
+export const updateEmployee = createAsyncThunk(
+  "employee/updateEmployee",
+  async ({ id, employeeData }: { id: number; employeeData: UpdateEmployeeRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.UPDATE_EMPLOYEE.replace("{id}", id.toString())
+      const response = await api.put<UpdateEmployeeResponse>(buildApiUrl(endpoint), employeeData)
 
-    if (!response.data.isSuccess) {
-      return rejectWithValue(response.data.message || "Failed to update employee") as any
-    }
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update employee")
+      }
 
-    const updated = response.data.data?.[0]
-    if (!updated) {
-      return rejectWithValue("Failed to update employee") as any
-    }
+      // Fixed: Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Updated employee data not found")
+      }
 
-    return updated
-  } catch (error: any) {
-    if (error.response?.data) {
-      return rejectWithValue(error.response.data.message || "Failed to update employee") as any
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update employee")
+      }
+      return rejectWithValue(error.message || "Network error during employee update")
     }
-    return rejectWithValue(error.message || "Network error during employee update") as any
   }
-})
+)
 
 export const deleteEmployee = createAsyncThunk(
   "employee/deleteEmployee",
@@ -346,6 +415,48 @@ export const deleteEmployee = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to delete employee")
       }
       return rejectWithValue(error.message || "Network error during employee deletion")
+    }
+  }
+)
+
+export const deactivateEmployee = createAsyncThunk(
+  "employee/deactivateEmployee",
+  async (employeeId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.DEACTIVATE.replace("{id}", employeeId.toString())
+      const response = await api.post<DeactivateEmployeeResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to deactivate employee")
+      }
+
+      return { employeeId, message: response.data.message || "Employee deactivated successfully" }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to deactivate employee")
+      }
+      return rejectWithValue(error.message || "Network error during employee deactivation")
+    }
+  }
+)
+
+export const activateEmployee = createAsyncThunk(
+  "employee/activateEmployee",
+  async (employeeId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.ACTIVATE.replace("{id}", employeeId.toString())
+      const response = await api.post<ActivateEmployeeResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to activate employee")
+      }
+
+      return { employeeId, message: response.data.message || "Employee activated successfully" }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to activate employee")
+      }
+      return rejectWithValue(error.message || "Network error during employee activation")
     }
   }
 )
@@ -384,12 +495,36 @@ const employeeSlice = createSlice({
       state.invitedUsers = null
     },
 
+    // Clear update status
+    clearUpdateStatus: (state) => {
+      state.updateError = null
+      state.updateSuccess = false
+      state.updateLoading = false
+    },
+
+    // Clear deactivate status
+    clearDeactivateStatus: (state) => {
+      state.deactivateError = null
+      state.deactivateSuccess = false
+      state.deactivateLoading = false
+    },
+
+    // Clear activate status
+    clearActivateStatus: (state) => {
+      state.activateError = null
+      state.activateSuccess = false
+      state.activateLoading = false
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
       state.inviteError = null
       state.employeesError = null
       state.employeeDetailsError = null
+      state.updateError = null
+      state.deactivateError = null
+      state.activateError = null
     },
 
     // Reset employee state
@@ -414,6 +549,15 @@ const employeeSlice = createSlice({
       state.inviteError = null
       state.inviteSuccess = false
       state.invitedUsers = null
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
+      state.deactivateLoading = false
+      state.deactivateError = null
+      state.deactivateSuccess = false
+      state.activateLoading = false
+      state.activateError = null
+      state.activateSuccess = false
       state.loading = false
       state.error = null
     },
@@ -449,14 +593,15 @@ const employeeSlice = createSlice({
       .addCase(fetchEmployees.fulfilled, (state, action: PayloadAction<EmployeesResponse>) => {
         state.employeesLoading = false
         state.employeesSuccess = true
-        state.employees = action.payload.data
+        // Fixed: Ensure data exists with fallback
+        state.employees = action.payload.data || []
         state.pagination = {
-          totalCount: action.payload.totalCount,
-          totalPages: action.payload.totalPages,
-          currentPage: action.payload.currentPage,
-          pageSize: action.payload.pageSize,
-          hasNext: action.payload.hasNext,
-          hasPrevious: action.payload.hasPrevious,
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
         }
         state.employeesError = null
       })
@@ -481,8 +626,8 @@ const employeeSlice = createSlice({
       })
       .addCase(fetchEmployeeById.fulfilled, (state, action: PayloadAction<Employee>) => {
         state.loading = false
-        // You might want to store the current employee separately
         state.error = null
+        // Optional: You can store the fetched employee if needed
       })
       .addCase(fetchEmployeeById.rejected, (state, action) => {
         state.loading = false
@@ -516,7 +661,8 @@ const employeeSlice = createSlice({
       .addCase(inviteEmployees.fulfilled, (state, action: PayloadAction<InviteUsersResponse>) => {
         state.inviteLoading = false
         state.inviteSuccess = true
-        state.invitedUsers = action.payload.data
+        // Fixed: Ensure data exists with fallback
+        state.invitedUsers = action.payload.data || []
         state.inviteError = null
       })
       .addCase(inviteEmployees.rejected, (state, action) => {
@@ -527,21 +673,46 @@ const employeeSlice = createSlice({
       })
       // Update employee cases
       .addCase(updateEmployee.pending, (state) => {
-        state.loading = true
-        state.error = null
+        state.updateLoading = true
+        state.updateError = null
+        state.updateSuccess = false
       })
-      .addCase(updateEmployee.fulfilled, (state, action: PayloadAction<Employee>) => {
-        state.loading = false
-        // Update the employee in the list
+      .addCase(updateEmployee.fulfilled, (state, action: PayloadAction<EmployeeDetails>) => {
+        state.updateLoading = false
+        state.updateSuccess = true
+        state.updateError = null
+
+        // Update the employee in the list if exists - convert EmployeeDetails to Employee format
         const index = state.employees.findIndex((emp) => emp.id === action.payload.id)
         if (index !== -1) {
-          state.employees[index] = action.payload
+          const updatedEmployee: Employee = {
+            id: action.payload.id,
+            fullName: action.payload.fullName,
+            email: action.payload.email,
+            phoneNumber: action.payload.phoneNumber,
+            accountId: action.payload.accountId,
+            isActive: action.payload.isActive,
+            mustChangePassword: action.payload.mustChangePassword,
+            employeeId: action.payload.employeeId,
+            position: action.payload.position,
+            employmentType: action.payload.employmentType,
+            departmentId: action.payload.departmentId,
+            departmentName: action.payload.departmentName,
+            areaOfficeId: action.payload.areaOfficeId,
+            areaOfficeName: action.payload.areaOfficeName,
+          }
+          state.employees[index] = updatedEmployee
         }
-        state.error = null
+
+        // Update employee details if it's the current one
+        if (state.employeeDetails && state.employeeDetails.id === action.payload.id) {
+          state.employeeDetails = action.payload
+        }
       })
       .addCase(updateEmployee.rejected, (state, action) => {
-        state.loading = false
-        state.error = (action.payload as string) || "Failed to update employee"
+        state.updateLoading = false
+        state.updateError = (action.payload as string) || "Failed to update employee"
+        state.updateSuccess = false
       })
       // Delete employee cases
       .addCase(deleteEmployee.pending, (state) => {
@@ -558,6 +729,73 @@ const employeeSlice = createSlice({
         state.loading = false
         state.error = (action.payload as string) || "Failed to delete employee"
       })
+      // Deactivate employee cases
+      .addCase(deactivateEmployee.pending, (state) => {
+        state.deactivateLoading = true
+        state.deactivateError = null
+        state.deactivateSuccess = false
+      })
+      .addCase(
+        deactivateEmployee.fulfilled,
+        (state, action: PayloadAction<{ employeeId: number; message: string }>) => {
+          state.deactivateLoading = false
+          state.deactivateSuccess = true
+          state.deactivateError = null
+
+          const { employeeId } = action.payload
+
+          // Update the employee's isActive status in the list
+          const index = state.employees.findIndex((emp) => emp.id === employeeId)
+          if (index !== -1) {
+            const employee = state.employees[index]
+            if (employee) {
+              employee.isActive = false
+            }
+          }
+
+          // Update employee details if it's the current one
+          if (state.employeeDetails && state.employeeDetails.id === employeeId) {
+            state.employeeDetails.isActive = false
+          }
+        }
+      )
+      .addCase(deactivateEmployee.rejected, (state, action) => {
+        state.deactivateLoading = false
+        state.deactivateError = (action.payload as string) || "Failed to deactivate employee"
+        state.deactivateSuccess = false
+      })
+      // Activate employee cases
+      .addCase(activateEmployee.pending, (state) => {
+        state.activateLoading = true
+        state.activateError = null
+        state.activateSuccess = false
+      })
+      .addCase(activateEmployee.fulfilled, (state, action: PayloadAction<{ employeeId: number; message: string }>) => {
+        state.activateLoading = false
+        state.activateSuccess = true
+        state.activateError = null
+
+        const { employeeId } = action.payload
+
+        // Update the employee's isActive status in the list
+        const index = state.employees.findIndex((emp) => emp.id === employeeId)
+        if (index !== -1) {
+          const employee = state.employees[index]
+          if (employee) {
+            employee.isActive = true
+          }
+        }
+
+        // Update employee details if it's the current one
+        if (state.employeeDetails && state.employeeDetails.id === employeeId) {
+          state.employeeDetails.isActive = true
+        }
+      })
+      .addCase(activateEmployee.rejected, (state, action) => {
+        state.activateLoading = false
+        state.activateError = (action.payload as string) || "Failed to activate employee"
+        state.activateSuccess = false
+      })
   },
 })
 
@@ -565,6 +803,9 @@ export const {
   clearEmployees,
   clearEmployeeDetails,
   clearInviteStatus,
+  clearUpdateStatus,
+  clearDeactivateStatus,
+  clearActivateStatus,
   clearError,
   resetEmployeeState,
   setPagination,

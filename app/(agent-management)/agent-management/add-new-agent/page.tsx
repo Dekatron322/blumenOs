@@ -80,9 +80,7 @@ const AddNewAgent = () => {
   ]
 
   const handleInputChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-      | { target: { name: string; value: string | number } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
     const stringValue = typeof value === "number" ? String(value) : value

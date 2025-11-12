@@ -3,10 +3,24 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, CheckCircle, Edit3, Mail, MapPin, Phone, Power, Share2, Shield, User } from "lucide-react"
+import {
+  AlertCircle,
+  CheckCircle,
+  Edit3,
+  Mail,
+  MapPin,
+  Phone,
+  Power,
+  PowerOff,
+  Share2,
+  Shield,
+  User,
+} from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
+import UpdateEmployeeModal from "components/ui/Modal/update-employee-modal"
+import ActivateAccountModal from "components/ui/Modal/activate-account-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   CalendarOutlineIcon,
@@ -24,6 +38,8 @@ import {
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearEmployeeDetails, fetchEmployeeDetails } from "lib/redux/employeeSlice"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 const EmployeeDetailsPage = () => {
   const params = useParams()
@@ -36,7 +52,8 @@ const EmployeeDetailsPage = () => {
     (state) => state.employee
   )
 
-  const [activeModal, setActiveModal] = useState<"suspend" | "reminder" | "status" | null>(null)
+  const [activeModal, setActiveModal] = useState<"suspend" | "activate" | "reminder" | "status" | "edit" | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
     if (employeeId) {
@@ -82,7 +99,7 @@ const EmployeeDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "suspend" | "reminder" | "status") => setActiveModal(modalType)
+  const openModal = (modalType: "suspend" | "activate" | "reminder" | "status" | "edit") => setActiveModal(modalType)
 
   const handleConfirmSuspend = () => {
     console.log("Employee suspended")
@@ -91,6 +108,17 @@ const EmployeeDetailsPage = () => {
 
   const handleConfirmReminder = (message: string) => {
     console.log("Reminder sent:", message)
+    closeAllModals()
+  }
+
+  const handleUpdateSuccess = () => {
+    // Refresh employee details after successful update
+    if (employeeId) {
+      const id = parseInt(employeeId)
+      if (!isNaN(id)) {
+        dispatch(fetchEmployeeDetails(id))
+      }
+    }
     closeAllModals()
   }
 
@@ -113,6 +141,204 @@ const EmployeeDetailsPage = () => {
       return `+1 (${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
     }
     return phoneNumber
+  }
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A"
+    return new Date(dateString).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+  }
+ 
+
+  const exportToPDF = async () => {
+    if (!employeeDetails) return
+
+    setIsExporting(true)
+    try {
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+
+      // Add header with company branding
+      doc.setFillColor(249, 249, 249)
+      doc.rect(0, 0, pageWidth, 60, "F")
+
+      // Company name
+      doc.setFontSize(20)
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(10, 10, 10)
+      doc.text("EMPLOYEE RECORD", pageWidth / 2, 20, { align: "center" })
+
+      // Report title
+      doc.setFontSize(16)
+      doc.setTextColor(100, 100, 100)
+      doc.text("Employee Details Report", pageWidth / 2, 30, { align: "center" })
+
+      // Date generated
+      doc.setFontSize(10)
+      doc.setTextColor(150, 150, 150)
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 38, { align: "center" })
+
+      let yPosition = 70
+
+      // Employee Profile Section
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(10, 10, 10)
+      doc.text("EMPLOYEE PROFILE", 14, yPosition)
+      yPosition += 10
+
+      // Profile table
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Field", "Details"]],
+        body: [
+          ["Full Name", employeeDetails.fullName],
+          ["Employee ID", employeeDetails.employeeId],
+          ["Position", employeeDetails.position || "Not specified"],
+          ["Department", employeeDetails.departmentName || "Not assigned"],
+          ["Employment Type", employeeDetails.employmentType?.replace("_", " ") || "FULL TIME"],
+          ["Status", employeeDetails.isActive ? "ACTIVE" : "INACTIVE"],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15
+
+      // Contact Information Section
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("CONTACT INFORMATION", 14, yPosition)
+      yPosition += 10
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Contact Method", "Details", "Status"]],
+        body: [
+          ["Email", employeeDetails.email, employeeDetails.isEmailVerified ? "✓ Verified" : "Not verified"],
+          [
+            "Phone",
+            formatPhoneNumber(employeeDetails.phoneNumber),
+            employeeDetails.isPhoneVerified ? "✓ Verified" : "Not verified",
+          ],
+          ["Address", employeeDetails.address || "Not provided", ""],
+          ["Emergency Contact", employeeDetails.emergencyContact || "Not provided", ""],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [16, 185, 129], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15
+
+      // Department & System Information
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("DEPARTMENT & SYSTEM INFORMATION", 14, yPosition)
+      yPosition += 10
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Category", "Details"]],
+        body: [
+          ["Area Office", employeeDetails.areaOfficeName || "Not specified"],
+          ["Supervisor", employeeDetails.supervisorName || "Not assigned"],
+          ["Account ID", employeeDetails.accountId],
+          ["Account Created", formatDate(employeeDetails.createdAt)],
+          ["Account Updated", formatDate(employeeDetails.updatedAt)],
+          ["Last Login", formatDate(employeeDetails.lastLoginAt)],
+          ["Password Reset Required", employeeDetails.mustChangePassword ? "Yes" : "No"],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [139, 92, 246], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15
+
+      // Roles & Privileges Section
+      if (employeeDetails.roles && employeeDetails.roles.length > 0) {
+        doc.setFontSize(14)
+        doc.setFont("helvetica", "bold")
+        doc.text("ROLES & PERMISSIONS", 14, yPosition)
+        yPosition += 10
+
+        const rolesBody = employeeDetails.roles.map((role) => [
+          role.name,
+          role.category,
+          role.description || "No description",
+        ])
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [["Role Name", "Category", "Description"]],
+          body: rolesBody,
+          theme: "grid",
+          headStyles: { fillColor: [245, 158, 11], textColor: 255 },
+          styles: { fontSize: 9 },
+          margin: { left: 14, right: 14 },
+        })
+
+        yPosition = (doc as any).lastAutoTable.finalY + 15
+      }
+
+      // Privileges Section
+      if (employeeDetails.privileges && employeeDetails.privileges.length > 0) {
+        doc.setFontSize(14)
+        doc.setFont("helvetica", "bold")
+        doc.text("SYSTEM PRIVILEGES", 14, yPosition)
+        yPosition += 10
+
+        const privilegesBody = employeeDetails.privileges.map((privilege) => [
+          privilege.name,
+          privilege.category,
+          privilege.actions
+            ? privilege.actions
+                .map((action) => ({ E: "Execute", R: "Read", U: "Update", W: "Write" })[action] || action)
+                .join(", ")
+            : "None",
+        ])
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [["Privilege", "Category", "Actions"]],
+          body: privilegesBody,
+          theme: "grid",
+          headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+          styles: { fontSize: 9 },
+          margin: { left: 14, right: 14 },
+        })
+      }
+
+      // Add page numbers
+      const totalPages = doc.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        doc.setFontSize(8)
+        doc.setTextColor(150, 150, 150)
+        doc.text(`Page ${i} of ${totalPages}`, pageWidth - 20, pageHeight - 10)
+      }
+
+      // Save the PDF
+      doc.save(`employee-record-${employeeDetails.employeeId}-${new Date().toISOString().split("T")[0]}.pdf`)
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      alert("Error generating PDF. Please try again.")
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   if (employeeDetailsLoading) {
@@ -185,15 +411,23 @@ const EmployeeDetailsPage = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
+                    <ButtonModule
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={exportToPDF}
+                      disabled={isExporting}
+                    >
                       <ExportOutlineIcon className="size-4" />
-                      Export
+                      {isExporting ? "Exporting..." : "Export"}
                     </ButtonModule>
-                    <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
-                      <Share2 className="size-4" />
-                      Share
-                    </ButtonModule>
-                    <ButtonModule variant="primary" size="sm" className="flex items-center gap-2">
+
+                    <ButtonModule
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => openModal("edit")}
+                    >
                       <Edit3 className="size-4" />
                       Edit
                     </ButtonModule>
@@ -202,6 +436,7 @@ const EmployeeDetailsPage = () => {
               </div>
             </div>
 
+            {/* Rest of your existing JSX remains the same */}
             <div className="flex w-full px-16 py-8">
               <div className="flex w-full gap-6">
                 {/* Left Column - Profile & Quick Actions */}
@@ -239,7 +474,7 @@ const EmployeeDetailsPage = () => {
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${employmentTypeConfig.bg} ${employmentTypeConfig.color}`}
                         >
-                          {employeeDetails.employmentType.replace("_", " ")}
+                          {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
                         </div>
                         {employeeDetails.mustChangePassword && (
                           <div className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600">
@@ -286,20 +521,12 @@ const EmployeeDetailsPage = () => {
                         Send Reminder
                       </ButtonModule>
                       <ButtonModule
-                        variant="secondary"
+                        variant={employeeDetails.isActive ? "danger" : "primary"}
                         className="w-full justify-start gap-3"
-                        onClick={() => openModal("status")}
+                        onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
                       >
-                        <UpdateUserOutlineIcon />
-                        Update Status
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="danger"
-                        className="w-full justify-start gap-3"
-                        onClick={() => openModal("suspend")}
-                      >
-                        <Power className="size-4" />
-                        {employeeDetails.isActive ? "Suspend Account" : "Activate Account"}
+                        {employeeDetails.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+                        {employeeDetails.isActive ? "Deactivate Account" : "Activate Account"}
                       </ButtonModule>
                     </div>
                   </motion.div>
@@ -365,7 +592,7 @@ const EmployeeDetailsPage = () => {
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Employment Type</label>
                           <p className="font-semibold text-gray-900">
-                            {employeeDetails.employmentType.replace("_", " ")}
+                            {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
@@ -533,31 +760,19 @@ const EmployeeDetailsPage = () => {
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Account Created</label>
-                          <p className="font-semibold text-gray-900">
-                            {employeeDetails.createdAt
-                              ? new Date(employeeDetails.createdAt).toLocaleDateString()
-                              : "N/A"}
-                          </p>
+                          <p className="font-semibold text-gray-900">{formatDate(employeeDetails.createdAt)}</p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Account Updated</label>
-                          <p className="font-semibold text-gray-900">
-                            {employeeDetails.updatedAt
-                              ? new Date(employeeDetails.updatedAt).toLocaleDateString()
-                              : "N/A"}
-                          </p>
+                          <p className="font-semibold text-gray-900">{formatDate(employeeDetails.updatedAt)}</p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Last Updated</label>
-                          <p className="font-semibold text-gray-900">
-                            {employeeDetails.updatedAt
-                              ? new Date(employeeDetails.updatedAt).toLocaleDateString()
-                              : "N/A"}
-                          </p>
+                          <label className="text-sm font-medium text-gray-600">Last Login</label>
+                          <p className="font-semibold text-gray-900">{formatDate(employeeDetails.lastLoginAt)}</p>
                         </div>
                       </div>
                     </div>
@@ -587,7 +802,9 @@ const EmployeeDetailsPage = () => {
                                     key={actionIndex}
                                     className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
                                   >
-                                    {action}
+                                    {({ E: "Execute", R: "Read", U: "Update", W: "Write" } as Record<string, string>)[
+                                      action
+                                    ] || action}
                                   </span>
                                 ))}
                               </div>
@@ -608,7 +825,17 @@ const EmployeeDetailsPage = () => {
       <SuspendAccountModal
         isOpen={activeModal === "suspend"}
         onRequestClose={closeAllModals}
-        onConfirm={handleConfirmSuspend}
+        onSuccess={handleUpdateSuccess}
+        employeeId={employeeDetails.id}
+        employeeName={employeeDetails.fullName}
+      />
+
+      <ActivateAccountModal
+        isOpen={activeModal === "activate"}
+        onRequestClose={closeAllModals}
+        onSuccess={handleUpdateSuccess}
+        employeeId={employeeDetails.id}
+        employeeName={employeeDetails.fullName}
       />
 
       <SendReminderModal
@@ -617,11 +844,17 @@ const EmployeeDetailsPage = () => {
         onConfirm={handleConfirmReminder}
       />
 
-      {/* <UpdateStatusModal isOpen={activeModal === "status"} onRequestClose={closeAllModals} employee={employeeDetails} /> */}
+      <UpdateEmployeeModal
+        isOpen={activeModal === "edit"}
+        onRequestClose={closeAllModals}
+        onSuccess={handleUpdateSuccess}
+        employee={employeeDetails}
+      />
     </section>
   )
 }
 
+// LoadingSkeleton component remains the same...
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />

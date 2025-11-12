@@ -649,11 +649,11 @@ const CustomerDetailsPage = () => {
       </div>
 
       {/* Modals */}
-      <SuspendAccountModal
+      {/* <SuspendAccountModal
         isOpen={activeModal === "suspend"}
         onRequestClose={closeAllModals}
         onConfirm={handleConfirmSuspend}
-      />
+      /> */}
 
       <SendReminderModal
         isOpen={activeModal === "reminder"}
