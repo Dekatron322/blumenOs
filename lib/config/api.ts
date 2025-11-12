@@ -27,6 +27,7 @@ export const API_ENDPOINTS = {
   EMPLOYEE: {
     EMPLOYEE: "/identity/users",
     INVITE: "/identity/users/invite",
+    EMPLOYEE_DETAILS: "/identity/users/{id}",
   },
   ROLES: {
     GET: "/roles-management/roles",

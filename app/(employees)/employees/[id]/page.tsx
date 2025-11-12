@@ -26,7 +26,9 @@ import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   CalendarOutlineIcon,
+  DepartmentInfoIcon,
   EmailOutlineIcon,
+  EmployeeInfoIcon,
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
@@ -34,153 +36,57 @@ import {
   PhoneOutlineIcon,
   SettingOutlineIcon,
   UpdateUserOutlineIcon,
+  UserRoleIcon,
+  VerifyOutlineIcon,
 } from "components/Icons/Icons"
-
-interface Employee {
-  id: string
-  employeeId: string
-  fullName: string
-  position: string
-  department: string
-  email: string
-  phoneNumber: string
-  hireDate: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  salary: string
-  address: string
-  emergencyContact: string
-  supervisor: string
-  employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"
-  workLocation: string
-  createdAt: string
-  updatedAt: string
-}
-
-interface Department {
-  name: string
-  manager: string
-  employeeCount: number
-  location: string
-}
-
-// Modern data generation for employees
-const generateSampleEmployee = (id: string): Employee => {
-  const firstNames = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn"]
-  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
-  const positions = [
-    "Software Engineer",
-    "HR Specialist",
-    "Sales Manager",
-    "Marketing Coordinator",
-    "Operations Manager",
-    "Finance Analyst",
-    "Customer Support",
-    "Product Manager",
-  ]
-  const departments = ["IT", "HR", "Sales", "Marketing", "Operations", "Finance", "Customer Service", "R&D"]
-  const workLocations = ["Head Office", "Branch A", "Branch B", "Branch C", "Remote"]
-  const supervisors = [
-    "Sarah Johnson",
-    "Michael Chen",
-    "David Wilson",
-    "Lisa Rodriguez",
-    "James Thompson",
-    "Karen Smith",
-  ]
-
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)]!
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)]!
-  const position = positions[Math.floor(Math.random() * positions.length)]!
-  const department = departments[Math.floor(Math.random() * departments.length)]!
-  const workLocation = workLocations[Math.floor(Math.random() * workLocations.length)]!
-  const supervisor = supervisors[Math.floor(Math.random() * supervisors.length)]!
-
-  return {
-    id,
-    employeeId: `EMP${80000 + Math.floor(Math.random() * 20000)}`,
-    fullName: `${firstName} ${lastName}`,
-    position,
-    department,
-    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@company.com`,
-    phoneNumber: `+1 (${555 + Math.floor(Math.random() * 445)}) ${100 + Math.floor(Math.random() * 900)}-${
-      1000 + Math.floor(Math.random() * 9000)
-    }`,
-    hireDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000 * 3).toISOString(),
-    status: ["ACTIVE", "INACTIVE", "SUSPENDED"][Math.floor(Math.random() * 3)] as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-    salary: (Math.random() * 80000 + 40000).toFixed(2),
-    address: `${Math.floor(Math.random() * 1000) + 1} ${
-      ["Main St", "Oak Ave", "Maple Dr", "Cedar Ln"][Math.floor(Math.random() * 4)]
-    }, ${["New York", "Los Angeles", "Chicago", "Houston"][Math.floor(Math.random() * 4)]}`,
-    emergencyContact: `+1 (${555 + Math.floor(Math.random() * 445)}) ${100 + Math.floor(Math.random() * 900)}-${
-      1000 + Math.floor(Math.random() * 9000)
-    }`,
-    supervisor,
-    employmentType: ["FULL_TIME", "PART_TIME", "CONTRACT"][Math.floor(Math.random() * 3)] as
-      | "FULL_TIME"
-      | "PART_TIME"
-      | "CONTRACT",
-    workLocation,
-    createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-const generateDepartmentInfo = (department: string): Department => {
-  const managers = [
-    "Sarah Johnson",
-    "Michael Chen",
-    "David Wilson",
-    "Lisa Rodriguez",
-    "James Thompson",
-    "Karen Smith",
-    "Robert Brown",
-    "Emily Zhang",
-  ]
-  const locations = ["Head Office", "Floor 2", "Floor 5", "Annex Building", "Remote Hub"]
-
-  return {
-    name: department,
-    manager: managers[Math.floor(Math.random() * managers.length)]!,
-    employeeCount: Math.floor(Math.random() * 50) + 10,
-    location: locations[Math.floor(Math.random() * locations.length)]!,
-  }
-}
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchEmployeeDetails, EmployeeDetails, clearEmployeeDetails } from "lib/redux/employeeSlice"
 
 const EmployeeDetailsPage = () => {
   const params = useParams()
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const employeeId = params.id as string
 
-  const [employee, setEmployee] = useState<Employee | null>(null)
-  const [departmentInfo, setDepartmentInfo] = useState<Department | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Get employee details from Redux store
+  const { employeeDetails, employeeDetailsLoading, employeeDetailsError, employeeDetailsSuccess } = useAppSelector(
+    (state) => state.employee
+  )
+
   const [activeModal, setActiveModal] = useState<"suspend" | "reminder" | "status" | null>(null)
 
   useEffect(() => {
-    const fetchEmployeeData = async () => {
-      setIsLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 1200))
-
-      const employeeData = generateSampleEmployee(employeeId)
-      const deptInfo = generateDepartmentInfo(employeeData.department)
-
-      setEmployee(employeeData)
-      setDepartmentInfo(deptInfo)
-      setIsLoading(false)
-    }
-
     if (employeeId) {
-      fetchEmployeeData()
+      const id = parseInt(employeeId)
+      if (!isNaN(id)) {
+        dispatch(fetchEmployeeDetails(id))
+      }
     }
-  }, [employeeId])
 
-  const getStatusConfig = (status: string) => {
-    const configs = {
-      ACTIVE: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle },
-      INACTIVE: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", icon: Clock },
-      SUSPENDED: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertCircle },
+    // Cleanup function to clear employee details when component unmounts
+    return () => {
+      dispatch(clearEmployeeDetails())
     }
-    return configs[status as keyof typeof configs] || configs.INACTIVE
+  }, [dispatch, employeeId])
+
+  const getStatusConfig = (status: boolean) => {
+    const configs = {
+      true: {
+        color: "text-emerald-600",
+        bg: "bg-emerald-50",
+        border: "border-emerald-200",
+        icon: CheckCircle,
+        label: "ACTIVE",
+      },
+      false: {
+        color: "text-red-600",
+        bg: "bg-red-50",
+        border: "border-red-200",
+        icon: AlertCircle,
+        label: "INACTIVE",
+      },
+    }
+    return configs[status.toString() as keyof typeof configs] || configs.false
   }
 
   const getEmploymentTypeConfig = (type: string) => {
@@ -205,11 +111,11 @@ const EmployeeDetailsPage = () => {
     closeAllModals()
   }
 
-  const calculateTenure = (hireDate: string) => {
-    const hire = new Date(hireDate)
+  const calculateTenure = (createdAt: string) => {
+    const created = new Date(createdAt)
     const now = new Date()
-    const years = now.getFullYear() - hire.getFullYear()
-    const months = now.getMonth() - hire.getMonth()
+    const years = now.getFullYear() - created.getFullYear()
+    const months = now.getMonth() - created.getMonth()
 
     if (months < 0) {
       return `${years - 1} years ${12 + months} months`
@@ -217,17 +123,30 @@ const EmployeeDetailsPage = () => {
     return `${years} years ${months} months`
   }
 
-  if (isLoading) {
+  const formatPhoneNumber = (phoneNumber: string) => {
+    // Basic formatting for phone numbers
+    const cleaned = phoneNumber.replace(/\D/g, "")
+    if (cleaned.length === 10) {
+      return `+1 (${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+    }
+    return phoneNumber
+  }
+
+  if (employeeDetailsLoading) {
     return <LoadingSkeleton />
   }
 
-  if (!employee) {
+  if (employeeDetailsError || !employeeDetails) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
         <div className="text-center">
           <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Employee Not Found</h1>
-          <p className="mb-6 text-gray-600">The employee you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            {employeeDetailsError ? "Error Loading Employee" : "Employee Not Found"}
+          </h1>
+          <p className="mb-6 text-gray-600">
+            {employeeDetailsError || "The employee you're looking for doesn't exist."}
+          </p>
           <ButtonModule variant="primary" onClick={() => router.back()}>
             Back to Employees
           </ButtonModule>
@@ -236,10 +155,10 @@ const EmployeeDetailsPage = () => {
     )
   }
 
-  const statusConfig = getStatusConfig(employee.status)
-  const employmentTypeConfig = getEmploymentTypeConfig(employee.employmentType)
+  const statusConfig = getStatusConfig(employeeDetails.isActive)
+  const employmentTypeConfig = getEmploymentTypeConfig(employeeDetails.employmentType)
   const StatusIcon = statusConfig.icon
-  const tenure = calculateTenure(employee.hireDate)
+  const tenure = calculateTenure(employeeDetails.createdAt || new Date().toISOString())
 
   return (
     <section className="size-full">
@@ -254,7 +173,7 @@ const EmployeeDetailsPage = () => {
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-gray-50"
+                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-[#f9f9f9]"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
@@ -313,7 +232,7 @@ const EmployeeDetailsPage = () => {
                     <div className="text-center">
                       <div className="relative inline-block">
                         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#0a0a0a]">
-                          {employee.fullName
+                          {employeeDetails.fullName
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
@@ -325,34 +244,39 @@ const EmployeeDetailsPage = () => {
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{employee.fullName}</h2>
-                      <p className="mb-4 text-gray-600">Employee #{employee.employeeId}</p>
+                      <h2 className="mb-2 text-xl font-bold text-gray-900">{employeeDetails.fullName}</h2>
+                      <p className="mb-4 text-gray-600">Employee #{employeeDetails.employeeId}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
                         >
-                          {employee.status}
+                          {statusConfig.label}
                         </div>
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${employmentTypeConfig.bg} ${employmentTypeConfig.color}`}
                         >
-                          {employee.employmentType.replace("_", " ")}
+                          {employeeDetails.employmentType.replace("_", " ")}
                         </div>
+                        {employeeDetails.mustChangePassword && (
+                          <div className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600">
+                            Password Reset
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
                           <PhoneOutlineIcon />
-                          {employee.phoneNumber}
+                          {formatPhoneNumber(employeeDetails.phoneNumber)}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <EmailOutlineIcon />
-                          {employee.email}
+                          {employeeDetails.email}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <MapOutlineIcon className="size-4" />
-                          {employee.workLocation}
+                          {employeeDetails.areaOfficeName || "Not specified"}
                         </div>
                       </div>
                     </div>
@@ -392,45 +316,33 @@ const EmployeeDetailsPage = () => {
                         onClick={() => openModal("suspend")}
                       >
                         <Power className="size-4" />
-                        Suspend Account
+                        {employeeDetails.isActive ? "Suspend Account" : "Activate Account"}
                       </ButtonModule>
                     </div>
                   </motion.div>
 
-                  {/* Compensation Overview */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="rounded-lg border bg-white p-6"
-                  >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <FinanceOutlineIcon />
-                      Compensation
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <div className="mb-2 text-3xl font-bold text-gray-900">
-                          ${parseFloat(employee.salary).toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600">Annual Salary</div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-emerald-600">
-                            $
-                            {(parseFloat(employee.salary) / 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {/* Roles & Privileges */}
+                  {employeeDetails.roles && employeeDetails.roles.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    >
+                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+                        <UserRoleIcon />
+                        Roles & Permissions
+                      </h3>
+                      <div className="space-y-3">
+                        {employeeDetails.roles.map((role, index) => (
+                          <div key={role.roleId} className="rounded-lg bg-[#f9f9f9] p-3">
+                            <div className="font-medium text-gray-900">{role.name}</div>
+                            <div className="text-sm text-gray-600">{role.category}</div>
                           </div>
-                          <div className="text-xs text-gray-600">Monthly</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-blue-600">{tenure}</div>
-                          <div className="text-xs text-gray-600">Tenure</div>
-                        </div>
+                        ))}
                       </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* Right Column - Detailed Information */}
@@ -439,42 +351,69 @@ const EmployeeDetailsPage = () => {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <Briefcase className="size-5" />
+                      <EmployeeInfoIcon />
                       Employment Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                       <div className="space-y-4">
-                        <div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Employee ID</label>
-                          <p className="font-semibold text-gray-900">{employee.employeeId}</p>
+                          <p className="font-semibold text-gray-900">{employeeDetails.employeeId}</p>
                         </div>
-                        <div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Position</label>
-                          <p className="font-semibold text-gray-900">{employee.position}</p>
+                          <p className="font-semibold text-gray-900">{employeeDetails.position || "Not specified"}</p>
+                        </div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Account ID</label>
+                          <p className="font-semibold text-gray-900">{employeeDetails.accountId}</p>
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Department</label>
-                          <p className="font-semibold text-gray-900">{employee.department}</p>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.departmentName || "Not assigned"}
+                          </p>
                         </div>
-                        <div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Employment Type</label>
-                          <p className="font-semibold text-gray-900">{employee.employmentType.replace("_", " ")}</p>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.employmentType.replace("_", " ")}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Area Office</label>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.areaOfficeName || "Not specified"}
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Work Location</label>
-                          <p className="font-semibold text-gray-900">{employee.workLocation}</p>
-                        </div>
-                        <div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Supervisor</label>
-                          <p className="font-semibold text-gray-900">{employee.supervisor}</p>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.supervisorName || "Not assigned"}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Status</label>
+                          <p className="font-semibold text-gray-900">
+                            <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
+                              <StatusIcon className="size-4" />
+                              {statusConfig.label}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Password Reset</label>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.mustChangePassword ? "Required" : "Not required"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -485,50 +424,72 @@ const EmployeeDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
                       <User className="size-5" />
                       Contact & Personal Details
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
                             <Phone className="size-5 text-blue-600" />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Phone Number</label>
-                            <p className="font-semibold text-gray-900">{employee.phoneNumber}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-gray-900">
+                                {formatPhoneNumber(employeeDetails.phoneNumber)}
+                              </p>
+                              <div className="text-[#f9f9f9]0 text-xs">
+                                {employeeDetails.isPhoneVerified ? (
+                                  <span className="text-emerald-600">✓ Verified</span>
+                                ) : (
+                                  <span className="text-amber-600">Not verified</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
                             <Mail className="size-5 text-green-600" />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Email Address</label>
-                            <p className="font-semibold text-gray-900">{employee.email}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-gray-900">{employeeDetails.email}</p>
+                              <div className="text-[#f9f9f9]0 text-xs">
+                                {employeeDetails.isEmailVerified ? (
+                                  <span className="text-emerald-600">✓ Verified</span>
+                                ) : (
+                                  <span className="text-amber-600">Not verified</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
                             <MapPin className="size-5 text-purple-600" />
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">Home Address</label>
-                            <p className="font-semibold text-gray-900">{employee.address}</p>
+                            <label className="text-sm font-medium text-gray-600">Address</label>
+                            <p className="font-semibold text-gray-900">{employeeDetails.address || "Not provided"}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <div className="flex size-10 items-center justify-center rounded-lg bg-red-100">
                             <Shield className="size-5 text-red-600" />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Emergency Contact</label>
-                            <p className="font-semibold text-gray-900">{employee.emergencyContact}</p>
+                            <p className="font-semibold text-gray-900">
+                              {employeeDetails.emergencyContact || "Not provided"}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -536,53 +497,37 @@ const EmployeeDetailsPage = () => {
                   </motion.div>
 
                   {/* Department Information */}
-                  {departmentInfo && (
+                  {employeeDetails.departmentName && (
                     <motion.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
-                      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                     >
                       <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <Briefcase className="size-5" />
+                        <DepartmentInfoIcon />
                         Department Information
                       </h3>
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-4  md:grid-cols-3">
                         <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Department Manager</label>
-                            <p className="font-semibold text-gray-900">{departmentInfo.manager}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Department Location</label>
-                            <p className="font-semibold text-gray-900">{departmentInfo.location}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Total Employees</label>
-                            <p className="font-semibold text-gray-900">{departmentInfo.employeeCount}</p>
-                          </div>
-                          <div>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                             <label className="text-sm font-medium text-gray-600">Department</label>
-                            <p className="font-semibold text-gray-900">{departmentInfo.name}</p>
+                            <p className="font-semibold text-gray-900">{employeeDetails.departmentName}</p>
                           </div>
                         </div>
                         <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Team Size Rank</label>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Area Office</label>
                             <p className="font-semibold text-gray-900">
-                              {departmentInfo.employeeCount > 40
-                                ? "Large"
-                                : departmentInfo.employeeCount > 20
-                                ? "Medium"
-                                : "Small"}
+                              {employeeDetails.areaOfficeName || "Not specified"}
                             </p>
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Office Type</label>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Supervisor</label>
                             <p className="font-semibold text-gray-900">
-                              {departmentInfo.location.includes("Remote") ? "Remote" : "On-site"}
+                              {employeeDetails.supervisorName || "Not assigned"}
                             </p>
                           </div>
                         </div>
@@ -590,96 +535,85 @@ const EmployeeDetailsPage = () => {
                     </motion.div>
                   )}
 
-                  {/* Compensation Details */}
+                  {/* System Information */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <DollarSign className="size-5" />
-                      Compensation Details
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                      <CalendarOutlineIcon />
+                      System Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className=" grid grid-cols-1 gap-4 md:grid-cols-3">
                       <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Annual Salary</label>
-                          <p className="text-2xl font-bold text-gray-900">
-                            ${parseFloat(employee.salary).toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Monthly Equivalent</label>
-                          <p className="text-lg font-semibold text-gray-900">
-                            $
-                            {(parseFloat(employee.salary) / 12).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Account Created</label>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.createdAt
+                              ? new Date(employeeDetails.createdAt).toLocaleDateString()
+                              : "N/A"}
                           </p>
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Employment Type</label>
-                          <p className="font-semibold text-gray-900">{employee.employmentType.replace("_", " ")}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Account Updated</label>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.updatedAt
+                              ? new Date(employeeDetails.updatedAt).toLocaleDateString()
+                              : "N/A"}
+                          </p>
                         </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Pay Frequency</label>
-                          <p className="font-semibold text-gray-900">Monthly</p>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                          <label className="text-sm font-medium text-gray-600">Last Updated</label>
+                          <p className="font-semibold text-gray-900">
+                            {employeeDetails.updatedAt
+                              ? new Date(employeeDetails.updatedAt).toLocaleDateString()
+                              : "N/A"}
+                          </p>
                         </div>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Employment Timeline */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <Calendar className="size-5" />
-                      Employment Timeline
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <Calendar className="size-5 text-blue-600" />
+                  {/* Privileges Information */}
+                  {employeeDetails.privileges && employeeDetails.privileges.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    >
+                      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <VerifyOutlineIcon />
+                        System Privileges
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {employeeDetails.privileges.map((privilege, index) => (
+                          <div key={index} className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <div className="font-medium text-gray-900">{privilege.name}</div>
+                            <div className="text-sm text-gray-600">{privilege.category}</div>
+                            {privilege.actions && privilege.actions.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {privilege.actions.map((action, actionIndex) => (
+                                  <span
+                                    key={actionIndex}
+                                    className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
+                                  >
+                                    {action}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Hire Date</h4>
-                            <p className="text-sm text-gray-600">Employee joined the company</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(employee.hireDate).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-600">{tenure} tenure</div>
-                        </div>
+                        ))}
                       </div>
-                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <Calendar className="size-5 text-green-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Profile Updated</h4>
-                            <p className="text-sm text-gray-600">Last profile modification</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(employee.updatedAt).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {new Date(employee.updatedAt).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </div>
@@ -700,13 +634,13 @@ const EmployeeDetailsPage = () => {
         onConfirm={handleConfirmReminder}
       />
 
-      {/* <UpdateStatusModal isOpen={activeModal === "status"} onRequestClose={closeAllModals} employee={employee} /> */}
+      {/* <UpdateStatusModal isOpen={activeModal === "status"} onRequestClose={closeAllModals} employee={employeeDetails} /> */}
     </section>
   )
 }
 
 const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+  <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />
     <div className="container mx-auto p-6">
       {/* Header Skeleton */}
@@ -759,24 +693,11 @@ const LoadingSkeleton = () => (
             </div>
           </div>
 
-          {/* Compensation Skeleton */}
+          {/* Roles Skeleton */}
           <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
             <div className="mb-4 h-6 w-32 rounded bg-gray-200"></div>
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="mb-2 h-8 w-24 rounded bg-gray-200"></div>
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="h-6 w-16 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-12 rounded bg-gray-200"></div>
-                </div>
-                <div className="text-center">
-                  <div className="h-6 w-20 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-12 rounded bg-gray-200"></div>
-                </div>
-              </div>
+            <div className="space-y-3">
+              <div className="h-16 w-full rounded bg-gray-200"></div>
             </div>
           </div>
         </div>

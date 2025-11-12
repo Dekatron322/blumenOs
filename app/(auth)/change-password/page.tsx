@@ -42,7 +42,7 @@ const ChangePassword: React.FC = () => {
           description: "Please log in to access this page",
           duration: 3000,
         })
-        router.push("/login")
+        router.push("/")
         return
       }
 

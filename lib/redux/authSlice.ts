@@ -256,12 +256,12 @@ api.interceptors.response.use(
           console.error("Token refresh failed:", refreshError)
           // Clear auth state on refresh failure
           clearAuthState()
-          window.location.href = "/login"
+          window.location.href = "/"
         }
       } else {
         // No refresh token available, redirect to login
         clearAuthState()
-        window.location.href = "/login"
+        window.location.href = "/"
       }
     }
 
@@ -284,7 +284,7 @@ const initialState: AuthState = {
   changePasswordSuccess: false,
 }
 
-export const loginUser = createAsyncThunk("auth/login", async (credentials: LoginCredentials, { rejectWithValue }) => {
+export const loginUser = createAsyncThunk("auth/", async (credentials: LoginCredentials, { rejectWithValue }) => {
   try {
     const response = await api.post<LoginResponse>(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), credentials)
 

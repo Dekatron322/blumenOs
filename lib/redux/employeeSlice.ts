@@ -21,6 +21,35 @@ export interface Employee {
   areaOfficeName: string | null
 }
 
+// Extended Employee interface for detailed view
+export interface EmployeeDetails {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  employeeId: string
+  position: string
+  employmentType: string
+  departmentId: number
+  departmentName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  createdAt?: string
+  updatedAt?: string
+  isEmailVerified: boolean
+  isPhoneVerified: boolean
+  profilePicture: string
+  emergencyContact: string
+  address: string
+  supervisorId: number
+  supervisorName: string
+  roles: Role[]
+  privileges: Privilege[]
+}
+
 export interface EmployeesResponse {
   data: Employee[]
   totalCount: number
@@ -31,6 +60,12 @@ export interface EmployeesResponse {
   hasPrevious: boolean
   isSuccess: boolean
   message: string
+}
+
+export interface EmployeeDetailsResponse {
+  isSuccess: boolean
+  message: string
+  data: EmployeeDetails
 }
 
 export interface EmployeesRequestParams {
@@ -118,6 +153,12 @@ interface EmployeeState {
   employeesError: string | null
   employeesSuccess: boolean
 
+  // Employee details state
+  employeeDetails: EmployeeDetails | null
+  employeeDetailsLoading: boolean
+  employeeDetailsError: string | null
+  employeeDetailsSuccess: boolean
+
   // Pagination state
   pagination: {
     totalCount: number
@@ -145,6 +186,10 @@ const initialState: EmployeeState = {
   employeesLoading: false,
   employeesError: null,
   employeesSuccess: false,
+  employeeDetails: null,
+  employeeDetailsLoading: false,
+  employeeDetailsError: null,
+  employeeDetailsSuccess: false,
   pagination: {
     totalCount: 0,
     totalPages: 0,
@@ -213,6 +258,27 @@ export const fetchEmployeeById = createAsyncThunk<Employee, number, { rejectValu
   }
 )
 
+export const fetchEmployeeDetails = createAsyncThunk(
+  "employee/fetchEmployeeDetails",
+  async (employeeId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.EMPLOYEE_DETAILS.replace("{id}", employeeId.toString())
+      const response = await api.get<EmployeeDetailsResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch employee details")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch employee details")
+      }
+      return rejectWithValue(error.message || "Network error during employee details fetch")
+    }
+  }
+)
+
 export const inviteEmployees = createAsyncThunk(
   "employee/inviteEmployees",
   async (inviteData: InviteUsersRequest, { rejectWithValue }) => {
@@ -237,33 +303,30 @@ export const updateEmployee = createAsyncThunk<
   Employee,
   { id: number; employeeData: Partial<Employee> },
   { rejectValue: string }
->(
-  "employee/updateEmployee",
-  async ({ id, employeeData }, { rejectWithValue }) => {
-    try {
-      const response = await api.put<EmployeesResponse>(
-        `${buildApiUrl(API_ENDPOINTS.EMPLOYEE.EMPLOYEE)}/${id}`,
-        employeeData
-      )
+>("employee/updateEmployee", async ({ id, employeeData }, { rejectWithValue }) => {
+  try {
+    const response = await api.put<EmployeesResponse>(
+      `${buildApiUrl(API_ENDPOINTS.EMPLOYEE.EMPLOYEE)}/${id}`,
+      employeeData
+    )
 
-      if (!response.data.isSuccess) {
-        return rejectWithValue(response.data.message || "Failed to update employee") as any
-      }
-
-      const updated = response.data.data?.[0]
-      if (!updated) {
-        return rejectWithValue("Failed to update employee") as any
-      }
-
-      return updated
-    } catch (error: any) {
-      if (error.response?.data) {
-        return rejectWithValue(error.response.data.message || "Failed to update employee") as any
-      }
-      return rejectWithValue(error.message || "Network error during employee update") as any
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to update employee") as any
     }
+
+    const updated = response.data.data?.[0]
+    if (!updated) {
+      return rejectWithValue("Failed to update employee") as any
+    }
+
+    return updated
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to update employee") as any
+    }
+    return rejectWithValue(error.message || "Network error during employee update") as any
   }
-)
+})
 
 export const deleteEmployee = createAsyncThunk(
   "employee/deleteEmployee",
@@ -307,6 +370,13 @@ const employeeSlice = createSlice({
       }
     },
 
+    // Clear employee details
+    clearEmployeeDetails: (state) => {
+      state.employeeDetails = null
+      state.employeeDetailsError = null
+      state.employeeDetailsSuccess = false
+    },
+
     // Clear invite status
     clearInviteStatus: (state) => {
       state.inviteError = null
@@ -319,6 +389,7 @@ const employeeSlice = createSlice({
       state.error = null
       state.inviteError = null
       state.employeesError = null
+      state.employeeDetailsError = null
     },
 
     // Reset employee state
@@ -327,6 +398,10 @@ const employeeSlice = createSlice({
       state.employeesLoading = false
       state.employeesError = null
       state.employeesSuccess = false
+      state.employeeDetails = null
+      state.employeeDetailsLoading = false
+      state.employeeDetailsError = null
+      state.employeeDetailsSuccess = false
       state.pagination = {
         totalCount: 0,
         totalPages: 0,
@@ -413,6 +488,24 @@ const employeeSlice = createSlice({
         state.loading = false
         state.error = (action.payload as string) || "Failed to fetch employee"
       })
+      // Fetch employee details cases
+      .addCase(fetchEmployeeDetails.pending, (state) => {
+        state.employeeDetailsLoading = true
+        state.employeeDetailsError = null
+        state.employeeDetailsSuccess = false
+      })
+      .addCase(fetchEmployeeDetails.fulfilled, (state, action: PayloadAction<EmployeeDetails>) => {
+        state.employeeDetailsLoading = false
+        state.employeeDetailsSuccess = true
+        state.employeeDetails = action.payload
+        state.employeeDetailsError = null
+      })
+      .addCase(fetchEmployeeDetails.rejected, (state, action) => {
+        state.employeeDetailsLoading = false
+        state.employeeDetailsError = (action.payload as string) || "Failed to fetch employee details"
+        state.employeeDetailsSuccess = false
+        state.employeeDetails = null
+      })
       // Invite employees cases
       .addCase(inviteEmployees.pending, (state) => {
         state.inviteLoading = true
@@ -470,6 +563,7 @@ const employeeSlice = createSlice({
 
 export const {
   clearEmployees,
+  clearEmployeeDetails,
   clearInviteStatus,
   clearError,
   resetEmployeeState,
