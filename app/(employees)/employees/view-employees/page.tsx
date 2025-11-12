@@ -15,6 +15,7 @@ import {
 } from "components/Icons/Icons"
 import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
+import { useAppSelector } from "lib/hooks/useRedux"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -292,6 +293,10 @@ export default function EmployeeManagement() {
   const [isLoading, setIsLoading] = useState(false)
   const [employeeData, setEmployeeData] = useState(generateEmployeeData())
 
+  // Permissions: show Add Employee only if user has 'W'
+  const { user } = useAppSelector((state) => state.auth)
+  const canWrite = !!user?.privileges?.some((p) => p.actions?.includes("W"))
+
   // Use mock data
   const totalEmployees = employeeData.totalEmployees
   const activeEmployees = employeeData.activeEmployees
@@ -346,15 +351,17 @@ export default function EmployeeManagement() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
-                  variant="outline"
-                  size="md"
-                  onClick={handleOpenAddEmployeeModal}
-                  icon={<AddIcon />}
-                  iconPosition="start"
-                >
-                  Add Employee
-                </ButtonModule>
+                {canWrite && (
+                  <ButtonModule
+                    variant="outline"
+                    size="md"
+                    onClick={handleOpenAddEmployeeModal}
+                    icon={<AddIcon />}
+                    iconPosition="start"
+                  >
+                    Add Employee
+                  </ButtonModule>
+                )}
                 <ButtonModule
                   variant="primary"
                   size="md"
