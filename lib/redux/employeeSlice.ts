@@ -264,6 +264,20 @@ export interface EmployeeReportResponse {
   data: EmployeeReportData
 }
 
+// Interfaces for Department Report
+export interface DepartmentReportItem {
+  departmentId: number
+  departmentName: string
+  totalUsers: number
+  activeUsers: number
+}
+
+export interface DepartmentReportResponse {
+  isSuccess: boolean
+  message: string
+  data: DepartmentReportItem[]
+}
+
 // Interfaces for Employee Invite
 interface InviteUserRequest {
   fullName: string
@@ -450,6 +464,12 @@ interface EmployeeState {
   employeeReportError: string | null
   employeeReportSuccess: boolean
 
+  // Department Report state
+  departmentReport: DepartmentReportItem[]
+  departmentReportLoading: boolean
+  departmentReportError: string | null
+  departmentReportSuccess: boolean
+
   // General employee state
   loading: boolean
   error: string | null
@@ -521,6 +541,10 @@ const initialState: EmployeeState = {
   employeeReportLoading: false,
   employeeReportError: null,
   employeeReportSuccess: false,
+  departmentReport: [],
+  departmentReportLoading: false,
+  departmentReportError: null,
+  departmentReportSuccess: false,
   loading: false,
   error: null,
 }
@@ -626,6 +650,33 @@ export const fetchEmployeeReport = createAsyncThunk("employee/fetchEmployeeRepor
     return rejectWithValue(error.message || "Network error during employee report fetch")
   }
 })
+
+export const fetchDepartmentReport = createAsyncThunk(
+  "employee/fetchDepartmentReport",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get<DepartmentReportResponse>(
+        buildApiUrl(API_ENDPOINTS.EMPLOYEE.REPORTS_BY_DEPARTMENT)
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch department report")
+      }
+
+      // Fixed: Ensure data exists with fallback
+      if (!response.data.data) {
+        return rejectWithValue("Department report data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch department report")
+      }
+      return rejectWithValue(error.message || "Network error during department report fetch")
+    }
+  }
+)
 
 export const inviteEmployees = createAsyncThunk(
   "employee/inviteEmployees",
@@ -957,6 +1008,14 @@ const employeeSlice = createSlice({
       state.employeeReportLoading = false
     },
 
+    // Clear department report
+    clearDepartmentReport: (state) => {
+      state.departmentReport = []
+      state.departmentReportError = null
+      state.departmentReportSuccess = false
+      state.departmentReportLoading = false
+    },
+
     // Clear invite status
     clearInviteStatus: (state) => {
       state.inviteError = null
@@ -1046,6 +1105,7 @@ const employeeSlice = createSlice({
       state.employeesError = null
       state.employeeDetailsError = null
       state.employeeReportError = null
+      state.departmentReportError = null
       state.updateError = null
       state.deactivateError = null
       state.activateError = null
@@ -1123,6 +1183,10 @@ const employeeSlice = createSlice({
       state.employeeReportLoading = false
       state.employeeReportError = null
       state.employeeReportSuccess = false
+      state.departmentReport = []
+      state.departmentReportLoading = false
+      state.departmentReportError = null
+      state.departmentReportSuccess = false
       state.loading = false
       state.error = null
     },
@@ -1239,6 +1303,24 @@ const employeeSlice = createSlice({
         state.employeeReportError = (action.payload as string) || "Failed to fetch employee report"
         state.employeeReportSuccess = false
         state.employeeReport = null
+      })
+      // Fetch department report cases
+      .addCase(fetchDepartmentReport.pending, (state) => {
+        state.departmentReportLoading = true
+        state.departmentReportError = null
+        state.departmentReportSuccess = false
+      })
+      .addCase(fetchDepartmentReport.fulfilled, (state, action: PayloadAction<DepartmentReportItem[]>) => {
+        state.departmentReportLoading = false
+        state.departmentReportSuccess = true
+        state.departmentReport = action.payload
+        state.departmentReportError = null
+      })
+      .addCase(fetchDepartmentReport.rejected, (state, action) => {
+        state.departmentReportLoading = false
+        state.departmentReportError = (action.payload as string) || "Failed to fetch department report"
+        state.departmentReportSuccess = false
+        state.departmentReport = []
       })
       // Invite employees cases
       .addCase(inviteEmployees.pending, (state) => {
@@ -1599,6 +1681,7 @@ export const {
   clearEmployees,
   clearEmployeeDetails,
   clearEmployeeReport,
+  clearDepartmentReport,
   clearInviteStatus,
   clearUpdateStatus,
   clearDeactivateStatus,

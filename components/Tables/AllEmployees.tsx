@@ -15,7 +15,7 @@ import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { fetchEmployees } from "lib/redux/employeeSlice"
+import { fetchEmployees, fetchDepartmentReport } from "lib/redux/employeeSlice"
 import { ChevronDown } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 
@@ -38,12 +38,12 @@ interface Employee {
   areaOfficeName: string | null
 }
 
-interface Department {
-  name: string
-  code: string
-  employeeCount: number
-  manager: string
-  location: string
+// Department report item from API
+interface DepartmentReportItem {
+  departmentId: number
+  departmentName: string
+  totalUsers: number
+  activeUsers: number
 }
 
 // Sample departments data
@@ -233,7 +233,8 @@ const HeaderSkeleton = () => (
 
 const AllEmployees = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { employees, employeesLoading, employeesError, pagination } = useSelector((state: RootState) => state.employee)
+  const { employees, employeesLoading, employeesError, pagination, departmentReport, departmentReportLoading, departmentReportError } =
+    useSelector((state: RootState) => state.employee)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
@@ -260,6 +261,13 @@ const AllEmployees = () => {
       })
     )
   }, [dispatch, currentPage, pagination.pageSize])
+
+  // Fetch department report when sidebar is visible
+  useEffect(() => {
+    if (showDepartments) {
+      dispatch(fetchDepartmentReport())
+    }
+  }, [dispatch, showDepartments])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -588,70 +596,24 @@ const AllEmployees = () => {
     </div>
   )
 
-  const departmentData: Department[] = [
-    {
-      name: "Human Resources",
-      code: "HR",
-      employeeCount: 15,
-      manager: "Sarah Johnson",
-      location: "Head Office",
-    },
-    {
-      name: "Information Technology",
-      code: "IT",
-      employeeCount: 28,
-      manager: "Michael Chen",
-      location: "Head Office",
-    },
-    {
-      name: "Finance",
-      code: "FIN",
-      employeeCount: 12,
-      manager: "David Wilson",
-      location: "Head Office",
-    },
-    {
-      name: "Sales",
-      code: "SAL",
-      employeeCount: 35,
-      manager: "Lisa Rodriguez",
-      location: "Branch A",
-    },
-    {
-      name: "Marketing",
-      code: "MKT",
-      employeeCount: 18,
-      manager: "James Thompson",
-      location: "Head Office",
-    },
-    {
-      name: "Operations",
-      code: "OPS",
-      employeeCount: 42,
-      manager: "Karen Smith",
-      location: "Branch B",
-    },
-  ]
-
-  const DepartmentCard = ({ department }: { department: Department }) => (
+  const DepartmentCard = ({ department }: { department: DepartmentReportItem }) => (
     <div className="rounded-lg border bg-[#f9f9f9] p-3 transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-medium text-gray-900">{department.code}</h3>
-          <div className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">{department.name}</div>
+          <h3 className="font-medium text-gray-900">{department.departmentName}</h3>
         </div>
         <div className="flex text-sm">
-          <span className="font-medium">{department.location}</span>
+          <span className="font-medium">{department.totalUsers.toLocaleString()}</span>
         </div>
       </div>
       <div className="mt-3 space-y-1">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Employees:</span>
-          <span className="font-medium">{department.employeeCount.toLocaleString()}</span>
+          <span className="text-gray-600">Active:</span>
+          <span className="font-medium">{department.activeUsers.toLocaleString()}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Manager:</span>
-          <span className="font-medium">{department.manager}</span>
+          <span className="text-gray-600">Inactive:</span>
+          <span className="font-medium">{(department.totalUsers - department.activeUsers).toLocaleString()}</span>
         </div>
       </div>
     </div>
@@ -902,9 +864,20 @@ const AllEmployees = () => {
               </div>
 
               <div className="mt-4 space-y-3">
-                {departmentData.map((department, index) => (
-                  <DepartmentCard key={index} department={department} />
-                ))}
+                {departmentReportLoading ? (
+                  [...Array(6)].map((_, index) => <DepartmentCardSkeleton key={index} />)
+                ) : departmentReportError ? (
+                  <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <p className="mb-2">Failed to load departments: {departmentReportError}</p>
+                    <button className="button-oulined" onClick={() => dispatch(fetchDepartmentReport())}>
+                      Retry
+                    </button>
+                  </div>
+                ) : (
+                  departmentReport.map((department) => (
+                    <DepartmentCard key={department.departmentId} department={department} />
+                  ))
+                )}
               </div>
 
               {/* Summary Stats */}
@@ -923,7 +896,7 @@ const AllEmployees = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Departments:</span>
-                    <span className="font-medium">{departmentData.length}</span>
+                    <span className="font-medium">{departmentReport.length}</span>
                   </div>
                 </div>
               </div>
