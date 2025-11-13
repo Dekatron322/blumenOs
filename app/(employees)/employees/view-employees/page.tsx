@@ -1,21 +1,14 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
 import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
 import { motion } from "framer-motion"
-import {
-  AddIcon,
-  ContractIcon,
-  DepartmentIcon,
-  EmployeeIcon,
-  PayrollIcon,
-  RefreshCircleIcon,
-} from "components/Icons/Icons"
-import AllEmployees from "components/Tables/AllEmployees"
+import { useRouter } from "next/navigation"
+import { AddIcon, RefreshCircleIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppSelector } from "lib/hooks/useRedux"
+import AllEmployees from "components/Tables/ViewAllEmployee"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -289,6 +282,7 @@ const generateEmployeeData = () => {
 }
 
 export default function EmployeeManagement() {
+  const router = useRouter()
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [employeeData, setEmployeeData] = useState(generateEmployeeData())
@@ -355,7 +349,7 @@ export default function EmployeeManagement() {
                   <ButtonModule
                     variant="outline"
                     size="md"
-                    onClick={handleOpenAddEmployeeModal}
+                    onClick={() => router.push("/employees/add-employees")}
                     icon={<AddIcon />}
                     iconPosition="start"
                   >

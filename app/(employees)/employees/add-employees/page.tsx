@@ -69,6 +69,9 @@ const AddEmployeePage = () => {
   const [csvErrors, setCsvErrors] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [showTempPasswordBanner, setShowTempPasswordBanner] = useState(false)
+  const [copied, setCopied] = useState(false)
+
   const [formData, setFormData] = useState<EmployeeFormData>({
     fullName: "",
     email: "",
@@ -81,7 +84,7 @@ const AddEmployeePage = () => {
     emergencyContact: "",
     address: "",
     supervisorId: 0, // Start with 0 (no selection)
-    employmentType: "FULL_TIME",
+    employmentType: "",
     isActive: true,
   })
 
@@ -316,7 +319,7 @@ const AddEmployeePage = () => {
           emergencyContact: "",
           address: "",
           supervisorId: 0,
-          employmentType: "FULL_TIME",
+          employmentType: "",
           isActive: true,
         })
         setFormErrors({})
@@ -346,7 +349,7 @@ const AddEmployeePage = () => {
       emergencyContact: "",
       address: "",
       supervisorId: 0,
-      employmentType: "FULL_TIME",
+      employmentType: "",
       isActive: true,
     })
     setFormErrors({})
@@ -714,6 +717,13 @@ const AddEmployeePage = () => {
     }
   }, [activeTab, dispatch])
 
+  useEffect(() => {
+    if (inviteSuccess && invitedUsers && invitedUsers.length > 0) {
+      setShowTempPasswordBanner(true)
+      setCopied(false)
+    }
+  }, [inviteSuccess, invitedUsers])
+
   // Show error notification if area offices fail to load
   useEffect(() => {
     if (areaOfficesError) {
@@ -841,6 +851,45 @@ const AddEmployeePage = () => {
                     transition={{ duration: 0.5 }}
                     className="rounded-b-lg  bg-white p-6 shadow-sm"
                   >
+                    {showTempPasswordBanner && invitedUsers && invitedUsers.length > 0 && (
+                      <div className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1">
+                            <p className="font-medium">Temporary password generated</p>
+                            <p className="text-blue-800">
+                              Share this one-time password with the employee securely.
+                            </p>
+                            <div className="mt-2 flex items-center gap-3">
+                              <code className="rounded bg-white px-3 py-1 text-base font-semibold text-blue-900 shadow-sm">
+                                {invitedUsers[0]!.temporaryPassword}
+                              </code>
+                              <ButtonModule
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(invitedUsers[0]!.temporaryPassword)
+                                  setCopied(true)
+                                  window.setTimeout(() => setCopied(false), 2000)
+                                }}
+                              >
+                                {copied ? "Copied" : "Copy"}
+                              </ButtonModule>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="text-blue-700 hover:text-blue-900"
+                            onClick={() => {
+                              setShowTempPasswordBanner(false)
+                              setCopied(false)
+                            }}
+                            aria-label="Dismiss temporary password"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Employee Information</h3>
@@ -914,13 +963,12 @@ const AddEmployeePage = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormInputModule
+                          <FormSelectModule
                             label="Employment Type"
                             name="employmentType"
                             value={formData.employmentType}
                             onChange={handleInputChange}
-                            type="text"
-                            placeholder="Enter employment type"
+                            options={[{ value: "", label: "Select employment type" }, ...employmentTypeOptions]}
                             error={formErrors.employmentType}
                             required
                           />

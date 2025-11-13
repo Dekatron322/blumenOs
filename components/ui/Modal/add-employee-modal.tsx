@@ -159,7 +159,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
       emergencyContact: "",
       address: "",
       supervisorId: 0,
-      employmentType: "FULL_TIME",
+      employmentType: "",
       isActive: true,
     })
     setFormErrors({})
@@ -792,13 +792,12 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onRequestCl
                 required
               />
 
-              <FormInputModule
+              <FormSelectModule
                 label="Employment Type"
                 name="employmentType"
-                type="text"
-                placeholder="Enter employment type"
                 value={formData.employmentType}
                 onChange={handleInputChange}
+                options={[{ value: "", label: "Select employment type" }, ...employmentTypeOptions]}
                 error={formErrors.employmentType}
                 required
               />
