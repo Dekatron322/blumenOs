@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/identity/users/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/identity/users/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/identity/users/change-requests/{publicId}/decline",
+    EMPLOYEE_REPORT: "/identity/users/reports/summary",
   },
 
   ROLES: {

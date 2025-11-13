@@ -2,7 +2,7 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
 import { motion } from "framer-motion"
 import {
@@ -15,7 +15,8 @@ import {
 } from "components/Icons/Icons"
 import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
-import { useAppSelector } from "lib/hooks/useRedux"
+import { useAppSelector, useAppDispatch } from "lib/hooks/useRedux"
+import { fetchEmployeeReport, clearEmployeeReport } from "lib/redux/employeeSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -272,65 +273,149 @@ const LoadingState = ({ showDepartments = true }) => {
   )
 }
 
-// Generate mock employee data
-const generateEmployeeData = () => {
-  return {
-    totalEmployees: Math.floor(185 + Math.random() * 50),
-    activeEmployees: Math.floor(160 + Math.random() * 40),
-    onLeaveEmployees: Math.floor(15 + Math.random() * 10),
-    newHires: Math.floor(12 + Math.random() * 8),
-    fullTimeEmployees: Math.floor(130 + Math.random() * 30),
-    partTimeEmployees: Math.floor(35 + Math.random() * 15),
-    contractEmployees: Math.floor(20 + Math.random() * 10),
-    departments: 8,
-    avgTenure: (2.5 + Math.random() * 2).toFixed(1),
-    turnoverRate: (3.5 + Math.random() * 2).toFixed(1),
+// Employee Report Card Component
+const EmployeeReportCard = ({
+  title,
+  value,
+  icon,
+  description,
+  subItems = [],
+  isLoading = false,
+}: {
+  title: string
+  value: string | number
+  icon: React.ReactNode
+  description?: string
+  subItems?: Array<{ label: string; value: string | number }>
+  isLoading?: boolean
+}) => {
+  if (isLoading) {
+    return (
+      <motion.div
+        className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+        initial={{ opacity: 0.6 }}
+        animate={{
+          opacity: [0.6, 1, 0.6],
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+      >
+        <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+          <div className="size-6 rounded-full bg-gray-200"></div>
+          <div className="h-4 w-32 rounded bg-gray-200"></div>
+        </div>
+        <div className="flex flex-col gap-3 pt-4">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex w-full justify-between">
+              <div className="h-4 w-24 rounded bg-gray-200"></div>
+              <div className="h-4 w-16 rounded bg-gray-200"></div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    )
   }
+
+  return (
+    <motion.div
+      className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+      whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+    >
+      <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+        {icon}
+        {title}
+      </div>
+      <div className="flex flex-col gap-3 pt-4">
+        <div className="flex w-full justify-between">
+          <p className="text-grey-200">{description || "Total"}:</p>
+          <p className="text-secondary font-medium">{value}</p>
+        </div>
+        {subItems.map((item, index) => (
+          <div key={index} className="flex w-full justify-between">
+            <p className="text-grey-200 text-sm">{item.label}:</p>
+            <p className="text-secondary text-sm font-medium">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
 }
 
 export default function EmployeeManagement() {
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [employeeData, setEmployeeData] = useState(generateEmployeeData())
+  const dispatch = useAppDispatch()
+
+  // Get employee report data from Redux store
+  const { employeeReport, employeeReportLoading, employeeReportError, employeeReportSuccess } = useAppSelector(
+    (state) => state.employee
+  )
 
   // Permissions: show Add Employee only if user has 'W'
   const { user } = useAppSelector((state) => state.auth)
   const canWrite = !!user?.privileges?.some((p) => p.actions?.includes("W"))
 
-  // Use mock data
-  const totalEmployees = employeeData.totalEmployees
-  const activeEmployees = employeeData.activeEmployees
-  const onLeaveEmployees = employeeData.onLeaveEmployees
-  const newHires = employeeData.newHires
-  const fullTimeEmployees = employeeData.fullTimeEmployees
-  const partTimeEmployees = employeeData.partTimeEmployees
-  const contractEmployees = employeeData.contractEmployees
-  const departments = employeeData.departments
-  const avgTenure = employeeData.avgTenure
-  const turnoverRate = employeeData.turnoverRate
+  // Fetch employee report on component mount
+  useEffect(() => {
+    dispatch(fetchEmployeeReport())
 
-  // Format numbers with commas
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
-  }
+    // Cleanup function to clear report data when component unmounts
+    return () => {
+      dispatch(clearEmployeeReport())
+    }
+  }, [dispatch])
 
   const handleAddEmployeeSuccess = async () => {
     setIsAddEmployeeModalOpen(false)
-    // Refresh data after adding employee
-    setEmployeeData(generateEmployeeData())
+    // Refresh employee report data after adding employee
+    dispatch(fetchEmployeeReport())
   }
 
   const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setEmployeeData(generateEmployeeData())
-      setIsLoading(false)
-    }, 1000)
+    dispatch(fetchEmployeeReport())
   }
 
   const handleOpenAddEmployeeModal = () => {
     setIsAddEmployeeModalOpen(true)
   }
+
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num?.toLocaleString() || "0"
+  }
+
+  // Calculate additional metrics from the report data
+  const calculateAdditionalMetrics = () => {
+    if (!employeeReport) return null
+
+    const {
+      totalUsers,
+      activeUsers,
+      inactiveUsers,
+      withDepartmentUsers,
+      withoutDepartmentUsers,
+      withAreaOfficeUsers,
+      withoutAreaOfficeUsers,
+      emailVerifiedUsers,
+      phoneVerifiedUsers,
+    } = employeeReport
+
+    const departmentCoverage = totalUsers > 0 ? ((withDepartmentUsers / totalUsers) * 100).toFixed(1) : "0"
+    const areaOfficeCoverage = totalUsers > 0 ? ((withAreaOfficeUsers / totalUsers) * 100).toFixed(1) : "0"
+    const emailVerificationRate = totalUsers > 0 ? ((emailVerifiedUsers / totalUsers) * 100).toFixed(1) : "0"
+    const phoneVerificationRate = totalUsers > 0 ? ((phoneVerifiedUsers / totalUsers) * 100).toFixed(1) : "0"
+
+    return {
+      departmentCoverage: `${departmentCoverage}%`,
+      areaOfficeCoverage: `${areaOfficeCoverage}%`,
+      emailVerificationRate: `${emailVerificationRate}%`,
+      phoneVerificationRate: `${phoneVerificationRate}%`,
+    }
+  }
+
+  const additionalMetrics = calculateAdditionalMetrics()
 
   return (
     <section className="size-full">
@@ -368,16 +453,31 @@ export default function EmployeeManagement() {
                   onClick={handleRefreshData}
                   icon={<RefreshCircleIcon />}
                   iconPosition="start"
+                  loading={employeeReportLoading}
                 >
                   Refresh Data
                 </ButtonModule>
               </motion.div>
             </div>
 
+            {/* Error Message */}
+            {employeeReportError && (
+              <motion.div
+                className="mx-16 mb-4 rounded-md bg-red-50 p-4 text-red-700 max-md:mx-0 max-sm:mx-3"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <p className="flex items-center gap-2">
+                  <span>⚠️</span>
+                  Error loading employee report: {employeeReportError}
+                </p>
+              </motion.div>
+            )}
+
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {isLoading ? (
+                {employeeReportLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
@@ -392,98 +492,60 @@ export default function EmployeeManagement() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <div className="flex w-full max-sm:flex-col">
-                        <div className="w-full">
-                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Total Employees Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <EmployeeIcon />
-                                Total Employees
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">All Employees:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(totalEmployees)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Active:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(activeEmployees)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
+                      {/* User Statistics Card */}
+                      <EmployeeReportCard
+                        title="User Statistics"
+                        value={formatNumber(employeeReport?.totalUsers || 0)}
+                        icon={<EmployeeIcon />}
+                        description="Total Users"
+                        subItems={[
+                          { label: "Active", value: formatNumber(employeeReport?.activeUsers || 0) },
+                          { label: "Inactive", value: formatNumber(employeeReport?.inactiveUsers || 0) },
+                        ]}
+                        isLoading={employeeReportLoading}
+                      />
 
-                            {/* Employment Types Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <ContractIcon />
-                                Employment Types
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Full Time:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(fullTimeEmployees)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Part Time:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(partTimeEmployees)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
+                      {/* Security Status Card */}
+                      <EmployeeReportCard
+                        title="Security Status"
+                        value={formatNumber(employeeReport?.mustChangePasswordUsers || 0)}
+                        icon={<ContractIcon />}
+                        description="Password Reset Required"
+                        subItems={[
+                          { label: "Email Verified", value: formatNumber(employeeReport?.emailVerifiedUsers || 0) },
+                          { label: "Phone Verified", value: formatNumber(employeeReport?.phoneVerifiedUsers || 0) },
+                        ]}
+                        isLoading={employeeReportLoading}
+                      />
 
-                            {/* Workforce Metrics Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <DepartmentIcon />
-                                Workforce Metrics
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">New Hires:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(newHires)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">On Leave:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(onLeaveEmployees)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
+                      {/* Department Coverage Card */}
+                      <EmployeeReportCard
+                        title="Department Coverage"
+                        value={formatNumber(employeeReport?.withDepartmentUsers || 0)}
+                        icon={<DepartmentIcon />}
+                        description="With Department"
+                        subItems={[
+                          {
+                            label: "Without Department",
+                            value: formatNumber(employeeReport?.withoutDepartmentUsers || 0),
+                          },
+                          { label: "Coverage", value: additionalMetrics?.departmentCoverage || "0%" },
+                        ]}
+                        isLoading={employeeReportLoading}
+                      />
 
-                            {/* Organization Overview Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <PayrollIcon />
-                                Organization
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Departments:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary font-medium">{departments}</p>
-                                    <ArrowIcon />
-                                  </div>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Avg Tenure:</p>
-                                  <p className="text-secondary font-medium">{avgTenure} yrs</p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </div>
-                      </div>
+                      {/* Activity & Invitations Card */}
+                      <EmployeeReportCard
+                        title="Activity & Invitations"
+                        value={formatNumber(employeeReport?.loggedInLast30Days || 0)}
+                        icon={<PayrollIcon />}
+                        description="Active Last 30 Days"
+                        subItems={[
+                          { label: "Pending Invites", value: formatNumber(employeeReport?.pendingInvitations || 0) },
+                          { label: "Expiring Invites", value: formatNumber(employeeReport?.expiringInvitations || 0) },
+                        ]}
+                        isLoading={employeeReportLoading}
+                      />
                     </motion.div>
 
                     <motion.div
