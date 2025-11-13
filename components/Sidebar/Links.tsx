@@ -42,7 +42,7 @@ const allLinks: LinkItem[] = [
     href: "/customers",
     icon: ServiceIcon,
     privilegeKey: "customers",
-    requiredActions: ["R"], // At least Read permission required
+    requiredActions: ["R"],
     children: [
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
@@ -62,6 +62,12 @@ const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       {
+        name: "Overview",
+        href: "/employees/overview",
+        privilegeKey: "identity-users",
+        requiredActions: ["W"],
+      },
+      {
         name: "View Employees",
         href: "/employees/view-employees",
         privilegeKey: "identity-users",
@@ -72,6 +78,12 @@ const allLinks: LinkItem[] = [
         href: "/employees/add-employees",
         privilegeKey: "identity-users",
         requiredActions: ["W"],
+      },
+      {
+        name: "Change Request",
+        href: "/employees/change-request",
+        privilegeKey: "identity-users",
+        requiredActions: ["E"],
       },
     ],
   },
