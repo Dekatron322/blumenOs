@@ -22,6 +22,7 @@ import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import UpdateEmployeeModal from "components/ui/Modal/update-employee-modal"
 import ActivateAccountModal from "components/ui/Modal/activate-account-modal"
 import ResetPasswordModal from "components/ui/Modal/reset-password-modal"
+import ChangeRequestModal from "components/ui/Modal/change-request-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   CalendarOutlineIcon,
@@ -58,7 +59,7 @@ const EmployeeDetailsPage = () => {
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
   const [activeModal, setActiveModal] = useState<
-    "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword" | null
+    "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword" | "changeRequest" | null
   >(null)
   const [isExporting, setIsExporting] = useState(false)
 
@@ -106,8 +107,9 @@ const EmployeeDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword") =>
-    setActiveModal(modalType)
+  const openModal = (
+    modalType: "suspend" | "activate" | "reminder" | "status" | "edit" | "resetPassword" | "changeRequest"
+  ) => setActiveModal(modalType)
 
   const handleConfirmSuspend = () => {
     console.log("Employee suspended")
@@ -121,6 +123,17 @@ const EmployeeDetailsPage = () => {
 
   const handleUpdateSuccess = () => {
     // Refresh employee details after successful update
+    if (employeeId) {
+      const id = parseInt(employeeId)
+      if (!isNaN(id)) {
+        dispatch(fetchEmployeeDetails(id))
+      }
+    }
+    closeAllModals()
+  }
+
+  const handleChangeRequestSuccess = () => {
+    // Refresh employee details after successful change request
     if (employeeId) {
       const id = parseInt(employeeId)
       if (!isNaN(id)) {
@@ -355,7 +368,7 @@ const EmployeeDetailsPage = () => {
   if (employeeDetailsError || !employeeDetails) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
-        <div className="text-center">
+        <div className="flex flex-col justify-center text-center">
           <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">
             {employeeDetailsError ? "Error Loading Employee" : "Employee Not Found"}
@@ -440,9 +453,14 @@ const EmployeeDetailsPage = () => {
                         Edit
                       </ButtonModule>
                     ) : (
-                      <ButtonModule variant="primary" size="sm" className="flex items-center gap-2" disabled>
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => openModal("changeRequest")}
+                      >
                         <Edit3 className="size-4" />
-                        Update Request
+                        Change Request
                       </ButtonModule>
                     )}
                   </div>
@@ -881,6 +899,14 @@ const EmployeeDetailsPage = () => {
         onRequestClose={closeAllModals}
         onSuccess={handleUpdateSuccess}
         employee={employeeDetails}
+      />
+
+      <ChangeRequestModal
+        isOpen={activeModal === "changeRequest"}
+        onRequestClose={closeAllModals}
+        onSuccess={handleChangeRequestSuccess}
+        employeeId={employeeDetails.id}
+        employeeName={employeeDetails.fullName}
       />
     </section>
   )

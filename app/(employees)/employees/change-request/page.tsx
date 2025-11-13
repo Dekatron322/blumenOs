@@ -16,6 +16,7 @@ import {
 import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppSelector } from "lib/hooks/useRedux"
+import AllChangeRequest from "components/Tables/AllChangeRequest"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -341,8 +342,8 @@ export default function EmployeeManagement() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Employee Management</h4>
-                <p>Manage employee records, departments, and HR operations</p>
+                <h4 className="text-2xl font-semibold">Change Request</h4>
+                <p>Manage employee change requests</p>
               </div>
 
               <motion.div
@@ -351,17 +352,6 @@ export default function EmployeeManagement() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                {canWrite && (
-                  <ButtonModule
-                    variant="outline"
-                    size="md"
-                    onClick={handleOpenAddEmployeeModal}
-                    icon={<AddIcon />}
-                    iconPosition="start"
-                  >
-                    Add Employee
-                  </ButtonModule>
-                )}
                 <ButtonModule
                   variant="primary"
                   size="md"
@@ -391,7 +381,7 @@ export default function EmployeeManagement() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                      <AllEmployees />
+                      <AllChangeRequest />
                     </motion.div>
                   </>
                 )}

@@ -100,6 +100,147 @@ export interface ResetPasswordResponse {
   message: string
 }
 
+// Interfaces for Change Request
+export interface ChangeRequestItem {
+  path: string
+  value: string
+}
+
+export interface ChangeRequestDispute {
+  type: number
+  disputeId: number
+}
+
+export interface ChangeRequestPreconditions {
+  [key: string]: string
+}
+
+export interface ChangeRequestData {
+  changes: ChangeRequestItem[]
+  comment: string
+  dispute?: ChangeRequestDispute
+  preconditions?: ChangeRequestPreconditions
+}
+
+export interface ChangeRequestResponseData {
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string
+  declinedReason: string
+  approvedAtUtc: string
+  approvedBy: string
+  appliedAtUtc: string
+  failureReason: string
+  disputeType: number
+  disputeId: number
+}
+
+export interface ChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
+// Interfaces for View Change Requests
+export interface ChangeRequestListItem {
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  source?: number
+}
+
+export interface ChangeRequestsResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestListItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface ChangeRequestsRequestParams {
+  pageNumber: number
+  pageSize: number
+  status?: number
+  source?: number
+  reference?: string
+  publicId?: string
+}
+
+// Interfaces for Change Request Details
+export interface ChangeRequestDetails {
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string | null
+  declinedReason: string | null
+  approvedAtUtc: string | null
+  approvedBy: string | null
+  appliedAtUtc: string | null
+  failureReason: string | null
+  disputeType: number | null
+  disputeId: number | null
+}
+
+export interface ChangeRequestDetailsResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestDetails
+}
+
+// Interfaces for Approve Change Request
+export interface ApproveChangeRequestRequest {
+  notes?: string
+}
+
+export interface ApproveChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
+// Interfaces for Decline Change Request
+export interface DeclineChangeRequestRequest {
+  reason: string
+}
+
+export interface DeclineChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
 // Interfaces for Employee Invite
 interface InviteUserRequest {
   fullName: string
@@ -242,6 +383,44 @@ interface EmployeeState {
   resetPasswordError: string | null
   resetPasswordSuccess: boolean
 
+  // Change Request state
+  changeRequestLoading: boolean
+  changeRequestError: string | null
+  changeRequestSuccess: boolean
+  changeRequestResponse: ChangeRequestResponseData | null
+
+  // View Change Requests state
+  changeRequests: ChangeRequestListItem[]
+  changeRequestsLoading: boolean
+  changeRequestsError: string | null
+  changeRequestsSuccess: boolean
+  changeRequestsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Change Request Details state
+  changeRequestDetails: ChangeRequestDetails | null
+  changeRequestDetailsLoading: boolean
+  changeRequestDetailsError: string | null
+  changeRequestDetailsSuccess: boolean
+
+  // Approve Change Request state
+  approveChangeRequestLoading: boolean
+  approveChangeRequestError: string | null
+  approveChangeRequestSuccess: boolean
+  approveChangeRequestResponse: ChangeRequestResponseData | null
+
+  // Decline Change Request state
+  declineChangeRequestLoading: boolean
+  declineChangeRequestError: string | null
+  declineChangeRequestSuccess: boolean
+  declineChangeRequestResponse: ChangeRequestResponseData | null
+
   // General employee state
   loading: boolean
   error: string | null
@@ -281,6 +460,34 @@ const initialState: EmployeeState = {
   resetPasswordLoading: false,
   resetPasswordError: null,
   resetPasswordSuccess: false,
+  changeRequestLoading: false,
+  changeRequestError: null,
+  changeRequestSuccess: false,
+  changeRequestResponse: null,
+  changeRequests: [],
+  changeRequestsLoading: false,
+  changeRequestsError: null,
+  changeRequestsSuccess: false,
+  changeRequestsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  changeRequestDetails: null,
+  changeRequestDetailsLoading: false,
+  changeRequestDetailsError: null,
+  changeRequestDetailsSuccess: false,
+  approveChangeRequestLoading: false,
+  approveChangeRequestError: null,
+  approveChangeRequestSuccess: false,
+  approveChangeRequestResponse: null,
+  declineChangeRequestLoading: false,
+  declineChangeRequestError: null,
+  declineChangeRequestSuccess: false,
+  declineChangeRequestResponse: null,
   loading: false,
   error: null,
 }
@@ -503,6 +710,163 @@ export const resetEmployeePassword = createAsyncThunk(
   }
 )
 
+export const submitChangeRequest = createAsyncThunk(
+  "employee/submitChangeRequest",
+  async ({ id, changeRequestData }: { id: number; changeRequestData: ChangeRequestData }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.CHANGE_REQUEST.replace("{id}", id.toString())
+      const response = await api.post<ChangeRequestResponse>(buildApiUrl(endpoint), changeRequestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to submit change request")
+      }
+
+      // Fixed: Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Change request response data not found")
+      }
+
+      return {
+        employeeId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to submit change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request submission")
+    }
+  }
+)
+
+export const fetchChangeRequests = createAsyncThunk(
+  "employee/fetchChangeRequests",
+  async (params: ChangeRequestsRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, status, source, reference, publicId } = params
+
+      const response = await api.get<ChangeRequestsResponse>(buildApiUrl(API_ENDPOINTS.EMPLOYEE.VIEW_CHANGE_REQUEST), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(status !== undefined && { Status: status }),
+          ...(source !== undefined && { Source: source }),
+          ...(reference && { Reference: reference }),
+          ...(publicId && { PublicId: publicId }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change requests")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change requests")
+      }
+      return rejectWithValue(error.message || "Network error during change requests fetch")
+    }
+  }
+)
+
+export const fetchChangeRequestDetails = createAsyncThunk(
+  "employee/fetchChangeRequestDetails",
+  async (identifier: string, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.CHANGE_REQUEST_DETAILS.replace("{identifier}", identifier)
+      const response = await api.get<ChangeRequestDetailsResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change request details")
+      }
+
+      // Fixed: Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Change request details not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change request details")
+      }
+      return rejectWithValue(error.message || "Network error during change request details fetch")
+    }
+  }
+)
+
+export const approveChangeRequest = createAsyncThunk(
+  "employee/approveChangeRequest",
+  async ({ publicId, notes }: { publicId: string; notes?: string }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.APPROVE_CHANGE_REQUEST.replace("{publicId}", publicId)
+      const requestBody: ApproveChangeRequestRequest = {}
+
+      if (notes) {
+        requestBody.notes = notes
+      }
+
+      const response = await api.post<ApproveChangeRequestResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to approve change request")
+      }
+
+      // Fixed: Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Approved change request data not found")
+      }
+
+      return {
+        publicId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to approve change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request approval")
+    }
+  }
+)
+
+export const declineChangeRequest = createAsyncThunk(
+  "employee/declineChangeRequest",
+  async ({ publicId, reason }: { publicId: string; reason: string }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.EMPLOYEE.DECLINE_CHANGE_REQUEST.replace("{publicId}", publicId)
+      const requestBody: DeclineChangeRequestRequest = {
+        reason: reason,
+      }
+
+      const response = await api.post<DeclineChangeRequestResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to decline change request")
+      }
+
+      // Fixed: Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Declined change request data not found")
+      }
+
+      return {
+        publicId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to decline change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request decline")
+    }
+  }
+)
+
 // Employee slice
 const employeeSlice = createSlice({
   name: "employee",
@@ -565,6 +929,53 @@ const employeeSlice = createSlice({
       state.resetPasswordLoading = false
     },
 
+    // Clear change request status
+    clearChangeRequestStatus: (state) => {
+      state.changeRequestError = null
+      state.changeRequestSuccess = false
+      state.changeRequestLoading = false
+      state.changeRequestResponse = null
+    },
+
+    // Clear change requests state
+    clearChangeRequests: (state) => {
+      state.changeRequests = []
+      state.changeRequestsError = null
+      state.changeRequestsSuccess = false
+      state.changeRequestsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear change request details
+    clearChangeRequestDetails: (state) => {
+      state.changeRequestDetails = null
+      state.changeRequestDetailsError = null
+      state.changeRequestDetailsSuccess = false
+      state.changeRequestDetailsLoading = false
+    },
+
+    // Clear approve change request status
+    clearApproveChangeRequestStatus: (state) => {
+      state.approveChangeRequestError = null
+      state.approveChangeRequestSuccess = false
+      state.approveChangeRequestLoading = false
+      state.approveChangeRequestResponse = null
+    },
+
+    // Clear decline change request status
+    clearDeclineChangeRequestStatus: (state) => {
+      state.declineChangeRequestError = null
+      state.declineChangeRequestSuccess = false
+      state.declineChangeRequestLoading = false
+      state.declineChangeRequestResponse = null
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -575,6 +986,11 @@ const employeeSlice = createSlice({
       state.deactivateError = null
       state.activateError = null
       state.resetPasswordError = null
+      state.changeRequestError = null
+      state.changeRequestsError = null
+      state.changeRequestDetailsError = null
+      state.approveChangeRequestError = null
+      state.declineChangeRequestError = null
     },
 
     // Reset employee state
@@ -611,6 +1027,34 @@ const employeeSlice = createSlice({
       state.resetPasswordLoading = false
       state.resetPasswordError = null
       state.resetPasswordSuccess = false
+      state.changeRequestLoading = false
+      state.changeRequestError = null
+      state.changeRequestSuccess = false
+      state.changeRequestResponse = null
+      state.changeRequests = []
+      state.changeRequestsLoading = false
+      state.changeRequestsError = null
+      state.changeRequestsSuccess = false
+      state.changeRequestsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.changeRequestDetails = null
+      state.changeRequestDetailsLoading = false
+      state.changeRequestDetailsError = null
+      state.changeRequestDetailsSuccess = false
+      state.approveChangeRequestLoading = false
+      state.approveChangeRequestError = null
+      state.approveChangeRequestSuccess = false
+      state.approveChangeRequestResponse = null
+      state.declineChangeRequestLoading = false
+      state.declineChangeRequestError = null
+      state.declineChangeRequestSuccess = false
+      state.declineChangeRequestResponse = null
       state.loading = false
       state.error = null
     },
@@ -619,6 +1063,12 @@ const employeeSlice = createSlice({
     setPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.pagination.currentPage = action.payload.page
       state.pagination.pageSize = action.payload.pageSize
+    },
+
+    // Set change requests pagination
+    setChangeRequestsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.changeRequestsPagination.currentPage = action.payload.page
+      state.changeRequestsPagination.pageSize = action.payload.pageSize
     },
 
     // Update employee in list (optimistic update)
@@ -884,6 +1334,178 @@ const employeeSlice = createSlice({
         state.resetPasswordError = (action.payload as string) || "Failed to reset password"
         state.resetPasswordSuccess = false
       })
+      // Change request cases
+      .addCase(submitChangeRequest.pending, (state) => {
+        state.changeRequestLoading = true
+        state.changeRequestError = null
+        state.changeRequestSuccess = false
+        state.changeRequestResponse = null
+      })
+      .addCase(
+        submitChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            employeeId: number
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.changeRequestLoading = false
+          state.changeRequestSuccess = true
+          state.changeRequestError = null
+          state.changeRequestResponse = action.payload.data
+        }
+      )
+      .addCase(submitChangeRequest.rejected, (state, action) => {
+        state.changeRequestLoading = false
+        state.changeRequestError = (action.payload as string) || "Failed to submit change request"
+        state.changeRequestSuccess = false
+        state.changeRequestResponse = null
+      })
+      // Fetch change requests cases
+      .addCase(fetchChangeRequests.pending, (state) => {
+        state.changeRequestsLoading = true
+        state.changeRequestsError = null
+        state.changeRequestsSuccess = false
+      })
+      .addCase(fetchChangeRequests.fulfilled, (state, action: PayloadAction<ChangeRequestsResponse>) => {
+        state.changeRequestsLoading = false
+        state.changeRequestsSuccess = true
+        // Fixed: Ensure data exists with fallback
+        state.changeRequests = action.payload.data || []
+        state.changeRequestsPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.changeRequestsError = null
+      })
+      .addCase(fetchChangeRequests.rejected, (state, action) => {
+        state.changeRequestsLoading = false
+        state.changeRequestsError = (action.payload as string) || "Failed to fetch change requests"
+        state.changeRequestsSuccess = false
+        state.changeRequests = []
+        state.changeRequestsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch change request details cases
+      .addCase(fetchChangeRequestDetails.pending, (state) => {
+        state.changeRequestDetailsLoading = true
+        state.changeRequestDetailsError = null
+        state.changeRequestDetailsSuccess = false
+      })
+      .addCase(fetchChangeRequestDetails.fulfilled, (state, action: PayloadAction<ChangeRequestDetails>) => {
+        state.changeRequestDetailsLoading = false
+        state.changeRequestDetailsSuccess = true
+        state.changeRequestDetails = action.payload
+        state.changeRequestDetailsError = null
+      })
+      .addCase(fetchChangeRequestDetails.rejected, (state, action) => {
+        state.changeRequestDetailsLoading = false
+        state.changeRequestDetailsError = (action.payload as string) || "Failed to fetch change request details"
+        state.changeRequestDetailsSuccess = false
+        state.changeRequestDetails = null
+      })
+      // Approve change request cases
+      .addCase(approveChangeRequest.pending, (state) => {
+        state.approveChangeRequestLoading = true
+        state.approveChangeRequestError = null
+        state.approveChangeRequestSuccess = false
+        state.approveChangeRequestResponse = null
+      })
+      .addCase(
+        approveChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            publicId: string
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.approveChangeRequestLoading = false
+          state.approveChangeRequestSuccess = true
+          state.approveChangeRequestError = null
+          state.approveChangeRequestResponse = action.payload.data
+
+          // Update the change request in the list if it exists
+          const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
+          if (index !== -1) {
+            const req = state.changeRequests[index]
+            if (req) {
+              req.status = 1 // Set status to APPROVED
+            }
+          }
+
+          // Update change request details if it's the current one
+          if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
+            state.changeRequestDetails.status = 1 // Set status to APPROVED
+            state.changeRequestDetails.approvalNotes = action.payload.data.approvalNotes
+            state.changeRequestDetails.approvedAtUtc = action.payload.data.approvedAtUtc
+            state.changeRequestDetails.approvedBy = action.payload.data.approvedBy
+          }
+        }
+      )
+      .addCase(approveChangeRequest.rejected, (state, action) => {
+        state.approveChangeRequestLoading = false
+        state.approveChangeRequestError = (action.payload as string) || "Failed to approve change request"
+        state.approveChangeRequestSuccess = false
+        state.approveChangeRequestResponse = null
+      })
+      // Decline change request cases
+      .addCase(declineChangeRequest.pending, (state) => {
+        state.declineChangeRequestLoading = true
+        state.declineChangeRequestError = null
+        state.declineChangeRequestSuccess = false
+        state.declineChangeRequestResponse = null
+      })
+      .addCase(
+        declineChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            publicId: string
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.declineChangeRequestLoading = false
+          state.declineChangeRequestSuccess = true
+          state.declineChangeRequestError = null
+          state.declineChangeRequestResponse = action.payload.data
+
+          // Update the change request in the list if it exists
+          const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
+          if (index !== -1) {
+            const req = state.changeRequests[index]
+            if (req) {
+              req.status = 2 // Set status to DECLINED
+            }
+          }
+
+          // Update change request details if it's the current one
+          if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
+            state.changeRequestDetails.status = 2 // Set status to DECLINED
+            state.changeRequestDetails.declinedReason = action.payload.data.declinedReason
+          }
+        }
+      )
+      .addCase(declineChangeRequest.rejected, (state, action) => {
+        state.declineChangeRequestLoading = false
+        state.declineChangeRequestError = (action.payload as string) || "Failed to decline change request"
+        state.declineChangeRequestSuccess = false
+        state.declineChangeRequestResponse = null
+      })
   },
 })
 
@@ -895,9 +1517,15 @@ export const {
   clearDeactivateStatus,
   clearActivateStatus,
   clearResetPasswordStatus,
+  clearChangeRequestStatus,
+  clearChangeRequests,
+  clearChangeRequestDetails,
+  clearApproveChangeRequestStatus,
+  clearDeclineChangeRequestStatus,
   clearError,
   resetEmployeeState,
   setPagination,
+  setChangeRequestsPagination,
   updateEmployeeInList,
   removeEmployeeFromList,
 } = employeeSlice.actions

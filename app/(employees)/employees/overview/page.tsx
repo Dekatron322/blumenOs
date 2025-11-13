@@ -387,6 +387,106 @@ export default function EmployeeManagement() {
                   // Loaded State
                   <>
                     <motion.div
+                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <div className="flex w-full max-sm:flex-col">
+                        <div className="w-full">
+                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
+                            {/* Total Employees Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <EmployeeIcon />
+                                Total Employees
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">All Employees:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(totalEmployees)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Active:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(activeEmployees)}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Employment Types Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <ContractIcon />
+                                Employment Types
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Full Time:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(fullTimeEmployees)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Part Time:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(partTimeEmployees)}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Workforce Metrics Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <DepartmentIcon />
+                                Workforce Metrics
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">New Hires:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(newHires)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">On Leave:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(onLeaveEmployees)}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Organization Overview Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <PayrollIcon />
+                                Organization
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Departments:</p>
+                                  <div className="flex gap-1">
+                                    <p className="text-secondary font-medium">{departments}</p>
+                                    <ArrowIcon />
+                                  </div>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Avg Tenure:</p>
+                                  <p className="text-secondary font-medium">{avgTenure} yrs</p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
