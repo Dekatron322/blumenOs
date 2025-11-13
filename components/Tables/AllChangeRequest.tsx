@@ -1,14 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { RxDotsVertical } from "react-icons/rx"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { PiNoteBold } from "react-icons/pi"
 import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { GoXCircle } from "react-icons/go"
-import { WiTime3 } from "react-icons/wi"
-import { VscEye, VscCheck, VscClose } from "react-icons/vsc"
+import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
@@ -34,10 +30,10 @@ const statusOptions = [
   { value: "", label: "All Status" },
   { value: "0", label: "Pending" },
   { value: "1", label: "Approved" },
-  { value: "2", label: "Rejected" },
-  { value: "3", label: "Applied" },
-  { value: "4", label: "Failed" },
-  { value: "5", label: "Cancelled" },
+  { value: "2", label: "Declined" },
+  { value: "3", label: "Cancelled" },
+  { value: "4", label: "Applied" },
+  { value: "5", label: "Failed" },
 ]
 
 // Source options for filtering
@@ -260,10 +256,10 @@ const AllChangeRequest = () => {
     const configs = {
       0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "PENDING" },
       1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "APPROVED" },
-      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "REJECTED" },
-      3: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", label: "APPLIED" },
-      4: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "FAILED" },
-      5: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "CANCELLED" },
+      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "DECLINED" },
+      3: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "CANCELLED" },
+      4: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", label: "APPLIED" },
+      5: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "FAILED" },
     }
     return configs[status as keyof typeof configs] || configs[0]
   }
