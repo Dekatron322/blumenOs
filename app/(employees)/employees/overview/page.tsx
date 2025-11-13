@@ -1,8 +1,7 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
 import { motion } from "framer-motion"
 import {
@@ -15,8 +14,8 @@ import {
 } from "components/Icons/Icons"
 import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
-import { useAppSelector, useAppDispatch } from "lib/hooks/useRedux"
-import { fetchEmployeeReport, clearEmployeeReport } from "lib/redux/employeeSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { clearEmployeeReport, fetchEmployeeReport } from "lib/redux/employeeSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {

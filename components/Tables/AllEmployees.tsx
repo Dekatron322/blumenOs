@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from "react"
-import { RxDotsVertical } from "react-icons/rx"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { PiNoteBold } from "react-icons/pi"
 import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { GoXCircle } from "react-icons/go"
-import { WiTime3 } from "react-icons/wi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
 import { AnimatePresence, motion } from "framer-motion"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
-import UpdateStatusModal from "components/ui/Modal/update-status-modal"
-import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
 import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { fetchEmployees, fetchDepartmentReport } from "lib/redux/employeeSlice"
+import { fetchDepartmentReport, fetchEmployees } from "lib/redux/employeeSlice"
 import { ChevronDown } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 
@@ -233,8 +227,15 @@ const HeaderSkeleton = () => (
 
 const AllEmployees = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { employees, employeesLoading, employeesError, pagination, departmentReport, departmentReportLoading, departmentReportError } =
-    useSelector((state: RootState) => state.employee)
+  const {
+    employees,
+    employeesLoading,
+    employeesError,
+    pagination,
+    departmentReport,
+    departmentReportLoading,
+    departmentReportError,
+  } = useSelector((state: RootState) => state.employee)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
