@@ -32,6 +32,7 @@ export const API_ENDPOINTS = {
     ACTIVATE: "/identity/users/{id}/activate",
     RESET_PASSWORD: "/identity/users/{id}/reset-password",
     CHANGE_REQUEST: "/identity/users/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/identity/users/{id}/change-requests",
     VIEW_CHANGE_REQUEST: "/identity/users/change-requests",
     CHANGE_REQUEST_DETAILS: "/identity/users/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/identity/users/change-requests/{publicId}/approve",

@@ -440,6 +440,20 @@ interface EmployeeState {
     hasPrevious: boolean
   }
 
+  // Change Requests By Employee ID state
+  changeRequestsByEmployee: ChangeRequestListItem[]
+  changeRequestsByEmployeeLoading: boolean
+  changeRequestsByEmployeeError: string | null
+  changeRequestsByEmployeeSuccess: boolean
+  changeRequestsByEmployeePagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
   // Change Request Details state
   changeRequestDetails: ChangeRequestDetails | null
   changeRequestDetailsLoading: boolean
@@ -518,6 +532,18 @@ const initialState: EmployeeState = {
   changeRequestsError: null,
   changeRequestsSuccess: false,
   changeRequestsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  changeRequestsByEmployee: [],
+  changeRequestsByEmployeeLoading: false,
+  changeRequestsByEmployeeError: null,
+  changeRequestsByEmployeeSuccess: false,
+  changeRequestsByEmployeePagination: {
     totalCount: 0,
     totalPages: 0,
     currentPage: 1,
@@ -877,6 +903,48 @@ export const fetchChangeRequests = createAsyncThunk(
   }
 )
 
+// New async thunk for fetching change requests by employee ID
+export const fetchChangeRequestsByEmployeeId = createAsyncThunk(
+  "employee/fetchChangeRequestsByEmployeeId",
+  async (
+    {
+      id,
+      params,
+    }: {
+      id: number
+      params: ChangeRequestsRequestParams
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { pageNumber, pageSize, status, source, reference, publicId } = params
+
+      const endpoint = API_ENDPOINTS.EMPLOYEE.CHANGE_REQUESTS_BY_ID.replace("{id}", id.toString())
+      const response = await api.get<ChangeRequestsResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(status !== undefined && { Status: status }),
+          ...(source !== undefined && { Source: source }),
+          ...(reference && { Reference: reference }),
+          ...(publicId && { PublicId: publicId }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change requests for employee")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change requests for employee")
+      }
+      return rejectWithValue(error.message || "Network error during employee change requests fetch")
+    }
+  }
+)
+
 export const fetchChangeRequestDetails = createAsyncThunk(
   "employee/fetchChangeRequestDetails",
   async (identifier: string, { rejectWithValue }) => {
@@ -1074,6 +1142,21 @@ const employeeSlice = createSlice({
       }
     },
 
+    // Clear change requests by employee state
+    clearChangeRequestsByEmployee: (state) => {
+      state.changeRequestsByEmployee = []
+      state.changeRequestsByEmployeeError = null
+      state.changeRequestsByEmployeeSuccess = false
+      state.changeRequestsByEmployeePagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
     // Clear change request details
     clearChangeRequestDetails: (state) => {
       state.changeRequestDetails = null
@@ -1112,6 +1195,7 @@ const employeeSlice = createSlice({
       state.resetPasswordError = null
       state.changeRequestError = null
       state.changeRequestsError = null
+      state.changeRequestsByEmployeeError = null
       state.changeRequestDetailsError = null
       state.approveChangeRequestError = null
       state.declineChangeRequestError = null
@@ -1167,6 +1251,18 @@ const employeeSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+      state.changeRequestsByEmployee = []
+      state.changeRequestsByEmployeeLoading = false
+      state.changeRequestsByEmployeeError = null
+      state.changeRequestsByEmployeeSuccess = false
+      state.changeRequestsByEmployeePagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
       state.changeRequestDetails = null
       state.changeRequestDetailsLoading = false
       state.changeRequestDetailsError = null
@@ -1201,6 +1297,12 @@ const employeeSlice = createSlice({
     setChangeRequestsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.changeRequestsPagination.currentPage = action.payload.page
       state.changeRequestsPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set change requests by employee pagination
+    setChangeRequestsByEmployeePagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.changeRequestsByEmployeePagination.currentPage = action.payload.page
+      state.changeRequestsByEmployeePagination.pageSize = action.payload.pageSize
     },
 
     // Update employee in list (optimistic update)
@@ -1566,6 +1668,42 @@ const employeeSlice = createSlice({
           hasPrevious: false,
         }
       })
+      // Fetch change requests by employee ID cases
+      .addCase(fetchChangeRequestsByEmployeeId.pending, (state) => {
+        state.changeRequestsByEmployeeLoading = true
+        state.changeRequestsByEmployeeError = null
+        state.changeRequestsByEmployeeSuccess = false
+      })
+      .addCase(fetchChangeRequestsByEmployeeId.fulfilled, (state, action: PayloadAction<ChangeRequestsResponse>) => {
+        state.changeRequestsByEmployeeLoading = false
+        state.changeRequestsByEmployeeSuccess = true
+        // Fixed: Ensure data exists with fallback
+        state.changeRequestsByEmployee = action.payload.data || []
+        state.changeRequestsByEmployeePagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.changeRequestsByEmployeeError = null
+      })
+      .addCase(fetchChangeRequestsByEmployeeId.rejected, (state, action) => {
+        state.changeRequestsByEmployeeLoading = false
+        state.changeRequestsByEmployeeError =
+          (action.payload as string) || "Failed to fetch change requests for employee"
+        state.changeRequestsByEmployeeSuccess = false
+        state.changeRequestsByEmployee = []
+        state.changeRequestsByEmployeePagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
       // Fetch change request details cases
       .addCase(fetchChangeRequestDetails.pending, (state) => {
         state.changeRequestDetailsLoading = true
@@ -1610,6 +1748,17 @@ const employeeSlice = createSlice({
           const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
           if (index !== -1) {
             const req = state.changeRequests[index]
+            if (req) {
+              req.status = 1 // Set status to APPROVED
+            }
+          }
+
+          // Update the change request in the employee-specific list if it exists
+          const employeeIndex = state.changeRequestsByEmployee.findIndex(
+            (cr) => cr.publicId === action.payload.publicId
+          )
+          if (employeeIndex !== -1) {
+            const req = state.changeRequestsByEmployee[employeeIndex]
             if (req) {
               req.status = 1 // Set status to APPROVED
             }
@@ -1661,6 +1810,17 @@ const employeeSlice = createSlice({
             }
           }
 
+          // Update the change request in the employee-specific list if it exists
+          const employeeIndex = state.changeRequestsByEmployee.findIndex(
+            (cr) => cr.publicId === action.payload.publicId
+          )
+          if (employeeIndex !== -1) {
+            const req = state.changeRequestsByEmployee[employeeIndex]
+            if (req) {
+              req.status = 2 // Set status to DECLINED
+            }
+          }
+
           // Update change request details if it's the current one
           if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
             state.changeRequestDetails.status = 2 // Set status to DECLINED
@@ -1689,6 +1849,7 @@ export const {
   clearResetPasswordStatus,
   clearChangeRequestStatus,
   clearChangeRequests,
+  clearChangeRequestsByEmployee,
   clearChangeRequestDetails,
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
@@ -1696,6 +1857,7 @@ export const {
   resetEmployeeState,
   setPagination,
   setChangeRequestsPagination,
+  setChangeRequestsByEmployeePagination,
   updateEmployeeInList,
   removeEmployeeFromList,
 } = employeeSlice.actions
