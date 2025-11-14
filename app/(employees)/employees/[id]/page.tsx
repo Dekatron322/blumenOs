@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import {
   AlertCircle,
   CheckCircle,
+  ChevronDown,
   Edit3,
   Mail,
   MapPin,
@@ -15,7 +16,6 @@ import {
   Share2,
   Shield,
   User,
-  ChevronDown,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
@@ -30,6 +30,7 @@ import {
   DepartmentInfoIcon,
   EmailOutlineIcon,
   EmployeeInfoIcon,
+  ExportCsvIcon,
   ExportOutlineIcon,
   MapOutlineIcon,
   NotificationOutlineIcon,
@@ -39,14 +40,13 @@ import {
   UpdateUserOutlineIcon,
   UserRoleIcon,
   VerifyOutlineIcon,
-  ExportCsvIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearEmployeeDetails,
+  clearChangeRequestsByEmployee,
   fetchEmployeeDetails,
   fetchChangeRequestsByEmployeeId,
-  clearChangeRequestsByEmployee,
 } from "lib/redux/employeeSlice"
 import type {
   ChangeRequestListItem as ChangeRequestListItemType,
