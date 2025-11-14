@@ -45,8 +45,8 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearChangeRequestsByEmployee,
   clearEmployeeDetails,
-  fetchEmployeeDetails,
   fetchChangeRequestsByEmployeeId,
+  fetchEmployeeDetails,
 } from "lib/redux/employeeSlice"
 import type {
   ChangeRequestListItem as ChangeRequestListItemType,
