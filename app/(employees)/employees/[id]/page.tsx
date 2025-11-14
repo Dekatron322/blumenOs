@@ -43,8 +43,8 @@ import {
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  clearEmployeeDetails,
   clearChangeRequestsByEmployee,
+  clearEmployeeDetails,
   fetchEmployeeDetails,
   fetchChangeRequestsByEmployeeId,
 } from "lib/redux/employeeSlice"
