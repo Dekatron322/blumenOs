@@ -856,9 +856,7 @@ const AddEmployeePage = () => {
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-1">
                             <p className="font-medium">Temporary password generated</p>
-                            <p className="text-blue-800">
-                              Share this one-time password with the employee securely.
-                            </p>
+                            <p className="text-blue-800">Share this one-time password with the employee securely.</p>
                             <div className="mt-2 flex items-center gap-3">
                               <code className="rounded bg-white px-3 py-1 text-base font-semibold text-blue-900 shadow-sm">
                                 {invitedUsers[0]!.temporaryPassword}
