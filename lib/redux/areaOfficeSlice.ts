@@ -11,6 +11,24 @@ export interface Company {
   nercSupplyStructure: number
 }
 
+export interface InjectionSubstation {
+  id: number
+  nercCode: string
+  injectionSubstationCode: string
+  areaOffice: AreaOffice
+}
+
+export interface ServiceCenter {
+  id: number
+  name: string
+  code: string
+  address: string
+  areaOfficeId: number
+  areaOffice: AreaOffice
+  latitude: number
+  longitude: number
+}
+
 export interface AreaOffice {
   id: number
   nameOfNewOAreaffice: string
@@ -19,6 +37,8 @@ export interface AreaOffice {
   latitude: number
   longitude: number
   company: Company
+  injectionSubstations?: InjectionSubstation[]
+  serviceCenters?: ServiceCenter[]
 }
 
 export interface AreaOfficesResponse {
@@ -33,6 +53,12 @@ export interface AreaOfficesResponse {
   hasPrevious: boolean
 }
 
+export interface AreaOfficeResponse {
+  isSuccess: boolean
+  message: string
+  data: AreaOffice[]
+}
+
 export interface AreaOfficesRequestParams {
   pageNumber: number
   pageSize: number
@@ -43,6 +69,21 @@ export interface AreaOfficesRequestParams {
   feederId?: number
   serviceCenterId?: number
 }
+
+// Request interfaces for adding area office
+export interface CreateAreaOfficeRequest {
+  companyId: number
+  oldNercCode: string
+  newNercCode: string
+  oldKaedcoCode: string
+  newKaedcoCode: string
+  nameOfOldOAreaffice: string
+  nameOfNewOAreaffice: string
+  latitude: number
+  longitude: number
+}
+
+export type CreateAreaOfficeRequestPayload = CreateAreaOfficeRequest[]
 
 // AreaOffice State
 interface AreaOfficeState {
@@ -66,6 +107,11 @@ interface AreaOfficeState {
   currentAreaOffice: AreaOffice | null
   currentAreaOfficeLoading: boolean
   currentAreaOfficeError: string | null
+
+  // Create areaOffice state
+  createLoading: boolean
+  createError: string | null
+  createSuccess: boolean
 }
 
 // Initial state
@@ -85,6 +131,9 @@ const initialState: AreaOfficeState = {
   currentAreaOffice: null,
   currentAreaOfficeLoading: false,
   currentAreaOfficeError: null,
+  createLoading: false,
+  createError: null,
+  createSuccess: false,
 }
 
 // Async thunks
@@ -159,6 +208,50 @@ export const fetchAreaOfficeById = createAsyncThunk<AreaOffice, number, { reject
   }
 )
 
+export const createAreaOffice = createAsyncThunk(
+  "areaOffices/createAreaOffice",
+  async (areaOfficeData: CreateAreaOfficeRequestPayload, { rejectWithValue }) => {
+    try {
+      // API expects a plain array of area office requests
+      const response = await api.post<AreaOfficeResponse>(buildApiUrl(API_ENDPOINTS.AREA_OFFICE.ADD), areaOfficeData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create area office")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create area office")
+      }
+      return rejectWithValue(error.message || "Network error during area office creation")
+    }
+  }
+)
+
+export const createSingleAreaOffice = createAsyncThunk(
+  "areaOffices/createSingleAreaOffice",
+  async (areaOfficeData: CreateAreaOfficeRequest, { rejectWithValue }) => {
+    try {
+      // Send a single-element array to match the bulk API contract
+      const payload: CreateAreaOfficeRequestPayload = [areaOfficeData]
+
+      const response = await api.post<AreaOfficeResponse>(buildApiUrl(API_ENDPOINTS.AREA_OFFICE.ADD), payload)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create area office")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create area office")
+      }
+      return rejectWithValue(error.message || "Network error during area office creation")
+    }
+  }
+)
+
 // AreaOffice slice
 const areaOfficeSlice = createSlice({
   name: "areaOffices",
@@ -183,6 +276,7 @@ const areaOfficeSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentAreaOfficeError = null
+      state.createError = null
     },
 
     // Clear current areaOffice
@@ -208,6 +302,9 @@ const areaOfficeSlice = createSlice({
       state.currentAreaOffice = null
       state.currentAreaOfficeLoading = false
       state.currentAreaOfficeError = null
+      state.createLoading = false
+      state.createError = null
+      state.createSuccess = false
     },
 
     // Set pagination
@@ -219,6 +316,13 @@ const areaOfficeSlice = createSlice({
     // Set current area office (for forms, etc.)
     setCurrentAreaOffice: (state, action: PayloadAction<AreaOffice | null>) => {
       state.currentAreaOffice = action.payload
+    },
+
+    // Clear create state
+    clearCreateState: (state) => {
+      state.createLoading = false
+      state.createError = null
+      state.createSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -272,6 +376,51 @@ const areaOfficeSlice = createSlice({
         state.currentAreaOfficeError = (action.payload as string) || "Failed to fetch area office"
         state.currentAreaOffice = null
       })
+      // Create area office cases
+      .addCase(createAreaOffice.pending, (state) => {
+        state.createLoading = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(createAreaOffice.fulfilled, (state, action: PayloadAction<AreaOfficeResponse>) => {
+        state.createLoading = false
+        state.createSuccess = true
+        state.createError = null
+
+        // Optionally add the newly created area office to the list
+        if (action.payload.data && action.payload.data.length > 0) {
+          state.areaOffices.unshift(...action.payload.data)
+        }
+      })
+      .addCase(createAreaOffice.rejected, (state, action) => {
+        state.createLoading = false
+        state.createError = (action.payload as string) || "Failed to create area office"
+        state.createSuccess = false
+      })
+      // Create single area office cases
+      .addCase(createSingleAreaOffice.pending, (state) => {
+        state.createLoading = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(createSingleAreaOffice.fulfilled, (state, action: PayloadAction<AreaOfficeResponse>) => {
+        state.createLoading = false
+        state.createSuccess = true
+        state.createError = null
+
+        // Optionally add the newly created area office to the list
+        if (action.payload.data && action.payload.data.length > 0) {
+          const newAreaOffice = action.payload.data[0]
+          if (newAreaOffice) {
+            state.areaOffices.unshift(newAreaOffice)
+          }
+        }
+      })
+      .addCase(createSingleAreaOffice.rejected, (state, action) => {
+        state.createLoading = false
+        state.createError = (action.payload as string) || "Failed to create area office"
+        state.createSuccess = false
+      })
   },
 })
 
@@ -282,6 +431,7 @@ export const {
   resetAreaOfficeState,
   setPagination,
   setCurrentAreaOffice,
+  clearCreateState,
 } = areaOfficeSlice.actions
 
 export default areaOfficeSlice.reducer

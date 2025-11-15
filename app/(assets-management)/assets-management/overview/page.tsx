@@ -3,6 +3,7 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { AnimatePresence, motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
@@ -287,6 +288,7 @@ const generateAssetData = () => {
 }
 
 export default function MeteringDashboard() {
+  const router = useRouter()
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [assetData, setAssetData] = useState(generateAssetData())
@@ -385,7 +387,7 @@ export default function MeteringDashboard() {
                         <div className="flex flex-col py-1">
                           <button
                             onClick={() => {
-                              setIsAddCustomerModalOpen(true)
+                              router.push("/assets-management/add-area-offices")
                               closeAddAssetMenu()
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
@@ -395,7 +397,7 @@ export default function MeteringDashboard() {
                           </button>
                           <button
                             onClick={() => {
-                              setIsAddCustomerModalOpen(true)
+                              router.push("/assets-management/add-feeders")
                               closeAddAssetMenu()
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
@@ -405,7 +407,7 @@ export default function MeteringDashboard() {
                           </button>
                           <button
                             onClick={() => {
-                              setIsAddCustomerModalOpen(true)
+                              router.push("/assets-management/add-injection-substations")
                               closeAddAssetMenu()
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
@@ -415,7 +417,7 @@ export default function MeteringDashboard() {
                           </button>
                           <button
                             onClick={() => {
-                              setIsAddCustomerModalOpen(true)
+                              router.push("/assets-management/add-poles")
                               closeAddAssetMenu()
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
@@ -425,7 +427,7 @@ export default function MeteringDashboard() {
                           </button>
                           <button
                             onClick={() => {
-                              setIsAddCustomerModalOpen(true)
+                              router.push("/assets-management/add-distribution-stations")
                               closeAddAssetMenu()
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"

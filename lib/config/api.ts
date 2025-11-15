@@ -47,6 +47,7 @@ export const API_ENDPOINTS = {
 
   AREA_OFFICE: {
     GET: "/assets/area-offices",
+    ADD: "/assets/area-offices",
   },
 
   FEEDERS: {
