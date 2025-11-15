@@ -3,45 +3,14 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  AlertCircle,
-  CheckCircle,
-  ChevronDown,
-  Edit3,
-  Building,
-  MapPin,
-  Power,
-  PowerOff,
-  Users,
-  Zap,
-  Mail,
-  Phone,
-} from "lucide-react"
+import { AlertCircle, Building, Edit3, MapPin, Zap } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
-import {
-  CalendarOutlineIcon,
-  DepartmentInfoIcon,
-  EmailOutlineIcon,
-  ExportOutlineIcon,
-  MapOutlineIcon,
-  PhoneOutlineIcon,
-  SettingOutlineIcon,
-  UpdateUserOutlineIcon,
-} from "components/Icons/Icons"
+import { DepartmentInfoIcon, ExportOutlineIcon, MapOutlineIcon, SettingOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearCurrentAreaOffice, fetchAreaOfficeById, updateAreaOffice } from "lib/redux/areaOfficeSlice"
-import type { AreaOffice, UpdateAreaOfficeRequest } from "lib/redux/areaOfficeSlice"
+import { clearCurrentAreaOffice, fetchAreaOfficeById } from "lib/redux/areaOfficeSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-
-// Status options for filtering (if needed for related data)
-const statusOptions = [
-  { value: "", label: "All Status" },
-  { value: "0", label: "Pending" },
-  { value: "1", label: "Active" },
-  { value: "2", label: "Inactive" },
-]
 
 // Injection Substation Card Component
 const InjectionSubstationCard = ({ substation }: { substation: any }) => {
@@ -1043,8 +1012,8 @@ const AreaOfficeDetailsPage = () => {
                           <Building className="mx-auto mb-4 size-12 text-gray-400" />
                           <h3 className="mb-2 text-lg font-semibold text-gray-900">No Associated Data</h3>
                           <p className="text-gray-600">
-                            This area office doesn't have any injection substations or service centers associated with
-                            it yet.
+                            This area office doesn&apos;t have any injection substations or service centers associated
+                            with it yet.
                           </p>
                         </div>
                       </motion.div>
