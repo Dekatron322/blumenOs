@@ -2,11 +2,11 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { RxDotsVertical } from "react-icons/rx"
+import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { type Pole, type PolesRequestParams, clearError, fetchPoles, setPagination } from "lib/redux/polesSlice"
+import { clearError, fetchPoles, type Pole, PolesRequestParams, setPagination } from "lib/redux/polesSlice"
 
 interface Status {
   value: number

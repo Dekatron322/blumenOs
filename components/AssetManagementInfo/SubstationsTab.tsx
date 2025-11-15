@@ -7,9 +7,9 @@ import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOu
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  InjectionSubstationsRequestParams,
   clearError,
   fetchInjectionSubstations,
+  InjectionSubstationsRequestParams,
   setPagination,
 } from "lib/redux/injectionSubstationSlice"
 
