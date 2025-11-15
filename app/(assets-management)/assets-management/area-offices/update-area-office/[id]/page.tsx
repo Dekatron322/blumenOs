@@ -281,7 +281,7 @@ const UpdateAreaOfficePage = () => {
   }
 
   const handleCancel = () => {
-    router.push("/area-offices") // Navigate back to area offices list
+    router.push("/assets-management/area-offices") // Navigate back to area offices list
   }
 
   const isFormValid = (): boolean => {
@@ -346,7 +346,7 @@ const UpdateAreaOfficePage = () => {
                 </div>
                 <h3 className="mb-2 text-lg font-semibold">Failed to load area office</h3>
                 <p className="mb-4 text-gray-600">{currentAreaOfficeError}</p>
-                <ButtonModule variant="primary" onClick={() => router.push("/area-offices")}>
+                <ButtonModule variant="primary" onClick={() => router.push("/assets-management/area-offices")}>
                   Back to Area Offices
                 </ButtonModule>
               </div>
