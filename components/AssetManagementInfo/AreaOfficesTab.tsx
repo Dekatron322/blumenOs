@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { AreaOfficesRequestParams, clearError, fetchAreaOffices, setPagination } from "lib/redux/areaOfficeSlice"
@@ -16,6 +17,7 @@ interface Status {
 interface ActionDropdownProps {
   office: AreaOffice
   onViewDetails: (office: AreaOffice) => void
+  onUpdateAreaOffice: (officeId: number) => void // Add this prop
 }
 
 // Use the AreaOffice interface from your slice
@@ -34,7 +36,7 @@ interface AreaOffice {
   }
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails, onUpdateAreaOffice }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -75,6 +77,13 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
     onViewDetails(office)
+    setIsOpen(false)
+  }
+
+  const handleUpdateAreaOffice = (e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log("Update operations for:", office.id)
+    onUpdateAreaOffice(office.id) // Call the parent handler
     setIsOpen(false)
   }
 
@@ -125,27 +134,14 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }
               >
                 View Details
               </motion.button>
+
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Manage staff for:", office.id)
-                  setIsOpen(false)
-                }}
+                onClick={handleUpdateAreaOffice}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Manage Staff
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update operations for:", office.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Operations
+                Update Area Office
               </motion.button>
             </div>
           </motion.div>
@@ -213,6 +209,7 @@ const LoadingSkeleton = () => {
 
 const AreaOfficesTab: React.FC = () => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const { areaOffices, loading, error, pagination } = useAppSelector((state) => state.areaOffices)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -298,6 +295,14 @@ const AreaOfficesTab: React.FC = () => {
 
   const paginate = (pageNumber: number) => {
     dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
+
+  const handleViewAreaOfficeDetails = (office: AreaOffice) => {
+    router.push(`/assets-management/area-offices/area-office-details/${office.id}`)
+  }
+
+  const handleUpdateAreaOffice = (officeId: number) => {
+    router.push(`/assets-management/area-offices/update-area-office/${officeId}`)
   }
 
   if (loading) return <LoadingSkeleton />
@@ -455,7 +460,11 @@ const AreaOfficesTab: React.FC = () => {
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown office={office} onViewDetails={setSelectedOffice} />
+                        <ActionDropdown
+                          office={office}
+                          onViewDetails={handleViewAreaOfficeDetails}
+                          onUpdateAreaOffice={handleUpdateAreaOffice} // Pass the handler
+                        />
                       </td>
                     </motion.tr>
                   ))}

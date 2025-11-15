@@ -42,7 +42,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
   loading = false,
 }) => {
   const baseClasses =
-    "flex z-0 items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "flex  z-0  items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
 
   const variantClasses = {
     primary:
@@ -71,11 +71,11 @@ export const ButtonModule: React.FC<ButtonProps> = ({
       onClick={onClick}
       aria-busy={loading}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
-        isDisabled ? "z-0 cursor-not-allowed opacity-50" : ""
+        isDisabled ? "z-0 cursor-not-allowed opacity-50" : "gap-1"
       } ${className}`}
     >
       {iconPosition === "start" && (
-        <span className="mr-2 inline-flex items-center">
+        <span className="inline-flex items-center">
           {loading ? (
             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -88,7 +88,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
       )}
       {children}
       {iconPosition === "end" && (
-        <span className="ml-2 inline-flex items-center">
+        <span className=" inline-flex items-center">
           {loading ? (
             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

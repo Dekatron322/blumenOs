@@ -34,6 +34,9 @@ export interface AreaOffice {
   nameOfNewOAreaffice: string
   newKaedcoCode: string
   newNercCode: string
+  oldKaedcoCode?: string
+  oldNercCode?: string
+  nameOfOldOAreaffice?: string
   latitude: number
   longitude: number
   company: Company
@@ -59,6 +62,12 @@ export interface AreaOfficeResponse {
   data: AreaOffice[]
 }
 
+export interface SingleAreaOfficeResponse {
+  isSuccess: boolean
+  message: string
+  data: AreaOffice
+}
+
 export interface AreaOfficesRequestParams {
   pageNumber: number
   pageSize: number
@@ -72,6 +81,18 @@ export interface AreaOfficesRequestParams {
 
 // Request interfaces for adding area office
 export interface CreateAreaOfficeRequest {
+  companyId: number
+  oldNercCode: string
+  newNercCode: string
+  oldKaedcoCode: string
+  newKaedcoCode: string
+  nameOfOldOAreaffice: string
+  nameOfNewOAreaffice: string
+  latitude: number
+  longitude: number
+}
+
+export interface UpdateAreaOfficeRequest {
   companyId: number
   oldNercCode: string
   newNercCode: string
@@ -112,6 +133,11 @@ interface AreaOfficeState {
   createLoading: boolean
   createError: string | null
   createSuccess: boolean
+
+  // Update areaOffice state
+  updateLoading: boolean
+  updateError: string | null
+  updateSuccess: boolean
 }
 
 // Initial state
@@ -134,6 +160,9 @@ const initialState: AreaOfficeState = {
   createLoading: false,
   createError: null,
   createSuccess: false,
+  updateLoading: false,
+  updateError: null,
+  updateSuccess: false,
 }
 
 // Async thunks
@@ -183,17 +212,16 @@ export const fetchAreaOfficeById = createAsyncThunk<AreaOffice, number, { reject
   "areaOffices/fetchAreaOfficeById",
   async (areaOfficeId: number, { rejectWithValue }) => {
     try {
-      // Note: This assumes there's a GET by ID endpoint
-      // You might need to adjust this based on your actual API
-      const response = await api.get<AreaOfficesResponse>(
-        `${buildApiUrl(API_ENDPOINTS.AREA_OFFICE.GET)}/${areaOfficeId}`
-      )
+      // Use the new GET_BY_ID endpoint with parameter replacement
+      const endpoint = API_ENDPOINTS.AREA_OFFICE.GET_BY_ID.replace("{id}", areaOfficeId.toString())
+
+      const response = await api.get<SingleAreaOfficeResponse>(buildApiUrl(endpoint))
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch area office")
       }
 
-      const areaOffice = response.data.data?.[0]
+      const areaOffice = response.data.data
       if (!areaOffice) {
         return rejectWithValue("Area office not found")
       }
@@ -252,6 +280,29 @@ export const createSingleAreaOffice = createAsyncThunk(
   }
 )
 
+export const updateAreaOffice = createAsyncThunk(
+  "areaOffices/updateAreaOffice",
+  async ({ id, areaOfficeData }: { id: number; areaOfficeData: UpdateAreaOfficeRequest }, { rejectWithValue }) => {
+    try {
+      // Replace the {id} placeholder in the endpoint with the actual ID
+      const endpoint = API_ENDPOINTS.AREA_OFFICE.UPDATE.replace("{id}", id.toString())
+
+      const response = await api.put<SingleAreaOfficeResponse>(buildApiUrl(endpoint), areaOfficeData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update area office")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update area office")
+      }
+      return rejectWithValue(error.message || "Network error during area office update")
+    }
+  }
+)
+
 // AreaOffice slice
 const areaOfficeSlice = createSlice({
   name: "areaOffices",
@@ -277,6 +328,7 @@ const areaOfficeSlice = createSlice({
       state.error = null
       state.currentAreaOfficeError = null
       state.createError = null
+      state.updateError = null
     },
 
     // Clear current areaOffice
@@ -305,6 +357,9 @@ const areaOfficeSlice = createSlice({
       state.createLoading = false
       state.createError = null
       state.createSuccess = false
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
     },
 
     // Set pagination
@@ -323,6 +378,13 @@ const areaOfficeSlice = createSlice({
       state.createLoading = false
       state.createError = null
       state.createSuccess = false
+    },
+
+    // Clear update state
+    clearUpdateState: (state) => {
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -421,6 +483,34 @@ const areaOfficeSlice = createSlice({
         state.createError = (action.payload as string) || "Failed to create area office"
         state.createSuccess = false
       })
+      // Update area office cases
+      .addCase(updateAreaOffice.pending, (state) => {
+        state.updateLoading = true
+        state.updateError = null
+        state.updateSuccess = false
+      })
+      .addCase(updateAreaOffice.fulfilled, (state, action: PayloadAction<SingleAreaOfficeResponse>) => {
+        state.updateLoading = false
+        state.updateSuccess = true
+        state.updateError = null
+
+        // Update the area office in the current list
+        const updatedAreaOffice = action.payload.data
+        const index = state.areaOffices.findIndex((ao) => ao.id === updatedAreaOffice.id)
+        if (index !== -1) {
+          state.areaOffices[index] = updatedAreaOffice
+        }
+
+        // Update current area office if it's the one being edited
+        if (state.currentAreaOffice && state.currentAreaOffice.id === updatedAreaOffice.id) {
+          state.currentAreaOffice = updatedAreaOffice
+        }
+      })
+      .addCase(updateAreaOffice.rejected, (state, action) => {
+        state.updateLoading = false
+        state.updateError = (action.payload as string) || "Failed to update area office"
+        state.updateSuccess = false
+      })
   },
 })
 
@@ -432,6 +522,7 @@ export const {
   setPagination,
   setCurrentAreaOffice,
   clearCreateState,
+  clearUpdateState,
 } = areaOfficeSlice.actions
 
 export default areaOfficeSlice.reducer

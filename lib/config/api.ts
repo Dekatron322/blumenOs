@@ -48,6 +48,8 @@ export const API_ENDPOINTS = {
   AREA_OFFICE: {
     GET: "/assets/area-offices",
     ADD: "/assets/area-offices",
+    UPDATE: "/assets/area-offices/{id}",
+    GET_BY_ID: "/assets/area-offices/{id}",
   },
 
   FEEDERS: {

@@ -387,7 +387,7 @@ export default function MeteringDashboard() {
                         <div className="flex flex-col py-1">
                           <button
                             onClick={() => {
-                              router.push("/assets-management/add-area-offices")
+                              router.push("/assets-management/area-offices/add-area-offices")
                               closeAddAssetMenu()
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
