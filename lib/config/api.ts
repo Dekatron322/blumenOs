@@ -54,6 +54,9 @@ export const API_ENDPOINTS = {
 
   FEEDERS: {
     GET: "/assets/feeders",
+    ADD: "/assets/feeders",
+    GET_BY_ID: "/assets/feeders/{id}",
+    UPDATE: "/assets/feeders/{id}",
   },
 
   INJECTION_SUBSTATION: {
