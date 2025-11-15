@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
@@ -54,6 +55,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -141,27 +143,17 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }
               >
                 View Details
               </motion.button>
+
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Monitor performance for:", feeder.id)
+                  router.push(`/assets-management/feeders/update-feeder/${feeder.id}`)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Monitor Performance
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update status for:", feeder.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Status
+                Update Feeder
               </motion.button>
             </div>
           </motion.div>
@@ -229,12 +221,16 @@ const LoadingSkeleton = () => {
 
 const FeedersTab: React.FC = () => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const { feeders, loading, error, pagination } = useAppSelector((state) => state.feeders)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [selectedFeeder, setSelectedFeeder] = useState<Feeder | null>(null)
+
+  const handleViewFeederDetails = (feeder: Feeder) => {
+    router.push(`/assets-management/feeders/feeder-details/${feeder.id}`)
+  }
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -475,7 +471,7 @@ const FeedersTab: React.FC = () => {
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown feeder={feeder} onViewDetails={setSelectedFeeder} />
+                        <ActionDropdown feeder={feeder} onViewDetails={handleViewFeederDetails} />
                       </td>
                     </motion.tr>
                   ))}

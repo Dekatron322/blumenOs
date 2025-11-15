@@ -33,6 +33,17 @@ export interface HtPole {
   htPoleNumber: string
 }
 
+export interface DistributionSubstation {
+  id: number
+  dssCode: string
+  nercCode: string
+  transformerCapacityInKva: number
+  latitude: number
+  longitude: number
+  status: string
+  feeder: Feeder
+}
+
 export interface Feeder {
   id: number
   name: string
@@ -41,6 +52,7 @@ export interface Feeder {
   feederVoltage: number
   injectionSubstation: InjectionSubstation
   htPole: HtPole
+  distributionSubstations?: DistributionSubstation[]
 }
 
 export interface FeedersResponse {
@@ -55,6 +67,18 @@ export interface FeedersResponse {
   hasPrevious: boolean
 }
 
+export interface FeederResponse {
+  isSuccess: boolean
+  message: string
+  data: Feeder[]
+}
+
+export interface SingleFeederResponse {
+  isSuccess: boolean
+  message: string
+  data: Feeder
+}
+
 export interface FeedersRequestParams {
   pageNumber: number
   pageSize: number
@@ -65,6 +89,27 @@ export interface FeedersRequestParams {
   feederId?: number
   serviceCenterId?: number
 }
+
+// Request interfaces for adding feeder
+export interface CreateFeederRequest {
+  injectionSubstationId: number
+  htPoleId: number
+  name: string
+  nercCode: string
+  kaedcoFeederCode: string
+  feederVoltage: number
+}
+
+export interface UpdateFeederRequest {
+  injectionSubstationId: number
+  htPoleId: number
+  name: string
+  nercCode: string
+  kaedcoFeederCode: string
+  feederVoltage: number
+}
+
+export type CreateFeederRequestPayload = CreateFeederRequest[]
 
 // Feeder State
 interface FeederState {
@@ -88,6 +133,16 @@ interface FeederState {
   currentFeeder: Feeder | null
   currentFeederLoading: boolean
   currentFeederError: string | null
+
+  // Create feeder state
+  createLoading: boolean
+  createError: string | null
+  createSuccess: boolean
+
+  // Update feeder state
+  updateLoading: boolean
+  updateError: string | null
+  updateSuccess: boolean
 }
 
 // Initial state
@@ -107,6 +162,12 @@ const initialState: FeederState = {
   currentFeeder: null,
   currentFeederLoading: false,
   currentFeederError: null,
+  createLoading: false,
+  createError: null,
+  createSuccess: false,
+  updateLoading: false,
+  updateError: null,
+  updateSuccess: false,
 }
 
 // Async thunks
@@ -156,13 +217,16 @@ export const fetchFeederById = createAsyncThunk<Feeder, number, { rejectValue: s
   "feeders/fetchFeederById",
   async (feederId: number, { rejectWithValue }) => {
     try {
-      const response = await api.get<FeedersResponse>(`${buildApiUrl(API_ENDPOINTS.FEEDERS.GET)}/${feederId}`)
+      // Use the new GET_BY_ID endpoint with parameter replacement
+      const endpoint = API_ENDPOINTS.FEEDERS.GET_BY_ID.replace("{id}", feederId.toString())
+
+      const response = await api.get<SingleFeederResponse>(buildApiUrl(endpoint))
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch feeder")
       }
 
-      const feeder = response.data.data?.[0]
+      const feeder = response.data.data
       if (!feeder) {
         return rejectWithValue("Feeder not found")
       }
@@ -173,6 +237,73 @@ export const fetchFeederById = createAsyncThunk<Feeder, number, { rejectValue: s
         return rejectWithValue(error.response.data.message || "Failed to fetch feeder")
       }
       return rejectWithValue(error.message || "Network error during feeder fetch")
+    }
+  }
+)
+
+export const createFeeder = createAsyncThunk(
+  "feeders/createFeeder",
+  async (feederData: CreateFeederRequestPayload, { rejectWithValue }) => {
+    try {
+      // API expects a plain array of feeder requests
+      const response = await api.post<FeederResponse>(buildApiUrl(API_ENDPOINTS.FEEDERS.ADD), feederData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create feeder")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create feeder")
+      }
+      return rejectWithValue(error.message || "Network error during feeder creation")
+    }
+  }
+)
+
+export const createSingleFeeder = createAsyncThunk(
+  "feeders/createSingleFeeder",
+  async (feederData: CreateFeederRequest, { rejectWithValue }) => {
+    try {
+      // Send a single-element array to match the bulk API contract
+      const payload: CreateFeederRequestPayload = [feederData]
+
+      const response = await api.post<FeederResponse>(buildApiUrl(API_ENDPOINTS.FEEDERS.ADD), payload)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create feeder")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create feeder")
+      }
+      return rejectWithValue(error.message || "Network error during feeder creation")
+    }
+  }
+)
+
+export const updateFeeder = createAsyncThunk(
+  "feeders/updateFeeder",
+  async ({ id, feederData }: { id: number; feederData: UpdateFeederRequest }, { rejectWithValue }) => {
+    try {
+      // Replace the {id} placeholder in the endpoint with the actual ID
+      const endpoint = API_ENDPOINTS.FEEDERS.UPDATE.replace("{id}", id.toString())
+
+      const response = await api.put<SingleFeederResponse>(buildApiUrl(endpoint), feederData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update feeder")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update feeder")
+      }
+      return rejectWithValue(error.message || "Network error during feeder update")
     }
   }
 )
@@ -201,6 +332,8 @@ const feedersSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentFeederError = null
+      state.createError = null
+      state.updateError = null
     },
 
     // Clear current feeder
@@ -226,6 +359,12 @@ const feedersSlice = createSlice({
       state.currentFeeder = null
       state.currentFeederLoading = false
       state.currentFeederError = null
+      state.createLoading = false
+      state.createError = null
+      state.createSuccess = false
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
     },
 
     // Set pagination
@@ -237,6 +376,20 @@ const feedersSlice = createSlice({
     // Set current feeder (for forms, etc.)
     setCurrentFeeder: (state, action: PayloadAction<Feeder | null>) => {
       state.currentFeeder = action.payload
+    },
+
+    // Clear create state
+    clearCreateState: (state) => {
+      state.createLoading = false
+      state.createError = null
+      state.createSuccess = false
+    },
+
+    // Clear update state
+    clearUpdateState: (state) => {
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -290,10 +443,91 @@ const feedersSlice = createSlice({
         state.currentFeederError = (action.payload as string) || "Failed to fetch feeder"
         state.currentFeeder = null
       })
+      // Create feeder cases
+      .addCase(createFeeder.pending, (state) => {
+        state.createLoading = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(createFeeder.fulfilled, (state, action: PayloadAction<FeederResponse>) => {
+        state.createLoading = false
+        state.createSuccess = true
+        state.createError = null
+
+        // Optionally add the newly created feeder to the list
+        if (action.payload.data && action.payload.data.length > 0) {
+          state.feeders.unshift(...action.payload.data)
+        }
+      })
+      .addCase(createFeeder.rejected, (state, action) => {
+        state.createLoading = false
+        state.createError = (action.payload as string) || "Failed to create feeder"
+        state.createSuccess = false
+      })
+      // Create single feeder cases
+      .addCase(createSingleFeeder.pending, (state) => {
+        state.createLoading = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(createSingleFeeder.fulfilled, (state, action: PayloadAction<FeederResponse>) => {
+        state.createLoading = false
+        state.createSuccess = true
+        state.createError = null
+
+        // Optionally add the newly created feeder to the list
+        if (action.payload.data && action.payload.data.length > 0) {
+          const newFeeder = action.payload.data[0]
+          if (newFeeder) {
+            state.feeders.unshift(newFeeder)
+          }
+        }
+      })
+      .addCase(createSingleFeeder.rejected, (state, action) => {
+        state.createLoading = false
+        state.createError = (action.payload as string) || "Failed to create feeder"
+        state.createSuccess = false
+      })
+      // Update feeder cases
+      .addCase(updateFeeder.pending, (state) => {
+        state.updateLoading = true
+        state.updateError = null
+        state.updateSuccess = false
+      })
+      .addCase(updateFeeder.fulfilled, (state, action: PayloadAction<SingleFeederResponse>) => {
+        state.updateLoading = false
+        state.updateSuccess = true
+        state.updateError = null
+
+        // Update the feeder in the current list
+        const updatedFeeder = action.payload.data
+        const index = state.feeders.findIndex((f) => f.id === updatedFeeder.id)
+        if (index !== -1) {
+          state.feeders[index] = updatedFeeder
+        }
+
+        // Update current feeder if it's the one being edited
+        if (state.currentFeeder && state.currentFeeder.id === updatedFeeder.id) {
+          state.currentFeeder = updatedFeeder
+        }
+      })
+      .addCase(updateFeeder.rejected, (state, action) => {
+        state.updateLoading = false
+        state.updateError = (action.payload as string) || "Failed to update feeder"
+        state.updateSuccess = false
+      })
   },
 })
 
-export const { clearFeeders, clearError, clearCurrentFeeder, resetFeederState, setPagination, setCurrentFeeder } =
-  feedersSlice.actions
+export const {
+  clearFeeders,
+  clearError,
+  clearCurrentFeeder,
+  resetFeederState,
+  setPagination,
+  setCurrentFeeder,
+  clearCreateState,
+  clearUpdateState,
+} = feedersSlice.actions
 
 export default feedersSlice.reducer
