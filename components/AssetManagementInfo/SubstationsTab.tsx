@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
@@ -48,6 +49,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetai
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -135,27 +137,17 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetai
               >
                 View Details
               </motion.button>
+
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Monitor performance for:", substation.id)
+                  router.push(`/assets-management/injection-substations/update-injection-substation/${substation.id}`)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Monitor Performance
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update status for:", substation.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Status
+                Update Substation
               </motion.button>
             </div>
           </motion.div>
@@ -223,12 +215,18 @@ const LoadingSkeleton = () => {
 
 const SubstationsTab: React.FC = () => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const { injectionSubstations, loading, error, pagination } = useAppSelector((state) => state.injectionSubstations)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [selectedSubstation, setSelectedSubstation] = useState<InjectionSubstation | null>(null)
+
+  const handleViewDetails = (substation: InjectionSubstation) => {
+    setSelectedSubstation(substation)
+    router.push(`/assets-management/injection-substations/injection-substation-details/${substation.id}`)
+  }
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -453,7 +451,7 @@ const SubstationsTab: React.FC = () => {
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown substation={substation} onViewDetails={setSelectedSubstation} />
+                        <ActionDropdown substation={substation} onViewDetails={handleViewDetails} />
                       </td>
                     </motion.tr>
                   ))}

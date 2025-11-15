@@ -58,6 +58,9 @@ export const API_ENDPOINTS = {
 
   INJECTION_SUBSTATION: {
     GET: "/assets/injection-substations",
+    ADD: "/assets/injection-substations",
+    GET_BY_ID: "/assets/injection-substations/{id}",
+    UPDATE: "/assets/injection-substations/{id}",
   },
 
   HT_POLE: {
