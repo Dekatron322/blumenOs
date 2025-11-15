@@ -6,16 +6,15 @@ import { useEffect, useState } from "react"
 
 import { AnimatePresence, motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import AssetManagementInfo from "components/AssetManagementInfo/AssetManagementInfo"
 import { usePopover } from "components/Navbar/use-popover"
 import {
+  AlertsIcon,
   DistributionIcon,
   OfficeIcon,
   PoleIcon,
   ReadingsIcon,
-  AlertsIcon,
 } from "components/AssetManagementInfo/TabNavigation"
 
 // Enhanced Skeleton Loader Component for Cards
