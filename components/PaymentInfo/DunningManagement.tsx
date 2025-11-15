@@ -154,7 +154,7 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
       {/* Dunning Stages Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {dunningStages.map((stage) => (
-          <div key={stage.id} className="rounded-lg border bg-[#F3F4F6] p-6 shadow-sm transition-all hover:shadow-md ">
+          <div key={stage.id} className="rounded-lg border bg-[#F9F9F9] p-6 shadow-sm transition-all hover:shadow-md ">
             {/* Stage Header */}
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900">{stage.title}</h3>

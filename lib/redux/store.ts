@@ -1,29 +1,30 @@
 // src/lib/redux/store.ts
 import { configureStore } from "@reduxjs/toolkit"
 import authReducer from "./authSlice"
-
-import { cryptoApi } from "./cryptoSlice"
-import { transactionApi } from "./transactionSlice"
-import { customerApi } from "./customerSlice"
-import { overviewApi } from "./overviewSlice"
+import employeeReducer from "./employeeSlice"
+import roleReducer from "./roleSlice"
+import areaOfficeReducer from "./areaOfficeSlice"
+import departmentReducer from "./departmentSlice"
 import { adminApi } from "./adminSlice"
+import injectionSubstationReducer from "./injectionSubstationSlice"
+import feedersReducer from "./feedersSlice"
+import distributionSubstationsReducer from "./distributionSubstationsSlice"
+import polesReducer from "./polesSlice"
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    [transactionApi.reducerPath]: transactionApi.reducer,
-    [cryptoApi.reducerPath]: cryptoApi.reducer,
-    [customerApi.reducerPath]: customerApi.reducer,
-    [overviewApi.reducerPath]: overviewApi.reducer,
+    employee: employeeReducer,
+    roles: roleReducer,
+    areaOffices: areaOfficeReducer,
+    departments: departmentReducer,
+    injectionSubstations: injectionSubstationReducer,
+    feeders: feedersReducer,
+    distributionSubstations: distributionSubstationsReducer,
+    poles: polesReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
-      .concat(transactionApi.middleware)
-      .concat(cryptoApi.middleware)
-      .concat(customerApi.middleware)
-      .concat(overviewApi.middleware)
-      .concat(adminApi.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>

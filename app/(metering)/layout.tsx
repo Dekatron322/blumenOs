@@ -4,12 +4,12 @@ import ProtectedRoute from "lib/protectedRoutes"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // <ProtectedRoute>
-    <html lang="en">
-      <body>
-        <ThemeProviders>{children}</ThemeProviders>
-      </body>
-    </html>
-    // </ProtectedRoute>
+    <ProtectedRoute>
+      <html lang="en">
+        <body>
+          <ThemeProviders>{children}</ThemeProviders>
+        </body>
+      </html>
+    </ProtectedRoute>
   )
 }
