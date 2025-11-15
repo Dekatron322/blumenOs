@@ -2,13 +2,21 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import AssetManagementInfo from "components/AssetManagementInfo/AssetManagementInfo"
+import { usePopover } from "components/Navbar/use-popover"
+import {
+  DistributionIcon,
+  OfficeIcon,
+  PoleIcon,
+  ReadingsIcon,
+  AlertsIcon,
+} from "components/AssetManagementInfo/TabNavigation"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -283,6 +291,29 @@ export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [assetData, setAssetData] = useState(generateAssetData())
+  const {
+    anchorRef: addAssetButtonRef,
+    open: isAddAssetMenuOpen,
+    handleToggle: toggleAddAssetMenu,
+    handleClose: closeAddAssetMenu,
+  } = usePopover()
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (addAssetButtonRef.current && !addAssetButtonRef.current.contains(target)) {
+        closeAddAssetMenu()
+      }
+    }
+
+    if (isAddAssetMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [addAssetButtonRef, closeAddAssetMenu, isAddAssetMenuOpen])
 
   // Use mock data
   const {
@@ -334,13 +365,80 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <button
-                  onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
-                >
-                  <PlusIcon />
-                  Install Meter
-                </button>
+                <div className="relative" ref={addAssetButtonRef}>
+                  <button
+                    onClick={toggleAddAssetMenu}
+                    className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
+                  >
+                    <PlusIcon />
+                    Add New Asset
+                  </button>
+
+                  <AnimatePresence>
+                    {isAddAssetMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-md bg-white text-sm shadow-lg ring-1 ring-black ring-opacity-5"
+                      >
+                        <div className="flex flex-col py-1">
+                          <button
+                            onClick={() => {
+                              setIsAddCustomerModalOpen(true)
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <OfficeIcon />
+                            <span>Add Area Office</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsAddCustomerModalOpen(true)
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <ReadingsIcon />
+                            <span>Add Feeder</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsAddCustomerModalOpen(true)
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <AlertsIcon />
+                            <span>Add Substation</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsAddCustomerModalOpen(true)
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <PoleIcon />
+                            <span>Add Pole</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsAddCustomerModalOpen(true)
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <DistributionIcon />
+                            <span>Add Distribution Station</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </motion.div>
             </div>
 
