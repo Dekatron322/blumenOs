@@ -173,7 +173,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "assets",
     requiredActions: ["R"],
     children: [
-      { name: "Asset Report", href: "/assets-management/overview", privilegeKey: "assets", requiredActions: ["R"] },
+      { name: "Overview", href: "/assets-management/overview", privilegeKey: "assets", requiredActions: ["R"] },
       { name: "Area Offices", href: "/assets-management/area-offices", privilegeKey: "assets", requiredActions: ["R"] },
       {
         name: "Injection Substation",
