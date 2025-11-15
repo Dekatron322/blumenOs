@@ -49,6 +49,22 @@ export const API_ENDPOINTS = {
     GET: "/assets/area-offices",
   },
 
+  FEEDERS: {
+    GET: "/assets/feeders",
+  },
+
+  INJECTION_SUBSTATION: {
+    GET: "/assets/injection-substations",
+  },
+
+  HT_POLE: {
+    GET: "/assets/ht-poles",
+  },
+
+  DISTRIBUTION_STATION: {
+    GET: "/assets/distribution-substations",
+  },
+
   DEPARTMENT: {
     GET: "/departments",
   },

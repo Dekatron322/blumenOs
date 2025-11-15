@@ -90,7 +90,7 @@ interface TabNavigationProps {
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
-    { id: "transformers", label: "Transformers", icon: <InventoryIcon /> },
+    // { id: "transformers", label: "Transformers", icon: <InventoryIcon /> },
     { id: "offices", label: "Area Offices", icon: <OfficeIcon /> },
     { id: "feeders", label: "Feeders", icon: <ReadingsIcon /> },
     { id: "substations", label: "Substations", icon: <AlertsIcon /> },

@@ -5,18 +5,8 @@ import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
-
-interface Pole {
-  id: string
-  name: string
-  location: string
-  height: string
-  material: "concrete" | "steel" | "wood" | "composite"
-  condition: "excellent" | "good" | "fair" | "poor"
-  installationDate: string
-  lastInspection: string
-  status: "operational" | "maintenance" | "damaged" | "replacement_needed"
-}
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { type Pole, type PolesRequestParams, clearError, fetchPoles, setPagination } from "lib/redux/polesSlice"
 
 interface Status {
   value: number
@@ -152,174 +142,199 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ pole, onViewDetails }) 
 const LoadingSkeleton = () => {
   return (
     <motion.div
-      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
+      className="flex-3 mt-5 flex flex-col rounded-md bg-white p-5"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
+      {/* Header Section Skeleton */}
+      <div className="items-center justify-between py-2 md:flex md:py-4">
+        <div className="h-8 w-40 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
+            className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
             animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
+              x: ["-100%", "100%"],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
             }}
           />
         </div>
         <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
+          <div className="h-10 w-48 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.2,
               }}
             />
           </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.4,
               }}
             />
           </div>
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-          <thead>
-            <tr>
-              {[...Array(8)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 8 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Cards Grid Skeleton */}
+      <div className="w-full">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="relative rounded-lg border bg-white p-4 shadow-sm">
+              {/* Action Button Skeleton */}
+              <div className="absolute right-2 top-2 h-6 w-6 overflow-hidden rounded-full bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.1,
+                  }}
+                />
+              </div>
+
+              {/* Card Content Skeleton */}
+              <div className="mb-2 h-4 w-24 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              </div>
+              <div className="mb-4 h-5 w-28 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.1,
+                  }}
+                />
+              </div>
+
+              <div className="mb-2 h-3 w-32 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.2,
+                  }}
+                />
+              </div>
+              <div className="h-4 w-40 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.3,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* Pagination Section Skeleton */}
       <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
+        <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
+            className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
             animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
+              x: ["-100%", "100%"],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.6,
             }}
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
+          <div className="h-8 w-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.8,
               }}
             />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
+            <div key={i} className="h-8 w-8 overflow-hidden rounded bg-gray-200">
               <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.8 + i * 0.1,
                 }}
               />
             </div>
           ))}
-          <div className="size-8 rounded bg-gray-200">
+          <div className="h-8 w-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1.3,
               }}
             />
           </div>
@@ -329,114 +344,36 @@ const LoadingSkeleton = () => {
   )
 }
 
-// Mock data for poles
-const mockPoles: Pole[] = [
-  {
-    id: "PL-001",
-    name: "Main Street Pole #1",
-    location: "Main St & 1st Ave",
-    height: "12m",
-    material: "concrete",
-    condition: "excellent",
-    installationDate: "2022-03-15",
-    lastInspection: "2024-01-10",
-    status: "operational",
-  },
-  {
-    id: "PL-002",
-    name: "Oak Avenue Pole #5",
-    location: "Oak Ave & Maple St",
-    height: "10m",
-    material: "steel",
-    condition: "good",
-    installationDate: "2021-08-22",
-    lastInspection: "2024-02-15",
-    status: "operational",
-  },
-  {
-    id: "PL-003",
-    name: "River Road Pole #12",
-    location: "River Rd & Bridge St",
-    height: "15m",
-    material: "wood",
-    condition: "fair",
-    installationDate: "2019-11-30",
-    lastInspection: "2024-01-28",
-    status: "maintenance",
-  },
-  {
-    id: "PL-004",
-    name: "Park View Pole #8",
-    location: "Central Park East",
-    height: "12m",
-    material: "composite",
-    condition: "poor",
-    installationDate: "2018-05-10",
-    lastInspection: "2024-03-01",
-    status: "replacement_needed",
-  },
-  {
-    id: "PL-005",
-    name: "Industrial Zone Pole #3",
-    location: "Industrial Area Sector B",
-    height: "18m",
-    material: "steel",
-    condition: "excellent",
-    installationDate: "2023-02-14",
-    lastInspection: "2024-02-20",
-    status: "operational",
-  },
-  {
-    id: "PL-006",
-    name: "Residential Pole #25",
-    location: "Green Valley Subdivision",
-    height: "10m",
-    material: "concrete",
-    condition: "good",
-    installationDate: "2020-09-05",
-    lastInspection: "2024-01-15",
-    status: "operational",
-  },
-  {
-    id: "PL-007",
-    name: "Highway Pole #7",
-    location: "Highway 45 KM 23",
-    height: "20m",
-    material: "steel",
-    condition: "fair",
-    installationDate: "2017-12-18",
-    lastInspection: "2024-02-28",
-    status: "damaged",
-  },
-  {
-    id: "PL-008",
-    name: "Commercial Pole #14",
-    location: "Downtown Plaza",
-    height: "12m",
-    material: "composite",
-    condition: "excellent",
-    installationDate: "2022-11-30",
-    lastInspection: "2024-03-05",
-    status: "operational",
-  },
-]
-
 const PolesTab: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const { poles, loading, error, pagination } = useAppSelector((state) => state.poles)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedPole, setSelectedPole] = useState<Pole | null>(null)
-  const pageSize = 10
 
-  // In a real app, you would fetch this data from an API
-  const isLoading = false
-  const isError = false
-  const poles = mockPoles
-  const totalRecords = poles.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  const currentPage = pagination.currentPage
+  const pageSize = pagination.pageSize
+  const totalRecords = pagination.totalCount
+  const totalPages = pagination.totalPages
 
-  const getStatusStyle = (status: Pole["status"]) => {
+  useEffect(() => {
+    const params: PolesRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
+    }
+    dispatch(fetchPoles(params))
+  }, [dispatch, currentPage, pageSize, searchText])
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
+
+  const getStatusStyle = (status: string) => {
     switch (status) {
       case "operational":
         return {
@@ -466,7 +403,7 @@ const PolesTab: React.FC = () => {
     }
   }
 
-  const getConditionStyle = (condition: Pole["condition"]) => {
+  const getConditionStyle = (condition: string) => {
     switch (condition) {
       case "excellent":
         return {
@@ -496,7 +433,7 @@ const PolesTab: React.FC = () => {
     }
   }
 
-  const getMaterialStyle = (material: Pole["material"]) => {
+  const getMaterialStyle = (material: string) => {
     switch (material) {
       case "concrete":
         return {
@@ -534,23 +471,23 @@ const PolesTab: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    setCurrentPage(1)
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => dispatch(setPagination({ page: pageNumber, pageSize }))
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading pole data</div>
+  if (loading) return <LoadingSkeleton />
+  if (error) return <div className="p-4 text-red-500">Error loading pole data: {error}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        className="items-center justify-between py-2 md:flex md:py-4"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -590,154 +527,38 @@ const PolesTab: React.FC = () => {
       ) : (
         <>
           <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+            className="w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                      ID
-                    </div>
-                  </th>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("name")}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <AnimatePresence>
+                {poles.map((pole, index) => (
+                  <motion.div
+                    key={pole.id}
+                    className="relative rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <div className="flex items-center gap-2">
-                      Pole Name <RxCaretSort />
+                    <div className="absolute right-2 top-2">
+                      <ActionDropdown pole={pole} onViewDetails={setSelectedPole} />
                     </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("location")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Location <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("height")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Height <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("material")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Material <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("condition")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Condition <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("lastInspection")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Last Inspection <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status <RxCaretSort />
-                    </div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {poles.map((pole, index) => (
-                    <motion.tr
-                      key={pole.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{pole.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{pole.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{pole.location}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{pole.height}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getMaterialStyle(pole.material)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {pole.material.charAt(0).toUpperCase() + pole.material.slice(1)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getConditionStyle(pole.condition)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {pole.condition.charAt(0).toUpperCase() + pole.condition.slice(1)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{pole.lastInspection}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getStatusStyle(pole.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                pole.status === "operational"
-                                  ? "#589E67"
-                                  : pole.status === "maintenance"
-                                  ? "#D97706"
-                                  : pole.status === "damaged"
-                                  ? "#AF4B4B"
-                                  : "#3B82F6",
-                            }}
-                          ></span>
-                          {pole.status
-                            .split("_")
-                            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(" ")}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown pole={pole} onViewDetails={setSelectedPole} />
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
+
+                    <div className="text-base font-semibold">PL-{pole.id}</div>
+
+                    <div className="mt-4 text-sm text-gray-500">HT Pole Number</div>
+                    <div className="text-sm">{pole.htPoleNumber}</div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
           </motion.div>
 
           <motion.div
-            className="flex items-center justify-between border-t py-3"
+            className="flex items-center justify-between py-3"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}

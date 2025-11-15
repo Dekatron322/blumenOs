@@ -11,7 +11,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import SubstationsTab from "components/AssetManagementInfo/SubstationsTab"
 import FeedersTab from "components/AssetManagementInfo/FeedersTab"
 import AreaOfficesTab from "components/AssetManagementInfo/AreaOfficesTab"
-import DistributionStationTab from "components/AssetManagementInfo/DistributionStaionTab"
+import DistributionStationTab from "components/AssetManagementInfo/DistributionStationTab"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {

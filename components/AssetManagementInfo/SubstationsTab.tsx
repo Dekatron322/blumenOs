@@ -5,16 +5,13 @@ import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
-
-interface Substation {
-  id: string
-  name: string
-  voltage: string
-  capacity: string
-  feeders: number
-  location: string
-  status: "operational" | "maintenance" | "faulty"
-}
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import {
+  InjectionSubstationsRequestParams,
+  clearError,
+  fetchInjectionSubstations,
+  setPagination,
+} from "lib/redux/injectionSubstationSlice"
 
 interface Status {
   value: number
@@ -22,8 +19,29 @@ interface Status {
 }
 
 interface ActionDropdownProps {
-  substation: Substation
-  onViewDetails: (substation: Substation) => void
+  substation: InjectionSubstation
+  onViewDetails: (substation: InjectionSubstation) => void
+}
+
+// Use the InjectionSubstation interface from your slice
+interface InjectionSubstation {
+  id: number
+  nercCode: string
+  injectionSubstationCode: string
+  areaOffice: {
+    id: number
+    nameOfNewOAreaffice: string
+    newKaedcoCode: string
+    newNercCode: string
+    latitude: number
+    longitude: number
+    company: {
+      id: number
+      name: string
+      nercCode: string
+      nercSupplyStructure: number
+    }
+  }
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetails }) => {
@@ -149,82 +167,27 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetai
 
 const LoadingSkeleton = () => {
   return (
-    <motion.div
-      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
+      {/* Header Section Skeleton */}
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          />
+        <div className="mb-3 md:mb-0">
+          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
+          <div className="h-4 w-64 rounded bg-gray-200"></div>
         </div>
-        <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
-          </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
-              }}
-            />
-          </div>
+        <div className="flex gap-4">
+          <div className="h-10 w-48 rounded bg-gray-200"></div>
+          <div className="h-10 w-24 rounded bg-gray-200"></div>
         </div>
       </div>
 
+      {/* Table Skeleton */}
       <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
-              {[...Array(8)].map((_, i) => (
+              {[...Array(7)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
+                  <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
               ))}
             </tr>
@@ -232,23 +195,9 @@ const LoadingSkeleton = () => {
           <tbody>
             {[...Array(5)].map((_, rowIndex) => (
               <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
+                {[...Array(7)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 8 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
+                    <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
                 ))}
               </tr>
@@ -257,124 +206,60 @@ const LoadingSkeleton = () => {
         </table>
       </div>
 
+      {/* Pagination Section Skeleton */}
       <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
-            }}
-          />
-        </div>
+        <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
-              }}
-            />
-          </div>
+          <div className="h-8 w-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
-              <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
-                }}
-              />
-            </div>
+            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
           ))}
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
-              }}
-            />
-          </div>
+          <div className="h-8 w-8 rounded bg-gray-200"></div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-// Mock data based on your sample
-const mockSubstations: Substation[] = [
-  {
-    id: "SS-001",
-    name: "Kaduna Main Substation",
-    voltage: "132/33 KV",
-    capacity: "60 MVA",
-    feeders: 6,
-    location: "Kaduna Central",
-    status: "operational",
-  },
-  {
-    id: "SS-002",
-    name: "Barnawa Substation",
-    voltage: "33/11 KV",
-    capacity: "15 MVA",
-    feeders: 3,
-    location: "Barnawa",
-    status: "operational",
-  },
-  {
-    id: "SS-003",
-    name: "Rigasa Substation",
-    voltage: "33/11 KV",
-    capacity: "20 MVA",
-    feeders: 4,
-    location: "Rigasa",
-    status: "operational",
-  },
-]
-
 const SubstationsTab: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const { injectionSubstations, loading, error, pagination } = useAppSelector((state) => state.injectionSubstations)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedSubstation, setSelectedSubstation] = useState<Substation | null>(null)
-  const pageSize = 10
+  const [selectedSubstation, setSelectedSubstation] = useState<InjectionSubstation | null>(null)
 
-  // In a real app, you would fetch this data from an API
-  const isLoading = false
-  const isError = false
-  const substations = mockSubstations
-  const totalRecords = substations.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  // Get pagination values from Redux state
+  const currentPage = pagination.currentPage
+  const pageSize = pagination.pageSize
+  const totalRecords = pagination.totalCount
+  const totalPages = pagination.totalPages
 
-  const getStatusStyle = (status: Substation["status"]) => {
-    switch (status) {
+  // Fetch injection substations on component mount and when search/pagination changes
+  useEffect(() => {
+    const fetchParams: InjectionSubstationsRequestParams = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      ...(searchText && { search: searchText }),
+    }
+
+    dispatch(fetchInjectionSubstations(fetchParams))
+  }, [dispatch, currentPage, pageSize, searchText])
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
+
+  const getStatusStyle = (status: string) => {
+    // Since your API doesn't have status, we'll create a mock status based on some logic
+    // You can modify this based on your actual business logic
+    const effectiveStatus = status || "operational" // Default status
+
+    switch (effectiveStatus) {
       case "operational":
         return {
           backgroundColor: "#EEF5F0",
@@ -389,6 +274,11 @@ const SubstationsTab: React.FC = () => {
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
+        }
+      case "limited_operations":
+        return {
+          backgroundColor: "#EFF6FF",
+          color: "#3B82F6",
         }
       default:
         return {
@@ -406,18 +296,22 @@ const SubstationsTab: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    setCurrentPage(1)
+    // Reset to first page when searching
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    // Reset to first page when clearing search
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => {
+    dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading substation data</div>
+  if (loading) return <LoadingSkeleton />
+  if (error) return <div className="p-4 text-red-500">Error loading injection substation data: {error}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -428,22 +322,22 @@ const SubstationsTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Substation Network</p>
-          <p className="text-sm text-gray-600">High-voltage transmission infrastructure</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Injection Substations</p>
+          <p className="text-sm text-gray-600">Manage and monitor injection substations operations</p>
         </div>
         <div className="flex gap-4">
           <SearchModule
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
-            placeholder="Search substations..."
+            placeholder="Search injection substations..."
             className="w-[380px]"
             bgClassName="bg-white"
           />
         </div>
       </motion.div>
 
-      {substations.length === 0 ? (
+      {injectionSubstations.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -456,7 +350,7 @@ const SubstationsTab: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText ? "No matching substations found" : "No substations available"}
+            {searchText ? "No matching injection substations found" : "No injection substations available"}
           </motion.p>
         </motion.div>
       ) : (
@@ -478,42 +372,34 @@ const SubstationsTab: React.FC = () => {
                   </th>
                   <th
                     className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("name")}
+                    onClick={() => toggleSort("nercCode")}
                   >
                     <div className="flex items-center gap-2">
-                      Name <RxCaretSort />
+                      NERC Code <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("voltage")}
+                    onClick={() => toggleSort("injectionSubstationCode")}
                   >
                     <div className="flex items-center gap-2">
-                      Voltage <RxCaretSort />
+                      Substation Code <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capacity")}
+                    onClick={() => toggleSort("areaOffice")}
                   >
                     <div className="flex items-center gap-2">
-                      Capacity <RxCaretSort />
+                      Area Office <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("feeders")}
+                    onClick={() => toggleSort("company")}
                   >
                     <div className="flex items-center gap-2">
-                      Feeders <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("location")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Location <RxCaretSort />
+                      Company <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -531,7 +417,7 @@ const SubstationsTab: React.FC = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {substations.map((substation, index) => (
+                  {injectionSubstations.map((substation, index) => (
                     <motion.tr
                       key={substation.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -539,31 +425,31 @@ const SubstationsTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{substation.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.voltage}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.capacity}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.feeders}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.location}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">IS-{substation.id}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.nercCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {substation.injectionSubstationCode}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {substation.areaOffice.nameOfNewOAreaffice}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {substation.areaOffice.company.name}
+                      </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getStatusStyle(substation.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                          style={getStatusStyle("operational")}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
                           <span
                             className="size-2 rounded-full"
                             style={{
-                              backgroundColor:
-                                substation.status === "operational"
-                                  ? "#589E67"
-                                  : substation.status === "maintenance"
-                                  ? "#D97706"
-                                  : "#AF4B4B",
+                              backgroundColor: "#589E67",
                             }}
                           ></span>
-                          {substation.status.charAt(0).toUpperCase() + substation.status.slice(1)}
+                          Operational
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
