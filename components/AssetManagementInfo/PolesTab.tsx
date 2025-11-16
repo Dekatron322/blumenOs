@@ -7,6 +7,7 @@ import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearError, fetchPoles, type Pole, PolesRequestParams, setPagination } from "lib/redux/polesSlice"
+import { useRouter } from "next/navigation"
 
 interface Status {
   value: number
@@ -122,14 +123,15 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ pole, onViewDetails }) 
               </motion.button>
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update status for:", pole.id)
+                onClick={(e) => {
+                  e.preventDefault()
+                  onViewDetails(pole)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Update Status
+                Update HT Pole
               </motion.button>
             </div>
           </motion.div>
@@ -353,6 +355,8 @@ const PolesTab: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [selectedPole, setSelectedPole] = useState<Pole | null>(null)
 
+  const router = useRouter()
+
   const currentPage = pagination.currentPage
   const pageSize = pagination.pageSize
   const totalRecords = pagination.totalCount
@@ -544,7 +548,12 @@ const PolesTab: React.FC = () => {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
                     <div className="absolute right-2 top-2">
-                      <ActionDropdown pole={pole} onViewDetails={setSelectedPole} />
+                      <ActionDropdown
+                        pole={pole}
+                        onViewDetails={(selectedPole) => {
+                          router.push(`/assets-management/poles/pole-details/${selectedPole.id}`)
+                        }}
+                      />
                     </div>
 
                     <div className="text-base font-semibold">PL-{pole.id}</div>

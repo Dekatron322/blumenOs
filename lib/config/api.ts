@@ -68,6 +68,9 @@ export const API_ENDPOINTS = {
 
   HT_POLE: {
     GET: "/assets/ht-poles",
+    ADD: "/assets/ht-poles",
+    GET_BY_ID: "/assets/ht-poles/{id}",
+    UPDATE: "/assets/ht-poles/{id}",
   },
 
   DISTRIBUTION_STATION: {
