@@ -12,9 +12,8 @@ import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { ChevronDown } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
-import ViewChangeRequestModal from "components/ui/Modal/view-change-request-model"
 import type { ChangeRequestListItem } from "lib/redux/injectionSubstationSlice"
-import { fetchChangeRequests, clearChangeRequests } from "lib/redux/injectionSubstationSlice"
+import { clearChangeRequests, fetchChangeRequests } from "lib/redux/injectionSubstationSlice"
 import ViewInjectionStationChangeRequest from "components/ui/Modal/view-injection-station-change-request"
 
 // Types
