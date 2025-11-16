@@ -8,9 +8,9 @@ import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  ServiceStationsRequestParams,
   clearError,
   fetchServiceStations,
+  ServiceStationsRequestParams,
   setPagination,
 } from "lib/redux/serviceStationsSlice"
 
