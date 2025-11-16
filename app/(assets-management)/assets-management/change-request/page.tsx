@@ -19,6 +19,7 @@ import { useAppSelector } from "lib/hooks/useRedux"
 import AllChangeRequest from "components/Tables/AllChangeRequest"
 import InjectionSubstationChangeRequest from "components/Tables/InjectionSubstationChangeRequest"
 import TabNavigation from "components/AssetManagementInfo/TabNavigation"
+import AreaOfficeChangeRequest from "components/Tables/AreaOfficeChangeRequest"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -339,7 +340,7 @@ export default function EmployeeManagement() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "offices":
-        return <div></div>
+        return <AreaOfficeChangeRequest />
       case "feeders":
         return <div></div>
       case "poles":
