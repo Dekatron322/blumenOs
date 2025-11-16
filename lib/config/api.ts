@@ -75,6 +75,9 @@ export const API_ENDPOINTS = {
 
   DISTRIBUTION_STATION: {
     GET: "/assets/distribution-substations",
+    ADD: "/assets/distribution-substations",
+    GET_BY_ID: "/assets/distribution-substations/{id}",
+    UPDATE: "/assets/distribution-substations/{id}",
   },
 
   DEPARTMENT: {

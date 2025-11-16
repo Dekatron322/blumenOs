@@ -13,6 +13,9 @@ interface FormInputProps {
   error?: string | boolean
   required?: boolean
   disabled?: boolean
+  min?: string | number
+  max?: string | number
+  step?: string | number
 }
 
 export const FormInputModule: React.FC<FormInputProps> = ({
@@ -26,6 +29,9 @@ export const FormInputModule: React.FC<FormInputProps> = ({
   error,
   required = false,
   disabled = false,
+  min,
+  max,
+  step,
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
@@ -55,6 +61,9 @@ export const FormInputModule: React.FC<FormInputProps> = ({
           onBlur={() => setIsFocused(false)}
           required={required}
           disabled={disabled}
+          min={min}
+          max={max}
+          step={step}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
         />

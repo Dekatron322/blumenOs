@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
@@ -21,6 +22,7 @@ interface Status {
 interface ActionDropdownProps {
   substation: DistributionSubstation
   onViewDetails: (substation: DistributionSubstation) => void
+  onUpdateStatus: (substation: DistributionSubstation) => void
 }
 
 // Use the DistributionSubstation interface from your slice
@@ -64,7 +66,7 @@ interface DistributionSubstation {
   }
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetails }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetails, onUpdateStatus }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -105,6 +107,12 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetai
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
     onViewDetails(substation)
+    setIsOpen(false)
+  }
+
+  const handleUpdateStatusClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onUpdateStatus(substation)
     setIsOpen(false)
   }
 
@@ -168,10 +176,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetai
               </motion.button>
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update status for:", substation.id)
-                  setIsOpen(false)
-                }}
+                onClick={handleUpdateStatusClick}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
@@ -243,6 +248,7 @@ const LoadingSkeleton = () => {
 
 const DistributionStationTab: React.FC = () => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const { distributionSubstations, loading, error, pagination } = useAppSelector(
     (state) => state.distributionSubstations
   )
@@ -250,7 +256,6 @@ const DistributionStationTab: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [selectedSubstation, setSelectedSubstation] = useState<DistributionSubstation | null>(null)
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -333,6 +338,14 @@ const DistributionStationTab: React.FC = () => {
 
   const paginate = (pageNumber: number) => {
     dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
+
+  const handleViewDetails = (substation: DistributionSubstation) => {
+    router.push(`/assets-management/distribution-stations/distribution-station-details/${substation.id}`)
+  }
+
+  const handleUpdateStatus = (substation: DistributionSubstation) => {
+    router.push(`/assets-management/distribution-stations/update-distribution-station/${substation.id}`)
   }
 
   if (loading) return <LoadingSkeleton />
@@ -503,7 +516,11 @@ const DistributionStationTab: React.FC = () => {
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown substation={substation} onViewDetails={setSelectedSubstation} />
+                        <ActionDropdown
+                          substation={substation}
+                          onViewDetails={handleViewDetails}
+                          onUpdateStatus={handleUpdateStatus}
+                        />
                       </td>
                     </motion.tr>
                   ))}

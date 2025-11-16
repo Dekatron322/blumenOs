@@ -52,6 +52,14 @@ export interface DistributionSubstation {
   longitude: number
   status: string
   feeder: Feeder
+  numberOfUnit: number
+  unitOneCode: string
+  unitTwoCode: string
+  unitThreeCode: string
+  unitFourCode: string
+  publicOrDedicated: string
+  remarks: string
+  oldDssCode?: string
 }
 
 export interface DistributionSubstationsResponse {
@@ -66,6 +74,18 @@ export interface DistributionSubstationsResponse {
   hasPrevious: boolean
 }
 
+export interface DistributionSubstationResponse {
+  isSuccess: boolean
+  message: string
+  data: DistributionSubstation[]
+}
+
+export interface SingleDistributionSubstationResponse {
+  isSuccess: boolean
+  message: string
+  data: DistributionSubstation
+}
+
 export interface DistributionSubstationsRequestParams {
   pageNumber: number
   pageSize: number
@@ -76,6 +96,45 @@ export interface DistributionSubstationsRequestParams {
   feederId?: number
   serviceCenterId?: number
 }
+
+// Request interfaces for adding/updating distribution substation
+export interface CreateDistributionSubstationRequest {
+  feederId: number
+  oldDssCode: string
+  dssCode: string
+  nercCode: string
+  transformerCapacityInKva: number
+  latitude: number
+  longitude: number
+  numberOfUnit: number
+  unitOneCode: string
+  unitTwoCode: string
+  unitThreeCode: string
+  unitFourCode: string
+  publicOrDedicated: string
+  status: string
+  remarks: string
+}
+
+export interface UpdateDistributionSubstationRequest {
+  feederId: number
+  oldDssCode: string
+  dssCode: string
+  nercCode: string
+  transformerCapacityInKva: number
+  latitude: number
+  longitude: number
+  numberOfUnit: number
+  unitOneCode: string
+  unitTwoCode: string
+  unitThreeCode: string
+  unitFourCode: string
+  publicOrDedicated: string
+  status: string
+  remarks: string
+}
+
+export type CreateDistributionSubstationRequestPayload = CreateDistributionSubstationRequest[]
 
 // DistributionSubstation State
 interface DistributionSubstationState {
@@ -99,6 +158,16 @@ interface DistributionSubstationState {
   currentDistributionSubstation: DistributionSubstation | null
   currentDistributionSubstationLoading: boolean
   currentDistributionSubstationError: string | null
+
+  // Create distribution substation state
+  createLoading: boolean
+  createError: string | null
+  createSuccess: boolean
+
+  // Update distribution substation state
+  updateLoading: boolean
+  updateError: string | null
+  updateSuccess: boolean
 }
 
 // Initial state
@@ -118,6 +187,12 @@ const initialState: DistributionSubstationState = {
   currentDistributionSubstation: null,
   currentDistributionSubstationLoading: false,
   currentDistributionSubstationError: null,
+  createLoading: false,
+  createError: null,
+  createSuccess: false,
+  updateLoading: false,
+  updateError: null,
+  updateSuccess: false,
 }
 
 // Async thunks
@@ -174,15 +249,16 @@ export const fetchDistributionSubstationById = createAsyncThunk<
   "distributionSubstations/fetchDistributionSubstationById",
   async (distributionSubstationId: number, { rejectWithValue }) => {
     try {
-      const response = await api.get<DistributionSubstationsResponse>(
-        `${buildApiUrl(API_ENDPOINTS.DISTRIBUTION_STATION.GET)}/${distributionSubstationId}`
-      )
+      // Use the new GET_BY_ID endpoint with parameter replacement
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.GET_BY_ID.replace("{id}", distributionSubstationId.toString())
+
+      const response = await api.get<SingleDistributionSubstationResponse>(buildApiUrl(endpoint))
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch distribution substation")
       }
 
-      const distributionSubstation = response.data.data?.[0]
+      const distributionSubstation = response.data.data
       if (!distributionSubstation) {
         return rejectWithValue("Distribution substation not found")
       }
@@ -193,6 +269,82 @@ export const fetchDistributionSubstationById = createAsyncThunk<
         return rejectWithValue(error.response.data.message || "Failed to fetch distribution substation")
       }
       return rejectWithValue(error.message || "Network error during distribution substation fetch")
+    }
+  }
+)
+
+export const createDistributionSubstation = createAsyncThunk(
+  "distributionSubstations/createDistributionSubstation",
+  async (substationData: CreateDistributionSubstationRequestPayload, { rejectWithValue }) => {
+    try {
+      // API expects a plain array of distribution substation requests
+      const response = await api.post<DistributionSubstationResponse>(
+        buildApiUrl(API_ENDPOINTS.DISTRIBUTION_STATION.ADD),
+        substationData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create distribution substation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create distribution substation")
+      }
+      return rejectWithValue(error.message || "Network error during distribution substation creation")
+    }
+  }
+)
+
+export const createSingleDistributionSubstation = createAsyncThunk(
+  "distributionSubstations/createSingleDistributionSubstation",
+  async (substationData: CreateDistributionSubstationRequest, { rejectWithValue }) => {
+    try {
+      // Send a single-element array to match the bulk API contract
+      const payload: CreateDistributionSubstationRequestPayload = [substationData]
+
+      const response = await api.post<DistributionSubstationResponse>(
+        buildApiUrl(API_ENDPOINTS.DISTRIBUTION_STATION.ADD),
+        payload
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create distribution substation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create distribution substation")
+      }
+      return rejectWithValue(error.message || "Network error during distribution substation creation")
+    }
+  }
+)
+
+export const updateDistributionSubstation = createAsyncThunk(
+  "distributionSubstations/updateDistributionSubstation",
+  async (
+    { id, substationData }: { id: number; substationData: UpdateDistributionSubstationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Replace the {id} placeholder in the endpoint with the actual ID
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.UPDATE.replace("{id}", id.toString())
+
+      const response = await api.put<SingleDistributionSubstationResponse>(buildApiUrl(endpoint), substationData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update distribution substation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update distribution substation")
+      }
+      return rejectWithValue(error.message || "Network error during distribution substation update")
     }
   }
 )
@@ -221,6 +373,8 @@ const distributionSubstationSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentDistributionSubstationError = null
+      state.createError = null
+      state.updateError = null
     },
 
     // Clear current distributionSubstation
@@ -246,6 +400,12 @@ const distributionSubstationSlice = createSlice({
       state.currentDistributionSubstation = null
       state.currentDistributionSubstationLoading = false
       state.currentDistributionSubstationError = null
+      state.createLoading = false
+      state.createError = null
+      state.createSuccess = false
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
     },
 
     // Set pagination
@@ -257,6 +417,20 @@ const distributionSubstationSlice = createSlice({
     // Set current distribution substation (for forms, etc.)
     setCurrentDistributionSubstation: (state, action: PayloadAction<DistributionSubstation | null>) => {
       state.currentDistributionSubstation = action.payload
+    },
+
+    // Clear create state
+    clearCreateState: (state) => {
+      state.createLoading = false
+      state.createError = null
+      state.createSuccess = false
+    },
+
+    // Clear update state
+    clearUpdateState: (state) => {
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
     },
   },
   extraReducers: (builder) => {
@@ -314,6 +488,88 @@ const distributionSubstationSlice = createSlice({
           (action.payload as string) || "Failed to fetch distribution substation"
         state.currentDistributionSubstation = null
       })
+      // Create distribution substation cases
+      .addCase(createDistributionSubstation.pending, (state) => {
+        state.createLoading = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(
+        createDistributionSubstation.fulfilled,
+        (state, action: PayloadAction<DistributionSubstationResponse>) => {
+          state.createLoading = false
+          state.createSuccess = true
+          state.createError = null
+
+          // Optionally add the newly created distribution substation to the list
+          if (action.payload.data && action.payload.data.length > 0) {
+            state.distributionSubstations.unshift(...action.payload.data)
+          }
+        }
+      )
+      .addCase(createDistributionSubstation.rejected, (state, action) => {
+        state.createLoading = false
+        state.createError = (action.payload as string) || "Failed to create distribution substation"
+        state.createSuccess = false
+      })
+      // Create single distribution substation cases
+      .addCase(createSingleDistributionSubstation.pending, (state) => {
+        state.createLoading = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(
+        createSingleDistributionSubstation.fulfilled,
+        (state, action: PayloadAction<DistributionSubstationResponse>) => {
+          state.createLoading = false
+          state.createSuccess = true
+          state.createError = null
+
+          // Optionally add the newly created distribution substation to the list
+          if (action.payload.data && action.payload.data.length > 0) {
+            const newSubstation = action.payload.data[0]
+            if (newSubstation) {
+              state.distributionSubstations.unshift(newSubstation)
+            }
+          }
+        }
+      )
+      .addCase(createSingleDistributionSubstation.rejected, (state, action) => {
+        state.createLoading = false
+        state.createError = (action.payload as string) || "Failed to create distribution substation"
+        state.createSuccess = false
+      })
+      // Update distribution substation cases
+      .addCase(updateDistributionSubstation.pending, (state) => {
+        state.updateLoading = true
+        state.updateError = null
+        state.updateSuccess = false
+      })
+      .addCase(
+        updateDistributionSubstation.fulfilled,
+        (state, action: PayloadAction<SingleDistributionSubstationResponse>) => {
+          state.updateLoading = false
+          state.updateSuccess = true
+          state.updateError = null
+
+          // Update the distribution substation in the current list
+          const updatedSubstation = action.payload.data
+          const index = state.distributionSubstations.findIndex((s) => s.id === updatedSubstation.id)
+          if (index !== -1) {
+            state.distributionSubstations[index] = updatedSubstation
+          }
+
+          // Update current distribution substation if it's the one being edited
+          if (state.currentDistributionSubstation && state.currentDistributionSubstation.id === updatedSubstation.id) {
+            state.currentDistributionSubstation = updatedSubstation
+          }
+        }
+      )
+      .addCase(updateDistributionSubstation.rejected, (state, action) => {
+        state.updateLoading = false
+        state.updateError = (action.payload as string) || "Failed to update distribution substation"
+        state.updateSuccess = false
+      })
   },
 })
 
@@ -324,6 +580,8 @@ export const {
   resetDistributionSubstationState,
   setPagination,
   setCurrentDistributionSubstation,
+  clearCreateState,
+  clearUpdateState,
 } = distributionSubstationSlice.actions
 
 export default distributionSubstationSlice.reducer
