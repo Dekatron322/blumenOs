@@ -94,7 +94,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "billing-postpaid",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["W"] },
       { name: "Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       { name: "Disputes", href: "/billing/disputes", privilegeKey: "disputes", requiredActions: ["R"] },
       { name: "Billing Jobs", href: "/billing/jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
@@ -121,7 +121,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "payments",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "All Payment", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Duning Mgt", href: "/payment/duning-mgt", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Disputes", href: "/payment/disputes", privilegeKey: "disputes", requiredActions: ["R"] },
@@ -134,7 +134,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "agents",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/agent-management/overview", privilegeKey: "agents", requiredActions: ["R"] },
+      { name: "Overview", href: "/agent-management/overview", privilegeKey: "agents", requiredActions: ["W"] },
       { name: "View All Agents", href: "/agent-management/all-agents", privilegeKey: "agents", requiredActions: ["R"] },
       {
         name: "Add New Agent",
@@ -151,7 +151,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "vendors",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/vendor-management/overview", privilegeKey: "vendors", requiredActions: ["R"] },
+      { name: "Overview", href: "/vendor-management/overview", privilegeKey: "vendors", requiredActions: ["W"] },
       {
         name: "View All Vendors",
         href: "/vendor-management/all-vendors",
@@ -173,7 +173,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "assets",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/assets-management/overview", privilegeKey: "assets", requiredActions: ["R"] },
+      { name: "Overview", href: "/assets-management/overview", privilegeKey: "assets", requiredActions: ["W"] },
       { name: "Area Offices", href: "/assets-management/area-offices", privilegeKey: "assets", requiredActions: ["R"] },
       {
         name: "Injection Substation",
@@ -195,6 +195,12 @@ const allLinks: LinkItem[] = [
         privilegeKey: "assets",
         requiredActions: ["R"],
       },
+      {
+        name: "Change Request",
+        href: "/assets-management/change-request",
+        privilegeKey: "assets",
+        requiredActions: ["E"],
+      },
     ],
   },
   {
@@ -204,7 +210,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "outages",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/outage-management/overview", privilegeKey: "outages", requiredActions: ["R"] },
+      { name: "Overview", href: "/outage-management/overview", privilegeKey: "outages", requiredActions: ["W"] },
       {
         name: "View Outages",
         href: "/outage-management/view-outages",
@@ -232,7 +238,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "notifications",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/analytics/overview", privilegeKey: "notifications", requiredActions: ["R"] },
+      { name: "Overview", href: "/analytics/overview", privilegeKey: "notifications", requiredActions: ["W"] },
       {
         name: "Revenue Analytics",
         href: "/analytics/revenue-analytics",
@@ -267,7 +273,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "system-settings",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["R"] },
+      { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
       {
         name: "Audit Trails",
         href: "/complaince/audit-trails",
@@ -296,7 +302,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "disputes",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/disputes/overview", privilegeKey: "disputes", requiredActions: ["R"] },
+      { name: "Overview", href: "/disputes/overview", privilegeKey: "disputes", requiredActions: ["W"] },
       {
         name: "Billing Disputes",
         href: "/disputes/billing-disputes",
