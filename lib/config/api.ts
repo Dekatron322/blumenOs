@@ -66,6 +66,13 @@ export const API_ENDPOINTS = {
     UPDATE: "/assets/injection-substations/{id}",
   },
 
+  SERVICE_STATION: {
+    GET: "/assets/service-centers",
+    ADD: "/assets/service-centers",
+    GET_BY_ID: "/assets/service-centers/{id}",
+    UPDATE: "/assets/service-centers/{id}",
+  },
+
   HT_POLE: {
     GET: "/assets/ht-poles",
     ADD: "/assets/ht-poles",

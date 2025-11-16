@@ -6,6 +6,7 @@ import SubstationsTab from "./SubstationsTab"
 import AreaOfficesTab from "./AreaOfficesTab"
 import PolesTab from "./PolesTab"
 import DistributionStaionTab from "./DistributionStationTab"
+import ServiceStationTab from "./ServiceStationTab"
 
 const AssetManagementInfo = () => {
   const [activeTab, setActiveTab] = useState("offices")
@@ -21,10 +22,14 @@ const AssetManagementInfo = () => {
         return <FeedersTab />
       case "poles":
         return <PolesTab />
+
       case "substations":
         return <SubstationsTab />
       case "distribution-stations":
         return <DistributionStaionTab />
+      case "service-stations":
+        return <ServiceStationTab />
+
       default:
         return <AreaOfficesTab />
     }

@@ -189,6 +189,12 @@ const allLinks: LinkItem[] = [
         privilegeKey: "assets",
         requiredActions: ["R"],
       },
+      {
+        name: "Service Stations",
+        href: "/assets-management/service-stations",
+        privilegeKey: "assets",
+        requiredActions: ["R"],
+      },
     ],
   },
   {

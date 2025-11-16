@@ -10,6 +10,7 @@ import injectionSubstationReducer from "./injectionSubstationSlice"
 import feedersReducer from "./feedersSlice"
 import distributionSubstationsReducer from "./distributionSubstationsSlice"
 import polesReducer from "./polesSlice"
+import serviceStationReducer from "./serviceStationsSlice"
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     feeders: feedersReducer,
     distributionSubstations: distributionSubstationsReducer,
     poles: polesReducer,
+    serviceStations: serviceStationReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

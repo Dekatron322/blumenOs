@@ -16,6 +16,7 @@ import {
   OfficeIcon,
   PoleIcon,
   ReadingsIcon,
+  ServiceStationIcon,
 } from "components/AssetManagementInfo/TabNavigation"
 
 // Enhanced Skeleton Loader Component for Cards
@@ -434,6 +435,16 @@ export default function MeteringDashboard() {
                           >
                             <DistributionIcon />
                             <span>Add Distribution Station</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/service-stations/add-service-stations")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <ServiceStationIcon />
+                            <span>Add Service Station</span>
                           </button>
                         </div>
                       </motion.div>
