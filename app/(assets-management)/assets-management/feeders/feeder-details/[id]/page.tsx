@@ -1486,33 +1486,27 @@ const FeederDetailsPage = () => {
                       Basic Information
                     </h3>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Feeder Name</label>
-                          <p className="font-semibold text-gray-900">{currentFeeder.name}</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">NERC Code</label>
-                          <p className="font-semibold text-gray-900">{currentFeeder.nercCode}</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">KAEDCO Feeder Code</label>
-                          <p className="font-semibold text-gray-900">{currentFeeder.kaedcoFeederCode}</p>
-                        </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <label className="text-sm font-medium text-gray-600">Feeder Name</label>
+                        <p className="font-semibold text-gray-900">{currentFeeder.name}</p>
                       </div>
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Feeder Voltage</label>
-                          <p className="font-semibold text-gray-900">{currentFeeder.feederVoltage}V</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Feeder ID</label>
-                          <p className="font-semibold text-gray-900">{currentFeeder.id}</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Status</label>
-                          <p className="font-semibold text-green-600">Active</p>
-                        </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <label className="text-sm font-medium text-gray-600">NERC Code</label>
+                        <p className="font-semibold text-gray-900">{currentFeeder.nercCode}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <label className="text-sm font-medium text-gray-600">Feeder Voltage</label>
+                        <p className="font-semibold text-gray-900">{currentFeeder.feederVoltage}V</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <label className="text-sm font-medium text-gray-600">KAEDCO Feeder Code</label>
+                        <p className="font-semibold text-gray-900">{currentFeeder.kaedcoFeederCode}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                        <label className="text-sm font-medium text-gray-600">Status</label>
+                        <p className="font-semibold text-green-600">Active</p>
                       </div>
                     </div>
                   </motion.div>
