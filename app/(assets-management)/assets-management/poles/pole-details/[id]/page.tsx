@@ -473,7 +473,7 @@ const PoleDetailsPage = () => {
         <div className="flex flex-col justify-center text-center">
           <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">HT Pole Not Found</h1>
-          <p className="mb-6 text-gray-600">The HT Pole you're looking for doesn&apos;t exist.</p>
+          <p className="mb-6 text-gray-600">The HT Pole you&apos;re looking for doesn&apos;t exist.</p>
           <ButtonModule variant="primary" onClick={() => router.back()}>
             Back to HT Poles
           </ButtonModule>
