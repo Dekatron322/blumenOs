@@ -63,6 +63,12 @@ export const API_ENDPOINTS = {
     ADD: "/assets/feeders",
     GET_BY_ID: "/assets/feeders/{id}",
     UPDATE: "/assets/feeders/{id}",
+    CHANGE_REQUEST: "/assets/feeders/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/feeders/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/feeders/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/feeders/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/feeders/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/feeders/change-requests/{publicId}/decline",
   },
 
   INJECTION_SUBSTATION: {
