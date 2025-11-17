@@ -708,10 +708,12 @@ const UpdateCustomerPage = () => {
                     <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                       <div className="border-b pb-4">
                         <h4 className="text-lg font-medium text-gray-900">Financial Information</h4>
-                        <p className="text-sm text-gray-600">Update the customer's financial and billing details</p>
+                        <p className="text-sm text-gray-600">
+                          Update the customer&apos;s financial and billing details
+                        </p>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1">
                         <FormInputModule
                           label="Stored Average"
                           name="storedAverage"
@@ -722,7 +724,7 @@ const UpdateCustomerPage = () => {
                           step="0.01"
                         />
 
-                        <FormInputModule
+                        {/* <FormInputModule
                           label="Total Monthly Vend"
                           name="totalMonthlyVend"
                           type="number"
@@ -750,7 +752,7 @@ const UpdateCustomerPage = () => {
                           value={formData.customerOutstandingDebtBalance}
                           onChange={handleInputChange}
                           step="0.01"
-                        />
+                        /> */}
                       </div>
                     </div>
 
