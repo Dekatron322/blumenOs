@@ -120,6 +120,10 @@ export const API_ENDPOINTS = {
   DEPARTMENT: {
     GET: "/departments",
   },
+
+  ANALYTICS: {
+    ASSET_MANAGEMENT: "/assets/reports/summary",
+  },
 }
 
 // Helper function to build full URL
