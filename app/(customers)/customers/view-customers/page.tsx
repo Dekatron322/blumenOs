@@ -2,7 +2,7 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import AddCustomerModal from "components/ui/Modal/add-customer-modal"
 import { motion } from "framer-motion"
 import {
@@ -15,8 +15,7 @@ import {
 } from "components/Icons/Icons"
 import AllCustomers from "components/Tables/AllCustomers"
 import { ButtonModule } from "components/ui/Button/Button"
-
-import { fetchCustomerAnalytics, clearCustomerAnalytics } from "lib/redux/analyticsSlice"
+import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 // Enhanced Skeleton Loader Component for Cards

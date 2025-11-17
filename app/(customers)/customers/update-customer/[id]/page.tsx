@@ -16,7 +16,6 @@ import {
   fetchCustomerById,
   updateCustomerById,
   UpdateCustomerRequest,
-  Customer,
 } from "lib/redux/customerSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
@@ -515,7 +514,7 @@ const UpdateCustomerPage = () => {
                     <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                       <div className="border-b pb-4">
                         <h4 className="text-lg font-medium text-gray-900">Personal Information</h4>
-                        <p className="text-sm text-gray-600">Update the customer's personal and contact details</p>
+                        <p className="text-sm text-gray-600">Update the customer&apos;s personal and contact details</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -568,7 +567,7 @@ const UpdateCustomerPage = () => {
                     <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                       <div className="border-b pb-4">
                         <h4 className="text-lg font-medium text-gray-900">Address Information</h4>
-                        <p className="text-sm text-gray-600">Update the customer's address and location details</p>
+                        <p className="text-sm text-gray-600">Update the customer&apos;s address and location details</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-6">
@@ -640,7 +639,9 @@ const UpdateCustomerPage = () => {
                     <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                       <div className="border-b pb-4">
                         <h4 className="text-lg font-medium text-gray-900">Service Information</h4>
-                        <p className="text-sm text-gray-600">Update the customer's service and distribution details</p>
+                        <p className="text-sm text-gray-600">
+                          Update the customer&apos;s service and distribution details
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

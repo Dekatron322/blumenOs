@@ -1,12 +1,10 @@
 "use client"
-
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { AlertCircle, CheckCircle, Clock, Edit3, Mail, MapPin, Phone, Power, Share2, User } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
-import UpdateStatusModal from "components/ui/Modal/update-status-modal"
 import SuspendCustomerModal from "components/ui/Modal/suspend-customer-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
@@ -23,7 +21,7 @@ import {
   UpdateUserOutlineIcon,
 } from "components/Icons/Icons"
 
-import { fetchCustomerById, clearCurrentCustomer, Customer } from "lib/redux/customerSlice"
+import { clearCurrentCustomer, fetchCustomerById } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 interface Asset {

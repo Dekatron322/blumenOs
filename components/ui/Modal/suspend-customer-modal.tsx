@@ -136,7 +136,9 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
 
             {/* Message */}
             <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Suspension</h3>
-            <p className="mb-4 text-center text-gray-600">Are you sure you want to suspend this customer's account?</p>
+            <p className="mb-4 text-center text-gray-600">
+              Are you sure you want to suspend this customer&apos;s account?
+            </p>
             <p className="mb-6 text-center text-sm text-gray-500">
               The customer will not be able to access services until the account is reactivated.
             </p>
@@ -157,7 +159,7 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
                 disabled={isLoading}
               />
               <p className="mt-1 text-xs text-gray-500">
-                This reason will be recorded and visible in the customer's account history.
+                This reason will be recorded and visible in the customer&apos;s account history.
               </p>
             </div>
           </div>

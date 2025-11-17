@@ -1,21 +1,13 @@
 import React, { useEffect, useState } from "react"
-import { RxDotsVertical } from "react-icons/rx"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { PiNoteBold } from "react-icons/pi"
 import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { GoXCircle } from "react-icons/go"
-import { WiTime3 } from "react-icons/wi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
 import { AnimatePresence, motion } from "framer-motion"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
-import UpdateStatusModal from "components/ui/Modal/update-status-modal"
-import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
-import CustomerDetailsModal from "components/ui/Modal/customer-details-modal"
 import { useRouter } from "next/navigation"
-
-import { fetchCustomers, setPagination, setFilters, clearFilters, Customer } from "lib/redux/customerSlice"
+import { Customer, fetchCustomers, setFilters, setPagination } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 type SortOrder = "asc" | "desc" | null
