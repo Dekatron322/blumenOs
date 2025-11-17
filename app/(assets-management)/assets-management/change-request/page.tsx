@@ -21,6 +21,7 @@ import InjectionSubstationChangeRequest from "components/Tables/InjectionSubstat
 import TabNavigation from "components/AssetManagementInfo/TabNavigation"
 import AreaOfficeChangeRequest from "components/Tables/AreaOfficeChangeRequest"
 import FeederChangeRequest from "components/Tables/FeederChangeRequest"
+import PoleChangeRequest from "components/Tables/PoleChangeRequest"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -297,7 +298,7 @@ export default function EmployeeManagement() {
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [employeeData, setEmployeeData] = useState(generateEmployeeData())
-  const [activeTab, setActiveTab] = useState("substations")
+  const [activeTab, setActiveTab] = useState("offices")
 
   // Permissions: show Add Employee only if user has 'W'
   const { user } = useAppSelector((state) => state.auth)
@@ -345,7 +346,7 @@ export default function EmployeeManagement() {
       case "feeders":
         return <FeederChangeRequest />
       case "poles":
-        return <div></div>
+        return <PoleChangeRequest />
       case "distribution-stations":
         return <div></div>
       case "service-stations":

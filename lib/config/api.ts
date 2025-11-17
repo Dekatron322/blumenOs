@@ -96,6 +96,12 @@ export const API_ENDPOINTS = {
     ADD: "/assets/ht-poles",
     GET_BY_ID: "/assets/ht-poles/{id}",
     UPDATE: "/assets/ht-poles/{id}",
+    CHANGE_REQUEST: "/assets/ht-poles/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/ht-poles/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/ht-poles/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/ht-poles/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/ht-poles/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/ht-poles/change-requests/{publicId}/decline",
   },
 
   DISTRIBUTION_STATION: {
