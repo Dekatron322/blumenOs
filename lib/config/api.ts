@@ -109,6 +109,12 @@ export const API_ENDPOINTS = {
     ADD: "/assets/distribution-substations",
     GET_BY_ID: "/assets/distribution-substations/{id}",
     UPDATE: "/assets/distribution-substations/{id}",
+    CHANGE_REQUEST: "/assets/distribution-substations/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/distribution-substations/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/distribution-substations/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/distribution-substations/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/distribution-substations/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/distribution-substations/change-requests/{publicId}/decline",
   },
 
   DEPARTMENT: {

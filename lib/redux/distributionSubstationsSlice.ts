@@ -136,6 +136,147 @@ export interface UpdateDistributionSubstationRequest {
 
 export type CreateDistributionSubstationRequestPayload = CreateDistributionSubstationRequest[]
 
+// Interfaces for Change Request
+export interface ChangeRequestItem {
+  path: string
+  value: string
+}
+
+export interface ChangeRequestDispute {
+  type: number
+  disputeId: number
+}
+
+export interface ChangeRequestPreconditions {
+  [key: string]: string
+}
+
+export interface ChangeRequestData {
+  changes: ChangeRequestItem[]
+  comment: string
+  dispute?: ChangeRequestDispute
+  preconditions?: ChangeRequestPreconditions
+}
+
+export interface ChangeRequestResponseData {
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string
+  declinedReason: string
+  approvedAtUtc: string
+  approvedBy: string
+  appliedAtUtc: string
+  failureReason: string
+  disputeType: number
+  disputeId: number
+}
+
+export interface ChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
+// Interfaces for View Change Requests
+export interface ChangeRequestListItem {
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  source?: number
+}
+
+export interface ChangeRequestsResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestListItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface ChangeRequestsRequestParams {
+  pageNumber: number
+  pageSize: number
+  status?: number
+  source?: number
+  reference?: string
+  publicId?: string
+}
+
+// Interfaces for Change Request Details
+export interface ChangeRequestDetails {
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string | null
+  declinedReason: string | null
+  approvedAtUtc: string | null
+  approvedBy: string | null
+  appliedAtUtc: string | null
+  failureReason: string | null
+  disputeType: number | null
+  disputeId: number | null
+}
+
+export interface ChangeRequestDetailsResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestDetails
+}
+
+// Interfaces for Approve Change Request
+export interface ApproveChangeRequestRequest {
+  notes?: string
+}
+
+export interface ApproveChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
+// Interfaces for Decline Change Request
+export interface DeclineChangeRequestRequest {
+  reason: string
+}
+
+export interface DeclineChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
 // DistributionSubstation State
 interface DistributionSubstationState {
   // DistributionSubstations list state
@@ -168,6 +309,58 @@ interface DistributionSubstationState {
   updateLoading: boolean
   updateError: string | null
   updateSuccess: boolean
+
+  // Change Request state
+  changeRequestLoading: boolean
+  changeRequestError: string | null
+  changeRequestSuccess: boolean
+  changeRequestResponse: ChangeRequestResponseData | null
+
+  // View Change Requests state
+  changeRequests: ChangeRequestListItem[]
+  changeRequestsLoading: boolean
+  changeRequestsError: string | null
+  changeRequestsSuccess: boolean
+  changeRequestsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Change Requests By Distribution Substation ID state
+  changeRequestsByDistributionSubstation: ChangeRequestListItem[]
+  changeRequestsByDistributionSubstationLoading: boolean
+  changeRequestsByDistributionSubstationError: string | null
+  changeRequestsByDistributionSubstationSuccess: boolean
+  changeRequestsByDistributionSubstationPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Change Request Details state
+  changeRequestDetails: ChangeRequestDetails | null
+  changeRequestDetailsLoading: boolean
+  changeRequestDetailsError: string | null
+  changeRequestDetailsSuccess: boolean
+
+  // Approve Change Request state
+  approveChangeRequestLoading: boolean
+  approveChangeRequestError: string | null
+  approveChangeRequestSuccess: boolean
+  approveChangeRequestResponse: ChangeRequestResponseData | null
+
+  // Decline Change Request state
+  declineChangeRequestLoading: boolean
+  declineChangeRequestError: string | null
+  declineChangeRequestSuccess: boolean
+  declineChangeRequestResponse: ChangeRequestResponseData | null
 }
 
 // Initial state
@@ -193,6 +386,46 @@ const initialState: DistributionSubstationState = {
   updateLoading: false,
   updateError: null,
   updateSuccess: false,
+  changeRequestLoading: false,
+  changeRequestError: null,
+  changeRequestSuccess: false,
+  changeRequestResponse: null,
+  changeRequests: [],
+  changeRequestsLoading: false,
+  changeRequestsError: null,
+  changeRequestsSuccess: false,
+  changeRequestsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  changeRequestsByDistributionSubstation: [],
+  changeRequestsByDistributionSubstationLoading: false,
+  changeRequestsByDistributionSubstationError: null,
+  changeRequestsByDistributionSubstationSuccess: false,
+  changeRequestsByDistributionSubstationPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  changeRequestDetails: null,
+  changeRequestDetailsLoading: false,
+  changeRequestDetailsError: null,
+  changeRequestDetailsSuccess: false,
+  approveChangeRequestLoading: false,
+  approveChangeRequestError: null,
+  approveChangeRequestSuccess: false,
+  approveChangeRequestResponse: null,
+  declineChangeRequestLoading: false,
+  declineChangeRequestError: null,
+  declineChangeRequestSuccess: false,
+  declineChangeRequestResponse: null,
 }
 
 // Async thunks
@@ -349,6 +582,206 @@ export const updateDistributionSubstation = createAsyncThunk(
   }
 )
 
+// Change Request Async Thunks
+export const submitChangeRequest = createAsyncThunk(
+  "distributionSubstations/submitChangeRequest",
+  async ({ id, changeRequestData }: { id: number; changeRequestData: ChangeRequestData }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.CHANGE_REQUEST.replace("{id}", id.toString())
+      const response = await api.post<ChangeRequestResponse>(buildApiUrl(endpoint), changeRequestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to submit change request")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Change request response data not found")
+      }
+
+      return {
+        distributionSubstationId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to submit change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request submission")
+    }
+  }
+)
+
+export const fetchChangeRequests = createAsyncThunk(
+  "distributionSubstations/fetchChangeRequests",
+  async (params: ChangeRequestsRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, status, source, reference, publicId } = params
+
+      const response = await api.get<ChangeRequestsResponse>(
+        buildApiUrl(API_ENDPOINTS.DISTRIBUTION_STATION.VIEW_CHANGE_REQUEST),
+        {
+          params: {
+            PageNumber: pageNumber,
+            PageSize: pageSize,
+            ...(status !== undefined && { Status: status }),
+            ...(source !== undefined && { Source: source }),
+            ...(reference && { Reference: reference }),
+            ...(publicId && { PublicId: publicId }),
+          },
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change requests")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change requests")
+      }
+      return rejectWithValue(error.message || "Network error during change requests fetch")
+    }
+  }
+)
+
+export const fetchChangeRequestsByDistributionSubstationId = createAsyncThunk(
+  "distributionSubstations/fetchChangeRequestsByDistributionSubstationId",
+  async (
+    {
+      id,
+      params,
+    }: {
+      id: number
+      params: ChangeRequestsRequestParams
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { pageNumber, pageSize, status, source, reference, publicId } = params
+
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.CHANGE_REQUESTS_BY_ID.replace("{id}", id.toString())
+      const response = await api.get<ChangeRequestsResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(status !== undefined && { Status: status }),
+          ...(source !== undefined && { Source: source }),
+          ...(reference && { Reference: reference }),
+          ...(publicId && { PublicId: publicId }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change requests for distribution substation")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(
+          error.response.data.message || "Failed to fetch change requests for distribution substation"
+        )
+      }
+      return rejectWithValue(error.message || "Network error during distribution substation change requests fetch")
+    }
+  }
+)
+
+export const fetchChangeRequestDetails = createAsyncThunk(
+  "distributionSubstations/fetchChangeRequestDetails",
+  async (identifier: string, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.CHANGE_REQUEST_DETAILS.replace("{identifier}", identifier)
+      const response = await api.get<ChangeRequestDetailsResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change request details")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Change request details not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change request details")
+      }
+      return rejectWithValue(error.message || "Network error during change request details fetch")
+    }
+  }
+)
+
+export const approveChangeRequest = createAsyncThunk(
+  "distributionSubstations/approveChangeRequest",
+  async ({ publicId, notes }: { publicId: string; notes?: string }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.APPROVE_CHANGE_REQUEST.replace("{publicId}", publicId)
+      const requestBody: ApproveChangeRequestRequest = {}
+
+      if (notes) {
+        requestBody.notes = notes
+      }
+
+      const response = await api.post<ApproveChangeRequestResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to approve change request")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Approved change request data not found")
+      }
+
+      return {
+        publicId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to approve change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request approval")
+    }
+  }
+)
+
+export const declineChangeRequest = createAsyncThunk(
+  "distributionSubstations/declineChangeRequest",
+  async ({ publicId, reason }: { publicId: string; reason: string }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.DISTRIBUTION_STATION.DECLINE_CHANGE_REQUEST.replace("{publicId}", publicId)
+      const requestBody: DeclineChangeRequestRequest = {
+        reason: reason,
+      }
+
+      const response = await api.post<DeclineChangeRequestResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to decline change request")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Declined change request data not found")
+      }
+
+      return {
+        publicId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to decline change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request decline")
+    }
+  }
+)
+
 // DistributionSubstation slice
 const distributionSubstationSlice = createSlice({
   name: "distributionSubstations",
@@ -375,6 +808,12 @@ const distributionSubstationSlice = createSlice({
       state.currentDistributionSubstationError = null
       state.createError = null
       state.updateError = null
+      state.changeRequestError = null
+      state.changeRequestsError = null
+      state.changeRequestsByDistributionSubstationError = null
+      state.changeRequestDetailsError = null
+      state.approveChangeRequestError = null
+      state.declineChangeRequestError = null
     },
 
     // Clear current distributionSubstation
@@ -406,12 +845,67 @@ const distributionSubstationSlice = createSlice({
       state.updateLoading = false
       state.updateError = null
       state.updateSuccess = false
+      state.changeRequestLoading = false
+      state.changeRequestError = null
+      state.changeRequestSuccess = false
+      state.changeRequestResponse = null
+      state.changeRequests = []
+      state.changeRequestsLoading = false
+      state.changeRequestsError = null
+      state.changeRequestsSuccess = false
+      state.changeRequestsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.changeRequestsByDistributionSubstation = []
+      state.changeRequestsByDistributionSubstationLoading = false
+      state.changeRequestsByDistributionSubstationError = null
+      state.changeRequestsByDistributionSubstationSuccess = false
+      state.changeRequestsByDistributionSubstationPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.changeRequestDetails = null
+      state.changeRequestDetailsLoading = false
+      state.changeRequestDetailsError = null
+      state.changeRequestDetailsSuccess = false
+      state.approveChangeRequestLoading = false
+      state.approveChangeRequestError = null
+      state.approveChangeRequestSuccess = false
+      state.approveChangeRequestResponse = null
+      state.declineChangeRequestLoading = false
+      state.declineChangeRequestError = null
+      state.declineChangeRequestSuccess = false
+      state.declineChangeRequestResponse = null
     },
 
     // Set pagination
     setPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.pagination.currentPage = action.payload.page
       state.pagination.pageSize = action.payload.pageSize
+    },
+
+    // Set change requests pagination
+    setChangeRequestsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.changeRequestsPagination.currentPage = action.payload.page
+      state.changeRequestsPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set change requests by distribution substation pagination
+    setChangeRequestsByDistributionSubstationPagination: (
+      state,
+      action: PayloadAction<{ page: number; pageSize: number }>
+    ) => {
+      state.changeRequestsByDistributionSubstationPagination.currentPage = action.payload.page
+      state.changeRequestsByDistributionSubstationPagination.pageSize = action.payload.pageSize
     },
 
     // Set current distribution substation (for forms, etc.)
@@ -431,6 +925,68 @@ const distributionSubstationSlice = createSlice({
       state.updateLoading = false
       state.updateError = null
       state.updateSuccess = false
+    },
+
+    // Clear change request status
+    clearChangeRequestStatus: (state) => {
+      state.changeRequestError = null
+      state.changeRequestSuccess = false
+      state.changeRequestLoading = false
+      state.changeRequestResponse = null
+    },
+
+    // Clear change requests state
+    clearChangeRequests: (state) => {
+      state.changeRequests = []
+      state.changeRequestsError = null
+      state.changeRequestsSuccess = false
+      state.changeRequestsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear change requests by distribution substation state
+    clearChangeRequestsByDistributionSubstation: (state) => {
+      state.changeRequestsByDistributionSubstation = []
+      state.changeRequestsByDistributionSubstationError = null
+      state.changeRequestsByDistributionSubstationSuccess = false
+      state.changeRequestsByDistributionSubstationPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear change request details
+    clearChangeRequestDetails: (state) => {
+      state.changeRequestDetails = null
+      state.changeRequestDetailsError = null
+      state.changeRequestDetailsSuccess = false
+      state.changeRequestDetailsLoading = false
+    },
+
+    // Clear approve change request status
+    clearApproveChangeRequestStatus: (state) => {
+      state.approveChangeRequestError = null
+      state.approveChangeRequestSuccess = false
+      state.approveChangeRequestLoading = false
+      state.approveChangeRequestResponse = null
+    },
+
+    // Clear decline change request status
+    clearDeclineChangeRequestStatus: (state) => {
+      state.declineChangeRequestError = null
+      state.declineChangeRequestSuccess = false
+      state.declineChangeRequestLoading = false
+      state.declineChangeRequestResponse = null
     },
   },
   extraReducers: (builder) => {
@@ -570,6 +1126,237 @@ const distributionSubstationSlice = createSlice({
         state.updateError = (action.payload as string) || "Failed to update distribution substation"
         state.updateSuccess = false
       })
+      // Change request cases
+      .addCase(submitChangeRequest.pending, (state) => {
+        state.changeRequestLoading = true
+        state.changeRequestError = null
+        state.changeRequestSuccess = false
+        state.changeRequestResponse = null
+      })
+      .addCase(
+        submitChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            distributionSubstationId: number
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.changeRequestLoading = false
+          state.changeRequestSuccess = true
+          state.changeRequestError = null
+          state.changeRequestResponse = action.payload.data
+        }
+      )
+      .addCase(submitChangeRequest.rejected, (state, action) => {
+        state.changeRequestLoading = false
+        state.changeRequestError = (action.payload as string) || "Failed to submit change request"
+        state.changeRequestSuccess = false
+        state.changeRequestResponse = null
+      })
+      // Fetch change requests cases
+      .addCase(fetchChangeRequests.pending, (state) => {
+        state.changeRequestsLoading = true
+        state.changeRequestsError = null
+        state.changeRequestsSuccess = false
+      })
+      .addCase(fetchChangeRequests.fulfilled, (state, action: PayloadAction<ChangeRequestsResponse>) => {
+        state.changeRequestsLoading = false
+        state.changeRequestsSuccess = true
+        state.changeRequests = action.payload.data || []
+        state.changeRequestsPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.changeRequestsError = null
+      })
+      .addCase(fetchChangeRequests.rejected, (state, action) => {
+        state.changeRequestsLoading = false
+        state.changeRequestsError = (action.payload as string) || "Failed to fetch change requests"
+        state.changeRequestsSuccess = false
+        state.changeRequests = []
+        state.changeRequestsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch change requests by distribution substation ID cases
+      .addCase(fetchChangeRequestsByDistributionSubstationId.pending, (state) => {
+        state.changeRequestsByDistributionSubstationLoading = true
+        state.changeRequestsByDistributionSubstationError = null
+        state.changeRequestsByDistributionSubstationSuccess = false
+      })
+      .addCase(
+        fetchChangeRequestsByDistributionSubstationId.fulfilled,
+        (state, action: PayloadAction<ChangeRequestsResponse>) => {
+          state.changeRequestsByDistributionSubstationLoading = false
+          state.changeRequestsByDistributionSubstationSuccess = true
+          state.changeRequestsByDistributionSubstation = action.payload.data || []
+          state.changeRequestsByDistributionSubstationPagination = {
+            totalCount: action.payload.totalCount || 0,
+            totalPages: action.payload.totalPages || 0,
+            currentPage: action.payload.currentPage || 1,
+            pageSize: action.payload.pageSize || 10,
+            hasNext: action.payload.hasNext || false,
+            hasPrevious: action.payload.hasPrevious || false,
+          }
+          state.changeRequestsByDistributionSubstationError = null
+        }
+      )
+      .addCase(fetchChangeRequestsByDistributionSubstationId.rejected, (state, action) => {
+        state.changeRequestsByDistributionSubstationLoading = false
+        state.changeRequestsByDistributionSubstationError =
+          (action.payload as string) || "Failed to fetch change requests for distribution substation"
+        state.changeRequestsByDistributionSubstationSuccess = false
+        state.changeRequestsByDistributionSubstation = []
+        state.changeRequestsByDistributionSubstationPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch change request details cases
+      .addCase(fetchChangeRequestDetails.pending, (state) => {
+        state.changeRequestDetailsLoading = true
+        state.changeRequestDetailsError = null
+        state.changeRequestDetailsSuccess = false
+      })
+      .addCase(fetchChangeRequestDetails.fulfilled, (state, action: PayloadAction<ChangeRequestDetails>) => {
+        state.changeRequestDetailsLoading = false
+        state.changeRequestDetailsSuccess = true
+        state.changeRequestDetails = action.payload
+        state.changeRequestDetailsError = null
+      })
+      .addCase(fetchChangeRequestDetails.rejected, (state, action) => {
+        state.changeRequestDetailsLoading = false
+        state.changeRequestDetailsError = (action.payload as string) || "Failed to fetch change request details"
+        state.changeRequestDetailsSuccess = false
+        state.changeRequestDetails = null
+      })
+      // Approve change request cases
+      .addCase(approveChangeRequest.pending, (state) => {
+        state.approveChangeRequestLoading = true
+        state.approveChangeRequestError = null
+        state.approveChangeRequestSuccess = false
+        state.approveChangeRequestResponse = null
+      })
+      .addCase(
+        approveChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            publicId: string
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.approveChangeRequestLoading = false
+          state.approveChangeRequestSuccess = true
+          state.approveChangeRequestError = null
+          state.approveChangeRequestResponse = action.payload.data
+
+          // Update the change request in the list if it exists
+          const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
+          if (index !== -1) {
+            const req = state.changeRequests[index]
+            if (req) {
+              req.status = 1 // Set status to APPROVED
+            }
+          }
+
+          // Update the change request in the distribution substation-specific list if it exists
+          const distributionSubstationIndex = state.changeRequestsByDistributionSubstation.findIndex(
+            (cr) => cr.publicId === action.payload.publicId
+          )
+          if (distributionSubstationIndex !== -1) {
+            const req = state.changeRequestsByDistributionSubstation[distributionSubstationIndex]
+            if (req) {
+              req.status = 1 // Set status to APPROVED
+            }
+          }
+
+          // Update change request details if it's the current one
+          if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
+            state.changeRequestDetails.status = 1 // Set status to APPROVED
+            state.changeRequestDetails.approvalNotes = action.payload.data.approvalNotes
+            state.changeRequestDetails.approvedAtUtc = action.payload.data.approvedAtUtc
+            state.changeRequestDetails.approvedBy = action.payload.data.approvedBy
+          }
+        }
+      )
+      .addCase(approveChangeRequest.rejected, (state, action) => {
+        state.approveChangeRequestLoading = false
+        state.approveChangeRequestError = (action.payload as string) || "Failed to approve change request"
+        state.approveChangeRequestSuccess = false
+        state.approveChangeRequestResponse = null
+      })
+      // Decline change request cases
+      .addCase(declineChangeRequest.pending, (state) => {
+        state.declineChangeRequestLoading = true
+        state.declineChangeRequestError = null
+        state.declineChangeRequestSuccess = false
+        state.declineChangeRequestResponse = null
+      })
+      .addCase(
+        declineChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            publicId: string
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.declineChangeRequestLoading = false
+          state.declineChangeRequestSuccess = true
+          state.declineChangeRequestError = null
+          state.declineChangeRequestResponse = action.payload.data
+
+          // Update the change request in the list if it exists
+          const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
+          if (index !== -1) {
+            const req = state.changeRequests[index]
+            if (req) {
+              req.status = 2 // Set status to DECLINED
+            }
+          }
+
+          // Update the change request in the distribution substation-specific list if it exists
+          const distributionSubstationIndex = state.changeRequestsByDistributionSubstation.findIndex(
+            (cr) => cr.publicId === action.payload.publicId
+          )
+          if (distributionSubstationIndex !== -1) {
+            const req = state.changeRequestsByDistributionSubstation[distributionSubstationIndex]
+            if (req) {
+              req.status = 2 // Set status to DECLINED
+            }
+          }
+
+          // Update change request details if it's the current one
+          if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
+            state.changeRequestDetails.status = 2 // Set status to DECLINED
+            state.changeRequestDetails.declinedReason = action.payload.data.declinedReason
+          }
+        }
+      )
+      .addCase(declineChangeRequest.rejected, (state, action) => {
+        state.declineChangeRequestLoading = false
+        state.declineChangeRequestError = (action.payload as string) || "Failed to decline change request"
+        state.declineChangeRequestSuccess = false
+        state.declineChangeRequestResponse = null
+      })
   },
 })
 
@@ -579,9 +1366,17 @@ export const {
   clearCurrentDistributionSubstation,
   resetDistributionSubstationState,
   setPagination,
+  setChangeRequestsPagination,
+  setChangeRequestsByDistributionSubstationPagination,
   setCurrentDistributionSubstation,
   clearCreateState,
   clearUpdateState,
+  clearChangeRequestStatus,
+  clearChangeRequests,
+  clearChangeRequestsByDistributionSubstation,
+  clearChangeRequestDetails,
+  clearApproveChangeRequestStatus,
+  clearDeclineChangeRequestStatus,
 } = distributionSubstationSlice.actions
 
 export default distributionSubstationSlice.reducer

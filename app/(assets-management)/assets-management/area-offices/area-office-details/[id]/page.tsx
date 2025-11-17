@@ -1102,17 +1102,6 @@ const AreaOfficeDetailsPage = () => {
   const closeAllModals = () => setActiveModal(null)
   const openModal = (modalType: "edit" | "changeRequest") => setActiveModal(modalType)
 
-  const handleUpdateSuccess = () => {
-    // Refresh area office details after successful update
-    if (areaOfficeId) {
-      const id = parseInt(areaOfficeId)
-      if (!isNaN(id)) {
-        dispatch(fetchAreaOfficeById(id))
-      }
-    }
-    closeAllModals()
-  }
-
   const handleChangeRequestSuccess = () => {
     // Refresh area office details after successful change request
     if (areaOfficeId) {
@@ -1122,17 +1111,6 @@ const AreaOfficeDetailsPage = () => {
       }
     }
     closeAllModals()
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
   }
 
   const exportToPDF = async () => {

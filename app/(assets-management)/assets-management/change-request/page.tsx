@@ -22,6 +22,7 @@ import TabNavigation from "components/AssetManagementInfo/TabNavigation"
 import AreaOfficeChangeRequest from "components/Tables/AreaOfficeChangeRequest"
 import FeederChangeRequest from "components/Tables/FeederChangeRequest"
 import PoleChangeRequest from "components/Tables/PoleChangeRequest"
+import DistributionSubstationChangeRequest from "components/Tables/DistributionSubstationChangeRequest"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -348,7 +349,7 @@ export default function EmployeeManagement() {
       case "poles":
         return <PoleChangeRequest />
       case "distribution-stations":
-        return <div></div>
+        return <DistributionSubstationChangeRequest />
       case "service-stations":
         return <div></div>
       case "substations":

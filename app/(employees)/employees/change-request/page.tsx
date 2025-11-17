@@ -299,16 +299,6 @@ export default function EmployeeManagement() {
   const canWrite = !!user?.privileges?.some((p) => p.actions?.includes("W"))
 
   // Use mock data
-  const totalEmployees = employeeData.totalEmployees
-  const activeEmployees = employeeData.activeEmployees
-  const onLeaveEmployees = employeeData.onLeaveEmployees
-  const newHires = employeeData.newHires
-  const fullTimeEmployees = employeeData.fullTimeEmployees
-  const partTimeEmployees = employeeData.partTimeEmployees
-  const contractEmployees = employeeData.contractEmployees
-  const departments = employeeData.departments
-  const avgTenure = employeeData.avgTenure
-  const turnoverRate = employeeData.turnoverRate
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
