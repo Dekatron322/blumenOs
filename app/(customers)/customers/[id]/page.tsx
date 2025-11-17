@@ -7,7 +7,7 @@ import { AlertCircle, CheckCircle, Clock, Edit3, Mail, MapPin, Phone, Power, Sha
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import UpdateStatusModal from "components/ui/Modal/update-status-modal"
-import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
+import SuspendCustomerModal from "components/ui/Modal/suspend-customer-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   CalendarOutlineIcon,
@@ -23,28 +23,8 @@ import {
   UpdateUserOutlineIcon,
 } from "components/Icons/Icons"
 
-interface Customer {
-  id: string
-  accountNumber: string
-  customerName: string
-  customerType: "PREPAID" | "POSTPAID"
-  serviceBand: string
-  tariffClass: string
-  region: string
-  businessUnit: string
-  feederId: string | null
-  transformerId: string | null
-  address: string
-  phoneNumber: string
-  email: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  outstandingArrears: string
-  createdAt: string
-  updatedAt: string
-  meters: any[]
-  prepaidAccount: any | null
-  postpaidAccount: any | null
-}
+import { fetchCustomerById, clearCurrentCustomer, Customer } from "lib/redux/customerSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 interface Asset {
   serialNo: number
@@ -55,109 +35,53 @@ interface Asset {
   status?: string
 }
 
-// Modern data generation
-const generateSampleCustomer = (id: string): Customer => {
-  const firstNames = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn"]
-  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
-  const streets = ["Main St", "Oak Ave", "Maple Dr", "Cedar Ln", "Pine St", "Elm Blvd", "View Rd", "Lake Ave"]
-  const cities = [
-    "New York",
-    "Los Angeles",
-    "Chicago",
-    "Houston",
-    "Phoenix",
-    "Philadelphia",
-    "San Antonio",
-    "San Diego",
-  ]
-
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)]!
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)]!
-  const street = `${Math.floor(Math.random() * 1000) + 1} ${streets[Math.floor(Math.random() * streets.length)]}`
-  const city = cities[Math.floor(Math.random() * cities.length)]
-
-  return {
-    id,
-    accountNumber: `ACC${80000 + Math.floor(Math.random() * 20000)}`,
-    customerName: `${firstName} ${lastName}`,
-    customerType: Math.random() > 0.5 ? "PREPAID" : "POSTPAID",
-    serviceBand: ["Band A", "Band B", "Band C"][Math.floor(Math.random() * 3)]!,
-    tariffClass: ["R1", "R2", "R3", "C1", "C2"][Math.floor(Math.random() * 5)]!,
-    region: ["North", "South", "East", "West"][Math.floor(Math.random() * 4)]!,
-    businessUnit: ["Commercial", "Residential", "Industrial"][Math.floor(Math.random() * 3)]!,
-    feederId: Math.random() > 0.3 ? `FD-${1000 + Math.floor(Math.random() * 900)}` : null,
-    transformerId: Math.random() > 0.3 ? `TR-${2000 + Math.floor(Math.random() * 800)}` : null,
-    address: `${street}, ${city}`,
-    phoneNumber: `+1 (${555 + Math.floor(Math.random() * 445)}) ${100 + Math.floor(Math.random() * 900)}-${
-      1000 + Math.floor(Math.random() * 9000)
-    }`,
-    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
-    status: ["ACTIVE", "INACTIVE", "SUSPENDED"][Math.floor(Math.random() * 3)] as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-    outstandingArrears: (Math.random() * 2500).toFixed(2),
-    createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    meters: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, (_, i) => ({
-      id: `MTR-${3000 + i}`,
-      type: ["Smart", "Digital", "Analog"][Math.floor(Math.random() * 3)],
-      installedDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString(),
-    })),
-    prepaidAccount:
-      Math.random() > 0.5
-        ? {
-            balance: (Math.random() * 500).toFixed(2),
-            lastTopUp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          }
-        : null,
-    postpaidAccount:
-      Math.random() > 0.5
-        ? {
-            lastBill: (Math.random() * 300).toFixed(2),
-            dueDate: new Date(Date.now() + Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString(),
-          }
-        : null,
-  }
-}
-
-const generateRandomAssets = (count: number): Asset[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    serialNo: index + 1,
-    supplyStructureType: ["OVERHEAD", "UNDERGROUND", "POLES"][Math.floor(Math.random() * 3)],
-    company: "EnergyCorp",
-    feederName: [`Main Feeder ${index + 1}`, `Secondary ${index + 1}`, `Backup ${index + 1}`][
-      Math.floor(Math.random() * 3)
-    ],
-    transformerCapacityKva: [50, 100, 200, 500][Math.floor(Math.random() * 4)],
-    status: ["ACTIVE", "MAINTENANCE", "UPGRADING"][Math.floor(Math.random() * 3)],
-  }))
-}
-
 const CustomerDetailsPage = () => {
   const params = useParams()
   const router = useRouter()
-  const customerId = params.id as string
+  const customerId = parseInt(params.id as string)
 
-  const [customer, setCustomer] = useState<Customer | null>(null)
+  // Redux hooks
+  const dispatch = useAppDispatch()
+  const { currentCustomer, currentCustomerLoading, currentCustomerError } = useAppSelector((state) => state.customers)
+
   const [assets, setAssets] = useState<Asset[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [activeModal, setActiveModal] = useState<"suspend" | "reminder" | "status" | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAppSelector((state) => state.auth)
+  const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
+  // Fetch customer data when component mounts
   useEffect(() => {
-    const fetchCustomerData = async () => {
-      setIsLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 1200))
+    const fetchData = async () => {
+      if (customerId && !isNaN(customerId)) {
+        setIsLoading(true)
+        try {
+          await dispatch(fetchCustomerById(customerId))
+        } catch (error) {
+          console.error("Error fetching customer:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setIsLoading(false)
+      }
+    }
 
-      const customerData = generateSampleCustomer(customerId)
+    fetchData()
+
+    // Cleanup when component unmounts
+    return () => {
+      dispatch(clearCurrentCustomer())
+    }
+  }, [dispatch, customerId])
+
+  // Generate assets based on customer data
+  useEffect(() => {
+    if (currentCustomer) {
       const customerAssets = generateRandomAssets(2)
-
-      setCustomer(customerData)
       setAssets(customerAssets)
-      setIsLoading(false)
     }
-
-    if (customerId) {
-      fetchCustomerData()
-    }
-  }, [customerId])
+  }, [currentCustomer])
 
   const getStatusConfig = (status: string) => {
     const configs = {
@@ -168,36 +92,69 @@ const CustomerDetailsPage = () => {
     return configs[status as keyof typeof configs] || configs.INACTIVE
   }
 
-  const getCustomerTypeConfig = (type: string) => {
-    return type === "PREPAID"
-      ? { color: "text-blue-600", bg: "bg-blue-50" }
-      : { color: "text-purple-600", bg: "bg-purple-50" }
+  const getCustomerTypeConfig = (isPPM: boolean) => {
+    return isPPM
+      ? { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" }
+      : { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" }
   }
 
   const closeAllModals = () => setActiveModal(null)
   const openModal = (modalType: "suspend" | "reminder" | "status") => setActiveModal(modalType)
-
-  const handleConfirmSuspend = () => {
-    console.log("Customer suspended")
-    closeAllModals()
-  }
 
   const handleConfirmReminder = (message: string) => {
     console.log("Reminder sent:", message)
     closeAllModals()
   }
 
-  if (isLoading) {
+  const handleSuspendSuccess = () => {
+    // Refresh customer data to get updated suspension status
+    dispatch(fetchCustomerById(customerId))
+    closeAllModals()
+  }
+
+  // Generate random assets (keeping this for now as it's not from API)
+  const generateRandomAssets = (count: number): Asset[] => {
+    return Array.from({ length: count }, (_, index) => ({
+      serialNo: index + 1,
+      supplyStructureType: ["OVERHEAD", "UNDERGROUND", "POLES"][Math.floor(Math.random() * 3)],
+      company: "EnergyCorp",
+      feederName: currentCustomer?.feederName || `Feeder ${index + 1}`,
+      transformerCapacityKva: [50, 100, 200, 500][Math.floor(Math.random() * 4)],
+      status: ["ACTIVE", "MAINTENANCE", "UPGRADING"][Math.floor(Math.random() * 3)],
+    }))
+  }
+
+  // Format currency values
+  const formatCurrency = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  // Show loading state
+  if (isLoading || currentCustomerLoading) {
     return <LoadingSkeleton />
   }
 
-  if (!customer) {
+  // Show error state
+  if (currentCustomerError || !currentCustomer) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="text-center">
           <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Customer Not Found</h1>
-          <p className="mb-6 text-gray-600">The customer you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            {currentCustomerError ? "Error Loading Customer" : "Customer Not Found"}
+          </h1>
+          <p className="mb-6 text-gray-600">
+            {currentCustomerError || "The customer you're looking for doesn't exist."}
+          </p>
           <ButtonModule variant="primary" onClick={() => router.back()}>
             Back to Customers
           </ButtonModule>
@@ -206,8 +163,8 @@ const CustomerDetailsPage = () => {
     )
   }
 
-  const statusConfig = getStatusConfig(customer.status)
-  const typeConfig = getCustomerTypeConfig(customer.customerType)
+  const statusConfig = getStatusConfig(currentCustomer.status)
+  const typeConfig = getCustomerTypeConfig(currentCustomer.isPPM)
   const StatusIcon = statusConfig.icon
 
   return (
@@ -217,7 +174,7 @@ const CustomerDetailsPage = () => {
           <DashboardNav />
           <div className="container mx-auto flex flex-col">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16   py-4">
+              <div className="mx-auto w-full px-16 py-4">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -256,14 +213,28 @@ const CustomerDetailsPage = () => {
                       <ExportOutlineIcon className="size-4" />
                       Export
                     </ButtonModule>
-                    <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
-                      <Share2 className="size-4" />
-                      Share
-                    </ButtonModule>
-                    <ButtonModule variant="primary" size="sm" className="flex items-center gap-2">
-                      <Edit3 className="size-4" />
-                      Edit
-                    </ButtonModule>
+
+                    {canUpdate ? (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => router.push(`/customers/update-customer/${customerId}`)}
+                      >
+                        <Edit3 className="size-4" />
+                        Edit
+                      </ButtonModule>
+                    ) : (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        // onClick={() => openModal("changeRequest")}
+                      >
+                        <Edit3 className="size-4" />
+                        Change Request
+                      </ButtonModule>
+                    )}
                   </div>
                 </div>
               </div>
@@ -282,7 +253,7 @@ const CustomerDetailsPage = () => {
                     <div className="text-center">
                       <div className="relative inline-block">
                         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#0a0a0a]">
-                          {customer.customerName
+                          {currentCustomer.fullName
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
@@ -294,34 +265,39 @@ const CustomerDetailsPage = () => {
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{customer.customerName}</h2>
-                      <p className="mb-4 text-gray-600">Account #{customer.accountNumber}</p>
+                      <h2 className="mb-2 text-xl font-bold text-gray-900">{currentCustomer.fullName}</h2>
+                      <p className="mb-4 text-gray-600">Account #{currentCustomer.accountNumber}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
                         >
-                          {customer.status}
+                          {currentCustomer.status}
                         </div>
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${typeConfig.bg} ${typeConfig.color}`}
                         >
-                          {customer.customerType}
+                          {typeConfig.label}
                         </div>
+                        {currentCustomer.isMD && (
+                          <div className="rounded-full bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-600">
+                            MD CUSTOMER
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
                           <PhoneOutlineIcon />
-                          {customer.phoneNumber}
+                          {currentCustomer.phoneNumber}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <EmailOutlineIcon />
-                          {customer.email}
+                          {currentCustomer.email}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <MapOutlineIcon className="size-4" />
-                          {customer.region}
+                          {currentCustomer.state}
                         </div>
                       </div>
                     </div>
@@ -356,12 +332,12 @@ const CustomerDetailsPage = () => {
                         Update Status
                       </ButtonModule>
                       <ButtonModule
-                        variant="danger"
+                        variant={currentCustomer.isSuspended ? "primary" : "danger"}
                         className="w-full justify-start gap-3"
                         onClick={() => openModal("suspend")}
                       >
                         <Power className="size-4" />
-                        Suspend Account
+                        {currentCustomer.isSuspended ? "Reactivate Account" : "Suspend Account"}
                       </ButtonModule>
                     </div>
                   </motion.div>
@@ -371,7 +347,7 @@ const CustomerDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="rounded-lg border  bg-white p-6"
+                    className="rounded-lg border bg-white p-6"
                   >
                     <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
                       <FinanceOutlineIcon />
@@ -380,28 +356,24 @@ const CustomerDetailsPage = () => {
                     <div className="space-y-4">
                       <div className="text-center">
                         <div className="mb-2 text-3xl font-bold text-gray-900">
-                          ₦{parseFloat(customer.outstandingArrears).toLocaleString()}
+                          {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
                         </div>
                         <div className="text-sm text-gray-600">Outstanding Balance</div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
-                        {customer.prepaidAccount && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-emerald-600">
-                              ₦{parseFloat(customer.prepaidAccount.balance).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-gray-600">Prepaid Balance</div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-emerald-600">
+                            {formatCurrency(currentCustomer.totalMonthlyVend)}
                           </div>
-                        )}
-                        {customer.postpaidAccount && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-amber-600">
-                              ₦{parseFloat(customer.postpaidAccount.lastBill).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-gray-600">Last Bill</div>
+                          <div className="text-xs text-gray-600">Monthly Vend</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-amber-600">
+                            {formatCurrency(currentCustomer.totalMonthlyDebt)}
                           </div>
-                        )}
+                          <div className="text-xs text-gray-600">Monthly Debt</div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -423,32 +395,43 @@ const CustomerDetailsPage = () => {
                       <div className="space-y-4">
                         <div>
                           <label className="text-sm font-medium text-gray-600">Account Number</label>
-                          <p className="font-semibold text-gray-900">{customer.accountNumber}</p>
+                          <p className="font-semibold text-gray-900">{currentCustomer.accountNumber}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-600">Customer Type</label>
-                          <p className="font-semibold text-gray-900">{customer.customerType}</p>
+                          <p className="font-semibold text-gray-900">{typeConfig.label}</p>
                         </div>
-                      </div>
-                      <div className="space-y-4">
                         <div>
                           <label className="text-sm font-medium text-gray-600">Tariff Class</label>
-                          <p className="font-semibold text-gray-900">{customer.tariffClass}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Business Unit</label>
-                          <p className="font-semibold text-gray-900">{customer.businessUnit}</p>
+                          <p className="font-semibold text-gray-900">{currentCustomer.band}</p>
                         </div>
                       </div>
-
                       <div className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium text-gray-600">Service Band</label>
-                          <p className="font-semibold text-gray-900">{customer.serviceBand}</p>
+                          <label className="text-sm font-medium text-gray-600">Meter Number</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.meterNumber || "Not assigned"}</p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-600">Region</label>
-                          <p className="font-semibold text-gray-900">{customer.region}</p>
+                          <label className="text-sm font-medium text-gray-600">Stored Average</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.storedAverage} kWh</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Tariff</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.tariff}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Area Office</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.areaOfficeName}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Service Center</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.serviceCenterName}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Company</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.companyName}</p>
                         </div>
                       </div>
                     </div>
@@ -473,7 +456,7 @@ const CustomerDetailsPage = () => {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Phone Number</label>
-                            <p className="font-semibold text-gray-900">{customer.phoneNumber}</p>
+                            <p className="font-semibold text-gray-900">{currentCustomer.phoneNumber}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -482,7 +465,7 @@ const CustomerDetailsPage = () => {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Email Address</label>
-                            <p className="font-semibold text-gray-900">{customer.email}</p>
+                            <p className="font-semibold text-gray-900">{currentCustomer.email}</p>
                           </div>
                         </div>
                       </div>
@@ -493,9 +476,68 @@ const CustomerDetailsPage = () => {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">Full Address</label>
-                            <p className="font-semibold text-gray-900">{customer.address}</p>
+                            <p className="font-semibold text-gray-900">
+                              {currentCustomer.address}
+                              {currentCustomer.addressTwo && `, ${currentCustomer.addressTwo}`}
+                              {currentCustomer.city && `, ${currentCustomer.city}`}
+                              {currentCustomer.state && `, ${currentCustomer.state}`}
+                            </p>
                           </div>
                         </div>
+                        <div className="flex items-start gap-3">
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-orange-100">
+                            <MapPin className="size-5 text-orange-600" />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Coordinates</label>
+                            <p className="font-semibold text-gray-900">
+                              {currentCustomer.latitude}, {currentCustomer.longitude}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Distribution Information */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                  >
+                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                      <MeterOutlineIcon className="size-5" />
+                      Distribution Information
+                    </h3>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Distribution Substation</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.distributionSubstationCode}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Feeder Name</label>
+                          <p className="font-semibold text-gray-900">{currentCustomer.feederName}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        {currentCustomer.salesRepUser && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Sales Representative</label>
+                            <p className="font-semibold text-gray-900">{currentCustomer.salesRepUser.fullName}</p>
+                            <p className="text-sm text-gray-600">{currentCustomer.salesRepUser.email}</p>
+                          </div>
+                        )}
+                        {currentCustomer.technicalEngineerUser && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Technical Engineer</label>
+                            <p className="font-semibold text-gray-900">
+                              {currentCustomer.technicalEngineerUser.fullName}
+                            </p>
+                            <p className="text-sm text-gray-600">{currentCustomer.technicalEngineerUser.email}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -564,28 +606,29 @@ const CustomerDetailsPage = () => {
                       Meter Information
                     </h3>
                     <div className="space-y-4">
-                      {customer.meters.map((meter, index) => (
-                        <div
-                          key={meter.id}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                              <MeterOutlineIcon className="size-5 text-green-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{meter.id}</h4>
-                              <p className="text-sm text-gray-600">
-                                {meter.type} Meter • Installed {new Date(meter.installedDate).toLocaleDateString()}
-                              </p>
-                            </div>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
+                            <MeterOutlineIcon className="size-5 text-green-600" />
                           </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">Active</div>
-                            <div className="text-xs text-gray-600">Last reading: 2 days ago</div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              {currentCustomer.meterNumber || "No meter assigned"}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {currentCustomer.isPPM ? "Prepaid" : "Postpaid"} Meter • {currentCustomer.band} Band
+                            </p>
                           </div>
                         </div>
-                      ))}
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-gray-900">
+                            {currentCustomer.isPPM ? "Prepaid" : "Postpaid"}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {currentCustomer.isMD ? "MD Customer" : "Standard Customer"}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
 
@@ -601,10 +644,48 @@ const CustomerDetailsPage = () => {
                       Account Timeline
                     </h3>
                     <div className="space-y-4">
+                      {currentCustomer.lastLoginAt && (
+                        <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
+                              <CalendarOutlineIcon className="size-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">Last Login</h4>
+                              <p className="text-sm text-gray-600">Customer last accessed their account</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              {formatDate(currentCustomer.lastLoginAt)}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {currentCustomer.isSuspended && currentCustomer.suspendedAt && (
+                        <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-red-100">
+                              <CalendarOutlineIcon className="size-5 text-red-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">Account Suspended</h4>
+                              <p className="text-sm text-gray-600">
+                                {currentCustomer.suspensionReason || "No reason provided"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              {formatDate(currentCustomer.suspendedAt)}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <CalendarOutlineIcon className="size-5 text-blue-600" />
+                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
+                            <CalendarOutlineIcon className="size-5 text-green-600" />
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900">Account Created</h4>
@@ -613,29 +694,7 @@ const CustomerDetailsPage = () => {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium text-gray-900">
-                            {new Date(customer.createdAt).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {new Date(customer.createdAt).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <CalendarOutlineIcon className="size-5 text-green-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Last Updated</h4>
-                            <p className="text-sm text-gray-600">Account information was updated</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(customer.updatedAt).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {new Date(customer.updatedAt).toLocaleTimeString()}
+                            {currentCustomer.createdAt ? formatDate(currentCustomer.createdAt) : "Unknown"}
                           </div>
                         </div>
                       </div>
@@ -649,62 +708,528 @@ const CustomerDetailsPage = () => {
       </div>
 
       {/* Modals */}
-      {/* <SuspendAccountModal
-        isOpen={activeModal === "suspend"}
-        onRequestClose={closeAllModals}
-        onConfirm={handleConfirmSuspend}
-      /> */}
-
       <SendReminderModal
         isOpen={activeModal === "reminder"}
         onRequestClose={closeAllModals}
         onConfirm={handleConfirmReminder}
       />
 
-      <UpdateStatusModal isOpen={activeModal === "status"} onRequestClose={closeAllModals} customer={customer} />
+      <SuspendCustomerModal
+        isOpen={activeModal === "suspend"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
+        onSuccess={handleSuspendSuccess}
+      />
+
+      {/* <UpdateStatusModal isOpen={activeModal === "status"} onRequestClose={closeAllModals} customer={currentCustomer} /> */}
     </section>
   )
 }
 
 const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-    <div className="mx-auto max-w-7xl">
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <DashboardNav />
+    <div className="container mx-auto p-6">
+      {/* Header Skeleton */}
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </div>
+          <div>
+            <div className="mb-2 h-8 w-48 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.2,
+                }}
+              />
+            </div>
+            <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.4,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.6,
+              }}
+            />
+          </div>
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.8,
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-6">
         {/* Left Column Skeleton */}
-        <div className="space-y-6 xl:col-span-1">
-          <div className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
+        <div className="w-[30%] space-y-6">
+          {/* Profile Card Skeleton */}
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
             <div className="text-center">
-              <div className="mx-auto mb-4 h-24 w-24 rounded-2xl bg-gray-200"></div>
-              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
-              <div className="mx-auto mb-4 size-48 rounded bg-gray-200"></div>
+              <div className="relative mx-auto mb-4">
+                <div className="mx-auto h-20 w-20 overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="mx-auto mb-2 h-6 w-32 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.2,
+                  }}
+                />
+              </div>
+              <div className="mx-auto mb-4 h-4 w-24 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.4,
+                  }}
+                />
+              </div>
               <div className="mb-6 flex justify-center gap-2">
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                <div className="h-6 w-20 overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.6,
+                    }}
+                  />
+                </div>
+                <div className="h-6 w-20 overflow-hidden rounded-full bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.8,
+                    }}
+                  />
+                </div>
               </div>
               <div className="space-y-3">
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
+                <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 1.0,
+                    }}
+                  />
+                </div>
+                <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 1.2,
+                    }}
+                  />
+                </div>
+                <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 1.4,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions Skeleton */}
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
+            <div className="mb-4 h-6 w-32 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+            <div className="space-y-3">
+              <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.2,
+                  }}
+                />
+              </div>
+              <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.4,
+                  }}
+                />
+              </div>
+              <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.6,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Overview Skeleton */}
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
+            <div className="mb-4 h-6 w-32 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="mx-auto mb-2 h-8 w-32 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.2,
+                    }}
+                  />
+                </div>
+                <div className="mx-auto h-4 w-24 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.4,
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="mx-auto mb-1 h-6 w-20 overflow-hidden rounded bg-gray-200">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.6,
+                      }}
+                    />
+                  </div>
+                  <div className="mx-auto h-3 w-16 overflow-hidden rounded bg-gray-200">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.8,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="mx-auto mb-1 h-6 w-20 overflow-hidden rounded bg-gray-200">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 1.0,
+                      }}
+                    />
+                  </div>
+                  <div className="mx-auto h-3 w-16 overflow-hidden rounded bg-gray-200">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 1.2,
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right Column Skeleton */}
-        <div className="space-y-6 xl:col-span-2">
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
-              <div className="mb-6 h-6 w-48 rounded bg-gray-200"></div>
-              <div className="grid grid-cols-2 gap-6">
+        <div className="flex-1 space-y-6">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div key={item} className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
+              <div className="mb-6 h-6 w-48 overflow-hidden rounded bg-gray-200">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                  animate={{
+                    x: ["-100%", "100%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: item * 0.1,
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                  {[1, 2, 3].map((subItem) => (
+                    <div key={subItem} className="space-y-2">
+                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: item * 0.1 + subItem * 0.1,
+                          }}
+                        />
+                      </div>
+                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: item * 0.1 + subItem * 0.1 + 0.05,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                  {[1, 2, 3].map((subItem) => (
+                    <div key={subItem} className="space-y-2">
+                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: item * 0.1 + subItem * 0.1 + 0.15,
+                          }}
+                        />
+                      </div>
+                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: item * 0.1 + subItem * 0.1 + 0.2,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((subItem) => (
+                    <div key={subItem} className="space-y-2">
+                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: item * 0.1 + subItem * 0.1 + 0.25,
+                          }}
+                        />
+                      </div>
+                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: item * 0.1 + subItem * 0.1 + 0.3,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

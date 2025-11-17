@@ -121,8 +121,16 @@ export const API_ENDPOINTS = {
     GET: "/departments",
   },
 
+  CUSTOMER: {
+    GET: "/customers",
+    GET_BY_ID: "/customers/{id}",
+    UPDATE: "/customers/{id}",
+    SUSPEND: "/customers/{id}/suspend",
+  },
+
   ANALYTICS: {
     ASSET_MANAGEMENT: "/assets/reports/summary",
+    CUSTOMER: "/customers/reports/summary",
   },
 }
 
