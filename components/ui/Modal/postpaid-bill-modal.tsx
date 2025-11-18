@@ -311,8 +311,8 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                         </div>
                       </div>
                       <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-white">BILL PERIOD</div>
-                        <div className="text-lg text-[#95EE94]">{bill.period}</div>
+                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-white">BILL NAME</div>
+                        <div className="text-lg text-[#95EE94]">{bill.name}</div>
                       </div>
                       <div>
                         <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-white">
