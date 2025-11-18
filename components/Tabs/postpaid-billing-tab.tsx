@@ -10,10 +10,10 @@ import { VscEye } from "react-icons/vsc"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  type PostpaidBill,
-  PostpaidBillsRequestParams,
   clearBills,
   fetchPostpaidBills,
+  type PostpaidBill,
+  PostpaidBillsRequestParams,
   setPagination,
 } from "lib/redux/postpaidSlice"
 
