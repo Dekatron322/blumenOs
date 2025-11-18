@@ -44,14 +44,16 @@ const allLinks: LinkItem[] = [
     privilegeKey: "customers",
     requiredActions: ["R"],
     children: [
+      { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["W"] },
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
-      {
-        name: "Field Enumeration",
-        href: "/customers/field-enumeration",
-        privilegeKey: "customers",
-        requiredActions: ["R"],
-      },
+      { name: "Change Request", href: "/customers/change-request", privilegeKey: "customers", requiredActions: ["E"] },
+      // {
+      //   name: "Field Enumeration",
+      //   href: "/customers/field-enumeration",
+      //   privilegeKey: "customers",
+      //   requiredActions: ["R"],
+      // },
     ],
   },
   {

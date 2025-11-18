@@ -723,36 +723,6 @@ const UpdateCustomerPage = () => {
                           onChange={handleInputChange}
                           step="0.01"
                         />
-
-                        {/* <FormInputModule
-                          label="Total Monthly Vend"
-                          name="totalMonthlyVend"
-                          type="number"
-                          placeholder="Enter total monthly vend"
-                          value={formData.totalMonthlyVend}
-                          onChange={handleInputChange}
-                          step="0.01"
-                        />
-
-                        <FormInputModule
-                          label="Total Monthly Debt"
-                          name="totalMonthlyDebt"
-                          type="number"
-                          placeholder="Enter total monthly debt"
-                          value={formData.totalMonthlyDebt}
-                          onChange={handleInputChange}
-                          step="0.01"
-                        />
-
-                        <FormInputModule
-                          label="Outstanding Balance"
-                          name="customerOutstandingDebtBalance"
-                          type="number"
-                          placeholder="Enter outstanding balance"
-                          value={formData.customerOutstandingDebtBalance}
-                          onChange={handleInputChange}
-                          step="0.01"
-                        /> */}
                       </div>
                     </div>
 

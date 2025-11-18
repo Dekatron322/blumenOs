@@ -15,7 +15,6 @@ import {
 } from "components/Icons/Icons"
 import AllCustomers from "components/Tables/AllCustomers"
 import { ButtonModule } from "components/ui/Button/Button"
-
 import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
@@ -274,6 +273,123 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
+// Customer Analytics Summary Cards Component
+const CustomerAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
+  const formatNumber = (num: number) => {
+    return num.toLocaleString()
+  }
+
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
+  return (
+    <motion.div
+      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex w-full max-sm:flex-col">
+        <div className="w-full">
+          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
+            {/* Total Customers Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                <CustomeraIcon />
+                Total Customers
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">All Accounts:</p>
+                  <p className="text-secondary font-medium">{formatNumber(analyticsData.totalCustomers)}</p>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Active:</p>
+                  <p className="text-secondary font-medium">{formatNumber(analyticsData.activeCustomers)}</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Prepaid Customers Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                <VendingIcon />
+                Prepaid Customers
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Token Meters:</p>
+                  <p className="text-secondary font-medium">{formatNumber(analyticsData.prepaidCustomers)}</p>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Percentage:</p>
+                  <p className="text-secondary font-medium">
+                    {calculatePercentage(analyticsData.prepaidCustomers, analyticsData.totalCustomers)}%
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Postpaid Customers Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                <PostpaidIcon />
+                Postpaid Customers
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Billed Monthly:</p>
+                  <p className="text-secondary font-medium">{formatNumber(analyticsData.postpaidCustomers)}</p>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Percentage:</p>
+                  <p className="text-secondary font-medium">
+                    {calculatePercentage(analyticsData.postpaidCustomers, analyticsData.totalCustomers)}%
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* PPM & MD Customers Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                <BillingIcon />
+                Special Categories
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">PPM Customers:</p>
+                  <div className="flex gap-1">
+                    <p className="text-secondary font-medium">{formatNumber(analyticsData.isPpmCustomers)}</p>
+                    <ArrowIcon />
+                  </div>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">MD Customers:</p>
+                  <p className="text-secondary font-medium">{formatNumber(analyticsData.isMdCustomers)}</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
 
@@ -373,6 +489,8 @@ export default function AllTransactions() {
                   <>
                     {customerAnalyticsData && (
                       <>
+                        <CustomerAnalyticsCards analyticsData={customerAnalyticsData} />
+
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}

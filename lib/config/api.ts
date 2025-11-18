@@ -124,8 +124,17 @@ export const API_ENDPOINTS = {
   CUSTOMER: {
     GET: "/customers",
     GET_BY_ID: "/customers/{id}",
+    ADD: "/customers/bulk",
     UPDATE: "/customers/{id}",
     SUSPEND: "/customers/{id}/suspend",
+    ACTIVATE: "/customers/{id}/activate",
+    PAYMENT_DISPUTE: "/customers/{id}/payment-disputes",
+    CHANGE_REQUEST: "/customers/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/customers/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/customers/change-requests",
+    CHANGE_REQUEST_DETAILS: "/customers/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
   },
 
   ANALYTICS: {
