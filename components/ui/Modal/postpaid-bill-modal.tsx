@@ -337,10 +337,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                         <span className="text-sm font-semibold text-gray-600">33 KV Injection:</span>
                         <span className="ml-2 text-sm text-gray-900">33 KV {bill.distributionSubstationCode}</span>
                       </div>
-                      <div className="flex w-full justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">DT Code:</span>
-                        <span className="text-sm text-gray-900">{bill.distributionSubstationCode}</span>
-                      </div>
+
                       <div className="flex w-full justify-between bg-[#EBEBEB] px-4 py-3">
                         <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
                         <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
