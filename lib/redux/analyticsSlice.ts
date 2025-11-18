@@ -45,6 +45,46 @@ export interface CustomerAnalyticsData {
   customersByTechnicalEngineerUser: CustomerByUser[]
 }
 
+// Interfaces for Postpaid Billing Analytics
+export interface PostpaidBillingAnalyticsData {
+  period: string
+  totalBills: number
+  draftBills: number
+  finalizedBills: number
+  reversedBills: number
+  totalOpeningBalance: number
+  totalPaymentsPrevMonth: number
+  totalAdjustedOpeningBalance: number
+  totalConsumptionKwh: number
+  totalChargeBeforeVat: number
+  totalVatAmount: number
+  totalCurrentBillAmount: number
+  totalAmountDue: number
+  forecastConsumptionKwh: number
+  forecastBillAmount: number
+  forecastTotalDue: number
+  flaggedMeterReadings: number
+  totalInvalidConsumptionKwh: number
+  estimatedBills: number
+  totalEstimatedConsumptionKwh: number
+  totalBillingVarianceCredits: number
+  totalBillingVarianceDebits: number
+  activeDisputes: number
+  resolvedDisputes: number
+  totalAdjustmentsApplied: number
+  generatedAtUtc: string
+}
+
+export interface PostpaidBillingAnalyticsParams {
+  period?: string
+  customerId?: number
+  accountNumber?: string
+  status?: 0 | 1 | 2
+  category?: 1 | 2
+  areaOfficeId?: number
+  feederId?: number
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -55,6 +95,12 @@ export interface CustomerAnalyticsResponse {
   isSuccess: boolean
   message: string
   data: CustomerAnalyticsData
+}
+
+export interface PostpaidBillingAnalyticsResponse {
+  isSuccess: boolean
+  message: string
+  data: PostpaidBillingAnalyticsData
 }
 
 // Analytics State
@@ -70,6 +116,13 @@ interface AnalyticsState {
   customerAnalyticsLoading: boolean
   customerAnalyticsError: string | null
   customerAnalyticsSuccess: boolean
+
+  // Postpaid Billing Analytics state
+  postpaidBillingAnalyticsData: PostpaidBillingAnalyticsData | null
+  postpaidBillingAnalyticsLoading: boolean
+  postpaidBillingAnalyticsError: string | null
+  postpaidBillingAnalyticsSuccess: boolean
+  postpaidBillingAnalyticsParams: PostpaidBillingAnalyticsParams | null
 
   // General analytics state
   loading: boolean
@@ -87,6 +140,12 @@ const initialState: AnalyticsState = {
   customerAnalyticsLoading: false,
   customerAnalyticsError: null,
   customerAnalyticsSuccess: false,
+
+  postpaidBillingAnalyticsData: null,
+  postpaidBillingAnalyticsLoading: false,
+  postpaidBillingAnalyticsError: null,
+  postpaidBillingAnalyticsSuccess: false,
+  postpaidBillingAnalyticsParams: null,
 
   loading: false,
   error: null,
@@ -143,6 +202,37 @@ export const fetchCustomerAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchPostpaidBillingAnalytics = createAsyncThunk(
+  "analytics/fetchPostpaidBillingAnalytics",
+  async (params: PostpaidBillingAnalyticsParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<PostpaidBillingAnalyticsResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.POSTPAID_BILLING),
+        { params }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch postpaid billing analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Postpaid billing analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch postpaid billing analytics")
+      }
+      return rejectWithValue(error.message || "Network error during postpaid billing analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -164,11 +254,26 @@ const analyticsSlice = createSlice({
       state.customerAnalyticsLoading = false
     },
 
+    // Clear postpaid billing analytics state
+    clearPostpaidBillingAnalytics: (state) => {
+      state.postpaidBillingAnalyticsData = null
+      state.postpaidBillingAnalyticsError = null
+      state.postpaidBillingAnalyticsSuccess = false
+      state.postpaidBillingAnalyticsLoading = false
+      state.postpaidBillingAnalyticsParams = null
+    },
+
+    // Set postpaid billing analytics parameters
+    setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
+      state.postpaidBillingAnalyticsParams = action.payload
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
       state.assetManagementError = null
       state.customerAnalyticsError = null
+      state.postpaidBillingAnalyticsError = null
     },
 
     // Reset analytics state
@@ -182,6 +287,12 @@ const analyticsSlice = createSlice({
       state.customerAnalyticsLoading = false
       state.customerAnalyticsError = null
       state.customerAnalyticsSuccess = false
+
+      state.postpaidBillingAnalyticsData = null
+      state.postpaidBillingAnalyticsLoading = false
+      state.postpaidBillingAnalyticsError = null
+      state.postpaidBillingAnalyticsSuccess = false
+      state.postpaidBillingAnalyticsParams = null
 
       state.loading = false
       state.error = null
@@ -226,10 +337,45 @@ const analyticsSlice = createSlice({
         state.customerAnalyticsSuccess = false
         state.customerAnalyticsData = null
       })
+
+      // Fetch postpaid billing analytics cases
+      .addCase(fetchPostpaidBillingAnalytics.pending, (state) => {
+        state.postpaidBillingAnalyticsLoading = true
+        state.postpaidBillingAnalyticsError = null
+        state.postpaidBillingAnalyticsSuccess = false
+      })
+      .addCase(
+        fetchPostpaidBillingAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: PostpaidBillingAnalyticsData
+            params: PostpaidBillingAnalyticsParams
+          }>
+        ) => {
+          state.postpaidBillingAnalyticsLoading = false
+          state.postpaidBillingAnalyticsSuccess = true
+          state.postpaidBillingAnalyticsData = action.payload.data
+          state.postpaidBillingAnalyticsParams = action.payload.params
+          state.postpaidBillingAnalyticsError = null
+        }
+      )
+      .addCase(fetchPostpaidBillingAnalytics.rejected, (state, action) => {
+        state.postpaidBillingAnalyticsLoading = false
+        state.postpaidBillingAnalyticsError = (action.payload as string) || "Failed to fetch postpaid billing analytics"
+        state.postpaidBillingAnalyticsSuccess = false
+        state.postpaidBillingAnalyticsData = null
+      })
   },
 })
 
-export const { clearAssetManagementAnalytics, clearCustomerAnalytics, clearError, resetAnalyticsState } =
-  analyticsSlice.actions
+export const {
+  clearAssetManagementAnalytics,
+  clearCustomerAnalytics,
+  clearPostpaidBillingAnalytics,
+  setPostpaidBillingAnalyticsParams,
+  clearError,
+  resetAnalyticsState,
+} = analyticsSlice.actions
 
 export default analyticsSlice.reducer
