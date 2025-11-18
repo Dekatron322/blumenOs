@@ -539,7 +539,7 @@ export default function BillingDashboard() {
                   onClick={handleStartBillingRun}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Starting..." : "Start Billing Run"}
+                  {isLoading ? "Starting.." : "Start Billing Run"}
                 </ButtonModule>
               </motion.div>
             </div>
