@@ -497,6 +497,17 @@ const CustomerDetailsPage = () => {
                           <span>Basic Information</span>
                         </button>
                         <button
+                          onClick={() => setActiveTab("postpaid-billing")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "postpaid-billing"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <PostpaidBillOutlineIcon className="size-5" />
+                          <span>Postpaid Billing</span>
+                        </button>
+                        <button
                           onClick={() => setActiveTab("payment-disputes")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
                             activeTab === "payment-disputes"
@@ -522,17 +533,6 @@ const CustomerDetailsPage = () => {
                         >
                           <ChangeRequestOutlineIcon className="size-5" />
                           <span>Change Requests</span>
-                        </button>
-                        <button
-                          onClick={() => setActiveTab("postpaid-billing")}
-                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                            activeTab === "postpaid-billing"
-                              ? "bg-[#0a0a0a] text-white"
-                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
-                          }`}
-                        >
-                          <PostpaidBillOutlineIcon className="size-5" />
-                          <span>Postpaid Billing</span>
                         </button>
                       </nav>
                     </div>
