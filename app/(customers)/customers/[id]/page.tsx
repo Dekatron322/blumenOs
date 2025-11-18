@@ -10,12 +10,16 @@ import ActivateCustomerModal from "components/ui/Modal/activate-customer-modal"
 import CustomerChangeRequestModal from "components/ui/Modal/customer-change-request-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
+  BasicInfoOutlineIcon,
+  ChangeRequestOutlineIcon,
   EmailOutlineIcon,
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
   NotificationOutlineIcon,
+  PaymentDisputeOutlineIcon,
   PhoneOutlineIcon,
+  PostpaidBillOutlineIcon,
   SettingOutlineIcon,
 } from "components/Icons/Icons"
 
@@ -32,6 +36,7 @@ import BasicInfoTab from "components/Tabs/basic-info-tab"
 import PaymentDisputesTab from "components/Tabs/payment-disputes-tab"
 import ChangeRequestsTab from "components/Tabs/change-requests-tab"
 import LoadingSkeleton from "components/Loader/loading-skeleton"
+import PostpaidBillingTab from "components/Tabs/postpaid-billing-tab"
 
 interface Asset {
   serialNo: number
@@ -43,7 +48,7 @@ interface Asset {
 }
 
 // Tab types
-type TabType = "basic-info" | "payment-disputes" | "change-requests"
+type TabType = "basic-info" | "payment-disputes" | "change-requests" | "postpaid-billing"
 
 const CustomerDetailsPage = () => {
   const params = useParams()
@@ -264,6 +269,8 @@ const CustomerDetailsPage = () => {
       )
     } else if (activeTab === "change-requests") {
       return <ChangeRequestsTab customerId={customerId} />
+    } else if (activeTab === "postpaid-billing") {
+      return <PostpaidBillingTab customerId={customerId} />
     }
   }
 
@@ -486,7 +493,8 @@ const CustomerDetailsPage = () => {
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >
-                          Basic Information
+                          <BasicInfoOutlineIcon className="size-5" />
+                          <span>Basic Information</span>
                         </button>
                         <button
                           onClick={() => setActiveTab("payment-disputes")}
@@ -496,7 +504,8 @@ const CustomerDetailsPage = () => {
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >
-                          Payment Disputes
+                          <PaymentDisputeOutlineIcon className="size-5" />
+                          <span>Payment Disputes</span>
                           {paymentDisputes.length > 0 && (
                             <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-1 text-xs font-medium leading-none text-white">
                               {paymentDisputes.length}
@@ -511,7 +520,19 @@ const CustomerDetailsPage = () => {
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >
-                          Change Requests
+                          <ChangeRequestOutlineIcon className="size-5" />
+                          <span>Change Requests</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("postpaid-billing")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "postpaid-billing"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <PostpaidBillOutlineIcon className="size-5" />
+                          <span>Postpaid Billing</span>
                         </button>
                       </nav>
                     </div>

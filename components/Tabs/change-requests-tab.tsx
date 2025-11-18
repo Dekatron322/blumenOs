@@ -357,10 +357,7 @@ const ChangeRequestsTab: React.FC<ChangeRequestsTabProps> = ({ customerId }) => 
         transition={{ delay: 0.5 }}
         className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <UpdateUserOutlineIcon />
-          Change Requests
-        </h3>
+        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">Change Requests</h3>
         <div className="animate-pulse">
           <div className="mb-4 flex gap-4">
             <div className="h-10 w-80 rounded bg-gray-200"></div>
@@ -389,10 +386,7 @@ const ChangeRequestsTab: React.FC<ChangeRequestsTabProps> = ({ customerId }) => 
         className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
       >
         <div className="mb-6 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <UpdateUserOutlineIcon />
-            Change Requests
-          </h3>
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Change Requests</h3>
           <button
             className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
             onClick={() => {

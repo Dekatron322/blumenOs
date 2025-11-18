@@ -137,6 +137,10 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
   },
 
+  POSTPAID_BILLING: {
+    GET: "/billing/postpaid",
+  },
+
   ANALYTICS: {
     ASSET_MANAGEMENT: "/assets/reports/summary",
     CUSTOMER: "/customers/reports/summary",

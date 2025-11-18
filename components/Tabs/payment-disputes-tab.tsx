@@ -16,6 +16,76 @@ interface PaymentDisputesTabProps {
   formatDateTime: (dateString: string) => string
 }
 
+// Skeleton Loader Components
+const SkeletonDisputeCard = () => (
+  <div className="rounded-lg border border-gray-200 bg-white p-6">
+    <div className="animate-pulse">
+      {/* Header */}
+      <div className="mb-4 flex items-start justify-between">
+        <div className="space-y-2">
+          <div className="h-6 w-32 rounded bg-gray-200"></div>
+          <div className="h-4 w-48 rounded bg-gray-200"></div>
+        </div>
+        <div className="flex gap-2">
+          <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+          <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+        </div>
+      </div>
+
+      {/* Amount and Date Grid */}
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-4 w-24 rounded bg-gray-200"></div>
+            <div className="h-5 w-20 rounded bg-gray-200"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Reason and Details Grid */}
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {[...Array(2)].map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-4 w-16 rounded bg-gray-200"></div>
+            <div className="h-12 rounded bg-gray-200"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Resolution Notes */}
+      <div className="mb-4">
+        <div className="mb-2 h-4 w-32 rounded bg-gray-200"></div>
+        <div className="h-16 rounded-lg bg-gray-200"></div>
+      </div>
+
+      {/* Payment Details */}
+      <div className="border-t pt-4">
+        <div className="mb-3 h-5 w-32 rounded bg-gray-200"></div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-4 w-20 rounded bg-gray-200"></div>
+              <div className="h-5 w-16 rounded bg-gray-200"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
+const SkeletonPagination = () => (
+  <div className="mt-6 flex items-center justify-between">
+    <div className="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+    <div className="flex gap-2">
+      <div className="h-9 w-20 animate-pulse rounded-md bg-gray-200"></div>
+      <div className="h-9 w-16 animate-pulse rounded-md bg-gray-200"></div>
+    </div>
+  </div>
+)
+
+const SkeletonPageSizeSelector = () => <div className="h-9 w-32 animate-pulse rounded-md bg-gray-200"></div>
+
 const PaymentDisputesTab: React.FC<PaymentDisputesTabProps> = ({
   paymentDisputes,
   loading,
@@ -49,12 +119,21 @@ const PaymentDisputesTab: React.FC<PaymentDisputesTabProps> = ({
   if (loading) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
-            <p className="text-gray-600">Loading payment disputes...</p>
-          </div>
+        {/* Header with skeleton */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="h-7 w-40 animate-pulse rounded bg-gray-200"></div>
+          <SkeletonPageSizeSelector />
         </div>
+
+        {/* Skeleton dispute cards */}
+        <div className="space-y-4">
+          {[...Array(3)].map((_, index) => (
+            <SkeletonDisputeCard key={index} />
+          ))}
+        </div>
+
+        {/* Skeleton pagination */}
+        <SkeletonPagination />
       </div>
     )
   }

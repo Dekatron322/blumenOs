@@ -13,6 +13,7 @@ import polesReducer from "./polesSlice"
 import serviceStationReducer from "./serviceStationsSlice"
 import analyticsReducer from "./analyticsSlice"
 import customerReducer from "./customerSlice"
+import postpaidBillingReducer from "./postpaidSlice"
 
 export const store = configureStore({
   reducer: {
@@ -28,6 +29,7 @@ export const store = configureStore({
     serviceStations: serviceStationReducer,
     analytics: analyticsReducer,
     customers: customerReducer,
+    postpaidBilling: postpaidBillingReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
