@@ -139,15 +139,26 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
         backgroundColor: "#ffffff",
       })
 
-      // Create PDF
+      // Create PDF with margins
       const imgData = canvas.toDataURL("image/png")
+
+      // Define margins (in px since we use "px" as unit)
+      const margin = 32 // adjust this value for more/less margin
+      const pageWidth = canvas.width + margin * 2
+      const pageHeight = canvas.height + margin * 2
+
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
-        format: [canvas.width, canvas.height],
+        format: [pageWidth, pageHeight],
       })
 
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+      // Optional: fill background (some viewers show transparent areas as gray)
+      pdf.setFillColor(255, 255, 255)
+      pdf.rect(0, 0, pageWidth, pageHeight, "F")
+
+      // Draw the captured invoice centered with margins
+      pdf.addImage(imgData, "PNG", margin, margin, canvas.width, canvas.height)
 
       // Generate filename
       const fileName = `KAD-ELEC-Invoice-${bill.customerAccountNumber}-${bill.period.replace(/\s+/g, "-")}.pdf`
