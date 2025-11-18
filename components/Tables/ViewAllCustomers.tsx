@@ -292,7 +292,7 @@ const HeaderSkeleton = () => (
   </motion.div>
 )
 
-const AllCustomers = () => {
+const ViewAllCustomers = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
@@ -798,10 +798,6 @@ const AllCustomers = () => {
                 </button>
               </div>
 
-              <button className="button-oulined" onClick={() => setShowCategories(!showCategories)}>
-                {showCategories ? "Hide Categories" : "Show Categories"}
-              </button>
-
               <div className="relative" data-dropdown-root="status-filter">
                 <button
                   type="button"
@@ -965,51 +961,6 @@ const AllCustomers = () => {
         </div>
 
         {/* Customer Categories Sidebar */}
-        <AnimatePresence initial={false}>
-          {showCategories && (
-            <motion.div
-              key="categories-sidebar"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ type: "spring", damping: 24, stiffness: 260 }}
-              className="w-80 rounded-md border bg-white p-5"
-            >
-              <div className="border-b pb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Customer Categories</h2>
-              </div>
-
-              <div className="mt-4 space-y-3">
-                {customerCategories.map((category, index) => (
-                  <CategoryCard key={index} category={category} />
-                ))}
-              </div>
-
-              {/* Summary Stats */}
-              <div className="mt-6 rounded-lg bg-gray-50 p-3">
-                <h3 className="mb-2 font-medium text-gray-900">Summary</h3>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total:</span>
-                    <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Active:</span>
-                    <span className="font-medium">
-                      {customers.filter((c) => c.status === "ACTIVE").length.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Suspended:</span>
-                    <span className="font-medium">
-                      {customers.filter((c) => c.status === "SUSPENDED").length.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Modal Components - Only one modal can be open at a time */}
@@ -1038,4 +989,4 @@ const AllCustomers = () => {
   )
 }
 
-export default AllCustomers
+export default ViewAllCustomers

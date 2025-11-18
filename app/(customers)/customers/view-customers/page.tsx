@@ -18,6 +18,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 
 import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import ViewAllCustomers from "components/Tables/ViewAllCustomers"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -378,7 +379,7 @@ export default function AllTransactions() {
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.5, delay: 0.2 }}
                         >
-                          <AllCustomers />
+                          <ViewAllCustomers />
                         </motion.div>
                       </>
                     )}
