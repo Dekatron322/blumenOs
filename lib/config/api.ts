@@ -139,6 +139,7 @@ export const API_ENDPOINTS = {
 
   POSTPAID_BILLING: {
     GET: "/billing/postpaid",
+    GET_BY_ID: "/billing/postpaid/{id}",
   },
 
   ANALYTICS: {

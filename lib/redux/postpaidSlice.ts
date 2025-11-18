@@ -22,6 +22,8 @@ export interface ActiveDispute {
 }
 
 export interface PostpaidBill {
+  dueDate: any
+  name: string
   id: number
   period: string
   category: number
@@ -79,6 +81,12 @@ export interface PostpaidBillsResponse {
   pageSize: number
   hasNext: boolean
   hasPrevious: boolean
+}
+
+export interface PostpaidBillResponse {
+  isSuccess: boolean
+  message: string
+  data: PostpaidBill
 }
 
 export interface PostpaidBillsRequestParams {
@@ -148,6 +156,15 @@ const initialState: PostpaidBillingState = {
   filters: {},
 }
 
+// Helper function to replace path parameters in endpoints
+const buildEndpointWithParams = (endpoint: string, params: Record<string, string | number>): string => {
+  let builtEndpoint = endpoint
+  for (const [key, value] of Object.entries(params)) {
+    builtEndpoint = builtEndpoint.replace(`{${key}}`, value.toString())
+  }
+  return builtEndpoint
+}
+
 // Async thunks
 export const fetchPostpaidBills = createAsyncThunk(
   "postpaidBilling/fetchPostpaidBills",
@@ -188,21 +205,18 @@ export const fetchPostpaidBillById = createAsyncThunk<PostpaidBill, number, { re
   "postpaidBilling/fetchPostpaidBillById",
   async (billId: number, { rejectWithValue }) => {
     try {
-      // Assuming there's a GET by ID endpoint - adjust if needed
-      const response = await api.get<PostpaidBillsResponse>(
-        `${buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.GET)}/${billId}`
-      )
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BY_ID, { id: billId })
+      const response = await api.get<PostpaidBillResponse>(buildApiUrl(endpoint))
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch postpaid bill")
       }
 
-      const bill = response.data.data?.[0]
-      if (!bill) {
+      if (!response.data.data) {
         return rejectWithValue("Postpaid bill not found")
       }
 
-      return bill
+      return response.data.data
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch postpaid bill")

@@ -8,6 +8,7 @@ import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { ExportCsvIcon } from "components/Icons/Icons"
+import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearBills,
@@ -83,7 +84,7 @@ const PostpaidBillCard = ({
             <span className="font-semibold text-green-600">₦</span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Bill #{bill.id}</h3>
+            <h3 className="font-semibold text-gray-900">{bill.name}</h3>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <div
                 className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
@@ -204,7 +205,7 @@ const PostpaidBillListItem = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">Bill #{bill.id}</h3>
+              <h3 className="truncate font-semibold text-gray-900">{bill.name}</h3>
               <div
                 className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
               >
@@ -277,6 +278,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
   const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [isCategoryOpen, setIsCategoryOpen] = useState(false)
   const [selectedBill, setSelectedBill] = useState<PostpaidBill | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Fetch postpaid bills for this customer
   useEffect(() => {
@@ -301,8 +303,11 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
   const handleViewDetails = (bill: PostpaidBill) => {
     setSelectedBill(bill)
-    // You can implement a modal or navigate to bill details page
-    console.log("View bill details:", bill)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
   }
 
   const handleCancelSearch = () => {
@@ -354,203 +359,209 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.5 }}
-      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-    >
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Postpaid Billing</h3>
-        <button
-          className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
-          onClick={() => {
-            /* TODO: Implement CSV export for postpaid bills */
-          }}
-          disabled={!bills || bills.length === 0}
-        >
-          <ExportCsvIcon color="#2563EB" size={20} />
-          <p className="text-sm text-[#2563EB]">Export CSV</p>
-        </button>
-      </div>
-
-      {/* Filters and Controls */}
-      <div className="mb-6 flex gap-4">
-        <SearchModule
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          onCancel={handleCancelSearch}
-          placeholder="Search by account number"
-          className="max-w-[300px]"
-        />
-
-        <div className="flex gap-2">
+    <>
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5 }}
+        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Postpaid Billing</h3>
           <button
-            className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-            onClick={() => setViewMode("grid")}
+            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+            onClick={() => {
+              /* TODO: Implement CSV export for postpaid bills */
+            }}
+            disabled={!bills || bills.length === 0}
           >
-            <MdGridView />
-            <p>Grid</p>
-          </button>
-          <button
-            className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-            onClick={() => setViewMode("list")}
-          >
-            <MdFormatListBulleted />
-            <p>List</p>
+            <ExportCsvIcon color="#2563EB" size={20} />
+            <p className="text-sm text-[#2563EB]">Export CSV</p>
           </button>
         </div>
 
-        {/* Status Filter */}
-        <div className="relative" data-dropdown-root="status-filter">
-          <button
-            type="button"
-            className="button-oulined flex items-center gap-2"
-            onClick={() => setIsStatusOpen((v) => !v)}
-            aria-haspopup="menu"
-            aria-expanded={isStatusOpen}
-          >
-            <IoMdFunnel />
-            <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
-            <ChevronDown className={`size-4 text-gray-500 transition-transform ${isStatusOpen ? "rotate-180" : ""}`} />
-          </button>
-          {isStatusOpen && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-              <div className="py-1">
-                {statusOptions.map((option) => (
+        {/* Filters and Controls */}
+        <div className="mb-6 flex gap-4">
+          <SearchModule
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onCancel={handleCancelSearch}
+            placeholder="Search by account number"
+            className="max-w-[300px]"
+          />
+
+          <div className="flex gap-2">
+            <button
+              className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+              onClick={() => setViewMode("grid")}
+            >
+              <MdGridView />
+              <p>Grid</p>
+            </button>
+            <button
+              className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+              onClick={() => setViewMode("list")}
+            >
+              <MdFormatListBulleted />
+              <p>List</p>
+            </button>
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative" data-dropdown-root="status-filter">
+            <button
+              type="button"
+              className="button-oulined flex items-center gap-2"
+              onClick={() => setIsStatusOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={isStatusOpen}
+            >
+              <IoMdFunnel />
+              <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
+              <ChevronDown
+                className={`size-4 text-gray-500 transition-transform ${isStatusOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {isStatusOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                <div className="py-1">
+                  {statusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                        selectedStatus === option.value ? "bg-gray-50" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedStatus(option.value)
+                        setIsStatusOpen(false)
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Category Filter */}
+          <div className="relative" data-dropdown-root="category-filter">
+            <button
+              type="button"
+              className="button-oulined flex items-center gap-2"
+              onClick={() => setIsCategoryOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={isCategoryOpen}
+            >
+              <IoMdFunnel />
+              <span>{categoryOptions.find((opt) => opt.value === selectedCategory)?.label || "All Categories"}</span>
+              <ChevronDown
+                className={`size-4 text-gray-500 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {isCategoryOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                <div className="py-1">
+                  {categoryOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                        selectedCategory === option.value ? "bg-gray-50" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedCategory(option.value)
+                        setIsCategoryOpen(false)
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Postpaid Bills Display */}
+        {error ? (
+          <div className="py-8 text-center">
+            <AlertCircle className="mx-auto mb-4 size-12 text-gray-400" />
+            <p className="text-gray-500">Error loading postpaid bills: {error}</p>
+          </div>
+        ) : bills.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-gray-500">No postpaid bills found for this customer</p>
+          </div>
+        ) : viewMode === "grid" ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {bills.map((bill: PostpaidBill) => (
+              <PostpaidBillCard key={bill.id} bill={bill} onViewDetails={handleViewDetails} />
+            ))}
+          </div>
+        ) : (
+          <div className="divide-y">
+            {bills.map((bill: PostpaidBill) => (
+              <PostpaidBillListItem key={bill.id} bill={bill} onViewDetails={handleViewDetails} />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {bills.length > 0 && (
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <p>Show rows</p>
+              <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
+                <option value={6}>6</option>
+                <option value={12}>12</option>
+                <option value={18}>18</option>
+                <option value={24}>24</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
+                onClick={() => changePage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <BiSolidLeftArrow />
+              </button>
+
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, index) => (
                   <button
-                    key={option.value}
-                    className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
-                      selectedStatus === option.value ? "bg-gray-50" : ""
+                    key={index + 1}
+                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                      currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                     }`}
-                    onClick={() => {
-                      setSelectedStatus(option.value)
-                      setIsStatusOpen(false)
-                    }}
+                    onClick={() => changePage(index + 1)}
                   >
-                    {option.label}
+                    {index + 1}
                   </button>
                 ))}
               </div>
+
+              <button
+                className={`px-3 py-2 ${
+                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                }`}
+                onClick={() => changePage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <BiSolidRightArrow />
+              </button>
             </div>
-          )}
-        </div>
-
-        {/* Category Filter */}
-        <div className="relative" data-dropdown-root="category-filter">
-          <button
-            type="button"
-            className="button-oulined flex items-center gap-2"
-            onClick={() => setIsCategoryOpen((v) => !v)}
-            aria-haspopup="menu"
-            aria-expanded={isCategoryOpen}
-          >
-            <IoMdFunnel />
-            <span>{categoryOptions.find((opt) => opt.value === selectedCategory)?.label || "All Categories"}</span>
-            <ChevronDown
-              className={`size-4 text-gray-500 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-          {isCategoryOpen && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-              <div className="py-1">
-                {categoryOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
-                      selectedCategory === option.value ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => {
-                      setSelectedCategory(option.value)
-                      setIsCategoryOpen(false)
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Postpaid Bills Display */}
-      {error ? (
-        <div className="py-8 text-center">
-          <AlertCircle className="mx-auto mb-4 size-12 text-gray-400" />
-          <p className="text-gray-500">Error loading postpaid bills: {error}</p>
-        </div>
-      ) : bills.length === 0 ? (
-        <div className="py-8 text-center">
-          <p className="text-gray-500">No postpaid bills found for this customer</p>
-        </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {bills.map((bill: PostpaidBill) => (
-            <PostpaidBillCard key={bill.id} bill={bill} onViewDetails={handleViewDetails} />
-          ))}
-        </div>
-      ) : (
-        <div className="divide-y">
-          {bills.map((bill: PostpaidBill) => (
-            <PostpaidBillListItem key={bill.id} bill={bill} onViewDetails={handleViewDetails} />
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {bills.length > 0 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <p>Show rows</p>
-            <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
-              <option value={6}>6</option>
-              <option value={12}>12</option>
-              <option value={18}>18</option>
-              <option value={24}>24</option>
-              <option value={50}>50</option>
-            </select>
+            <p>
+              Page {currentPage} of {totalPages} ({totalRecords} total records)
+            </p>
           </div>
+        )}
 
-          <div className="flex items-center gap-3">
-            <button
-              className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
-              onClick={() => changePage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <BiSolidLeftArrow />
-            </button>
-
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                    currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                  }`}
-                  onClick={() => changePage(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-
-            <button
-              className={`px-3 py-2 ${
-                currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-              }`}
-              onClick={() => changePage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <BiSolidRightArrow />
-            </button>
-          </div>
-          <p>
-            Page {currentPage} of {totalPages} ({totalRecords} total records)
-          </p>
-        </div>
-      )}
-    </motion.div>
+        <PostpaidBillDetailsModal isOpen={isModalOpen} onRequestClose={handleCloseModal} bill={selectedBill} />
+      </motion.div>
+    </>
   )
 }
 
