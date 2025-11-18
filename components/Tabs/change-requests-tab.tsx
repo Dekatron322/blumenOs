@@ -9,12 +9,11 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { UpdateUserOutlineIcon } from "components/Icons/Icons"
 import { ExportCsvIcon } from "components/Icons/Icons"
-
 import {
-  fetchChangeRequestsByCustomerId,
   type ChangeRequestListItem,
   ChangeRequestsRequestParams,
   clearChangeRequestsByCustomer,
+  fetchChangeRequestsByCustomerId,
 } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import ViewCustomerChangeRequestModal from "components/ui/Modal/view-customer-change-request-modal"

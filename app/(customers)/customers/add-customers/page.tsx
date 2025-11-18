@@ -12,10 +12,10 @@ import { notify } from "components/ui/Notification/Notification"
 import { AddCustomerIcon, RefreshCircleIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
-  clearCreateState,
-  bulkCreateCustomers,
-  CreateCustomerRequest,
   BulkCreateCustomerRequest,
+  bulkCreateCustomers,
+  clearCreateState,
+  CreateCustomerRequest,
 } from "lib/redux/customerSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"

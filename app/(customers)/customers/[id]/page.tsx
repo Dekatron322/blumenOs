@@ -10,13 +10,10 @@ import ActivateCustomerModal from "components/ui/Modal/activate-customer-modal"
 import CustomerChangeRequestModal from "components/ui/Modal/customer-change-request-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
-  CalendarOutlineIcon,
   EmailOutlineIcon,
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
-  MeteringOutlineIcon,
-  MeterOutlineIcon,
   NotificationOutlineIcon,
   PhoneOutlineIcon,
   SettingOutlineIcon,
@@ -26,15 +23,9 @@ import {
   clearCurrentCustomer,
   fetchCustomerById,
   fetchPaymentDisputes,
-  PaymentDispute,
   PaymentDisputesRequestParams,
-  fetchChangeRequestsByCustomerId,
-  type ChangeRequestListItem,
-  ChangeRequestsRequestParams,
-  clearChangeRequestsByCustomer,
 } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import ViewCustomerChangeRequestModal from "components/ui/Modal/view-customer-change-request-modal"
 
 // Import tab components
 import BasicInfoTab from "components/Tabs/basic-info-tab"
