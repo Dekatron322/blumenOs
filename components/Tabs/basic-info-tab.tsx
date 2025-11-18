@@ -2,7 +2,7 @@
 import React from "react"
 import { motion } from "framer-motion"
 import { Mail, MapPin, Phone, User } from "lucide-react"
-import { CalendarOutlineIcon, MapOutlineIcon, MeterOutlineIcon, MeteringOutlineIcon } from "components/Icons/Icons"
+import { CalendarOutlineIcon, MapOutlineIcon, MeteringOutlineIcon, MeterOutlineIcon } from "components/Icons/Icons"
 
 interface Asset {
   serialNo: number
