@@ -140,6 +140,8 @@ export const API_ENDPOINTS = {
   POSTPAID_BILLING: {
     GET: "/billing/postpaid",
     GET_BY_ID: "/billing/postpaid/{id}",
+    FINALIZE: "/billing/postpaid/finalize-period",
+    FINALIZE_BY_AREA_OFFICE_ID: "/billing/postpaid/area-offices/{areaOfficeId}/finalize",
   },
 
   ANALYTICS: {

@@ -9,6 +9,7 @@ import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import BillingInfo from "components/BillingInfo/BillingInfo"
 import { ButtonModule } from "components/ui/Button/Button"
 import AllBills from "components/BillingInfo/AllBills"
+import StartBillingRun from "components/ui/Modal/start-billing-run"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -278,6 +279,7 @@ const generateMeterData = () => {
 
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false) // Add this state
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
 
@@ -293,6 +295,16 @@ export default function MeteringDashboard() {
     setIsAddCustomerModalOpen(false)
     // Refresh data after adding customer
     setMeterData(generateMeterData())
+  }
+
+  const handleBillingRunSuccess = async () => {
+    setIsStartBillingRunModalOpen(false)
+    // Refresh data after billing run
+    setIsLoading(true)
+    setTimeout(() => {
+      setMeterData(generateMeterData())
+      setIsLoading(false)
+    }, 1000)
   }
 
   const handleRefreshData = () => {
@@ -322,7 +334,13 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule variant="secondary" size="md" className="mt-2" icon={<PlayIcon />}>
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  className="mt-2"
+                  icon={<PlayIcon />}
+                  onClick={() => setIsStartBillingRunModalOpen(true)} // Add this onClick
+                >
                   Start Billing Run
                 </ButtonModule>
               </motion.div>
@@ -354,10 +372,19 @@ export default function MeteringDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
       <InstallMeterModal
         isOpen={isAddCustomerModalOpen}
         onRequestClose={() => setIsAddCustomerModalOpen(false)}
         onSuccess={handleAddCustomerSuccess}
+      />
+
+      {/* Add the StartBillingRun modal */}
+      <StartBillingRun
+        isOpen={isStartBillingRunModalOpen}
+        onRequestClose={() => setIsStartBillingRunModalOpen(false)}
+        onSuccess={handleBillingRunSuccess}
       />
     </section>
   )

@@ -1,7 +1,9 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from "components/Icons/Icons"
+import { fetchPostpaidBills, setFilters, clearFilters, setPagination } from "lib/redux/postpaidSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,12 +32,144 @@ interface BillingCyclesProps {
 
 const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
   const [searchText, setSearchText] = useState("")
+  const dispatch = useAppDispatch()
+
+  // Get state from Redux store
+  const { bills, loading, error, pagination, filters, success } = useAppSelector((state) => state.postpaidBilling)
+
+  console.log("Redux State:", {
+    billsCount: bills?.length,
+    loading,
+    error,
+    pagination,
+    filters,
+    success,
+  })
+
+  // Fetch bills on component mount and when filters/pagination change
+  useEffect(() => {
+    console.log("useEffect triggered - fetching bills...")
+
+    const fetchBills = async () => {
+      const requestParams = {
+        pageNumber: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        ...filters,
+      }
+
+      console.log("Dispatching fetchPostpaidBills with params:", requestParams)
+
+      const result = await dispatch(fetchPostpaidBills(requestParams))
+
+      console.log("Fetch result:", result)
+
+      if (fetchPostpaidBills.fulfilled.match(result)) {
+        console.log("Bills fetched successfully:", result.payload.data?.length)
+      } else if (fetchPostpaidBills.rejected.match(result)) {
+        console.error("Failed to fetch bills:", result.error)
+      }
+    }
+
+    fetchBills()
+  }, [dispatch, pagination.currentPage, pagination.pageSize, filters])
+
+  // Handle search
+  const handleSearch = (text: string) => {
+    setSearchText(text)
+    if (text.trim()) {
+      dispatch(setFilters({ accountNumber: text.trim() }))
+    } else {
+      dispatch(clearFilters())
+    }
+  }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    dispatch(clearFilters())
   }
 
-  const billingCycles: BillingCycle[] = [
+  // Transform API data to component format
+  // Transform API data to component format
+  // Transform API data to component format
+  const transformBillsToCycles = (): BillingCycle[] => {
+    if (!bills || bills.length === 0) {
+      console.log("No bills to transform")
+      return []
+    }
+
+    console.log("Transforming bills to cycles, count:", bills.length)
+
+    // Group bills by period to create billing cycles
+    const cyclesByPeriod = bills.reduce(
+      (acc, bill) => {
+        const period = bill.period
+        if (!acc[period]) {
+          acc[period] = {
+            bills: [],
+            totalAmount: 0,
+            billCount: 0,
+          }
+        }
+        acc[period].bills.push(bill)
+        acc[period].totalAmount += bill.totalDue || 0
+        acc[period].billCount += 1
+        return acc
+      },
+      {} as Record<string, { bills: any[]; totalAmount: number; billCount: number }>
+    )
+
+    console.log("Cycles by period:", cyclesByPeriod)
+
+    // Transform to BillingCycle format
+    return Object.entries(cyclesByPeriod).map(([period, data], index) => {
+      // Determine status based on bill data
+      let status: "Completed" | "In Progress" | "Scheduled" = "Completed"
+      const hasActiveDisputes = data.bills.some((bill) => bill.activeDispute !== null)
+      const hasEstimatedBills = data.bills.some((bill) => bill.isEstimated)
+
+      if (hasActiveDisputes || hasEstimatedBills) {
+        status = "In Progress"
+      }
+
+      // Format dates - using period string or creating from period
+      let periodDate
+      try {
+        periodDate = new Date(period + "-01")
+        if (isNaN(periodDate.getTime())) {
+          // If period is not in expected format, use current date
+          periodDate = new Date()
+        }
+      } catch {
+        periodDate = new Date()
+      }
+
+      const startDate = new Date(periodDate.getFullYear(), periodDate.getMonth(), 1)
+      const endDate = new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 0)
+
+      const cycleName = `${periodDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })} Billing`
+
+      // Ensure we always have valid dates and ID
+      return {
+        id: data.bills[0]?.id || index + 1,
+        name: cycleName,
+        status,
+        startDate: startDate.toISOString().split("T")[0] as string,
+        endDate: endDate.toISOString().split("T")[0] as string,
+        billsGenerated: data.billCount.toLocaleString(),
+        totalAmount: data.totalAmount > 0 ? `₦${(data.totalAmount / 1000000).toFixed(1)}M` : "Pending",
+        approvedBy: status === "Completed" ? "Revenue Manager" : undefined,
+      }
+    })
+  }
+
+  const billingCycles = transformBillsToCycles()
+  console.log("Transformed billing cycles:", billingCycles)
+
+  // Only show fallback if no data and not loading
+  const shouldShowFallback = !loading && billingCycles.length === 0
+
+  // Fallback data if no API data
+  const fallbackCycles: BillingCycle[] = [
     {
       id: 1,
       name: "January 2024 Billing",
@@ -57,9 +191,94 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
     },
   ]
 
+  const displayCycles = shouldShowFallback ? fallbackCycles : billingCycles
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    } catch {
+      return "Invalid Date"
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Completed":
+        return "bg-green-100 text-green-800"
+      case "In Progress":
+        return "bg-blue-100 text-blue-800"
+      case "Scheduled":
+        return "bg-gray-100 text-gray-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const getCycleTypeColor = (status: string) => {
+    switch (status) {
+      case "Completed":
+        return "bg-blue-100 text-blue-800"
+      case "In Progress":
+        return "bg-purple-100 text-purple-800"
+      case "Scheduled":
+        return "bg-green-100 text-green-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const getAmountColor = (amount: string) => {
+    if (amount === "Pending" || amount === "-") {
+      return "text-yellow-600"
+    }
+    return "text-green-600"
+  }
+
+  if (loading && billingCycles.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex gap-6"
+      >
+        <div className="flex-1">
+          <div className="rounded-lg border bg-white p-6">
+            <div className="mb-6">
+              <h3 className="mb-2 text-lg font-semibold">Billing Cycles</h3>
+              <div className="h-12 animate-pulse rounded-lg bg-gray-200"></div>
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
+                  <div className="animate-pulse">
+                    <div className="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
+                    <div className="mb-4 h-3 w-1/2 rounded bg-gray-200"></div>
+                    <div className="flex justify-between">
+                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
+                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
+                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
+                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="w-80">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="mb-4 h-6 w-1/2 animate-pulse rounded bg-gray-200"></div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="h-16 animate-pulse rounded bg-gray-200"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    )
   }
 
   return (
@@ -69,6 +288,16 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
       transition={{ duration: 0.3 }}
       className="flex gap-6"
     >
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-4 left-4 z-50 rounded-lg bg-black bg-opacity-80 p-4 text-xs text-white">
+          <div>Bills: {bills?.length || 0}</div>
+          <div>Loading: {loading ? "Yes" : "No"}</div>
+          <div>Error: {error || "None"}</div>
+          <div>Using: {shouldShowFallback ? "Fallback Data" : "API Data"}</div>
+        </div>
+      )}
+
       {/* Left Column - Billing Cycles */}
       <div className="flex-1">
         <div className="rounded-lg border bg-white p-6">
@@ -76,206 +305,158 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
             <h3 className="mb-2 text-lg font-semibold">Billing Cycles</h3>
             <SearchModule
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               onCancel={handleCancelSearch}
             />
+            {error && (
+              <div className="mt-2 rounded-lg bg-red-50 p-3">
+                <p className="text-sm text-red-600">Error loading billing cycles: {error}</p>
+              </div>
+            )}
+            {shouldShowFallback && (
+              <div className="mt-2 rounded-lg bg-yellow-50 p-3">
+                <p className="text-sm text-yellow-600">Showing sample data - no billing cycles found</p>
+              </div>
+            )}
           </div>
 
           {/* Billing Cycles List */}
           <div className="space-y-4">
-            {/* Billing Cycle 1 */}
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-3">
-                      <DateIcon />
-                      <h4 className="font-semibold text-gray-900">January 2024 Billing</h4>
+            {displayCycles.map((cycle) => (
+              <div
+                key={cycle.id}
+                className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 transition-shadow duration-200 hover:shadow-sm"
+              >
+                <div className="flex w-full items-start justify-between gap-3">
+                  <div className="flex flex-1 flex-col">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex gap-3">
+                        <DateIcon />
+                        <h4 className="font-semibold text-gray-900">{cycle.name}</h4>
+                      </div>
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(cycle.status)}`}>
+                        {cycle.status}
+                      </span>
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${getCycleTypeColor(cycle.status)}`}>
+                        Monthly Cycle
+                      </span>
                     </div>
-                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                      Completed
-                    </span>
-                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                      Monthly Cycle
-                    </span>
+
+                    <p className="font-medium text-gray-900">
+                      {formatDate(cycle.startDate)} to {formatDate(cycle.endDate)}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {cycle.approvedBy ? `Approved by: ${cycle.approvedBy}` : "Pending approval"}
+                    </p>
                   </div>
 
-                  <p className="mt-1 font-medium text-gray-900">Dec 1, 2023 to Dec 31, 2023</p>
-                  <p className="text-sm text-gray-600">Approved by: Revenue Manager</p>
-                </div>
-
-                <div className="text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-900">₦42,500,000</p>
-                    <p className="text-gray-500">2024-01-15 14:30</p>
+                  <div className="min-w-[120px] text-right text-sm">
+                    <p className={`font-semibold ${getAmountColor(cycle.totalAmount)}`}>{cycle.totalAmount}</p>
+                    <p className="text-gray-500">
+                      {cycle.status === "Completed"
+                        ? formatDate(cycle.endDate)
+                        : cycle.status === "In Progress"
+                        ? "In Progress"
+                        : `Starts: ${formatDate(cycle.startDate)}`}
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              {/* Status Indicators */}
-              <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                <div>
+                {/* Status Indicators */}
+                <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
                   <div className="flex items-center gap-2">
                     <BillsIcon />
-                    <p className="text-gray-500">Bills Generated</p>
-                  </div>
-                  <p className="font-medium text-green-600">₦42,500,000</p>
-                </div>
-                <div>
-                  <div className="flex gap-2">
-                    <CycleIcon />
                     <div>
-                      <p className="text-gray-500">Cycle Status</p>
-                      <p className="font-medium text-green-600">Completed</p>
+                      <p className="text-gray-500">Bills Generated</p>
+                      <p className={`font-medium ${getAmountColor(cycle.billsGenerated)}`}>{cycle.billsGenerated}</p>
                     </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <StatusIcon />
-                  <div>
-                    <p className="text-gray-500">Approval</p>
-                    <p className="font-medium text-green-600">Approved</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <RevenueGeneratedIcon />
-                  <div>
-                    <p className="text-gray-500">Revenue</p>
-
-                    <p className="font-medium text-green-600">₦42.5M</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Billing Cycle 2 */}
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <div className="flex gap-3">
-                      <DateIcon />
-                      <h4 className="font-semibold text-gray-900">February 2024 Billing</h4>
-                    </div>
-                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                      In Progress
-                    </span>
-                    <span className="rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800">
-                      Monthly Cycle
-                    </span>
-                  </div>
-
-                  <p className="mt-1 font-medium text-gray-900">Jan 1, 2024 to Jan 31, 2024</p>
-                  <p className="text-sm text-gray-600">Pending approval</p>
-                </div>
-
-                <div className="text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-900">Pending</p>
-                    <p className="text-gray-500">2024-02-15 10:20</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Indicators */}
-              <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                <div className="flex gap-2">
-                  <BillsIcon />
-                  <div>
-                    <p className="text-gray-500">Bills Generated</p>
-                    <p className="font-medium text-yellow-600">0</p>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex gap-2">
                     <CycleIcon />
                     <div>
                       <p className="text-gray-500">Cycle Status</p>
-                      <p className="font-medium text-blue-600">In Progress</p>
+                      <p
+                        className={`font-medium ${
+                          cycle.status === "Completed"
+                            ? "text-green-600"
+                            : cycle.status === "In Progress"
+                            ? "text-blue-600"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {cycle.status}
+                      </p>
                     </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <StatusIcon />
-                  <div>
-                    <p className="text-gray-500">Approval</p>
-                    <p className="font-medium text-yellow-600">Pending</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <RevenueGeneratedIcon />
-                  <div>
-                    <p className="text-gray-500">Revenue</p>
-                    <p className="font-medium text-yellow-600">Pending</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Billing Cycle 3 */}
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <div className="flex gap-3">
-                      <DateIcon />
-                      <h4 className="font-semibold text-gray-900">March 2024 Billing</h4>
-                    </div>
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
-                      Scheduled
-                    </span>
-                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                      Monthly Cycle
-                    </span>
-                  </div>
-
-                  <p className="mt-1 font-medium text-gray-900">Feb 1, 2024 to Feb 29, 2024</p>
-                  <p className="text-sm text-gray-600">Starts in 15 days</p>
-                </div>
-
-                <div className="text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-900">-</p>
-                    <p className="text-gray-500">Starts: 2024-03-01</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Indicators */}
-              <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                <div className="flex gap-2">
-                  <BillsIcon />
-                  <div>
-                    <p className="text-gray-500">Bills Generated</p>
-                    <p className="font-medium text-gray-600">-</p>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex gap-2">
-                    <CycleIcon />
+                    <StatusIcon />
                     <div>
-                      <p className="text-gray-500">Cycle Status</p>
-                      <p className="font-medium text-gray-600">Scheduled</p>
+                      <p className="text-gray-500">Approval</p>
+                      <p className={`font-medium ${cycle.approvedBy ? "text-green-600" : "text-yellow-600"}`}>
+                        {cycle.approvedBy ? "Approved" : "Pending"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RevenueGeneratedIcon />
+                    <div>
+                      <p className="text-gray-500">Revenue</p>
+                      <p className={`font-medium ${getAmountColor(cycle.totalAmount)}`}>{cycle.totalAmount}</p>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <StatusIcon />
-                  <div>
-                    <p className="text-gray-500">Approval</p>
-                    <p className="font-medium text-gray-600">Not Started</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <RevenueGeneratedIcon />
-                  <div>
-                    <p className="text-gray-500">Revenue</p>
-                    <p className="font-medium text-gray-600">-</p>
-                  </div>
-                </div>
               </div>
-            </div>
+            ))}
           </div>
+
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
+                {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of{" "}
+                {pagination.totalCount} cycles
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    dispatch(
+                      setPagination({
+                        page: pagination.currentPage - 1,
+                        pageSize: pagination.pageSize,
+                      })
+                    )
+                  }
+                  disabled={!pagination.hasPrevious}
+                  className={`rounded border px-3 py-1 ${
+                    pagination.hasPrevious
+                      ? "border-gray-300 bg-white hover:bg-gray-50"
+                      : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() =>
+                    dispatch(
+                      setPagination({
+                        page: pagination.currentPage + 1,
+                        pageSize: pagination.pageSize,
+                      })
+                    )
+                  }
+                  disabled={!pagination.hasNext}
+                  className={`rounded border px-3 py-1 ${
+                    pagination.hasNext
+                      ? "border-gray-300 bg-white hover:bg-gray-50"
+                      : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -286,7 +467,10 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="mb-4 text-lg font-semibold">Cycle Actions</h3>
             <div className="space-y-3">
-              <button className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm">
+              <button
+                className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm"
+                onClick={onStartNewCycle}
+              >
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-blue-100 p-2">
                     <svg className="size-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,6 +551,35 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                   </div>
                 </div>
               </button>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <h3 className="mb-4 text-lg font-semibold">Overview</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Total Cycles</span>
+                <span className="font-semibold">{displayCycles.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Completed</span>
+                <span className="font-semibold text-green-600">
+                  {displayCycles.filter((cycle) => cycle.status === "Completed").length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">In Progress</span>
+                <span className="font-semibold text-blue-600">
+                  {displayCycles.filter((cycle) => cycle.status === "In Progress").length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Scheduled</span>
+                <span className="font-semibold text-gray-600">
+                  {displayCycles.filter((cycle) => cycle.status === "Scheduled").length}
+                </span>
+              </div>
             </div>
           </div>
         </div>

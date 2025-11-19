@@ -101,6 +101,28 @@ export interface PostpaidBillsRequestParams {
   feederId?: number
 }
 
+// Finalize Period Interfaces
+export interface FinalizePeriodRequest {
+  period: string
+}
+
+export interface FinalizePeriodResponse {
+  isSuccess: boolean
+  message: string
+  data: string
+}
+
+// Finalize Period by Area Office Interfaces
+export interface FinalizePeriodByAreaOfficeRequest {
+  period: string
+}
+
+export interface FinalizePeriodByAreaOfficeResponse {
+  isSuccess: boolean
+  message: string
+  data: PostpaidBill[]
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -123,6 +145,19 @@ interface PostpaidBillingState {
   currentBill: PostpaidBill | null
   currentBillLoading: boolean
   currentBillError: string | null
+
+  // Finalize period state
+  finalizeLoading: boolean
+  finalizeError: string | null
+  finalizeSuccess: boolean
+  finalizeMessage: string | null
+
+  // Finalize period by area office state
+  finalizeByAreaOfficeLoading: boolean
+  finalizeByAreaOfficeError: string | null
+  finalizeByAreaOfficeSuccess: boolean
+  finalizeByAreaOfficeMessage: string | null
+  finalizedAreaOfficeBills: PostpaidBill[]
 
   // Search/filter state
   filters: {
@@ -153,6 +188,15 @@ const initialState: PostpaidBillingState = {
   currentBill: null,
   currentBillLoading: false,
   currentBillError: null,
+  finalizeLoading: false,
+  finalizeError: null,
+  finalizeSuccess: false,
+  finalizeMessage: null,
+  finalizeByAreaOfficeLoading: false,
+  finalizeByAreaOfficeError: null,
+  finalizeByAreaOfficeSuccess: false,
+  finalizeByAreaOfficeMessage: null,
+  finalizedAreaOfficeBills: [],
   filters: {},
 }
 
@@ -226,6 +270,56 @@ export const fetchPostpaidBillById = createAsyncThunk<PostpaidBill, number, { re
   }
 )
 
+export const finalizeBillingPeriod = createAsyncThunk(
+  "postpaidBilling/finalizeBillingPeriod",
+  async (requestData: FinalizePeriodRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<FinalizePeriodResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.FINALIZE),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to finalize billing period")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to finalize billing period")
+      }
+      return rejectWithValue(error.message || "Network error during billing period finalization")
+    }
+  }
+)
+
+export const finalizeBillingPeriodByAreaOffice = createAsyncThunk(
+  "postpaidBilling/finalizeBillingPeriodByAreaOffice",
+  async (
+    { areaOfficeId, requestData }: { areaOfficeId: number; requestData: FinalizePeriodByAreaOfficeRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.FINALIZE_BY_AREA_OFFICE_ID, {
+        areaOfficeId,
+      })
+
+      const response = await api.post<FinalizePeriodByAreaOfficeResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to finalize billing period for area office")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to finalize billing period for area office")
+      }
+      return rejectWithValue(error.message || "Network error during area office billing period finalization")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -250,12 +344,31 @@ const postpaidSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentBillError = null
+      state.finalizeError = null
+      state.finalizeByAreaOfficeError = null
     },
 
     // Clear current bill
     clearCurrentBill: (state) => {
       state.currentBill = null
       state.currentBillError = null
+    },
+
+    // Clear finalize state
+    clearFinalizeState: (state) => {
+      state.finalizeLoading = false
+      state.finalizeError = null
+      state.finalizeSuccess = false
+      state.finalizeMessage = null
+    },
+
+    // Clear finalize by area office state
+    clearFinalizeByAreaOfficeState: (state) => {
+      state.finalizeByAreaOfficeLoading = false
+      state.finalizeByAreaOfficeError = null
+      state.finalizeByAreaOfficeSuccess = false
+      state.finalizeByAreaOfficeMessage = null
+      state.finalizedAreaOfficeBills = []
     },
 
     // Reset billing state
@@ -275,6 +388,15 @@ const postpaidSlice = createSlice({
       state.currentBill = null
       state.currentBillLoading = false
       state.currentBillError = null
+      state.finalizeLoading = false
+      state.finalizeError = null
+      state.finalizeSuccess = false
+      state.finalizeMessage = null
+      state.finalizeByAreaOfficeLoading = false
+      state.finalizeByAreaOfficeError = null
+      state.finalizeByAreaOfficeSuccess = false
+      state.finalizeByAreaOfficeMessage = null
+      state.finalizedAreaOfficeBills = []
       state.filters = {}
     },
 
@@ -345,10 +467,64 @@ const postpaidSlice = createSlice({
         state.currentBillError = (action.payload as string) || "Failed to fetch postpaid bill"
         state.currentBill = null
       })
+      // Finalize billing period cases
+      .addCase(finalizeBillingPeriod.pending, (state) => {
+        state.finalizeLoading = true
+        state.finalizeError = null
+        state.finalizeSuccess = false
+        state.finalizeMessage = null
+      })
+      .addCase(finalizeBillingPeriod.fulfilled, (state, action: PayloadAction<FinalizePeriodResponse>) => {
+        state.finalizeLoading = false
+        state.finalizeSuccess = true
+        state.finalizeMessage = action.payload.message || "Billing period finalized successfully"
+        state.finalizeError = null
+      })
+      .addCase(finalizeBillingPeriod.rejected, (state, action) => {
+        state.finalizeLoading = false
+        state.finalizeError = (action.payload as string) || "Failed to finalize billing period"
+        state.finalizeSuccess = false
+        state.finalizeMessage = null
+      })
+      // Finalize billing period by area office cases
+      .addCase(finalizeBillingPeriodByAreaOffice.pending, (state) => {
+        state.finalizeByAreaOfficeLoading = true
+        state.finalizeByAreaOfficeError = null
+        state.finalizeByAreaOfficeSuccess = false
+        state.finalizeByAreaOfficeMessage = null
+      })
+      .addCase(
+        finalizeBillingPeriodByAreaOffice.fulfilled,
+        (state, action: PayloadAction<FinalizePeriodByAreaOfficeResponse>) => {
+          state.finalizeByAreaOfficeLoading = false
+          state.finalizeByAreaOfficeSuccess = true
+          state.finalizeByAreaOfficeMessage =
+            action.payload.message || "Billing period finalized successfully for area office"
+          state.finalizedAreaOfficeBills = action.payload.data
+          state.finalizeByAreaOfficeError = null
+        }
+      )
+      .addCase(finalizeBillingPeriodByAreaOffice.rejected, (state, action) => {
+        state.finalizeByAreaOfficeLoading = false
+        state.finalizeByAreaOfficeError =
+          (action.payload as string) || "Failed to finalize billing period for area office"
+        state.finalizeByAreaOfficeSuccess = false
+        state.finalizeByAreaOfficeMessage = null
+        state.finalizedAreaOfficeBills = []
+      })
   },
 })
 
-export const { clearBills, clearError, clearCurrentBill, resetBillingState, setPagination, setFilters, clearFilters } =
-  postpaidSlice.actions
+export const {
+  clearBills,
+  clearError,
+  clearCurrentBill,
+  clearFinalizeState,
+  clearFinalizeByAreaOfficeState,
+  resetBillingState,
+  setPagination,
+  setFilters,
+  clearFilters,
+} = postpaidSlice.actions
 
 export default postpaidSlice.reducer
