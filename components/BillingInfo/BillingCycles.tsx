@@ -102,7 +102,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
     // Group bills by period to create billing cycles
     const cyclesByPeriod = bills.reduce(
       (acc, bill) => {
-        const period = bill.period
+        const period = (bill.period as string) || "Unknown"
         if (!acc[period]) {
           acc[period] = {
             bills: [],
@@ -110,9 +110,10 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
             billCount: 0,
           }
         }
-        acc[period].bills.push(bill)
-        acc[period].totalAmount += bill.totalDue || 0
-        acc[period].billCount += 1
+        const periodData = acc[period]
+        periodData.bills.push(bill)
+        periodData.totalAmount += bill.totalDue || 0
+        periodData.billCount += 1
         return acc
       },
       {} as Record<string, { bills: any[]; totalAmount: number; billCount: number }>
