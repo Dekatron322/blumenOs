@@ -1,44 +1,17 @@
 import React, { useEffect, useState } from "react"
-import { RxDotsVertical } from "react-icons/rx"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { PiNoteBold } from "react-icons/pi"
 import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { GoXCircle } from "react-icons/go"
-import { WiTime3 } from "react-icons/wi"
 import { VscEye } from "react-icons/vsc"
+import { ChevronDown } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { AnimatePresence, motion } from "framer-motion"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
-import UpdateStatusModal from "components/ui/Modal/update-status-modal"
-import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
-import CustomerDetailsModal from "components/ui/Modal/customer-details-modal"
 import { useRouter } from "next/navigation"
+import { Customer, fetchCustomers, setFilters, setPagination } from "lib/redux/customerSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 type SortOrder = "asc" | "desc" | null
-
-interface Customer {
-  id: string
-  accountNumber: string
-  customerName: string
-  customerType: "PREPAID" | "POSTPAID"
-  serviceBand: string
-  tariffClass: string
-  region: string
-  businessUnit: string
-  feederId: string | null
-  transformerId: string | null
-  address: string
-  phoneNumber: string
-  email: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  outstandingArrears: string
-  createdAt: string
-  updatedAt: string
-  meters: any[]
-  prepaidAccount: any | null
-  postpaidAccount: any | null
-}
 
 interface CustomerCategory {
   name: string
@@ -104,42 +77,6 @@ const tariffClasses = ["R1", "R2", "R3", "C1", "C2", "C3"]
 const businessUnits = ["Unit A", "Unit B", "Unit C", "Unit D"]
 const statuses: ("ACTIVE" | "INACTIVE" | "SUSPENDED")[] = ["ACTIVE", "INACTIVE", "SUSPENDED"]
 const customerTypes: ("PREPAID" | "POSTPAID")[] = ["PREPAID", "POSTPAID"]
-
-// Generate random customer data
-const generateRandomCustomers = (count: number): Customer[] => {
-  return Array.from({ length: count }, (_, index) => {
-    const id = `cust-${Date.now()}-${index}`
-    const status = statuses[Math.floor(Math.random() * statuses.length)]!
-    const customerType = customerTypes[Math.floor(Math.random() * customerTypes.length)]!
-    const region = regions[Math.floor(Math.random() * regions.length)]!
-    const serviceBand = serviceBands[Math.floor(Math.random() * serviceBands.length)]!
-    const tariffClass = tariffClasses[Math.floor(Math.random() * tariffClasses.length)]!
-    const businessUnit = businessUnits[Math.floor(Math.random() * businessUnits.length)]!
-
-    return {
-      id,
-      accountNumber: `ACC${10000 + index}`,
-      customerName: `Customer ${index + 1}`,
-      customerType,
-      serviceBand,
-      tariffClass,
-      region,
-      businessUnit,
-      feederId: Math.random() > 0.5 ? `FEEDER-${100 + index}` : null,
-      transformerId: Math.random() > 0.5 ? `TRANS-${200 + index}` : null,
-      address: `Address ${index + 1}, ${region} Region`,
-      phoneNumber: `+234${800000000 + index}`,
-      email: `customer${index + 1}@example.com`,
-      status,
-      outstandingArrears: (Math.random() * 10000).toFixed(2),
-      createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      meters: [],
-      prepaidAccount: customerType === "PREPAID" ? { balance: (Math.random() * 5000).toFixed(2) } : null,
-      postpaidAccount: customerType === "POSTPAID" ? { lastBill: (Math.random() * 5000).toFixed(2) } : null,
-    }
-  })
-}
 
 // Generate random assets
 const generateRandomAssets = (count: number): Asset[] => {
@@ -358,17 +295,12 @@ const HeaderSkeleton = () => (
 const AllCustomers = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
-  const [rowsPerPage, setRowsPerPage] = useState(6)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showCategories, setShowCategories] = useState(true)
   const [selectedRegion, setSelectedRegion] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [customersData, setCustomersData] = useState<any>(null)
-  const [isOpen, setIsOpen] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
 
   // Modal states - only one modal can be open at a time
   const [activeModal, setActiveModal] = useState<"details" | "suspend" | "reminder" | "status" | null>(null)
@@ -376,31 +308,28 @@ const AllCustomers = () => {
   const [customerAssets, setCustomerAssets] = useState<Asset[]>([])
   const router = useRouter()
 
-  // Generate random data on component mount
+  // Redux hooks
+  const dispatch = useAppDispatch()
+  const { customers, loading, error, pagination, filters } = useAppSelector((state) => state.customers)
+
+  // Fetch customers on component mount and when filters/pagination change
   useEffect(() => {
-    setIsLoading(true)
-    // Simulate API call delay
-    const timer = setTimeout(() => {
-      const totalRecords = 50
-      const totalPages = Math.ceil(totalRecords / rowsPerPage)
-      const customers = generateRandomCustomers(rowsPerPage)
+    const fetchData = async () => {
+      await dispatch(
+        fetchCustomers({
+          pageNumber: pagination.currentPage,
+          pageSize: pagination.pageSize,
+          search: filters.search,
+          status: filters.status,
+          isSuspended: filters.isSuspended || undefined,
+          distributionSubstationId: filters.distributionSubstationId || undefined,
+          serviceCenterId: filters.serviceCenterId || undefined,
+        })
+      )
+    }
 
-      setCustomersData({
-        data: {
-          customers,
-          pagination: {
-            totalRecords,
-            totalPages,
-            currentPage,
-            limit: rowsPerPage,
-          },
-        },
-      })
-      setIsLoading(false)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [currentPage, rowsPerPage])
+    fetchData()
+  }, [dispatch, pagination.currentPage, pagination.pageSize, filters])
 
   // Generate assets when customer is selected
   useEffect(() => {
@@ -416,10 +345,16 @@ const AllCustomers = () => {
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
+
       if (!target.closest('[data-dropdown-root="customer-actions"]')) {
         setActiveDropdown(null)
       }
+
+      if (!target.closest('[data-dropdown-root="status-filter"]')) {
+        setIsStatusFilterOpen(false)
+      }
     }
+
     document.addEventListener("mousedown", onDocClick)
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [])
@@ -474,6 +409,33 @@ const AllCustomers = () => {
     closeAllModals()
   }
 
+  // Search and filter handlers
+  const handleSearchChange = (value: string) => {
+    dispatch(setFilters({ search: value }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  const handleCancelSearch = () => {
+    dispatch(setFilters({ search: "" }))
+  }
+
+  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = Number(event.target.value)
+    dispatch(setPagination({ page: 1, pageSize: newPageSize }))
+  }
+
+  const handleStatusFilterChange = (status: string) => {
+    dispatch(setFilters({ status }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setIsStatusFilterOpen(false)
+  }
+
+  const changePage = (page: number) => {
+    if (page > 0 && page <= pagination.totalPages) {
+      dispatch(setPagination({ page, pageSize: pagination.pageSize }))
+    }
+  }
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "ACTIVE":
@@ -522,36 +484,10 @@ const AllCustomers = () => {
     }
   }
 
-  const toggleSort = (column: keyof Customer) => {
+  const toggleSort = (column: string) => {
     const isAscending = sortColumn === column && sortOrder === "asc"
     setSortOrder(isAscending ? "desc" : "asc")
     setSortColumn(column)
-  }
-
-  const handleCancelSearch = () => {
-    setSearchText("")
-  }
-
-  // Filter customers based on search text and region
-  const filteredCustomers =
-    customersData?.data?.customers?.filter((customer: Customer) => {
-      const matchesSearch =
-        searchText === "" ||
-        Object.values(customer).some((value) => value?.toString().toLowerCase().includes(searchText.toLowerCase()))
-      const matchesRegion = selectedRegion === "" || customer.region === selectedRegion
-      return matchesSearch && matchesRegion
-    }) || []
-
-  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setRowsPerPage(Number(event.target.value))
-    setCurrentPage(1)
-  }
-
-  const totalPages = customersData?.data?.pagination?.totalPages || 1
-  const totalRecords = customersData?.data?.pagination?.totalRecords || 0
-
-  const changePage = (page: number) => {
-    if (page > 0 && page <= totalPages) setCurrentPage(page)
   }
 
   const CustomerCard = ({ customer }: { customer: Customer }) => (
@@ -560,14 +496,14 @@ const AllCustomers = () => {
         <div className="flex items-center gap-3">
           <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
             <span className="font-semibold text-blue-600">
-              {customer.customerName
+              {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{customer.customerName}</h3>
+            <h3 className="font-semibold text-gray-900">{customer.fullName}</h3>
             <div className="mt-1 flex items-center gap-2">
               <div
                 style={getStatusStyle(customer.status)}
@@ -576,46 +512,14 @@ const AllCustomers = () => {
                 <span className="size-2 rounded-full" style={dotStyle(customer.status)}></span>
                 {customer.status}
               </div>
-              <div style={getCustomerTypeStyle(customer.customerType)} className="rounded-full px-2 py-1 text-xs">
-                {customer.customerType}
+              <div
+                style={getCustomerTypeStyle(customer.isPPM ? "PREPAID" : "POSTPAID")}
+                className="rounded-full px-2 py-1 text-xs"
+              >
+                {customer.isPPM ? "PREPAID" : "POSTPAID"}
               </div>
             </div>
           </div>
-        </div>
-        <div className="relative" data-dropdown-root="customer-actions">
-          <RxDotsVertical
-            onClick={() => toggleDropdown(customer.id)}
-            className="cursor-pointer text-gray-400 hover:text-gray-600"
-          />
-          {activeDropdown === customer.id && (
-            <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-              <ul className="text-sm">
-                <li
-                  className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                  onClick={() => handleOpenStatusModal(customer)}
-                >
-                  <VscEye />
-                  Update Status
-                </li>
-                <li
-                  className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                  onClick={handleOpenReminderModal}
-                >
-                  <WiTime3 /> Send Reminder
-                </li>
-                <li
-                  className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                  onClick={handleOpenSuspendModal}
-                >
-                  <GoXCircle /> Suspend Account
-                </li>
-                <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                  <PiNoteBold />
-                  Export Data
-                </li>
-              </ul>
-            </div>
-          )}
         </div>
       </div>
 
@@ -626,23 +530,23 @@ const AllCustomers = () => {
         </div>
         <div className="flex justify-between">
           <span>Region:</span>
-          <span className="font-medium">{customer.region}</span>
+          <span className="font-medium">{customer.state}</span>
         </div>
         <div className="flex justify-between">
-          <span>Service Band:</span>
-          <span className="font-medium">{customer.serviceBand}</span>
+          <span>Service Center:</span>
+          <span className="font-medium">{customer.serviceCenterName}</span>
         </div>
         <div className="flex justify-between">
           <span>Tariff:</span>
-          <span className="font-medium">{customer.tariffClass}</span>
+          <span className="font-medium">{customer.band}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>Outstanding Arrears:</span>
           <div
-            style={getArrearsStyle(customer.outstandingArrears)}
+            style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
             className="rounded-full px-2 py-1 text-xs font-medium"
           >
-            ₦{parseFloat(customer.outstandingArrears).toLocaleString()}
+            ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
           </div>
         </div>
       </div>
@@ -669,7 +573,7 @@ const AllCustomers = () => {
         <div className="flex items-center gap-4">
           <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
             <span className="text-sm font-semibold text-blue-600">
-              {customer.customerName
+              {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
@@ -677,7 +581,7 @@ const AllCustomers = () => {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{customer.customerName}</h3>
+              <h3 className="truncate font-semibold text-gray-900">{customer.fullName}</h3>
               <div
                 style={getStatusStyle(customer.status)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
@@ -685,14 +589,17 @@ const AllCustomers = () => {
                 <span className="size-2 rounded-full" style={dotStyle(customer.status)}></span>
                 {customer.status}
               </div>
-              <div style={getCustomerTypeStyle(customer.customerType)} className="rounded-full px-2 py-1 text-xs">
-                {customer.customerType}
+              <div
+                style={getCustomerTypeStyle(customer.isPPM ? "PREPAID" : "POSTPAID")}
+                className="rounded-full px-2 py-1 text-xs"
+              >
+                {customer.isPPM ? "PREPAID" : "POSTPAID"}
               </div>
               <div
-                style={getArrearsStyle(customer.outstandingArrears)}
+                style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
                 className="rounded-full px-2 py-1 text-xs font-medium"
               >
-                Arrears: ₦{parseFloat(customer.outstandingArrears).toLocaleString()}
+                Arrears: ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
@@ -700,13 +607,13 @@ const AllCustomers = () => {
                 <strong>Account:</strong> {customer.accountNumber}
               </span>
               <span>
-                <strong>Region:</strong> {customer.region}
+                <strong>Region:</strong> {customer.state}
               </span>
               <span>
-                <strong>Service Band:</strong> {customer.serviceBand}
+                <strong>Service Center:</strong> {customer.serviceCenterName}
               </span>
               <span>
-                <strong>Tariff:</strong> {customer.tariffClass}
+                <strong>Tariff:</strong> {customer.band}
               </span>
             </div>
             <p className="mt-2 text-sm text-gray-500">{customer.address}</p>
@@ -715,50 +622,14 @@ const AllCustomers = () => {
 
         <div className="flex items-center gap-3">
           <div className="text-right text-sm">
-            <div className="font-medium text-gray-900">
-              Created: {new Date(customer.createdAt).toLocaleDateString()}
-            </div>
+            <div className="font-medium text-gray-900">Phone: {customer.phoneNumber}</div>
+            <div className="text-gray-600">Email: {customer.email}</div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => handleViewDetails(customer)} className="button-oulined flex items-center gap-2">
               <VscEye className="size-4" />
               View
             </button>
-            <div className="relative" data-dropdown-root="customer-actions">
-              <RxDotsVertical
-                onClick={() => toggleDropdown(customer.id)}
-                className="cursor-pointer text-gray-400 hover:text-gray-600"
-              />
-              {activeDropdown === customer.id && (
-                <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-                  <ul className="text-sm">
-                    <li
-                      className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                      onClick={() => handleOpenStatusModal(customer)}
-                    >
-                      <VscEye />
-                      Update Status
-                    </li>
-                    <li
-                      className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                      onClick={handleOpenReminderModal}
-                    >
-                      <WiTime3 /> Send Reminder
-                    </li>
-                    <li
-                      className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100"
-                      onClick={handleOpenSuspendModal}
-                    >
-                      <GoXCircle /> Suspend Account
-                    </li>
-                    <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                      <PiNoteBold />
-                      Export Data
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -836,7 +707,7 @@ const AllCustomers = () => {
     </div>
   )
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex-3 relative mt-5 flex items-start gap-6">
         {/* Main Content Skeleton */}
@@ -903,8 +774,8 @@ const AllCustomers = () => {
             <p className="text-2xl font-medium">All Customers</p>
             <div className="mt-2 flex gap-4">
               <SearchModule
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                value={filters.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onCancel={handleCancelSearch}
                 placeholder="Search by name, account number, or meter number"
                 className="max-w-[300px] "
@@ -931,17 +802,66 @@ const AllCustomers = () => {
                 {showCategories ? "Hide Categories" : "Show Categories"}
               </button>
 
-              <select
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="button-oulined"
-              >
-                <option value="">All Regions</option>
-                <option value="South">South</option>
-                <option value="North">North</option>
-                <option value="East">East</option>
-                <option value="West">West</option>
-              </select>
+              <div className="relative" data-dropdown-root="status-filter">
+                <button
+                  type="button"
+                  className="button-oulined flex items-center gap-2"
+                  onClick={() => setIsStatusFilterOpen((open) => !open)}
+                >
+                  <IoMdFunnel />
+                  <span>
+                    {filters.status === "ACTIVE"
+                      ? "Active"
+                      : filters.status === "INACTIVE"
+                      ? "Inactive"
+                      : filters.status === "SUSPENDED"
+                      ? "Suspended"
+                      : "All Status"}
+                  </span>
+                  <ChevronDown
+                    className={`size-4 text-gray-500 transition-transform ${isStatusFilterOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {isStatusFilterOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("")}
+                      >
+                        All Status
+                      </button>
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "ACTIVE" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("ACTIVE")}
+                      >
+                        Active
+                      </button>
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "INACTIVE" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("INACTIVE")}
+                      >
+                        Inactive
+                      </button>
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "SUSPENDED" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("SUSPENDED")}
+                      >
+                        Suspended
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <button className="button-oulined" type="button">
                 <IoMdFunnel />
@@ -950,17 +870,36 @@ const AllCustomers = () => {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-4 text-red-700">
+              <p>Error loading customers: {error}</p>
+            </div>
+          )}
+
           {/* Customer Display Area */}
           <div className="w-full">
-            {viewMode === "grid" ? (
+            {customers.length === 0 && !loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
+                    <VscEye className="size-6 text-gray-400" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-medium text-gray-900">No customers found</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {filters.search ? "Try adjusting your search criteria" : "No customers available"}
+                  </p>
+                </div>
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredCustomers.map((customer: Customer) => (
+                {customers.map((customer: Customer) => (
                   <CustomerCard key={customer.id} customer={customer} />
                 ))}
               </div>
             ) : (
               <div className="divide-y">
-                {filteredCustomers.map((customer: Customer) => (
+                {customers.map((customer: Customer) => (
                   <CustomerListItem key={customer.id} customer={customer} />
                 ))}
               </div>
@@ -968,55 +907,61 @@ const AllCustomers = () => {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <p>Show rows</p>
-              <select value={rowsPerPage} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
-                <option value={6}>6</option>
-                <option value={12}>12</option>
-                <option value={18}>18</option>
-                <option value={24}>24</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <BiSolidLeftArrow />
-              </button>
-
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                      currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                    }`}
-                    onClick={() => changePage(index + 1)}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+          {customers.length > 0 && (
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <p>Show rows</p>
+                <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
+                  <option value={6}>6</option>
+                  <option value={12}>12</option>
+                  <option value={18}>18</option>
+                  <option value={24}>24</option>
+                  <option value={50}>50</option>
+                </select>
               </div>
 
-              <button
-                className={`px-3 py-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                <BiSolidRightArrow />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  className={`px-3 py-2 ${
+                    pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  <BiSolidLeftArrow />
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: pagination.totalPages }, (_, index) => (
+                    <button
+                      key={index + 1}
+                      className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                        pagination.currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                      }`}
+                      onClick={() => changePage(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  className={`px-3 py-2 ${
+                    pagination.currentPage === pagination.totalPages
+                      ? "cursor-not-allowed text-gray-400"
+                      : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  <BiSolidRightArrow />
+                </button>
+              </div>
+              <p>
+                Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount} total records)
+              </p>
             </div>
-            <p>
-              Page {currentPage} of {totalPages} ({totalRecords} total records)
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Customer Categories Sidebar */}
@@ -1046,15 +991,19 @@ const AllCustomers = () => {
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total:</span>
-                    <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                    <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Residential:</span>
-                    <span className="font-medium">106,150</span>
+                    <span className="text-gray-600">Active:</span>
+                    <span className="font-medium">
+                      {customers.filter((c) => c.status === "ACTIVE").length.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Commercial:</span>
-                    <span className="font-medium">15,400</span>
+                    <span className="text-gray-600">Suspended:</span>
+                    <span className="font-medium">
+                      {customers.filter((c) => c.status === "SUSPENDED").length.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1064,7 +1013,7 @@ const AllCustomers = () => {
       </div>
 
       {/* Modal Components - Only one modal can be open at a time */}
-      <CustomerDetailsModal
+      {/* <CustomerDetailsModal
         isOpen={activeModal === "details"}
         onRequestClose={closeAllModals}
         customer={selectedCustomer}
@@ -1072,13 +1021,7 @@ const AllCustomers = () => {
         onUpdateStatus={handleOpenStatusModal}
         onSendReminder={handleOpenReminderModal}
         onSuspendAccount={handleOpenSuspendModal}
-      />
-
-      <SuspendAccountModal
-        isOpen={activeModal === "suspend"}
-        onRequestClose={closeAllModals}
-        onConfirm={handleConfirmSuspend}
-      />
+      /> */}
 
       <SendReminderModal
         isOpen={activeModal === "reminder"}
@@ -1086,11 +1029,11 @@ const AllCustomers = () => {
         onConfirm={handleConfirmReminder}
       />
 
-      <UpdateStatusModal
+      {/* <UpdateStatusModal
         isOpen={activeModal === "status"}
         onRequestClose={closeAllModals}
         customer={selectedCustomer}
-      />
+      /> */}
     </>
   )
 }

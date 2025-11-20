@@ -1,8 +1,5 @@
 "use client"
 import React, { useState } from "react"
-import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined"
-import { RiEye2Line, RiEyeCloseLine } from "react-icons/ri"
-import { VscLock } from "react-icons/vsc"
 import { EyesCloseIcon, EyesOpenIcon, LockIcon } from "components/Icons/Icons"
 
 interface PasswordInputProps {
@@ -12,6 +9,9 @@ interface PasswordInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   className?: string
   error?: boolean
+  onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  disabled?: boolean
 }
 
 export const PasswordInputModule: React.FC<PasswordInputProps> = ({
@@ -21,6 +21,9 @@ export const PasswordInputModule: React.FC<PasswordInputProps> = ({
   onChange,
   className = "",
   error = false,
+  onKeyPress,
+  onKeyDown,
+  disabled = false,
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -57,6 +60,9 @@ export const PasswordInputModule: React.FC<PasswordInputProps> = ({
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onKeyPress={onKeyPress}
+          onKeyDown={onKeyDown}
+          disabled={disabled}
         />
         <button type="button" className="ml-2 rounded-full p-1 focus:outline-none" onClick={togglePasswordVisibility}>
           {isPasswordVisible ? <EyesOpenIcon /> : <EyesCloseIcon />}

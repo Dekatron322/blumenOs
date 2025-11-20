@@ -1,20 +1,30 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "lib/redux/store"
 
-import { motion } from "framer-motion"
-import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import MeteringInfo from "components/MeteringInfo/MeteringInfo"
+import { AnimatePresence, motion } from "framer-motion"
+import { MetersProgrammedIcon, OfficeIcon, PlusIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import AssetManagementInfo from "components/AssetManagementInfo/AssetManagementInfo"
+import { usePopover } from "components/Navbar/use-popover"
+import {
+  AlertsIcon,
+  DistributionIcon,
+  PoleIcon,
+  ReadingsIcon,
+  ServiceStationIcon,
+} from "components/AssetManagementInfo/TabNavigation"
+import { fetchAssetManagementAnalytics } from "lib/redux/analyticsSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
   return (
     <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
-      {[...Array(4)].map((_, index) => (
+      {[...Array(5)].map((_, index) => (
         <motion.div
           key={index}
           className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
@@ -265,36 +275,97 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock asset data
+// Generate mock asset data as fallback
 const generateAssetData = () => {
   return {
     totalTransformers: 247,
     operationalTransformers: 215,
     activeFeeders: 48,
     operationalFeeders: 45,
-    substations: 12,
-    operationalSubstations: 12,
-    assetsUnderMaintenance: 15,
-    maintenanceStatus: "Scheduled work",
+    injectionSubstations: 8,
+    operationalInjectionSubstations: 8,
+    distributionSubstations: 4,
+    operationalDistributionSubstations: 4,
   }
 }
 
 export default function MeteringDashboard() {
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [assetData, setAssetData] = useState(generateAssetData())
 
-  // Use mock data
+  // Get analytics data from Redux store
+  const { assetManagementData, assetManagementLoading, assetManagementError } = useSelector(
+    (state: RootState) => state.analytics
+  )
+
+  const {
+    anchorRef: addAssetButtonRef,
+    open: isAddAssetMenuOpen,
+    handleToggle: toggleAddAssetMenu,
+    handleClose: closeAddAssetMenu,
+  } = usePopover()
+
+  useEffect(() => {
+    // Fetch asset management analytics when component mounts
+    dispatch(fetchAssetManagementAnalytics())
+  }, [dispatch])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (addAssetButtonRef.current && !addAssetButtonRef.current.contains(target)) {
+        closeAddAssetMenu()
+      }
+    }
+
+    if (isAddAssetMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [addAssetButtonRef, closeAddAssetMenu, isAddAssetMenuOpen])
+
+  // Use real analytics data from Redux or fallback to mock data
+  const analyticsData = assetManagementData || {
+    companies: 0,
+    areaOffices: 0,
+    injectionSubstations: 0,
+    feeders: 0,
+    distributionSubstations: 0,
+    htPoles: 0,
+  }
+
+  // Transform analytics data to match our card structure
+  const transformedAssetData = {
+    totalTransformers: analyticsData.htPoles || assetData.totalTransformers,
+    operationalTransformers: Math.floor((analyticsData.htPoles || assetData.operationalTransformers) * 0.87),
+    activeFeeders: analyticsData.feeders || assetData.activeFeeders,
+    operationalFeeders: Math.floor((analyticsData.feeders || assetData.operationalFeeders) * 0.94),
+    injectionSubstations: analyticsData.injectionSubstations || assetData.injectionSubstations,
+    operationalInjectionSubstations: Math.floor(
+      (analyticsData.injectionSubstations || assetData.operationalInjectionSubstations) * 1.0
+    ),
+    distributionSubstations: analyticsData.distributionSubstations || assetData.distributionSubstations,
+    operationalDistributionSubstations: Math.floor(
+      (analyticsData.distributionSubstations || assetData.operationalDistributionSubstations) * 1.0
+    ),
+  }
+
   const {
     totalTransformers,
     operationalTransformers,
     activeFeeders,
     operationalFeeders,
-    substations,
-    operationalSubstations,
-    assetsUnderMaintenance,
-    maintenanceStatus,
-  } = assetData
+    injectionSubstations,
+    operationalInjectionSubstations,
+    distributionSubstations,
+    operationalDistributionSubstations,
+  } = transformedAssetData
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -304,16 +375,18 @@ export default function MeteringDashboard() {
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
     // Refresh data after adding customer
-    setAssetData(generateAssetData())
+    dispatch(fetchAssetManagementAnalytics())
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
-    setTimeout(() => {
-      setAssetData(generateAssetData())
+    dispatch(fetchAssetManagementAnalytics()).finally(() => {
       setIsLoading(false)
-    }, 1000)
+    })
   }
+
+  // Show loading state when fetching analytics data
+  const showLoading = isLoading || assetManagementLoading
 
   return (
     <section className="size-full">
@@ -326,6 +399,9 @@ export default function MeteringDashboard() {
               <div>
                 <h4 className="text-2xl font-semibold">Asset Management</h4>
                 <p>Network infrastructure and equipment tracking</p>
+                {assetManagementError && (
+                  <div className="mt-2 text-sm text-red-600">Error loading analytics: {assetManagementError}</div>
+                )}
               </div>
 
               <motion.div
@@ -335,19 +411,103 @@ export default function MeteringDashboard() {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <button
-                  onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
+                  onClick={handleRefreshData}
+                  disabled={showLoading}
+                  className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <PlusIcon />
-                  Install Meter
+                  <span>{showLoading ? "Refreshing..." : "Refresh Data"}</span>
                 </button>
+                <div className="relative" ref={addAssetButtonRef}>
+                  <button
+                    onClick={toggleAddAssetMenu}
+                    className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
+                  >
+                    <PlusIcon />
+                    Add New Asset
+                  </button>
+
+                  <AnimatePresence>
+                    {isAddAssetMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-md bg-white text-sm shadow-lg ring-1 ring-black ring-opacity-5"
+                      >
+                        <div className="flex flex-col py-1">
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/area-offices/add-area-offices")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <OfficeIcon />
+                            <span>Add Area Office</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/feeders/add-feeders")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <ReadingsIcon />
+                            <span>Add Feeder</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/injection-substations/add-injection-substations")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <AlertsIcon />
+                            <span>Add Injection Substation</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/poles/add-poles")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <PoleIcon />
+                            <span>Add Pole</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/distribution-stations/add-distribution-stations")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <DistributionIcon />
+                            <span>Add Distribution Station</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              router.push("/assets-management/service-stations/add-service-stations")
+                              closeAddAssetMenu()
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                          >
+                            <ServiceStationIcon />
+                            <span>Add Service Station</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </motion.div>
             </div>
 
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {isLoading ? (
+                {showLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
@@ -365,29 +525,6 @@ export default function MeteringDashboard() {
                       <div className="flex w-full max-sm:flex-col">
                         <div className="w-full">
                           <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Total Transformers Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-blue-600">
-                                  <TokenGeneratedIcon />
-                                </div>
-                                <span className="font-medium">Total Transformers</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(totalTransformers)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Operational:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(operationalTransformers)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
-
                             {/* Active Feeders Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
@@ -395,7 +532,7 @@ export default function MeteringDashboard() {
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
                                 <div className="text-green-600">
-                                  <MetersProgrammedIcon />
+                                  <TokenGeneratedIcon />
                                 </div>
                                 <span className="font-medium">Active Feeders</span>
                               </div>
@@ -411,56 +548,92 @@ export default function MeteringDashboard() {
                               </div>
                             </motion.div>
 
-                            {/* Substations Card */}
+                            {/* Injection Substations Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
+                                <div className="text-purple-600">
                                   <VendingIcon />
                                 </div>
-                                <span className="font-medium">Substations</span>
+                                <span className="font-medium">Injection Substations</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(substations)}</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(injectionSubstations)}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
+                                  <p className="text-grey-200">Operational:</p>
                                   <div className="flex items-center gap-1">
                                     <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">All operational</p>
+                                    <p className="text-secondary font-medium">
+                                      {formatNumber(operationalInjectionSubstations)}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Assets Under Maintenance Card */}
+                            {/* Distribution Substations Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-yellow-600">
-                                  <TamperIcon />
+                                <div className="text-orange-600">
+                                  <MetersProgrammedIcon />
                                 </div>
-                                <span className="font-medium">Under Maintenance</span>
+                                <span className="font-medium">Distribution Substations</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Assets:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">
-                                      {formatNumber(assetsUnderMaintenance)}
-                                    </p>
-                                    <ArrowIcon />
-                                  </div>
+                                  <p className="text-grey-200">Total:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(distributionSubstations)}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
-                                  <p className="text-secondary font-medium">{maintenanceStatus}</p>
+                                  <p className="text-grey-200">Operational:</p>
+                                  <div className="flex items-center gap-1">
+                                    <div className="size-2 rounded-full bg-green-500"></div>
+                                    <p className="text-secondary font-medium">
+                                      {formatNumber(operationalDistributionSubstations)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            {/* Area Offices Card */}
+                            <motion.div
+                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <div className="">
+                                  <OfficeIcon />
+                                </div>
+                                <span className="font-medium">Area Offices</span>
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Total:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {formatNumber(analyticsData.areaOffices || 15)}
+                                  </p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Active:</p>
+                                  <div className="flex items-center gap-1">
+                                    <div className="size-2 rounded-full bg-green-500"></div>
+                                    <p className="text-secondary font-medium">
+                                      {formatNumber(analyticsData.areaOffices || 15)}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </motion.div>

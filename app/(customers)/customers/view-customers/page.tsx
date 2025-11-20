@@ -2,7 +2,7 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AddCustomerModal from "components/ui/Modal/add-customer-modal"
 import { motion } from "framer-motion"
 import {
@@ -15,6 +15,10 @@ import {
 } from "components/Icons/Icons"
 import AllCustomers from "components/Tables/AllCustomers"
 import { ButtonModule } from "components/ui/Button/Button"
+
+import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import ViewAllCustomers from "components/Tables/ViewAllCustomers"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -271,54 +275,37 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock utility customer data
-const generateUtilityCustomerData = () => {
-  return {
-    totalCustomers: Math.floor(125000 + Math.random() * 5000),
-    activeCustomers: Math.floor(115000 + Math.random() * 4000),
-    frozenCustomers: Math.floor(1500 + Math.random() * 500),
-    inactiveCustomers: Math.floor(8500 + Math.random() * 2000),
-    prepaidCustomers: Math.floor(85000 + Math.random() * 3000),
-    postpaidCustomers: Math.floor(35000 + Math.random() * 2000),
-    estimatedBillingCustomers: Math.floor(5000 + Math.random() * 1000),
-  }
-}
-
 export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [customerData, setCustomerData] = useState(generateUtilityCustomerData())
 
-  // Use mock data instead of API
-  const totalCustomers = customerData.totalCustomers
-  const activeCustomers = customerData.activeCustomers
-  const frozenCustomers = customerData.frozenCustomers
-  const inactiveCustomers = customerData.inactiveCustomers
-  const prepaidCustomers = customerData.prepaidCustomers
-  const postpaidCustomers = customerData.postpaidCustomers
-  const estimatedBillingCustomers = customerData.estimatedBillingCustomers
+  // Redux hooks
+  const dispatch = useAppDispatch()
+  const { customerAnalyticsData, customerAnalyticsLoading, customerAnalyticsError, customerAnalyticsSuccess } =
+    useAppSelector((state) => state.analytics)
 
-  // Format numbers with commas
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
-  }
+  // Fetch customer analytics on component mount
+  useEffect(() => {
+    dispatch(fetchCustomerAnalytics())
+  }, [dispatch])
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after adding customer
-    setCustomerData(generateUtilityCustomerData())
+    // Refresh customer analytics after adding customer
+    dispatch(fetchCustomerAnalytics())
   }
 
   const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setCustomerData(generateUtilityCustomerData())
-      setIsLoading(false)
-    }, 1000)
+    dispatch(clearCustomerAnalytics())
+    dispatch(fetchCustomerAnalytics())
   }
 
   const handleOpenAddCustomerModal = () => {
     setIsAddCustomerModalOpen(true)
+  }
+
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString()
   }
 
   return (
@@ -355,16 +342,28 @@ export default function AllTransactions() {
                   onClick={handleRefreshData}
                   icon={<RefreshCircleIcon />}
                   iconPosition="start"
+                  disabled={customerAnalyticsLoading}
                 >
-                  Refresh Data
+                  {customerAnalyticsLoading ? "Refreshing..." : "Refresh Data"}
                 </ButtonModule>
               </motion.div>
             </div>
 
+            {/* Error Message */}
+            {customerAnalyticsError && (
+              <motion.div
+                className="mx-16 mb-4 rounded-md bg-red-50 p-4 text-red-700"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <p>Error loading customer analytics: {customerAnalyticsError}</p>
+              </motion.div>
+            )}
+
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {isLoading ? (
+                {customerAnalyticsLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
@@ -373,123 +372,44 @@ export default function AllTransactions() {
                 ) : (
                   // Loaded State
                   <>
-                    <motion.div
-                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="flex w-full max-sm:flex-col">
-                        <div className="w-full">
-                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <CustomeraIcon />
-                                Total Customers
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">All Accounts:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(totalCustomers)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Active:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(activeCustomers)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
+                    {customerAnalyticsData && (
+                      <>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                        >
+                          <ViewAllCustomers />
+                        </motion.div>
+                      </>
+                    )}
 
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <VendingIcon />
-                                Prepaid Customers
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Token Meters:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(prepaidCustomers)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalCustomers > 0
-                                      ? `${Math.round((prepaidCustomers / totalCustomers) * 100)}%`
-                                      : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <PostpaidIcon />
-                                Postpaid Customers
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Billed Monthly:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(postpaidCustomers)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalCustomers > 0
-                                      ? `${Math.round((postpaidCustomers / totalCustomers) * 100)}%`
-                                      : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            <motion.div
-                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <BillingIcon />
-                                Estimated Billing
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Unmetered:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary font-medium">
-                                      {formatNumber(estimatedBillingCustomers)}
-                                    </p>
-                                    <ArrowIcon />
-                                  </div>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalCustomers > 0
-                                      ? `${Math.round((estimatedBillingCustomers / totalCustomers) * 100)}%`
-                                      : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          </div>
+                    {/* Empty State */}
+                    {!customerAnalyticsData && !customerAnalyticsLoading && !customerAnalyticsError && (
+                      <motion.div
+                        className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-12"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <div className="text-center">
+                          <CustomeraIcon />
+                          <h3 className="mt-4 text-lg font-medium text-gray-900">No Customer Data</h3>
+                          <p className="mt-2 text-sm text-gray-500">
+                            No customer analytics data available. Try refreshing the data.
+                          </p>
+                          <ButtonModule
+                            variant="primary"
+                            size="md"
+                            onClick={handleRefreshData}
+                            className="mt-4"
+                            icon={<RefreshCircleIcon />}
+                            iconPosition="start"
+                          >
+                            Refresh Data
+                          </ButtonModule>
                         </div>
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <AllCustomers />
-                    </motion.div>
+                      </motion.div>
+                    )}
                   </>
                 )}
               </div>

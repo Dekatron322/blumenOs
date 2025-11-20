@@ -113,8 +113,6 @@
 
 // export default WebhookTestTab
 
-
-
 "use client"
 
 import React, { useState } from "react"
@@ -186,9 +184,7 @@ const WebhookTestTab = () => {
   }
 
   return (
-    <div className="rounded-md border bg-white p-6 w-full max-w-md">
-    
-
+    <div className="w-full max-w-md rounded-md border bg-white p-6">
       <h3 className="mb-4 text-lg font-semibold">Simulate Payment Webhook</h3>
 
       <div className="space-y-4">
@@ -212,7 +208,7 @@ const WebhookTestTab = () => {
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             placeholder="12000"
-            className="w-full bg-white rounded-md border border-gray-200 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
@@ -230,11 +226,15 @@ const WebhookTestTab = () => {
               <option>Pending</option>
             </select>
             <svg
-              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
+              className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-gray-500"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
-              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06-.02L10 10.67l3.71-3.48a.75.75 0 111.02 1.1l-4.2 3.94a.75.75 0 01-1.02 0L5.25 8.29a.75.75 0 01-.02-1.08z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06-.02L10 10.67l3.71-3.48a.75.75 0 111.02 1.1l-4.2 3.94a.75.75 0 01-1.02 0L5.25 8.29a.75.75 0 01-.02-1.08z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
         </div>
@@ -269,7 +269,7 @@ const WebhookTestTab = () => {
             className="rounded-md border border-gray-200 bg-gray-50 p-3"
           >
             <h4 className="mb-2 text-sm font-semibold">Response</h4>
-            <pre className="max-h-48 overflow-auto rounded bg-white p-3 text-xs font-mono text-gray-800">
+            <pre className="max-h-48 overflow-auto rounded bg-white p-3 font-mono text-xs text-gray-800">
               {response}
             </pre>
           </motion.div>

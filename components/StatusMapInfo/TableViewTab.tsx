@@ -205,8 +205,6 @@
 
 // export default TableViewTab
 
-
-
 "use client"
 
 import React, { useState } from "react"
@@ -276,25 +274,14 @@ const TableViewTab = () => {
 
   // filtering
   const filteredData = mockData.filter((row) =>
-    [
-      row.customerId,
-      row.name,
-      row.meterNo,
-      row.state,
-      row.amountDue,
-      row.lastPayment ?? "N/A",
-      row.status,
-    ]
+    [row.customerId, row.name, row.meterNo, row.state, row.amountDue, row.lastPayment ?? "N/A", row.status]
       .join(" ")
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   )
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize))
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const getStatusClasses = (status: TableRow["status"]) => {
     switch (status) {
@@ -311,15 +298,7 @@ const TableViewTab = () => {
 
   // CSV export (exports currently filtered rows)
   const exportCSV = () => {
-    const headers = [
-      "Customer ID",
-      "Name",
-      "Meter No",
-      "State",
-      "Amount Due",
-      "Last Payment",
-      "Status",
-    ]
+    const headers = ["Customer ID", "Name", "Meter No", "State", "Amount Due", "Last Payment", "Status"]
     const rows = filteredData.map((r) => [
       r.customerId,
       r.name,
@@ -344,7 +323,6 @@ const TableViewTab = () => {
       {/* Top controls: tabs + header + export */}
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-        
           <h3 className="text-lg font-semibold text-gray-800">
             Customer List <span className="text-sm font-normal text-gray-500">({mockData.length})</span>
           </h3>
@@ -360,7 +338,7 @@ const TableViewTab = () => {
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              className="rounded-md border bg-white border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -369,8 +347,19 @@ const TableViewTab = () => {
             className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:opacity-95"
             title="Export CSV"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
+              />
             </svg>
             Export CSV
           </button>
@@ -396,13 +385,13 @@ const TableViewTab = () => {
         <table className="w-full min-w-[900px]">
           <thead>
             <tr className="border-b bg-gray-50">
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[14%]">Customer ID</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[22%]">Name</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[18%]">Meter No</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[12%]">State</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[12%]">Amount Due</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[12%]">Last Payment</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[10%]">Status</th>
+              <th className="w-[14%] px-4 py-3 text-left text-sm font-semibold text-gray-700">Customer ID</th>
+              <th className="w-[22%] px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th className="w-[18%] px-4 py-3 text-left text-sm font-semibold text-gray-700">Meter No</th>
+              <th className="w-[12%] px-4 py-3 text-left text-sm font-semibold text-gray-700">State</th>
+              <th className="w-[12%] px-4 py-3 text-left text-sm font-semibold text-gray-700">Amount Due</th>
+              <th className="w-[12%] px-4 py-3 text-left text-sm font-semibold text-gray-700">Last Payment</th>
+              <th className="w-[10%] px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
             </tr>
           </thead>
 
@@ -434,7 +423,9 @@ const TableViewTab = () => {
 
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getStatusClasses(row.status)}`}
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getStatusClasses(
+                        row.status
+                      )}`}
                     >
                       {row.status.toUpperCase()}
                     </span>
@@ -456,8 +447,8 @@ const TableViewTab = () => {
       {totalPages > 1 && (
         <div className="mt-6 flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm text-gray-600">
-            Showing {(currentPage - 1) * pageSize + 1} to{" "}
-            {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
+            Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
+            {filteredData.length} entries
           </div>
 
           <div className="flex items-center gap-2">
@@ -474,9 +465,7 @@ const TableViewTab = () => {
                 key={i + 1}
                 onClick={() => setCurrentPage(i + 1)}
                 className={`rounded-md border px-3 py-1 text-sm ${
-                  currentPage === i + 1
-                    ? "border-blue-500 bg-blue-500 text-white"
-                    : "border-gray-300"
+                  currentPage === i + 1 ? "border-blue-500 bg-blue-500 text-white" : "border-gray-300"
                 }`}
               >
                 {i + 1}

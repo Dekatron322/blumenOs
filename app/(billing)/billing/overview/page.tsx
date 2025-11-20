@@ -2,12 +2,18 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { MetersProgrammedIcon, PlayIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import BillingInfo from "components/BillingInfo/BillingInfo"
+import { BillingIcon, PlayIcon, PostpaidIcon, RefreshCircleIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
+import BillingInfo from "components/BillingInfo/BillingInfo"
+import {
+  clearPostpaidBillingAnalytics,
+  fetchPostpaidBillingAnalytics,
+  setPostpaidBillingAnalyticsParams,
+} from "lib/redux/analyticsSlice"
+import type { PostpaidBillingAnalyticsParams } from "lib/redux/analyticsSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -45,8 +51,8 @@ const SkeletonLoader = () => {
   )
 }
 
-// Enhanced Skeleton for Customer Categories
-const CategoriesSkeleton = () => {
+// Enhanced Skeleton for Billing Analytics Cards
+const BillingAnalyticsSkeleton = () => {
   return (
     <div className="w-80 rounded-md border bg-white p-5">
       <div className="border-b pb-4">
@@ -167,93 +173,14 @@ const TableSkeleton = () => {
   )
 }
 
-// List View Skeleton
-const ListSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex gap-4">
-          <div className="h-10 w-80 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* List View Skeleton */}
-      <div className="divide-y">
-        {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-gray-200"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="h-5 w-40 rounded bg-gray-200"></div>
-                    <div className="flex gap-2">
-                      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
-                    ))}
-                  </div>
-                  <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-20 rounded bg-gray-200"></div>
-                  <div className="size-6 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
 // Main Loading Component
-const LoadingState = ({ showCategories = true }) => {
+const LoadingState = ({ showAnalytics = true }) => {
   return (
     <div className="flex-3 relative mt-5 flex items-start gap-6">
-      {showCategories ? (
+      {showAnalytics ? (
         <>
           <TableSkeleton />
-          <CategoriesSkeleton />
+          <BillingAnalyticsSkeleton />
         </>
       ) : (
         <div className="w-full">
@@ -264,42 +191,267 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock meter data
-const generateMeterData = () => {
-  return {
-    smartMeters: 89420,
-    conventionalMeters: 29514,
-    readSuccessRate: 94.2,
-    alerts: 847,
-    totalMeters: 89420 + 29514,
+// Postpaid Billing Analytics Summary Cards Component
+const PostpaidBillingAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
   }
-}
 
-export default function MeteringDashboard() {
-  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [meterData, setMeterData] = useState(generateMeterData())
-
-  // Use mock data
-  const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
-
-  // Format numbers with commas
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
 
-  const handleAddCustomerSuccess = async () => {
-    setIsAddCustomerModalOpen(false)
-    // Refresh data after adding customer
-    setMeterData(generateMeterData())
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
+  return (
+    <motion.div
+      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex w-full max-sm:flex-col">
+        <div className="w-full">
+          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
+            {/* Total Bills Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                <BillingIcon />
+                <span className="font-medium">Total Bills</span>
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">All Bills:</p>
+                  <p className="text-secondary text-xl font-bold">{formatNumber(analyticsData.totalBills)}</p>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Finalized:</p>
+                  <p className="text-secondary font-medium">
+                    {formatNumber(analyticsData.finalizedBills)} (
+                    {calculatePercentage(analyticsData.finalizedBills, analyticsData.totalBills)}%)
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Revenue Summary Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                {/* <AnalyticsIcon /> */}
+                <span className="font-medium">Revenue Summary</span>
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Current Bill:</p>
+                  <p className="text-secondary text-xl font-bold">
+                    {formatCurrency(analyticsData.totalCurrentBillAmount)}
+                  </p>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Total Due:</p>
+                  <p className="text-secondary font-medium">{formatCurrency(analyticsData.totalAmountDue)}</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Consumption Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                <PostpaidIcon />
+                <span className="font-medium">Consumption</span>
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Total kWh:</p>
+                  <p className="text-secondary text-xl font-bold">{formatNumber(analyticsData.totalConsumptionKwh)}</p>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Forecast:</p>
+                  <p className="text-secondary font-medium">{formatNumber(analyticsData.forecastConsumptionKwh)} kWh</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Disputes & Adjustments Card */}
+            <motion.div
+              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+            >
+              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                {/* <DisputeIcon /> */}
+                <span className="font-medium">Disputes & Adjustments</span>
+              </div>
+              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Active Disputes:</p>
+                  <div className="flex gap-1">
+                    <p className="text-secondary font-medium">{formatNumber(analyticsData.activeDisputes)}</p>
+                    <ArrowIcon />
+                  </div>
+                </div>
+                <div className="flex w-full justify-between">
+                  <p className="text-grey-200">Adjustments:</p>
+                  <p className="text-secondary font-medium">{formatCurrency(analyticsData.totalAdjustmentsApplied)}</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Period Selector Component
+const PeriodSelector = ({
+  currentPeriod,
+  onPeriodChange,
+}: {
+  currentPeriod?: string
+  onPeriodChange: (period: string) => void
+}) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = String(now.getMonth() + 1).padStart(2, "0")
+  const currentPeriodValue = `${currentYear}-${currentMonth}`
+
+  const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+  const periods = monthLabels.map((label, index) => {
+    const monthNumber = String(index + 1).padStart(2, "0")
+    return {
+      value: `${currentYear}-${monthNumber}`,
+      label: `${label} ${currentYear}`,
+    }
+  })
+
+  const selectedValue = currentPeriod ?? currentPeriodValue
+
+  return (
+    <div className="flex items-center gap-3">
+      <label htmlFor="period-select" className="text-sm font-medium text-gray-700">
+        Billing Period:
+      </label>
+      <div className="relative">
+        <button
+          id="period-select"
+          type="button"
+          className="flex min-w-[160px] items-center justify-between gap-2 rounded-md border border-[#0a0a0a] bg-transparent px-3 py-2 text-sm focus:border-[#0a0a0a] focus:outline-none focus:ring-1 focus:ring-[#0a0a0a]"
+          onClick={() => setIsDropdownOpen((prev) => !prev)}
+        >
+          <span>{periods.find((p) => p.value === selectedValue)?.label ?? selectedValue}</span>
+          <svg
+            className="size-4 text-gray-500"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+
+        {isDropdownOpen && (
+          <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
+            {periods.map((period) => (
+              <button
+                key={period.value}
+                type="button"
+                className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
+                  period.value === selectedValue ? "bg-gray-100 font-medium" : ""
+                }`}
+                onClick={() => {
+                  onPeriodChange(period.value)
+                  setIsDropdownOpen(false)
+                }}
+              >
+                {period.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function BillingDashboard() {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const getCurrentPeriod = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    return `${year}-${month}`
+  }
+
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(() => getCurrentPeriod())
+
+  // Redux hooks
+  const dispatch = useAppDispatch()
+  const {
+    postpaidBillingAnalyticsData,
+    postpaidBillingAnalyticsLoading,
+    postpaidBillingAnalyticsError,
+    postpaidBillingAnalyticsParams,
+  } = useAppSelector((state) => state.analytics)
+
+  // Fetch postpaid billing analytics on component mount and when period changes
+  useEffect(() => {
+    const params: PostpaidBillingAnalyticsParams = {
+      period: selectedPeriod,
+      status: 1, // Finalized bills
+      category: 2, // Postpaid category
+    }
+    dispatch(setPostpaidBillingAnalyticsParams(params))
+    dispatch(fetchPostpaidBillingAnalytics(params))
+  }, [dispatch, selectedPeriod])
+
+  const handlePeriodChange = (period: string) => {
+    setSelectedPeriod(period)
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
-    setTimeout(() => {
-      setMeterData(generateMeterData())
-      setIsLoading(false)
-    }, 1000)
+    const params: PostpaidBillingAnalyticsParams = {
+      period: selectedPeriod,
+      status: 1,
+      category: 2,
+    }
+    dispatch(clearPostpaidBillingAnalytics())
+    dispatch(fetchPostpaidBillingAnalytics(params))
+    setTimeout(() => setIsLoading(false), 1000)
+  }
+
+  const handleStartBillingRun = () => {
+    // Implement billing run logic here
+    console.log("Starting billing run for period:", selectedPeriod)
+  }
+
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString()
   }
 
   return (
@@ -321,216 +473,188 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule variant="outline" size="md" className="mt-2" icon={<PlayIcon />}>
+                <PeriodSelector currentPeriod={selectedPeriod} onPeriodChange={handlePeriodChange} />
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  icon={<PlayIcon />}
+                  onClick={handleStartBillingRun}
+                  disabled={postpaidBillingAnalyticsLoading}
+                >
                   Start Billing Run
+                </ButtonModule>
+                <ButtonModule
+                  variant="primary"
+                  size="md"
+                  onClick={handleRefreshData}
+                  icon={<RefreshCircleIcon />}
+                  iconPosition="start"
+                  disabled={postpaidBillingAnalyticsLoading || isLoading}
+                >
+                  {postpaidBillingAnalyticsLoading || isLoading ? "Refreshing..." : "Refresh Data"}
                 </ButtonModule>
               </motion.div>
             </div>
 
+            {/* Error Message */}
+            {postpaidBillingAnalyticsError && (
+              <motion.div
+                className="mx-16 mb-4 rounded-md bg-red-50 p-4 text-red-700"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <p>Error loading billing analytics: {postpaidBillingAnalyticsError}</p>
+              </motion.div>
+            )}
+
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {isLoading ? (
+                {postpaidBillingAnalyticsLoading || isLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
-                    <LoadingState showCategories={true} />
+                    <LoadingState showAnalytics={true} />
                   </>
                 ) : (
-                  // Loaded State - Redesigned Metering Dashboard
+                  // Loaded State - Billing Dashboard
                   <>
-                    <motion.div
-                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="flex w-full max-sm:flex-col">
-                        <div className="w-full">
-                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Smart Meters Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-blue-600">
-                                  <TokenGeneratedIcon />
-                                </div>
-                                <span className="font-medium">Smart Meters</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Installed:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(smartMeters)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalMeters > 0 ? `${Math.round((smartMeters / totalMeters) * 100)}%` : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
+                    {postpaidBillingAnalyticsData && (
+                      <>
+                        <PostpaidBillingAnalyticsCards analyticsData={postpaidBillingAnalyticsData} />
 
-                            {/* Conventional Meters Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <MetersProgrammedIcon />
-                                </div>
-                                <span className="font-medium">Conventional</span>
+                        {/* Additional Metrics Summary */}
+                        <motion.div
+                          className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                        >
+                          {/* Bill Status Summary */}
+                          <div className="rounded-lg bg-blue-50 p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-blue-800">Bill Status</p>
+                                <p className="text-2xl font-bold text-blue-900">
+                                  {formatNumber(postpaidBillingAnalyticsData.finalizedBills)} /{" "}
+                                  {formatNumber(postpaidBillingAnalyticsData.totalBills)}
+                                </p>
                               </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Installed:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(conventionalMeters)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalMeters > 0
-                                      ? `${Math.round((conventionalMeters / totalMeters) * 100)}%`
-                                      : "0%"}
-                                  </p>
-                                </div>
+                              <div className="rounded-full bg-blue-100 p-2">
+                                <BillingIcon />
                               </div>
-                            </motion.div>
-
-                            {/* Read Success Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <VendingIcon />
-                                </div>
-                                <span className="font-medium">Read Success</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Success Rate:</p>
-                                  <p className="text-secondary text-xl font-bold">{readSuccessRate}%</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div
-                                      className={`size-2 rounded-full ${
-                                        readSuccessRate >= 90
-                                          ? "bg-green-500"
-                                          : readSuccessRate >= 80
-                                          ? "bg-yellow-500"
-                                          : "bg-red-500"
-                                      }`}
-                                    ></div>
-                                    <p className="text-secondary font-medium">
-                                      {readSuccessRate >= 90
-                                        ? "Excellent"
-                                        : readSuccessRate >= 80
-                                        ? "Good"
-                                        : "Needs Attention"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Alerts Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-red-600">
-                                  <TamperIcon />
-                                </div>
-                                <span className="font-medium">Alerts</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Active Alerts:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">{formatNumber(alerts)}</p>
-                                    <ArrowIcon />
-                                  </div>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Trend:</p>
-                                  <p className="text-secondary font-medium">
-                                    <span className="text-red-500">↑ 12%</span> from last week
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Additional Metrics Summary
-                    <motion.div
-                      className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <div className="rounded-lg bg-blue-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-blue-800">Total Meters</p>
-                            <p className="text-2xl font-bold text-blue-900">{formatNumber(totalMeters)}</p>
-                          </div>
-                          <div className="rounded-full bg-blue-100 p-2">
-                            <SmartMeterIcon />
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-blue-600">All installed meters in the system</p>
-                      </div>
-
-                      <div className="rounded-lg bg-green-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-green-800">AMI Coverage</p>
-                            <p className="text-2xl font-bold text-green-900">
-                              {totalMeters > 0 ? Math.round((smartMeters / totalMeters) * 100) : 0}%
+                            </div>
+                            <p className="mt-2 text-xs text-blue-600">
+                              {formatNumber(postpaidBillingAnalyticsData.draftBills)} draft,{" "}
+                              {formatNumber(postpaidBillingAnalyticsData.reversedBills)} reversed
                             </p>
                           </div>
-                          <div className="rounded-full bg-green-100 p-2">
-                            <SuccessIcon />
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-green-600">Advanced Metering Infrastructure penetration</p>
-                      </div>
 
-                      <div className="rounded-lg bg-orange-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-orange-800">Avg. Daily Reads</p>
-                            <p className="text-2xl font-bold text-orange-900">
-                              {formatNumber(Math.round(totalMeters * 0.87))}
+                          {/* Financial Overview */}
+                          <div className="rounded-lg bg-green-50 p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-green-800">Revenue</p>
+                                <p className="text-2xl font-bold text-green-900">
+                                  {new Intl.NumberFormat("en-NG", {
+                                    style: "currency",
+                                    currency: "NGN",
+                                    notation: "compact",
+                                    maximumFractionDigits: 1,
+                                  }).format(postpaidBillingAnalyticsData.totalCurrentBillAmount)}
+                                </p>
+                              </div>
+                              {/* <div className="rounded-full bg-green-100 p-2">
+                                <AnalyticsIcon />
+                              </div> */}
+                            </div>
+                            <p className="mt-2 text-xs text-green-600">
+                              VAT:{" "}
+                              {new Intl.NumberFormat("en-NG", {
+                                style: "currency",
+                                currency: "NGN",
+                                notation: "compact",
+                                maximumFractionDigits: 1,
+                              }).format(postpaidBillingAnalyticsData.totalVatAmount)}
                             </p>
                           </div>
-                          <div className="rounded-full bg-orange-100 p-2">
-                            <ConventionalMeterIcon />
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-orange-600">Successful meter readings per day</p>
-                      </div>
-                    </motion.div> */}
 
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
-                    >
-                      <BillingInfo />
-                    </motion.div>
+                          {/* Consumption Metrics */}
+                          <div className="rounded-lg bg-orange-50 p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-orange-800">Energy Consumption</p>
+                                <p className="text-2xl font-bold text-orange-900">
+                                  {formatNumber(postpaidBillingAnalyticsData.totalConsumptionKwh)} kWh
+                                </p>
+                              </div>
+                              <div className="rounded-full bg-orange-100 p-2">
+                                <PostpaidIcon />
+                              </div>
+                            </div>
+                            <p className="mt-2 text-xs text-orange-600">
+                              {formatNumber(postpaidBillingAnalyticsData.estimatedBills)} estimated bills
+                            </p>
+                          </div>
+
+                          {/* Quality Metrics */}
+                          <div className="rounded-lg bg-purple-50 p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-purple-800">Data Quality</p>
+                                <p className="text-2xl font-bold text-purple-900">
+                                  {formatNumber(postpaidBillingAnalyticsData.flaggedMeterReadings)}
+                                </p>
+                              </div>
+                              {/* <div className="rounded-full bg-purple-100 p-2">
+                                <DisputeIcon />
+                              </div> */}
+                            </div>
+                            <p className="mt-2 text-xs text-purple-600">
+                              {formatNumber(postpaidBillingAnalyticsData.activeDisputes)} active disputes
+                            </p>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          className="mt-6"
+                        >
+                          <BillingInfo />
+                        </motion.div>
+                      </>
+                    )}
+
+                    {/* Empty State */}
+                    {!postpaidBillingAnalyticsData &&
+                      !postpaidBillingAnalyticsLoading &&
+                      !postpaidBillingAnalyticsError && (
+                        <motion.div
+                          className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-12"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          <div className="text-center">
+                            <BillingIcon />
+                            <h3 className="mt-4 text-lg font-medium text-gray-900">No Billing Data</h3>
+                            <p className="mt-2 text-sm text-gray-500">
+                              No postpaid billing analytics data available for the selected period.
+                            </p>
+                            <ButtonModule
+                              variant="primary"
+                              size="md"
+                              onClick={handleRefreshData}
+                              className="mt-4"
+                              icon={<RefreshCircleIcon />}
+                              iconPosition="start"
+                            >
+                              Refresh Data
+                            </ButtonModule>
+                          </div>
+                        </motion.div>
+                      )}
                   </>
                 )}
               </div>
@@ -538,11 +662,6 @@ export default function MeteringDashboard() {
           </div>
         </div>
       </div>
-      <InstallMeterModal
-        isOpen={isAddCustomerModalOpen}
-        onRequestClose={() => setIsAddCustomerModalOpen(false)}
-        onSuccess={handleAddCustomerSuccess}
-      />
     </section>
   )
 }

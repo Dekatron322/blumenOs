@@ -5,28 +5,33 @@ import FeedersTab from "./FeedersTab"
 import SubstationsTab from "./SubstationsTab"
 import AreaOfficesTab from "./AreaOfficesTab"
 import PolesTab from "./PolesTab"
-import DistributionStaionTab from "./DistributionStaionTab"
+import DistributionStaionTab from "./DistributionStationTab"
+import ServiceStationTab from "./ServiceStationTab"
 
 const AssetManagementInfo = () => {
-  const [activeTab, setActiveTab] = useState("transformers")
+  const [activeTab, setActiveTab] = useState("offices")
 
   // Render active tab content
   const renderTabContent = () => {
     switch (activeTab) {
-      case "transformers":
-        return <TransformersTab />
+      // case "transformers":
+      //   return <TransformersTab />
       case "offices":
         return <AreaOfficesTab />
-      case "transformers":
-        return <TransformersTab />
+      case "feeders":
+        return <FeedersTab />
       case "poles":
         return <PolesTab />
+
       case "substations":
         return <SubstationsTab />
       case "distribution-stations":
         return <DistributionStaionTab />
+      case "service-stations":
+        return <ServiceStationTab />
+
       default:
-        return <TransformersTab />
+        return <AreaOfficesTab />
     }
   }
 

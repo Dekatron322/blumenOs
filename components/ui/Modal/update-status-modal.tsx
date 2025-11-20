@@ -6,7 +6,6 @@ import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormSelectModule } from "../Input/FormSelectModule"
-import { useUpdateCustomerMutation } from "lib/redux/customerSlice"
 import { notify } from "../Notification/Notification"
 
 interface Customer {
@@ -40,7 +39,7 @@ interface UpdateCustomerModalProps {
 }
 
 const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onRequestClose, onSuccess, customer }) => {
-  const [updateCustomer, { isLoading, error }] = useUpdateCustomerMutation()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     serviceBand: "",
     tariffClass: "",
@@ -59,12 +58,13 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onReq
   }, [customer])
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+    const valueStr = typeof value === "number" ? String(value) : value
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: valueStr,
     }))
   }
 
@@ -92,27 +92,12 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onReq
     }
 
     try {
-      const updates: any = {}
+      setIsSubmitting(true)
 
-      // Only include fields that have changed
-      if (formData.serviceBand !== customer.serviceBand) {
-        updates.serviceBand = formData.serviceBand
-      }
-      if (formData.tariffClass !== customer.tariffClass) {
-        updates.tariffClass = formData.tariffClass
-      }
-      if (formData.status !== customer.status) {
-        updates.status = formData.status
-      }
+      // Simulate processing delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      const result = await updateCustomer({
-        id: customer.id,
-        updates: updates,
-      }).unwrap()
-
-      console.log("Customer updated successfully:", result)
-
-      // Show success notification
+      // Frontend-only success
       notify("success", "Customer updated successfully", {
         description: `${customer.customerName}'s information has been updated`,
         duration: 5000,
@@ -120,17 +105,8 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onReq
 
       onRequestClose()
       if (onSuccess) onSuccess()
-    } catch (error: any) {
-      console.error("Failed to update customer:", error)
-
-      // Extract error message from the API response
-      const errorMessage = error?.data?.message || "An unexpected error occurred while updating the customer"
-
-      // Show error notification
-      notify("error", "Failed to update customer", {
-        description: errorMessage,
-        duration: 6000,
-      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -286,7 +262,7 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onReq
             className="flex-1"
             size="lg"
             onClick={onRequestClose}
-            disabled={isLoading}
+            disabled={isSubmitting}
           >
             Cancel
           </ButtonModule>
@@ -295,9 +271,9 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({ isOpen, onReq
             className="flex-1"
             size="lg"
             onClick={handleSubmit}
-            disabled={!isFormValid() || !hasChanges || isLoading}
+            disabled={!isFormValid() || !hasChanges || isSubmitting}
           >
-            {isLoading ? "Updating..." : "Update Customer"}
+            {isSubmitting ? "Updating..." : "Update Customer"}
           </ButtonModule>
         </div>
       </motion.div>

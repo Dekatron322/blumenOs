@@ -2,42 +2,76 @@
 
 import React, { useRef, useState } from "react"
 import { motion } from "framer-motion"
+import { useDispatch, useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { useAddCustomerMutation } from "lib/redux/customerSlice"
 import { AddCustomerIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { AppDispatch, RootState } from "lib/redux/store"
+import {
+  BulkCreateCustomerRequest,
+  bulkCreateCustomers,
+  clearCreateState,
+  CreateCustomerRequest,
+} from "lib/redux/customerSlice"
+import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { fetchEmployees } from "lib/redux/employeeSlice"
 
 interface CustomerFormData {
-  accountNumber: string
-  customerName: string
-  customerType: "" | "PREPAID" | "POSTPAID"
-  serviceBand: string
-  tariffClass: string
-  region: string
-  businessUnit: string
-  address: string
+  fullName: string
   phoneNumber: string
   email: string
+  address: string
+  distributionSubstationId: number
+  status: string
+  addressTwo: string
+  city: string
+  state: string
+  serviceCenterId: number
+  latitude: number
+  longitude: number
+  tariff: number
+  meterNumber: string
+  isPPM: boolean
+  isMD: boolean
+  comment: string
+  band: string
+  storedAverage: number
+  totalMonthlyVend: number
+  totalMonthlyDebt: number
+  customerOutstandingDebtBalance: number
+  salesRepUserId: number
+  technicalEngineerUserId: number
 }
 
-interface CSVCustomer {
-  accountNumber: string
-  customerName: string
-  customerType: "PREPAID" | "POSTPAID"
-  serviceBand: string
-  tariffClass: string
-  region: string
-  businessUnit: string
-  address: string
-  phoneNumber: string
-  email: string
-}
+type CSVCustomer = CreateCustomerRequest
 
 const AddCustomerPage = () => {
-  const [addCustomer, { isLoading }] = useAddCustomerMutation()
+  const dispatch = useDispatch<AppDispatch>()
+  const router = useRouter()
+
+  const { createLoading, createError, createSuccess, bulkCreateResults } = useSelector(
+    (state: RootState) => state.customers
+  )
+
+  const {
+    distributionSubstations,
+    loading: distributionSubstationsLoading,
+    error: distributionSubstationsError,
+  } = useSelector((state: RootState) => state.distributionSubstations)
+
+  const {
+    serviceStations,
+    loading: serviceStationsLoading,
+    error: serviceStationsError,
+  } = useSelector((state: RootState) => state.serviceStations)
+
+  const { employees, employeesLoading, employeesError } = useSelector((state: RootState) => state.employee)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -47,68 +81,188 @@ const AddCustomerPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<CustomerFormData>({
-    accountNumber: "",
-    customerName: "",
-    customerType: "",
-    serviceBand: "",
-    tariffClass: "",
-    region: "",
-    businessUnit: "",
-    address: "",
+    fullName: "",
     phoneNumber: "",
     email: "",
+    address: "",
+    distributionSubstationId: 0,
+    status: "ACTIVE",
+    addressTwo: "",
+    city: "",
+    state: "",
+    serviceCenterId: 0,
+    latitude: 0,
+    longitude: 0,
+    tariff: 0,
+    meterNumber: "",
+    isPPM: false,
+    isMD: false,
+    comment: "",
+    band: "",
+    storedAverage: 0,
+    totalMonthlyVend: 0,
+    totalMonthlyDebt: 0,
+    customerOutstandingDebtBalance: 0,
+    salesRepUserId: 0,
+    technicalEngineerUserId: 0,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
+  // Fetch related data when component mounts
+  React.useEffect(() => {
+    // Fetch distribution substations for the dropdown
+    dispatch(
+      fetchDistributionSubstations({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    // Fetch service centers for the dropdown
+    dispatch(
+      fetchServiceStations({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    // Fetch employees for the dropdowns
+    dispatch(
+      fetchEmployees({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+  }, [dispatch])
+
+  // Handle success and error states
+  React.useEffect(() => {
+    if (createSuccess) {
+      if (activeTab === "single") {
+        notify("success", "Customer created successfully", {
+          description: `${formData.fullName} has been added to the system`,
+          duration: 5000,
+        })
+        // Reset form after successful creation
+        handleReset()
+      } else if (activeTab === "bulk" && bulkCreateResults) {
+        const { successful, failed } = bulkCreateResults
+        const successCount = successful.length
+        const failedCount = failed.length
+
+        if (failedCount === 0) {
+          notify("success", "Bulk upload completed successfully", {
+            description: `All ${successCount} customers have been created successfully`,
+            duration: 6000,
+          })
+        } else {
+          notify("warning", "Bulk upload completed with some errors", {
+            description: `${successCount} customers created successfully, ${failedCount} failed`,
+            duration: 8000,
+          })
+        }
+
+        // Reset bulk upload state
+        setCsvFile(null)
+        setCsvData([])
+        setCsvErrors([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+      }
+    }
+
+    if (createError) {
+      notify("error", "Failed to create customer", {
+        description: createError,
+        duration: 6000,
+      })
+    }
+  }, [createSuccess, createError, bulkCreateResults, activeTab, formData.fullName])
+
+  // Clear state when component unmounts
+  React.useEffect(() => {
+    return () => {
+      dispatch(clearCreateState())
+    }
+  }, [dispatch])
+
   // Options for dropdowns
-  const customerTypeOptions = [
-    { value: "", label: "Select customer type" },
-    { value: "PREPAID", label: "Prepaid" },
-    { value: "POSTPAID", label: "Postpaid" },
+  const statusOptions = [
+    { value: "ACTIVE", label: "Active" },
+    { value: "INACTIVE", label: "Inactive" },
   ]
 
-  const serviceBandOptions = [
-    { value: "", label: "Select service band" },
-    { value: "A", label: "Band A" },
-    { value: "B", label: "Band B" },
-    { value: "C", label: "Band C" },
-    { value: "D", label: "Band D" },
-    { value: "E", label: "Band E" },
+  const bandOptions = [
+    { value: "", label: "Select band" },
+    { value: "Band A", label: "Band A" },
+    { value: "Band B", label: "Band B" },
+    { value: "Band C", label: "Band C" },
+    { value: "Band D", label: "Band D" },
+    { value: "Band E", label: "Band E" },
   ]
 
-  const tariffClassOptions = [
-    { value: "", label: "Select tariff class" },
-    { value: "T1", label: "T1 - Residential" },
-    { value: "T2", label: "T2 - Commercial" },
-    { value: "T3", label: "T3 - Industrial" },
-    { value: "T4", label: "T4 - Special Load" },
+  // Distribution substation options from fetched data
+  const distributionSubstationOptions = [
+    { value: 0, label: "Select distribution substation" },
+    ...distributionSubstations.map((substation) => ({
+      value: substation.id,
+      label: `${substation.dssCode} (${substation.nercCode})`,
+    })),
   ]
 
-  const regionOptions = [
-    { value: "", label: "Select region" },
-    { value: "North", label: "North" },
-    { value: "South", label: "South" },
-    { value: "East", label: "East" },
-    { value: "West", label: "West" },
-    { value: "Central", label: "Central" },
+  // Service center options from fetched data
+  const serviceCenterOptions = [
+    { value: 0, label: "Select service center" },
+    ...serviceStations.map((serviceStation) => ({
+      value: serviceStation.id,
+      label: `${serviceStation.name} (${serviceStation.code})`,
+    })),
   ]
 
-  const businessUnitOptions = [
-    { value: "", label: "Select business unit" },
-    { value: "UnitA", label: "Unit A" },
-    { value: "UnitB", label: "Unit B" },
-    { value: "UnitC", label: "Unit C" },
-    { value: "UnitD", label: "Unit D" },
+  // Employee options for sales rep and technical engineer
+  const employeeOptions = [
+    { value: 0, label: "Select employee" },
+    ...employees.map((employee) => ({
+      value: employee.id,
+      label: `${employee.fullName} (${employee.email})`,
+    })),
   ]
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+
+    // Handle number fields
+    let processedValue = value
+    if (
+      [
+        "distributionSubstationId",
+        "serviceCenterId",
+        "latitude",
+        "longitude",
+        "tariff",
+        "storedAverage",
+        "totalMonthlyVend",
+        "totalMonthlyDebt",
+        "customerOutstandingDebtBalance",
+        "salesRepUserId",
+        "technicalEngineerUserId",
+      ].includes(name)
+    ) {
+      processedValue = value === "" ? 0 : Number(value)
+    }
+
+    // Handle boolean fields
+    if (["isPPM", "isMD"].includes(name)) {
+      processedValue = value === "true" || value === true
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }))
 
     // Clear error when user starts typing
@@ -123,36 +277,8 @@ const AddCustomerPage = () => {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.accountNumber.trim()) {
-      errors.accountNumber = "Account number is required"
-    }
-
-    if (!formData.customerName.trim()) {
-      errors.customerName = "Customer name is required"
-    }
-
-    if (!formData.customerType) {
-      errors.customerType = "Customer type is required"
-    }
-
-    if (!formData.serviceBand.trim()) {
-      errors.serviceBand = "Service band is required"
-    }
-
-    if (!formData.tariffClass.trim()) {
-      errors.tariffClass = "Tariff class is required"
-    }
-
-    if (!formData.region.trim()) {
-      errors.region = "Region is required"
-    }
-
-    if (!formData.businessUnit.trim()) {
-      errors.businessUnit = "Business unit is required"
-    }
-
-    if (!formData.address.trim()) {
-      errors.address = "Address is required"
+    if (!formData.fullName.trim()) {
+      errors.fullName = "Full name is required"
     }
 
     if (!formData.phoneNumber.trim()) {
@@ -165,6 +291,22 @@ const AddCustomerPage = () => {
       errors.email = "Email is required"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = "Please enter a valid email address"
+    }
+
+    if (!formData.address.trim()) {
+      errors.address = "Address is required"
+    }
+
+    if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
+      errors.distributionSubstationId = "Distribution substation is required"
+    }
+
+    if (!formData.serviceCenterId || formData.serviceCenterId === 0) {
+      errors.serviceCenterId = "Service center is required"
+    }
+
+    if (!formData.band.trim()) {
+      errors.band = "Band is required"
     }
 
     setFormErrors(errors)
@@ -185,70 +327,76 @@ const AddCustomerPage = () => {
       return
     }
 
-    setIsSubmitting(true)
-
     try {
-      const result = await addCustomer({
-        accountNumber: formData.accountNumber,
-        customerName: formData.customerName,
-        customerType: formData.customerType as "PREPAID" | "POSTPAID",
-        serviceBand: formData.serviceBand,
-        tariffClass: formData.tariffClass,
-        region: formData.region,
-        businessUnit: formData.businessUnit,
-        address: formData.address,
+      const createData: CreateCustomerRequest = {
+        fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
-        status: "ACTIVE",
-      }).unwrap()
+        address: formData.address,
+        distributionSubstationId: formData.distributionSubstationId,
+        status: formData.status,
+        addressTwo: formData.addressTwo,
+        city: formData.city,
+        state: formData.state,
+        serviceCenterId: formData.serviceCenterId,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        tariff: formData.tariff,
+        meterNumber: formData.meterNumber,
+        isPPM: formData.isPPM,
+        isMD: formData.isMD,
+        comment: formData.comment,
+        band: formData.band,
+        storedAverage: formData.storedAverage,
+        totalMonthlyVend: formData.totalMonthlyVend,
+        totalMonthlyDebt: formData.totalMonthlyDebt,
+        customerOutstandingDebtBalance: formData.customerOutstandingDebtBalance,
+        salesRepUserId: formData.salesRepUserId,
+        technicalEngineerUserId: formData.technicalEngineerUserId,
+      }
 
-      console.log("Customer added successfully:", result)
+      const bulkPayload: BulkCreateCustomerRequest = {
+        customers: [createData],
+      }
 
-      notify("success", "Customer created successfully", {
-        description: `${formData.customerName} (${formData.accountNumber}) has been added to the system`,
-        duration: 5000,
-      })
+      await dispatch(bulkCreateCustomers(bulkPayload)).unwrap()
 
-      // Reset form
-      setFormData({
-        accountNumber: "",
-        customerName: "",
-        customerType: "",
-        serviceBand: "",
-        tariffClass: "",
-        region: "",
-        businessUnit: "",
-        address: "",
-        phoneNumber: "",
-        email: "",
-      })
-      setFormErrors({})
+      // Success is handled in the useEffect above
     } catch (error: any) {
-      console.error("Failed to add customer:", error)
-      const errorMessage = error?.data?.message || "An unexpected error occurred while adding the customer"
-      notify("error", "Failed to add customer", {
-        description: errorMessage,
-        duration: 6000,
-      })
-    } finally {
-      setIsSubmitting(false)
+      console.error("Failed to create customer:", error)
+      // Error is handled in the useEffect above
     }
   }
 
   const handleReset = () => {
     setFormData({
-      accountNumber: "",
-      customerName: "",
-      customerType: "",
-      serviceBand: "",
-      tariffClass: "",
-      region: "",
-      businessUnit: "",
-      address: "",
+      fullName: "",
       phoneNumber: "",
       email: "",
+      address: "",
+      distributionSubstationId: 0,
+      status: "ACTIVE",
+      addressTwo: "",
+      city: "",
+      state: "",
+      serviceCenterId: 0,
+      latitude: 0,
+      longitude: 0,
+      tariff: 0,
+      meterNumber: "",
+      isPPM: false,
+      isMD: false,
+      comment: "",
+      band: "",
+      storedAverage: 0,
+      totalMonthlyVend: 0,
+      totalMonthlyDebt: 0,
+      customerOutstandingDebtBalance: 0,
+      salesRepUserId: 0,
+      technicalEngineerUserId: 0,
     })
     setFormErrors({})
+    dispatch(clearCreateState())
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -292,23 +440,20 @@ const AddCustomerPage = () => {
           return
         }
 
-        const headers = lines[0]!.split(",").map((header) => header.trim().toLowerCase())
+        const headers = lines[0]!.split(",").map((header) => header.trim())
 
-        // Validate headers
-        const expectedHeaders = [
-          "accountnumber",
-          "customername",
-          "customertype",
-          "serviceband",
-          "tariffclass",
-          "region",
-          "businessunit",
-          "address",
-          "phonenumber",
+        // Validate headers: use the exact camelCase headers from the template
+        const requiredHeaders = [
+          "fullName",
+          "phoneNumber",
           "email",
+          "address",
+          "distributionSubstationId",
+          "serviceCenterId",
+          "band",
         ]
 
-        const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
+        const missingHeaders = requiredHeaders.filter((header) => !headers.includes(header))
         if (missingHeaders.length > 0) {
           setCsvErrors([`Missing required columns: ${missingHeaders.join(", ")}`])
           return
@@ -334,18 +479,36 @@ const AddCustomerPage = () => {
           if (rowErrors.length > 0) {
             errors.push(...rowErrors)
           } else {
-            parsedData.push({
-              accountNumber: row.accountnumber,
-              customerName: row.customername,
-              customerType: row.customertype.toUpperCase() as "PREPAID" | "POSTPAID",
-              serviceBand: row.serviceband,
-              tariffClass: row.tariffclass,
-              region: row.region,
-              businessUnit: row.businessunit,
-              address: row.address,
-              phoneNumber: row.phonenumber,
+            const customer: CSVCustomer = {
+              fullName: row.fullName,
+              phoneNumber: row.phoneNumber,
               email: row.email,
-            })
+              address: row.address,
+              distributionSubstationId: row.distributionSubstationId ? Number(row.distributionSubstationId) : 0,
+              status: row.status || "ACTIVE",
+              addressTwo: row.addressTwo || "",
+              city: row.city || "",
+              state: row.state || "",
+              serviceCenterId: row.serviceCenterId ? Number(row.serviceCenterId) : 0,
+              latitude: row.latitude ? Number(row.latitude) : 0,
+              longitude: row.longitude ? Number(row.longitude) : 0,
+              tariff: row.tariff ? Number(row.tariff) : 0,
+              meterNumber: row.meterNumber || "",
+              isPPM: String(row.isPPM).toLowerCase() === "true",
+              isMD: String(row.isMD).toLowerCase() === "true",
+              comment: row.comment || "",
+              band: row.band,
+              storedAverage: row.storedAverage ? Number(row.storedAverage) : 0,
+              totalMonthlyVend: row.totalMonthlyVend ? Number(row.totalMonthlyVend) : 0,
+              totalMonthlyDebt: row.totalMonthlyDebt ? Number(row.totalMonthlyDebt) : 0,
+              customerOutstandingDebtBalance: row.customerOutstandingDebtBalance
+                ? Number(row.customerOutstandingDebtBalance)
+                : 0,
+              salesRepUserId: row.salesRepUserId ? Number(row.salesRepUserId) : 0,
+              technicalEngineerUserId: row.technicalEngineerUserId ? Number(row.technicalEngineerUserId) : 0,
+            }
+
+            parsedData.push(customer)
           }
         }
 
@@ -387,43 +550,13 @@ const AddCustomerPage = () => {
   const validateCSVRow = (row: any, rowNumber: number): string[] => {
     const errors: string[] = []
 
-    if (!row.accountnumber?.trim()) {
-      errors.push(`Row ${rowNumber}: Account number is required`)
+    if (!row.fullName?.trim()) {
+      errors.push(`Row ${rowNumber}: Full name is required`)
     }
 
-    if (!row.customername?.trim()) {
-      errors.push(`Row ${rowNumber}: Customer name is required`)
-    }
-
-    if (!row.customertype?.trim()) {
-      errors.push(`Row ${rowNumber}: Customer type is required`)
-    } else if (!["PREPAID", "POSTPAID"].includes(row.customertype.toUpperCase())) {
-      errors.push(`Row ${rowNumber}: Customer type must be PREPAID or POSTPAID`)
-    }
-
-    if (!row.serviceband?.trim()) {
-      errors.push(`Row ${rowNumber}: Service band is required`)
-    }
-
-    if (!row.tariffclass?.trim()) {
-      errors.push(`Row ${rowNumber}: Tariff class is required`)
-    }
-
-    if (!row.region?.trim()) {
-      errors.push(`Row ${rowNumber}: Region is required`)
-    }
-
-    if (!row.businessunit?.trim()) {
-      errors.push(`Row ${rowNumber}: Business unit is required`)
-    }
-
-    if (!row.address?.trim()) {
-      errors.push(`Row ${rowNumber}: Address is required`)
-    }
-
-    if (!row.phonenumber?.trim()) {
+    if (!row.phoneNumber?.trim()) {
       errors.push(`Row ${rowNumber}: Phone number is required`)
-    } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(row.phonenumber.replace(/\s/g, ""))) {
+    } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(row.phoneNumber.replace(/\s/g, ""))) {
       errors.push(`Row ${rowNumber}: Please enter a valid Nigerian phone number`)
     }
 
@@ -431,6 +564,22 @@ const AddCustomerPage = () => {
       errors.push(`Row ${rowNumber}: Email is required`)
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
       errors.push(`Row ${rowNumber}: Please enter a valid email address`)
+    }
+
+    if (!row.address?.trim()) {
+      errors.push(`Row ${rowNumber}: Address is required`)
+    }
+
+    if (!row.distributionSubstationId?.trim()) {
+      errors.push(`Row ${rowNumber}: Distribution substation ID is required`)
+    }
+
+    if (!row.serviceCenterId?.trim()) {
+      errors.push(`Row ${rowNumber}: Service center ID is required`)
+    }
+
+    if (!row.band?.trim()) {
+      errors.push(`Row ${rowNumber}: Band is required`)
     }
 
     return errors
@@ -453,85 +602,107 @@ const AddCustomerPage = () => {
       return
     }
 
-    setIsBulkLoading(true)
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Frontend-only implementation - log the data and show success message
-      console.log("Bulk customer data ready for upload:", csvData)
-
-      notify("success", "Bulk upload ready", {
-        description: `${csvData.length} customers validated and ready for upload. Backend integration pending.`,
-        duration: 6000,
-      })
-
-      // In a real implementation, you would send the data to your API here:
-      // await bulkAddCustomers(csvData).unwrap()
-
-      // Reset form
-      setCsvFile(null)
-      setCsvData([])
-      setCsvErrors([])
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+      // csvData already contains CreateCustomerRequest-compatible objects
+      const bulkData: BulkCreateCustomerRequest = {
+        customers: csvData,
       }
+
+      await dispatch(bulkCreateCustomers(bulkData)).unwrap()
+
+      // Success is handled in the useEffect above
     } catch (error: any) {
       console.error("Failed to process bulk upload:", error)
-      notify("error", "Bulk upload processing failed", {
-        description: "There was an error processing the bulk upload",
-        duration: 6000,
-      })
-    } finally {
-      setIsBulkLoading(false)
+      // Error is handled in the useEffect above
     }
   }
 
   const downloadTemplate = () => {
     const headers = [
-      "accountNumber",
-      "customerName",
-      "customerType",
-      "serviceBand",
-      "tariffClass",
-      "region",
-      "businessUnit",
-      "address",
+      "fullName",
       "phoneNumber",
       "email",
-    ]
+      "address",
+      "distributionSubstationId",
+      "status",
+      "addressTwo",
+      "city",
+      "state",
+      "serviceCenterId",
+      "latitude",
+      "longitude",
+      "tariff",
+      "meterNumber",
+      "isPPM",
+      "isMD",
+      "comment",
+      "band",
+      "storedAverage",
+      "totalMonthlyVend",
+      "totalMonthlyDebt",
+      "customerOutstandingDebtBalance",
+      "salesRepUserId",
+      "technicalEngineerUserId",
+    ] as const
 
-    const exampleData = [
+    const exampleData: CSVCustomer[] = [
       {
-        accountNumber: "ACC00123",
-        customerName: "John Doe",
-        customerType: "PREPAID",
-        serviceBand: "A",
-        tariffClass: "T1",
-        region: "North",
-        businessUnit: "UnitA",
-        address: "123 Main Street, Lagos",
-        phoneNumber: "08012345678",
-        email: "john.doe@example.com",
+        fullName: "Muritala Ibrahim",
+        phoneNumber: "09017292738",
+        email: "muritalaibrahim097@gmail.com",
+        address: "King Land, Jiwa Abuja",
+        distributionSubstationId: 2,
+        status: "ACTIVE",
+        addressTwo: "",
+        city: "Abuja",
+        state: "Abuja",
+        serviceCenterId: 2,
+        latitude: 9.123,
+        longitude: 6.123,
+        tariff: 100,
+        meterNumber: "",
+        isPPM: false,
+        isMD: false,
+        comment: "",
+        band: "Band B",
+        storedAverage: 0.02,
+        totalMonthlyVend: 0,
+        totalMonthlyDebt: 0,
+        customerOutstandingDebtBalance: 0,
+        salesRepUserId: 11,
+        technicalEngineerUserId: 9,
       },
       {
-        accountNumber: "ACC00124",
-        customerName: "Jane Smith",
-        customerType: "POSTPAID",
-        serviceBand: "B",
-        tariffClass: "T2",
-        region: "South",
-        businessUnit: "UnitB",
-        address: "456 Broad Avenue, Abuja",
-        phoneNumber: "08087654321",
-        email: "jane.smith@example.com",
+        fullName: "Jane Doe",
+        phoneNumber: "08012345678",
+        email: "jane.doe@example.com",
+        address: "12 Example Street, Kaduna",
+        distributionSubstationId: 3,
+        status: "ACTIVE",
+        addressTwo: "",
+        city: "Kaduna",
+        state: "Kaduna",
+        serviceCenterId: 4,
+        latitude: 10.512,
+        longitude: 7.345,
+        tariff: 85,
+        meterNumber: "12345678901",
+        isPPM: true,
+        isMD: false,
+        comment: "High-usage customer",
+        band: "Band A",
+        storedAverage: 0.5,
+        totalMonthlyVend: 10000,
+        totalMonthlyDebt: 2000,
+        customerOutstandingDebtBalance: 5000,
+        salesRepUserId: 15,
+        technicalEngineerUserId: 12,
       },
     ]
 
     let csvContent = headers.join(",") + "\n"
     exampleData.forEach((row) => {
-      csvContent += headers.map((header) => row[header as keyof typeof row]).join(",") + "\n"
+      csvContent += headers.map((header) => String(row[header])).join(",") + "\n"
     })
 
     const blob = new Blob([csvContent], { type: "text/csv" })
@@ -552,16 +723,13 @@ const AddCustomerPage = () => {
 
   const isFormValid = (): boolean => {
     return (
-      formData.accountNumber.trim() !== "" &&
-      formData.customerName.trim() !== "" &&
-      formData.customerType !== "" &&
-      formData.serviceBand.trim() !== "" &&
-      formData.tariffClass.trim() !== "" &&
-      formData.region.trim() !== "" &&
-      formData.businessUnit.trim() !== "" &&
-      formData.address.trim() !== "" &&
+      formData.fullName.trim() !== "" &&
       formData.phoneNumber.trim() !== "" &&
-      formData.email.trim() !== ""
+      formData.email.trim() !== "" &&
+      formData.address.trim() !== "" &&
+      formData.distributionSubstationId !== 0 &&
+      formData.serviceCenterId !== 0 &&
+      formData.band.trim() !== ""
     )
   }
 
@@ -598,7 +766,7 @@ const AddCustomerPage = () => {
                           if (fileInputRef.current) fileInputRef.current.value = ""
                         }
                   }
-                  disabled={isSubmitting || isBulkLoading}
+                  disabled={createLoading}
                 >
                   {activeTab === "single" ? "Reset Form" : "Clear CSV"}
                 </ButtonModule>
@@ -616,17 +784,17 @@ const AddCustomerPage = () => {
                   }
                   disabled={
                     activeTab === "single"
-                      ? !isFormValid() || isSubmitting
-                      : csvData.length === 0 || csvErrors.length > 0 || isBulkLoading
+                      ? !isFormValid() || createLoading
+                      : csvData.length === 0 || csvErrors.length > 0 || createLoading
                   }
                   icon={<AddCustomerIcon />}
                   iconPosition="start"
                 >
                   {activeTab === "single"
-                    ? isSubmitting
+                    ? createLoading
                       ? "Adding Customer..."
                       : "Add Customer"
-                    : isBulkLoading
+                    : createLoading
                     ? "Processing..."
                     : `Process ${csvData.length} Customers`}
                 </ButtonModule>
@@ -681,117 +849,33 @@ const AddCustomerPage = () => {
                     </div>
 
                     {/* Customer Form */}
-                    <form onSubmit={handleSingleSubmit} className="space-y-6">
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Account Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Account Information</h4>
-
-                          <FormInputModule
-                            label="Account Number"
-                            name="accountNumber"
-                            type="text"
-                            placeholder="Enter account number (e.g., ACC00123)"
-                            value={formData.accountNumber}
-                            onChange={handleInputChange}
-                            error={formErrors.accountNumber}
-                            required
-                          />
-
-                          <FormInputModule
-                            label="Customer Name"
-                            name="customerName"
-                            type="text"
-                            placeholder="Enter customer full name"
-                            value={formData.customerName}
-                            onChange={handleInputChange}
-                            error={formErrors.customerName}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Customer Type"
-                            name="customerType"
-                            value={formData.customerType}
-                            onChange={handleInputChange}
-                            options={customerTypeOptions}
-                            error={formErrors.customerType}
-                            required
-                          />
+                    <form onSubmit={handleSingleSubmit} className="space-y-8">
+                      {/* Section 1: Personal Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Personal Information</h4>
+                          <p className="text-sm text-gray-600">
+                            Enter the customer&apos;s personal and contact details
+                          </p>
                         </div>
 
-                        {/* Service Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Service Information</h4>
-
-                          <FormSelectModule
-                            label="Service Band"
-                            name="serviceBand"
-                            value={formData.serviceBand}
-                            onChange={handleInputChange}
-                            options={serviceBandOptions}
-                            error={formErrors.serviceBand}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Tariff Class"
-                            name="tariffClass"
-                            value={formData.tariffClass}
-                            onChange={handleInputChange}
-                            options={tariffClassOptions}
-                            error={formErrors.tariffClass}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Location Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Location Information</h4>
-
-                          <FormSelectModule
-                            label="Region"
-                            name="region"
-                            value={formData.region}
-                            onChange={handleInputChange}
-                            options={regionOptions}
-                            error={formErrors.region}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Business Unit"
-                            name="businessUnit"
-                            value={formData.businessUnit}
-                            onChange={handleInputChange}
-                            options={businessUnitOptions}
-                            error={formErrors.businessUnit}
-                            required
-                          />
-
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                           <FormInputModule
-                            label="Address"
-                            name="address"
+                            label="Full Name"
+                            name="fullName"
                             type="text"
-                            placeholder="Enter complete address"
-                            value={formData.address}
+                            placeholder="Enter full name"
+                            value={formData.fullName}
                             onChange={handleInputChange}
-                            error={formErrors.address}
+                            error={formErrors.fullName}
                             required
                           />
-                        </div>
-
-                        {/* Contact Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Contact Information</h4>
 
                           <FormInputModule
                             label="Phone Number"
                             name="phoneNumber"
-                            type="tel"
-                            placeholder="Enter phone number (e.g., 08099998888)"
+                            type="text"
+                            placeholder="Enter phone number"
                             value={formData.phoneNumber}
                             onChange={handleInputChange}
                             error={formErrors.phoneNumber}
@@ -808,6 +892,223 @@ const AddCustomerPage = () => {
                             error={formErrors.email}
                             required
                           />
+
+                          <FormSelectModule
+                            label="Status"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleInputChange}
+                            options={statusOptions}
+                            error={formErrors.status}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Section 2: Address Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Address Information</h4>
+                          <p className="text-sm text-gray-600">
+                            Enter the customer&apos;s address and location details
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                          <FormInputModule
+                            label="Address Line 1"
+                            name="address"
+                            type="text"
+                            placeholder="Enter address line 1"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            error={formErrors.address}
+                            required
+                          />
+
+                          <FormInputModule
+                            label="Address Line 2"
+                            name="addressTwo"
+                            type="text"
+                            placeholder="Enter address line 2 (optional)"
+                            value={formData.addressTwo}
+                            onChange={handleInputChange}
+                          />
+
+                          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <FormInputModule
+                              label="City"
+                              name="city"
+                              type="text"
+                              placeholder="Enter city"
+                              value={formData.city}
+                              onChange={handleInputChange}
+                            />
+
+                            <FormInputModule
+                              label="State"
+                              name="state"
+                              type="text"
+                              placeholder="Enter state"
+                              value={formData.state}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <FormInputModule
+                              label="Latitude"
+                              name="latitude"
+                              type="number"
+                              placeholder="Enter latitude"
+                              value={formData.latitude}
+                              onChange={handleInputChange}
+                              step="0.000001"
+                            />
+
+                            <FormInputModule
+                              label="Longitude"
+                              name="longitude"
+                              type="number"
+                              placeholder="Enter longitude"
+                              value={formData.longitude}
+                              onChange={handleInputChange}
+                              step="0.000001"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Service Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Service Information</h4>
+                          <p className="text-sm text-gray-600">
+                            Enter the customer&apos;s service and distribution details
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          <FormSelectModule
+                            label="Distribution Substation"
+                            name="distributionSubstationId"
+                            value={formData.distributionSubstationId}
+                            onChange={handleInputChange}
+                            options={distributionSubstationOptions}
+                            error={formErrors.distributionSubstationId}
+                            required
+                            disabled={distributionSubstationsLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Service Center"
+                            name="serviceCenterId"
+                            value={formData.serviceCenterId}
+                            onChange={handleInputChange}
+                            options={serviceCenterOptions}
+                            error={formErrors.serviceCenterId}
+                            required
+                            disabled={serviceStationsLoading}
+                          />
+
+                          <FormInputModule
+                            label="Tariff"
+                            name="tariff"
+                            type="number"
+                            placeholder="Enter tariff"
+                            value={formData.tariff}
+                            onChange={handleInputChange}
+                            step="0.01"
+                          />
+
+                          <FormSelectModule
+                            label="Band"
+                            name="band"
+                            value={formData.band}
+                            onChange={handleInputChange}
+                            options={bandOptions}
+                            error={formErrors.band}
+                            required
+                          />
+                        </div>
+
+                        {distributionSubstationsLoading && (
+                          <p className="text-sm text-gray-500">Loading distribution substations...</p>
+                        )}
+                        {distributionSubstationsError && (
+                          <p className="text-sm text-red-500">
+                            Error loading distribution substations: {distributionSubstationsError}
+                          </p>
+                        )}
+                        {serviceStationsLoading && <p className="text-sm text-gray-500">Loading service centers...</p>}
+                        {serviceStationsError && (
+                          <p className="text-sm text-red-500">Error loading service centers: {serviceStationsError}</p>
+                        )}
+                      </div>
+
+                      {/* Section 5: Financial Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Financial Information</h4>
+                          <p className="text-sm text-gray-600">
+                            Enter the customer&apos;s financial and billing details
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1">
+                          <FormInputModule
+                            label="Stored Average"
+                            name="storedAverage"
+                            type="number"
+                            placeholder="Enter stored average"
+                            value={formData.storedAverage}
+                            onChange={handleInputChange}
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Section 6: Additional Information */}
+                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                        <div className="border-b pb-4">
+                          <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
+                          <p className="text-sm text-gray-600">Enter additional customer details and comments</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                          <FormInputModule
+                            label="Comment"
+                            name="comment"
+                            type="text"
+                            placeholder="Enter any comments or notes"
+                            value={formData.comment}
+                            onChange={handleInputChange}
+                          />
+
+                          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <FormSelectModule
+                              label="Sales Representative"
+                              name="salesRepUserId"
+                              value={formData.salesRepUserId}
+                              onChange={handleInputChange}
+                              options={employeeOptions}
+                              disabled={employeesLoading}
+                            />
+
+                            <FormSelectModule
+                              label="Technical Engineer"
+                              name="technicalEngineerUserId"
+                              value={formData.technicalEngineerUserId}
+                              onChange={handleInputChange}
+                              options={employeeOptions}
+                              disabled={employeesLoading}
+                            />
+                          </div>
+
+                          {employeesLoading && <p className="text-sm text-gray-500">Loading employees...</p>}
+                          {employeesError && (
+                            <p className="text-sm text-red-500">Error loading employees: {employeesError}</p>
+                          )}
                         </div>
                       </div>
 
@@ -844,7 +1145,7 @@ const AddCustomerPage = () => {
                           variant="dangerSecondary"
                           size="lg"
                           onClick={handleReset}
-                          disabled={isSubmitting}
+                          disabled={createLoading}
                           type="button"
                         >
                           Reset
@@ -853,9 +1154,9 @@ const AddCustomerPage = () => {
                           variant="primary"
                           size="lg"
                           type="submit"
-                          disabled={!isFormValid() || isSubmitting}
+                          disabled={!isFormValid() || createLoading}
                         >
-                          {isSubmitting ? "Adding Customer..." : "Add Customer"}
+                          {createLoading ? "Adding Customer..." : "Add Customer"}
                         </ButtonModule>
                       </div>
                     </form>
@@ -869,7 +1170,7 @@ const AddCustomerPage = () => {
                     className="rounded-b-lg rounded-tl-lg bg-white p-6 shadow-sm"
                   >
                     {/* Template Download */}
-                    {/* <div className="mb-6 rounded-lg bg-blue-50 p-4">
+                    <div className="mb-6 rounded-lg bg-blue-50 p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
@@ -879,7 +1180,7 @@ const AddCustomerPage = () => {
                           Download Template
                         </ButtonModule>
                       </div>
-                    </div> */}
+                    </div>
 
                     {/* File Upload Area */}
                     <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-8 text-center">
@@ -949,8 +1250,8 @@ const AddCustomerPage = () => {
                               Choose Different File
                             </ButtonModule>
                             {csvErrors.length === 0 && csvData.length > 0 && (
-                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={isBulkLoading}>
-                                {isBulkLoading ? "Processing..." : `Process ${csvData.length} Customers`}
+                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={createLoading}>
+                                {createLoading ? "Processing..." : `Process ${csvData.length} Customers`}
                               </ButtonModule>
                             )}
                           </div>
@@ -1003,16 +1304,16 @@ const AddCustomerPage = () => {
                             <thead className="bg-gray-50">
                               <tr>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Account
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   Name
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Type
+                                  Phone
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   Email
+                                </th>
+                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                                  Band
                                 </th>
                               </tr>
                             </thead>
@@ -1020,17 +1321,15 @@ const AddCustomerPage = () => {
                               {csvData.slice(0, 5).map((customer, index) => (
                                 <tr key={index}>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {customer.accountNumber}
+                                    {customer.fullName}
                                   </td>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {customer.customerName}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {customer.customerType}
+                                    {customer.phoneNumber}
                                   </td>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
                                     {customer.email}
                                   </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{customer.band}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1045,52 +1344,6 @@ const AddCustomerPage = () => {
                     )}
                   </motion.div>
                 )}
-
-                {/* Help Section */}
-                {/* <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="mt-6 rounded-lg bg-blue-50 p-6"
-                >
-                  <div className="flex items-start">
-                    <div className="shrink-0">
-                      <svg className="size-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-blue-800">
-                        {activeTab === "single" ? "Need help with customer creation?" : "Need help with bulk upload?"}
-                      </h3>
-                      <div className="mt-2 text-sm text-blue-700">
-                        <ul className="list-disc space-y-1 pl-5">
-                          {activeTab === "single" ? (
-                            <>
-                              <li>Ensure all required fields are filled before submitting</li>
-                              <li>Account numbers must be unique across the system</li>
-                              <li>Phone numbers must be valid Nigerian numbers</li>
-                              <li>Email addresses must be in valid format</li>
-                            </>
-                          ) : (
-                            <>
-                              <li>Download the template to ensure proper CSV formatting</li>
-                              <li>All columns in the template are required</li>
-                              <li>Customer type must be either PREPAID or POSTPAID</li>
-                              <li>Phone numbers must be valid Nigerian numbers</li>
-                              <li>Maximum file size is 10MB</li>
-                            </>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div> */}
               </div>
             </div>
           </div>

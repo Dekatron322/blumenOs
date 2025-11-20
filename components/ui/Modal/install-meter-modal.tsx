@@ -25,12 +25,12 @@ const InstallMeterModal: React.FC<InstallMeterModalProps> = ({ isOpen, onRequest
   })
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: String(value),
     }))
   }
 

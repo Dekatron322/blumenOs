@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react"
 
 export function usePopover() {
-  const anchorRef = useRef(null)
+  const anchorRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
 
   const handleOpen = useCallback(() => {

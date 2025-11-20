@@ -1,50 +1,42 @@
 "use client"
-
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, CheckCircle, Clock, Edit3, Mail, MapPin, Phone, Power, Share2, User } from "lucide-react"
+import { AlertCircle, CheckCircle, Clock, Edit3, Power } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
-import UpdateStatusModal from "components/ui/Modal/update-status-modal"
-import SuspendAccountModal from "components/ui/Modal/suspend-account-modal"
+import SuspendCustomerModal from "components/ui/Modal/suspend-customer-modal"
+import ActivateCustomerModal from "components/ui/Modal/activate-customer-modal"
+import CustomerChangeRequestModal from "components/ui/Modal/customer-change-request-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
-  CalendarOutlineIcon,
+  BasicInfoOutlineIcon,
+  ChangeRequestOutlineIcon,
   EmailOutlineIcon,
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
-  MeteringOutlineIcon,
-  MeterOutlineIcon,
   NotificationOutlineIcon,
+  PaymentDisputeOutlineIcon,
   PhoneOutlineIcon,
+  PostpaidBillOutlineIcon,
   SettingOutlineIcon,
-  UpdateUserOutlineIcon,
 } from "components/Icons/Icons"
 
-interface Customer {
-  id: string
-  accountNumber: string
-  customerName: string
-  customerType: "PREPAID" | "POSTPAID"
-  serviceBand: string
-  tariffClass: string
-  region: string
-  businessUnit: string
-  feederId: string | null
-  transformerId: string | null
-  address: string
-  phoneNumber: string
-  email: string
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
-  outstandingArrears: string
-  createdAt: string
-  updatedAt: string
-  meters: any[]
-  prepaidAccount: any | null
-  postpaidAccount: any | null
-}
+import {
+  clearCurrentCustomer,
+  fetchCustomerById,
+  fetchPaymentDisputes,
+  PaymentDisputesRequestParams,
+} from "lib/redux/customerSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+
+// Import tab components
+import BasicInfoTab from "components/Tabs/basic-info-tab"
+import PaymentDisputesTab from "components/Tabs/payment-disputes-tab"
+import ChangeRequestsTab from "components/Tabs/change-requests-tab"
+import LoadingSkeleton from "components/Loader/loading-skeleton"
+import PostpaidBillingTab from "components/Tabs/postpaid-billing-tab"
 
 interface Asset {
   serialNo: number
@@ -55,109 +47,83 @@ interface Asset {
   status?: string
 }
 
-// Modern data generation
-const generateSampleCustomer = (id: string): Customer => {
-  const firstNames = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn"]
-  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
-  const streets = ["Main St", "Oak Ave", "Maple Dr", "Cedar Ln", "Pine St", "Elm Blvd", "View Rd", "Lake Ave"]
-  const cities = [
-    "New York",
-    "Los Angeles",
-    "Chicago",
-    "Houston",
-    "Phoenix",
-    "Philadelphia",
-    "San Antonio",
-    "San Diego",
-  ]
-
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)]!
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)]!
-  const street = `${Math.floor(Math.random() * 1000) + 1} ${streets[Math.floor(Math.random() * streets.length)]}`
-  const city = cities[Math.floor(Math.random() * cities.length)]
-
-  return {
-    id,
-    accountNumber: `ACC${80000 + Math.floor(Math.random() * 20000)}`,
-    customerName: `${firstName} ${lastName}`,
-    customerType: Math.random() > 0.5 ? "PREPAID" : "POSTPAID",
-    serviceBand: ["Band A", "Band B", "Band C"][Math.floor(Math.random() * 3)]!,
-    tariffClass: ["R1", "R2", "R3", "C1", "C2"][Math.floor(Math.random() * 5)]!,
-    region: ["North", "South", "East", "West"][Math.floor(Math.random() * 4)]!,
-    businessUnit: ["Commercial", "Residential", "Industrial"][Math.floor(Math.random() * 3)]!,
-    feederId: Math.random() > 0.3 ? `FD-${1000 + Math.floor(Math.random() * 900)}` : null,
-    transformerId: Math.random() > 0.3 ? `TR-${2000 + Math.floor(Math.random() * 800)}` : null,
-    address: `${street}, ${city}`,
-    phoneNumber: `+1 (${555 + Math.floor(Math.random() * 445)}) ${100 + Math.floor(Math.random() * 900)}-${
-      1000 + Math.floor(Math.random() * 9000)
-    }`,
-    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
-    status: ["ACTIVE", "INACTIVE", "SUSPENDED"][Math.floor(Math.random() * 3)] as "ACTIVE" | "INACTIVE" | "SUSPENDED",
-    outstandingArrears: (Math.random() * 2500).toFixed(2),
-    createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    meters: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, (_, i) => ({
-      id: `MTR-${3000 + i}`,
-      type: ["Smart", "Digital", "Analog"][Math.floor(Math.random() * 3)],
-      installedDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString(),
-    })),
-    prepaidAccount:
-      Math.random() > 0.5
-        ? {
-            balance: (Math.random() * 500).toFixed(2),
-            lastTopUp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          }
-        : null,
-    postpaidAccount:
-      Math.random() > 0.5
-        ? {
-            lastBill: (Math.random() * 300).toFixed(2),
-            dueDate: new Date(Date.now() + Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString(),
-          }
-        : null,
-  }
-}
-
-const generateRandomAssets = (count: number): Asset[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    serialNo: index + 1,
-    supplyStructureType: ["OVERHEAD", "UNDERGROUND", "POLES"][Math.floor(Math.random() * 3)],
-    company: "EnergyCorp",
-    feederName: [`Main Feeder ${index + 1}`, `Secondary ${index + 1}`, `Backup ${index + 1}`][
-      Math.floor(Math.random() * 3)
-    ],
-    transformerCapacityKva: [50, 100, 200, 500][Math.floor(Math.random() * 4)],
-    status: ["ACTIVE", "MAINTENANCE", "UPGRADING"][Math.floor(Math.random() * 3)],
-  }))
-}
+// Tab types
+type TabType = "basic-info" | "payment-disputes" | "change-requests" | "postpaid-billing"
 
 const CustomerDetailsPage = () => {
   const params = useParams()
   const router = useRouter()
-  const customerId = params.id as string
+  const customerId = parseInt(params.id as string)
 
-  const [customer, setCustomer] = useState<Customer | null>(null)
+  // Redux hooks
+  const dispatch = useAppDispatch()
+  const {
+    currentCustomer,
+    currentCustomerLoading,
+    currentCustomerError,
+    paymentDisputes,
+    paymentDisputesLoading,
+    paymentDisputesError,
+    paymentDisputesPagination,
+  } = useAppSelector((state) => state.customers)
+
   const [assets, setAssets] = useState<Asset[]>([])
+  const [activeModal, setActiveModal] = useState<
+    "suspend" | "reminder" | "status" | "activate" | "changeRequest" | null
+  >(null)
+  const [activeTab, setActiveTab] = useState<TabType>("basic-info")
   const [isLoading, setIsLoading] = useState(true)
-  const [activeModal, setActiveModal] = useState<"suspend" | "reminder" | "status" | null>(null)
+  const { user } = useAppSelector((state) => state.auth)
+  const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
+  // Payment disputes state
+  const [paymentDisputesPage, setPaymentDisputesPage] = useState(1)
+  const [paymentDisputesPageSize, setPaymentDisputesPageSize] = useState(10)
+
+  // Fetch customer data when component mounts
   useEffect(() => {
-    const fetchCustomerData = async () => {
-      setIsLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 1200))
+    const fetchData = async () => {
+      if (customerId && !isNaN(customerId)) {
+        setIsLoading(true)
+        try {
+          await dispatch(fetchCustomerById(customerId))
+        } catch (error) {
+          console.error("Error fetching customer:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setIsLoading(false)
+      }
+    }
 
-      const customerData = generateSampleCustomer(customerId)
+    fetchData()
+
+    // Cleanup when component unmounts
+    return () => {
+      dispatch(clearCurrentCustomer())
+    }
+  }, [dispatch, customerId])
+
+  // Fetch payment disputes when tab is active
+  useEffect(() => {
+    if (activeTab === "payment-disputes" && customerId && !isNaN(customerId)) {
+      const params: PaymentDisputesRequestParams & { customerId: number } = {
+        customerId,
+        pageNumber: paymentDisputesPage,
+        pageSize: paymentDisputesPageSize,
+      }
+      dispatch(fetchPaymentDisputes(params))
+    }
+  }, [activeTab, customerId, paymentDisputesPage, paymentDisputesPageSize, dispatch])
+
+  // Generate assets based on customer data
+  useEffect(() => {
+    if (currentCustomer) {
       const customerAssets = generateRandomAssets(2)
-
-      setCustomer(customerData)
       setAssets(customerAssets)
-      setIsLoading(false)
     }
-
-    if (customerId) {
-      fetchCustomerData()
-    }
-  }, [customerId])
+  }, [currentCustomer])
 
   const getStatusConfig = (status: string) => {
     const configs = {
@@ -168,36 +134,97 @@ const CustomerDetailsPage = () => {
     return configs[status as keyof typeof configs] || configs.INACTIVE
   }
 
-  const getCustomerTypeConfig = (type: string) => {
-    return type === "PREPAID"
-      ? { color: "text-blue-600", bg: "bg-blue-50" }
-      : { color: "text-purple-600", bg: "bg-purple-50" }
+  const getCustomerTypeConfig = (isPPM: boolean) => {
+    return isPPM
+      ? { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" }
+      : { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" }
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "suspend" | "reminder" | "status") => setActiveModal(modalType)
-
-  const handleConfirmSuspend = () => {
-    console.log("Customer suspended")
-    closeAllModals()
-  }
+  const openModal = (modalType: "suspend" | "reminder" | "status" | "activate" | "changeRequest") =>
+    setActiveModal(modalType)
 
   const handleConfirmReminder = (message: string) => {
     console.log("Reminder sent:", message)
     closeAllModals()
   }
 
-  if (isLoading) {
+  const handleSuspendSuccess = () => {
+    // Refresh customer data to get updated suspension status
+    dispatch(fetchCustomerById(customerId))
+    closeAllModals()
+  }
+
+  const handleActivateSuccess = () => {
+    // Refresh customer data to get updated activation status
+    dispatch(fetchCustomerById(customerId))
+    closeAllModals()
+  }
+
+  // Generate random assets (keeping this for now as it's not from API)
+  const generateRandomAssets = (count: number): Asset[] => {
+    return Array.from({ length: count }, (_, index) => ({
+      serialNo: index + 1,
+      supplyStructureType: ["OVERHEAD", "UNDERGROUND", "POLES"][Math.floor(Math.random() * 3)],
+      company: "EnergyCorp",
+      feederName: currentCustomer?.feederName || `Feeder ${index + 1}`,
+      transformerCapacityKva: [50, 100, 200, 500][Math.floor(Math.random() * 4)],
+      status: ["ACTIVE", "MAINTENANCE", "UPGRADING"][Math.floor(Math.random() * 3)],
+    }))
+  }
+
+  // Format currency values
+  const formatCurrency = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  // Format date with time
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  // Handle payment disputes pagination
+  const handlePaymentDisputesPageChange = (page: number) => {
+    setPaymentDisputesPage(page)
+  }
+
+  const handlePaymentDisputesPageSizeChange = (size: number) => {
+    setPaymentDisputesPageSize(size)
+    setPaymentDisputesPage(1) // Reset to first page when changing page size
+  }
+
+  // Show loading state
+  if (isLoading || currentCustomerLoading) {
     return <LoadingSkeleton />
   }
 
-  if (!customer) {
+  // Show error state
+  if (currentCustomerError || !currentCustomer) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="text-center">
           <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Customer Not Found</h1>
-          <p className="mb-6 text-gray-600">The customer you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            {currentCustomerError ? "Error Loading Customer" : "Customer Not Found"}
+          </h1>
+          <p className="mb-6 text-gray-600">
+            {currentCustomerError || "The customer you're looking for doesn't exist."}
+          </p>
           <ButtonModule variant="primary" onClick={() => router.back()}>
             Back to Customers
           </ButtonModule>
@@ -206,9 +233,46 @@ const CustomerDetailsPage = () => {
     )
   }
 
-  const statusConfig = getStatusConfig(customer.status)
-  const typeConfig = getCustomerTypeConfig(customer.customerType)
+  const statusConfig = getStatusConfig(currentCustomer.status)
+  const typeConfig = getCustomerTypeConfig(currentCustomer.isPPM)
   const StatusIcon = statusConfig.icon
+
+  // Render the appropriate content based on active tab
+  const renderTabContent = () => {
+    const commonProps = {
+      currentCustomer,
+      formatCurrency,
+      formatDate,
+      formatDateTime,
+    }
+
+    if (activeTab === "basic-info") {
+      return <BasicInfoTab {...commonProps} assets={assets} />
+    } else if (activeTab === "payment-disputes") {
+      return (
+        <PaymentDisputesTab
+          paymentDisputes={paymentDisputes}
+          loading={paymentDisputesLoading}
+          error={paymentDisputesError}
+          pagination={paymentDisputesPagination}
+          currentPage={paymentDisputesPage}
+          pageSize={paymentDisputesPageSize}
+          onPageChange={handlePaymentDisputesPageChange}
+          onPageSizeChange={handlePaymentDisputesPageSizeChange}
+          formatCurrency={function (amount: number): string {
+            throw new Error("Function not implemented.")
+          }}
+          formatDateTime={function (dateString: string): string {
+            throw new Error("Function not implemented.")
+          }}
+        />
+      )
+    } else if (activeTab === "change-requests") {
+      return <ChangeRequestsTab customerId={customerId} />
+    } else if (activeTab === "postpaid-billing") {
+      return <PostpaidBillingTab customerId={customerId} />
+    }
+  }
 
   return (
     <section className="size-full">
@@ -217,7 +281,7 @@ const CustomerDetailsPage = () => {
           <DashboardNav />
           <div className="container mx-auto flex flex-col">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16   py-4">
+              <div className="mx-auto w-full px-16 py-4">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -256,14 +320,28 @@ const CustomerDetailsPage = () => {
                       <ExportOutlineIcon className="size-4" />
                       Export
                     </ButtonModule>
-                    <ButtonModule variant="secondary" size="sm" className="flex items-center gap-2">
-                      <Share2 className="size-4" />
-                      Share
-                    </ButtonModule>
-                    <ButtonModule variant="primary" size="sm" className="flex items-center gap-2">
-                      <Edit3 className="size-4" />
-                      Edit
-                    </ButtonModule>
+
+                    {canUpdate ? (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => router.push(`/customers/update-customer/${customerId}`)}
+                      >
+                        <Edit3 className="size-4" />
+                        Edit
+                      </ButtonModule>
+                    ) : (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => openModal("changeRequest")}
+                      >
+                        <Edit3 className="size-4" />
+                        Change Request
+                      </ButtonModule>
+                    )}
                   </div>
                 </div>
               </div>
@@ -271,8 +349,8 @@ const CustomerDetailsPage = () => {
 
             <div className="flex w-full px-16 py-8">
               <div className="flex w-full gap-6">
-                {/* Left Column - Profile & Quick Actions */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                {/* Right Sidebar - Always Visible */}
+                <div className="flex w-[30%] flex-col space-y-6">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -282,7 +360,7 @@ const CustomerDetailsPage = () => {
                     <div className="text-center">
                       <div className="relative inline-block">
                         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#0a0a0a]">
-                          {customer.customerName
+                          {currentCustomer.fullName
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
@@ -294,34 +372,39 @@ const CustomerDetailsPage = () => {
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{customer.customerName}</h2>
-                      <p className="mb-4 text-gray-600">Account #{customer.accountNumber}</p>
+                      <h2 className="mb-2 text-xl font-bold text-gray-900">{currentCustomer.fullName}</h2>
+                      <p className="mb-4 text-gray-600">Account #{currentCustomer.accountNumber}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
                         >
-                          {customer.status}
+                          {currentCustomer.status}
                         </div>
                         <div
                           className={`rounded-full px-3 py-1.5 text-sm font-medium ${typeConfig.bg} ${typeConfig.color}`}
                         >
-                          {customer.customerType}
+                          {typeConfig.label}
                         </div>
+                        {currentCustomer.isMD && (
+                          <div className="rounded-full bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-600">
+                            MD CUSTOMER
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
                           <PhoneOutlineIcon />
-                          {customer.phoneNumber}
+                          {currentCustomer.phoneNumber}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <EmailOutlineIcon />
-                          {customer.email}
+                          {currentCustomer.email}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <MapOutlineIcon className="size-4" />
-                          {customer.region}
+                          {currentCustomer.state}
                         </div>
                       </div>
                     </div>
@@ -347,22 +430,16 @@ const CustomerDetailsPage = () => {
                         <NotificationOutlineIcon />
                         Send Reminder
                       </ButtonModule>
-                      <ButtonModule
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => openModal("status")}
-                      >
-                        <UpdateUserOutlineIcon />
-                        Update Status
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="danger"
-                        className="w-full justify-start gap-3"
-                        onClick={() => openModal("suspend")}
-                      >
-                        <Power className="size-4" />
-                        Suspend Account
-                      </ButtonModule>
+                      {canUpdate && (
+                        <ButtonModule
+                          variant={currentCustomer.isSuspended ? "primary" : "danger"}
+                          className="w-full justify-start gap-3"
+                          onClick={() => (currentCustomer.isSuspended ? openModal("activate") : openModal("suspend"))}
+                        >
+                          <Power className="size-4" />
+                          {currentCustomer.isSuspended ? "Reactivate Account" : "Suspend Account"}
+                        </ButtonModule>
+                      )}
                     </div>
                   </motion.div>
 
@@ -371,7 +448,7 @@ const CustomerDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="rounded-lg border  bg-white p-6"
+                    className="rounded-lg border bg-white p-6"
                   >
                     <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
                       <FinanceOutlineIcon />
@@ -380,267 +457,87 @@ const CustomerDetailsPage = () => {
                     <div className="space-y-4">
                       <div className="text-center">
                         <div className="mb-2 text-3xl font-bold text-gray-900">
-                          ₦{parseFloat(customer.outstandingArrears).toLocaleString()}
+                          {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
                         </div>
                         <div className="text-sm text-gray-600">Outstanding Balance</div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
-                        {customer.prepaidAccount && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-emerald-600">
-                              ₦{parseFloat(customer.prepaidAccount.balance).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-gray-600">Prepaid Balance</div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-emerald-600">
+                            {formatCurrency(currentCustomer.totalMonthlyVend)}
                           </div>
-                        )}
-                        {customer.postpaidAccount && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-amber-600">
-                              ₦{parseFloat(customer.postpaidAccount.lastBill).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-gray-600">Last Bill</div>
+                          <div className="text-xs text-gray-600">Monthly Vend</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-amber-600">
+                            {formatCurrency(currentCustomer.totalMonthlyDebt)}
                           </div>
-                        )}
+                          <div className="text-xs text-gray-600">Monthly Debt</div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 </div>
 
-                {/* Right Column - Detailed Information */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
-                  {/* Account Information */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <User className="size-5" />
-                      Account Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Account Number</label>
-                          <p className="font-semibold text-gray-900">{customer.accountNumber}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Customer Type</label>
-                          <p className="font-semibold text-gray-900">{customer.customerType}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Tariff Class</label>
-                          <p className="font-semibold text-gray-900">{customer.tariffClass}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Business Unit</label>
-                          <p className="font-semibold text-gray-900">{customer.businessUnit}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Service Band</label>
-                          <p className="font-semibold text-gray-900">{customer.serviceBand}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Region</label>
-                          <p className="font-semibold text-gray-900">{customer.region}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Contact & Location */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <MapOutlineIcon className="size-5" />
-                      Contact & Location
-                    </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <Phone className="size-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Phone Number</label>
-                            <p className="font-semibold text-gray-900">{customer.phoneNumber}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <Mail className="size-5 text-green-600" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Email Address</label>
-                            <p className="font-semibold text-gray-900">{customer.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
-                            <MapPin className="size-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Full Address</label>
-                            <p className="font-semibold text-gray-900">{customer.address}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Assets & Equipment */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <MeterOutlineIcon className="size-5" />
-                      Assets & Equipment
-                    </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      {assets.map((asset, index) => (
-                        <div key={asset.serialNo} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                          <div className="mb-3 flex items-center gap-3">
-                            <div className="flex size-12 items-center justify-center rounded-lg bg-blue-100">
-                              <MeterOutlineIcon className="size-6 text-blue-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">Asset #{asset.serialNo}</h4>
-                              <p className="text-sm text-gray-600">{asset.supplyStructureType}</p>
-                            </div>
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Feeder</span>
-                              <span className="font-medium">{asset.feederName}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Capacity</span>
-                              <span className="font-medium">{asset.transformerCapacityKva}kVA</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Status</span>
-                              <span
-                                className={`rounded-full px-2 py-1 text-xs font-medium ${
-                                  asset.status === "ACTIVE"
-                                    ? "bg-emerald-50 text-emerald-600"
-                                    : asset.status === "MAINTENANCE"
-                                    ? "bg-amber-50 text-amber-600"
-                                    : "bg-blue-50 text-blue-600"
-                                }`}
-                              >
-                                {asset.status}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-
-                  {/* Meter Information */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <MeteringOutlineIcon className="size-5" />
-                      Meter Information
-                    </h3>
-                    <div className="space-y-4">
-                      {customer.meters.map((meter, index) => (
-                        <div
-                          key={meter.id}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4"
+                {/* Main Content Area - Tab Content */}
+                <div className="flex w-[70%] flex-col space-y-6">
+                  <div className="mb-4">
+                    <div className="w-fit rounded-md bg-white p-2">
+                      <nav className="-mb-px flex space-x-2">
+                        <button
+                          onClick={() => setActiveTab("basic-info")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "basic-info"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                              <MeterOutlineIcon className="size-5 text-green-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{meter.id}</h4>
-                              <p className="text-sm text-gray-600">
-                                {meter.type} Meter • Installed {new Date(meter.installedDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">Active</div>
-                            <div className="text-xs text-gray-600">Last reading: 2 days ago</div>
-                          </div>
-                        </div>
-                      ))}
+                          <BasicInfoOutlineIcon className="size-5" />
+                          <span>Basic Information</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("postpaid-billing")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "postpaid-billing"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <PostpaidBillOutlineIcon className="size-5" />
+                          <span>Postpaid Billing</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("payment-disputes")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "payment-disputes"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <PaymentDisputeOutlineIcon className="size-5" />
+                          <span>Payment Disputes</span>
+                          {paymentDisputes.length > 0 && (
+                            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-1 text-xs font-medium leading-none text-white">
+                              {paymentDisputes.length}
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("change-requests")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "change-requests"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <ChangeRequestOutlineIcon className="size-5" />
+                          <span>Change Requests</span>
+                        </button>
+                      </nav>
                     </div>
-                  </motion.div>
-
-                  {/* Account Timeline */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <CalendarOutlineIcon className="size-5" />
-                      Account Timeline
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <CalendarOutlineIcon className="size-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Account Created</h4>
-                            <p className="text-sm text-gray-600">Customer account was successfully created</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(customer.createdAt).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {new Date(customer.createdAt).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <CalendarOutlineIcon className="size-5 text-green-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Last Updated</h4>
-                            <p className="text-sm text-gray-600">Account information was updated</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(customer.updatedAt).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {new Date(customer.updatedAt).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
+                  </div>
+                  {renderTabContent()}
                 </div>
               </div>
             </div>
@@ -649,70 +546,42 @@ const CustomerDetailsPage = () => {
       </div>
 
       {/* Modals */}
-      <SuspendAccountModal
-        isOpen={activeModal === "suspend"}
-        onRequestClose={closeAllModals}
-        onConfirm={handleConfirmSuspend}
-      />
-
       <SendReminderModal
         isOpen={activeModal === "reminder"}
         onRequestClose={closeAllModals}
         onConfirm={handleConfirmReminder}
       />
 
-      <UpdateStatusModal isOpen={activeModal === "status"} onRequestClose={closeAllModals} customer={customer} />
+      <CustomerChangeRequestModal
+        isOpen={activeModal === "changeRequest"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        customerAccountNumber={currentCustomer.accountNumber}
+        onSuccess={() => {
+          closeAllModals()
+        }}
+      />
+
+      <SuspendCustomerModal
+        isOpen={activeModal === "suspend"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
+        onSuccess={handleSuspendSuccess}
+      />
+
+      <ActivateCustomerModal
+        isOpen={activeModal === "activate"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
+        onSuccess={handleActivateSuccess}
+      />
     </section>
   )
 }
-
-const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-    <div className="mx-auto max-w-7xl">
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* Left Column Skeleton */}
-        <div className="space-y-6 xl:col-span-1">
-          <div className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
-            <div className="text-center">
-              <div className="mx-auto mb-4 h-24 w-24 rounded-2xl bg-gray-200"></div>
-              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
-              <div className="mx-auto mb-4 size-48 rounded bg-gray-200"></div>
-              <div className="mb-6 flex justify-center gap-2">
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-              </div>
-              <div className="space-y-3">
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column Skeleton */}
-        <div className="space-y-6 xl:col-span-2">
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
-              <div className="mb-6 h-6 w-48 rounded bg-gray-200"></div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-)
 
 export default CustomerDetailsPage

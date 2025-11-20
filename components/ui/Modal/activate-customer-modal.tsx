@@ -1,107 +1,167 @@
 "use client"
 
-import React, { useState } from "react"
-import Modal from "react-modal"
+import React from "react"
+import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
-import { ButtonModule } from "../Button/Button"
+import { ButtonModule } from "components/ui/Button/Button"
+import { activateCustomer } from "lib/redux/customerSlice"
+import { notify } from "components/ui/Notification/Notification"
+import { useAppDispatch } from "lib/hooks/useRedux"
 
 interface ActivateCustomerModalProps {
   isOpen: boolean
   onRequestClose: () => void
-  onSuccess?: () => void
+  onConfirm?: () => void
   customerId: number
   customerName: string
+  accountNumber: string
+  onSuccess?: () => void
 }
 
 const ActivateCustomerModal: React.FC<ActivateCustomerModalProps> = ({
   isOpen,
   onRequestClose,
-  onSuccess,
+  onConfirm,
   customerId,
   customerName,
+  accountNumber,
+  onSuccess,
 }) => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = React.useState(false)
 
-  const handleActivate = async () => {
-    setIsLoading(true)
-    setError("")
+  if (!isOpen) return null
 
+  const handleConfirm = async () => {
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsLoading(true)
 
-      // Mock successful activation
-      console.log(`Customer ${customerId} activated successfully`)
-
-      // Call success callback if provided
-      if (onSuccess) {
-        onSuccess()
+      // If custom onConfirm is provided, use it
+      if (onConfirm) {
+        await onConfirm()
+        onRequestClose()
+        return
       }
 
-      // Close the modal
-      onRequestClose()
-    } catch (err) {
-      setError("Failed to activate customer. Please try again.")
-      console.error("Error activating customer:", err)
+      // Otherwise, use the default activate customer action
+      const result = await dispatch(activateCustomer(customerId))
+
+      if (activateCustomer.fulfilled.match(result)) {
+        notify("success", `Account for ${customerName} has been activated successfully`)
+        onSuccess?.()
+        onRequestClose()
+      } else {
+        throw new Error(result.payload as string)
+      }
+    } catch (error: any) {
+      notify("error", error.message || "Failed to activate account")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleConfirm()
+    }
+  }
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onRequestClose}
-      className="mt-20 w-[350px] max-w-md overflow-hidden rounded-md bg-white shadow-lg outline-none"
-      overlayClassName="fixed inset-0 bg-black bg-opacity-50 overflow-hidden flex items-center justify-center"
-      ariaHideApp={false}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      onClick={onRequestClose}
     >
-      <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-4">
-        <h2 className="text-lg font-bold">Ban User</h2>
-        <div onClick={onRequestClose} className="cursor-pointer">
-          <CloseIcon />
-        </div>
-      </div>
-      <div className="px-4 pb-6">
-        <p className="my-4 text-sm">
-          Are you sure you want to Ban <span className="font-semibold">{customerName}</span>?
-        </p>
-
-        {error && <div className="mb-4 text-sm text-red-500">{error}</div>}
-
-        <div className="flex w-full justify-end gap-4">
-          <ButtonModule
-            variant="outlineDanger"
-            className="w-full"
-            size="lg"
-            onClick={handleActivate}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 20, opacity: 0 }}
+        transition={{ type: "spring", damping: 25 }}
+        className="relative w-[500px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
+          <h2 className="text-xl font-bold text-gray-900">Activate Customer Account</h2>
+          <button
+            onClick={onRequestClose}
+            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
             disabled={isLoading}
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <svg
-                  className="mr-2 size-5 animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <CloseIcon />
+          </button>
+        </div>
+
+        <div className="max-h-[70vh] overflow-y-auto">
+          <div className="flex flex-col items-center px-6 pb-6 pt-6">
+            {/* Success Icon */}
+            <div className="mb-6 flex items-center justify-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
+                <svg className="size-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
-                Banning...
               </div>
-            ) : (
-              "Approve Customer"
-            )}
+            </div>
+
+            {/* Customer Information */}
+            <div className="mb-4 w-full text-center">
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">{customerName}</h3>
+              <p className="text-sm text-gray-600">Account: {accountNumber}</p>
+            </div>
+
+            {/* Message */}
+            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Activation</h3>
+            <p className="mb-4 text-center text-gray-600">
+              Are you sure you want to activate this customer&apos;s account?
+            </p>
+            <p className="mb-6 text-center text-sm text-green-600">
+              The customer will regain full access to all services and features.
+            </p>
+
+            {/* Activation Notice */}
+            <div className="w-full rounded-lg bg-blue-50 p-4">
+              <div className="flex items-start">
+                <svg className="mr-3 mt-0.5 size-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-blue-800">Activation Notice</h4>
+                  <p className="mt-1 text-sm text-blue-700">
+                    Activating this account will restore the customer&apos;s ability to:
+                  </p>
+                  <ul className="mt-2 list-inside list-disc text-sm text-blue-600">
+                    <li>Access their account dashboard</li>
+                    <li>Make payments and view billing history</li>
+                    <li>Request services and support</li>
+                    <li>Receive notifications and updates</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose} disabled={isLoading}>
+            Cancel
+          </ButtonModule>
+          <ButtonModule variant="primary" className="flex-1" size="lg" onClick={handleConfirm} disabled={isLoading}>
+            {isLoading ? "Activating..." : "Activate Account"}
           </ButtonModule>
         </div>
-      </div>
-    </Modal>
+      </motion.div>
+    </motion.div>
   )
 }
 

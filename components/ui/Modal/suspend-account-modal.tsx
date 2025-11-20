@@ -4,19 +4,59 @@ import React from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
+import { deactivateEmployee } from "lib/redux/employeeSlice"
+import { notify } from "components/ui/Notification/Notification"
+import { useAppDispatch } from "lib/hooks/useRedux"
 
 interface SuspendAccountModalProps {
   isOpen: boolean
   onRequestClose: () => void
-  onConfirm: () => void
+  onConfirm?: () => void
+  employeeId: number
+  employeeName: string
+  onSuccess?: () => void
 }
 
-const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({ isOpen, onRequestClose, onConfirm }) => {
+const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({
+  isOpen,
+  onRequestClose,
+  onConfirm,
+  employeeId,
+  employeeName,
+  onSuccess,
+}) => {
+  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = React.useState(false)
+
   if (!isOpen) return null
 
-  const handleConfirm = () => {
-    onConfirm()
-    onRequestClose()
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true)
+
+      // If custom onConfirm is provided, use it
+      if (onConfirm) {
+        await onConfirm() // Added await to ensure it completes
+        onRequestClose()
+        return
+      }
+
+      // Otherwise, use the default deactivate employee action
+      const result = await dispatch(deactivateEmployee(employeeId))
+
+      if (deactivateEmployee.fulfilled.match(result)) {
+        notify("success", `Account for ${employeeName} has been deactivated successfully`)
+        onSuccess?.()
+      } else {
+        throw new Error(result.payload as string)
+      }
+
+      onRequestClose()
+    } catch (error: any) {
+      notify("error", error.message || "Failed to deactivate account")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -36,10 +76,11 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({ isOpen, onReq
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Suspend Account</h2>
+          <h2 className="text-xl font-bold text-gray-900">Deactivate Account</h2>
           <button
             onClick={onRequestClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            disabled={isLoading}
           >
             <CloseIcon />
           </button>
@@ -62,20 +103,28 @@ const SuspendAccountModal: React.FC<SuspendAccountModalProps> = ({ isOpen, onReq
             </div>
 
             {/* Message */}
-            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Suspension</h3>
-            <p className="mb-2 text-center text-gray-600">Are you sure you want to suspend this customer account?</p>
+            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Deactivation</h3>
+            <p className="mb-2 text-center text-gray-600">
+              Are you sure you want to deactivate {employeeName}&apos;s account?
+            </p>
             <p className="text-center text-sm text-gray-500">
-              The customer will not be able to access services until the account is reactivated.
+              The employee will not be able to access services until the account is reactivated.
             </p>
           </div>
         </div>
 
         <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <ButtonModule variant="dangerSecondary" className="flex-1" size="lg" onClick={onRequestClose}>
+          <ButtonModule
+            variant="dangerSecondary"
+            className="flex-1"
+            size="lg"
+            onClick={onRequestClose}
+            disabled={isLoading}
+          >
             Cancel
           </ButtonModule>
-          <ButtonModule variant="danger" className="flex-1" size="lg" onClick={handleConfirm}>
-            Suspend Account
+          <ButtonModule variant="danger" className="flex-1" size="lg" onClick={handleConfirm} disabled={isLoading}>
+            {isLoading ? "Deactivating..." : "Deactivate Account"}
           </ButtonModule>
         </div>
       </motion.div>

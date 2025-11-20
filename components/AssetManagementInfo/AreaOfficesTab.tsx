@@ -4,20 +4,10 @@ import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
-
-interface AreaOffice {
-  id: string
-  name: string
-  location: string
-  manager: string
-  contact: string
-  substations: number
-  feeders: number
-  customers: number
-  operationalHours: string
-  status: "operational" | "maintenance" | "closed" | "limited_operations"
-}
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { AreaOfficesRequestParams, clearError, fetchAreaOffices, setPagination } from "lib/redux/areaOfficeSlice"
 
 interface Status {
   value: number
@@ -27,9 +17,26 @@ interface Status {
 interface ActionDropdownProps {
   office: AreaOffice
   onViewDetails: (office: AreaOffice) => void
+  onUpdateAreaOffice: (officeId: number) => void // Add this prop
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }) => {
+// Use the AreaOffice interface from your slice
+interface AreaOffice {
+  id: number
+  nameOfNewOAreaffice: string
+  newKaedcoCode: string
+  newNercCode: string
+  latitude: number
+  longitude: number
+  company: {
+    id: number
+    name: string
+    nercCode: string
+    nercSupplyStructure: number
+  }
+}
+
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails, onUpdateAreaOffice }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -70,6 +77,13 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
     onViewDetails(office)
+    setIsOpen(false)
+  }
+
+  const handleUpdateAreaOffice = (e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log("Update operations for:", office.id)
+    onUpdateAreaOffice(office.id) // Call the parent handler
     setIsOpen(false)
   }
 
@@ -120,27 +134,14 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }
               >
                 View Details
               </motion.button>
+
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Manage staff for:", office.id)
-                  setIsOpen(false)
-                }}
+                onClick={handleUpdateAreaOffice}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Manage Staff
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update operations for:", office.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Operations
+                Update Area Office
               </motion.button>
             </div>
           </motion.div>
@@ -152,82 +153,27 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails }
 
 const LoadingSkeleton = () => {
   return (
-    <motion.div
-      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
+      {/* Header Section Skeleton */}
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          />
+        <div className="mb-3 md:mb-0">
+          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
+          <div className="h-4 w-64 rounded bg-gray-200"></div>
         </div>
-        <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
-          </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
-              }}
-            />
-          </div>
+        <div className="flex gap-4">
+          <div className="h-10 w-48 rounded bg-gray-200"></div>
+          <div className="h-10 w-24 rounded bg-gray-200"></div>
         </div>
       </div>
 
+      {/* Table Skeleton */}
       <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
               {[...Array(8)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
+                  <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
               ))}
             </tr>
@@ -237,21 +183,7 @@ const LoadingSkeleton = () => {
               <tr key={rowIndex}>
                 {[...Array(8)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 8 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
+                    <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
                 ))}
               </tr>
@@ -260,193 +192,61 @@ const LoadingSkeleton = () => {
         </table>
       </div>
 
+      {/* Pagination Section Skeleton */}
       <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
-            }}
-          />
-        </div>
+        <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
-              }}
-            />
-          </div>
+          <div className="h-8 w-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
-              <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
-                }}
-              />
-            </div>
+            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
           ))}
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
-              }}
-            />
-          </div>
+          <div className="h-8 w-8 rounded bg-gray-200"></div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-// Mock data for area offices
-const mockAreaOffices: AreaOffice[] = [
-  {
-    id: "AO-001",
-    name: "Kaduna Central Area Office",
-    location: "Central Business District",
-    manager: "Alhaji Musa Bello",
-    contact: "+234 803 123 4567",
-    substations: 8,
-    feeders: 24,
-    customers: 45200,
-    operationalHours: "24/7",
-    status: "operational",
-  },
-  {
-    id: "AO-002",
-    name: "Barnawa Regional Office",
-    location: "Barnawa Industrial Area",
-    manager: "Engr. Fatima Sani",
-    contact: "+234 802 987 6543",
-    substations: 5,
-    feeders: 16,
-    customers: 28700,
-    operationalHours: "24/7",
-    status: "operational",
-  },
-  {
-    id: "AO-003",
-    name: "Sabon Tasha District Office",
-    location: "Sabon Tasha Residential",
-    manager: "Mr. John Okoro",
-    contact: "+234 805 456 7890",
-    substations: 4,
-    feeders: 12,
-    customers: 18900,
-    operationalHours: "6:00 AM - 10:00 PM",
-    status: "limited_operations",
-  },
-  {
-    id: "AO-004",
-    name: "Kakuri Industrial Office",
-    location: "Kakuri Industrial Zone",
-    manager: "Engr. Ahmed Mohammed",
-    contact: "+234 807 234 5678",
-    substations: 6,
-    feeders: 18,
-    customers: 32500,
-    operationalHours: "24/7",
-    status: "maintenance",
-  },
-  {
-    id: "AO-005",
-    name: "Ungwan Rimi Service Center",
-    location: "Ungwan Rimi District",
-    manager: "Mrs. Grace Williams",
-    contact: "+234 809 876 5432",
-    substations: 3,
-    feeders: 9,
-    customers: 12400,
-    operationalHours: "8:00 AM - 6:00 PM",
-    status: "operational",
-  },
-  {
-    id: "AO-006",
-    name: "Malali Customer Care Office",
-    location: "Malali Residential Area",
-    manager: "Mr. Daniel Johnson",
-    contact: "+234 804 345 6789",
-    substations: 2,
-    feeders: 6,
-    customers: 8700,
-    operationalHours: "8:00 AM - 4:00 PM",
-    status: "closed",
-  },
-  {
-    id: "AO-007",
-    name: "Tudun Wada Regional Office",
-    location: "Tudun Wada District",
-    manager: "Alhaji Ibrahim Abdullahi",
-    contact: "+234 806 567 8901",
-    substations: 7,
-    feeders: 21,
-    customers: 39800,
-    operationalHours: "24/7",
-    status: "operational",
-  },
-  {
-    id: "AO-008",
-    name: "Mando Barracks Service Point",
-    location: "Mando Barracks Area",
-    manager: "Capt. James Okon",
-    contact: "+234 810 678 9012",
-    substations: 1,
-    feeders: 3,
-    customers: 5200,
-    operationalHours: "7:00 AM - 7:00 PM",
-    status: "operational",
-  },
-]
-
 const AreaOfficesTab: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { areaOffices, loading, error, pagination } = useAppSelector((state) => state.areaOffices)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedOffice, setSelectedOffice] = useState<AreaOffice | null>(null)
-  const pageSize = 10
 
-  // In a real app, you would fetch this data from an API
-  const isLoading = false
-  const isError = false
-  const offices = mockAreaOffices
-  const totalRecords = offices.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  // Get pagination values from Redux state
+  const currentPage = pagination.currentPage
+  const pageSize = pagination.pageSize
+  const totalRecords = pagination.totalCount
+  const totalPages = pagination.totalPages
 
-  const getStatusStyle = (status: AreaOffice["status"]) => {
-    switch (status) {
+  // Fetch area offices on component mount and when search/pagination changes
+  useEffect(() => {
+    const fetchParams: AreaOfficesRequestParams = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      ...(searchText && { search: searchText }),
+    }
+
+    dispatch(fetchAreaOffices(fetchParams))
+  }, [dispatch, currentPage, pageSize, searchText])
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
+
+  const getStatusStyle = (status: string) => {
+    // Since your API doesn't have status, we'll create a mock status based on some logic
+    // You can modify this based on your actual business logic
+    const effectiveStatus = status || "operational" // Default status
+
+    switch (effectiveStatus) {
       case "operational":
         return {
           backgroundColor: "#EEF5F0",
@@ -483,18 +283,30 @@ const AreaOfficesTab: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    setCurrentPage(1)
+    // Reset to first page when searching
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    // Reset to first page when clearing search
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => {
+    dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading area office data</div>
+  const handleViewAreaOfficeDetails = (office: AreaOffice) => {
+    router.push(`/assets-management/area-offices/area-office-details/${office.id}`)
+  }
+
+  const handleUpdateAreaOffice = (officeId: number) => {
+    router.push(`/assets-management/area-offices/update-area-office/${officeId}`)
+  }
+
+  if (loading) return <LoadingSkeleton />
+  if (error) return <div className="p-4 text-red-500">Error loading area office data: {error}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -520,7 +332,7 @@ const AreaOfficesTab: React.FC = () => {
         </div>
       </motion.div>
 
-      {offices.length === 0 ? (
+      {areaOffices.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -563,42 +375,42 @@ const AreaOfficesTab: React.FC = () => {
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("location")}
+                    onClick={() => toggleSort("code")}
                   >
                     <div className="flex items-center gap-2">
-                      Location <RxCaretSort />
+                      KAEDCO Code <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("manager")}
+                    onClick={() => toggleSort("nercCode")}
                   >
                     <div className="flex items-center gap-2">
-                      Manager <RxCaretSort />
+                      NERC Code <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("substations")}
+                    onClick={() => toggleSort("company")}
                   >
                     <div className="flex items-center gap-2">
-                      Substations <RxCaretSort />
+                      Company <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("feeders")}
+                    onClick={() => toggleSort("latitude")}
                   >
                     <div className="flex items-center gap-2">
-                      Feeders <RxCaretSort />
+                      Latitude <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customers")}
+                    onClick={() => toggleSort("longitude")}
                   >
                     <div className="flex items-center gap-2">
-                      Customers <RxCaretSort />
+                      Longitude <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -616,7 +428,7 @@ const AreaOfficesTab: React.FC = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {offices.map((office, index) => (
+                  {areaOffices.map((office, index) => (
                     <motion.tr
                       key={office.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -624,18 +436,16 @@ const AreaOfficesTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{office.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.location}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.manager}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.substations}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.feeders}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {office.customers.toLocaleString()}
-                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">AO-{office.id}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.nameOfNewOAreaffice}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newKaedcoCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newNercCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.company.name}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.latitude}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.longitude}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getStatusStyle(office.status)}
+                          style={getStatusStyle("operational")}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
@@ -643,24 +453,18 @@ const AreaOfficesTab: React.FC = () => {
                           <span
                             className="size-2 rounded-full"
                             style={{
-                              backgroundColor:
-                                office.status === "operational"
-                                  ? "#589E67"
-                                  : office.status === "maintenance"
-                                  ? "#D97706"
-                                  : office.status === "closed"
-                                  ? "#AF4B4B"
-                                  : "#3B82F6",
+                              backgroundColor: "#589E67",
                             }}
                           ></span>
-                          {office.status
-                            .split("_")
-                            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(" ")}
+                          Operational
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown office={office} onViewDetails={setSelectedOffice} />
+                        <ActionDropdown
+                          office={office}
+                          onViewDetails={handleViewAreaOfficeDetails}
+                          onUpdateAreaOffice={handleUpdateAreaOffice} // Pass the handler
+                        />
                       </td>
                     </motion.tr>
                   ))}
