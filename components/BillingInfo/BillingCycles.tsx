@@ -110,7 +110,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
             billCount: 0,
           }
         }
-        const periodData = acc[period]
+        const periodData = acc[period]!
         periodData.bills.push(bill)
         periodData.totalAmount += bill.totalDue || 0
         periodData.billCount += 1
