@@ -1,10 +1,10 @@
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { MapIcon, UserIcon } from "components/Icons/Icons"
-import { fetchPostpaidBills, setFilters, clearFilters, setPagination } from "lib/redux/postpaidSlice"
+import { clearFilters, fetchPostpaidBills, setFilters, setPagination } from "lib/redux/postpaidSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 const CyclesIcon = () => (
