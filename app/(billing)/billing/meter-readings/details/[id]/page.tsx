@@ -3,41 +3,12 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  AlertCircle,
-  CheckCircle,
-  ChevronDown,
-  Edit3,
-  Mail,
-  MapPin,
-  Phone,
-  Power,
-  PowerOff,
-  Share2,
-  Shield,
-  User,
-  Zap,
-  Calendar,
-  FileText,
-  Flag,
-  TrendingUp,
-  BarChart3,
-} from "lucide-react"
+import { AlertCircle, BarChart3, CheckCircle, Calendar, FileText, Flag, TrendingUp, User, Zap } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
-import {
-  CalendarOutlineIcon,
-  EmailOutlineIcon,
-  ExportCsvIcon,
-  ExportOutlineIcon,
-  MapOutlineIcon,
-  PhoneOutlineIcon,
-  SettingOutlineIcon,
-  UpdateUserOutlineIcon,
-  VerifyOutlineIcon,
-} from "components/Icons/Icons"
+import { CalendarOutlineIcon, ExportOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchMeterReadingById, clearCurrentMeterReading, MeterReading } from "lib/redux/meterReadingSlice"
+import { clearCurrentMeterReading, fetchMeterReadingById, MeterReading } from "lib/redux/meterReadingSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
