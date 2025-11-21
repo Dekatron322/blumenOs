@@ -11,9 +11,9 @@ import { notify } from "components/ui/Notification/Notification"
 import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
-  clearApplyFeederEnergyCaps,
   applyFeederEnergyCaps,
   ApplyFeederEnergyCapsRequest,
+  clearApplyFeederEnergyCaps,
 } from "lib/redux/feederEnergyCapSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 

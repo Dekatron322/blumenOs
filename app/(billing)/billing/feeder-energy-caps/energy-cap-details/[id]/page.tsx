@@ -8,7 +8,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { DepartmentInfoIcon, ExportOutlineIcon, SettingOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearSelectedFeederEnergyCap, fetchFeederEnergyCapById, FeederEnergyCap } from "lib/redux/feederEnergyCapSlice"
+import { clearSelectedFeederEnergyCap, fetchFeederEnergyCapById } from "lib/redux/feederEnergyCapSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 

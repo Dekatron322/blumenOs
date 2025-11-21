@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  FeederEnergyCapsRequestParams,
   clearError,
+  FeederEnergyCapsRequestParams,
   fetchFeederEnergyCaps,
   setPagination,
 } from "lib/redux/feederEnergyCapSlice"
