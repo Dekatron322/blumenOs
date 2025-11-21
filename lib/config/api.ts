@@ -142,6 +142,9 @@ export const API_ENDPOINTS = {
     GET_BY_ID: "/billing/postpaid/{id}",
     FINALIZE: "/billing/postpaid/finalize-period",
     FINALIZE_BY_AREA_OFFICE_ID: "/billing/postpaid/area-offices/{areaOfficeId}/finalize",
+    BILLING_JOBS: "/billing/postpaid/jobs",
+    BILLING_JOBS_BY_ID: "/billing/postpaid/jobs/{id}",
+    ADD_BILLING_JOB: "/billing/postpaid/jobs",
   },
 
   ANALYTICS: {

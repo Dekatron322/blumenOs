@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -8,6 +9,16 @@ import { BillsIcon, CycleIcon, DateIcon, MapIcon, PlusIcon, StatusIcon, UserIcon
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import {
+  fetchBillingJobs,
+  clearBillingJobs,
+  setBillingJobsPagination,
+  setBillingJobsFilters,
+  clearBillingJobsFilters,
+  BillingJob as ReduxBillingJob,
+} from "lib/redux/postpaidSlice"
+import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21,29 +32,21 @@ const CyclesIcon = () => (
 
 interface BillingJob {
   id: number
-  jobName: string
-  jobType:
-    | "bill-generation"
-    | "meter-reading"
-    | "data-export"
-    | "report-generation"
-    | "system-maintenance"
-    | "dispute-processing"
-  status: "pending" | "running" | "completed" | "failed" | "cancelled"
-  priority: "low" | "medium" | "high" | "critical"
-  scheduledTime: string
-  startTime: string
-  endTime: string
-  initiatedBy: string
-  progress: number
-  totalRecords: number
-  processedRecords: number
-  successCount: number
-  failureCount: number
-  billingCycle: string
-  description: string
-  errorMessage?: string
-  outputFile?: string
+  period: string
+  areaOfficeId: number
+  areaOfficeName: string
+  status: number
+  draftedCount: number
+  finalizedCount: number
+  skippedCount: number
+  totalCustomers: number
+  processedCustomers: number
+  lastError: string
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  requestedByUserId: number
+  requestedByName: string
 }
 
 interface ActionDropdownProps {
@@ -94,6 +97,27 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ job, onViewDetails }) =
     onViewDetails(job)
     setIsOpen(false)
   }
+
+  const getStatusText = (status: number): string => {
+    switch (status) {
+      case 0:
+        return "Pending"
+      case 1:
+        return "Running"
+      case 2:
+        return "Completed"
+      case 3:
+        return "Failed"
+      case 4:
+        return "Cancelled"
+      default:
+        return "Unknown"
+    }
+  }
+
+  const isJobRunning = job.status === 1
+  const isJobPending = job.status === 0
+  const hasOutput = job.status === 2 // Completed jobs might have output
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -153,7 +177,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ job, onViewDetails }) =
               >
                 View Logs
               </motion.button>
-              {job.status === "running" && (
+              {isJobRunning && (
                 <motion.button
                   className="block w-full px-4 py-2 text-left text-sm text-orange-600 hover:bg-gray-100"
                   onClick={() => {
@@ -166,7 +190,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ job, onViewDetails }) =
                   Cancel Job
                 </motion.button>
               )}
-              {job.status === "pending" && (
+              {isJobPending && (
                 <motion.button
                   className="block w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-gray-100"
                   onClick={() => {
@@ -179,7 +203,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ job, onViewDetails }) =
                   Start Now
                 </motion.button>
               )}
-              {job.outputFile && (
+              {hasOutput && (
                 <motion.button
                   className="block w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-gray-100"
                   onClick={() => {
@@ -391,184 +415,65 @@ const LoadingSkeleton = () => {
   )
 }
 
-const generateJobData = () => {
-  return {
-    totalJobs: 24,
-    runningJobs: 3,
-    completedJobs: 18,
-    failedJobs: 2,
-  }
-}
-
 const BillingJobs: React.FC = () => {
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { billingJobs, billingJobsLoading, billingJobsError, billingJobsSuccess, billingJobsPagination } =
+    useAppSelector((state) => state.postpaidBilling)
+
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedJob, setSelectedJob] = useState<BillingJob | null>(null)
-  const [jobData, setJobData] = useState(generateJobData())
-  const pageSize = 10
 
-  const jobs: BillingJob[] = [
-    {
-      id: 1,
-      jobName: "January 2024 Bill Generation",
-      jobType: "bill-generation",
-      status: "completed",
-      priority: "high",
-      scheduledTime: "2024-01-01 00:00",
-      startTime: "2024-01-01 00:05",
-      endTime: "2024-01-01 02:30",
-      initiatedBy: "System Auto",
-      progress: 100,
-      totalRecords: 89540,
-      processedRecords: 89540,
-      successCount: 89420,
-      failureCount: 120,
-      billingCycle: "January 2024",
-      description: "Monthly bill generation for all customers",
-      outputFile: "bills_january_2024.csv",
-    },
-    {
-      id: 2,
-      jobName: "Meter Reading Import - Route A",
-      jobType: "meter-reading",
-      status: "running",
-      priority: "medium",
-      scheduledTime: "2024-01-15 08:00",
-      startTime: "2024-01-15 08:00",
-      endTime: "",
-      initiatedBy: "John Adebayo",
-      progress: 65,
-      totalRecords: 12500,
-      processedRecords: 8125,
-      successCount: 8100,
-      failureCount: 25,
-      billingCycle: "February 2024",
-      description: "Import meter readings from field agents for Route A",
-    },
-    {
-      id: 3,
-      jobName: "Q4 2023 Financial Report",
-      jobType: "report-generation",
-      status: "pending",
-      priority: "medium",
-      scheduledTime: "2024-01-20 22:00",
-      startTime: "",
-      endTime: "",
-      initiatedBy: "Sarah Johnson",
-      progress: 0,
-      totalRecords: 0,
-      processedRecords: 0,
-      successCount: 0,
-      failureCount: 0,
-      billingCycle: "Q4 2023",
-      description: "Generate quarterly financial reports for management",
-    },
-    {
-      id: 4,
-      jobName: "Customer Data Export",
-      jobType: "data-export",
-      status: "failed",
-      priority: "low",
-      scheduledTime: "2024-01-14 14:00",
-      startTime: "2024-01-14 14:00",
-      endTime: "2024-01-14 14:15",
-      initiatedBy: "Michael Chen",
-      progress: 45,
-      totalRecords: 150000,
-      processedRecords: 67500,
-      successCount: 67500,
-      failureCount: 0,
-      billingCycle: "N/A",
-      description: "Export customer data for analytics team",
-      errorMessage: "Disk space insufficient for export file",
-    },
-    {
-      id: 5,
-      jobName: "System Database Maintenance",
-      jobType: "system-maintenance",
-      status: "completed",
-      priority: "critical",
-      scheduledTime: "2024-01-13 23:00",
-      startTime: "2024-01-13 23:00",
-      endTime: "2024-01-14 01:30",
-      initiatedBy: "System Auto",
-      progress: 100,
-      totalRecords: 0,
-      processedRecords: 0,
-      successCount: 1,
-      failureCount: 0,
-      billingCycle: "N/A",
-      description: "Weekly database optimization and cleanup",
-    },
-    {
-      id: 6,
-      jobName: "Pending Dispute Processing",
-      jobType: "dispute-processing",
-      status: "running",
-      priority: "high",
-      scheduledTime: "2024-01-15 09:00",
-      startTime: "2024-01-15 09:00",
-      endTime: "",
-      initiatedBy: "Dispute System",
-      progress: 30,
-      totalRecords: 156,
-      processedRecords: 47,
-      successCount: 45,
-      failureCount: 2,
-      billingCycle: "January 2024",
-      description: "Process pending billing disputes automatically",
-    },
-    {
-      id: 7,
-      jobName: "February 2024 Pre-Billing Check",
-      jobType: "bill-generation",
-      status: "cancelled",
-      priority: "medium",
-      scheduledTime: "2024-01-25 06:00",
-      startTime: "",
-      endTime: "",
-      initiatedBy: "System Auto",
-      progress: 0,
-      totalRecords: 0,
-      processedRecords: 0,
-      successCount: 0,
-      failureCount: 0,
-      billingCycle: "February 2024",
-      description: "Pre-billing validation and checks",
-    },
-  ]
+  const currentPage = billingJobsPagination.currentPage
+  const pageSize = billingJobsPagination.pageSize
+  const totalRecords = billingJobsPagination.totalCount
+  const totalPages = billingJobsPagination.totalPages
 
-  const isLoading = false
-  const isError = false
-  const totalRecords = jobs.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  // Fetch billing jobs on component mount and when filters/pagination change
+  useEffect(() => {
+    const params = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      ...(searchText && { period: searchText }),
+      // Add other filters as needed
+    }
 
-  const getStatusStyle = (status: BillingJob["status"]) => {
+    dispatch(fetchBillingJobs(params))
+  }, [dispatch, currentPage, pageSize, searchText])
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      dispatch(clearBillingJobs())
+    }
+  }, [dispatch])
+
+  const getStatusStyle = (status: number) => {
     switch (status) {
-      case "pending":
+      case 0: // Pending
         return {
           backgroundColor: "#FEF6E6",
           color: "#D97706",
         }
-      case "running":
+      case 1: // Running
         return {
           backgroundColor: "#EFF6FF",
           color: "#2563EB",
         }
-      case "completed":
+      case 2: // Completed
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
         }
-      case "failed":
+      case 3: // Failed
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
         }
-      case "cancelled":
+      case 4: // Cancelled
         return {
           backgroundColor: "#F3F4F6",
           color: "#6B7280",
@@ -581,108 +486,67 @@ const BillingJobs: React.FC = () => {
     }
   }
 
-  const getPriorityStyle = (priority: BillingJob["priority"]) => {
-    switch (priority) {
-      case "low":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "medium":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "high":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "critical":
-        return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
-        }
+  const getStatusText = (status: number): string => {
+    switch (status) {
+      case 0:
+        return "Pending"
+      case 1:
+        return "Running"
+      case 2:
+        return "Completed"
+      case 3:
+        return "Failed"
+      case 4:
+        return "Cancelled"
       default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
+        return "Unknown"
     }
   }
 
-  const getJobTypeStyle = (type: BillingJob["jobType"]) => {
-    switch (type) {
-      case "bill-generation":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "meter-reading":
-        return {
-          backgroundColor: "#F0FDF4",
-          color: "#16A34A",
-        }
-      case "data-export":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "report-generation":
-        return {
-          backgroundColor: "#F3E8FF",
-          color: "#9333EA",
-        }
-      case "system-maintenance":
-        return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
-        }
-      case "dispute-processing":
-        return {
-          backgroundColor: "#FFFBEB",
-          color: "#D97706",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A"
+    return new Date(dateString).toLocaleString()
   }
 
-  const formatJobType = (type: BillingJob["jobType"]) => {
-    return type
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
+  const calculateProgress = (job: BillingJob) => {
+    if (job.totalCustomers === 0) return 0
+    return Math.round((job.processedCustomers / job.totalCustomers) * 100)
   }
 
   const toggleSort = (column: string) => {
     const isAscending = sortColumn === column && sortOrder === "asc"
     setSortOrder(isAscending ? "desc" : "asc")
     setSortColumn(column)
+    // TODO: Implement actual sorting logic
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    setCurrentPage(1)
+    dispatch(setBillingJobsPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    dispatch(setBillingJobsPagination({ page: 1, pageSize }))
   }
 
   const handleAddJobSuccess = async () => {
     setIsAddJobModalOpen(false)
-    setJobData(generateJobData())
+    // Refresh the jobs list
+    dispatch(
+      fetchBillingJobs({
+        pageNumber: currentPage,
+        pageSize: pageSize,
+      })
+    )
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => {
+    dispatch(setBillingJobsPagination({ page: pageNumber, pageSize }))
+  }
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading jobs</div>
+  if (billingJobsLoading) return <LoadingSkeleton />
+  if (billingJobsError) return <div className="p-4 text-red-500">Error loading jobs: {billingJobsError}</div>
 
   return (
     <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
@@ -731,7 +595,7 @@ const BillingJobs: React.FC = () => {
                     <h3 className="mb-3 text-lg font-semibold">Job Queue</h3>
                     <div className="max-w-md">
                       <SearchModule
-                        placeholder="Search jobs by name or description..."
+                        placeholder="Search by period (e.g., 2024-01)..."
                         value={searchText}
                         onChange={handleSearch}
                         onCancel={handleCancelSearch}
@@ -739,7 +603,7 @@ const BillingJobs: React.FC = () => {
                     </div>
                   </div>
 
-                  {jobs.length === 0 ? (
+                  {billingJobs.length === 0 ? (
                     <motion.div
                       className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -766,15 +630,15 @@ const BillingJobs: React.FC = () => {
                                 <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   <div className="flex items-center gap-2">
                                     <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
-                                    Job Name
+                                    Period
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("jobType")}
+                                  onClick={() => toggleSort("areaOfficeName")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Job Type <RxCaretSort className="text-gray-400" />
+                                    Area Office <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
@@ -787,10 +651,18 @@ const BillingJobs: React.FC = () => {
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("priority")}
+                                  onClick={() => toggleSort("draftedCount")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Priority <RxCaretSort className="text-gray-400" />
+                                    Drafted <RxCaretSort className="text-gray-400" />
+                                  </div>
+                                </th>
+                                <th
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  onClick={() => toggleSort("finalizedCount")}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    Finalized <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
@@ -803,34 +675,26 @@ const BillingJobs: React.FC = () => {
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("billingCycle")}
+                                  onClick={() => toggleSort("requestedByName")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Billing Cycle <RxCaretSort className="text-gray-400" />
+                                    Requested By <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("initiatedBy")}
+                                  onClick={() => toggleSort("requestedAtUtc")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Initiated By <RxCaretSort className="text-gray-400" />
+                                    Requested At <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("scheduledTime")}
+                                  onClick={() => toggleSort("completedAtUtc")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Scheduled Time <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("processedRecords")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Records <RxCaretSort className="text-gray-400" />
+                                    Completed At <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
@@ -840,7 +704,7 @@ const BillingJobs: React.FC = () => {
                             </thead>
                             <tbody className="bg-white">
                               <AnimatePresence>
-                                {jobs.map((job, index) => (
+                                {billingJobs.map((job, index) => (
                                   <motion.tr
                                     key={job.id}
                                     initial={{ opacity: 0, y: 10 }}
@@ -853,20 +717,13 @@ const BillingJobs: React.FC = () => {
                                       <div className="flex items-center gap-2">
                                         <CycleIcon />
                                         <div>
-                                          <div className="font-medium text-gray-900">{job.jobName}</div>
-                                          <div className="text-xs text-gray-500">{job.description}</div>
+                                          <div className="font-medium text-gray-900">{job.period}</div>
+                                          <div className="text-xs text-gray-500">ID: {job.id}</div>
                                         </div>
                                       </div>
                                     </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getJobTypeStyle(job.jobType)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        {formatJobType(job.jobType)}
-                                      </motion.div>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.areaOfficeName}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <motion.div
@@ -879,81 +736,68 @@ const BillingJobs: React.FC = () => {
                                           className="size-2 rounded-full"
                                           style={{
                                             backgroundColor:
-                                              job.status === "pending"
+                                              job.status === 0
                                                 ? "#D97706"
-                                                : job.status === "running"
+                                                : job.status === 1
                                                 ? "#2563EB"
-                                                : job.status === "completed"
+                                                : job.status === 2
                                                 ? "#589E67"
-                                                : job.status === "failed"
+                                                : job.status === 3
                                                 ? "#AF4B4B"
                                                 : "#6B7280",
                                           }}
                                         ></span>
-                                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                                        {getStatusText(job.status)}
                                       </motion.div>
+                                      {job.lastError && (
+                                        <div
+                                          className="mt-1 max-w-xs truncate text-xs text-red-500"
+                                          title={job.lastError}
+                                        >
+                                          Error: {job.lastError}
+                                        </div>
+                                      )}
                                     </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getPriorityStyle(job.priority)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        <span
-                                          className="size-2 rounded-full"
-                                          style={{
-                                            backgroundColor:
-                                              job.priority === "low"
-                                                ? "#589E67"
-                                                : job.priority === "medium"
-                                                ? "#D97706"
-                                                : job.priority === "high"
-                                                ? "#AF4B4B"
-                                                : "#DB2777",
-                                          }}
-                                        ></span>
-                                        {job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}
-                                      </motion.div>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.draftedCount.toLocaleString()}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.finalizedCount.toLocaleString()}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <div className="flex items-center gap-2">
                                         <div className="h-2 w-20 rounded-full bg-gray-200">
                                           <div
                                             className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                                            style={{ width: `${job.progress}%` }}
+                                            style={{ width: `${calculateProgress(job)}%` }}
                                           />
                                         </div>
-                                        <span className="text-xs font-medium text-gray-700">{job.progress}%</span>
+                                        <span className="text-xs font-medium text-gray-700">
+                                          {calculateProgress(job)}%
+                                        </span>
                                       </div>
                                       <div className="mt-1 text-xs text-gray-500">
-                                        {job.processedRecords.toLocaleString()} / {job.totalRecords.toLocaleString()}
+                                        {job.processedCustomers.toLocaleString()} /{" "}
+                                        {job.totalCustomers.toLocaleString()} customers
                                       </div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.billingCycle}
+                                      {job.requestedByName}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.initiatedBy}
+                                      {formatDate(job.requestedAtUtc)}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.scheduledTime}
+                                      {job.completedAtUtc ? formatDate(job.completedAtUtc) : "In Progress"}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <div className="text-sm font-medium text-gray-900">
-                                        {job.processedRecords.toLocaleString()}
-                                      </div>
-                                      <div className="text-xs text-gray-500">
-                                        {job.successCount.toLocaleString()} success
-                                      </div>
-                                      {job.failureCount > 0 && (
-                                        <div className="text-xs text-red-500">
-                                          {job.failureCount.toLocaleString()} failed
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ActionDropdown job={job} onViewDetails={setSelectedJob} />
+                                      <ActionDropdown
+                                        job={job}
+                                        onViewDetails={(job) => {
+                                          setSelectedJob(job)
+                                          router.push(`/billing/jobs/jobs-detail/${job.id}`)
+                                        }}
+                                      />
                                     </td>
                                   </motion.tr>
                                 ))}
@@ -1063,7 +907,7 @@ const BillingJobs: React.FC = () => {
           </div>
         </div>
       </div>
-      <AddAgentModal
+      <CreateBillingJobModal
         isOpen={isAddJobModalOpen}
         onRequestClose={() => setIsAddJobModalOpen(false)}
         onSuccess={handleAddJobSuccess}

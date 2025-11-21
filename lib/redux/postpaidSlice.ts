@@ -101,6 +101,66 @@ export interface PostpaidBillsRequestParams {
   feederId?: number
 }
 
+// Billing Job Interfaces
+export interface BillingJob {
+  id: number
+  period: string
+  areaOfficeId: number
+  areaOfficeName: string
+  status: number
+  draftedCount: number
+  finalizedCount: number
+  skippedCount: number
+  totalCustomers: number
+  processedCustomers: number
+  lastError: string
+  requestedAtUtc: string
+  startedAtUtc: string
+  completedAtUtc: string
+  requestedByUserId: number
+  requestedByName: string
+}
+
+export interface BillingJobResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingJob
+}
+
+export interface BillingJobsResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingJob[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface BillingJobsRequestParams {
+  pageNumber: number
+  pageSize: number
+  period?: string
+  areaOfficeId?: number
+  status?: number
+  fromRequestedAtUtc?: string
+  toRequestedAtUtc?: string
+}
+
+// Create Billing Job Interfaces
+export interface CreateBillingJobRequest {
+  period: string
+  areaOfficeId: number
+}
+
+export interface CreateBillingJobResponse {
+  isSuccess: boolean
+  message: string
+  data: BillingJob
+}
+
 // Finalize Period Interfaces
 export interface FinalizePeriodRequest {
   period: string
@@ -146,6 +206,32 @@ interface PostpaidBillingState {
   currentBillLoading: boolean
   currentBillError: string | null
 
+  // Billing jobs state
+  billingJobs: BillingJob[]
+  billingJobsLoading: boolean
+  billingJobsError: string | null
+  billingJobsSuccess: boolean
+  billingJobsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Current billing job state (for viewing details)
+  currentBillingJob: BillingJob | null
+  currentBillingJobLoading: boolean
+  currentBillingJobError: string | null
+
+  // Create billing job state
+  createBillingJobLoading: boolean
+  createBillingJobError: string | null
+  createBillingJobSuccess: boolean
+  createBillingJobMessage: string | null
+  createdBillingJob: BillingJob | null
+
   // Finalize period state
   finalizeLoading: boolean
   finalizeError: string | null
@@ -169,6 +255,15 @@ interface PostpaidBillingState {
     areaOfficeId?: number
     feederId?: number
   }
+
+  // Billing jobs filters
+  billingJobsFilters: {
+    period?: string
+    areaOfficeId?: number
+    status?: number
+    fromRequestedAtUtc?: string
+    toRequestedAtUtc?: string
+  }
 }
 
 // Initial state
@@ -188,6 +283,26 @@ const initialState: PostpaidBillingState = {
   currentBill: null,
   currentBillLoading: false,
   currentBillError: null,
+  billingJobs: [],
+  billingJobsLoading: false,
+  billingJobsError: null,
+  billingJobsSuccess: false,
+  billingJobsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  currentBillingJob: null,
+  currentBillingJobLoading: false,
+  currentBillingJobError: null,
+  createBillingJobLoading: false,
+  createBillingJobError: null,
+  createBillingJobSuccess: false,
+  createBillingJobMessage: null,
+  createdBillingJob: null,
   finalizeLoading: false,
   finalizeError: null,
   finalizeSuccess: false,
@@ -198,6 +313,7 @@ const initialState: PostpaidBillingState = {
   finalizeByAreaOfficeMessage: null,
   finalizedAreaOfficeBills: [],
   filters: {},
+  billingJobsFilters: {},
 }
 
 // Helper function to replace path parameters in endpoints
@@ -266,6 +382,86 @@ export const fetchPostpaidBillById = createAsyncThunk<PostpaidBill, number, { re
         return rejectWithValue(error.response.data.message || "Failed to fetch postpaid bill")
       }
       return rejectWithValue(error.message || "Network error during postpaid bill fetch")
+    }
+  }
+)
+
+export const fetchBillingJobs = createAsyncThunk(
+  "postpaidBilling/fetchBillingJobs",
+  async (params: BillingJobsRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, period, areaOfficeId, status, fromRequestedAtUtc, toRequestedAtUtc } = params
+
+      const response = await api.get<BillingJobsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.BILLING_JOBS), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(period && { Period: period }),
+          ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
+          ...(status !== undefined && { Status: status }),
+          ...(fromRequestedAtUtc && { FromRequestedAtUtc: fromRequestedAtUtc }),
+          ...(toRequestedAtUtc && { ToRequestedAtUtc: toRequestedAtUtc }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch billing jobs")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch billing jobs")
+      }
+      return rejectWithValue(error.message || "Network error during billing jobs fetch")
+    }
+  }
+)
+
+export const fetchBillingJobById = createAsyncThunk<BillingJob, number, { rejectValue: string }>(
+  "postpaidBilling/fetchBillingJobById",
+  async (jobId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.BILLING_JOBS_BY_ID, { id: jobId })
+      const response = await api.get<BillingJobResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch billing job")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Billing job not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch billing job")
+      }
+      return rejectWithValue(error.message || "Network error during billing job fetch")
+    }
+  }
+)
+
+export const createBillingJob = createAsyncThunk(
+  "postpaidBilling/createBillingJob",
+  async (requestData: CreateBillingJobRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CreateBillingJobResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.ADD_BILLING_JOB),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create billing job")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create billing job")
+      }
+      return rejectWithValue(error.message || "Network error during billing job creation")
     }
   }
 )
@@ -340,10 +536,44 @@ const postpaidSlice = createSlice({
       }
     },
 
+    // Clear billing jobs state
+    clearBillingJobs: (state) => {
+      state.billingJobs = []
+      state.billingJobsError = null
+      state.billingJobsSuccess = false
+      state.billingJobsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear current billing job state
+    clearCurrentBillingJob: (state) => {
+      state.currentBillingJob = null
+      state.currentBillingJobError = null
+      state.currentBillingJobLoading = false
+    },
+
+    // Clear create billing job state
+    clearCreateBillingJob: (state) => {
+      state.createBillingJobLoading = false
+      state.createBillingJobError = null
+      state.createBillingJobSuccess = false
+      state.createBillingJobMessage = null
+      state.createdBillingJob = null
+    },
+
     // Clear errors
     clearError: (state) => {
       state.error = null
       state.currentBillError = null
+      state.billingJobsError = null
+      state.currentBillingJobError = null
+      state.createBillingJobError = null
       state.finalizeError = null
       state.finalizeByAreaOfficeError = null
     },
@@ -388,6 +618,26 @@ const postpaidSlice = createSlice({
       state.currentBill = null
       state.currentBillLoading = false
       state.currentBillError = null
+      state.billingJobs = []
+      state.billingJobsLoading = false
+      state.billingJobsError = null
+      state.billingJobsSuccess = false
+      state.billingJobsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.currentBillingJob = null
+      state.currentBillingJobLoading = false
+      state.currentBillingJobError = null
+      state.createBillingJobLoading = false
+      state.createBillingJobError = null
+      state.createBillingJobSuccess = false
+      state.createBillingJobMessage = null
+      state.createdBillingJob = null
       state.finalizeLoading = false
       state.finalizeError = null
       state.finalizeSuccess = false
@@ -398,6 +648,7 @@ const postpaidSlice = createSlice({
       state.finalizeByAreaOfficeMessage = null
       state.finalizedAreaOfficeBills = []
       state.filters = {}
+      state.billingJobsFilters = {}
     },
 
     // Set pagination
@@ -406,14 +657,30 @@ const postpaidSlice = createSlice({
       state.pagination.pageSize = action.payload.pageSize
     },
 
+    // Set billing jobs pagination
+    setBillingJobsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.billingJobsPagination.currentPage = action.payload.page
+      state.billingJobsPagination.pageSize = action.payload.pageSize
+    },
+
     // Set filters
     setFilters: (state, action: PayloadAction<Partial<PostpaidBillingState["filters"]>>) => {
       state.filters = { ...state.filters, ...action.payload }
     },
 
+    // Set billing jobs filters
+    setBillingJobsFilters: (state, action: PayloadAction<Partial<PostpaidBillingState["billingJobsFilters"]>>) => {
+      state.billingJobsFilters = { ...state.billingJobsFilters, ...action.payload }
+    },
+
     // Clear filters
     clearFilters: (state) => {
       state.filters = {}
+    },
+
+    // Clear billing jobs filters
+    clearBillingJobsFilters: (state) => {
+      state.billingJobsFilters = {}
     },
   },
   extraReducers: (builder) => {
@@ -467,6 +734,77 @@ const postpaidSlice = createSlice({
         state.currentBillError = (action.payload as string) || "Failed to fetch postpaid bill"
         state.currentBill = null
       })
+      // Fetch billing jobs cases
+      .addCase(fetchBillingJobs.pending, (state) => {
+        state.billingJobsLoading = true
+        state.billingJobsError = null
+        state.billingJobsSuccess = false
+      })
+      .addCase(fetchBillingJobs.fulfilled, (state, action: PayloadAction<BillingJobsResponse>) => {
+        state.billingJobsLoading = false
+        state.billingJobsSuccess = true
+        state.billingJobs = action.payload.data
+        state.billingJobsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+        state.billingJobsError = null
+      })
+      .addCase(fetchBillingJobs.rejected, (state, action) => {
+        state.billingJobsLoading = false
+        state.billingJobsError = (action.payload as string) || "Failed to fetch billing jobs"
+        state.billingJobsSuccess = false
+        state.billingJobs = []
+        state.billingJobsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch billing job by ID cases
+      .addCase(fetchBillingJobById.pending, (state) => {
+        state.currentBillingJobLoading = true
+        state.currentBillingJobError = null
+      })
+      .addCase(fetchBillingJobById.fulfilled, (state, action: PayloadAction<BillingJob>) => {
+        state.currentBillingJobLoading = false
+        state.currentBillingJob = action.payload
+        state.currentBillingJobError = null
+      })
+      .addCase(fetchBillingJobById.rejected, (state, action) => {
+        state.currentBillingJobLoading = false
+        state.currentBillingJobError = (action.payload as string) || "Failed to fetch billing job"
+        state.currentBillingJob = null
+      })
+      // Create billing job cases
+      .addCase(createBillingJob.pending, (state) => {
+        state.createBillingJobLoading = true
+        state.createBillingJobError = null
+        state.createBillingJobSuccess = false
+        state.createBillingJobMessage = null
+        state.createdBillingJob = null
+      })
+      .addCase(createBillingJob.fulfilled, (state, action: PayloadAction<CreateBillingJobResponse>) => {
+        state.createBillingJobLoading = false
+        state.createBillingJobSuccess = true
+        state.createBillingJobMessage = action.payload.message || "Billing job created successfully"
+        state.createdBillingJob = action.payload.data
+        state.createBillingJobError = null
+      })
+      .addCase(createBillingJob.rejected, (state, action) => {
+        state.createBillingJobLoading = false
+        state.createBillingJobError = (action.payload as string) || "Failed to create billing job"
+        state.createBillingJobSuccess = false
+        state.createBillingJobMessage = null
+        state.createdBillingJob = null
+      })
       // Finalize billing period cases
       .addCase(finalizeBillingPeriod.pending, (state) => {
         state.finalizeLoading = true
@@ -517,14 +855,20 @@ const postpaidSlice = createSlice({
 
 export const {
   clearBills,
+  clearBillingJobs,
+  clearCurrentBillingJob,
+  clearCreateBillingJob,
   clearError,
   clearCurrentBill,
   clearFinalizeState,
   clearFinalizeByAreaOfficeState,
   resetBillingState,
   setPagination,
+  setBillingJobsPagination,
   setFilters,
+  setBillingJobsFilters,
   clearFilters,
+  clearBillingJobsFilters,
 } = postpaidSlice.actions
 
 export default postpaidSlice.reducer
