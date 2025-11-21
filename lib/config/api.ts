@@ -156,6 +156,7 @@ export const API_ENDPOINTS = {
   METER_READINGS: {
     GET: "/billing/postpaid/meter-readings",
     GET_BY_ID: "/billing/postpaid/meter-readings/{id}",
+    ADD: "/billing/postpaid/meter-readings",
   },
 
   ANALYTICS: {

@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useMemo, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -373,6 +374,7 @@ const generateReadingData = () => {
 }
 
 const MeterReadings: React.FC = () => {
+  const router = useRouter()
   const dispatch = useAppDispatch()
   const { meterReadings, meterReadingsLoading, meterReadingsError, meterReadingsSuccess, pagination } = useAppSelector(
     (state) => state.meterReadings
@@ -383,7 +385,6 @@ const MeterReadings: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [selectedReading, setSelectedReading] = useState<MeterReading | null>(null)
   const [readingData, setReadingData] = useState(generateReadingData())
   const [filters, setFilters] = useState({
     period: "",
@@ -616,6 +617,10 @@ const MeterReadings: React.FC = () => {
     })
   }
 
+  const handleViewDetails = (reading: MeterReading) => {
+    router.push(`/billing/meter-readings/details/${reading.id}`)
+  }
+
   if (meterReadingsLoading) return <LoadingSkeleton />
   if (meterReadingsError) return <div>Error loading meter readings: {meterReadingsError}</div>
 
@@ -641,7 +646,7 @@ const MeterReadings: React.FC = () => {
                   variant="primary"
                   size="md"
                   icon={<PlusIcon />}
-                  onClick={() => console.log("Add new reading")}
+                  onClick={() => router.push("/billing/meter-readings/add")}
                 >
                   New Reading
                 </ButtonModule>
@@ -928,7 +933,7 @@ const MeterReadings: React.FC = () => {
                                       {reading.capturedByName}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ActionDropdown reading={reading} onViewDetails={setSelectedReading} />
+                                      <ActionDropdown reading={reading} onViewDetails={handleViewDetails} />
                                     </td>
                                   </motion.tr>
                                 ))}

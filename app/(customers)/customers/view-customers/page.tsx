@@ -2,8 +2,8 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useEffect, useState } from "react"
-import AddCustomerModal from "components/ui/Modal/add-customer-modal"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   AddCustomerIcon,
@@ -276,7 +276,7 @@ const LoadingState = ({ showCategories = true }) => {
 }
 
 export default function AllTransactions() {
-  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const router = useRouter()
 
   // Redux hooks
   const dispatch = useAppDispatch()
@@ -288,19 +288,13 @@ export default function AllTransactions() {
     dispatch(fetchCustomerAnalytics())
   }, [dispatch])
 
-  const handleAddCustomerSuccess = async () => {
-    setIsAddCustomerModalOpen(false)
-    // Refresh customer analytics after adding customer
-    dispatch(fetchCustomerAnalytics())
-  }
-
   const handleRefreshData = () => {
     dispatch(clearCustomerAnalytics())
     dispatch(fetchCustomerAnalytics())
   }
 
-  const handleOpenAddCustomerModal = () => {
-    setIsAddCustomerModalOpen(true)
+  const handleGoToAddCustomerPage = () => {
+    router.push("/customers/add-customers")
   }
 
   // Format numbers with commas
@@ -330,7 +324,7 @@ export default function AllTransactions() {
                 <ButtonModule
                   variant="outline"
                   size="md"
-                  onClick={handleOpenAddCustomerModal}
+                  onClick={handleGoToAddCustomerPage}
                   icon={<AddCustomerIcon />}
                   iconPosition="start"
                 >
@@ -417,11 +411,6 @@ export default function AllTransactions() {
           </div>
         </div>
       </div>
-      <AddCustomerModal
-        isOpen={isAddCustomerModalOpen}
-        onRequestClose={() => setIsAddCustomerModalOpen(false)}
-        onSuccess={handleAddCustomerSuccess}
-      />
     </section>
   )
 }
