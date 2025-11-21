@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, Building, Calendar, DollarSign, FileText, User, Zap } from "lucide-react"
+import { AlertCircle, Building, Calendar, DollarSign, Edit3, FileText, User, Zap } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -11,6 +11,7 @@ import { clearCurrentBill, fetchPostpaidBillById } from "lib/redux/postpaidSlice
 import { fetchDistributionSubstationById } from "lib/redux/distributionSubstationsSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import BillingJobChangeRequestModal from "components/ui/Modal/billing-job-change-request-modal"
 
 // LoadingSkeleton component
 const LoadingSkeleton = () => (
@@ -336,6 +337,15 @@ const BillDetailsPage = () => {
   const { currentBill, currentBillLoading, currentBillError } = useAppSelector((state) => state.postpaidBilling)
   const { currentDistributionSubstation } = useAppSelector((state) => state.distributionSubstations)
 
+  const { user } = useAppSelector((state) => state.auth)
+  const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
+
+  const [activeModal, setActiveModal] = useState<"edit" | "changeRequest" | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
+
+  const closeAllModals = () => setActiveModal(null)
+  const openModal = (modalType: "edit" | "changeRequest") => setActiveModal(modalType)
+
   useEffect(() => {
     if (billId) {
       const id = parseInt(billId)
@@ -567,6 +577,27 @@ const BillDetailsPage = () => {
                       <FileText className="size-4" />
                       Export PDF
                     </ButtonModule>
+                    {canUpdate ? (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => openModal("edit")}
+                      >
+                        <Edit3 className="size-4" />
+                        Edit
+                      </ButtonModule>
+                    ) : (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => openModal("changeRequest")}
+                      >
+                        <Edit3 className="size-4" />
+                        Change Request
+                      </ButtonModule>
+                    )}
                   </div>
                 </div>
               </div>
@@ -941,6 +972,17 @@ const BillDetailsPage = () => {
           </div>
         </div>
       </div>
+      <BillingJobChangeRequestModal
+        isOpen={activeModal === "changeRequest"}
+        onRequestClose={closeAllModals}
+        billingJobId={currentBill.id}
+        billingJobPeriod={currentBill.period}
+        areaOfficeName={currentBill.areaOfficeName}
+        onSuccess={() => {
+          closeAllModals()
+          // optionally: refetch or update bill here if you expect changes to apply immediately
+        }}
+      />
     </section>
   )
 }

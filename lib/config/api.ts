@@ -145,6 +145,12 @@ export const API_ENDPOINTS = {
     BILLING_JOBS: "/billing/postpaid/jobs",
     BILLING_JOBS_BY_ID: "/billing/postpaid/jobs/{id}",
     ADD_BILLING_JOB: "/billing/postpaid/jobs",
+    CHANGE_REQUEST: "/billing/postpaid/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/billing/postpaid/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/billing/postpaid/change-requests",
+    CHANGE_REQUEST_DETAILS: "/billing/postpaid/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/decline",
   },
 
   ANALYTICS: {

@@ -100,6 +100,12 @@ const allLinks: LinkItem[] = [
       { name: "Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       { name: "Disputes", href: "/billing/disputes", privilegeKey: "disputes", requiredActions: ["R"] },
       { name: "Billing Jobs", href: "/billing/jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      {
+        name: "Change Request",
+        href: "/billing/change-requests",
+        privilegeKey: "billing-postpaid",
+        requiredActions: ["E"],
+      },
     ],
   },
   {

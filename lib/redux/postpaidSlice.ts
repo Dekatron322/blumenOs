@@ -183,6 +183,150 @@ export interface FinalizePeriodByAreaOfficeResponse {
   data: PostpaidBill[]
 }
 
+// Change Request Interfaces
+export interface ChangeRequestItem {
+  path: string
+  value: string
+}
+
+export interface ChangeRequestDispute {
+  type: number
+  disputeId: number
+}
+
+export interface ChangeRequestPreconditions {
+  [key: string]: string
+}
+
+export interface ChangeRequestData {
+  changes: ChangeRequestItem[]
+  comment: string
+  dispute?: ChangeRequestDispute
+  preconditions?: ChangeRequestPreconditions
+}
+
+export interface ChangeRequestResponseData {
+  id: number
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string
+  declinedReason: string
+  approvedAtUtc: string
+  approvedBy: string
+  appliedAtUtc: string
+  failureReason: string
+  disputeType: number
+  disputeId: number
+}
+
+export interface ChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
+// Interfaces for View Change Requests
+export interface ChangeRequestListItem {
+  id: number
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  source?: number
+}
+
+export interface ChangeRequestsResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestListItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface ChangeRequestsRequestParams {
+  pageNumber: number
+  pageSize: number
+  status?: number
+  source?: number
+  reference?: string
+  publicId?: string
+}
+
+// Interfaces for Change Request Details
+export interface ChangeRequestDetails {
+  id: number
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string | null
+  declinedReason: string | null
+  approvedAtUtc: string | null
+  approvedBy: string | null
+  appliedAtUtc: string | null
+  failureReason: string | null
+  disputeType: number | null
+  disputeId: number | null
+}
+
+export interface ChangeRequestDetailsResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestDetails
+}
+
+// Interfaces for Approve Change Request
+export interface ApproveChangeRequestRequest {
+  notes?: string
+}
+
+export interface ApproveChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
+// Interfaces for Decline Change Request
+export interface DeclineChangeRequestRequest {
+  reason: string
+}
+
+export interface DeclineChangeRequestResponse {
+  isSuccess: boolean
+  message: string
+  data: ChangeRequestResponseData
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -244,6 +388,58 @@ interface PostpaidBillingState {
   finalizeByAreaOfficeSuccess: boolean
   finalizeByAreaOfficeMessage: string | null
   finalizedAreaOfficeBills: PostpaidBill[]
+
+  // Change Request state
+  changeRequestLoading: boolean
+  changeRequestError: string | null
+  changeRequestSuccess: boolean
+  changeRequestResponse: ChangeRequestResponseData | null
+
+  // View Change Requests state
+  changeRequests: ChangeRequestListItem[]
+  changeRequestsLoading: boolean
+  changeRequestsError: string | null
+  changeRequestsSuccess: boolean
+  changeRequestsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Change Requests By Billing Job ID state
+  changeRequestsByBillingJob: ChangeRequestListItem[]
+  changeRequestsByBillingJobLoading: boolean
+  changeRequestsByBillingJobError: string | null
+  changeRequestsByBillingJobSuccess: boolean
+  changeRequestsByBillingJobPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Change Request Details state
+  changeRequestDetails: ChangeRequestDetails | null
+  changeRequestDetailsLoading: boolean
+  changeRequestDetailsError: string | null
+  changeRequestDetailsSuccess: boolean
+
+  // Approve Change Request state
+  approveChangeRequestLoading: boolean
+  approveChangeRequestError: string | null
+  approveChangeRequestSuccess: boolean
+  approveChangeRequestResponse: ChangeRequestResponseData | null
+
+  // Decline Change Request state
+  declineChangeRequestLoading: boolean
+  declineChangeRequestError: string | null
+  declineChangeRequestSuccess: boolean
+  declineChangeRequestResponse: ChangeRequestResponseData | null
 
   // Search/filter state
   filters: {
@@ -312,6 +508,46 @@ const initialState: PostpaidBillingState = {
   finalizeByAreaOfficeSuccess: false,
   finalizeByAreaOfficeMessage: null,
   finalizedAreaOfficeBills: [],
+  changeRequestLoading: false,
+  changeRequestError: null,
+  changeRequestSuccess: false,
+  changeRequestResponse: null,
+  changeRequests: [],
+  changeRequestsLoading: false,
+  changeRequestsError: null,
+  changeRequestsSuccess: false,
+  changeRequestsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  changeRequestsByBillingJob: [],
+  changeRequestsByBillingJobLoading: false,
+  changeRequestsByBillingJobError: null,
+  changeRequestsByBillingJobSuccess: false,
+  changeRequestsByBillingJobPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  changeRequestDetails: null,
+  changeRequestDetailsLoading: false,
+  changeRequestDetailsError: null,
+  changeRequestDetailsSuccess: false,
+  approveChangeRequestLoading: false,
+  approveChangeRequestError: null,
+  approveChangeRequestSuccess: false,
+  approveChangeRequestResponse: null,
+  declineChangeRequestLoading: false,
+  declineChangeRequestError: null,
+  declineChangeRequestSuccess: false,
+  declineChangeRequestResponse: null,
   filters: {},
   billingJobsFilters: {},
 }
@@ -516,6 +752,204 @@ export const finalizeBillingPeriodByAreaOffice = createAsyncThunk(
   }
 )
 
+// Change Request Async Thunks
+export const submitChangeRequest = createAsyncThunk(
+  "postpaidBilling/submitChangeRequest",
+  async ({ id, changeRequestData }: { id: number; changeRequestData: ChangeRequestData }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.CHANGE_REQUEST, { id })
+      const response = await api.post<ChangeRequestResponse>(buildApiUrl(endpoint), changeRequestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to submit change request")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Change request response data not found")
+      }
+
+      return {
+        billingJobId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to submit change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request submission")
+    }
+  }
+)
+
+export const fetchChangeRequests = createAsyncThunk(
+  "postpaidBilling/fetchChangeRequests",
+  async (params: ChangeRequestsRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, status, source, reference, publicId } = params
+
+      const response = await api.get<ChangeRequestsResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.VIEW_CHANGE_REQUEST),
+        {
+          params: {
+            PageNumber: pageNumber,
+            PageSize: pageSize,
+            ...(status !== undefined && { Status: status }),
+            ...(source !== undefined && { Source: source }),
+            ...(reference && { Reference: reference }),
+            ...(publicId && { PublicId: publicId }),
+          },
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change requests")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change requests")
+      }
+      return rejectWithValue(error.message || "Network error during change requests fetch")
+    }
+  }
+)
+
+export const fetchChangeRequestsByBillingJobId = createAsyncThunk(
+  "postpaidBilling/fetchChangeRequestsByBillingJobId",
+  async (
+    {
+      id,
+      params,
+    }: {
+      id: number
+      params: ChangeRequestsRequestParams
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { pageNumber, pageSize, status, source, reference, publicId } = params
+
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.CHANGE_REQUESTS_BY_ID, { id })
+      const response = await api.get<ChangeRequestsResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(status !== undefined && { Status: status }),
+          ...(source !== undefined && { Source: source }),
+          ...(reference && { Reference: reference }),
+          ...(publicId && { PublicId: publicId }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change requests for billing job")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change requests for billing job")
+      }
+      return rejectWithValue(error.message || "Network error during billing job change requests fetch")
+    }
+  }
+)
+
+export const fetchChangeRequestDetails = createAsyncThunk(
+  "postpaidBilling/fetchChangeRequestDetails",
+  async (identifier: string, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.CHANGE_REQUEST_DETAILS, { identifier })
+      const response = await api.get<ChangeRequestDetailsResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch change request details")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Change request details not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch change request details")
+      }
+      return rejectWithValue(error.message || "Network error during change request details fetch")
+    }
+  }
+)
+
+export const approveChangeRequest = createAsyncThunk(
+  "postpaidBilling/approveChangeRequest",
+  async ({ publicId, notes }: { publicId: string; notes?: string }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.APPROVE_CHANGE_REQUEST, { publicId })
+      const requestBody: ApproveChangeRequestRequest = {}
+
+      if (notes) {
+        requestBody.notes = notes
+      }
+
+      const response = await api.post<ApproveChangeRequestResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to approve change request")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Approved change request data not found")
+      }
+
+      return {
+        publicId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to approve change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request approval")
+    }
+  }
+)
+
+export const declineChangeRequest = createAsyncThunk(
+  "postpaidBilling/declineChangeRequest",
+  async ({ publicId, reason }: { publicId: string; reason: string }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.DECLINE_CHANGE_REQUEST, { publicId })
+      const requestBody: DeclineChangeRequestRequest = {
+        reason: reason,
+      }
+
+      const response = await api.post<DeclineChangeRequestResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to decline change request")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Declined change request data not found")
+      }
+
+      return {
+        publicId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to decline change request")
+      }
+      return rejectWithValue(error.message || "Network error during change request decline")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -576,6 +1010,12 @@ const postpaidSlice = createSlice({
       state.createBillingJobError = null
       state.finalizeError = null
       state.finalizeByAreaOfficeError = null
+      state.changeRequestError = null
+      state.changeRequestsError = null
+      state.changeRequestsByBillingJobError = null
+      state.changeRequestDetailsError = null
+      state.approveChangeRequestError = null
+      state.declineChangeRequestError = null
     },
 
     // Clear current bill
@@ -599,6 +1039,68 @@ const postpaidSlice = createSlice({
       state.finalizeByAreaOfficeSuccess = false
       state.finalizeByAreaOfficeMessage = null
       state.finalizedAreaOfficeBills = []
+    },
+
+    // Clear change request status
+    clearChangeRequestStatus: (state) => {
+      state.changeRequestError = null
+      state.changeRequestSuccess = false
+      state.changeRequestLoading = false
+      state.changeRequestResponse = null
+    },
+
+    // Clear change requests state
+    clearChangeRequests: (state) => {
+      state.changeRequests = []
+      state.changeRequestsError = null
+      state.changeRequestsSuccess = false
+      state.changeRequestsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear change requests by billing job state
+    clearChangeRequestsByBillingJob: (state) => {
+      state.changeRequestsByBillingJob = []
+      state.changeRequestsByBillingJobError = null
+      state.changeRequestsByBillingJobSuccess = false
+      state.changeRequestsByBillingJobPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear change request details
+    clearChangeRequestDetails: (state) => {
+      state.changeRequestDetails = null
+      state.changeRequestDetailsError = null
+      state.changeRequestDetailsSuccess = false
+      state.changeRequestDetailsLoading = false
+    },
+
+    // Clear approve change request status
+    clearApproveChangeRequestStatus: (state) => {
+      state.approveChangeRequestError = null
+      state.approveChangeRequestSuccess = false
+      state.approveChangeRequestLoading = false
+      state.approveChangeRequestResponse = null
+    },
+
+    // Clear decline change request status
+    clearDeclineChangeRequestStatus: (state) => {
+      state.declineChangeRequestError = null
+      state.declineChangeRequestSuccess = false
+      state.declineChangeRequestLoading = false
+      state.declineChangeRequestResponse = null
     },
 
     // Reset billing state
@@ -647,6 +1149,46 @@ const postpaidSlice = createSlice({
       state.finalizeByAreaOfficeSuccess = false
       state.finalizeByAreaOfficeMessage = null
       state.finalizedAreaOfficeBills = []
+      state.changeRequestLoading = false
+      state.changeRequestError = null
+      state.changeRequestSuccess = false
+      state.changeRequestResponse = null
+      state.changeRequests = []
+      state.changeRequestsLoading = false
+      state.changeRequestsError = null
+      state.changeRequestsSuccess = false
+      state.changeRequestsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.changeRequestsByBillingJob = []
+      state.changeRequestsByBillingJobLoading = false
+      state.changeRequestsByBillingJobError = null
+      state.changeRequestsByBillingJobSuccess = false
+      state.changeRequestsByBillingJobPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.changeRequestDetails = null
+      state.changeRequestDetailsLoading = false
+      state.changeRequestDetailsError = null
+      state.changeRequestDetailsSuccess = false
+      state.approveChangeRequestLoading = false
+      state.approveChangeRequestError = null
+      state.approveChangeRequestSuccess = false
+      state.approveChangeRequestResponse = null
+      state.declineChangeRequestLoading = false
+      state.declineChangeRequestError = null
+      state.declineChangeRequestSuccess = false
+      state.declineChangeRequestResponse = null
       state.filters = {}
       state.billingJobsFilters = {}
     },
@@ -661,6 +1203,18 @@ const postpaidSlice = createSlice({
     setBillingJobsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.billingJobsPagination.currentPage = action.payload.page
       state.billingJobsPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set change requests pagination
+    setChangeRequestsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.changeRequestsPagination.currentPage = action.payload.page
+      state.changeRequestsPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set change requests by billing job pagination
+    setChangeRequestsByBillingJobPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.changeRequestsByBillingJobPagination.currentPage = action.payload.page
+      state.changeRequestsByBillingJobPagination.pageSize = action.payload.pageSize
     },
 
     // Set filters
@@ -850,6 +1404,234 @@ const postpaidSlice = createSlice({
         state.finalizeByAreaOfficeMessage = null
         state.finalizedAreaOfficeBills = []
       })
+      // Change request cases
+      .addCase(submitChangeRequest.pending, (state) => {
+        state.changeRequestLoading = true
+        state.changeRequestError = null
+        state.changeRequestSuccess = false
+        state.changeRequestResponse = null
+      })
+      .addCase(
+        submitChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            billingJobId: number
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.changeRequestLoading = false
+          state.changeRequestSuccess = true
+          state.changeRequestError = null
+          state.changeRequestResponse = action.payload.data
+        }
+      )
+      .addCase(submitChangeRequest.rejected, (state, action) => {
+        state.changeRequestLoading = false
+        state.changeRequestError = (action.payload as string) || "Failed to submit change request"
+        state.changeRequestSuccess = false
+        state.changeRequestResponse = null
+      })
+      // Fetch change requests cases
+      .addCase(fetchChangeRequests.pending, (state) => {
+        state.changeRequestsLoading = true
+        state.changeRequestsError = null
+        state.changeRequestsSuccess = false
+      })
+      .addCase(fetchChangeRequests.fulfilled, (state, action: PayloadAction<ChangeRequestsResponse>) => {
+        state.changeRequestsLoading = false
+        state.changeRequestsSuccess = true
+        state.changeRequests = action.payload.data || []
+        state.changeRequestsPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.changeRequestsError = null
+      })
+      .addCase(fetchChangeRequests.rejected, (state, action) => {
+        state.changeRequestsLoading = false
+        state.changeRequestsError = (action.payload as string) || "Failed to fetch change requests"
+        state.changeRequestsSuccess = false
+        state.changeRequests = []
+        state.changeRequestsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch change requests by billing job ID cases
+      .addCase(fetchChangeRequestsByBillingJobId.pending, (state) => {
+        state.changeRequestsByBillingJobLoading = true
+        state.changeRequestsByBillingJobError = null
+        state.changeRequestsByBillingJobSuccess = false
+      })
+      .addCase(fetchChangeRequestsByBillingJobId.fulfilled, (state, action: PayloadAction<ChangeRequestsResponse>) => {
+        state.changeRequestsByBillingJobLoading = false
+        state.changeRequestsByBillingJobSuccess = true
+        state.changeRequestsByBillingJob = action.payload.data || []
+        state.changeRequestsByBillingJobPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.changeRequestsByBillingJobError = null
+      })
+      .addCase(fetchChangeRequestsByBillingJobId.rejected, (state, action) => {
+        state.changeRequestsByBillingJobLoading = false
+        state.changeRequestsByBillingJobError =
+          (action.payload as string) || "Failed to fetch change requests for billing job"
+        state.changeRequestsByBillingJobSuccess = false
+        state.changeRequestsByBillingJob = []
+        state.changeRequestsByBillingJobPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch change request details cases
+      .addCase(fetchChangeRequestDetails.pending, (state) => {
+        state.changeRequestDetailsLoading = true
+        state.changeRequestDetailsError = null
+        state.changeRequestDetailsSuccess = false
+      })
+      .addCase(fetchChangeRequestDetails.fulfilled, (state, action: PayloadAction<ChangeRequestDetails>) => {
+        state.changeRequestDetailsLoading = false
+        state.changeRequestDetailsSuccess = true
+        state.changeRequestDetails = action.payload
+        state.changeRequestDetailsError = null
+      })
+      .addCase(fetchChangeRequestDetails.rejected, (state, action) => {
+        state.changeRequestDetailsLoading = false
+        state.changeRequestDetailsError = (action.payload as string) || "Failed to fetch change request details"
+        state.changeRequestDetailsSuccess = false
+        state.changeRequestDetails = null
+      })
+      // Approve change request cases
+      .addCase(approveChangeRequest.pending, (state) => {
+        state.approveChangeRequestLoading = true
+        state.approveChangeRequestError = null
+        state.approveChangeRequestSuccess = false
+        state.approveChangeRequestResponse = null
+      })
+      .addCase(
+        approveChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            publicId: string
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.approveChangeRequestLoading = false
+          state.approveChangeRequestSuccess = true
+          state.approveChangeRequestError = null
+          state.approveChangeRequestResponse = action.payload.data
+
+          // Update the change request in the list if it exists
+          const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
+          if (index !== -1) {
+            const req = state.changeRequests[index]
+            if (req) {
+              req.status = 1 // Set status to APPROVED
+            }
+          }
+
+          // Update the change request in the billing job-specific list if it exists
+          const billingJobIndex = state.changeRequestsByBillingJob.findIndex(
+            (cr) => cr.publicId === action.payload.publicId
+          )
+          if (billingJobIndex !== -1) {
+            const req = state.changeRequestsByBillingJob[billingJobIndex]
+            if (req) {
+              req.status = 1 // Set status to APPROVED
+            }
+          }
+
+          // Update change request details if it's the current one
+          if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
+            state.changeRequestDetails.status = 1 // Set status to APPROVED
+            state.changeRequestDetails.approvalNotes = action.payload.data.approvalNotes
+            state.changeRequestDetails.approvedAtUtc = action.payload.data.approvedAtUtc
+            state.changeRequestDetails.approvedBy = action.payload.data.approvedBy
+          }
+        }
+      )
+      .addCase(approveChangeRequest.rejected, (state, action) => {
+        state.approveChangeRequestLoading = false
+        state.approveChangeRequestError = (action.payload as string) || "Failed to approve change request"
+        state.approveChangeRequestSuccess = false
+        state.approveChangeRequestResponse = null
+      })
+      // Decline change request cases
+      .addCase(declineChangeRequest.pending, (state) => {
+        state.declineChangeRequestLoading = true
+        state.declineChangeRequestError = null
+        state.declineChangeRequestSuccess = false
+        state.declineChangeRequestResponse = null
+      })
+      .addCase(
+        declineChangeRequest.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            publicId: string
+            data: ChangeRequestResponseData
+            message: string
+          }>
+        ) => {
+          state.declineChangeRequestLoading = false
+          state.declineChangeRequestSuccess = true
+          state.declineChangeRequestError = null
+          state.declineChangeRequestResponse = action.payload.data
+
+          // Update the change request in the list if it exists
+          const index = state.changeRequests.findIndex((cr) => cr.publicId === action.payload.publicId)
+          if (index !== -1) {
+            const req = state.changeRequests[index]
+            if (req) {
+              req.status = 2 // Set status to DECLINED
+            }
+          }
+
+          // Update the change request in the billing job-specific list if it exists
+          const billingJobIndex = state.changeRequestsByBillingJob.findIndex(
+            (cr) => cr.publicId === action.payload.publicId
+          )
+          if (billingJobIndex !== -1) {
+            const req = state.changeRequestsByBillingJob[billingJobIndex]
+            if (req) {
+              req.status = 2 // Set status to DECLINED
+            }
+          }
+
+          // Update change request details if it's the current one
+          if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
+            state.changeRequestDetails.status = 2 // Set status to DECLINED
+            state.changeRequestDetails.declinedReason = action.payload.data.declinedReason
+          }
+        }
+      )
+      .addCase(declineChangeRequest.rejected, (state, action) => {
+        state.declineChangeRequestLoading = false
+        state.declineChangeRequestError = (action.payload as string) || "Failed to decline change request"
+        state.declineChangeRequestSuccess = false
+        state.declineChangeRequestResponse = null
+      })
   },
 })
 
@@ -862,9 +1644,17 @@ export const {
   clearCurrentBill,
   clearFinalizeState,
   clearFinalizeByAreaOfficeState,
+  clearChangeRequestStatus,
+  clearChangeRequests,
+  clearChangeRequestsByBillingJob,
+  clearChangeRequestDetails,
+  clearApproveChangeRequestStatus,
+  clearDeclineChangeRequestStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
+  setChangeRequestsPagination,
+  setChangeRequestsByBillingJobPagination,
   setFilters,
   setBillingJobsFilters,
   clearFilters,
