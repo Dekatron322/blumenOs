@@ -10,9 +10,9 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  BillingJob as ReduxBillingJob,
   clearBillingJobs,
   fetchBillingJobs,
+  BillingJob as ReduxBillingJob,
   setBillingJobsPagination,
 } from "lib/redux/postpaidSlice"
 import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
