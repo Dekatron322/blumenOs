@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from "components/Icons/Icons"
+import { ButtonModule } from "components/ui/Button/Button"
+import { VscEye } from "react-icons/vsc"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearFeederEnergyCaps,
@@ -34,11 +37,13 @@ interface EnergyCapCycle {
 
 interface FeederEnergyCapsProps {
   onApplyNewCaps?: () => void
+  onViewDetails?: (cycle: EnergyCapCycle) => void
 }
 
-const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps }) => {
+const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onViewDetails }) => {
   const [searchText, setSearchText] = useState("")
   const dispatch = useAppDispatch()
+  const router = useRouter()
 
   // Get state from Redux store
   const { feederEnergyCaps, feederEnergyCapsLoading, feederEnergyCapsError, pagination, feederEnergyCapsSuccess } =
@@ -87,6 +92,11 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps }) =
   const handleCancelSearch = () => {
     setSearchText("")
     dispatch(clearFeederEnergyCaps())
+  }
+
+  const handleViewDetails = (cycle: EnergyCapCycle) => {
+    router.push(`/billing/feeder-energy-caps/energy-cap-details/${cycle.id}`)
+    onViewDetails?.(cycle)
   }
 
   // Transform API data to component format
@@ -435,11 +445,23 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps }) =
                     </p>
                   </div>
 
-                  <div className="min-w-[120px] text-right text-sm">
-                    <p className={`font-semibold ${getAmountColor(cycle.totalEnergyCap)}`}>{cycle.totalEnergyCap}</p>
-                    <p className="text-gray-500">
-                      {cycle.status === "Active" ? "Active" : cycle.status === "Expired" ? "Expired" : "Pending"}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="space-y-1 text-right text-sm">
+                      <p className={`font-semibold ${getAmountColor(cycle.totalEnergyCap)}`}>{cycle.totalEnergyCap}</p>
+                      <p className="text-gray-500">
+                        {cycle.status === "Active" ? "Active" : cycle.status === "Expired" ? "Expired" : "Pending"}
+                      </p>
+                    </div>
+                    <ButtonModule
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewDetails(cycle)}
+                      icon={<VscEye className="size-4" />}
+                      iconPosition="start"
+                      className="bg-white"
+                    >
+                      View Details
+                    </ButtonModule>
                   </div>
                 </div>
 
