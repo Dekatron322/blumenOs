@@ -170,6 +170,11 @@ export const API_ENDPOINTS = {
     CUSTOMER: "/customers/reports/summary",
     POSTPAID_BILLING: "/billing/postpaid/summary",
   },
+
+  PAYMENTS: {
+    GET: "/payments",
+    GET_BY_ID: "/payments/{id}",
+  },
 }
 
 // Helper function to build full URL

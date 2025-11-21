@@ -1,4 +1,3 @@
-// src/lib/redux/store.ts
 import { configureStore } from "@reduxjs/toolkit"
 import authReducer from "./authSlice"
 import employeeReducer from "./employeeSlice"
@@ -16,6 +15,7 @@ import customerReducer from "./customerSlice"
 import postpaidBillingReducer from "./postpaidSlice"
 import meterReadingReducer from "./meterReadingSlice"
 import feederEnergyCapReducer from "./feederEnergyCapSlice"
+import paymentReducer from "./paymentSlice"
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +34,7 @@ export const store = configureStore({
     postpaidBilling: postpaidBillingReducer,
     meterReadings: meterReadingReducer,
     feederEnergyCaps: feederEnergyCapReducer,
+    payments: paymentReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
