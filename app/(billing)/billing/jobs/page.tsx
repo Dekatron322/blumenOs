@@ -5,18 +5,15 @@ import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { BillsIcon, CycleIcon, DateIcon, MapIcon, PlusIcon, StatusIcon, UserIcon } from "components/Icons/Icons"
+import { CycleIcon, PlusIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
-import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  fetchBillingJobs,
-  clearBillingJobs,
-  setBillingJobsPagination,
-  setBillingJobsFilters,
-  clearBillingJobsFilters,
   BillingJob as ReduxBillingJob,
+  clearBillingJobs,
+  fetchBillingJobs,
+  setBillingJobsPagination,
 } from "lib/redux/postpaidSlice"
 import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
 
