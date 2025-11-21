@@ -34,10 +34,10 @@ const MapViewTab = () => {
   const customers: Customer[] = [
     { id: 1, position: [10.52, 7.44], state: "Kaduna", feeder: "Feeder 1", status: "Paid" },
     { id: 2, position: [10.54, 7.46], state: "Kaduna", feeder: "Feeder 2", status: "Unpaid" },
-    { id: 3, position: [10.50, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Partial" },
-    { id: 4, position: [12.00, 8.52], state: "Kano", feeder: "Feeder 1", status: "Unknown" },
+    { id: 3, position: [10.5, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Partial" },
+    { id: 4, position: [12.0, 8.52], state: "Kano", feeder: "Feeder 1", status: "Unknown" },
     { id: 5, position: [12.03, 8.55], state: "Kano", feeder: "Feeder 2", status: "Paid" },
-    { id: 6, position: [12.02, 8.50], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
+    { id: 6, position: [12.02, 8.5], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
     { id: 7, position: [9.07, 7.49], state: "Abuja", feeder: "Feeder 1", status: "Partial" },
     { id: 8, position: [9.05, 7.52], state: "Abuja", feeder: "Feeder 2", status: "Paid" },
   ]
@@ -45,15 +45,15 @@ const MapViewTab = () => {
   const assets: Asset[] = [
     { id: 1, position: [10.52, 7.44], type: "feeder" },
     { id: 2, position: [10.54, 7.46], type: "feeder" },
-    { id: 3, position: [10.50, 7.42], type: "feeder" },
-    { id: 4, position: [12.00, 8.52], type: "feeder" },
+    { id: 3, position: [10.5, 7.42], type: "feeder" },
+    { id: 4, position: [12.0, 8.52], type: "feeder" },
     { id: 5, position: [12.03, 8.55], type: "feeder" },
     { id: 6, position: [9.07, 7.49], type: "feeder" },
     { id: 7, position: [9.05, 7.52], type: "feeder" },
 
-    { id: 8, position: [10.55, 7.40], type: "transformer" },
+    { id: 8, position: [10.55, 7.4], type: "transformer" },
     { id: 9, position: [10.48, 7.45], type: "transformer" },
-    { id: 10, position: [12.02, 8.50], type: "transformer" },
+    { id: 10, position: [12.02, 8.5], type: "transformer" },
     { id: 11, position: [12.01, 8.56], type: "transformer" },
     { id: 12, position: [9.06, 7.47], type: "transformer" },
 
@@ -66,23 +66,30 @@ const MapViewTab = () => {
     { id: 18, position: [10.53, 7.43], type: "service" },
     { id: 19, position: [12.05, 8.55], type: "service" },
     { id: 20, position: [9.09, 7.51], type: "service" },
-    { id: 21, position: [9.10, 7.53], type: "service" },
+    { id: 21, position: [9.1, 7.53], type: "service" },
   ]
 
   const getAssetIcon = (type: Asset["type"]) => {
     switch (type) {
       case "feeder":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center;color:#facc15">⚡</span>')
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center;color:#facc15">⚡</span>'
+        )
       case "substation":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏭</span>')
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏭</span>'
+        )
       case "transformer":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🔌</span>')
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🔌</span>'
+        )
       case "service":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏢</span>')
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏢</span>'
+        )
     }
   }
 
-        
   const stateOptions = ["All States", ...Array.from(new Set(customers.map((c) => c.state))).sort()]
   const feederOptions = ["All Feeders", ...Array.from(new Set(customers.map((c) => c.feeder))).sort()]
 
@@ -106,11 +113,10 @@ const MapViewTab = () => {
   const assetIcon = (html: string) => LRef.current?.divIcon({ html, className: "", iconSize: [60, 60] })
 
   const mapDivRef = useRef<HTMLDivElement>(null)
-const mapRef = useRef<any>(null)
-const customersGroupRef = useRef<any>(null)
-const assetsGroupRef = useRef<any>(null)
-const LRef = useRef<any>(null)
-
+  const mapRef = useRef<any>(null)
+  const customersGroupRef = useRef<any>(null)
+  const assetsGroupRef = useRef<any>(null)
+  const LRef = useRef<any>(null)
 
   const renderLayers = () => {
     if (!LRef.current || !mapRef.current) return
@@ -118,7 +124,6 @@ const LRef = useRef<any>(null)
     assetsGroupRef.current?.clearLayers()
 
     if (customersLayerEnabled) {
-
       const filtered = customers.filter((cust) => {
         const stateOk = selectedState === "All States" || cust.state === selectedState
         const feederOk = selectedFeeder === "All Feeders" || cust.feeder === selectedFeeder
@@ -128,7 +133,8 @@ const LRef = useRef<any>(null)
 
       filtered.forEach((c) => {
         const icon = getCustomerIcon(c.status)
-        LRef.current.marker(c.position, { icon })
+        LRef.current
+          .marker(c.position, { icon })
           .bindPopup(
             `<div class="space-y-1"><div class="font-semibold">${c.state}</div><div class="text-xs">${c.feeder}</div><div class="text-xs">Status: ${c.status}</div></div>`
           )
@@ -139,9 +145,12 @@ const LRef = useRef<any>(null)
     if (assetsLayerEnabled) {
       assets.forEach((a) => {
         const icon = getAssetIcon(a.type)
-        LRef.current.marker(a.position, { icon })
+        LRef.current
+          .marker(a.position, { icon })
           .bindPopup(
-            `<div class="space-y-1"><div class="font-semibold capitalize">${a.type}</div><div class="text-xs">Lat: ${a.position[0].toFixed(2)}, Lng: ${a.position[1].toFixed(2)}</div></div>`
+            `<div class="space-y-1"><div class="font-semibold capitalize">${
+              a.type
+            }</div><div class="text-xs">Lat: ${a.position[0].toFixed(2)}, Lng: ${a.position[1].toFixed(2)}</div></div>`
           )
           .addTo(assetsGroupRef.current!)
       })
@@ -407,10 +416,22 @@ const LRef = useRef<any>(null)
               <div>
                 <h4 className="mb-2 text-sm font-semibold">Customers</h4>
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-green-500"></span><span>Paid</span></div>
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-red-500"></span><span>Unpaid</span></div>
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-amber-500"></span><span>Partial</span></div>
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-gray-500"></span><span>Unknown</span></div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-green-500"></span>
+                    <span>Paid</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-red-500"></span>
+                    <span>Unpaid</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-amber-500"></span>
+                    <span>Partial</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-gray-500"></span>
+                    <span>Unknown</span>
+                  </div>
                 </div>
               </div>
 
@@ -435,7 +456,6 @@ const LRef = useRef<any>(null)
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
