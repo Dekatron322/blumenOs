@@ -17,6 +17,7 @@ import AllCustomers from "components/Tables/AllCustomers"
 import { ButtonModule } from "components/ui/Button/Button"
 import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { useRouter } from "next/navigation"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -393,6 +394,8 @@ const CustomerAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
 export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
 
+  const router = useRouter()
+
   // Redux hooks
   const dispatch = useAppDispatch()
   const { customerAnalyticsData, customerAnalyticsLoading, customerAnalyticsError, customerAnalyticsSuccess } =
@@ -415,7 +418,7 @@ export default function AllTransactions() {
   }
 
   const handleOpenAddCustomerModal = () => {
-    setIsAddCustomerModalOpen(true)
+    router.push("/customers/add-customers")
   }
 
   // Format numbers with commas
