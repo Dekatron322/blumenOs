@@ -15,6 +15,7 @@ import analyticsReducer from "./analyticsSlice"
 import customerReducer from "./customerSlice"
 import postpaidBillingReducer from "./postpaidSlice"
 import meterReadingReducer from "./meterReadingSlice"
+import feederEnergyCapReducer from "./feederEnergyCapSlice"
 
 export const store = configureStore({
   reducer: {
@@ -32,6 +33,7 @@ export const store = configureStore({
     customers: customerReducer,
     postpaidBilling: postpaidBillingReducer,
     meterReadings: meterReadingReducer,
+    feederEnergyCaps: feederEnergyCapReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

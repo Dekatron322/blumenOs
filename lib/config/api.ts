@@ -159,6 +159,12 @@ export const API_ENDPOINTS = {
     ADD: "/billing/postpaid/meter-readings",
   },
 
+  FEEDER_ENERGY_CAP: {
+    GET: "/billing/postpaid/feeder-energy-caps",
+    GET_BY_ID: "/billing/postpaid/feeder-energy-caps/{id}",
+    ADD: "/billing/postpaid/feeder-energy-caps/apply-all",
+  },
+
   ANALYTICS: {
     ASSET_MANAGEMENT: "/assets/reports/summary",
     CUSTOMER: "/customers/reports/summary",

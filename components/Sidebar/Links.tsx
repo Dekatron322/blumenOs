@@ -104,6 +104,12 @@ const allLinks: LinkItem[] = [
         privilegeKey: "billing-postpaid",
         requiredActions: ["R"],
       },
+      {
+        name: "Feeder Energy Caps",
+        href: "/billing/feeder-energy-caps",
+        privilegeKey: "billing-postpaid",
+        requiredActions: ["R"],
+      },
       { name: "Billing Jobs", href: "/billing/jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       {
         name: "Change Request",
