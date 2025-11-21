@@ -5,9 +5,9 @@ import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearFeederEnergyCaps,
+  FeederEnergyCap,
   fetchFeederEnergyCaps,
   setPagination,
-  FeederEnergyCap,
 } from "lib/redux/feederEnergyCapSlice"
 
 const CyclesIcon = () => (
