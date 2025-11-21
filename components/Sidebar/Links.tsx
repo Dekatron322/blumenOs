@@ -98,7 +98,12 @@ const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["W"] },
       { name: "Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
-      { name: "Disputes", href: "/billing/disputes", privilegeKey: "disputes", requiredActions: ["R"] },
+      {
+        name: "Meter Readings",
+        href: "/billing/meter-readings",
+        privilegeKey: "billing-postpaid",
+        requiredActions: ["R"],
+      },
       { name: "Billing Jobs", href: "/billing/jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       {
         name: "Change Request",
