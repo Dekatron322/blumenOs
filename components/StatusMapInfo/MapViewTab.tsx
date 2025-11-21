@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
+import "leaflet/dist/leaflet.css"
 
 const MapViewTab = () => {
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false)
@@ -12,9 +13,173 @@ const MapViewTab = () => {
   const [customersLayerEnabled, setCustomersLayerEnabled] = useState(true)
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
 
-  const stateOptions = ["All States", "Lagos", "Abuja", "Kano", "Rivers", "Ogun"]
-  const feederOptions = ["All Feeders", "Feeder 1", "Feeder 2", "Feeder 3", "Feeder 4"]
   const paymentStatusOptions = ["All Status", "Paid", "Unpaid", "Partial", "Unknown"]
+
+  type Customer = {
+    id: number
+    position: [number, number]
+    state: string
+    feeder: string
+    status: "Paid" | "Unpaid" | "Partial" | "Unknown"
+  }
+
+  type Asset = {
+    id: number
+    position: [number, number]
+    type: "feeder" | "substation" | "transformer" | "service"
+  }
+
+  const nigeriaCenter: [number, number] = [9.082, 8.6753]
+
+  const customers: Customer[] = [
+    { id: 1, position: [10.52, 7.44], state: "Kaduna", feeder: "Feeder 1", status: "Paid" },
+    { id: 2, position: [10.54, 7.46], state: "Kaduna", feeder: "Feeder 2", status: "Unpaid" },
+    { id: 3, position: [10.50, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Partial" },
+    { id: 4, position: [12.00, 8.52], state: "Kano", feeder: "Feeder 1", status: "Unknown" },
+    { id: 5, position: [12.03, 8.55], state: "Kano", feeder: "Feeder 2", status: "Paid" },
+    { id: 6, position: [12.02, 8.50], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
+    { id: 7, position: [9.07, 7.49], state: "Abuja", feeder: "Feeder 1", status: "Partial" },
+    { id: 8, position: [9.05, 7.52], state: "Abuja", feeder: "Feeder 2", status: "Paid" },
+  ]
+
+  const assets: Asset[] = [
+    { id: 1, position: [10.52, 7.44], type: "feeder" },
+    { id: 2, position: [10.54, 7.46], type: "feeder" },
+    { id: 3, position: [10.50, 7.42], type: "feeder" },
+    { id: 4, position: [12.00, 8.52], type: "feeder" },
+    { id: 5, position: [12.03, 8.55], type: "feeder" },
+    { id: 6, position: [9.07, 7.49], type: "feeder" },
+    { id: 7, position: [9.05, 7.52], type: "feeder" },
+
+    { id: 8, position: [10.55, 7.40], type: "transformer" },
+    { id: 9, position: [10.48, 7.45], type: "transformer" },
+    { id: 10, position: [12.02, 8.50], type: "transformer" },
+    { id: 11, position: [12.01, 8.56], type: "transformer" },
+    { id: 12, position: [9.06, 7.47], type: "transformer" },
+
+    { id: 13, position: [10.56, 7.47], type: "substation" },
+    { id: 14, position: [10.51, 7.38], type: "substation" },
+    { id: 15, position: [11.98, 8.48], type: "substation" },
+    { id: 16, position: [12.04, 8.53], type: "substation" },
+    { id: 17, position: [9.08, 7.52], type: "substation" },
+
+    { id: 18, position: [10.53, 7.43], type: "service" },
+    { id: 19, position: [12.05, 8.55], type: "service" },
+    { id: 20, position: [9.09, 7.51], type: "service" },
+    { id: 21, position: [9.10, 7.53], type: "service" },
+  ]
+
+  const getAssetIcon = (type: Asset["type"]) => {
+    switch (type) {
+      case "feeder":
+        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center;color:#facc15">⚡</span>')
+      case "substation":
+        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏭</span>')
+      case "transformer":
+        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🔌</span>')
+      case "service":
+        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏢</span>')
+    }
+  }
+
+        
+  const stateOptions = ["All States", ...Array.from(new Set(customers.map((c) => c.state))).sort()]
+  const feederOptions = ["All Feeders", ...Array.from(new Set(customers.map((c) => c.feeder))).sort()]
+
+  const dot = (color: string) =>
+    LRef.current!.divIcon({
+      html: `<span style="background:${color};width:16px;height:16px;border-radius:50%;display:block;border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,.4)"></span>`,
+      className: "",
+      iconSize: [16, 16],
+    })
+
+  const getCustomerIcon = (status: "Paid" | "Unpaid" | "Partial" | "Unknown") => {
+    const colorMap: Record<"Paid" | "Unpaid" | "Partial" | "Unknown", string> = {
+      Paid: "#22c55e",
+      Unpaid: "#ef4444",
+      Partial: "#f59e0b",
+      Unknown: "#6b7280",
+    }
+    return dot(colorMap[status])
+  }
+
+  const assetIcon = (html: string) => LRef.current?.divIcon({ html, className: "", iconSize: [60, 60] })
+
+  const mapDivRef = useRef<HTMLDivElement>(null)
+const mapRef = useRef<any>(null)
+const customersGroupRef = useRef<any>(null)
+const assetsGroupRef = useRef<any>(null)
+const LRef = useRef<any>(null)
+
+
+  const renderLayers = () => {
+    if (!LRef.current || !mapRef.current) return
+    customersGroupRef.current?.clearLayers()
+    assetsGroupRef.current?.clearLayers()
+
+    if (customersLayerEnabled) {
+
+      const filtered = customers.filter((cust) => {
+        const stateOk = selectedState === "All States" || cust.state === selectedState
+        const feederOk = selectedFeeder === "All Feeders" || cust.feeder === selectedFeeder
+        const statusOk = selectedPaymentStatus === "All Status" || cust.status === selectedPaymentStatus
+        return stateOk && feederOk && statusOk
+      })
+
+      filtered.forEach((c) => {
+        const icon = getCustomerIcon(c.status)
+        LRef.current.marker(c.position, { icon })
+          .bindPopup(
+            `<div class="space-y-1"><div class="font-semibold">${c.state}</div><div class="text-xs">${c.feeder}</div><div class="text-xs">Status: ${c.status}</div></div>`
+          )
+          .addTo(customersGroupRef.current!)
+      })
+    }
+
+    if (assetsLayerEnabled) {
+      assets.forEach((a) => {
+        const icon = getAssetIcon(a.type)
+        LRef.current.marker(a.position, { icon })
+          .bindPopup(
+            `<div class="space-y-1"><div class="font-semibold capitalize">${a.type}</div><div class="text-xs">Lat: ${a.position[0].toFixed(2)}, Lng: ${a.position[1].toFixed(2)}</div></div>`
+          )
+          .addTo(assetsGroupRef.current!)
+      })
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true
+    const init = async () => {
+      if (!mapRef.current && mapDivRef.current) {
+        const Leaflet = await import("leaflet")
+        const L = Leaflet.default ?? Leaflet
+        if (!mounted) return
+        LRef.current = L
+        const map = L.map(mapDivRef.current, { zoomControl: true }).setView(nigeriaCenter, 6)
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map)
+        mapRef.current = map
+        customersGroupRef.current = L.layerGroup().addTo(map)
+        assetsGroupRef.current = L.layerGroup().addTo(map)
+        renderLayers()
+      }
+    }
+    init()
+    return () => {
+      mounted = false
+      mapRef.current?.remove()
+      mapRef.current = null
+      customersGroupRef.current = null
+      assetsGroupRef.current = null
+      LRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    renderLayers()
+  }, [selectedState, selectedFeeder, selectedPaymentStatus, customersLayerEnabled, assetsLayerEnabled])
 
   const handleReset = () => {
     setSelectedState("All States")
@@ -25,7 +190,7 @@ const MapViewTab = () => {
   return (
     <div className="flex gap-6">
       {/* Left Control Panel */}
-      <div className="w-80 flex-shrink-0 space-y-6">
+      <div className="w-80 shrink-0 space-y-6">
         {/* Filters Section */}
         <div className="rounded-md border bg-white p-4">
           <div className="mb-4 flex items-center justify-between">
@@ -40,7 +205,7 @@ const MapViewTab = () => {
               <label className="mb-2 block text-sm font-medium">State</label>
               <div className="mt-3">
                 <div
-                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setStateDropdownOpen(!stateDropdownOpen)
                     setFeederDropdownOpen(false)
@@ -88,7 +253,7 @@ const MapViewTab = () => {
               <label className="mb-2 block text-sm font-medium">Feeder</label>
               <div className="mt-3">
                 <div
-                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setFeederDropdownOpen(!feederDropdownOpen)
                     setStateDropdownOpen(false)
@@ -136,7 +301,7 @@ const MapViewTab = () => {
               <label className="mb-2 block text-sm font-medium">Payment Status</label>
               <div className="mt-3">
                 <div
-                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setPaymentStatusDropdownOpen(!paymentStatusDropdownOpen)
                     setStateDropdownOpen(false)
@@ -231,130 +396,21 @@ const MapViewTab = () => {
         {/* Map Display */}
         <div className="relative h-[600px] w-full overflow-hidden rounded-md bg-gray-100">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <svg viewBox="0 0 1000 600" className="size-full" xmlns="http://www.w3.org/2000/svg">
-            {/* Background - Simplified world map focusing on West Africa */}
-            <rect width="1000" height="600" fill="#e5e7eb" />
-
-            {/* Water bodies */}
-            <path
-              d="M0,0 L1000,0 L1000,600 L0,600 Z M200,150 Q300,200 400,150 T600,150 L800,200 L850,350 L700,500 L400,550 L200,500 Z"
-              fill="#cbd5e1"
-            />
-
-            {/* Land areas - Simplified West Africa */}
-            <path
-              d="M200,150 Q300,100 400,150 T600,150 L800,200 L850,350 L700,500 L400,550 L200,500 Z"
-              fill="#f3f4f6"
-              stroke="#d1d5db"
-              strokeWidth="2"
-            />
-
-            {/* Feeder Zones - Green/Red gradients based on collection rate */}
-            {customersLayerEnabled && (
-              <>
-                <ellipse cx="400" cy="300" rx="80" ry="60" fill="rgba(34,197,94,0.3)" />
-                <ellipse cx="500" cy="280" rx="70" ry="50" fill="rgba(34,197,94,0.4)" />
-                <ellipse cx="600" cy="320" rx="90" ry="70" fill="rgba(239,68,68,0.3)" />
-                <ellipse cx="450" cy="400" rx="60" ry="50" fill="rgba(34,197,94,0.5)" />
-              </>
-            )}
-
-            {/* Customer markers */}
-            {customersLayerEnabled && (
-              <>
-                {/* Paid customers - Green dots */}
-                <circle cx="380" cy="290" r="4" fill="#22c55e" />
-                <circle cx="420" cy="310" r="4" fill="#22c55e" />
-                <circle cx="480" cy="270" r="4" fill="#22c55e" />
-                <circle cx="520" cy="290" r="4" fill="#22c55e" />
-                <circle cx="440" cy="390" r="4" fill="#22c55e" />
-
-                {/* Unpaid customers - Red dots */}
-                <circle cx="580" cy="310" r="4" fill="#ef4444" />
-                <circle cx="620" cy="330" r="4" fill="#ef4444" />
-                <circle cx="590" cy="350" r="4" fill="#ef4444" />
-
-                {/* Partial customers - Orange dots */}
-                <circle cx="350" cy="350" r="4" fill="#f97316" />
-                <circle cx="470" cy="360" r="4" fill="#f97316" />
-
-                {/* Unknown customers - Grey dots */}
-                <circle cx="300" cy="280" r="4" fill="#6b7280" />
-              </>
-            )}
-
-            {/* Asset markers */}
-            {assetsLayerEnabled && (
-              <>
-                {/* Feeder - Yellow lightning */}
-                <g transform="translate(500, 250)">
-                  <path d="M0,-10 L5,0 L2,0 L7,10 L2,10 L-3,0 L0,0 Z" fill="#eab308" stroke="#ca8a04" strokeWidth="1" />
-                </g>
-
-                {/* Substation - Grey building */}
-                <g transform="translate(450, 350)">
-                  <rect x="-8" y="-6" width="16" height="12" fill="#6b7280" />
-                  <rect x="-6" y="-4" width="4" height="3" fill="#9ca3af" />
-                  <rect x="2" y="-4" width="4" height="3" fill="#9ca3af" />
-                </g>
-
-                {/* Transformer - Brown */}
-                <g transform="translate(550, 400)">
-                  <rect x="-6" y="-8" width="12" height="16" fill="#92400e" />
-                  <circle cx="0" cy="0" r="3" fill="#a16207" />
-                </g>
-
-                {/* Service Center - Grey building with antenna */}
-                <g transform="translate(600, 280)">
-                  <rect x="-8" y="-6" width="16" height="12" fill="#6b7280" />
-                  <line x1="0" y1="-6" x2="0" y2="-12" stroke="#6b7280" strokeWidth="2" />
-                  <circle cx="0" cy="-12" r="2" fill="#6b7280" />
-                </g>
-              </>
-            )}
-          </svg>
+          <div ref={mapDivRef} className="h-[600px] w-full rounded-md" />
 
           {/* Map Controls */}
-          <div className="absolute right-4 top-4 flex flex-col gap-2 rounded-md border bg-white p-1 shadow-lg">
-            <button className="rounded p-1 hover:bg-gray-100">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-            <button className="rounded p-1 hover:bg-gray-100">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-            <button className="rounded p-1 hover:bg-gray-100">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 19V5M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-          </div>
 
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 rounded-md border bg-white p-4 shadow-lg">
+          <div className="absolute bottom-4 left-4 z-[1000] rounded-md border bg-white p-4 shadow-lg">
             <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Legend</h3>
               <div>
                 <h4 className="mb-2 text-sm font-semibold">Customers</h4>
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="size-3 rounded-full bg-green-500"></div>
-                    <span>Paid</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="size-3 rounded-full bg-red-500"></div>
-                    <span>Unpaid</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="size-3 rounded-full bg-orange-500"></div>
-                    <span>Partial</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="size-3 rounded-full bg-gray-500"></div>
-                    <span>Unknown</span>
-                  </div>
+                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-green-500"></span><span>Paid</span></div>
+                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-red-500"></span><span>Unpaid</span></div>
+                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-amber-500"></span><span>Partial</span></div>
+                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-gray-500"></span><span>Unknown</span></div>
                 </div>
               </div>
 
@@ -362,39 +418,24 @@ const MapViewTab = () => {
                 <h4 className="mb-2 text-sm font-semibold">Assets</h4>
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M0,-10 L5,0 L2,0 L7,10 L2,10 L-3,0 L0,0 Z" fill="#eab308" transform="translate(12,12)" />
-                    </svg>
+                    <span className="inline-flex h-4 w-4 items-center justify-center text-yellow-400">⚡</span>
                     <span>Feeder</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="size-4 rounded bg-gray-500"></div>
+                    <span className="inline-flex h-4 w-4 items-center justify-center">🏭</span>
                     <span>Substation</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="size-4 rounded bg-amber-900"></div>
+                    <span className="inline-flex h-4 w-4 items-center justify-center">🔌</span>
                     <span>Transformer</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="size-4 rounded bg-gray-500"></div>
+                    <span className="inline-flex h-4 w-4 items-center justify-center">🏢</span>
                     <span>Service Center</span>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="mb-2 text-sm font-semibold">Feeder Zones</h4>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="h-2 w-full rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span>Red: 0%</span>
-                    <span>Green: 100%</span>
-                  </div>
-                  <div className="text-xs text-gray-600">Collection Rate</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
