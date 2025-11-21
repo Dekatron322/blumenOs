@@ -6,30 +6,27 @@ import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { VscEye } from "react-icons/vsc"
 import { ButtonModule } from "components/ui/Button/Button"
-import BillDetailsModal from "components/ui/Modal/bill-details-modal"
-import { BillsIcon, BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
+import { BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
 import PdfFile from "public/pdf-file"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchPostpaidBills, PostpaidBill } from "lib/redux/postpaidSlice"
+import { fetchMeterReadings, MeterReading } from "lib/redux/meterReadingSlice"
 
-interface RecentBillsProps {
+interface MeterReadingsProps {
   onExport?: () => void
   onGenerateBills?: () => void
-  onViewDetails?: (bill: PostpaidBill) => void
+  onViewDetails?: (reading: MeterReading) => void
 }
 
-const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, onViewDetails }) => {
+const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills, onViewDetails }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { bills, loading, error } = useAppSelector((state) => state.postpaidBilling)
+  const { meterReadings, meterReadingsLoading, meterReadingsError } = useAppSelector((state) => state.meterReadings)
 
   const [searchText, setSearchText] = useState("")
-  const [selectedBill, setSelectedBill] = useState<PostpaidBill | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     void dispatch(
-      fetchPostpaidBills({
+      fetchMeterReadings({
         pageNumber: 1,
         pageSize: 10,
       })
@@ -40,104 +37,22 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     setSearchText("")
   }
 
-  const handleViewDetails = (bill: PostpaidBill) => {
-    // Navigate to the bill details page
-    router.push(`/billing/bills/${bill.id}`)
-    onViewDetails?.(bill)
+  const handleViewDetails = (reading: MeterReading) => {
+    // Navigate to the meter reading details page
+    router.push(`/billing/meter-readings/details/${reading.id}`)
+    onViewDetails?.(reading)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedBill(null)
-  }
-
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 2,
-    }).format(amount)
-  }
-
-  const mapStatusToLabel = (status: number): "generated" | "pending" | "approved" => {
-    switch (status) {
-      case 0:
-        return "pending"
-      case 1:
-        return "generated"
-      case 2:
-        return "approved"
-      default:
-        return "pending"
-    }
-  }
-
-  const filteredBills = bills.filter((bill) => {
+  const filteredReadings = meterReadings.filter((reading) => {
     if (!searchText.trim()) return true
     const query = searchText.toLowerCase()
     return (
-      bill.customerName.toLowerCase().includes(query) ||
-      bill.customerAccountNumber.toLowerCase().includes(query) ||
-      bill.id.toString().toLowerCase().includes(query)
+      reading.customerName.toLowerCase().includes(query) ||
+      reading.customerAccountNumber.toLowerCase().includes(query) ||
+      reading.period.toLowerCase().includes(query) ||
+      reading.id.toString().toLowerCase().includes(query)
     )
   })
-
-  const getStatusColor = (status: "generated" | "pending" | "approved") => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800"
-      case "generated":
-        return "bg-blue-100 text-blue-800"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusIcon = (status: "generated" | "pending" | "approved") => {
-    switch (status) {
-      case "approved":
-        return (
-          <svg className="size-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        )
-      case "generated":
-        return (
-          <svg className="size-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        )
-      case "pending":
-        return (
-          <svg className="size-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        )
-      default:
-        return (
-          <svg className="size-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        )
-    }
-  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -152,11 +67,11 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
         transition={{ duration: 0.3 }}
         className="flex gap-6"
       >
-        {/* Left Column - Recent Bills */}
+        {/* Left Column - Meter Readings */}
         <div className="flex-1">
           <div className="rounded-lg border bg-white p-6">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Recent Bills</h3>
+              <h3 className="text-lg font-semibold">Recent Meter Readings</h3>
               <div className="flex gap-2">
                 <ButtonModule icon={<PdfFile />} variant="outline" size="md" onClick={onExport}>
                   Export
@@ -175,9 +90,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
               />
             </div>
 
-            {/* Recent Bills List */}
+            {/* Meter Readings List */}
             <div className="space-y-4">
-              {loading && (
+              {meterReadingsLoading && (
                 <div className="space-y-4">
                   {[1, 2, 3].map((skeleton) => (
                     <div key={skeleton} className="animate-pulse rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
@@ -186,7 +101,6 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                           <div className="flex items-center gap-2">
                             <div className="h-4 w-32 rounded bg-gray-200" />
                             <div className="h-5 w-20 rounded-full bg-gray-200" />
-                            <div className="h-5 w-16 rounded-full bg-gray-200" />
                           </div>
 
                           <div className="h-4 w-40 rounded bg-gray-200" />
@@ -198,9 +112,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
 
                         <div className="flex items-center gap-3">
                           <div className="space-y-1 text-right">
-                            <div className="h-4 w-32 rounded bg-gray-200" />
                             <div className="h-3 w-28 rounded bg-gray-200" />
-                            <div className="h-3 w-24 rounded bg-gray-200" />
+                            <div className="h-3 w-32 rounded bg-gray-200" />
+                            <div className="h-4 w-36 rounded bg-gray-200" />
                           </div>
                           <div className="h-8 w-24 rounded-md border border-gray-200 bg-white" />
                         </div>
@@ -240,51 +154,56 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                   ))}
                 </div>
               )}
-              {!loading && error && <p className="text-sm text-red-500">Error loading bills: {error}</p>}
-              {!loading && !error && filteredBills.length === 0 && (
-                <p className="text-sm text-gray-500">No bills found.</p>
+              {!meterReadingsLoading && meterReadingsError && (
+                <p className="text-sm text-red-500">Error loading meter readings: {meterReadingsError}</p>
               )}
-              {!loading &&
-                !error &&
-                filteredBills.map((bill) => {
-                  const statusLabel = mapStatusToLabel(bill.status)
+              {!meterReadingsLoading && !meterReadingsError && filteredReadings.length === 0 && (
+                <p className="text-sm text-gray-500">No meter readings found.</p>
+              )}
+              {!meterReadingsLoading &&
+                !meterReadingsError &&
+                filteredReadings.map((reading) => {
                   return (
                     <motion.div
-                      key={bill.id}
+                      key={reading.id}
                       className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm"
                       whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }}
                     >
                       <div className="flex w-full items-start justify-between gap-3">
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-gray-900">{bill.customerName}</h4>
-                            <span
-                              className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(statusLabel)}`}
-                            >
-                              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-                            </span>
+                            <h4 className="font-semibold text-gray-900">{reading.customerName}</h4>
                             <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
-                              Cat {bill.category}
+                              Period {reading.period}
                             </span>
                           </div>
 
-                          <p className="mt-1 font-medium text-gray-900">{bill.customerAccountNumber}</p>
+                          <p className="mt-1 font-medium text-gray-900">{reading.customerAccountNumber}</p>
                           <div className="flex items-center gap-2">
                             {" "}
                             <DateIcon />
-                            <p className="text-sm text-gray-600">Due Date: {formatDate(bill.dueDate ?? bill.period)}</p>
+                            <p className="text-sm text-gray-600">
+                              Captured: {formatDate(reading.capturedAtUtc)} by {reading.capturedByName}
+                            </p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
                           <div className="text-right">
-                            <p className="font-semibold text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
-                            <p className="text-sm text-gray-500">{bill.consumptionKwh.toLocaleString()} kWh</p>
+                            <p className="text-sm text-gray-500">
+                              Prev: {reading.previousReadingKwh.toLocaleString()} kWh
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Present: {reading.presentReadingKwh.toLocaleString()} kWh
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              Valid: {reading.validConsumptionKwh.toLocaleString()} kWh
+                            </p>
                           </div>
                           <ButtonModule
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewDetails(bill)}
+                            onClick={() => handleViewDetails(reading)}
                             icon={<VscEye className="size-4" />}
                             iconPosition="start"
                             className="bg-white"
@@ -299,41 +218,41 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
                         <div className="flex gap-2">
                           <BillsIdIcon />
                           <div>
-                            <p className="text-gray-500">Bill ID</p>
-                            <p className="font-medium text-gray-900">{bill.id}</p>
+                            <p className="text-gray-500">Reading ID</p>
+                            <p className="font-medium text-gray-900">{reading.id}</p>
                           </div>
                         </div>
                         <div>
                           <div className="flex gap-2">
                             <CategoryIcon />
                             <div>
-                              <p className="text-gray-500">Category</p>
-                              <p className="font-medium text-gray-900">Cat {bill.category}</p>
+                              <p className="text-gray-500">Anomaly Score</p>
+                              <p className="font-medium text-gray-900">{(reading.anomalyScore ?? 0).toFixed(2)}</p>
                             </div>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <CycleIcon />
                           <div>
-                            <p className="text-gray-500">Status</p>
+                            <p className="text-gray-500">Flagged</p>
                             <p
                               className={`font-medium ${
-                                statusLabel === "approved"
-                                  ? "text-green-600"
-                                  : statusLabel === "generated"
-                                  ? "text-blue-600"
-                                  : "text-yellow-600"
+                                reading.isFlaggedForReview ? "text-red-600" : "text-green-600"
                               }`}
                             >
-                              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
+                              {reading.isFlaggedForReview ? "Yes" : "No"}
                             </p>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <RevenueGeneratedIcon />
                           <div>
-                            <p className="text-gray-500">Amount</p>
-                            <p className="font-medium text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
+                            <p className="text-gray-500">Estimated Consumption</p>
+                            <p className="font-medium text-gray-900">
+                              {reading.estimatedConsumptionKwh != null
+                                ? `${reading.estimatedConsumptionKwh.toLocaleString()} kWh`
+                                : "N/A"}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -458,4 +377,4 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   )
 }
 
-export default RecentBills
+export default MeterReadings

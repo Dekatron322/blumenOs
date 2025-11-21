@@ -2,8 +2,13 @@ import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from "components/Icons/Icons"
-import { clearFilters, fetchPostpaidBills, setFilters, setPagination } from "lib/redux/postpaidSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import {
+  clearFeederEnergyCaps,
+  fetchFeederEnergyCaps,
+  setPagination,
+  FeederEnergyCap,
+} from "lib/redux/feederEnergyCapSlice"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -15,187 +20,212 @@ const CyclesIcon = () => (
   </svg>
 )
 
-interface BillingCycle {
+interface EnergyCapCycle {
   id: number
   name: string
-  status: "Completed" | "In Progress" | "Scheduled"
-  startDate: string
-  endDate: string
-  billsGenerated: string
-  totalAmount: string
-  approvedBy?: string
+  status: "Active" | "Expired" | "Pending"
+  period: string
+  feedersCount: string
+  totalEnergyCap: string
+  averageTariff: string
+  appliedBy?: string
+  appliedAt?: string
 }
 
-interface BillingCyclesProps {
-  onStartNewCycle?: () => void
+interface FeederEnergyCapsProps {
+  onApplyNewCaps?: () => void
 }
 
-const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
+const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps }) => {
   const [searchText, setSearchText] = useState("")
   const dispatch = useAppDispatch()
 
   // Get state from Redux store
-  const { bills, loading, error, pagination, filters, success } = useAppSelector((state) => state.postpaidBilling)
+  const { feederEnergyCaps, feederEnergyCapsLoading, feederEnergyCapsError, pagination, feederEnergyCapsSuccess } =
+    useAppSelector((state) => state.feederEnergyCaps)
 
-  console.log("Redux State:", {
-    billsCount: bills?.length,
-    loading,
-    error,
+  console.log("Feeder Energy Caps State:", {
+    capsCount: feederEnergyCaps?.length,
+    loading: feederEnergyCapsLoading,
+    error: feederEnergyCapsError,
     pagination,
-    filters,
-    success,
+    success: feederEnergyCapsSuccess,
   })
 
-  // Fetch bills on component mount and when filters/pagination change
+  // Fetch feeder energy caps on component mount and when pagination changes
   useEffect(() => {
-    console.log("useEffect triggered - fetching bills...")
+    console.log("useEffect triggered - fetching feeder energy caps...")
 
-    const fetchBills = async () => {
+    const fetchEnergyCaps = async () => {
       const requestParams = {
         pageNumber: pagination.currentPage,
         pageSize: pagination.pageSize,
-        ...filters,
       }
 
-      console.log("Dispatching fetchPostpaidBills with params:", requestParams)
+      console.log("Dispatching fetchFeederEnergyCaps with params:", requestParams)
 
-      const result = await dispatch(fetchPostpaidBills(requestParams))
+      const result = await dispatch(fetchFeederEnergyCaps(requestParams))
 
       console.log("Fetch result:", result)
 
-      if (fetchPostpaidBills.fulfilled.match(result)) {
-        console.log("Bills fetched successfully:", result.payload.data?.length)
-      } else if (fetchPostpaidBills.rejected.match(result)) {
-        console.error("Failed to fetch bills:", result.error)
+      if (fetchFeederEnergyCaps.fulfilled.match(result)) {
+        console.log("Feeder energy caps fetched successfully:", result.payload.data?.length)
+      } else if (fetchFeederEnergyCaps.rejected.match(result)) {
+        console.error("Failed to fetch feeder energy caps:", result.error)
       }
     }
 
-    fetchBills()
-  }, [dispatch, pagination.currentPage, pagination.pageSize, filters])
+    fetchEnergyCaps()
+  }, [dispatch, pagination.currentPage, pagination.pageSize])
 
   // Handle search
   const handleSearch = (text: string) => {
     setSearchText(text)
-    if (text.trim()) {
-      dispatch(setFilters({ accountNumber: text.trim() }))
-    } else {
-      dispatch(clearFilters())
-    }
+    // You can implement search filtering here if needed
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    dispatch(clearFilters())
+    dispatch(clearFeederEnergyCaps())
   }
 
   // Transform API data to component format
-  // Transform API data to component format
-  // Transform API data to component format
-  const transformBillsToCycles = (): BillingCycle[] => {
-    if (!bills || bills.length === 0) {
-      console.log("No bills to transform")
+  const transformCapsToCycles = (): EnergyCapCycle[] => {
+    if (!feederEnergyCaps || feederEnergyCaps.length === 0) {
+      console.log("No feeder energy caps to transform")
       return []
     }
 
-    console.log("Transforming bills to cycles, count:", bills.length)
+    console.log("Transforming feeder energy caps to cycles, count:", feederEnergyCaps.length)
 
-    // Group bills by period to create billing cycles
-    const cyclesByPeriod = bills.reduce(
-      (acc, bill) => {
-        const period = (bill.period as string) || "Unknown"
+    // Group caps by period to create energy cap cycles
+    const cyclesByPeriod = feederEnergyCaps.reduce(
+      (acc, cap) => {
+        const period = cap.period || "Unknown"
         if (!acc[period]) {
           acc[period] = {
-            bills: [],
-            totalAmount: 0,
-            billCount: 0,
+            caps: [],
+            totalEnergyCap: 0,
+            feedersCount: new Set<number>(),
+            totalTariff: 0,
           }
         }
         const periodData = acc[period]!
-        periodData.bills.push(bill)
-        periodData.totalAmount += bill.totalDue || 0
-        periodData.billCount += 1
+        periodData.caps.push(cap)
+        periodData.totalEnergyCap += cap.energyCapKwh || 0
+        periodData.feedersCount.add(cap.feederId)
+        periodData.totalTariff += cap.tariffOverridePerKwh || 0
         return acc
       },
-      {} as Record<string, { bills: any[]; totalAmount: number; billCount: number }>
+      {} as Record<
+        string,
+        {
+          caps: FeederEnergyCap[]
+          totalEnergyCap: number
+          feedersCount: Set<number>
+          totalTariff: number
+        }
+      >
     )
 
     console.log("Cycles by period:", cyclesByPeriod)
 
-    // Transform to BillingCycle format
+    // Transform to EnergyCapCycle format
     return Object.entries(cyclesByPeriod).map(([period, data], index) => {
-      // Determine status based on bill data
-      let status: "Completed" | "In Progress" | "Scheduled" = "Completed"
-      const hasActiveDisputes = data.bills.some((bill) => bill.activeDispute !== null)
-      const hasEstimatedBills = data.bills.some((bill) => bill.isEstimated)
+      // Determine status based on period date
+      let status: "Active" | "Expired" | "Pending" = "Active"
+      try {
+        const periodDate = new Date(period + "-01")
+        const currentDate = new Date()
+        const currentPeriod = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`
 
-      if (hasActiveDisputes || hasEstimatedBills) {
-        status = "In Progress"
+        if (period < currentPeriod) {
+          status = "Expired"
+        } else if (period > currentPeriod) {
+          status = "Pending"
+        }
+      } catch {
+        status = "Active"
       }
 
-      // Format dates - using period string or creating from period
+      const feedersCount = data.feedersCount.size
+      const averageTariff = data.caps.length > 0 ? data.totalTariff / data.caps.length : 0
+
+      // Format period for display
       let periodDate
       try {
         periodDate = new Date(period + "-01")
         if (isNaN(periodDate.getTime())) {
-          // If period is not in expected format, use current date
           periodDate = new Date()
         }
       } catch {
         periodDate = new Date()
       }
 
-      const startDate = new Date(periodDate.getFullYear(), periodDate.getMonth(), 1)
-      const endDate = new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 0)
+      const cycleName = `${periodDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })} Energy Caps`
 
-      const cycleName = `${periodDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })} Billing`
-
-      // Ensure we always have valid dates and ID
       return {
-        id: data.bills[0]?.id || index + 1,
+        id: data.caps[0]?.id || index + 1,
         name: cycleName,
         status,
-        startDate: startDate.toISOString().split("T")[0] as string,
-        endDate: endDate.toISOString().split("T")[0] as string,
-        billsGenerated: data.billCount.toLocaleString(),
-        totalAmount: data.totalAmount > 0 ? `₦${(data.totalAmount / 1000000).toFixed(1)}M` : "Pending",
-        approvedBy: status === "Completed" ? "Revenue Manager" : undefined,
+        period,
+        feedersCount: feedersCount.toLocaleString(),
+        totalEnergyCap: data.totalEnergyCap > 0 ? `${(data.totalEnergyCap / 1000).toFixed(1)}M kWh` : "0 kWh",
+        averageTariff: averageTariff > 0 ? `₦${averageTariff.toFixed(2)}` : "₦0.00",
+        appliedBy: data.caps[0]?.capturedByName || "System",
+        appliedAt: data.caps[0]?.capturedAtUtc,
       }
     })
   }
 
-  const billingCycles = transformBillsToCycles()
-  console.log("Transformed billing cycles:", billingCycles)
+  const energyCapCycles = transformCapsToCycles()
+  console.log("Transformed energy cap cycles:", energyCapCycles)
 
   // Only show fallback if no data and not loading
-  const shouldShowFallback = !loading && billingCycles.length === 0
+  const shouldShowFallback = !feederEnergyCapsLoading && energyCapCycles.length === 0
 
   // Fallback data if no API data
-  const fallbackCycles: BillingCycle[] = [
+  const fallbackCycles: EnergyCapCycle[] = [
     {
       id: 1,
-      name: "January 2024 Billing",
-      status: "Completed",
-      startDate: "2023-12-01",
-      endDate: "2023-12-31",
-      billsGenerated: "89,540",
-      totalAmount: "₦42,500,000",
-      approvedBy: "Revenue Manager",
+      name: "January 2024 Energy Caps",
+      status: "Active",
+      period: "2024-01",
+      feedersCount: "1,250",
+      totalEnergyCap: "45.2M kWh",
+      averageTariff: "₦52.75",
+      appliedBy: "Energy Manager",
+      appliedAt: "2024-01-01T00:00:00Z",
     },
     {
       id: 2,
-      name: "February 2024 Billing",
-      status: "In Progress",
-      startDate: "2024-01-01",
-      endDate: "2024-01-31",
-      billsGenerated: "0",
-      totalAmount: "Pending",
+      name: "February 2024 Energy Caps",
+      status: "Pending",
+      period: "2024-02",
+      feedersCount: "0",
+      totalEnergyCap: "Pending",
+      averageTariff: "Pending",
+    },
+    {
+      id: 3,
+      name: "December 2023 Energy Caps",
+      status: "Expired",
+      period: "2023-12",
+      feedersCount: "1,180",
+      totalEnergyCap: "42.8M kWh",
+      averageTariff: "₦50.25",
+      appliedBy: "Energy Manager",
+      appliedAt: "2023-12-01T00:00:00Z",
     },
   ]
 
-  const displayCycles = shouldShowFallback ? fallbackCycles : billingCycles
+  const displayCycles = shouldShowFallback ? fallbackCycles : energyCapCycles
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
     try {
+      if (!dateString) {
+        return "Invalid Date"
+      }
       const date = new Date(dateString)
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     } catch {
@@ -203,14 +233,27 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
     }
   }
 
+  const formatPeriod = (period: string) => {
+    try {
+      const [year, month] = period.split("-")
+      if (!year || !month) {
+        return period
+      }
+      const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1)
+      return date.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    } catch {
+      return period
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "Active":
         return "bg-green-100 text-green-800"
-      case "In Progress":
-        return "bg-blue-100 text-blue-800"
-      case "Scheduled":
+      case "Expired":
         return "bg-gray-100 text-gray-800"
+      case "Pending":
+        return "bg-blue-100 text-blue-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -218,11 +261,11 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
 
   const getCycleTypeColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "Active":
         return "bg-blue-100 text-blue-800"
-      case "In Progress":
+      case "Expired":
         return "bg-purple-100 text-purple-800"
-      case "Scheduled":
+      case "Pending":
         return "bg-green-100 text-green-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -230,13 +273,13 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
   }
 
   const getAmountColor = (amount: string) => {
-    if (amount === "Pending" || amount === "-") {
+    if (amount === "Pending" || amount === "0 kWh") {
       return "text-yellow-600"
     }
     return "text-green-600"
   }
 
-  if (loading && billingCycles.length === 0) {
+  if (feederEnergyCapsLoading && energyCapCycles.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -247,7 +290,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
         <div className="flex-1">
           <div className="rounded-lg border bg-white p-6">
             <div className="mb-6">
-              <h3 className="mb-2 text-lg font-semibold">Billing Cycles</h3>
+              <h3 className="mb-2 text-lg font-semibold">Feeder Energy Caps</h3>
               <div className="h-12 animate-pulse rounded-lg bg-gray-200" />
             </div>
             <div className="space-y-4">
@@ -333,36 +376,37 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
       {/* Debug info - remove in production */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed bottom-4 left-4 z-50 rounded-lg bg-black bg-opacity-80 p-4 text-xs text-white">
-          <div>Bills: {bills?.length || 0}</div>
-          <div>Loading: {loading ? "Yes" : "No"}</div>
-          <div>Error: {error || "None"}</div>
+          <div>Feeder Energy Caps: {feederEnergyCaps?.length || 0}</div>
+          <div>Loading: {feederEnergyCapsLoading ? "Yes" : "No"}</div>
+          <div>Error: {feederEnergyCapsError || "None"}</div>
           <div>Using: {shouldShowFallback ? "Fallback Data" : "API Data"}</div>
         </div>
       )}
 
-      {/* Left Column - Billing Cycles */}
+      {/* Left Column - Energy Cap Cycles */}
       <div className="flex-1">
         <div className="rounded-lg border bg-white p-6">
           <div className="mb-6">
-            <h3 className="mb-2 text-lg font-semibold">Billing Cycles</h3>
+            <h3 className="mb-2 text-lg font-semibold">Feeder Energy Caps</h3>
             <SearchModule
               value={searchText}
               onChange={(e) => handleSearch(e.target.value)}
               onCancel={handleCancelSearch}
+              placeholder="Search by period or feeder..."
             />
-            {error && (
+            {feederEnergyCapsError && (
               <div className="mt-2 rounded-lg bg-red-50 p-3">
-                <p className="text-sm text-red-600">Error loading billing cycles: {error}</p>
+                <p className="text-sm text-red-600">Error loading energy caps: {feederEnergyCapsError}</p>
               </div>
             )}
             {shouldShowFallback && (
               <div className="mt-2 rounded-lg bg-yellow-50 p-3">
-                <p className="text-sm text-yellow-600">Showing sample data - no billing cycles found</p>
+                <p className="text-sm text-yellow-600">Showing sample data - no energy caps found</p>
               </div>
             )}
           </div>
 
-          {/* Billing Cycles List */}
+          {/* Energy Cap Cycles List */}
           <div className="space-y-4">
             {displayCycles.map((cycle) => (
               <div
@@ -380,26 +424,21 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                         {cycle.status}
                       </span>
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${getCycleTypeColor(cycle.status)}`}>
-                        Monthly Cycle
+                        Energy Caps
                       </span>
                     </div>
 
-                    <p className="font-medium text-gray-900">
-                      {formatDate(cycle.startDate)} to {formatDate(cycle.endDate)}
-                    </p>
+                    <p className="font-medium text-gray-900">Period: {formatPeriod(cycle.period)}</p>
                     <p className="text-sm text-gray-600">
-                      {cycle.approvedBy ? `Approved by: ${cycle.approvedBy}` : "Pending approval"}
+                      {cycle.appliedBy ? `Applied by: ${cycle.appliedBy}` : "Pending application"}
+                      {cycle.appliedAt && ` on ${formatDate(cycle.appliedAt)}`}
                     </p>
                   </div>
 
                   <div className="min-w-[120px] text-right text-sm">
-                    <p className={`font-semibold ${getAmountColor(cycle.totalAmount)}`}>{cycle.totalAmount}</p>
+                    <p className={`font-semibold ${getAmountColor(cycle.totalEnergyCap)}`}>{cycle.totalEnergyCap}</p>
                     <p className="text-gray-500">
-                      {cycle.status === "Completed"
-                        ? formatDate(cycle.endDate)
-                        : cycle.status === "In Progress"
-                        ? "In Progress"
-                        : `Starts: ${formatDate(cycle.startDate)}`}
+                      {cycle.status === "Active" ? "Active" : cycle.status === "Expired" ? "Expired" : "Pending"}
                     </p>
                   </div>
                 </div>
@@ -409,21 +448,21 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                   <div className="flex items-center gap-2">
                     <BillsIcon />
                     <div>
-                      <p className="text-gray-500">Bills Generated</p>
-                      <p className={`font-medium ${getAmountColor(cycle.billsGenerated)}`}>{cycle.billsGenerated}</p>
+                      <p className="text-gray-500">Feeders</p>
+                      <p className={`font-medium ${getAmountColor(cycle.feedersCount)}`}>{cycle.feedersCount}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <CycleIcon />
                     <div>
-                      <p className="text-gray-500">Cycle Status</p>
+                      <p className="text-gray-500">Status</p>
                       <p
                         className={`font-medium ${
-                          cycle.status === "Completed"
+                          cycle.status === "Active"
                             ? "text-green-600"
-                            : cycle.status === "In Progress"
-                            ? "text-blue-600"
-                            : "text-gray-600"
+                            : cycle.status === "Expired"
+                            ? "text-gray-600"
+                            : "text-blue-600"
                         }`}
                       >
                         {cycle.status}
@@ -433,17 +472,21 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                   <div className="flex items-center gap-2">
                     <StatusIcon />
                     <div>
-                      <p className="text-gray-500">Approval</p>
-                      <p className={`font-medium ${cycle.approvedBy ? "text-green-600" : "text-yellow-600"}`}>
-                        {cycle.approvedBy ? "Approved" : "Pending"}
+                      <p className="text-gray-500">Avg Tariff</p>
+                      <p
+                        className={`font-medium ${
+                          cycle.averageTariff === "Pending" ? "text-yellow-600" : "text-green-600"
+                        }`}
+                      >
+                        {cycle.averageTariff}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <RevenueGeneratedIcon />
                     <div>
-                      <p className="text-gray-500">Revenue</p>
-                      <p className={`font-medium ${getAmountColor(cycle.totalAmount)}`}>{cycle.totalAmount}</p>
+                      <p className="text-gray-500">Total Cap</p>
+                      <p className={`font-medium ${getAmountColor(cycle.totalEnergyCap)}`}>{cycle.totalEnergyCap}</p>
                     </div>
                   </div>
                 </div>
@@ -505,13 +548,13 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
       {/* Right Column - System Overview */}
       <div className="w-80">
         <div className="space-y-6">
-          {/* Cycle Actions */}
+          {/* Energy Cap Actions */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Cycle Actions</h3>
+            <h3 className="mb-4 text-lg font-semibold">Energy Cap Actions</h3>
             <div className="space-y-3">
               <button
                 className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:border-blue-300 hover:shadow-sm"
-                onClick={onStartNewCycle}
+                onClick={onApplyNewCaps}
               >
                 <div className="flex items-center gap-3">
                   <div className="rounded-full bg-blue-100 p-2">
@@ -525,8 +568,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Create New Cycle</h4>
-                    <p className="text-sm text-gray-600">Start a new billing period</p>
+                    <h4 className="font-medium text-gray-900">Apply New Caps</h4>
+                    <p className="text-sm text-gray-600">Set new energy caps for feeders</p>
                   </div>
                 </div>
               </button>
@@ -550,8 +593,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Configure Routes</h4>
-                    <p className="text-sm text-gray-600">Manage billing routes</p>
+                    <h4 className="font-medium text-gray-900">Configure Templates</h4>
+                    <p className="text-sm text-gray-600">Manage energy cap templates</p>
                   </div>
                 </div>
               </button>
@@ -569,7 +612,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Export Billing Data</h4>
+                    <h4 className="font-medium text-gray-900">Export Cap Data</h4>
                     <p className="text-sm text-gray-600">Download reports and data</p>
                   </div>
                 </div>
@@ -588,8 +631,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Approve Pending Bills</h4>
-                    <p className="text-sm text-gray-600">Review and approve bills</p>
+                    <h4 className="font-medium text-gray-900">Review Caps</h4>
+                    <p className="text-sm text-gray-600">Review and adjust caps</p>
                   </div>
                 </div>
               </button>
@@ -601,25 +644,25 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
             <h3 className="mb-4 text-lg font-semibold">Overview</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Cycles</span>
+                <span className="text-sm text-gray-600">Total Periods</span>
                 <span className="font-semibold">{displayCycles.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Completed</span>
+                <span className="text-sm text-gray-600">Active</span>
                 <span className="font-semibold text-green-600">
-                  {displayCycles.filter((cycle) => cycle.status === "Completed").length}
+                  {displayCycles.filter((cycle) => cycle.status === "Active").length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">In Progress</span>
+                <span className="text-sm text-gray-600">Pending</span>
                 <span className="font-semibold text-blue-600">
-                  {displayCycles.filter((cycle) => cycle.status === "In Progress").length}
+                  {displayCycles.filter((cycle) => cycle.status === "Pending").length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Scheduled</span>
+                <span className="text-sm text-gray-600">Expired</span>
                 <span className="font-semibold text-gray-600">
-                  {displayCycles.filter((cycle) => cycle.status === "Scheduled").length}
+                  {displayCycles.filter((cycle) => cycle.status === "Expired").length}
                 </span>
               </div>
             </div>
@@ -630,4 +673,4 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
   )
 }
 
-export default BillingCycles
+export default FeederEnergyCaps
