@@ -1,13 +1,11 @@
 "use client"
-
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { FormSelectModule } from "../Input/FormSelectModule"
 import { ButtonModule } from "../Button/Button"
-import { FormInputModule } from "../Input/Input"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { createBillingJob, clearCreateBillingJob } from "lib/redux/postpaidSlice"
+import { clearCreateBillingJob, createBillingJob } from "lib/redux/postpaidSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 
 interface CreateBillingJobModalProps {
