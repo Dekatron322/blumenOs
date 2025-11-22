@@ -174,6 +174,13 @@ export const API_ENDPOINTS = {
   PAYMENTS: {
     GET: "/payments",
     GET_BY_ID: "/payments/{id}",
+    ADD: "/payments",
+    CHANGE_REQUEST: "/payments/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/payments/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/payments/change-requests",
+    CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/decline",
   },
 }
 

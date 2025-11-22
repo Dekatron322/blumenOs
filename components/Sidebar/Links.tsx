@@ -142,8 +142,9 @@ const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "All Payment", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Record Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Duning Mgt", href: "/payment/duning-mgt", privilegeKey: "payments", requiredActions: ["R"] },
-      { name: "Disputes", href: "/payment/disputes", privilegeKey: "disputes", requiredActions: ["R"] },
+      { name: "Change Request", href: "/payment/change-request", privilegeKey: "payments", requiredActions: ["E"] },
     ],
   },
   {
