@@ -26,6 +26,7 @@ interface ButtonProps extends MotionProps {
   icon?: React.ReactNode
   /** Position of the icon relative to the button text */
   iconPosition?: "start" | "end"
+  loading?: boolean
 }
 
 export const ButtonModule: React.FC<ButtonProps> = ({
@@ -38,9 +39,10 @@ export const ButtonModule: React.FC<ButtonProps> = ({
   children,
   icon,
   iconPosition = "start",
+  loading = false,
 }) => {
   const baseClasses =
-    "flex z-0 items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "flex  z-0  items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
 
   const variantClasses = {
     primary:
@@ -60,18 +62,43 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     lg: "h-12 px-6 text-lg",
   }
 
+  const isDisabled = disabled || loading
+
   return (
     <button
       type={type}
-      disabled={disabled}
+      disabled={isDisabled}
       onClick={onClick}
+      aria-busy={loading}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
-        disabled ? "z-0 cursor-not-allowed opacity-50" : ""
+        isDisabled ? "z-0 cursor-not-allowed opacity-50" : "gap-1"
       } ${className}`}
     >
-      {icon && iconPosition === "start" && <span className="mr-2 inline-flex items-center">{icon}</span>}
+      {iconPosition === "start" && (
+        <span className="inline-flex items-center">
+          {loading ? (
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          ) : (
+            icon
+          )}
+        </span>
+      )}
       {children}
-      {icon && iconPosition === "end" && <span className="ml-2 inline-flex items-center">{icon}</span>}
+      {iconPosition === "end" && (
+        <span className=" inline-flex items-center">
+          {loading ? (
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          ) : (
+            icon
+          )}
+        </span>
+      )}
     </button>
   )
 }

@@ -1,20 +1,13 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
-
-interface Feeder {
-  id: string
-  name: string
-  voltage: string
-  length: string
-  transformers: number
-  customers: number
-  status: "operational" | "maintenance" | "faulty"
-}
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { clearError, FeedersRequestParams, fetchFeeders, setPagination } from "lib/redux/feedersSlice"
 
 interface Status {
   value: number
@@ -26,10 +19,43 @@ interface ActionDropdownProps {
   onViewDetails: (feeder: Feeder) => void
 }
 
+// Use the Feeder interface from your slice
+interface Feeder {
+  id: number
+  name: string
+  nercCode: string
+  kaedcoFeederCode: string
+  feederVoltage: number
+  injectionSubstation: {
+    id: number
+    nercCode: string
+    injectionSubstationCode: string
+    areaOffice: {
+      id: number
+      nameOfNewOAreaffice: string
+      newKaedcoCode: string
+      newNercCode: string
+      latitude: number
+      longitude: number
+      company: {
+        id: number
+        name: string
+        nercCode: string
+        nercSupplyStructure: number
+      }
+    }
+  }
+  htPole: {
+    id: number
+    htPoleNumber: string
+  }
+}
+
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -117,27 +143,17 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }
               >
                 View Details
               </motion.button>
+
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Monitor performance for:", feeder.id)
+                  router.push(`/assets-management/feeders/update-feeder/${feeder.id}`)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Monitor Performance
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update status for:", feeder.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Status
+                Update Feeder
               </motion.button>
             </div>
           </motion.div>
@@ -149,82 +165,27 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }
 
 const LoadingSkeleton = () => {
   return (
-    <motion.div
-      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
+      {/* Header Section Skeleton */}
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          />
+        <div className="mb-3 md:mb-0">
+          <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
+          <div className="h-4 w-64 rounded bg-gray-200"></div>
         </div>
-        <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
-          </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
-              }}
-            />
-          </div>
+        <div className="flex gap-4">
+          <div className="h-10 w-48 rounded bg-gray-200"></div>
+          <div className="h-10 w-24 rounded bg-gray-200"></div>
         </div>
       </div>
 
+      {/* Table Skeleton */}
       <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
               {[...Array(8)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
+                  <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
               ))}
             </tr>
@@ -234,21 +195,7 @@ const LoadingSkeleton = () => {
               <tr key={rowIndex}>
                 {[...Array(8)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 8 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
+                    <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
                 ))}
               </tr>
@@ -257,133 +204,64 @@ const LoadingSkeleton = () => {
         </table>
       </div>
 
+      {/* Pagination Section Skeleton */}
       <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
-            }}
-          />
-        </div>
+        <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
-              }}
-            />
-          </div>
+          <div className="h-8 w-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
-              <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
-                }}
-              />
-            </div>
+            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
           ))}
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
-              }}
-            />
-          </div>
+          <div className="h-8 w-8 rounded bg-gray-200"></div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-// Mock data based on your sample
-const mockFeeders: Feeder[] = [
-  {
-    id: "FD-001",
-    name: "Kaduna North 33KV Feeder",
-    voltage: "33 KV",
-    length: "12.5 km",
-    transformers: 8,
-    customers: 2340,
-    status: "operational",
-  },
-  {
-    id: "FD-002",
-    name: "Barnawa 11KV Feeder",
-    voltage: "11 KV",
-    length: "8.3 km",
-    transformers: 5,
-    customers: 1820,
-    status: "operational",
-  },
-  {
-    id: "FD-003",
-    name: "Ungwan Rimi 11KV Feeder",
-    voltage: "11 KV",
-    length: "6.7 km",
-    transformers: 4,
-    customers: 1450,
-    status: "maintenance",
-  },
-  {
-    id: "FD-004",
-    name: "Sabon Tasha 33KV Feeder",
-    voltage: "33 KV",
-    length: "15.2 km",
-    transformers: 10,
-    customers: 3120,
-    status: "operational",
-  },
-]
-
 const FeedersTab: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { feeders, loading, error, pagination } = useAppSelector((state) => state.feeders)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedFeeder, setSelectedFeeder] = useState<Feeder | null>(null)
-  const pageSize = 10
 
-  // In a real app, you would fetch this data from an API
-  const isLoading = false
-  const isError = false
-  const feeders = mockFeeders
-  const totalRecords = feeders.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  const handleViewFeederDetails = (feeder: Feeder) => {
+    router.push(`/assets-management/feeders/feeder-details/${feeder.id}`)
+  }
 
-  const getStatusStyle = (status: Feeder["status"]) => {
-    switch (status) {
+  // Get pagination values from Redux state
+  const currentPage = pagination.currentPage
+  const pageSize = pagination.pageSize
+  const totalRecords = pagination.totalCount
+  const totalPages = pagination.totalPages
+
+  // Fetch feeders on component mount and when search/pagination changes
+  useEffect(() => {
+    const fetchParams: FeedersRequestParams = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      ...(searchText && { search: searchText }),
+    }
+
+    dispatch(fetchFeeders(fetchParams))
+  }, [dispatch, currentPage, pageSize, searchText])
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
+
+  const getStatusStyle = (status: string) => {
+    // Since your API doesn't have status, we'll create a mock status based on some logic
+    // You can modify this based on your actual business logic
+    const effectiveStatus = status || "operational" // Default status
+
+    switch (effectiveStatus) {
       case "operational":
         return {
           backgroundColor: "#EEF5F0",
@@ -398,6 +276,11 @@ const FeedersTab: React.FC = () => {
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
+        }
+      case "limited_operations":
+        return {
+          backgroundColor: "#EFF6FF",
+          color: "#3B82F6",
         }
       default:
         return {
@@ -415,18 +298,22 @@ const FeedersTab: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    setCurrentPage(1)
+    // Reset to first page when searching
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    // Reset to first page when clearing search
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => {
+    dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading feeder data</div>
+  if (loading) return <LoadingSkeleton />
+  if (error) return <div className="p-4 text-red-500">Error loading feeder data: {error}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -437,8 +324,8 @@ const FeedersTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Feeder Network</p>
-          <p className="text-sm text-gray-600">Monitor feeder performance and connectivity</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Feeders</p>
+          <p className="text-sm text-gray-600">Manage and monitor feeder operations</p>
         </div>
         <div className="flex gap-4">
           <SearchModule
@@ -495,34 +382,42 @@ const FeedersTab: React.FC = () => {
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("voltage")}
+                    onClick={() => toggleSort("nercCode")}
                   >
                     <div className="flex items-center gap-2">
-                      Voltage <RxCaretSort />
+                      NERC Code <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("length")}
+                    onClick={() => toggleSort("kaedcoFeederCode")}
                   >
                     <div className="flex items-center gap-2">
-                      Length <RxCaretSort />
+                      KAEDCO Code <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("transformers")}
+                    onClick={() => toggleSort("feederVoltage")}
                   >
                     <div className="flex items-center gap-2">
-                      Transformers <RxCaretSort />
+                      Voltage (KV) <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customers")}
+                    onClick={() => toggleSort("injectionSubstation")}
                   >
                     <div className="flex items-center gap-2">
-                      Customers <RxCaretSort />
+                      Injection Substation <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("htPole")}
+                  >
+                    <div className="flex items-center gap-2">
+                      HT Pole <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -548,37 +443,35 @@ const FeedersTab: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{feeder.id}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">FD-{feeder.id}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.voltage}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.length}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.transformers}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.kaedcoFeederCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.feederVoltage} KV</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder.customers.toLocaleString()}
+                        {feeder.injectionSubstation.injectionSubstationCode}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {feeder.htPole?.htPoleNumber || "N/A"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getStatusStyle(feeder.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                          style={getStatusStyle("operational")}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
                           <span
                             className="size-2 rounded-full"
                             style={{
-                              backgroundColor:
-                                feeder.status === "operational"
-                                  ? "#589E67"
-                                  : feeder.status === "maintenance"
-                                  ? "#D97706"
-                                  : "#AF4B4B",
+                              backgroundColor: "#589E67",
                             }}
                           ></span>
-                          {feeder.status.charAt(0).toUpperCase() + feeder.status.slice(1)}
+                          Operational
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown feeder={feeder} onViewDetails={setSelectedFeeder} />
+                        <ActionDropdown feeder={feeder} onViewDetails={handleViewFeederDetails} />
                       </td>
                     </motion.tr>
                   ))}
