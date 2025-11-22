@@ -5,12 +5,12 @@ import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
+import { MapIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 
-import { fetchPayments, PaymentsRequestParams, clearPayments } from "lib/redux/paymentSlice"
+import { clearPayments, fetchPayments, PaymentsRequestParams } from "lib/redux/paymentSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 const CyclesIcon = () => (
