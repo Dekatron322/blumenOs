@@ -16,6 +16,9 @@ import postpaidBillingReducer from "./postpaidSlice"
 import meterReadingReducer from "./meterReadingSlice"
 import feederEnergyCapReducer from "./feederEnergyCapSlice"
 import paymentReducer from "./paymentSlice"
+import vendorReducer from "./vendorSlice"
+import agentReducer from "./agentSlice"
+import paymentTypeReducer from "./paymentTypeSlice"
 
 export const store = configureStore({
   reducer: {
@@ -35,6 +38,9 @@ export const store = configureStore({
     meterReadings: meterReadingReducer,
     feederEnergyCaps: feederEnergyCapReducer,
     payments: paymentReducer,
+    vendors: vendorReducer,
+    agents: agentReducer,
+    paymentTypes: paymentTypeReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

@@ -23,6 +23,10 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: "/identity/auth/change-password",
   },
 
+  AGENTS: {
+    GET: "/agents",
+  },
+
   EMPLOYEE: {
     EMPLOYEE: "/identity/users",
     INVITE: "/identity/users/invite",
@@ -135,6 +139,11 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/customers/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
+    CUSTOMER_LOOKUP: "/customers/lookup",
+  },
+
+  PAYMENT_TYPE: {
+    GET: "/payments/types",
   },
 
   POSTPAID_BILLING: {
@@ -143,6 +152,7 @@ export const API_ENDPOINTS = {
     FINALIZE: "/billing/postpaid/finalize-period",
     FINALIZE_BY_AREA_OFFICE_ID: "/billing/postpaid/area-offices/{areaOfficeId}/finalize",
     BILLING_JOBS: "/billing/postpaid/jobs",
+    GET_BY_REFERENCE: "/billing/postpaid/public/{reference}",
     BILLING_JOBS_BY_ID: "/billing/postpaid/jobs/{id}",
     ADD_BILLING_JOB: "/billing/postpaid/jobs",
     CHANGE_REQUEST: "/billing/postpaid/{id}/change-requests",
@@ -181,6 +191,10 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/decline",
+  },
+
+  VENDORS: {
+    GET: "/vendors",
   },
 }
 

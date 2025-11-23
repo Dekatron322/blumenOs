@@ -84,7 +84,8 @@ export interface PaymentsRequestParams {
 
 // Create Payment Request Interface
 export interface CreatePaymentRequest {
-  postpaidBillId: number
+  postpaidBillId?: number
+  customerId?: number
   paymentTypeId: number
   amount: number
   channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
@@ -92,8 +93,8 @@ export interface CreatePaymentRequest {
   externalReference?: string
   narrative?: string
   paidAtUtc: string
-  agentId?: number
-  vendorId?: number
+  agentId?: number | null
+  vendorId?: number | null
   collectorType: "Customer" | "Agent" | "Vendor" | "Staff"
 }
 

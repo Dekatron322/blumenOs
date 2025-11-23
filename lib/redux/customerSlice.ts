@@ -461,6 +461,18 @@ export interface DeclineChangeRequestResponse {
   data: ChangeRequestResponseData
 }
 
+// Customer Lookup Interfaces
+export interface CustomerLookupParams {
+  reference: string
+  type: string
+}
+
+export interface CustomerLookupResponse {
+  isSuccess: boolean
+  message: string
+  data: Customer
+}
+
 // Customer State
 interface CustomerState {
   // Customers list state
@@ -483,6 +495,12 @@ interface CustomerState {
   currentCustomer: Customer | null
   currentCustomerLoading: boolean
   currentCustomerError: string | null
+
+  // Customer lookup state
+  customerLookup: Customer | null
+  customerLookupLoading: boolean
+  customerLookupError: string | null
+  customerLookupSuccess: boolean
 
   // Create customer state
   createLoading: boolean
@@ -612,6 +630,10 @@ const initialState: CustomerState = {
   currentCustomer: null,
   currentCustomerLoading: false,
   currentCustomerError: null,
+  customerLookup: null,
+  customerLookupLoading: false,
+  customerLookupError: null,
+  customerLookupSuccess: false,
   createLoading: false,
   createError: null,
   createSuccess: false,
@@ -759,6 +781,37 @@ export const fetchCustomerById = createAsyncThunk<Customer, number, { rejectValu
         return rejectWithValue(error.response.data.message || "Failed to fetch customer")
       }
       return rejectWithValue(error.message || "Network error during customer fetch")
+    }
+  }
+)
+
+export const lookupCustomer = createAsyncThunk(
+  "customers/lookupCustomer",
+  async (params: CustomerLookupParams, { rejectWithValue }) => {
+    try {
+      const { reference, type } = params
+
+      const response = await api.get<CustomerLookupResponse>(buildApiUrl(API_ENDPOINTS.CUSTOMER.CUSTOMER_LOOKUP), {
+        params: {
+          reference,
+          type,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to lookup customer")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Customer not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to lookup customer")
+      }
+      return rejectWithValue(error.message || "Network error during customer lookup")
     }
   }
 )
@@ -1134,6 +1187,7 @@ const customerSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentCustomerError = null
+      state.customerLookupError = null
       state.createError = null
       state.updateError = null
       state.suspendError = null
@@ -1153,6 +1207,14 @@ const customerSlice = createSlice({
       state.currentCustomerError = null
     },
 
+    // Clear customer lookup
+    clearCustomerLookup: (state) => {
+      state.customerLookup = null
+      state.customerLookupError = null
+      state.customerLookupLoading = false
+      state.customerLookupSuccess = false
+    },
+
     // Reset customer state
     resetCustomerState: (state) => {
       state.customers = []
@@ -1170,6 +1232,10 @@ const customerSlice = createSlice({
       state.currentCustomer = null
       state.currentCustomerLoading = false
       state.currentCustomerError = null
+      state.customerLookup = null
+      state.customerLookupLoading = false
+      state.customerLookupError = null
+      state.customerLookupSuccess = false
       state.createLoading = false
       state.createError = null
       state.createSuccess = false
@@ -1610,6 +1676,24 @@ const customerSlice = createSlice({
         state.currentCustomerError = (action.payload as string) || "Failed to fetch customer"
         state.currentCustomer = null
       })
+      // Lookup customer cases
+      .addCase(lookupCustomer.pending, (state) => {
+        state.customerLookupLoading = true
+        state.customerLookupError = null
+        state.customerLookupSuccess = false
+      })
+      .addCase(lookupCustomer.fulfilled, (state, action: PayloadAction<Customer>) => {
+        state.customerLookupLoading = false
+        state.customerLookupSuccess = true
+        state.customerLookup = action.payload
+        state.customerLookupError = null
+      })
+      .addCase(lookupCustomer.rejected, (state, action) => {
+        state.customerLookupLoading = false
+        state.customerLookupError = (action.payload as string) || "Failed to lookup customer"
+        state.customerLookupSuccess = false
+        state.customerLookup = null
+      })
       // Create customer cases
       .addCase(createCustomer.pending, (state) => {
         state.createLoading = true
@@ -2010,6 +2094,7 @@ export const {
   clearCustomers,
   clearError,
   clearCurrentCustomer,
+  clearCustomerLookup,
   resetCustomerState,
   setPagination,
   setPaymentDisputesPagination,

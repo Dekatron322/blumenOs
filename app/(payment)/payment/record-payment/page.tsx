@@ -12,9 +12,15 @@ import { notify } from "components/ui/Notification/Notification"
 import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { clearCreatePayment, createPayment } from "lib/redux/paymentSlice"
+import { fetchVendors } from "lib/redux/vendorSlice"
+import { fetchAgents } from "lib/redux/agentSlice"
+import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
+import { fetchPostpaidBillByReference, clearCurrentBillByReference } from "lib/redux/postpaidSlice"
+import { lookupCustomer, clearCustomerLookup } from "lib/redux/customerSlice"
 
 interface PaymentFormData {
   postpaidBillId: number
+  customerId: number
   paymentTypeId: number
   amount: number
   channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
@@ -27,6 +33,62 @@ interface PaymentFormData {
   collectorType: "Customer" | "Agent" | "Vendor" | "Staff"
 }
 
+interface BillInfo {
+  id: number
+  customerName: string
+  customerAccountNumber: string
+  period: string
+  totalDue: number
+  status: number
+}
+
+interface CustomerInfo {
+  id: number
+  accountNumber: string
+  fullName: string
+  phoneNumber: string
+  email: string
+  status: string
+  isSuspended: boolean
+  distributionSubstationCode: string
+  feederName: string
+  areaOfficeName: string
+  address: string
+  city: string
+  state: string
+  serviceCenterName: string
+  meterNumber: string
+  isPPM: boolean
+  isMD: boolean
+  band: string
+  customerOutstandingDebtBalance: number
+}
+
+// Channel mapping utilities
+const channelMap = {
+  1: "Cash" as const,
+  2: "BankTransfer" as const,
+  3: "Pos" as const,
+  4: "Card" as const,
+  5: "VendorWallet" as const,
+}
+
+const reverseChannelMap = {
+  Cash: 1,
+  BankTransfer: 2,
+  Pos: 3,
+  Card: 4,
+  VendorWallet: 5,
+}
+
+const channelOptions = [
+  { value: 1, label: "Cash" },
+  { value: 2, label: "Bank Transfer" },
+  { value: 3, label: "POS" },
+  { value: 4, label: "Card" },
+  { value: 5, label: "Vendor Wallet" },
+]
+
 const AddPaymentPage = () => {
   const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
@@ -35,69 +97,222 @@ const AddPaymentPage = () => {
     (state: RootState) => state.payments
   )
 
+  const { vendors, loading: vendorsLoading, error: vendorsError } = useSelector((state: RootState) => state.vendors)
+  const { agents, loading: agentsLoading } = useSelector((state: RootState) => state.agents)
+  const { paymentTypes, loading: paymentTypesLoading } = useSelector((state: RootState) => state.paymentTypes)
+  const { currentBillByReference, currentBillByReferenceLoading, currentBillByReferenceError } = useSelector(
+    (state: RootState) => state.postpaidBilling
+  )
+  const { customerLookup, customerLookupLoading, customerLookupError, customerLookupSuccess } = useSelector(
+    (state: RootState) => state.customers
+  )
+
+  const [identifierType, setIdentifierType] = useState<"postpaidBill" | "customer">("postpaidBill")
+  const [paymentReference, setPaymentReference] = useState("")
+  const [customerReference, setCustomerReference] = useState("")
+  const [billInfo, setBillInfo] = useState<BillInfo | null>(null)
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null)
+  const [isValidatingReference, setIsValidatingReference] = useState(false)
+  const [isValidatingCustomer, setIsValidatingCustomer] = useState(false)
+
   const [formData, setFormData] = useState<PaymentFormData>({
     postpaidBillId: 0,
+    customerId: 0,
     paymentTypeId: 0,
     amount: 0,
     channel: "Cash",
     currency: "NGN",
     externalReference: "",
     narrative: "",
-    paidAtUtc: new Date().toISOString().slice(0, 16), // Current date and time in local format
+    paidAtUtc: new Date().toISOString().slice(0, 16),
     agentId: 0,
     vendorId: 0,
-    collectorType: "Customer",
+    collectorType: "Staff",
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  // Payment channel options
-  const channelOptions = [
-    { value: "Cash", label: "Cash" },
-    { value: "BankTransfer", label: "Bank Transfer" },
-    { value: "Pos", label: "POS" },
-    { value: "Card", label: "Card" },
-    { value: "VendorWallet", label: "Vendor Wallet" },
-  ]
-
   // Collector type options
   const collectorTypeOptions = [
-    { value: "Customer", label: "Customer" },
-    { value: "Agent", label: "Agent" },
-    { value: "Vendor", label: "Vendor" },
     { value: "Staff", label: "Staff" },
+    { value: "Vendor", label: "Vendor" },
+    { value: "Agent", label: "Sales Rep" },
   ]
+
+  const vendorOptions = vendors.map((vendor) => ({ value: vendor.id, label: vendor.name }))
+  const agentOptions = agents.map((agent) => ({ value: agent.id, label: agent.user.fullName }))
 
   // Currency options
-  const currencyOptions = [
-    { value: "NGN", label: "NGN - Nigerian Naira" },
-    { value: "USD", label: "USD - US Dollar" },
-    { value: "EUR", label: "EUR - Euro" },
-    { value: "GBP", label: "GBP - British Pound" },
-  ]
+  const currencyOptions = [{ value: "NGN", label: "NGN - Nigerian Naira" }]
+  const paymentTypeOptions = paymentTypes
+    .filter((paymentType) => paymentType.isActive)
+    .map((paymentType) => ({ value: paymentType.id, label: paymentType.name }))
 
-  // Payment type options (you might want to fetch these from an API)
-  const paymentTypeOptions = [
-    { value: 1, label: "Postpaid Bill Payment" },
-    { value: 2, label: "Advance Payment" },
-    { value: 3, label: "Security Deposit" },
-    { value: 4, label: "Other" },
-  ]
+  // Validate payment reference
+  const validatePaymentReference = async () => {
+    if (!paymentReference.trim()) {
+      setFormErrors((prev) => ({ ...prev, paymentReference: "Payment reference is required" }))
+      return
+    }
+
+    setIsValidatingReference(true)
+    setFormErrors((prev) => ({ ...prev, paymentReference: "" }))
+    setBillInfo(null)
+
+    try {
+      const result = await dispatch(fetchPostpaidBillByReference(paymentReference)).unwrap()
+
+      if (result) {
+        setBillInfo({
+          id: result.id,
+          customerName: result.customerName,
+          customerAccountNumber: result.customerAccountNumber,
+          period: result.period,
+          totalDue: result.totalDue,
+          status: result.status,
+        })
+
+        // Auto-populate the bill ID and amount
+        setFormData((prev) => ({
+          ...prev,
+          postpaidBillId: result.id,
+          amount: result.totalDue,
+        }))
+
+        notify("success", "Bill validated successfully", {
+          description: `Bill found for ${result.customerName}`,
+          duration: 3000,
+        })
+      }
+    } catch (error: any) {
+      setFormErrors((prev) => ({
+        ...prev,
+        paymentReference: error || "Invalid payment reference",
+      }))
+      setBillInfo(null)
+      setFormData((prev) => ({
+        ...prev,
+        postpaidBillId: 0,
+        amount: 0,
+      }))
+    } finally {
+      setIsValidatingReference(false)
+    }
+  }
+
+  // Validate customer reference
+  const validateCustomerReference = async () => {
+    if (!customerReference.trim()) {
+      setFormErrors((prev) => ({ ...prev, customerReference: "Customer reference is required" }))
+      return
+    }
+
+    setIsValidatingCustomer(true)
+    setFormErrors((prev) => ({ ...prev, customerReference: "" }))
+    setCustomerInfo(null)
+
+    try {
+      const result = await dispatch(
+        lookupCustomer({
+          reference: customerReference,
+          type: "postpaid",
+        })
+      ).unwrap()
+
+      if (result) {
+        setCustomerInfo({
+          id: result.id,
+          accountNumber: result.accountNumber,
+          fullName: result.fullName,
+          phoneNumber: result.phoneNumber,
+          email: result.email,
+          status: result.status,
+          isSuspended: result.isSuspended,
+          distributionSubstationCode: result.distributionSubstationCode,
+          feederName: result.feederName,
+          areaOfficeName: result.areaOfficeName,
+          address: result.address,
+          city: result.city,
+          state: result.state,
+          serviceCenterName: result.serviceCenterName,
+          meterNumber: result.meterNumber,
+          isPPM: result.isPPM,
+          isMD: result.isMD,
+          band: result.band,
+          customerOutstandingDebtBalance: result.customerOutstandingDebtBalance,
+        })
+
+        // Auto-populate the customer ID
+        setFormData((prev) => ({
+          ...prev,
+          customerId: result.id,
+        }))
+
+        notify("success", "Customer validated successfully", {
+          description: `Customer found: ${result.fullName}`,
+          duration: 3000,
+        })
+      }
+    } catch (error: any) {
+      setFormErrors((prev) => ({
+        ...prev,
+        customerReference: error || "Invalid customer reference",
+      }))
+      setCustomerInfo(null)
+      setFormData((prev) => ({
+        ...prev,
+        customerId: 0,
+      }))
+    } finally {
+      setIsValidatingCustomer(false)
+    }
+  }
+
+  // Clear bill info when reference changes
+  useEffect(() => {
+    if (!paymentReference.trim()) {
+      setBillInfo(null)
+      setFormData((prev) => ({
+        ...prev,
+        postpaidBillId: 0,
+        amount: 0,
+      }))
+      setFormErrors((prev) => ({ ...prev, paymentReference: "" }))
+    }
+  }, [paymentReference])
+
+  // Clear customer info when reference changes
+  useEffect(() => {
+    if (!customerReference.trim()) {
+      setCustomerInfo(null)
+      setFormData((prev) => ({
+        ...prev,
+        customerId: 0,
+      }))
+      setFormErrors((prev) => ({ ...prev, customerReference: "" }))
+    }
+  }, [customerReference])
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
 
-    // Handle number fields
     let processedValue = value
-    if (["postpaidBillId", "paymentTypeId", "amount", "agentId", "vendorId"].includes(name)) {
+
+    // Handle number fields
+    if (["postpaidBillId", "customerId", "paymentTypeId", "amount", "agentId", "vendorId"].includes(name)) {
       processedValue = value === "" ? 0 : Number(value)
+    }
+
+    // Handle channel field - convert numeric value to string type
+    if (name === "channel") {
+      const numericValue = Number(value)
+      processedValue = channelMap[numericValue as keyof typeof channelMap] || "Cash"
     }
 
     // Handle date field
     if (name === "paidAtUtc") {
-      // Convert local datetime to ISO string
       const localDate = new Date(value)
       processedValue = localDate.toISOString()
     }
@@ -119,8 +334,22 @@ const AddPaymentPage = () => {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (formData.postpaidBillId === 0) {
-      errors.postpaidBillId = "Postpaid Bill ID is required"
+    if (identifierType === "postpaidBill") {
+      if (!paymentReference.trim()) {
+        errors.paymentReference = "Payment reference is required"
+      } else if (!billInfo) {
+        errors.paymentReference = "Please validate the payment reference first"
+      } else if (formData.postpaidBillId === 0) {
+        errors.paymentReference = "Valid bill ID not found"
+      }
+    } else if (identifierType === "customer") {
+      if (!customerReference.trim()) {
+        errors.customerReference = "Customer reference is required"
+      } else if (!customerInfo) {
+        errors.customerReference = "Please validate the customer reference first"
+      } else if (formData.customerId === 0) {
+        errors.customerReference = "Valid customer ID not found"
+      }
     }
 
     if (formData.paymentTypeId === 0) {
@@ -141,6 +370,14 @@ const AddPaymentPage = () => {
 
     if (!formData.collectorType) {
       errors.collectorType = "Collector type is required"
+    }
+
+    if (formData.collectorType === "Vendor" && formData.vendorId <= 0) {
+      errors.vendorId = "Vendor is required when collector type is Vendor"
+    }
+
+    if (formData.collectorType === "Agent" && formData.agentId <= 0) {
+      errors.agentId = "Agent is required when collector type is Agent"
     }
 
     if (!formData.paidAtUtc) {
@@ -173,13 +410,18 @@ const AddPaymentPage = () => {
 
     try {
       // Prepare the data for API
+      const { postpaidBillId, customerId, agentId, vendorId, ...rest } = formData
+
       const paymentData = {
-        ...formData,
+        ...rest,
+        ...(identifierType === "postpaidBill" && { postpaidBillId }),
+        ...(identifierType === "customer" && { customerId }),
         // Only include optional fields if they have values
         ...(formData.externalReference && { externalReference: formData.externalReference }),
         ...(formData.narrative && { narrative: formData.narrative }),
-        ...(formData.agentId > 0 && { agentId: formData.agentId }),
-        ...(formData.vendorId > 0 && { vendorId: formData.vendorId }),
+        // Always send agentId/vendorId as either a valid ID or null so backend does not see 0
+        agentId: formData.collectorType === "Agent" && agentId && agentId > 0 ? agentId : null,
+        vendorId: formData.collectorType === "Vendor" && vendorId && vendorId > 0 ? vendorId : null,
       }
 
       const result = await dispatch(createPayment(paymentData)).unwrap()
@@ -193,7 +435,7 @@ const AddPaymentPage = () => {
         // Redirect to payment details page
         if (result.data?.id) {
           setTimeout(() => {
-            router.push(`/payments-management/payments/${result.data.id}`)
+            router.push(`/payment/payment-detail/${result.data.id}`)
           }, 2000)
         }
       }
@@ -211,6 +453,7 @@ const AddPaymentPage = () => {
   const handleReset = () => {
     setFormData({
       postpaidBillId: 0,
+      customerId: 0,
       paymentTypeId: 0,
       amount: 0,
       channel: "Cash",
@@ -220,22 +463,76 @@ const AddPaymentPage = () => {
       paidAtUtc: new Date().toISOString().slice(0, 16),
       agentId: 0,
       vendorId: 0,
-      collectorType: "Customer",
+      collectorType: "Staff",
     })
+    setPaymentReference("")
+    setCustomerReference("")
+    setBillInfo(null)
+    setCustomerInfo(null)
+    setIdentifierType("postpaidBill")
     setFormErrors({})
     dispatch(clearCreatePayment())
+    dispatch(clearCurrentBillByReference())
+    dispatch(clearCustomerLookup())
   }
 
+  useEffect(() => {
+    if (!paymentTypesLoading && paymentTypes.length === 0) {
+      dispatch(fetchPaymentTypes())
+    }
+  }, [dispatch, paymentTypesLoading, paymentTypes.length])
+
+  useEffect(() => {
+    if (formData.collectorType === "Vendor") {
+      if (!vendorsLoading && vendors.length === 0) {
+        dispatch(
+          fetchVendors({
+            pageNumber: 1,
+            pageSize: 50,
+          })
+        )
+      }
+    } else if (formData.vendorId > 0) {
+      setFormData((prev) => ({ ...prev, vendorId: 0 }))
+    }
+
+    if (formData.collectorType === "Agent") {
+      if (!agentsLoading && agents.length === 0) {
+        dispatch(
+          fetchAgents({
+            pageNumber: 1,
+            pageSize: 50,
+          })
+        )
+      }
+    } else if (formData.agentId > 0) {
+      setFormData((prev) => ({ ...prev, agentId: 0 }))
+    }
+  }, [
+    dispatch,
+    formData.collectorType,
+    formData.vendorId,
+    formData.agentId,
+    vendors.length,
+    vendorsLoading,
+    agents.length,
+    agentsLoading,
+  ])
+
   const isFormValid = (): boolean => {
-    return (
-      formData.postpaidBillId > 0 &&
+    const baseValidation =
       formData.paymentTypeId > 0 &&
       formData.amount > 0 &&
-      !!formData.channel && // <- change this
+      !!formData.channel &&
       formData.currency !== "" &&
       !!formData.collectorType &&
       formData.paidAtUtc !== ""
-    )
+
+    if (identifierType === "postpaidBill") {
+      return baseValidation && paymentReference.trim() !== ""
+    } else {
+      return baseValidation && customerReference.trim() !== ""
+    }
   }
 
   // Handle success state
@@ -254,6 +551,33 @@ const AddPaymentPage = () => {
       })
     }
   }, [createPaymentError])
+
+  // Get status text for display
+  const getStatusText = (status: number): string => {
+    switch (status) {
+      case 0:
+        return "Draft"
+      case 1:
+        return "Finalized"
+      case 2:
+        return "Paid"
+      case 3:
+        return "Overdue"
+      default:
+        return "Unknown"
+    }
+  }
+
+  // Get customer status text for display
+  const getCustomerStatusText = (status: string, isSuspended: boolean): string => {
+    if (isSuspended) return "Suspended"
+    return status || "Active"
+  }
+
+  // Get the numeric value for form display
+  const getChannelNumericValue = (channel: PaymentFormData["channel"]): number => {
+    return reverseChannelMap[channel] || 1
+  }
 
   return (
     <section className="size-full">
@@ -316,24 +640,197 @@ const AddPaymentPage = () => {
                       </div>
 
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormInputModule
-                          label="Postpaid Bill ID"
-                          name="postpaidBillId"
-                          type="number"
-                          placeholder="Enter postpaid bill ID"
-                          value={formData.postpaidBillId}
-                          onChange={handleInputChange}
-                          error={formErrors.postpaidBillId}
-                          required
-                          min="1"
+                        <FormSelectModule
+                          label="Record Payment By"
+                          name="identifierType"
+                          value={identifierType}
+                          onChange={({ target }) => {
+                            const value = target.value as "postpaidBill" | "customer"
+                            setIdentifierType(value)
+                            setFormErrors((prev) => ({ ...prev, paymentReference: "", customerReference: "" }))
+                            setPaymentReference("")
+                            setCustomerReference("")
+                            setBillInfo(null)
+                            setCustomerInfo(null)
+                          }}
+                          options={[
+                            { value: "postpaidBill", label: "Postpaid Bill Reference" },
+                            { value: "customer", label: "Customer Reference" },
+                          ]}
                         />
+
+                        {identifierType === "postpaidBill" && (
+                          <div className="space-y-2">
+                            <FormInputModule
+                              label="Payment Reference"
+                              name="paymentReference"
+                              type="text"
+                              placeholder="Enter payment reference"
+                              value={paymentReference}
+                              onChange={(e) => setPaymentReference(e.target.value)}
+                              error={formErrors.paymentReference}
+                              required
+                            />
+                            <div className="flex gap-2">
+                              <ButtonModule
+                                variant="outline"
+                                size="sm"
+                                onClick={validatePaymentReference}
+                                disabled={
+                                  !paymentReference.trim() || isValidatingReference || currentBillByReferenceLoading
+                                }
+                                type="button"
+                              >
+                                {isValidatingReference || currentBillByReferenceLoading
+                                  ? "Validating..."
+                                  : "Validate Reference"}
+                              </ButtonModule>
+                              {billInfo && (
+                                <ButtonModule
+                                  variant="dangerSecondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    setPaymentReference("")
+                                    setBillInfo(null)
+                                    setFormData((prev) => ({ ...prev, postpaidBillId: 0, amount: 0 }))
+                                  }}
+                                  type="button"
+                                >
+                                  Clear
+                                </ButtonModule>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {identifierType === "customer" && (
+                          <div className="space-y-2">
+                            <FormInputModule
+                              label="Customer Reference"
+                              name="customerReference"
+                              type="text"
+                              placeholder="Enter customer reference (account number)"
+                              value={customerReference}
+                              onChange={(e) => setCustomerReference(e.target.value)}
+                              error={formErrors.customerReference}
+                              required
+                            />
+                            <div className="flex gap-2">
+                              <ButtonModule
+                                variant="outline"
+                                size="sm"
+                                onClick={validateCustomerReference}
+                                disabled={!customerReference.trim() || isValidatingCustomer || customerLookupLoading}
+                                type="button"
+                              >
+                                {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Validate Customer"}
+                              </ButtonModule>
+                              {customerInfo && (
+                                <ButtonModule
+                                  variant="dangerSecondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    setCustomerReference("")
+                                    setCustomerInfo(null)
+                                    setFormData((prev) => ({ ...prev, customerId: 0 }))
+                                  }}
+                                  type="button"
+                                >
+                                  Clear
+                                </ButtonModule>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Bill Information Display */}
+                        {billInfo && (
+                          <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 md:grid-cols-2">
+                            <div>
+                              <h5 className="font-medium text-blue-800">Bill Information</h5>
+                              <div className="mt-2 space-y-1 text-sm text-blue-700">
+                                <p>
+                                  <strong>Customer:</strong> {billInfo.customerName}
+                                </p>
+                                <p>
+                                  <strong>Account No:</strong> {billInfo.customerAccountNumber}
+                                </p>
+                                <p>
+                                  <strong>Billing Period:</strong> {billInfo.period}
+                                </p>
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-blue-800">Payment Details</h5>
+                              <div className="mt-2 space-y-1 text-sm text-blue-700">
+                                <p>
+                                  <strong>Total Due:</strong> ₦{billInfo.totalDue.toLocaleString()}
+                                </p>
+                                <p>
+                                  <strong>Status:</strong> {getStatusText(billInfo.status)}
+                                </p>
+                                <p>
+                                  <strong>Bill ID:</strong> {billInfo.id}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Customer Information Display */}
+                        {customerInfo && (
+                          <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 md:grid-cols-2">
+                            <div>
+                              <h5 className="font-medium text-blue-800">Customer Information</h5>
+                              <div className="mt-2 space-y-1 text-sm text-blue-700">
+                                <p>
+                                  <strong>Name:</strong> {customerInfo.fullName}
+                                </p>
+                                <p>
+                                  <strong>Account No:</strong> {customerInfo.accountNumber}
+                                </p>
+                                <p>
+                                  <strong>Phone:</strong> {customerInfo.phoneNumber}
+                                </p>
+                                <p>
+                                  <strong>Email:</strong> {customerInfo.email}
+                                </p>
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-blue-800">Account Details</h5>
+                              <div className="mt-2 space-y-1 text-sm text-blue-700">
+                                <p>
+                                  <strong>Status:</strong>{" "}
+                                  {getCustomerStatusText(customerInfo.status, customerInfo.isSuspended)}
+                                </p>
+                                <p>
+                                  <strong>Area Office:</strong> {customerInfo.areaOfficeName}
+                                </p>
+                                <p>
+                                  <strong>Feeder:</strong> {customerInfo.feederName}
+                                </p>
+                                <p>
+                                  <strong>Outstanding Balance:</strong> ₦
+                                  {customerInfo.customerOutstandingDebtBalance.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         <FormSelectModule
                           label="Payment Type"
                           name="paymentTypeId"
                           value={formData.paymentTypeId}
                           onChange={handleInputChange}
-                          options={[{ value: 0, label: "Select payment type" }, ...paymentTypeOptions]}
+                          options={[
+                            {
+                              value: 0,
+                              label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
+                            },
+                            ...paymentTypeOptions,
+                          ]}
                           error={formErrors.paymentTypeId}
                           required
                         />
@@ -349,12 +846,13 @@ const AddPaymentPage = () => {
                           required
                           min="0.01"
                           step="0.01"
+                          disabled={billInfo !== null}
                         />
 
                         <FormSelectModule
                           label="Payment Channel"
                           name="channel"
-                          value={formData.channel}
+                          value={getChannelNumericValue(formData.channel)}
                           onChange={handleInputChange}
                           options={[{ value: "", label: "Select payment channel" }, ...channelOptions]}
                           error={formErrors.channel}
@@ -397,30 +895,42 @@ const AddPaymentPage = () => {
                           name="collectorType"
                           value={formData.collectorType}
                           onChange={handleInputChange}
-                          options={[{ value: "", label: "Select collector type" }, ...collectorTypeOptions]}
+                          options={collectorTypeOptions}
                           error={formErrors.collectorType}
                           required
                         />
 
-                        <FormInputModule
-                          label="Agent ID (Optional)"
-                          name="agentId"
-                          type="number"
-                          placeholder="Enter agent ID if applicable"
-                          value={formData.agentId}
-                          onChange={handleInputChange}
-                          min="0"
-                        />
+                        {formData.collectorType === "Agent" && (
+                          <FormSelectModule
+                            label="Agent"
+                            name="agentId"
+                            value={formData.agentId}
+                            onChange={handleInputChange}
+                            options={[
+                              { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
+                              ...agentOptions,
+                            ]}
+                            error={formErrors.agentId}
+                            required
+                            disabled={agentsLoading}
+                          />
+                        )}
 
-                        <FormInputModule
-                          label="Vendor ID (Optional)"
-                          name="vendorId"
-                          type="number"
-                          placeholder="Enter vendor ID if applicable"
-                          value={formData.vendorId}
-                          onChange={handleInputChange}
-                          min="0"
-                        />
+                        {formData.collectorType === "Vendor" && (
+                          <FormSelectModule
+                            label="Vendor"
+                            name="vendorId"
+                            value={formData.vendorId}
+                            onChange={handleInputChange}
+                            options={[
+                              { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
+                              ...vendorOptions,
+                            ]}
+                            error={formErrors.vendorId}
+                            required
+                            disabled={vendorsLoading}
+                          />
+                        )}
                       </div>
                     </div>
 
