@@ -15,8 +15,8 @@ import { clearCreatePayment, createPayment } from "lib/redux/paymentSlice"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
-import { fetchPostpaidBillByReference, clearCurrentBillByReference } from "lib/redux/postpaidSlice"
-import { lookupCustomer, clearCustomerLookup } from "lib/redux/customerSlice"
+import { clearCurrentBillByReference, fetchPostpaidBillByReference } from "lib/redux/postpaidSlice"
+import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
 
 interface PaymentFormData {
   postpaidBillId: number
