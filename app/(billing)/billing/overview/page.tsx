@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 import { BillingIcon, PlayIcon, PostpaidIcon, RefreshCircleIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import BillingInfo from "components/BillingInfo/BillingInfo"
+import StartBillingRun from "components/ui/Modal/start-billing-run"
 import {
   clearPostpaidBillingAnalytics,
   fetchPostpaidBillingAnalytics,
@@ -398,6 +399,7 @@ const PeriodSelector = ({
 
 export default function BillingDashboard() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false)
 
   const getCurrentPeriod = () => {
     const now = new Date()
@@ -445,8 +447,12 @@ export default function BillingDashboard() {
   }
 
   const handleStartBillingRun = () => {
-    // Implement billing run logic here
-    console.log("Starting billing run for period:", selectedPeriod)
+    setIsStartBillingRunModalOpen(true)
+  }
+
+  const handleBillingRunSuccess = () => {
+    setIsStartBillingRunModalOpen(false)
+    handleRefreshData()
   }
 
   // Format numbers with commas
@@ -481,7 +487,7 @@ export default function BillingDashboard() {
                   onClick={handleStartBillingRun}
                   disabled={postpaidBillingAnalyticsLoading}
                 >
-                  Start Billing Run
+                  Publish Billing Run
                 </ButtonModule>
                 <ButtonModule
                   variant="primary"
@@ -662,6 +668,11 @@ export default function BillingDashboard() {
           </div>
         </div>
       </div>
+      <StartBillingRun
+        isOpen={isStartBillingRunModalOpen}
+        onRequestClose={() => setIsStartBillingRunModalOpen(false)}
+        onSuccess={handleBillingRunSuccess}
+      />
     </section>
   )
 }

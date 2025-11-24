@@ -195,7 +195,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[500px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative w-[500px] max-w-4xl  rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
@@ -219,7 +219,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              Finalize by Period
+              Publish by Period
             </button>
             <button
               onClick={() => setActiveTab("areaOffice")}
@@ -229,7 +229,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              Finalize by Area Office
+              Publish by Area Office
             </button>
           </nav>
         </div>
