@@ -85,6 +85,56 @@ export interface PostpaidBillingAnalyticsParams {
   feederId?: number
 }
 
+// Interfaces for Payment Summary Analytics
+export interface PaymentSummaryByChannel {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryByCollector {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryByStatus {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryByPaymentType {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryWindow {
+  window: string
+  count: number
+  amount: number
+  byChannel: PaymentSummaryByChannel[]
+  byCollector: PaymentSummaryByCollector[]
+  byStatus: PaymentSummaryByStatus[]
+  byPaymentType: PaymentSummaryByPaymentType[]
+}
+
+export interface PaymentSummaryData {
+  windows: PaymentSummaryWindow[]
+}
+
+export interface PaymentSummaryParams {
+  today?: boolean
+  yesterday?: boolean
+  thisWeek?: boolean
+  lastWeek?: boolean
+  thisMonth?: boolean
+  lastMonth?: boolean
+  thisYear?: boolean
+  allTime?: boolean
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -101,6 +151,12 @@ export interface PostpaidBillingAnalyticsResponse {
   isSuccess: boolean
   message: string
   data: PostpaidBillingAnalyticsData
+}
+
+export interface PaymentSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentSummaryData
 }
 
 // Analytics State
@@ -124,6 +180,13 @@ interface AnalyticsState {
   postpaidBillingAnalyticsSuccess: boolean
   postpaidBillingAnalyticsParams: PostpaidBillingAnalyticsParams | null
 
+  // Payment Summary Analytics state
+  paymentSummaryData: PaymentSummaryData | null
+  paymentSummaryLoading: boolean
+  paymentSummaryError: string | null
+  paymentSummarySuccess: boolean
+  paymentSummaryParams: PaymentSummaryParams | null
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -146,6 +209,12 @@ const initialState: AnalyticsState = {
   postpaidBillingAnalyticsError: null,
   postpaidBillingAnalyticsSuccess: false,
   postpaidBillingAnalyticsParams: null,
+
+  paymentSummaryData: null,
+  paymentSummaryLoading: false,
+  paymentSummaryError: null,
+  paymentSummarySuccess: false,
+  paymentSummaryParams: null,
 
   loading: false,
   error: null,
@@ -233,6 +302,37 @@ export const fetchPostpaidBillingAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchPaymentSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchPaymentSummaryAnalytics",
+  async (params: PaymentSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.post<PaymentSummaryResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.PAYMENT_SUMMARY),
+        params // Send as request body for POST
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Payment summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during payment summary analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -263,9 +363,23 @@ const analyticsSlice = createSlice({
       state.postpaidBillingAnalyticsParams = null
     },
 
+    // Clear payment summary analytics state
+    clearPaymentSummaryAnalytics: (state) => {
+      state.paymentSummaryData = null
+      state.paymentSummaryError = null
+      state.paymentSummarySuccess = false
+      state.paymentSummaryLoading = false
+      state.paymentSummaryParams = null
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
+    },
+
+    // Set payment summary analytics parameters
+    setPaymentSummaryAnalyticsParams: (state, action: PayloadAction<PaymentSummaryParams>) => {
+      state.paymentSummaryParams = action.payload
     },
 
     // Clear all errors
@@ -274,6 +388,7 @@ const analyticsSlice = createSlice({
       state.assetManagementError = null
       state.customerAnalyticsError = null
       state.postpaidBillingAnalyticsError = null
+      state.paymentSummaryError = null
     },
 
     // Reset analytics state
@@ -293,6 +408,12 @@ const analyticsSlice = createSlice({
       state.postpaidBillingAnalyticsError = null
       state.postpaidBillingAnalyticsSuccess = false
       state.postpaidBillingAnalyticsParams = null
+
+      state.paymentSummaryData = null
+      state.paymentSummaryLoading = false
+      state.paymentSummaryError = null
+      state.paymentSummarySuccess = false
+      state.paymentSummaryParams = null
 
       state.loading = false
       state.error = null
@@ -366,6 +487,35 @@ const analyticsSlice = createSlice({
         state.postpaidBillingAnalyticsSuccess = false
         state.postpaidBillingAnalyticsData = null
       })
+
+      // Fetch payment summary analytics cases
+      .addCase(fetchPaymentSummaryAnalytics.pending, (state) => {
+        state.paymentSummaryLoading = true
+        state.paymentSummaryError = null
+        state.paymentSummarySuccess = false
+      })
+      .addCase(
+        fetchPaymentSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: PaymentSummaryData
+            params: PaymentSummaryParams
+          }>
+        ) => {
+          state.paymentSummaryLoading = false
+          state.paymentSummarySuccess = true
+          state.paymentSummaryData = action.payload.data
+          state.paymentSummaryParams = action.payload.params
+          state.paymentSummaryError = null
+        }
+      )
+      .addCase(fetchPaymentSummaryAnalytics.rejected, (state, action) => {
+        state.paymentSummaryLoading = false
+        state.paymentSummaryError = (action.payload as string) || "Failed to fetch payment summary analytics"
+        state.paymentSummarySuccess = false
+        state.paymentSummaryData = null
+      })
   },
 })
 
@@ -373,7 +523,9 @@ export const {
   clearAssetManagementAnalytics,
   clearCustomerAnalytics,
   clearPostpaidBillingAnalytics,
+  clearPaymentSummaryAnalytics,
   setPostpaidBillingAnalyticsParams,
+  setPaymentSummaryAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions

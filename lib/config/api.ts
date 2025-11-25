@@ -179,6 +179,7 @@ export const API_ENDPOINTS = {
     ASSET_MANAGEMENT: "/assets/reports/summary",
     CUSTOMER: "/customers/reports/summary",
     POSTPAID_BILLING: "/billing/postpaid/summary",
+    PAYMENT_SUMMARY: "/payments/reports/summary",
   },
 
   PAYMENTS: {
