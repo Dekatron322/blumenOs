@@ -180,6 +180,13 @@ export const API_ENDPOINTS = {
     CUSTOMER: "/customers/reports/summary",
     POSTPAID_BILLING: "/billing/postpaid/summary",
     PAYMENT_SUMMARY: "/payments/reports/summary",
+    OUTAGE_SUMMARY: "/outages/report/summary",
+  },
+
+  OUTAGE_MANAGEMENT: {
+    GET: "/outages",
+    ADD: "/outages",
+    GET_BY_ID: "/outages/{id}",
   },
 
   PAYMENTS: {
@@ -192,6 +199,11 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/decline",
+  },
+
+  PAYMENT_DUNNING: {
+    GET: "/payments/dunning/cases",
+    ADD: "/payments/dunning/cases",
   },
 
   VENDORS: {

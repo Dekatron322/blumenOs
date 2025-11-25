@@ -135,6 +135,45 @@ export interface PaymentSummaryParams {
   allTime?: boolean
 }
 
+// Interfaces for Outage Summary Analytics
+export interface OutageSummaryByStatus {
+  key: string
+  count: number
+}
+
+export interface OutageSummaryByPriority {
+  key: string
+  count: number
+}
+
+export interface OutageSummaryByScope {
+  key: string
+  count: number
+}
+
+export interface OutageSummaryTimeline {
+  date: string
+  count: number
+}
+
+export interface OutageSummaryData {
+  total: number
+  open: number
+  resolved: number
+  byStatus: OutageSummaryByStatus[]
+  byPriority: OutageSummaryByPriority[]
+  byScope: OutageSummaryByScope[]
+  timeline: OutageSummaryTimeline[]
+}
+
+export interface OutageSummaryParams {
+  From?: string
+  To?: string
+  Scope?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -157,6 +196,12 @@ export interface PaymentSummaryResponse {
   isSuccess: boolean
   message: string
   data: PaymentSummaryData
+}
+
+export interface OutageSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: OutageSummaryData
 }
 
 // Analytics State
@@ -187,6 +232,13 @@ interface AnalyticsState {
   paymentSummarySuccess: boolean
   paymentSummaryParams: PaymentSummaryParams | null
 
+  // Outage Summary Analytics state
+  outageSummaryData: OutageSummaryData | null
+  outageSummaryLoading: boolean
+  outageSummaryError: string | null
+  outageSummarySuccess: boolean
+  outageSummaryParams: OutageSummaryParams | null
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -215,6 +267,12 @@ const initialState: AnalyticsState = {
   paymentSummaryError: null,
   paymentSummarySuccess: false,
   paymentSummaryParams: null,
+
+  outageSummaryData: null,
+  outageSummaryLoading: false,
+  outageSummaryError: null,
+  outageSummarySuccess: false,
+  outageSummaryParams: null,
 
   loading: false,
   error: null,
@@ -333,6 +391,36 @@ export const fetchPaymentSummaryAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchOutageSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchOutageSummaryAnalytics",
+  async (params: OutageSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<OutageSummaryResponse>(buildApiUrl(API_ENDPOINTS.ANALYTICS.OUTAGE_SUMMARY), {
+        params,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch outage summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Outage summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch outage summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during outage summary analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -372,6 +460,15 @@ const analyticsSlice = createSlice({
       state.paymentSummaryParams = null
     },
 
+    // Clear outage summary analytics state
+    clearOutageSummaryAnalytics: (state) => {
+      state.outageSummaryData = null
+      state.outageSummaryError = null
+      state.outageSummarySuccess = false
+      state.outageSummaryLoading = false
+      state.outageSummaryParams = null
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
@@ -382,6 +479,11 @@ const analyticsSlice = createSlice({
       state.paymentSummaryParams = action.payload
     },
 
+    // Set outage summary analytics parameters
+    setOutageSummaryAnalyticsParams: (state, action: PayloadAction<OutageSummaryParams>) => {
+      state.outageSummaryParams = action.payload
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -389,6 +491,7 @@ const analyticsSlice = createSlice({
       state.customerAnalyticsError = null
       state.postpaidBillingAnalyticsError = null
       state.paymentSummaryError = null
+      state.outageSummaryError = null
     },
 
     // Reset analytics state
@@ -414,6 +517,12 @@ const analyticsSlice = createSlice({
       state.paymentSummaryError = null
       state.paymentSummarySuccess = false
       state.paymentSummaryParams = null
+
+      state.outageSummaryData = null
+      state.outageSummaryLoading = false
+      state.outageSummaryError = null
+      state.outageSummarySuccess = false
+      state.outageSummaryParams = null
 
       state.loading = false
       state.error = null
@@ -516,6 +625,35 @@ const analyticsSlice = createSlice({
         state.paymentSummarySuccess = false
         state.paymentSummaryData = null
       })
+
+      // Fetch outage summary analytics cases
+      .addCase(fetchOutageSummaryAnalytics.pending, (state) => {
+        state.outageSummaryLoading = true
+        state.outageSummaryError = null
+        state.outageSummarySuccess = false
+      })
+      .addCase(
+        fetchOutageSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: OutageSummaryData
+            params: OutageSummaryParams
+          }>
+        ) => {
+          state.outageSummaryLoading = false
+          state.outageSummarySuccess = true
+          state.outageSummaryData = action.payload.data
+          state.outageSummaryParams = action.payload.params
+          state.outageSummaryError = null
+        }
+      )
+      .addCase(fetchOutageSummaryAnalytics.rejected, (state, action) => {
+        state.outageSummaryLoading = false
+        state.outageSummaryError = (action.payload as string) || "Failed to fetch outage summary analytics"
+        state.outageSummarySuccess = false
+        state.outageSummaryData = null
+      })
   },
 })
 
@@ -524,8 +662,10 @@ export const {
   clearCustomerAnalytics,
   clearPostpaidBillingAnalytics,
   clearPaymentSummaryAnalytics,
+  clearOutageSummaryAnalytics,
   setPostpaidBillingAnalyticsParams,
   setPaymentSummaryAnalyticsParams,
+  setOutageSummaryAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions
