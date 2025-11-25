@@ -11,7 +11,8 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
 import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { clearCreatePayment, createPayment } from "lib/redux/paymentSlice"
+import { clearCreatePayment, createPayment, type VirtualAccount } from "lib/redux/paymentSlice"
+import BankTransferDetailsModal from "components/ui/Modal/bank-transfer-details-modal"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
@@ -114,6 +115,8 @@ const AddPaymentPage = () => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null)
   const [isValidatingReference, setIsValidatingReference] = useState(false)
   const [isValidatingCustomer, setIsValidatingCustomer] = useState(false)
+  const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null)
+  const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
 
   const [formData, setFormData] = useState<PaymentFormData>({
     postpaidBillId: 0,
@@ -432,11 +435,12 @@ const AddPaymentPage = () => {
           duration: 5000,
         })
 
-        // Redirect to payment details page
-        if (result.data?.id) {
-          setTimeout(() => {
-            router.push(`/payment/payment-detail/${result.data.id}`)
-          }, 2000)
+        if (result.data?.channel === "BankTransfer" && result.data.virtualAccount) {
+          setVirtualAccount(result.data.virtualAccount)
+          setIsVirtualAccountModalOpen(true)
+        } else {
+          setVirtualAccount(null)
+          setIsVirtualAccountModalOpen(false)
         }
       }
     } catch (error: any) {
@@ -469,6 +473,8 @@ const AddPaymentPage = () => {
     setCustomerReference("")
     setBillInfo(null)
     setCustomerInfo(null)
+    setVirtualAccount(null)
+    setIsVirtualAccountModalOpen(false)
     setIdentifierType("postpaidBill")
     setFormErrors({})
     dispatch(clearCreatePayment())
@@ -1048,6 +1054,11 @@ const AddPaymentPage = () => {
           </div>
         </div>
       </div>
+      <BankTransferDetailsModal
+        isOpen={isVirtualAccountModalOpen}
+        onRequestClose={() => setIsVirtualAccountModalOpen(false)}
+        virtualAccount={virtualAccount}
+      />
     </section>
   )
 }
