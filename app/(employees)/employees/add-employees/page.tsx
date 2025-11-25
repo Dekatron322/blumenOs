@@ -14,6 +14,7 @@ import { clearInviteStatus, fetchEmployees, inviteEmployees } from "lib/redux/em
 import { fetchRoles } from "lib/redux/roleSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
+import TempPasswordModal from "components/ui/Modal/temp-password-modal"
 
 interface EmployeeFormData {
   fullName: string
@@ -71,6 +72,8 @@ const AddEmployeePage = () => {
 
   const [showTempPasswordBanner, setShowTempPasswordBanner] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null)
+  const [temporaryEmail, setTemporaryEmail] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<EmployeeFormData>({
     fullName: "",
@@ -238,9 +241,7 @@ const AddEmployeePage = () => {
       errors.address = "Address is required"
     }
 
-    if (!formData.emergencyContact.trim()) {
-      errors.emergencyContact = "Emergency contact is required"
-    }
+    // emergencyContact is optional, so no validation error when empty
 
     if (!formData.employmentType) {
       errors.employmentType = "Employment type is required"
@@ -261,10 +262,7 @@ const AddEmployeePage = () => {
       errors.departmentId = "Department is required"
     }
 
-    // Validate supervisor selection (optional field)
-    if (formData.supervisorId === 0) {
-      errors.supervisorId = "Please select a supervisor or choose 'No supervisor'"
-    }
+    // Supervisor selection is optional; no validation error when 0
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -297,13 +295,13 @@ const AddEmployeePage = () => {
           duration: 5000,
         })
 
-        // Show temporary passwords if available
+        // Capture temporary password if available
         if (result.data && result.data.length > 0) {
           const tempPassword = result.data[0]!.temporaryPassword
-          notify("info", "Temporary password generated", {
-            description: `Temporary password: ${tempPassword}. Please share this with the employee securely.`,
-            duration: 8000,
-          })
+          const tempEmail = result.data[0]!.user.email ?? formData.email
+          setTemporaryPassword(tempPassword)
+          setTemporaryEmail(tempEmail)
+          setShowTempPasswordBanner(true)
         }
 
         // Reset form
@@ -700,13 +698,11 @@ const AddEmployeePage = () => {
       formData.email.trim() !== "" &&
       formData.phoneNumber.trim() !== "" &&
       formData.address.trim() !== "" &&
-      formData.emergencyContact.trim() !== "" &&
       formData.employmentType !== "" &&
       formData.roleIds.length > 0 &&
       formData.roleIds[0] !== 0 &&
       formData.areaOfficeId !== 0 &&
-      formData.departmentId !== 0 &&
-      formData.supervisorId !== 0
+      formData.departmentId !== 0
     )
   }
 
@@ -721,6 +717,8 @@ const AddEmployeePage = () => {
     if (inviteSuccess && invitedUsers && invitedUsers.length > 0) {
       setShowTempPasswordBanner(true)
       setCopied(false)
+      setTemporaryPassword(invitedUsers[0]!.temporaryPassword)
+      setTemporaryEmail(invitedUsers[0]!.user.email)
     }
   }, [inviteSuccess, invitedUsers])
 
@@ -839,7 +837,6 @@ const AddEmployeePage = () => {
                 </div>
               </div>
             </div>
-
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
@@ -851,43 +848,6 @@ const AddEmployeePage = () => {
                     transition={{ duration: 0.5 }}
                     className="rounded-b-lg  bg-white p-6 shadow-sm"
                   >
-                    {showTempPasswordBanner && invitedUsers && invitedUsers.length > 0 && (
-                      <div className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1">
-                            <p className="font-medium">Temporary password generated</p>
-                            <p className="text-blue-800">Share this one-time password with the employee securely.</p>
-                            <div className="mt-2 flex items-center gap-3">
-                              <code className="rounded bg-white px-3 py-1 text-base font-semibold text-blue-900 shadow-sm">
-                                {invitedUsers[0]!.temporaryPassword}
-                              </code>
-                              <ButtonModule
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(invitedUsers[0]!.temporaryPassword)
-                                  setCopied(true)
-                                  window.setTimeout(() => setCopied(false), 2000)
-                                }}
-                              >
-                                {copied ? "Copied" : "Copy"}
-                              </ButtonModule>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            className="text-blue-700 hover:text-blue-900"
-                            onClick={() => {
-                              setShowTempPasswordBanner(false)
-                              setCopied(false)
-                            }}
-                            aria-label="Dismiss temporary password"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    )}
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Employee Information</h3>
@@ -1072,7 +1032,6 @@ const AddEmployeePage = () => {
                             value={formData.emergencyContact}
                             onChange={handleInputChange}
                             error={formErrors.emergencyContact}
-                            required
                           />
 
                           <div className="md:col-span-2">
@@ -1353,6 +1312,17 @@ const AddEmployeePage = () => {
           </div>
         </div>
       </div>
+      <TempPasswordModal
+        isOpen={showTempPasswordBanner && !!temporaryPassword}
+        onRequestClose={() => {
+          setShowTempPasswordBanner(false)
+          setCopied(false)
+          setTemporaryPassword(null)
+          setTemporaryEmail(null)
+        }}
+        temporaryPassword={temporaryPassword}
+        email={temporaryEmail}
+      />
     </section>
   )
 }
