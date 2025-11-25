@@ -2,7 +2,7 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import {
   AlertIcon,
@@ -17,15 +17,10 @@ import {
   VendingIcon,
 } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import BillingInfo from "components/BillingInfo/BillingInfo"
 import { ButtonModule } from "components/ui/Button/Button"
 import PaymentInfo from "components/PaymentInfo/PaymentInfo"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import {
-  fetchPaymentSummaryAnalytics,
-  setPaymentSummaryAnalyticsParams,
-  clearPaymentSummaryAnalytics,
-} from "lib/redux/analyticsSlice"
+import { fetchPaymentSummaryAnalytics, setPaymentSummaryAnalyticsParams } from "lib/redux/analyticsSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
