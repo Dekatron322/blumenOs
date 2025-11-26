@@ -1,11 +1,9 @@
 "use client"
-
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import OutageManagementInfo from "components/OutageManagementInfo/OutageManagementInfo"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
