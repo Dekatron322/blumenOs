@@ -926,7 +926,7 @@ const AddDunningCasePage = () => {
                                 <div className="ml-3">
                                   <h3 className="text-sm font-medium text-amber-800">No overdue bills found</h3>
                                   <div className="mt-2 text-sm text-amber-700">
-                                    <p>This customer doesn't have any bills with outstanding amounts.</p>
+                                    <p>This customer doesn&apos;t have any bills with outstanding amounts.</p>
                                   </div>
                                 </div>
                               </div>
