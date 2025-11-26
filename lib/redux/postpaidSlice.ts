@@ -23,11 +23,8 @@ export interface ActiveDispute {
 
 export interface PostpaidBill {
   totalPaid: number
-  totalPaid: number
   outstandingAmount: number
   reference: any
-  outstandingAmount: any
-  outstandingAmount: number
   dueDate: any
   name: string
   id: number
