@@ -7,7 +7,7 @@ import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { useDispatch, useSelector } from "react-redux"
 import { RootState, AppDispatch } from "lib/redux/store"
-import { fetchOutages, Outage as ApiOutage, OutageRequestParams } from "lib/redux/outageSlice"
+import { fetchOutages, OutageRequestParams, Outage as ApiOutage } from "lib/redux/outageSlice"
 import SearchInput from "components/Search/SearchInput"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
