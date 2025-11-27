@@ -73,6 +73,69 @@ export interface PostpaidBill {
   createdAt: string
   lastUpdated: string
   ledgerEntries: LedgerEntry[]
+  customer?: {
+    lastLoginAt: string | null
+    suspensionReason: string | null
+    suspendedAt: string | null
+    distributionSubstationId: number
+    distributionSubstationCode: string
+    feederName: string
+    areaOfficeName: string | null
+    accountNumberHistory: any[]
+    meterHistory: any[]
+    id: number
+    customerNumber: number
+    customerID: string
+    accountNumber: string
+    autoNumber: string
+    isCustomerNew: boolean
+    isPostEnumerated: boolean
+    statusCode: string
+    isReadyforExtraction: boolean
+    fullName: string
+    phoneNumber: string
+    phoneOffice: string
+    gender: string
+    email: string
+    status: string
+    isSuspended: boolean
+    companyName: string | null
+    address: string | null
+    addressTwo: string | null
+    city: string
+    state: string
+    lga: string
+    serviceCenterId: number
+    serviceCenterName: string
+    latitude: number | null
+    longitude: number | null
+    tariff: number
+    tariffCode: string
+    tariffID: string
+    tariffInddex: string
+    tariffType: string
+    tariffClass: string
+    newRate: number | null
+    vat: number
+    isVATWaved: boolean
+    meterNumber: string
+    isPPM: boolean
+    isMD: boolean
+    isUrban: boolean
+    isHRB: boolean
+    isCustomerAccGovt: boolean
+    comment: string | null
+    band: string
+    storedAverage: number | null
+    totalMonthlyVend: number | null
+    totalMonthlyDebt: number | null
+    customerOutstandingDebtBalance: number | null
+    salesRepUserId: number
+    technicalEngineerUserId: number | null
+    category: string | null
+    subCategory: string | null
+    salesRepUser: any
+  } | null
 }
 
 export interface PostpaidBillsResponse {
