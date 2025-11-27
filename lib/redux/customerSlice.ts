@@ -35,16 +35,42 @@ export interface ServiceCenter {
   longitude: number
 }
 
+export interface TechnicalEngineerUser {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  employeeId: string
+  position: string
+  employmentType: string
+  employmentStartAt: string
+  employmentEndAt: string
+  departmentId: number
+  departmentName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  lastLoginAt: string
+  createdAt: string
+  lastUpdated: string
+}
+
 export interface InjectionSubstation {
   id: number
   nercCode: string
   injectionSubstationCode: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
   areaOffice: AreaOffice
 }
 
 export interface HtPole {
   id: number
   htPoleNumber: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
 }
 
 export interface Feeder {
@@ -53,6 +79,8 @@ export interface Feeder {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
   injectionSubstation: InjectionSubstation
   htPole: HtPole
 }
@@ -66,6 +94,8 @@ export interface DistributionSubstation {
   latitude: number
   longitude: number
   status: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
   feeder: Feeder
   numberOfUnit: number
   unitOneCode: string
@@ -83,19 +113,60 @@ export interface SalesRepUser {
   phoneNumber: string
 }
 
-export interface TechnicalEngineerUser {
-  id: number
-  fullName: string
-  email: string
-  phoneNumber: string
+export interface AccountNumberHistory {
+  oldAccountNumber: string
+  newAccountNumber: string
+  requestedByUserId: number
+  requestedAtUtc: string
+  reason: string
+  oldAddress: string
+  oldAddressTwo: string
+  oldCity: string
+  oldState: string
+  oldLatitude: number
+  oldLongitude: number
+  newAddress: string
+  newAddressTwo: string
+  newCity: string
+  newState: string
+  newLatitude: number
+  newLongitude: number
+}
+
+export interface MeterHistory {
+  oldMeterNumber: string
+  newMeterNumber: string
+  requestedByUserId: number
+  requestedAtUtc: string
+  reason: string
+  oldAddress: string
+  oldAddressTwo: string
+  oldCity: string
+  oldState: string
+  oldLatitude: number
+  oldLongitude: number
+  newAddress: string
+  newAddressTwo: string
+  newCity: string
+  newState: string
+  newLatitude: number
+  newLongitude: number
 }
 
 export interface Customer {
-  createdAt: any
   id: number
+  customerNumber: number
+  customerID: string
   accountNumber: string
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
   fullName: string
   phoneNumber: string
+  phoneOffice: string
+  gender: string
   email: string
   status: string
   isSuspended: boolean
@@ -108,14 +179,26 @@ export interface Customer {
   addressTwo: string
   city: string
   state: string
+  lga: string
   serviceCenterId: number
   serviceCenterName: string
   latitude: number
   longitude: number
   tariff: number
+  tariffCode: string
+  tariffID: string
+  tariffInddex: string
+  tariffType: string
+  tariffClass: string
+  newRate: number
+  vat: number
+  isVATWaved: boolean
   meterNumber: string
   isPPM: boolean
   isMD: boolean
+  isUrban: boolean
+  isHRB: boolean
+  isCustomerAccGovt: boolean
   comment: string
   band: string
   storedAverage: number
@@ -131,6 +214,9 @@ export interface Customer {
   distributionSubstation: DistributionSubstation
   technicalEngineerUser: TechnicalEngineerUser
   serviceCenter: ServiceCenter
+  accountNumberHistory: AccountNumberHistory[]
+  meterHistory: MeterHistory[]
+  createdAt?: any
 }
 
 export interface CustomersResponse {

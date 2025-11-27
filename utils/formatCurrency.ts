@@ -1,9 +1,12 @@
 export const formatCurrency = (value: number | string, currency: string = ""): string => {
-  // Convert string input to number if needed
-  const numericValue = typeof value === "string" ? parseFloat(value) : value
+  // Normalize null/undefined and non-numeric inputs to 0
+  const rawValue = value == null ? 0 : value
 
-  // Handle NaN cases
-  if (isNaN(numericValue)) {
+  // Convert string input to number if needed
+  const numericValue = typeof rawValue === "string" ? parseFloat(rawValue) : rawValue
+
+  // Handle NaN and non-number cases
+  if (typeof numericValue !== "number" || isNaN(numericValue)) {
     return `${currency} 0.00`
   }
 

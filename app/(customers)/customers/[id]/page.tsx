@@ -28,6 +28,7 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { clearCurrentCustomer, fetchCustomerById } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPayments } from "lib/redux/paymentSlice"
+import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
 
 // Import tab components
 import BasicInfoTab from "components/Tabs/basic-info-tab"
@@ -171,8 +172,8 @@ const CustomerDetailsPage = () => {
   }
 
   // Format currency values
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString()}`
+  const formatCurrency = (amount: number | string) => {
+    return formatCurrencyUtil(amount, "₦")
   }
 
   // Format date
