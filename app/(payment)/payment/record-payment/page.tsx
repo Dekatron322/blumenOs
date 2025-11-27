@@ -22,6 +22,8 @@ import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
 interface PaymentFormData {
   postpaidBillId: number
   customerId: number
+  latitude: number
+  longitude: number
   paymentTypeId: number
   amount: number
   channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
@@ -121,6 +123,8 @@ const AddPaymentPage = () => {
   const [formData, setFormData] = useState<PaymentFormData>({
     postpaidBillId: 0,
     customerId: 0,
+    latitude: 0,
+    longitude: 0,
     paymentTypeId: 0,
     amount: 0,
     channel: "Cash",
@@ -304,7 +308,18 @@ const AddPaymentPage = () => {
     let processedValue = value
 
     // Handle number fields
-    if (["postpaidBillId", "customerId", "paymentTypeId", "amount", "agentId", "vendorId"].includes(name)) {
+    if (
+      [
+        "postpaidBillId",
+        "customerId",
+        "latitude",
+        "longitude",
+        "paymentTypeId",
+        "amount",
+        "agentId",
+        "vendorId",
+      ].includes(name)
+    ) {
       processedValue = value === "" ? 0 : Number(value)
     }
 
@@ -458,6 +473,8 @@ const AddPaymentPage = () => {
     setFormData({
       postpaidBillId: 0,
       customerId: 0,
+      latitude: 0,
+      longitude: 0,
       paymentTypeId: 0,
       amount: 0,
       channel: "Cash",
