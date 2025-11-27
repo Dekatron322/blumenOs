@@ -73,8 +73,8 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
       if (!areaOffices || areaOffices.length === 0) {
         dispatch(
           fetchAreaOffices({
-            pageNumber: 1,
-            pageSize: 100,
+            PageNumber: 1,
+            PageSize: 100,
           })
         )
       }

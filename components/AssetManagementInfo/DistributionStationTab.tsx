@@ -311,8 +311,12 @@ const DistributionStationTab: React.FC = () => {
     }
   }
 
-  const getStatusDisplayText = (status: string) => {
-    return status
+  const getStatusDisplayText = (status: string | null | undefined) => {
+    if (!status) return "Unknown"
+
+    const normalized = String(status).toLowerCase()
+
+    return normalized
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ")
@@ -480,17 +484,17 @@ const DistributionStationTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">DS-{substation.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.dssCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.nercCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.dssCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.nercCode || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         {substation.transformerCapacityInKva.toLocaleString()} kVA
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.feeder.name}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.feeder?.name || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {substation.feeder.injectionSubstation.injectionSubstationCode}
+                        {substation.feeder?.injectionSubstation?.injectionSubstationCode || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {substation.feeder.injectionSubstation.areaOffice.nameOfNewOAreaffice}
+                        {substation.feeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div

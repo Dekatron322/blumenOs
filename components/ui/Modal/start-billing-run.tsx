@@ -37,8 +37,8 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
     if (isOpen) {
       dispatch(
         fetchAreaOffices({
-          pageNumber: 1,
-          pageSize: 100, // Fetch all area offices
+          PageNumber: 1,
+          PageSize: 100, // Fetch all area offices
         })
       )
     }

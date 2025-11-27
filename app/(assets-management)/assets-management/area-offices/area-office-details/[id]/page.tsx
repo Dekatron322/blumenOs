@@ -20,6 +20,10 @@ import autoTable from "jspdf-autotable"
 import type {
   ChangeRequestListItem as ChangeRequestListItemType,
   ChangeRequestsRequestParams,
+  AreaOfficeDetail,
+  InjectionSubstation,
+  ServiceCenter,
+  AreaOfficeState,
 } from "lib/redux/areaOfficeSlice"
 import { SearchModule } from "components/ui/Search/search-module"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
@@ -28,7 +32,7 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 
 // Injection Substation Card Component
-const InjectionSubstationCard = ({ substation }: { substation: any }) => {
+const InjectionSubstationCard = ({ substation }: { substation: InjectionSubstation }) => {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-center gap-3">
@@ -38,6 +42,9 @@ const InjectionSubstationCard = ({ substation }: { substation: any }) => {
         <div className="flex-1">
           <h4 className="font-semibold text-gray-900">{substation.injectionSubstationCode}</h4>
           <p className="text-sm text-gray-600">NERC: {substation.nercCode}</p>
+          {substation.technicalEngineerUser && (
+            <p className="text-sm text-gray-500">Engineer: {substation.technicalEngineerUser.fullName}</p>
+          )}
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
@@ -52,7 +59,7 @@ const InjectionSubstationCard = ({ substation }: { substation: any }) => {
 }
 
 // Service Center Card Component
-const ServiceCenterCard = ({ serviceCenter }: { serviceCenter: any }) => {
+const ServiceCenterCard = ({ serviceCenter }: { serviceCenter: ServiceCenter }) => {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-center gap-3">
@@ -709,7 +716,7 @@ const AreaOfficeChangeRequestsSection = ({ areaOfficeId }: { areaOfficeId: numbe
     changeRequestsByAreaOfficeLoading,
     changeRequestsByAreaOfficeError,
     changeRequestsByAreaOfficePagination,
-  } = useAppSelector((state) => state.areaOffices)
+  } = useAppSelector((state) => state.areaOffices as AreaOfficeState)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
@@ -1206,11 +1213,12 @@ const AreaOfficeDetailsPage = () => {
           substation.injectionSubstationCode,
           substation.nercCode,
           substation.id.toString(),
+          substation.technicalEngineerUser?.fullName || "Not assigned",
         ])
 
         autoTable(doc, {
           startY: yPosition,
-          head: [["Substation Code", "NERC Code", "ID"]],
+          head: [["Substation Code", "NERC Code", "ID", "Technical Engineer"]],
           body: substationsBody,
           theme: "grid",
           headStyles: { fillColor: [139, 92, 246], textColor: 255 },
@@ -1402,7 +1410,9 @@ const AreaOfficeDetailsPage = () => {
                       <div className="space-y-3 text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
                           <MapOutlineIcon />
-                          Coordinates: {currentAreaOffice.latitude.toFixed(4)}, {currentAreaOffice.longitude.toFixed(4)}
+                          Coordinates: {currentAreaOffice?.latitude !== undefined
+                            ? currentAreaOffice.latitude
+                            : "N/A"}, {currentAreaOffice?.longitude !== undefined ? currentAreaOffice.longitude : "N/A"}
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <span className="font-medium">NERC:</span> {currentAreaOffice.newNercCode}
@@ -1440,7 +1450,7 @@ const AreaOfficeDetailsPage = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Company</span>
-                        <span className="font-semibold text-gray-900">{currentAreaOffice.company.name}</span>
+                        <span className="font-semibold text-gray-900">{currentAreaOffice?.company?.name ?? "N/A"}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -1458,10 +1468,12 @@ const AreaOfficeDetailsPage = () => {
                     </h3>
                     <div className="space-y-3">
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
-                        <div className="font-medium text-gray-900">{currentAreaOffice.company.name}</div>
-                        <div className="text-sm text-gray-600">NERC: {currentAreaOffice.company.nercCode}</div>
+                        <div className="font-medium text-gray-900">{currentAreaOffice?.company?.name ?? "N/A"}</div>
                         <div className="text-sm text-gray-600">
-                          Supply Structure: {currentAreaOffice.company.nercSupplyStructure}
+                          NERC: {currentAreaOffice?.company?.nercCode ?? "N/A"}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Supply Structure: {currentAreaOffice?.company?.nercSupplyStructure ?? "N/A"}
                         </div>
                       </div>
                     </div>

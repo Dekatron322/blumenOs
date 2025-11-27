@@ -3,7 +3,30 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
-// Interfaces for AreaOffice
+// Interfaces for User
+export interface User {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  employeeId: string
+  position: string
+  employmentType: string
+  employmentStartAt: string
+  employmentEndAt: string
+  departmentId: number
+  departmentName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  lastLoginAt: string
+  createdAt: string
+  lastUpdated: string
+}
+
+// Interfaces for Company
 export interface Company {
   id: number
   name: string
@@ -11,10 +34,25 @@ export interface Company {
   nercSupplyStructure: number
 }
 
+export interface AreaOffice {
+  id: number
+  nameOfNewOAreaffice: string
+  newKaedcoCode: string
+  newNercCode: string
+  oldKaedcoCode?: string
+  oldNercCode?: string
+  nameOfOldOAreaffice?: string
+  latitude: number
+  longitude: number
+  company: Company
+}
+
 export interface InjectionSubstation {
   id: number
   nercCode: string
   injectionSubstationCode: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: User
   areaOffice: AreaOffice
 }
 
@@ -29,7 +67,7 @@ export interface ServiceCenter {
   longitude: number
 }
 
-export interface AreaOffice {
+export interface AreaOfficeDetail {
   id: number
   nameOfNewOAreaffice: string
   newKaedcoCode: string
@@ -65,18 +103,18 @@ export interface AreaOfficeResponse {
 export interface SingleAreaOfficeResponse {
   isSuccess: boolean
   message: string
-  data: AreaOffice
+  data: AreaOfficeDetail
 }
 
 export interface AreaOfficesRequestParams {
-  pageNumber: number
-  pageSize: number
-  search?: string
-  companyId?: number
-  areaOfficeId?: number
-  injectionSubstationId?: number
-  feederId?: number
-  serviceCenterId?: number
+  PageNumber: number
+  PageSize: number
+  Search?: string
+  CompanyId?: number
+  AreaOfficeId?: number
+  InjectionSubstationId?: number
+  FeederId?: number
+  ServiceCenterId?: number
 }
 
 // Request interfaces for adding area office
@@ -248,7 +286,7 @@ export interface DeclineChangeRequestResponse {
 }
 
 // AreaOffice State
-interface AreaOfficeState {
+export interface AreaOfficeState {
   // AreaOffices list state
   areaOffices: AreaOffice[]
   loading: boolean
@@ -266,7 +304,7 @@ interface AreaOfficeState {
   }
 
   // Current areaOffice state (for viewing/editing)
-  currentAreaOffice: AreaOffice | null
+  currentAreaOffice: AreaOfficeDetail | null
   currentAreaOfficeLoading: boolean
   currentAreaOfficeError: string | null
 
@@ -404,26 +442,26 @@ export const fetchAreaOffices = createAsyncThunk(
   async (params: AreaOfficesRequestParams, { rejectWithValue }) => {
     try {
       const {
-        pageNumber,
-        pageSize,
-        search,
-        companyId,
-        areaOfficeId,
-        injectionSubstationId,
-        feederId,
-        serviceCenterId,
+        PageNumber,
+        PageSize,
+        Search,
+        CompanyId,
+        AreaOfficeId,
+        InjectionSubstationId,
+        FeederId,
+        ServiceCenterId,
       } = params
 
       const response = await api.get<AreaOfficesResponse>(buildApiUrl(API_ENDPOINTS.AREA_OFFICE.GET), {
         params: {
-          PageNumber: pageNumber,
-          PageSize: pageSize,
-          ...(search && { Search: search }),
-          ...(companyId && { CompanyId: companyId }),
-          ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
-          ...(injectionSubstationId && { InjectionSubstationId: injectionSubstationId }),
-          ...(feederId && { FeederId: feederId }),
-          ...(serviceCenterId && { ServiceCenterId: serviceCenterId }),
+          PageNumber,
+          PageSize,
+          ...(Search && { Search }),
+          ...(CompanyId && { CompanyId }),
+          ...(AreaOfficeId && { AreaOfficeId }),
+          ...(InjectionSubstationId && { InjectionSubstationId }),
+          ...(FeederId && { FeederId }),
+          ...(ServiceCenterId && { ServiceCenterId }),
         },
       })
 
@@ -441,7 +479,7 @@ export const fetchAreaOffices = createAsyncThunk(
   }
 )
 
-export const fetchAreaOfficeById = createAsyncThunk<AreaOffice, number, { rejectValue: string }>(
+export const fetchAreaOfficeById = createAsyncThunk<AreaOfficeDetail, number, { rejectValue: string }>(
   "areaOffices/fetchAreaOfficeById",
   async (areaOfficeId: number, { rejectWithValue }) => {
     try {
@@ -858,7 +896,7 @@ const areaOfficeSlice = createSlice({
     },
 
     // Set current area office (for forms, etc.)
-    setCurrentAreaOffice: (state, action: PayloadAction<AreaOffice | null>) => {
+    setCurrentAreaOffice: (state, action: PayloadAction<AreaOfficeDetail | null>) => {
       state.currentAreaOffice = action.payload
     },
 
@@ -979,7 +1017,7 @@ const areaOfficeSlice = createSlice({
         state.currentAreaOfficeLoading = true
         state.currentAreaOfficeError = null
       })
-      .addCase(fetchAreaOfficeById.fulfilled, (state, action: PayloadAction<AreaOffice>) => {
+      .addCase(fetchAreaOfficeById.fulfilled, (state, action: PayloadAction<AreaOfficeDetail>) => {
         state.currentAreaOfficeLoading = false
         state.currentAreaOffice = action.payload
         state.currentAreaOfficeError = null

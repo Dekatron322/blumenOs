@@ -444,15 +444,15 @@ const FeedersTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">FD-{feeder.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.kaedcoFeederCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.feederVoltage} KV</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.kaedcoFeederCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.feederVoltage ?? "-"} KV</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder.injectionSubstation.injectionSubstationCode}
+                        {feeder?.injectionSubstation?.injectionSubstationCode || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder.htPole?.htPoleNumber || "N/A"}
+                        {feeder.htPole?.htPoleNumber || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div

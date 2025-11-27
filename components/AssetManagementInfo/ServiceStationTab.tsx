@@ -449,14 +449,14 @@ const ServiceStationTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">SS-{station.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.code}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.address}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.name || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.code || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.address || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {station.areaOffice.nameOfNewOAreaffice}
+                        {station.areaOffice?.nameOfNewOAreaffice || "-"}
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.latitude}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.longitude}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.latitude ?? "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{station.longitude ?? "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
                           style={getStatusStyle("operational")}

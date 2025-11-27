@@ -1438,12 +1438,14 @@ const FeederDetailsPage = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Injection Substation</span>
                         <span className="font-semibold text-gray-900">
-                          {currentFeeder.injectionSubstation.injectionSubstationCode}
+                          {currentFeeder?.injectionSubstation?.injectionSubstationCode || "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">HT Pole</span>
-                        <span className="font-semibold text-gray-900">{currentFeeder.htPole.htPoleNumber}</span>
+                        <span className="font-semibold text-gray-900">
+                          {currentFeeder?.htPole?.htPoleNumber || "N/A"}
+                        </span>
                       </div>
                     </div>
                   </motion.div>
@@ -1462,11 +1464,13 @@ const FeederDetailsPage = () => {
                     <div className="space-y-3">
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
                         <div className="font-medium text-gray-900">
-                          {currentFeeder.injectionSubstation.injectionSubstationCode}
+                          {currentFeeder?.injectionSubstation?.injectionSubstationCode || "N/A"}
                         </div>
-                        <div className="text-sm text-gray-600">NERC: {currentFeeder.injectionSubstation.nercCode}</div>
                         <div className="text-sm text-gray-600">
-                          Area Office: {currentFeeder.injectionSubstation.areaOffice.nameOfNewOAreaffice}
+                          NERC: {currentFeeder?.injectionSubstation?.nercCode || "N/A"}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Area Office: {currentFeeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice || "N/A"}
                         </div>
                       </div>
                     </div>
@@ -1492,7 +1496,7 @@ const FeederDetailsPage = () => {
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                         <label className="text-sm font-medium text-gray-600">NERC Code</label>
-                        <p className="font-semibold text-gray-900">{currentFeeder.nercCode}</p>
+                        <p className="font-semibold text-gray-900">{currentFeeder?.nercCode || "N/A"}</p>
                       </div>
                     </div>
                     <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -1531,9 +1535,11 @@ const FeederDetailsPage = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-600">Injection Substation</label>
                             <p className="font-semibold text-gray-900">
-                              {currentFeeder.injectionSubstation.injectionSubstationCode}
+                              {currentFeeder?.injectionSubstation?.injectionSubstationCode || "N/A"}
                             </p>
-                            <p className="text-sm text-gray-600">NERC: {currentFeeder.injectionSubstation.nercCode}</p>
+                            <p className="text-sm text-gray-600">
+                              NERC: {currentFeeder?.injectionSubstation?.nercCode || "N/A"}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
@@ -1543,10 +1549,10 @@ const FeederDetailsPage = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-600">Area Office</label>
                             <p className="font-semibold text-gray-900">
-                              {currentFeeder.injectionSubstation.areaOffice.nameOfNewOAreaffice}
+                              {currentFeeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice || "N/A"}
                             </p>
                             <p className="text-sm text-gray-600">
-                              KAEDCO: {currentFeeder.injectionSubstation.areaOffice.newKaedcoCode}
+                              KAEDCO: {currentFeeder?.injectionSubstation?.areaOffice?.newKaedcoCode || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -1558,8 +1564,10 @@ const FeederDetailsPage = () => {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">HT Pole</label>
-                            <p className="font-semibold text-gray-900">{currentFeeder.htPole.htPoleNumber}</p>
-                            <p className="text-sm text-gray-600">ID: {currentFeeder.htPole.id}</p>
+                            <p className="font-semibold text-gray-900">
+                              {currentFeeder?.htPole?.htPoleNumber || "N/A"}
+                            </p>
+                            <p className="text-sm text-gray-600">ID: {currentFeeder?.htPole?.id || "N/A"}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
@@ -1569,10 +1577,10 @@ const FeederDetailsPage = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-600">Company</label>
                             <p className="font-semibold text-gray-900">
-                              {currentFeeder.injectionSubstation.areaOffice.company.name}
+                              {currentFeeder?.injectionSubstation?.areaOffice?.company?.name || "N/A"}
                             </p>
                             <p className="text-sm text-gray-600">
-                              NERC: {currentFeeder.injectionSubstation.areaOffice.company.nercCode}
+                              NERC: {currentFeeder?.injectionSubstation?.areaOffice?.company?.nercCode || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -1590,10 +1598,10 @@ const FeederDetailsPage = () => {
                     >
                       <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
                         <Building className="size-5" />
-                        Distribution Substations ({currentFeeder.distributionSubstations.length})
+                        Distribution Substations ({currentFeeder?.distributionSubstations?.length || 0})
                       </h3>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {currentFeeder.distributionSubstations.map((substation) => (
+                        {currentFeeder?.distributionSubstations?.map((substation) => (
                           <DistributionSubstationCard key={substation.id} substation={substation} />
                         ))}
                       </div>
