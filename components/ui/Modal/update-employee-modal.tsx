@@ -95,8 +95,8 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
 
       dispatch(
         fetchAreaOffices({
-          pageNumber: 1,
-          pageSize: 100,
+          PageNumber: 1,
+          PageSize: 100,
         })
       )
 

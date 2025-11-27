@@ -7,7 +7,6 @@ import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
 import { Download, Printer } from "lucide-react"
 import { PostpaidBill } from "lib/redux/postpaidSlice"
-import * as QRCode from "qrcode"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
 
@@ -24,7 +23,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
   bill,
   loading = false,
 }) => {
-  const qrCodeRef = useRef<HTMLCanvasElement>(null)
+  const barcodeRef = useRef<HTMLCanvasElement>(null)
   const invoiceRef = useRef<HTMLDivElement>(null)
 
   const formatCurrency = (amount: number) => {
@@ -116,55 +115,50 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
     }
   }
 
-  // Generate QR code data for the invoice
-  const generateQRCodeData = () => {
-    if (!bill) return ""
+  // Generate simple 1D-style barcode on canvas using the account number
+  const generateBarcode = () => {
+    if (!barcodeRef.current || !bill) return
 
-    const invoiceData = {
-      accountNumber: bill.customerAccountNumber,
-      accountName: bill.customerName,
-      period: bill.period,
-      totalDue: bill.totalDue,
-      dueDate: bill.dueDate,
-      invoiceDate: bill.createdAt,
-      consumption: bill.consumptionKwh,
-      company: "KAD-ELEC",
-      type: "ELECTRICITY_BILL",
+    const canvas = barcodeRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const value = String(bill.customerAccountNumber || "")
+
+    // Canvas sizing for crisp lines
+    const width = 220
+    const height = 60
+    canvas.width = width
+    canvas.height = height
+
+    // Background
+    ctx.fillStyle = "#FFFFFF"
+    ctx.fillRect(0, 0, width, height)
+
+    // Basic hash from the value to vary bar patterns
+    let hash = 0
+    for (let i = 0; i < value.length; i++) {
+      hash = (hash * 31 + value.charCodeAt(i)) >>> 0
     }
 
-    return JSON.stringify(invoiceData)
-  }
+    const barWidth = 2
+    const totalBars = Math.floor(width / barWidth)
 
-  // Generate scannable QR code
-  const generateQRCode = async () => {
-    if (!qrCodeRef.current || !bill) return
-
-    try {
-      const qrData = generateQRCodeData()
-
-      await QRCode.toCanvas(qrCodeRef.current, qrData, {
-        width: 120,
-        margin: 1,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
-        errorCorrectionLevel: "M",
-      })
-    } catch (err) {
-      console.error("Error generating QR code:", err)
-      // Fallback: Draw simple QR code pattern
-      const canvas = qrCodeRef.current
-      const ctx = canvas.getContext("2d")
-      if (ctx) {
-        ctx.fillStyle = "#FFFFFF"
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+    for (let i = 0; i < totalBars; i++) {
+      // Derive a pseudo-random pattern from the hash and index
+      const bit = (hash >> i % 32) & 1
+      if (bit === 1) {
         ctx.fillStyle = "#000000"
-        ctx.font = "10px Arial"
-        ctx.textAlign = "center"
-        ctx.fillText("QR ERROR", canvas.width / 2, canvas.height / 2)
+        ctx.fillRect(i * barWidth, 4, barWidth, height - 16)
       }
     }
+
+    // Draw the human-readable value below the bars
+    ctx.fillStyle = "#000000"
+    ctx.font = "10px Arial"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "bottom"
+    ctx.fillText(value, width / 2, height - 2)
   }
 
   // Download PDF functionality
@@ -228,10 +222,10 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
     }
   }
 
-  // Initialize QR code when component mounts or bill changes
+  // Initialize barcode when component mounts or bill changes
   useEffect(() => {
     if (bill && isOpen) {
-      generateQRCode()
+      generateBarcode()
     }
   }, [bill, isOpen])
 
@@ -313,9 +307,12 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                 {/* Visible invoice content (also used for PDF capture) */}
                 <div ref={invoiceRef} className="">
                   {/* Header */}
-                  <div className="flex justify-between">
+                  <div className="flex items-center justify-between">
                     <div className="mb-8 text-center">
                       <img src="/kad.svg" alt="KAD-ELEC Logo" />
+                    </div>
+                    <div className="mb-8 flex flex-1 justify-center">
+                      <canvas ref={barcodeRef} className="h-16 w-56" />
                     </div>
                     <div className="mb-8 text-center">
                       <h1 className="mb-2 font-bold text-gray-900">KAD-ELEC.</h1>

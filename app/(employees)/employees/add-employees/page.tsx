@@ -111,8 +111,8 @@ const AddEmployeePage = () => {
 
     dispatch(
       fetchAreaOffices({
-        pageNumber: 1,
-        pageSize: 100, // Fetch a reasonable number of area offices
+        PageNumber: 1,
+        PageSize: 100, // Fetch a reasonable number of area offices
       })
     )
 
