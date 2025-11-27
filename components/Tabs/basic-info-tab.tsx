@@ -252,7 +252,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
         </h3>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
-            <label className="text-sm font-medium text-gray-500">Distribution Substation</label>
+            <label className="text-sm font-medium text-gray-500">Distribution Station</label>
             <p className="text-sm text-gray-900">{currentCustomer.distributionSubstationCode}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">

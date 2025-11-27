@@ -525,11 +525,11 @@ const UpdateDistributionStationPage = () => {
             {/* Page Header */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Update Distribution Substation</h4>
+                <h4 className="text-2xl font-semibold">Update Distribution Station</h4>
                 <p className="text-gray-600">
                   {currentDistributionSubstation
                     ? `Update details for ${currentDistributionSubstation.dssCode}`
-                    : "Update distribution substation details"}
+                    : "Update distribution station details"}
                 </p>
               </div>
 
@@ -551,7 +551,7 @@ const UpdateDistributionStationPage = () => {
                   onClick={submitDistributionStationUpdate}
                   disabled={!isFormValid() || updateLoading}
                 >
-                  {updateLoading ? "Updating Distribution Substation..." : "Update Distribution Substation"}
+                  {updateLoading ? "Updating Distribution Station..." : "Update Distribution Station"}
                 </ButtonModule>
               </motion.div>
             </div>
@@ -567,9 +567,9 @@ const UpdateDistributionStationPage = () => {
                 >
                   {/* Form Header */}
                   <div className="mb-6 border-b pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Distribution Substation Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Distribution Station Information</h3>
                     <p className="text-sm text-gray-600">
-                      Update the required fields to modify the distribution substation
+                      Update the required fields to modify the distribution station
                     </p>
                   </div>
 
@@ -579,9 +579,7 @@ const UpdateDistributionStationPage = () => {
                     <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
                       <div className="border-b pb-4">
                         <h4 className="text-lg font-medium text-gray-900">Associated Assets</h4>
-                        <p className="text-sm text-gray-600">
-                          Select the feeder this distribution substation belongs to
-                        </p>
+                        <p className="text-sm text-gray-600">Select the feeder this distribution station belongs to</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-6">
@@ -848,7 +846,7 @@ const UpdateDistributionStationPage = () => {
                             </p>
                           </div>
                           <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Distribution Substation ID</label>
+                            <label className="text-sm font-medium text-blue-600">Distribution Station ID</label>
                             <p className="font-semibold text-blue-900">{currentDistributionSubstation.id}</p>
                           </div>
                         </div>

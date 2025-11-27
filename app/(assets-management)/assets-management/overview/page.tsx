@@ -587,7 +587,7 @@ export default function MeteringDashboard() {
                                 <div className="text-orange-600">
                                   <MetersProgrammedIcon />
                                 </div>
-                                <span className="font-medium">Distribution Substations</span>
+                                <span className="font-medium">Distribution Stations</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">

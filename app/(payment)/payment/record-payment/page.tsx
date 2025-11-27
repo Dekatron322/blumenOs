@@ -542,6 +542,11 @@ const AddPaymentPage = () => {
     agentsLoading,
   ])
 
+  const isReferenceVerified =
+    identifierType === "postpaidBill"
+      ? !!billInfo && formData.postpaidBillId !== 0
+      : !!customerInfo && formData.customerId !== 0
+
   const isFormValid = (): boolean => {
     const baseValidation =
       formData.paymentTypeId > 0 &&
@@ -552,9 +557,9 @@ const AddPaymentPage = () => {
       formData.paidAtUtc !== ""
 
     if (identifierType === "postpaidBill") {
-      return baseValidation && paymentReference.trim() !== ""
+      return baseValidation && paymentReference.trim() !== "" && isReferenceVerified
     } else {
-      return baseValidation && customerReference.trim() !== ""
+      return baseValidation && customerReference.trim() !== "" && isReferenceVerified
     }
   }
 
@@ -677,18 +682,18 @@ const AddPaymentPage = () => {
                             setCustomerInfo(null)
                           }}
                           options={[
-                            { value: "postpaidBill", label: "Postpaid Bill Reference" },
-                            { value: "customer", label: "Customer Reference" },
+                            { value: "postpaidBill", label: "Postpaid Bill" },
+                            { value: "customer", label: "Customer" },
                           ]}
                         />
 
                         {identifierType === "postpaidBill" && (
                           <div className="space-y-2">
                             <FormInputModule
-                              label="Payment Reference"
+                              label="Payment Bill"
                               name="paymentReference"
                               type="text"
-                              placeholder="Enter payment reference"
+                              placeholder="Enter payment bill"
                               value={paymentReference}
                               onChange={(e) => setPaymentReference(e.target.value)}
                               error={formErrors.paymentReference}
@@ -842,151 +847,161 @@ const AddPaymentPage = () => {
                           </div>
                         )}
 
-                        <FormSelectModule
-                          label="Payment Type"
-                          name="paymentTypeId"
-                          value={formData.paymentTypeId}
-                          onChange={handleInputChange}
-                          options={[
-                            {
-                              value: 0,
-                              label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
-                            },
-                            ...paymentTypeOptions,
-                          ]}
-                          error={formErrors.paymentTypeId}
-                          required
-                        />
+                        {isReferenceVerified && (
+                          <>
+                            <FormSelectModule
+                              label="Payment Type"
+                              name="paymentTypeId"
+                              value={formData.paymentTypeId}
+                              onChange={handleInputChange}
+                              options={[
+                                {
+                                  value: 0,
+                                  label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
+                                },
+                                ...paymentTypeOptions,
+                              ]}
+                              error={formErrors.paymentTypeId}
+                              required
+                            />
 
-                        <FormInputModule
-                          label="Amount"
-                          name="amount"
-                          type="number"
-                          placeholder="Enter payment amount"
-                          value={formData.amount}
-                          onChange={handleInputChange}
-                          error={formErrors.amount}
-                          required
-                          min="0.01"
-                          step="0.01"
-                          disabled={billInfo !== null}
-                        />
+                            <FormInputModule
+                              label="Amount"
+                              name="amount"
+                              type="number"
+                              placeholder="Enter payment amount"
+                              value={formData.amount}
+                              onChange={handleInputChange}
+                              error={formErrors.amount}
+                              required
+                              min="0.01"
+                              step="0.01"
+                              disabled={billInfo !== null}
+                            />
 
-                        <FormSelectModule
-                          label="Payment Channel"
-                          name="channel"
-                          value={getChannelNumericValue(formData.channel)}
-                          onChange={handleInputChange}
-                          options={[{ value: "", label: "Select payment channel" }, ...channelOptions]}
-                          error={formErrors.channel}
-                          required
-                        />
+                            <FormSelectModule
+                              label="Payment Channel"
+                              name="channel"
+                              value={getChannelNumericValue(formData.channel)}
+                              onChange={handleInputChange}
+                              options={[{ value: "", label: "Select payment channel" }, ...channelOptions]}
+                              error={formErrors.channel}
+                              required
+                            />
 
-                        <FormSelectModule
-                          label="Currency"
-                          name="currency"
-                          value={formData.currency}
-                          onChange={handleInputChange}
-                          options={[{ value: "", label: "Select currency" }, ...currencyOptions]}
-                          error={formErrors.currency}
-                          required
-                        />
+                            <FormSelectModule
+                              label="Currency"
+                              name="currency"
+                              value={formData.currency}
+                              onChange={handleInputChange}
+                              options={[{ value: "", label: "Select currency" }, ...currencyOptions]}
+                              error={formErrors.currency}
+                              required
+                            />
 
-                        <FormInputModule
-                          label="Payment Date & Time"
-                          name="paidAtUtc"
-                          type="datetime-local"
-                          value={formData.paidAtUtc}
-                          onChange={handleInputChange}
-                          error={formErrors.paidAtUtc}
-                          required
-                          placeholder={""}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Section 2: Collector Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
-                        <p className="text-sm text-gray-600">Specify who collected this payment</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormSelectModule
-                          label="Collector Type"
-                          name="collectorType"
-                          value={formData.collectorType}
-                          onChange={handleInputChange}
-                          options={collectorTypeOptions}
-                          error={formErrors.collectorType}
-                          required
-                        />
-
-                        {formData.collectorType === "Agent" && (
-                          <FormSelectModule
-                            label="Agent"
-                            name="agentId"
-                            value={formData.agentId}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
-                              ...agentOptions,
-                            ]}
-                            error={formErrors.agentId}
-                            required
-                            disabled={agentsLoading}
-                          />
-                        )}
-
-                        {formData.collectorType === "Vendor" && (
-                          <FormSelectModule
-                            label="Vendor"
-                            name="vendorId"
-                            value={formData.vendorId}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
-                              ...vendorOptions,
-                            ]}
-                            error={formErrors.vendorId}
-                            required
-                            disabled={vendorsLoading}
-                          />
+                            <FormInputModule
+                              label="Payment Date & Time"
+                              name="paidAtUtc"
+                              type="datetime-local"
+                              value={formData.paidAtUtc}
+                              onChange={handleInputChange}
+                              error={formErrors.paidAtUtc}
+                              required
+                              placeholder={""}
+                            />
+                          </>
                         )}
                       </div>
                     </div>
 
-                    {/* Section 3: Additional Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                        <p className="text-sm text-gray-600">Provide any additional payment details or references</p>
-                      </div>
+                    {isReferenceVerified && (
+                      <>
+                        {/* Section 2: Collector Information */}
+                        <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                          <div className="border-b pb-4">
+                            <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
+                            <p className="text-sm text-gray-600">Specify who collected this payment</p>
+                          </div>
 
-                      <div className="grid grid-cols-1 gap-6">
-                        <FormInputModule
-                          label="External Reference (Optional)"
-                          name="externalReference"
-                          type="text"
-                          placeholder="Enter external reference number"
-                          value={formData.externalReference}
-                          onChange={handleInputChange}
-                        />
+                          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <FormSelectModule
+                              label="Collector Type"
+                              name="collectorType"
+                              value={formData.collectorType}
+                              onChange={handleInputChange}
+                              options={collectorTypeOptions}
+                              error={formErrors.collectorType}
+                              required
+                            />
 
-                        <FormInputModule
-                          label="Narrative (Optional)"
-                          name="narrative"
-                          type="text"
-                          placeholder="Enter payment description or notes"
-                          value={formData.narrative}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
+                            {formData.collectorType === "Agent" && (
+                              <FormSelectModule
+                                label="Agent"
+                                name="agentId"
+                                value={formData.agentId}
+                                onChange={handleInputChange}
+                                options={[
+                                  { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
+                                  ...agentOptions,
+                                ]}
+                                error={formErrors.agentId}
+                                required
+                                disabled={agentsLoading}
+                              />
+                            )}
+
+                            {formData.collectorType === "Vendor" && (
+                              <FormSelectModule
+                                label="Vendor"
+                                name="vendorId"
+                                value={formData.vendorId}
+                                onChange={handleInputChange}
+                                options={[
+                                  { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
+                                  ...vendorOptions,
+                                ]}
+                                error={formErrors.vendorId}
+                                required
+                                disabled={vendorsLoading}
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Section 3: Additional Information */}
+                        <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                          <div className="border-b pb-4">
+                            <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
+                            <p className="text-sm text-gray-600">
+                              Provide any additional payment details or references
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-6">
+                            <FormInputModule
+                              label="External Reference (Optional)"
+                              name="externalReference"
+                              type="text"
+                              placeholder="Enter external reference number"
+                              value={formData.externalReference}
+                              onChange={handleInputChange}
+                            />
+
+                            <FormInputModule
+                              label="Narrative (Optional)"
+                              name="narrative"
+                              type="text"
+                              placeholder="Enter payment description or notes"
+                              value={formData.narrative}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     {/* Error Summary */}
-                    {Object.keys(formErrors).length > 0 && (
+                    {Object.values(formErrors).some((error) => !!error) && (
                       <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
                         <div className="flex">
                           <div className="shrink-0">

@@ -794,7 +794,7 @@ const UpdateCustomerPage = () => {
                             </p>
                           </div>
                           <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Distribution Substation</label>
+                            <label className="text-sm font-medium text-blue-600">Distribution Station</label>
                             <p className="font-semibold text-blue-900">{currentCustomer.distributionSubstationCode}</p>
                           </div>
                           <div className="rounded-lg border border-blue-200 bg-white p-4">

@@ -752,7 +752,7 @@ const MaintenanceDetailsPage = () => {
                         <div className="font-medium text-gray-900">
                           {currentMaintenance.distributionSubstationName || "Not specified"}
                         </div>
-                        <div className="text-sm text-gray-600">Distribution Substation</div>
+                        <div className="text-sm text-gray-600">Distribution Station</div>
                       </div>
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
                         <div className="font-medium text-gray-900">
@@ -802,7 +802,7 @@ const MaintenanceDetailsPage = () => {
                       </div>
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Distribution Substation</label>
+                          <label className="text-sm font-medium text-gray-600">Distribution Station</label>
                           <p className="font-semibold text-gray-900">
                             {currentDistributionSubstation
                               ? `${currentDistributionSubstation.dssCode} (${currentDistributionSubstation.nercCode})`

@@ -1430,7 +1430,7 @@ const FeederDetailsPage = () => {
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Distribution Substations</span>
+                        <span className="text-sm text-gray-600">Distribution Stations</span>
                         <span className="font-semibold text-gray-900">
                           {currentFeeder.distributionSubstations?.length || 0}
                         </span>

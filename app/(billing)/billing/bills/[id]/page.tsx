@@ -1305,7 +1305,7 @@ const BillDetailsPage = () => {
                         <div className="font-medium text-gray-900">
                           {currentDistributionSubstation?.dssCode || currentBill.distributionSubstationCode}
                         </div>
-                        <div className="text-sm text-gray-600">Distribution Substation</div>
+                        <div className="text-sm text-gray-600">Distribution Station</div>
                       </div>
                     </div>
                   </motion.div>

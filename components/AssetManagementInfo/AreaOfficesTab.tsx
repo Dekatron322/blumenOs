@@ -437,12 +437,14 @@ const AreaOfficesTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">AO-{office.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.nameOfNewOAreaffice}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newKaedcoCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newNercCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.company?.name ?? "N/A"}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.latitude}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.longitude}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {office.nameOfNewOAreaffice || "-"}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newKaedcoCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newNercCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.company?.name ?? "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.latitude ?? "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.longitude ?? "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
                           style={getStatusStyle("operational")}
