@@ -71,8 +71,8 @@ const AddAreaOfficePage = () => {
   useEffect(() => {
     dispatch(
       fetchAreaOffices({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
   }, [dispatch])
@@ -198,8 +198,8 @@ const AddAreaOfficePage = () => {
         // Refresh the area offices list
         dispatch(
           fetchAreaOffices({
-            pageNumber: 1,
-            pageSize: 100,
+            PageNumber: 1,
+            PageSize: 100,
           })
         )
       }
@@ -459,8 +459,8 @@ const AddAreaOfficePage = () => {
         // Refresh the area offices list
         dispatch(
           fetchAreaOffices({
-            pageNumber: 1,
-            pageSize: 100,
+            PageNumber: 1,
+            PageSize: 100,
           })
         )
       }

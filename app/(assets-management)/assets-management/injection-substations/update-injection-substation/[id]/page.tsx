@@ -78,8 +78,8 @@ const UpdateInjectionSubstationPage = () => {
     // Fetch area offices for the dropdown
     dispatch(
       fetchAreaOffices({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
   }, [dispatch, id, router])
