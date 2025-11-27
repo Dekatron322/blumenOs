@@ -312,7 +312,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       <img src="/kad.svg" alt="KAD-ELEC Logo" />
                     </div>
                     <div className="mb-8 flex flex-1 justify-center">
-                      <canvas ref={barcodeRef} className="h-16 w-56" />
+                      <canvas ref={barcodeRef} className="h-14 w-52" />
                     </div>
                     <div className="mb-8 text-center">
                       <h1 className="mb-2 font-bold text-gray-900">KAD-ELEC.</h1>
