@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -8,6 +9,8 @@ import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon } from "components/Ic
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchVendors } from "lib/redux/vendorSlice"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -19,7 +22,7 @@ const CyclesIcon = () => (
   </svg>
 )
 
-interface Vendor {
+interface VendorUI {
   id: number
   name: string
   status: "active" | "inactive" | "low stock"
@@ -36,8 +39,8 @@ interface Vendor {
 }
 
 interface ActionDropdownProps {
-  vendor: Vendor
-  onViewDetails: (vendor: Vendor) => void
+  vendor: VendorUI
+  onViewDetails: (vendor: VendorUI) => void
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ vendor, onViewDetails }) => {
@@ -352,114 +355,49 @@ const generateVendorData = () => {
 }
 
 const AllVendors: React.FC = () => {
+  const router = useRouter()
   const [isAddVendorModalOpen, setIsAddVendorModalOpen] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null)
+  const [selectedVendor, setSelectedVendor] = useState<VendorUI | null>(null)
   const [vendorData, setVendorData] = useState(generateVendorData())
   const pageSize = 10
 
-  const vendors: Vendor[] = [
-    {
-      id: 1,
-      name: "Buy Power",
-      status: "active",
-      phone: "+234801234567",
-      location: "Lagos Island",
-      dailySales: "₦12,500",
-      transactionsToday: 45,
-      stockBalance: "₦8,500",
-      commissionRate: "2.5%",
-      performance: "Excellent",
-      businessType: "Energy Retailer",
-      contactPerson: "Mr. Johnson Ade",
-      totalRevenue: "₦2.4M",
-    },
-    {
-      id: 2,
-      name: "Blumentech",
-      status: "active",
-      phone: "+234802345678",
-      location: "Ikeja",
-      dailySales: "₦9,800",
-      transactionsToday: 38,
-      stockBalance: "₦12,000",
-      commissionRate: "2.5%",
-      performance: "Good",
-      businessType: "Tech Solutions",
-      contactPerson: "Ms. Sarah Blume",
-      totalRevenue: "₦1.8M",
-    },
-    {
-      id: 3,
-      name: "PowerVend",
-      status: "low stock",
-      phone: "+234803456789",
-      location: "Surulere",
-      dailySales: "₦7,500",
-      transactionsToday: 28,
-      stockBalance: "₦4,500",
-      commissionRate: "2%",
-      performance: "Good",
-      businessType: "Vending Services",
-      contactPerson: "Mr. James Okafor",
-      totalRevenue: "₦1.2M",
-    },
-    {
-      id: 4,
-      name: "EnergyPlus",
-      status: "inactive",
-      phone: "+234804567890",
-      location: "Victoria Island",
-      dailySales: "₦0",
-      transactionsToday: 0,
-      stockBalance: "₦0",
-      commissionRate: "2%",
-      performance: "Poor",
-      businessType: "Energy Distribution",
-      contactPerson: "Dr. Fatima Bello",
-      totalRevenue: "₦850K",
-    },
-    {
-      id: 5,
-      name: "SmartEnergy",
-      status: "active",
-      phone: "+234805678901",
-      location: "Lekki",
-      dailySales: "₦15,200",
-      transactionsToday: 52,
-      stockBalance: "₦15,000",
-      commissionRate: "3%",
-      performance: "Excellent",
-      businessType: "Smart Meter Solutions",
-      contactPerson: "Ms. Amina Yusuf",
-      totalRevenue: "₦3.1M",
-    },
-    {
-      id: 6,
-      name: "TechVendors",
-      status: "active",
-      phone: "+234806789012",
-      location: "Yaba",
-      dailySales: "₦11,300",
-      transactionsToday: 42,
-      stockBalance: "₦9,800",
-      commissionRate: "2.8%",
-      performance: "Good",
-      businessType: "Technology Retail",
-      contactPerson: "Mr. Chinedu Nwosu",
-      totalRevenue: "₦2.1M",
-    },
-  ]
+  const dispatch = useAppDispatch()
+  const { vendors, loading: isLoading, error, pagination } = useAppSelector((state) => state.vendors)
 
-  const isLoading = false
-  const isError = false
-  const totalRecords = vendors.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  useEffect(() => {
+    void dispatch(
+      fetchVendors({
+        pageNumber: currentPage,
+        pageSize,
+        search: searchText || undefined,
+      })
+    )
+  }, [dispatch, currentPage, pageSize, searchText])
 
-  const getStatusStyle = (status: Vendor["status"]) => {
+  const totalRecords = pagination.totalCount || vendors.length
+  const totalPages = pagination.totalPages || Math.ceil((vendors.length || 1) / pageSize)
+
+  const uiVendors: VendorUI[] = vendors.map((vendor) => ({
+    id: vendor.id,
+    name: vendor.name,
+    status: vendor.isSuspended ? "inactive" : "active",
+    phone: vendor.phoneNumber,
+    location: `${vendor.city || ""}${vendor.state ? ", " + vendor.state : ""}`.trim(),
+    dailySales: "-",
+    transactionsToday: 0,
+    stockBalance: "-",
+    commissionRate: `${vendor.commission}%`,
+    performance: "Good",
+    businessType: "Vendor",
+    contactPerson: vendor.employeeName || "-",
+    totalRevenue: "-",
+  }))
+
+  const getStatusStyle = (status: VendorUI["status"]) => {
     switch (status) {
       case "active":
         return {
@@ -484,7 +422,7 @@ const AllVendors: React.FC = () => {
     }
   }
 
-  const getPerformanceStyle = (performance: Vendor["performance"]) => {
+  const getPerformanceStyle = (performance: VendorUI["performance"]) => {
     switch (performance) {
       case "Excellent":
         return {
@@ -538,8 +476,12 @@ const AllVendors: React.FC = () => {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
+  const handleViewVendorDetails = (vendor: VendorUI) => {
+    router.push(`/vendor-management/vendor-detail/${vendor.id}`)
+  }
+
   if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading vendors</div>
+  if (error) return <div>Error loading vendors: {error}</div>
 
   return (
     <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
@@ -596,7 +538,7 @@ const AllVendors: React.FC = () => {
                     </div>
                   </div>
 
-                  {vendors.length === 0 ? (
+                  {uiVendors.length === 0 ? (
                     <motion.div
                       className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -697,7 +639,7 @@ const AllVendors: React.FC = () => {
                             </thead>
                             <tbody className="bg-white">
                               <AnimatePresence>
-                                {vendors.map((vendor, index) => (
+                                {uiVendors.map((vendor, index) => (
                                   <motion.tr
                                     key={vendor.id}
                                     initial={{ opacity: 0, y: 10 }}
@@ -793,7 +735,7 @@ const AllVendors: React.FC = () => {
                                       {vendor.businessType}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ActionDropdown vendor={vendor} onViewDetails={setSelectedVendor} />
+                                      <ActionDropdown vendor={vendor} onViewDetails={handleViewVendorDetails} />
                                     </td>
                                   </motion.tr>
                                 ))}

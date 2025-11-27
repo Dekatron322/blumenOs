@@ -2,7 +2,7 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   CustomeraIcon,
@@ -20,6 +20,8 @@ import { ButtonModule } from "components/ui/Button/Button"
 import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
 import AgentDirectory from "components/AgentManagementInfo/AgentDirectory"
 import VendorManagement from "components/VendorManagementInfo/VendorManagment"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchVendorSummaryAnalytics } from "lib/redux/analyticsSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -276,60 +278,68 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock vendor data
-const generateVendorData = () => {
-  return {
-    activeVendors: 32,
-    collectionsToday: 5200000, // ₦5.2M in kobo
-    targetAchievement: 78.5,
-    lowFloatAlerts: 5,
-  }
+// Format currency
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+const formatNumber = (num: number) => {
+  return num.toLocaleString()
 }
 
 export default function VendorManagementDashboard() {
   const [isAddVendorModalOpen, setIsAddVendorModalOpen] = useState(false)
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [vendorData, setVendorData] = useState(generateVendorData())
 
-  // Use mock data
-  const { activeVendors, collectionsToday, targetAchievement, lowFloatAlerts } = vendorData
+  const dispatch = useAppDispatch()
+  const { vendorSummaryData, vendorSummaryLoading, vendorSummaryError, vendorSummarySuccess } = useAppSelector(
+    (state) => state.analytics
+  )
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return (
-      new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
-      }).format(amount / 1000000) + "M"
-    ) // Convert from kobo to millions
+  // Calculate derived metrics from vendor data
+  const calculateDerivedMetrics = () => {
+    if (!vendorSummaryData) return null
+
+    const { totalVendors, activeVendors, suspendedVendors, vendorsByState } = vendorSummaryData
+
+    return {
+      totalVendors,
+      activeVendors,
+      suspendedVendors,
+      vendorsByState,
+    }
   }
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
-  }
+  const derivedMetrics = calculateDerivedMetrics()
+
+  useEffect(() => {
+    // Fetch vendor analytics when component mounts
+    dispatch(fetchVendorSummaryAnalytics({}))
+  }, [dispatch])
 
   const handleAddVendorSuccess = async () => {
     setIsAddVendorModalOpen(false)
-    // Refresh data after adding vendor
-    setVendorData(generateVendorData())
+    // Refresh vendor analytics after adding vendor
+    dispatch(fetchVendorSummaryAnalytics({}))
   }
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after adding customer
-    setVendorData(generateVendorData())
+    // Refresh vendor analytics after adding customer
+    dispatch(fetchVendorSummaryAnalytics({}))
   }
 
   const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setVendorData(generateVendorData())
-      setIsLoading(false)
-    }, 1000)
+    dispatch(fetchVendorSummaryAnalytics({}))
   }
+
+  // Show loading state
+  const isLoading = vendorSummaryLoading
 
   return (
     <section className="size-full">
@@ -362,6 +372,26 @@ export default function VendorManagementDashboard() {
               </motion.div>
             </div>
 
+            {/* Error State */}
+            {vendorSummaryError && (
+              <div className="mx-16 mb-4 rounded-md bg-red-50 p-4 max-md:mx-0 max-sm:mx-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <TamperIcon />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">Failed to load vendor analytics</h3>
+                      <p className="mt-2 text-sm text-red-700">{vendorSummaryError}</p>
+                    </div>
+                  </div>
+                  <ButtonModule variant="secondary" size="sm" onClick={handleRefreshData} disabled={isLoading}>
+                    Retry
+                  </ButtonModule>
+                </div>
+              </div>
+            )}
+
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
@@ -372,7 +402,7 @@ export default function VendorManagementDashboard() {
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Updated Vendor Management Dashboard
+                  // Loaded State - Updated Vendor Management Dashboard with real data
                   <>
                     <motion.div
                       className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
@@ -383,7 +413,7 @@ export default function VendorManagementDashboard() {
                       <div className="flex w-full max-sm:flex-col">
                         <div className="w-full">
                           <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Active Vendors Card */}
+                            {/* Total Vendors Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
@@ -392,24 +422,30 @@ export default function VendorManagementDashboard() {
                                 <div className="text-blue-600">
                                   <CustomeraIcon />
                                 </div>
-                                <span className="font-medium">Active Vendors</span>
+                                <span className="font-medium">Total Vendors</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total Active:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(activeVendors)}</p>
+                                  <p className="text-grey-200">All Vendors:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {derivedMetrics ? formatNumber(derivedMetrics.totalVendors) : 0}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
+                                  <p className="text-grey-200">Active/Suspended:</p>
                                   <div className="flex items-center gap-1">
                                     <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">All Active</p>
+                                    <p className="text-secondary font-medium">
+                                      {derivedMetrics
+                                        ? `${derivedMetrics.activeVendors}/${derivedMetrics.suspendedVendors}`
+                                        : "0/0"}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Collections Today Card */}
+                            {/* Active Vendors Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
@@ -418,85 +454,89 @@ export default function VendorManagementDashboard() {
                                 <div className="text-green-600">
                                   <MetersProgrammedIcon />
                                 </div>
-                                <span className="font-medium">Collections Today</span>
+                                <span className="font-medium">Active Vendors</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Amount:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatCurrency(collectionsToday)}</p>
+                                  <p className="text-grey-200">Currently Active:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {derivedMetrics ? formatNumber(derivedMetrics.activeVendors) : 0}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Trend:</p>
+                                  <p className="text-grey-200">Percentage:</p>
                                   <p className="text-secondary font-medium">
-                                    <span className="text-green-500">↑ 8%</span> from yesterday
+                                    {derivedMetrics && derivedMetrics.totalVendors > 0
+                                      ? `${Math.round(
+                                          (derivedMetrics.activeVendors / derivedMetrics.totalVendors) * 100
+                                        )}% of total`
+                                      : "0%"}
                                   </p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Target Achievement Card */}
+                            {/* Estimated Collections Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
+                                <div className="text-purple-600">
                                   <VendingIcon />
                                 </div>
-                                <span className="font-medium">Target Achievement</span>
+                                <span className="font-medium">Suspended Vendors</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Achievement Rate:</p>
-                                  <p className="text-secondary text-xl font-bold">{targetAchievement}%</p>
+                                  <p className="text-grey-200">Currently Suspended:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {derivedMetrics ? formatNumber(derivedMetrics.suspendedVendors) : 0}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div
-                                      className={`size-2 rounded-full ${
-                                        targetAchievement >= 90
-                                          ? "bg-green-500"
-                                          : targetAchievement >= 80
-                                          ? "bg-yellow-500"
-                                          : "bg-red-500"
-                                      }`}
-                                    ></div>
-                                    <p className="text-secondary font-medium">
-                                      {targetAchievement >= 90
-                                        ? "Excellent"
-                                        : targetAchievement >= 80
-                                        ? "Good"
-                                        : "Needs Attention"}
-                                    </p>
-                                  </div>
+                                  <p className="text-grey-200">Share of Total:</p>
+                                  <p className="text-secondary font-medium">
+                                    {derivedMetrics && derivedMetrics.totalVendors > 0
+                                      ? `${Math.round(
+                                          (derivedMetrics.suspendedVendors / derivedMetrics.totalVendors) * 100
+                                        )}% of total`
+                                      : "0%"}
+                                  </p>
                                 </div>
                               </div>
                             </motion.div>
 
-                            {/* Low Float Alerts Card */}
+                            {/* Performance Metrics Card */}
                             <motion.div
                               className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-red-600">
+                                <div className="text-orange-600">
                                   <TamperIcon />
                                 </div>
-                                <span className="font-medium">Low Float Alerts</span>
+                                <span className="font-medium">Coverage Metrics</span>
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Active Alerts:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">{formatNumber(lowFloatAlerts)}</p>
-                                    <ArrowIcon />
-                                  </div>
+                                  <p className="text-grey-200">States Covered:</p>
+                                  <p className="text-secondary text-xl font-bold">
+                                    {derivedMetrics && derivedMetrics.vendorsByState
+                                      ? formatNumber(derivedMetrics.vendorsByState.length)
+                                      : 0}
+                                  </p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Priority:</p>
+                                  <p className="text-grey-200">Avg Vendors / State:</p>
                                   <p className="text-secondary font-medium">
-                                    <span className="text-red-500">High</span> - Requires Action
+                                    {derivedMetrics &&
+                                    derivedMetrics.vendorsByState &&
+                                    derivedMetrics.vendorsByState.length > 0
+                                      ? formatNumber(
+                                          Math.round(derivedMetrics.totalVendors / derivedMetrics.vendorsByState.length)
+                                        )
+                                      : 0}
                                   </p>
                                 </div>
                               </div>
@@ -505,6 +545,31 @@ export default function VendorManagementDashboard() {
                         </div>
                       </div>
                     </motion.div>
+
+                    {/* State Distribution Section */}
+                    {derivedMetrics && derivedMetrics.vendorsByState && derivedMetrics.vendorsByState.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="mt-6 rounded-lg bg-white p-6 shadow-sm"
+                      >
+                        <h3 className="mb-4 text-lg font-semibold">Vendor Distribution by State</h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {derivedMetrics.vendorsByState.slice(0, 6).map((state, index) => (
+                            <div key={index} className="flex items-center justify-between rounded-lg border p-3">
+                              <span className="font-medium">{state.state}</span>
+                              <span className="font-bold text-blue-600">{formatNumber(state.count)} vendors</span>
+                            </div>
+                          ))}
+                        </div>
+                        {derivedMetrics.vendorsByState.length > 6 && (
+                          <div className="mt-4 text-center">
+                            <p className="text-gray-600">+{derivedMetrics.vendorsByState.length - 6} more states</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
 
                     <motion.div
                       initial={{ opacity: 0 }}

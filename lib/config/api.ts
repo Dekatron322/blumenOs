@@ -182,6 +182,7 @@ export const API_ENDPOINTS = {
     PAYMENT_SUMMARY: "/payments/reports/summary",
     OUTAGE_SUMMARY: "/outages/report/summary",
     MAINTENANCE_SUMMARY: "/maintenance/report/summary",
+    VENDOR_SUMMARY: "/vendors/reports/summary",
   },
 
   OUTAGE_MANAGEMENT: {
@@ -217,6 +218,12 @@ export const API_ENDPOINTS = {
 
   VENDORS: {
     GET: "/vendors",
+    GET_BY_ID: "/vendors/{id}",
+    ADD: "/vendors/bulk",
+    GET_VENDOR_WALLET: "/vendors/{id}/wallet",
+    TOP_UP: "/vendors/{id}/wallet/top-up",
+    SUSPEND: "/vendors/{id}/suspend",
+    UPDATE_COMMISSION: "/vendors/{id}/commission",
   },
 }
 

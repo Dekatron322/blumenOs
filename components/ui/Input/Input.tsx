@@ -6,6 +6,7 @@ interface FormInputProps {
   label: string
   type: string
   name?: string
+  id?: string
   placeholder: string
   value: string | number | any
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
@@ -24,6 +25,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
   placeholder,
   value,
   name,
+  id,
   onChange,
   className = "",
   error,
@@ -56,6 +58,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
           className="w-full bg-transparent text-base outline-none disabled:cursor-not-allowed disabled:text-gray-500"
           value={value}
           name={name}
+          id={id}
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}

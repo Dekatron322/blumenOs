@@ -214,6 +214,24 @@ export interface MaintenanceSummaryParams {
   FeederId?: number
 }
 
+// Interfaces for Vendor Summary Analytics
+export interface VendorByState {
+  state: string
+  count: number
+}
+
+export interface VendorSummaryData {
+  totalVendors: number
+  activeVendors: number
+  suspendedVendors: number
+  vendorsByState: VendorByState[]
+}
+
+export interface VendorSummaryParams {
+  state?: string
+  status?: "active" | "suspended"
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -248,6 +266,12 @@ export interface MaintenanceSummaryResponse {
   isSuccess: boolean
   message: string
   data: MaintenanceSummaryData
+}
+
+export interface VendorSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: VendorSummaryData
 }
 
 // Analytics State
@@ -292,6 +316,13 @@ interface AnalyticsState {
   maintenanceSummarySuccess: boolean
   maintenanceSummaryParams: MaintenanceSummaryParams | null
 
+  // Vendor Summary Analytics state
+  vendorSummaryData: VendorSummaryData | null
+  vendorSummaryLoading: boolean
+  vendorSummaryError: string | null
+  vendorSummarySuccess: boolean
+  vendorSummaryParams: VendorSummaryParams | null
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -332,6 +363,12 @@ const initialState: AnalyticsState = {
   maintenanceSummaryError: null,
   maintenanceSummarySuccess: false,
   maintenanceSummaryParams: null,
+
+  vendorSummaryData: null,
+  vendorSummaryLoading: false,
+  vendorSummaryError: null,
+  vendorSummarySuccess: false,
+  vendorSummaryParams: null,
 
   loading: false,
   error: null,
@@ -513,6 +550,36 @@ export const fetchMaintenanceSummaryAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchVendorSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchVendorSummaryAnalytics",
+  async (params: VendorSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<VendorSummaryResponse>(buildApiUrl(API_ENDPOINTS.ANALYTICS.VENDOR_SUMMARY), {
+        params,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch vendor summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Vendor summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch vendor summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during vendor summary analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -570,6 +637,15 @@ const analyticsSlice = createSlice({
       state.maintenanceSummaryParams = null
     },
 
+    // Clear vendor summary analytics state
+    clearVendorSummaryAnalytics: (state) => {
+      state.vendorSummaryData = null
+      state.vendorSummaryError = null
+      state.vendorSummarySuccess = false
+      state.vendorSummaryLoading = false
+      state.vendorSummaryParams = null
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
@@ -590,6 +666,11 @@ const analyticsSlice = createSlice({
       state.maintenanceSummaryParams = action.payload
     },
 
+    // Set vendor summary analytics parameters
+    setVendorSummaryAnalyticsParams: (state, action: PayloadAction<VendorSummaryParams>) => {
+      state.vendorSummaryParams = action.payload
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -599,6 +680,7 @@ const analyticsSlice = createSlice({
       state.paymentSummaryError = null
       state.outageSummaryError = null
       state.maintenanceSummaryError = null
+      state.vendorSummaryError = null
     },
 
     // Reset analytics state
@@ -636,6 +718,12 @@ const analyticsSlice = createSlice({
       state.maintenanceSummaryError = null
       state.maintenanceSummarySuccess = false
       state.maintenanceSummaryParams = null
+
+      state.vendorSummaryData = null
+      state.vendorSummaryLoading = false
+      state.vendorSummaryError = null
+      state.vendorSummarySuccess = false
+      state.vendorSummaryParams = null
 
       state.loading = false
       state.error = null
@@ -796,6 +884,35 @@ const analyticsSlice = createSlice({
         state.maintenanceSummarySuccess = false
         state.maintenanceSummaryData = null
       })
+
+      // Fetch vendor summary analytics cases
+      .addCase(fetchVendorSummaryAnalytics.pending, (state) => {
+        state.vendorSummaryLoading = true
+        state.vendorSummaryError = null
+        state.vendorSummarySuccess = false
+      })
+      .addCase(
+        fetchVendorSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: VendorSummaryData
+            params: VendorSummaryParams
+          }>
+        ) => {
+          state.vendorSummaryLoading = false
+          state.vendorSummarySuccess = true
+          state.vendorSummaryData = action.payload.data
+          state.vendorSummaryParams = action.payload.params
+          state.vendorSummaryError = null
+        }
+      )
+      .addCase(fetchVendorSummaryAnalytics.rejected, (state, action) => {
+        state.vendorSummaryLoading = false
+        state.vendorSummaryError = (action.payload as string) || "Failed to fetch vendor summary analytics"
+        state.vendorSummarySuccess = false
+        state.vendorSummaryData = null
+      })
   },
 })
 
@@ -806,10 +923,12 @@ export const {
   clearPaymentSummaryAnalytics,
   clearOutageSummaryAnalytics,
   clearMaintenanceSummaryAnalytics,
+  clearVendorSummaryAnalytics,
   setPostpaidBillingAnalyticsParams,
   setPaymentSummaryAnalyticsParams,
   setOutageSummaryAnalyticsParams,
   setMaintenanceSummaryAnalyticsParams,
+  setVendorSummaryAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions
