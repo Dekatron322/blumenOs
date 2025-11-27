@@ -703,9 +703,9 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   <div className="mt-8   py-3 pt-4 text-center text-sm text-gray-600">
                     <div className="mb-2">
                       <p>
-                        Bill Created on: 11/1/2025 3:00:36 PM Sales Rep's Telephone: : Area Office Telephone No: PAY AT
-                        ANY BANK NATIONWIDE POS OR NEAREST CASH OFFICE ***PAY ON OR BEFORE 11/15/2025 3:00:36 PM TO
-                        AVOID DISCONNECTION*** | Status Code 02=Active, Status Code 04 = Disconnection
+                        Bill Created on: 11/1/2025 3:00:36 PM Sales Rep&lsquo;s Telephone: : Area Office Telephone No:
+                        PAY AT ANY BANK NATIONWIDE POS OR NEAREST CASH OFFICE ***PAY ON OR BEFORE 11/15/2025 3:00:36 PM
+                        TO AVOID DISCONNECTION*** | Status Code 02=Active, Status Code 04 = Disconnection
                       </p>
                     </div>
                   </div>

@@ -10,11 +10,11 @@ import { useDispatch, useSelector } from "react-redux"
 import { useParams, useRouter } from "next/navigation"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
+  clearCurrentOutage,
+  clearUpdateOutageState,
   fetchOutageById,
   updateOutage,
   UpdateOutageRequest,
-  clearCurrentOutage,
-  clearUpdateOutageState,
 } from "lib/redux/outageSlice"
 
 interface UpdateOutageFormData {

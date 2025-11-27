@@ -6,20 +6,17 @@ import { motion } from "framer-motion"
 import {
   AlertCircle,
   CheckCircle,
-  ChevronDown,
+  CreditCard,
   Edit3,
   Mail,
   MapPin,
   Phone,
   Power,
   PowerOff,
-  Share2,
   Shield,
+  TrendingUp,
   User,
   Wallet,
-  CreditCard,
-  TrendingUp,
-  Calendar,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
@@ -32,26 +29,17 @@ import {
   DepartmentInfoIcon,
   EmailOutlineIcon,
   EmployeeInfoIcon,
-  ExportCsvIcon,
   ExportOutlineIcon,
   MapOutlineIcon,
-  NotificationOutlineIcon,
   PasswordOutlineIcon,
   PhoneOutlineIcon,
   PostpaidBillOutlineIcon,
   SettingOutlineIcon,
-  UpdateUserOutlineIcon,
   UserRoleIcon,
   VerifyOutlineIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import {
-  clearCurrentVendor,
-  clearVendorWallet,
-  fetchVendorById,
-  fetchVendorWallet,
-  updateCurrentVendor,
-} from "lib/redux/vendorSlice"
+import { clearCurrentVendor, clearVendorWallet, fetchVendorById, fetchVendorWallet } from "lib/redux/vendorSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 

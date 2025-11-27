@@ -1,24 +1,11 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import {
-  CustomeraIcon,
-  MetersProgrammedIcon,
-  PlayIcon,
-  PlusIcon,
-  TamperIcon,
-  TokenGeneratedIcon,
-  VendingIcon,
-} from "components/Icons/Icons"
-import InstallMeterModal from "components/ui/Modal/install-meter-modal"
+import { CustomeraIcon, MetersProgrammedIcon, PlusIcon, TamperIcon, VendingIcon } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
-import BillingInfo from "components/BillingInfo/BillingInfo"
 import { ButtonModule } from "components/ui/Button/Button"
-import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
-import AgentDirectory from "components/AgentManagementInfo/AgentDirectory"
 import VendorManagement from "components/VendorManagementInfo/VendorManagment"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendorSummaryAnalytics } from "lib/redux/analyticsSlice"

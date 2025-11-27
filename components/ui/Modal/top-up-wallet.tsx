@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "../Button/Button"
 import { FormInputModule } from "../Input/Input"
 import { notify } from "../Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { topUpVendorWallet, clearVendorTopUp } from "lib/redux/vendorSlice"
+import { clearVendorTopUp, topUpVendorWallet } from "lib/redux/vendorSlice"
 
 interface TopUpWalletModalProps {
   isOpen: boolean
@@ -327,7 +327,7 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
 
                 <div className="rounded-lg bg-gray-50 p-4">
                   <p className="text-sm text-gray-600">
-                    The top-up will be processed immediately. You can track the transaction status in the vendor's
+                    The top-up will be processed immediately. You can track the transaction status in the vendor&apos;s
                     wallet history.
                   </p>
                 </div>

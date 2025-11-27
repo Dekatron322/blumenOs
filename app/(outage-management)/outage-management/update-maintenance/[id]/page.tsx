@@ -10,11 +10,11 @@ import { useDispatch, useSelector } from "react-redux"
 import { useParams, useRouter } from "next/navigation"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
+  clearCurrentMaintenance,
+  clearUpdateState,
   fetchMaintenanceById,
   updateMaintenance,
   UpdateMaintenanceRequest,
-  clearCurrentMaintenance,
-  clearUpdateState,
 } from "lib/redux/maintenanceSlice"
 
 interface UpdateMaintenanceFormData {

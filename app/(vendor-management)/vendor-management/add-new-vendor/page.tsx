@@ -5,10 +5,10 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { AddAgentIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { AddAgentIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { createBulkVendors, clearBulkCreate } from "lib/redux/vendorSlice"
+import { createBulkVendors } from "lib/redux/vendorSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 
 interface VendorFormData {

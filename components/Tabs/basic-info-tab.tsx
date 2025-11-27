@@ -1,8 +1,8 @@
 "use client"
 import React from "react"
 import { motion } from "framer-motion"
-import { Mail, MapPin, Phone, User, Building, Zap, Calendar, History, AlertCircle, CheckCircle } from "lucide-react"
-import { CalendarOutlineIcon, MapOutlineIcon, MeteringOutlineIcon, MeterOutlineIcon } from "components/Icons/Icons"
+import { AlertCircle, Building, History, Mail, MapPin, Phone, User, Zap } from "lucide-react"
+import { MeteringOutlineIcon, MeterOutlineIcon } from "components/Icons/Icons"
 
 interface Asset {
   serialNo: number

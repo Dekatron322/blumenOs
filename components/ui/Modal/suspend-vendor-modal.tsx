@@ -1,14 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
-import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { suspendVendor, clearVendorSuspend } from "lib/redux/vendorSlice"
+import { clearVendorSuspend, suspendVendor } from "lib/redux/vendorSlice"
 
 interface SuspendVendorModalProps {
   isOpen: boolean
@@ -175,7 +174,7 @@ const SuspendVendorModal: React.FC<SuspendVendorModalProps> = ({
 
             <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Vendor Suspension</h3>
             <p className="mb-6 text-center text-gray-600">
-              Are you sure you want to suspend <strong>{vendorName}</strong>'s account?
+              Are you sure you want to suspend <strong>{vendorName}</strong>&apos;s account?
             </p>
 
             {/* Suspension Details */}
