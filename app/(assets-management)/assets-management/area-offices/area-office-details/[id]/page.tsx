@@ -18,11 +18,11 @@ import { AreaOfficeChangeRequestModal } from "components/ui/Modal/area-office-ch
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import type {
+  AreaOfficeState,
   ChangeRequestListItem as ChangeRequestListItemType,
   ChangeRequestsRequestParams,
   InjectionSubstation,
   ServiceCenter,
-  AreaOfficeState,
 } from "lib/redux/areaOfficeSlice"
 import { SearchModule } from "components/ui/Search/search-module"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
