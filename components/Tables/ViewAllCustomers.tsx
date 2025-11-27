@@ -436,6 +436,43 @@ const AllCustomers = () => {
     }
   }
 
+  const getPageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Always show first page
+    items.push(1)
+
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      // Close to the start: show first few pages
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      // Close to the end: show ellipsis then last few pages
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      // In the middle: show ellipsis, surrounding pages, then ellipsis
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    // Always show last page
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "ACTIVE":
@@ -995,17 +1032,23 @@ const AllCustomers = () => {
                 </button>
 
                 <div className="flex items-center gap-2">
-                  {Array.from({ length: pagination.totalPages }, (_, index) => (
-                    <button
-                      key={index + 1}
-                      className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                        pagination.currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                      }`}
-                      onClick={() => changePage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
+                  {getPageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
                 </div>
 
                 <button
