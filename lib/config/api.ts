@@ -181,12 +181,21 @@ export const API_ENDPOINTS = {
     POSTPAID_BILLING: "/billing/postpaid/summary",
     PAYMENT_SUMMARY: "/payments/reports/summary",
     OUTAGE_SUMMARY: "/outages/report/summary",
+    MAINTENANCE_SUMMARY: "/maintenance/report/summary",
   },
 
   OUTAGE_MANAGEMENT: {
     GET: "/outages",
     ADD: "/outages",
     GET_BY_ID: "/outages/{id}",
+    UPDATE: "/outages/{id}",
+  },
+
+  MAINTENANCE: {
+    GET: "/maintenance",
+    ADD: "/maintenance",
+    GET_BY_ID: "/maintenance/{id}",
+    UPDATE: "/maintenance/{id}",
   },
 
   PAYMENTS: {

@@ -174,6 +174,46 @@ export interface OutageSummaryParams {
   FeederId?: number
 }
 
+// Interfaces for Maintenance Summary Analytics
+export interface MaintenanceSummaryByStatus {
+  key: string
+  count: number
+}
+
+export interface MaintenanceSummaryByPriority {
+  key: string
+  count: number
+}
+
+export interface MaintenanceSummaryByType {
+  key: string
+  count: number
+}
+
+export interface MaintenanceSummaryTimeline {
+  date: string
+  count: number
+}
+
+export interface MaintenanceSummaryData {
+  total: number
+  active: number
+  completed: number
+  byStatus: MaintenanceSummaryByStatus[]
+  byPriority: MaintenanceSummaryByPriority[]
+  byType: MaintenanceSummaryByType[]
+  timeline: MaintenanceSummaryTimeline[]
+}
+
+export interface MaintenanceSummaryParams {
+  From?: string
+  To?: string
+  Scope?: number
+  Type?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -202,6 +242,12 @@ export interface OutageSummaryResponse {
   isSuccess: boolean
   message: string
   data: OutageSummaryData
+}
+
+export interface MaintenanceSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: MaintenanceSummaryData
 }
 
 // Analytics State
@@ -239,6 +285,13 @@ interface AnalyticsState {
   outageSummarySuccess: boolean
   outageSummaryParams: OutageSummaryParams | null
 
+  // Maintenance Summary Analytics state
+  maintenanceSummaryData: MaintenanceSummaryData | null
+  maintenanceSummaryLoading: boolean
+  maintenanceSummaryError: string | null
+  maintenanceSummarySuccess: boolean
+  maintenanceSummaryParams: MaintenanceSummaryParams | null
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -273,6 +326,12 @@ const initialState: AnalyticsState = {
   outageSummaryError: null,
   outageSummarySuccess: false,
   outageSummaryParams: null,
+
+  maintenanceSummaryData: null,
+  maintenanceSummaryLoading: false,
+  maintenanceSummaryError: null,
+  maintenanceSummarySuccess: false,
+  maintenanceSummaryParams: null,
 
   loading: false,
   error: null,
@@ -421,6 +480,39 @@ export const fetchOutageSummaryAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchMaintenanceSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchMaintenanceSummaryAnalytics",
+  async (params: MaintenanceSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<MaintenanceSummaryResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.MAINTENANCE_SUMMARY),
+        {
+          params,
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch maintenance summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Maintenance summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch maintenance summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during maintenance summary analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -469,6 +561,15 @@ const analyticsSlice = createSlice({
       state.outageSummaryParams = null
     },
 
+    // Clear maintenance summary analytics state
+    clearMaintenanceSummaryAnalytics: (state) => {
+      state.maintenanceSummaryData = null
+      state.maintenanceSummaryError = null
+      state.maintenanceSummarySuccess = false
+      state.maintenanceSummaryLoading = false
+      state.maintenanceSummaryParams = null
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
@@ -484,6 +585,11 @@ const analyticsSlice = createSlice({
       state.outageSummaryParams = action.payload
     },
 
+    // Set maintenance summary analytics parameters
+    setMaintenanceSummaryAnalyticsParams: (state, action: PayloadAction<MaintenanceSummaryParams>) => {
+      state.maintenanceSummaryParams = action.payload
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -492,6 +598,7 @@ const analyticsSlice = createSlice({
       state.postpaidBillingAnalyticsError = null
       state.paymentSummaryError = null
       state.outageSummaryError = null
+      state.maintenanceSummaryError = null
     },
 
     // Reset analytics state
@@ -523,6 +630,12 @@ const analyticsSlice = createSlice({
       state.outageSummaryError = null
       state.outageSummarySuccess = false
       state.outageSummaryParams = null
+
+      state.maintenanceSummaryData = null
+      state.maintenanceSummaryLoading = false
+      state.maintenanceSummaryError = null
+      state.maintenanceSummarySuccess = false
+      state.maintenanceSummaryParams = null
 
       state.loading = false
       state.error = null
@@ -654,6 +767,35 @@ const analyticsSlice = createSlice({
         state.outageSummarySuccess = false
         state.outageSummaryData = null
       })
+
+      // Fetch maintenance summary analytics cases
+      .addCase(fetchMaintenanceSummaryAnalytics.pending, (state) => {
+        state.maintenanceSummaryLoading = true
+        state.maintenanceSummaryError = null
+        state.maintenanceSummarySuccess = false
+      })
+      .addCase(
+        fetchMaintenanceSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: MaintenanceSummaryData
+            params: MaintenanceSummaryParams
+          }>
+        ) => {
+          state.maintenanceSummaryLoading = false
+          state.maintenanceSummarySuccess = true
+          state.maintenanceSummaryData = action.payload.data
+          state.maintenanceSummaryParams = action.payload.params
+          state.maintenanceSummaryError = null
+        }
+      )
+      .addCase(fetchMaintenanceSummaryAnalytics.rejected, (state, action) => {
+        state.maintenanceSummaryLoading = false
+        state.maintenanceSummaryError = (action.payload as string) || "Failed to fetch maintenance summary analytics"
+        state.maintenanceSummarySuccess = false
+        state.maintenanceSummaryData = null
+      })
   },
 })
 
@@ -663,9 +805,11 @@ export const {
   clearPostpaidBillingAnalytics,
   clearPaymentSummaryAnalytics,
   clearOutageSummaryAnalytics,
+  clearMaintenanceSummaryAnalytics,
   setPostpaidBillingAnalyticsParams,
   setPaymentSummaryAnalyticsParams,
   setOutageSummaryAnalyticsParams,
+  setMaintenanceSummaryAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions

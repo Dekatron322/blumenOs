@@ -69,6 +69,20 @@ export interface CreateOutageResponse {
   data: Outage
 }
 
+export interface UpdateOutageRequest {
+  status?: number
+  priority?: number
+  details?: string
+  resolutionSummary?: string
+  restoredAt?: string
+}
+
+export interface UpdateOutageResponse {
+  isSuccess: boolean
+  message: string
+  data: Outage
+}
+
 export interface OutageRequestParams {
   // Query parameters
   Status?: number
@@ -97,6 +111,11 @@ interface OutageState {
   createError: string | null
   createSuccess: boolean
 
+  // Update outage state
+  updateLoading: boolean
+  updateError: string | null
+  updateSuccess: boolean
+
   // Pagination state
   totalCount: number
   totalPages: number
@@ -123,6 +142,9 @@ const initialState: OutageState = {
   createLoading: false,
   createError: null,
   createSuccess: false,
+  updateLoading: false,
+  updateError: null,
+  updateSuccess: false,
   totalCount: 0,
   totalPages: 0,
   currentPage: 1,
@@ -226,6 +248,27 @@ export const createOutage = createAsyncThunk(
   }
 )
 
+export const updateOutage = createAsyncThunk(
+  "outages/updateOutage",
+  async ({ id, updateData }: { id: number; updateData: UpdateOutageRequest }, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.OUTAGE_MANAGEMENT.UPDATE.replace("{id}", id.toString()))
+      const response = await api.patch<UpdateOutageResponse>(url, updateData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update outage")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update outage")
+      }
+      return rejectWithValue(error.message || "Network error during outage update")
+    }
+  }
+)
+
 // Outage slice
 const outageSlice = createSlice({
   name: "outages",
@@ -251,11 +294,19 @@ const outageSlice = createSlice({
       state.createSuccess = false
     },
 
+    // Clear update outage state
+    clearUpdateOutageState: (state) => {
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
+    },
+
     // Clear errors
     clearError: (state) => {
       state.error = null
       state.currentOutageError = null
       state.createError = null
+      state.updateError = null
     },
 
     // Clear current outage
@@ -274,6 +325,9 @@ const outageSlice = createSlice({
       state.createLoading = false
       state.createError = null
       state.createSuccess = false
+      state.updateLoading = false
+      state.updateError = null
+      state.updateSuccess = false
       state.totalCount = 0
       state.totalPages = 0
       state.currentPage = 1
@@ -472,12 +526,42 @@ const outageSlice = createSlice({
         state.createError = (action.payload as string) || "Failed to create outage"
         state.createSuccess = false
       })
+      // Update outage cases
+      .addCase(updateOutage.pending, (state) => {
+        state.updateLoading = true
+        state.updateError = null
+        state.updateSuccess = false
+      })
+      .addCase(updateOutage.fulfilled, (state, action: PayloadAction<UpdateOutageResponse>) => {
+        state.updateLoading = false
+        state.updateSuccess = true
+        state.updateError = null
+
+        const updatedOutage = action.payload.data
+
+        // Update the outage in the list if it exists
+        const index = state.outages.findIndex((outage) => outage.id === updatedOutage.id)
+        if (index !== -1) {
+          state.outages[index] = updatedOutage
+        }
+
+        // Also update current outage if it's the same one
+        if (state.currentOutage && state.currentOutage.id === updatedOutage.id) {
+          state.currentOutage = updatedOutage
+        }
+      })
+      .addCase(updateOutage.rejected, (state, action) => {
+        state.updateLoading = false
+        state.updateError = (action.payload as string) || "Failed to update outage"
+        state.updateSuccess = false
+      })
   },
 })
 
 export const {
   clearOutages,
   clearCreateOutageState,
+  clearUpdateOutageState,
   clearError,
   clearCurrentOutage,
   resetOutageState,

@@ -21,6 +21,7 @@ import agentReducer from "./agentSlice"
 import paymentTypeReducer from "./paymentTypeSlice"
 import paymentDunningReducer from "./paymentDunningSlice"
 import outageReducer from "./outageSlice"
+import maintenanceReducer from "./maintenanceSlice"
 
 export const store = configureStore({
   reducer: {
@@ -45,6 +46,7 @@ export const store = configureStore({
     paymentTypes: paymentTypeReducer,
     paymentDunnings: paymentDunningReducer,
     outages: outageReducer,
+    maintenances: maintenanceReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

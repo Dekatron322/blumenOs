@@ -36,6 +36,7 @@ interface ActionDropdownProps {
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ outage, onViewDetails }) => {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -129,7 +130,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ outage, onViewDetails }
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Update outage:", outage.id)
+                  router.push(`/outage-management/update/${outage.numericId}`)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
