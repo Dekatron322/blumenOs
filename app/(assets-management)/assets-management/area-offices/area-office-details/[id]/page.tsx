@@ -20,7 +20,6 @@ import autoTable from "jspdf-autotable"
 import type {
   ChangeRequestListItem as ChangeRequestListItemType,
   ChangeRequestsRequestParams,
-  AreaOfficeDetail,
   InjectionSubstation,
   ServiceCenter,
   AreaOfficeState,
