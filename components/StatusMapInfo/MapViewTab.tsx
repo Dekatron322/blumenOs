@@ -13,14 +13,14 @@ const MapViewTab = () => {
   const [customersLayerEnabled, setCustomersLayerEnabled] = useState(true)
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
 
-  const paymentStatusOptions = ["All Status", "Paid", "Unpaid", "Partial", "Unknown"]
+  const paymentStatusOptions = ["All Status", "Paid", "Partial", "Unpaid"]
 
   type Customer = {
     id: number
     position: [number, number]
     state: string
     feeder: string
-    status: "Paid" | "Unpaid" | "Partial" | "Unknown"
+    status: "Paid" | "Partial" | "Unpaid" 
   }
 
   type Asset = {
@@ -34,8 +34,8 @@ const MapViewTab = () => {
   const customers: Customer[] = [
     { id: 1, position: [10.52, 7.44], state: "Kaduna", feeder: "Feeder 1", status: "Paid" },
     { id: 2, position: [10.54, 7.46], state: "Kaduna", feeder: "Feeder 2", status: "Unpaid" },
-    { id: 3, position: [10.50, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Partial" },
-    { id: 4, position: [12.00, 8.52], state: "Kano", feeder: "Feeder 1", status: "Unknown" },
+    { id: 3, position: [10.50, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Unpaid" },
+    { id: 4, position: [12.00, 8.52], state: "Kano", feeder: "Feeder 1", status: "Partial" },
     { id: 5, position: [12.03, 8.55], state: "Kano", feeder: "Feeder 2", status: "Paid" },
     { id: 6, position: [12.02, 8.50], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
     { id: 7, position: [9.07, 7.49], state: "Abuja", feeder: "Feeder 1", status: "Partial" },
@@ -93,12 +93,12 @@ const MapViewTab = () => {
       iconSize: [16, 16],
     })
 
-  const getCustomerIcon = (status: "Paid" | "Unpaid" | "Partial" | "Unknown") => {
-    const colorMap: Record<"Paid" | "Unpaid" | "Partial" | "Unknown", string> = {
+  const getCustomerIcon = (status: "Paid" | "Unpaid" | "Partial") => {
+    const colorMap: Record<"Paid" | "Unpaid" | "Partial", string> = {
       Paid: "#22c55e",
       Unpaid: "#ef4444",
       Partial: "#f59e0b",
-      Unknown: "#6b7280",
+      
     }
     return dot(colorMap[status])
   }
@@ -410,17 +410,17 @@ const LRef = useRef<any>(null)
                   <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-green-500"></span><span>Paid</span></div>
                   <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-red-500"></span><span>Unpaid</span></div>
                   <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-amber-500"></span><span>Partial</span></div>
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-gray-500"></span><span>Unknown</span></div>
+                  {/* <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-gray-500"></span><span>Unknown</span></div> */}
                 </div>
               </div>
 
               <div>
                 <h4 className="mb-2 text-sm font-semibold">Assets</h4>
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <span className="inline-flex h-4 w-4 items-center justify-center text-yellow-400">⚡</span>
                     <span>Feeder</span>
-                  </div>
+                  </div> */}
                   <div className="flex items-center gap-2">
                     <span className="inline-flex h-4 w-4 items-center justify-center">🏭</span>
                     <span>Substation</span>
