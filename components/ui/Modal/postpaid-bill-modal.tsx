@@ -51,6 +51,21 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
     })
   }
 
+  const getCustomerStatusLabel = (code?: string | null) => {
+    switch (code) {
+      case "02":
+        return "Active"
+      case "04":
+        return "Suspended"
+      case "05":
+        return "PPM"
+      case "07":
+        return "Inactive"
+      default:
+        return code || "Unknown"
+    }
+  }
+
   const getStatusConfig = (status: number) => {
     const configs = {
       0: { color: "text-amber-600", bg: "bg-amber-50", label: "PENDING" },
@@ -328,20 +343,20 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff]">
                     <p>BILLING INFORMATION</p>
                   </div>
-                  <div className=" grid grid-cols-2  border bg-[#EBEBEB]">
+                  <div className=" grid grid-cols-2  border bg-[#FFFFFF]">
                     <div className="space-y-3">
                       <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
                         <p>AREA OFFICE</p>
                         <p>{bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}</p>
                       </div>
-                      <div className="flex flex-col bg-[#EBEBEB]">
+                      <div className="flex flex-col bg-[#FFFFFFF]">
                         <div className="flex w-full justify-between px-4 ">
                           <span className="text-sm font-semibold text-gray-600"># Bill:</span>
                           <span className="ml-2 text-sm text-gray-900">{bill.customerAccountNumber}</span>
                         </div>
                         <div className="flex w-full justify-between px-4 pt-3">
                           <span className="text-sm font-semibold text-gray-600">Bill Month:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.period}</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.name}</span>
                         </div>
                         <div className="flex w-full justify-between px-4 pt-3">
                           <span className="text-sm font-semibold text-gray-600">Customer Account:</span>
@@ -397,7 +412,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="space-y-3 border-l border-gray-200 bg-[#E1E1E1] pb-4">
+                    <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
                       <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
                         <p>SERVICE CENTER:</p>
                         <p>{bill.customer?.serviceCenterName || "-"}</p>
@@ -422,7 +437,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       </div>
                       <div className="flex items-center justify-between px-4 ">
                         <span className="text-sm font-semibold text-gray-600">Sales Rep:</span>
-                        <span className="text-sm text-gray-900">Sales Rep</span>
+                        <span className="text-sm text-gray-900">{bill.customer?.salesRepUser?.fullName || "N/A"}</span>
                       </div>
                       <div className="flex items-center justify-between px-4 ">
                         <span className="text-sm font-semibold text-gray-600">Meter:</span>
@@ -480,13 +495,13 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff]">
                     <p>BILLING CHARGES</p>
                   </div>
-                  <div className="grid grid-cols-2  border bg-[#EBEBEB]">
+                  <div className="grid grid-cols-2  border bg-[#FFFFFF]">
                     <div className="space-y-3">
                       <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
                         <p>CHARGES</p>
                         <p>TOTAL</p>
                       </div>
-                      <div className="flex flex-col bg-[#EBEBEB]">
+                      <div className="flex flex-col bg-[#FFFFFF]">
                         <div className="flex w-full justify-between px-4 ">
                           <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
                           <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
@@ -551,14 +566,16 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="space-y-3 border-l border-gray-200 bg-[#E1E1E1] pb-4">
+                    <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
                       <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
                         <p>CHARGES</p>
                         <p>TOTAL</p>
                       </div>
                       <div className="flex items-center justify-between px-4 ">
                         <span className="text-sm font-semibold text-gray-600">Status Code:</span>
-                        <span className="text-sm text-gray-900">{bill.customer?.statusCode || "-"}</span>
+                        <span className="text-sm text-gray-900">
+                          {getCustomerStatusLabel(bill.customer?.statusCode)}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between px-4 ">
                         <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
@@ -704,9 +721,9 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   <div className="mt-8   py-3 pt-4 text-center text-sm text-gray-600">
                     <div className="mb-2">
                       <p>
-                        Bill Created on: 11/1/2025 3:00:36 PM Sales Rep&lsquo;s Telephone: : Area Office Telephone No:
-                        PAY AT ANY BANK NATIONWIDE POS OR NEAREST CASH OFFICE ***PAY ON OR BEFORE 11/15/2025 3:00:36 PM
-                        TO AVOID DISCONNECTION*** | Status Code 02=Active, Status Code 04 = Disconnection
+                        PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
+                        OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYTMENT CHANNELS |
+                        <b> ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
                       </p>
                     </div>
                   </div>

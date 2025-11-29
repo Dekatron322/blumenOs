@@ -13,14 +13,14 @@ const MapViewTab = () => {
   const [customersLayerEnabled, setCustomersLayerEnabled] = useState(true)
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
 
-  const paymentStatusOptions = ["All Status", "Paid", "Unpaid", "Partial", "Unknown"]
+  const paymentStatusOptions = ["All Status", "Paid", "Unpaid", "Partial"]
 
   type Customer = {
     id: number
     position: [number, number]
     state: string
     feeder: string
-    status: "Paid" | "Unpaid" | "Partial" | "Unknown"
+    status: "Paid" | "Unpaid" | "Partial"
   }
 
   type Asset = {
@@ -35,7 +35,6 @@ const MapViewTab = () => {
     { id: 1, position: [10.52, 7.44], state: "Kaduna", feeder: "Feeder 1", status: "Paid" },
     { id: 2, position: [10.54, 7.46], state: "Kaduna", feeder: "Feeder 2", status: "Unpaid" },
     { id: 3, position: [10.5, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Partial" },
-    { id: 4, position: [12.0, 8.52], state: "Kano", feeder: "Feeder 1", status: "Unknown" },
     { id: 5, position: [12.03, 8.55], state: "Kano", feeder: "Feeder 2", status: "Paid" },
     { id: 6, position: [12.02, 8.5], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
     { id: 7, position: [9.07, 7.49], state: "Abuja", feeder: "Feeder 1", status: "Partial" },
@@ -100,12 +99,11 @@ const MapViewTab = () => {
       iconSize: [16, 16],
     })
 
-  const getCustomerIcon = (status: "Paid" | "Unpaid" | "Partial" | "Unknown") => {
-    const colorMap: Record<"Paid" | "Unpaid" | "Partial" | "Unknown", string> = {
+  const getCustomerIcon = (status: "Paid" | "Unpaid" | "Partial") => {
+    const colorMap: Record<"Paid" | "Unpaid" | "Partial", string> = {
       Paid: "#22c55e",
       Unpaid: "#ef4444",
       Partial: "#f59e0b",
-      Unknown: "#6b7280",
     }
     return dot(colorMap[status])
   }
@@ -427,10 +425,6 @@ const MapViewTab = () => {
                   <div className="flex items-center gap-2">
                     <span className="inline-block size-3 rounded-full bg-amber-500"></span>
                     <span>Partial</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-block size-3 rounded-full bg-gray-500"></span>
-                    <span>Unknown</span>
                   </div>
                 </div>
               </div>

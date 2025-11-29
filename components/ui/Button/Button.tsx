@@ -14,7 +14,7 @@ type ButtonVariant =
   | "dangerSecondary"
 type ButtonSize = "sm" | "md" | "lg"
 
-interface ButtonProps extends MotionProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, MotionProps {
   type?: "button" | "submit" | "reset"
   onClick?: () => void
   disabled?: boolean
@@ -40,6 +40,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
   icon,
   iconPosition = "start",
   loading = false,
+  ...rest
 }) => {
   const baseClasses =
     "flex  z-0  items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
@@ -73,6 +74,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
         isDisabled ? "z-0 cursor-not-allowed opacity-50" : "gap-1"
       } ${className}`}
+      {...rest}
     >
       {iconPosition === "start" && (
         <span className="inline-flex items-center">

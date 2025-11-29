@@ -28,6 +28,8 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   formatDate,
   formatDateTime,
 }) => {
+  const currentMonthYear = new Date().toLocaleString("default", { month: "long", year: "numeric" })
+
   const getStatusLabel = (code: string) => {
     switch (code) {
       case "02":
@@ -55,21 +57,21 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <User className="size-5" />
           Customer Overview
         </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Customer Number</label>
             <p className="text-sm font-semibold text-gray-900">{currentCustomer.customerNumber}</p>
           </div>
 
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Account Number</label>
             <p className="text-sm font-semibold text-gray-900">{currentCustomer.accountNumber}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Auto Number</label>
             <p className="text-sm text-gray-900">{currentCustomer.autoNumber}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          </div> */}
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <div className="text-sm font-medium text-gray-500">Status Code</div>
             <p
               className={`inline-flex rounded-full px-2 py-1 text-xs font-medium
@@ -89,7 +91,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
               {getStatusLabel(currentCustomer.statusCode)}
             </p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9f9f9] p-4">
             <label className="text-sm font-medium text-gray-500">Customer Type</label>
             <div className="flex flex-wrap gap-1">
               <span
@@ -109,12 +111,33 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                   POST ENUMERATED
                 </span>
               )}
+              {currentCustomer.isPPM && (
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                  Prepaid Meter
+                </span>
+              )}
+              {currentCustomer.isMD && (
+                <span className="inline-flex items-center rounded-full bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700">
+                  MD Customer
+                </span>
+              )}
+              {currentCustomer.isUrban && (
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
+                  Urban Area
+                </span>
+              )}
+              {currentCustomer.isHRB && (
+                <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+                  HRB Customer
+                </span>
+              )}
             </div>
+            {/* <div className="mt-2 flex flex-wrap gap-1"></div> */}
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Ready for Extraction</label>
             <p className="text-sm text-gray-900">{currentCustomer.isReadyforExtraction ? "Yes" : "No"}</p>
-          </div>
+          </div> */}
         </div>
       </motion.div>
 
@@ -129,37 +152,39 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <User className="size-5" />
           Personal Information
         </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Full Name</label>
             <p className="text-sm font-semibold text-gray-900">{currentCustomer.fullName}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Phone Number</label>
             <div className="flex items-center gap-2">
               <Phone className="size-4 text-gray-400" />
               <p className="text-sm text-gray-900">{currentCustomer.phoneNumber}</p>
             </div>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Office Phone</label>
             <div className="flex items-center gap-2">
               <Phone className="size-4 text-gray-400" />
               <p className="text-sm text-gray-900">{currentCustomer.phoneOffice || "N/A"}</p>
             </div>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Email</label>
             <div className="flex items-center gap-2">
               <Mail className="size-4 text-gray-400" />
               <p className="text-sm text-gray-900">{currentCustomer.email}</p>
             </div>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
-            <label className="text-sm font-medium text-gray-500">Gender</label>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Customer Category</label>
+            {/* //change to customer category */}
+            {/* types are - commercial, residential, industrial, government, special - can be extracted from tarriff */}
             <p className="text-sm text-gray-900">{currentCustomer.gender || "N/A"}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Last Login</label>
             <p className="text-sm text-gray-900">{formatDateTime(currentCustomer.lastLoginAt)}</p>
           </div>
@@ -179,31 +204,31 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
         </h3>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-4 ">
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
               <label className="text-sm font-medium text-gray-500">Primary Address</label>
               <p className="text-sm text-gray-900">{currentCustomer.address}</p>
             </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
               <label className="text-sm font-medium text-gray-500">Secondary Address</label>
               <p className="text-sm text-gray-900">{currentCustomer.addressTwo || "N/A"}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">City</label>
                 <p className="text-sm text-gray-900">{currentCustomer.city}</p>
               </div>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">State</label>
                 <p className="text-sm text-gray-900">{currentCustomer.state}</p>
               </div>
             </div>
           </div>
           <div className="space-y-4">
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
               <label className="text-sm font-medium text-gray-500">LGA</label>
               <p className="text-sm text-gray-900">{currentCustomer.lga || "N/A"}</p>
             </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-gray-500">Latitude</label>
@@ -215,7 +240,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                 </div>
               </div>
             </div>
-            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
               <label className="text-sm font-medium text-gray-500">Service Center</label>
               <p className="text-sm text-gray-900">{currentCustomer.serviceCenterName}</p>
             </div>
@@ -251,31 +276,28 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           Distribution Information
         </h3>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Distribution Station</label>
             <p className="text-sm text-gray-900">{currentCustomer.distributionSubstationCode}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Feeder Name</label>
             <p className="text-sm text-gray-900">{currentCustomer.feederName}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Area Office</label>
             <p className="text-sm text-gray-900">{currentCustomer.areaOfficeName}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
-            <label className="text-sm font-medium text-gray-500">Company</label>
-            <p className="text-sm text-gray-900">{currentCustomer.companyName}</p>
-          </div>
+
           {currentCustomer.distributionSubstation && (
             <>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">Transformer Capacity</label>
                 <p className="text-sm text-gray-900">
                   {currentCustomer.distributionSubstation.transformerCapacityInKva} kVA
                 </p>
               </div>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">Number of Units</label>
                 <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation.numberOfUnit}</p>
               </div>
@@ -296,40 +318,40 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           Meter & Billing Information
         </h3>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Meter Number</label>
             <p className="text-sm font-semibold text-gray-900">{currentCustomer.meterNumber}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
-            <label className="text-sm font-medium text-gray-500">Tariff</label>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Tariff Rate</label>
             <p className="text-sm text-gray-900">{currentCustomer.tariff}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Tariff Code</label>
             <p className="text-sm text-gray-900">{currentCustomer.tariffCode}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Tariff Class</label>
             <p className="text-sm text-gray-900">{currentCustomer.tariffClass}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
-            <label className="text-sm font-medium text-gray-500">Band</label>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Tariff Band</label>
             <p className="text-sm text-gray-900">{currentCustomer.band}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">New Rate</label>
             <p className="text-sm text-gray-900">{formatCurrency(currentCustomer.newRate)}</p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          </div> */}
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">VAT</label>
             <p className="text-sm text-gray-900">{currentCustomer.vat}%</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">VAT Waived</label>
             <p className="text-sm text-gray-900">{currentCustomer.isVATWaved ? "Yes" : "No"}</p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* <div className="mt-4 grid grid-cols-1 gap-4 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex items-center gap-2">
             <div className={`size-3 rounded-full ${currentCustomer.isPPM ? "bg-blue-500" : "bg-gray-300"}`}></div>
             <span className="text-sm text-gray-700">Prepaid Meter</span>
@@ -346,7 +368,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             <div className={`size-3 rounded-full ${currentCustomer.isHRB ? "bg-purple-500" : "bg-gray-300"}`}></div>
             <span className="text-sm text-gray-700">HRB Customer</span>
           </div>
-        </div>
+        </div> */}
       </motion.div>
 
       {/* Financial Information */}
@@ -360,20 +382,20 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <MeteringOutlineIcon className="size-5" />
           Financial Information
         </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4 text-center">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
             <label className="text-sm font-medium text-gray-500">Stored Average</label>
             <p className="text-2xl font-bold text-gray-900">{currentCustomer.storedAverage}Kwh</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Monthly Vend</label>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
+            <label className="text-sm font-medium text-gray-500">{`Current Bill - ${currentMonthYear}`}</label>
             <p className="text-2xl font-bold text-emerald-600">{formatCurrency(currentCustomer.totalMonthlyVend)}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4 text-center">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
             <label className="text-sm font-medium text-gray-500">Monthly Debt</label>
             <p className="text-2xl font-bold text-amber-600">{formatCurrency(currentCustomer.totalMonthlyDebt)}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4 text-center">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
             <label className="text-sm font-medium text-gray-500">Outstanding Balance</label>
             <p className="text-2xl font-bold text-red-600">
               {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
@@ -393,12 +415,14 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <User className="size-5" />
           Sales & Technical Information
         </h3>
-        <div className="grid grid-cols-1 gap-6 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 md:grid-cols-2">
           <div className="space-y-4 rounded-md border border-dashed border-gray-200 bg-[#FFFFFF] p-4">
             <h4 className="font-medium text-gray-700">Sales Representative</h4>
             {currentCustomer.salesRepUser ? (
               <div className="space-y-2">
-                <p className="text-sm text-gray-900">{currentCustomer.salesRepUser.fullName}</p>
+                <p className="text-sm text-gray-900">
+                  {currentCustomer.salesRepUser.fullName} - (ID:{currentCustomer.salesRepUser.id})
+                </p>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Mail className="size-4" />
                   {currentCustomer.salesRepUser.email}
@@ -434,7 +458,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
       </motion.div>
 
       {/* Additional Information */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4 }}
@@ -445,24 +469,24 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           Additional Information
         </h3>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Comment</label>
             <p className="text-sm text-gray-900">{currentCustomer.comment || "No comments"}</p>
           </div>
           {currentCustomer.isSuspended && (
             <>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">Suspension Reason</label>
                 <p className="text-sm text-gray-900">{currentCustomer.suspensionReason || "Not specified"}</p>
               </div>
-              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F5F5F5] p-4">
+              <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">Suspended At</label>
                 <p className="text-sm text-gray-900">{formatDateTime(currentCustomer.suspendedAt)}</p>
               </div>
             </>
           )}
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* Account & Meter History */}
       {(currentCustomer.accountNumberHistory?.length > 0 || currentCustomer.meterHistory?.length > 0) && (
@@ -524,7 +548,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
       )}
 
       {/* Assets & Equipment */}
-      {assets.length > 0 && (
+      {/* {assets.length > 0 && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -575,7 +599,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             ))}
           </div>
         </motion.div>
-      )}
+      )} */}
     </>
   )
 }

@@ -142,6 +142,14 @@ export const API_ENDPOINTS = {
     CUSTOMER_LOOKUP: "/customers/lookup",
   },
 
+  CREATE_CUSTOMER: {
+    ADD: "/customers/bulk",
+  },
+
+  STATUS_MAP: {
+    GET: "/status-map",
+  },
+
   PAYMENT_TYPE: {
     GET: "/payments/types",
   },
