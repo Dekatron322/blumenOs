@@ -3,8 +3,8 @@ type Environment = "STAGING" | "PRODUCTION"
 
 export const API_CONFIG = {
   // Environment-based base URLs
-  STAGING: "https://ultra-service-79baffa4bc31.herokuapp.com",
-  PRODUCTION: "https://ultra-service-79baffa4bc31.herokuapp.com",
+  STAGING: "https://blumenos-e0fba1f74776.herokuapp.com",
+  PRODUCTION: "https://blumenos-e0fba1f74776.herokuapp.com",
 
   // Current environment (change this to switch between staging/production)
   CURRENT_ENV: (process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING") as Environment,
@@ -15,75 +15,223 @@ export const API_CONFIG = {
   },
 }
 
-// Centralized API Endpoints
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: "/Admin/Login",
-    REFRESH_TOKEN: "/Admin/RefreshToken",
+    LOGIN: "/identity/auth/login",
+    REFRESH_TOKEN: "/identity/auth/refresh",
+    CHANGE_PASSWORD: "/identity/auth/change-password",
   },
 
-  SYSTEM: {
-    CURRENCIES: "/System/Currencies",
+  AGENTS: {
+    GET: "/agents",
   },
 
-  // User/Customer endpoints
-  USERS: {
-    OVERVIEW: "/Admin/Users/Overview",
-    LIST: "/Admin/Users",
-    DETAILS: (id: string | number) => `/Admin/Users/${id}`,
-    ADD_BONUS: "/Admin/Wallet/Bonus",
-    DISABLE: "/Admin/Wallet/Disable",
-    SUSPEND: "/Admin/User/Suspend",
+  EMPLOYEE: {
+    EMPLOYEE: "/identity/users",
+    INVITE: "/identity/users/invite",
+    EMPLOYEE_DETAILS: "/identity/users/{id}",
+    UPDATE_EMPLOYEE: "/identity/users/{id}",
+    DEACTIVATE: "/identity/users/{id}/deactivate",
+    ACTIVATE: "/identity/users/{id}/activate",
+    RESET_PASSWORD: "/identity/users/{id}/reset-password",
+    CHANGE_REQUEST: "/identity/users/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/identity/users/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/identity/users/change-requests",
+    CHANGE_REQUEST_DETAILS: "/identity/users/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/identity/users/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/identity/users/change-requests/{publicId}/decline",
+    EMPLOYEE_REPORT: "/identity/users/reports/summary",
+    REPORTS_BY_DEPARTMENT: "/identity/users/reports/by-department",
   },
 
-  // Transaction endpoints
-  TRANSACTIONS: {
-    LIST: "/Admin/Transactions",
-    DETAILS: (id: string | number) => `/Admin/Transactions/${id}`,
-    CRYPTO: "/Admin/Crypto/Transactions",
-    OVERVIEW: "/Admin/Transactions/Overview",
-    REFUND: "/Wallet/RefundPayBills",
-    SETTLE: "Admin/Crypto/Refund",
+  ROLES: {
+    GET: "/roles-management/roles",
   },
 
-  BANKS: {
-    LIST: "/Psb9/Banklist",
-    VERIFY: "/Psb9/AccountEnquiry",
+  AREA_OFFICE: {
+    GET: "/assets/area-offices",
+    ADD: "/assets/area-offices",
+    UPDATE: "/assets/area-offices/{id}",
+    GET_BY_ID: "/assets/area-offices/{id}",
+    CHANGE_REQUEST: "/assets/area-offices/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/area-offices/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/area-offices/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/area-offices/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/area-offices/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/area-offices/change-requests/{publicId}/decline",
   },
 
-  // Crypto endpoints
-  CRYPTO: {
-    LIST: "/Admin/Crypto",
-    DETAILS: (id: string | number) => `/Admin/Crypto/${id}`,
-    OVERVIEW: "/Admin/Crypto/Overview",
-    TRANSFER: "/Admin/Crypto/Transfer",
-    REQUEST_OTP: "/Admin/Request/Otp",
-    QUOTATION: "/Admin/Quotation",
-    SWAP: "/Admin/Crypto/Swap",
-    SETTLE: "/Admin/Crypto/Settle",
-    REFUND: "/Admin/Wallet/RefundWithdrawal",
+  FEEDERS: {
+    GET: "/assets/feeders",
+    ADD: "/assets/feeders",
+    GET_BY_ID: "/assets/feeders/{id}",
+    UPDATE: "/assets/feeders/{id}",
+    CHANGE_REQUEST: "/assets/feeders/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/feeders/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/feeders/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/feeders/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/feeders/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/feeders/change-requests/{publicId}/decline",
   },
 
-  // Dashboard endpoints
-  DASHBOARD: {
-    STATS: "/Admin/Dashboard/Stats",
-    ANALYTICS: "/Admin/Dashboard/Analytics",
-    WITHDRAW: "/Admin/Wallet/Withdraw",
+  INJECTION_SUBSTATION: {
+    GET: "/assets/injection-substations",
+    ADD: "/assets/injection-substations",
+    GET_BY_ID: "/assets/injection-substations/{id}",
+    UPDATE: "/assets/injection-substations/{id}",
+    CHANGE_REQUEST: "/assets/injection-substations/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/injection-substations/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/injection-substations/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/injection-substations/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/injection-substations/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/injection-substations/change-requests/{publicId}/decline",
   },
 
-  //Series endpoints
-  SERIES: {
-    ANALYTICS: "/Admin/Transactions/Series",
+  SERVICE_STATION: {
+    GET: "/assets/service-centers",
+    ADD: "/assets/service-centers",
+    GET_BY_ID: "/assets/service-centers/{id}",
+    UPDATE: "/assets/service-centers/{id}",
   },
 
-  FEES: {
-    CRYPTO_FEES: "/Admin/CryptoFees",
-    EDIT_CRYPTO_FEES: "/Admin/Crypto/Fee",
+  HT_POLE: {
+    GET: "/assets/ht-poles",
+    ADD: "/assets/ht-poles",
+    GET_BY_ID: "/assets/ht-poles/{id}",
+    UPDATE: "/assets/ht-poles/{id}",
+    CHANGE_REQUEST: "/assets/ht-poles/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/ht-poles/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/ht-poles/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/ht-poles/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/ht-poles/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/ht-poles/change-requests/{publicId}/decline",
   },
 
-  LOGS: {
-    ADMIN_LOGS: "/Admin/Logs",
+  DISTRIBUTION_STATION: {
+    GET: "/assets/distribution-substations",
+    ADD: "/assets/distribution-substations",
+    GET_BY_ID: "/assets/distribution-substations/{id}",
+    UPDATE: "/assets/distribution-substations/{id}",
+    CHANGE_REQUEST: "/assets/distribution-substations/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/assets/distribution-substations/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/assets/distribution-substations/change-requests",
+    CHANGE_REQUEST_DETAILS: "/assets/distribution-substations/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/assets/distribution-substations/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/assets/distribution-substations/change-requests/{publicId}/decline",
+  },
+
+  DEPARTMENT: {
+    GET: "/departments",
+  },
+
+  CUSTOMER: {
+    GET: "/customers",
+    GET_BY_ID: "/customers/{id}",
+    ADD: "/customers/bulk",
+    UPDATE: "/customers/{id}",
+    SUSPEND: "/customers/{id}/suspend",
+    ACTIVATE: "/customers/{id}/activate",
+    PAYMENT_DISPUTE: "/customers/{id}/payment-disputes",
+    CHANGE_REQUEST: "/customers/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/customers/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/customers/change-requests",
+    CHANGE_REQUEST_DETAILS: "/customers/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
+    CUSTOMER_LOOKUP: "/customers/lookup",
+  },
+
+  CREATE_CUSTOMER: {
+    ADD: "/customers/bulk",
+  },
+
+  STATUS_MAP: {
+    GET: "/status-map",
+  },
+
+  PAYMENT_TYPE: {
+    GET: "/payments/types",
+  },
+
+  POSTPAID_BILLING: {
+    GET: "/billing/postpaid",
+    GET_BY_ID: "/billing/postpaid/{id}",
+    FINALIZE: "/billing/postpaid/finalize-period",
+    FINALIZE_BY_AREA_OFFICE_ID: "/billing/postpaid/area-offices/{areaOfficeId}/finalize",
+    BILLING_JOBS: "/billing/postpaid/jobs",
+    GET_BY_REFERENCE: "/billing/postpaid/public/{reference}",
+    BILLING_JOBS_BY_ID: "/billing/postpaid/jobs/{id}",
+    ADD_BILLING_JOB: "/billing/postpaid/jobs",
+    CHANGE_REQUEST: "/billing/postpaid/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/billing/postpaid/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/billing/postpaid/change-requests",
+    CHANGE_REQUEST_DETAILS: "/billing/postpaid/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/decline",
+  },
+
+  METER_READINGS: {
+    GET: "/billing/postpaid/meter-readings",
+    GET_BY_ID: "/billing/postpaid/meter-readings/{id}",
+    ADD: "/billing/postpaid/meter-readings",
+  },
+
+  FEEDER_ENERGY_CAP: {
+    GET: "/billing/postpaid/feeder-energy-caps",
+    GET_BY_ID: "/billing/postpaid/feeder-energy-caps/{id}",
+    ADD: "/billing/postpaid/feeder-energy-caps/apply-all",
+  },
+
+  ANALYTICS: {
+    ASSET_MANAGEMENT: "/assets/reports/summary",
+    CUSTOMER: "/customers/reports/summary",
+    POSTPAID_BILLING: "/billing/postpaid/summary",
+    PAYMENT_SUMMARY: "/payments/reports/summary",
+    OUTAGE_SUMMARY: "/outages/report/summary",
+    MAINTENANCE_SUMMARY: "/maintenance/report/summary",
+    VENDOR_SUMMARY: "/vendors/reports/summary",
+  },
+
+  OUTAGE_MANAGEMENT: {
+    GET: "/outages",
+    ADD: "/outages",
+    GET_BY_ID: "/outages/{id}",
+    UPDATE: "/outages/{id}",
+  },
+
+  MAINTENANCE: {
+    GET: "/maintenance",
+    ADD: "/maintenance",
+    GET_BY_ID: "/maintenance/{id}",
+    UPDATE: "/maintenance/{id}",
+  },
+
+  PAYMENTS: {
+    GET: "/payments",
+    GET_BY_ID: "/payments/{id}",
+    ADD: "/payments",
+    CHANGE_REQUEST: "/payments/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/payments/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/payments/change-requests",
+    CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/decline",
+  },
+
+  PAYMENT_DUNNING: {
+    GET: "/payments/dunning/cases",
+    ADD: "/payments/dunning/cases",
+  },
+
+  VENDORS: {
+    GET: "/vendors",
+    GET_BY_ID: "/vendors/{id}",
+    ADD: "/vendors/bulk",
+    GET_VENDOR_WALLET: "/vendors/{id}/wallet",
+    TOP_UP: "/vendors/{id}/wallet/top-up",
+    SUSPEND: "/vendors/{id}/suspend",
+    UPDATE_COMMISSION: "/vendors/{id}/commission",
   },
 }
 

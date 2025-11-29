@@ -1,80 +1,80 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
-import { API_CONFIG, API_ENDPOINTS } from "lib/config/api"
+import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
 // Interfaces
-interface Tokens {
-  accessToken: string
-  refreshToken: string
-  accessExpiry: string
-  refreshExpiry: string
-}
-
-interface Status {
-  value: number
-  label: string
-}
-
-interface Country {
-  id: number
+interface Role {
+  roleId: number
   name: string
-  callingCode: string
-  abbreviation: string
-  currency: null | string
+  slug: string
+  category: string
 }
 
-interface Permission {
-  id: number
-  canViewUsers: boolean
-  canManageUsers: boolean
-  canManageAdmin: boolean
-  canViewDashboard: boolean
-  canViewTransactions: boolean
-  canManageSystemSettings: boolean
-}
-
-interface Admin {
-  id: number
-  isActive: boolean
-  isSuperAdmin: boolean
-  permission: Permission
+interface Privilege {
+  key: string
+  name: string
+  category: string
+  actions: string[]
 }
 
 interface User {
   id: number
-  firstName: string
-  lastName: string
-  phoneNumber: string
-  tag: string
-  photo: string
-  referralUrl: string
-  dob: string
+  fullName: string
   email: string
-  role: string
-  status: Status
-  isVerified: boolean
-  country: Country
-  admin: Admin
+  phoneNumber: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  isEmailVerified: boolean
+  isPhoneVerified: boolean
+  profilePicture: string | null
+  roles: Role[]
+  privileges: Privilege[]
+}
+
+interface Tokens {
+  accessToken: string
+  refreshToken: string
+  expiresAt: string
 }
 
 interface LoginResponse {
-  tokens: Tokens
-  user: User
+  isSuccess: boolean
   message: string
+  data: {
+    accessToken: string
+    expiresAt: string
+    refreshToken: string
+    user: User
+    mustChangePassword: boolean
+  }
 }
 
 interface RefreshTokenResponse {
-  tokens: {
+  isSuccess: boolean
+  message: string
+  data: {
     accessToken: string
-    accessExpiry: string
+    expiresAt: string
+    refreshToken: string
+    user: User
+    mustChangePassword: boolean
   }
+}
+
+interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+interface ChangePasswordResponse {
+  isSuccess: boolean
   message: string
 }
 
 interface LoginCredentials {
-  username: string
+  email: string
   password: string
-  appId: string
 }
 
 interface AuthState {
@@ -84,21 +84,28 @@ interface AuthState {
   error: string | null
   isAuthenticated: boolean
   isRefreshing: boolean
+  mustChangePassword: boolean
+  isChangingPassword: boolean
+  changePasswordError: string | null
+  changePasswordSuccess: boolean
 }
 
 // Configure axios instance
 export const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 })
 
 // Helper functions for localStorage
-const loadAuthState = (): AuthState | undefined => {
+const loadAuthState = (): Partial<AuthState> | undefined => {
   try {
     const serializedState = localStorage.getItem("authState")
     if (serializedState === null) {
       return undefined
     }
-    return JSON.parse(serializedState) as AuthState
+    return JSON.parse(serializedState) as Partial<AuthState>
   } catch (err) {
     console.warn("Failed to load auth state from localStorage", err)
     return undefined
@@ -111,6 +118,7 @@ const saveAuthState = (state: AuthState) => {
       user: state.user,
       tokens: state.tokens,
       isAuthenticated: state.isAuthenticated,
+      mustChangePassword: state.mustChangePassword,
     })
     localStorage.setItem("authState", serializedState)
   } catch (err) {
@@ -118,9 +126,24 @@ const saveAuthState = (state: AuthState) => {
   }
 }
 
+const clearAuthState = () => {
+  try {
+    localStorage.removeItem("authState")
+  } catch (err) {
+    console.warn("Failed to clear auth state from localStorage", err)
+  }
+}
+
 // Check if token is expired
-const isTokenExpired = (expiryDate: string): boolean => {
-  return new Date() >= new Date(expiryDate)
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const [, payloadPart = ""] = token.split(".")
+    const payload = JSON.parse(atob(payloadPart)) as { exp?: number }
+    if (typeof payload.exp !== "number") return true
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
 }
 
 // Refresh token function
@@ -133,58 +156,54 @@ export const refreshAccessToken = createAsyncThunk("auth/refreshToken", async (_
       return rejectWithValue("No refresh token available")
     }
 
-    const response = await api.post<RefreshTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
+    const response = await api.post<RefreshTokenResponse>(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH_TOKEN), {
       refreshToken,
     })
 
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Token refresh failed")
+    }
+
     return response.data
   } catch (error: any) {
-    if (error.response) {
-      return rejectWithValue(error.response.data)
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Token refresh failed")
     }
-    return rejectWithValue(error.message)
+    return rejectWithValue(error.message || "Network error during token refresh")
   }
 })
 
+// Change password function
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (passwordData: ChangePasswordRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ChangePasswordResponse>(
+        buildApiUrl(API_ENDPOINTS.AUTH.CHANGE_PASSWORD),
+        passwordData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Password change failed")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Password change failed")
+      }
+      return rejectWithValue(error.message || "Network error during password change")
+    }
+  }
+)
+
 // Add request interceptor to inject token
 api.interceptors.request.use(
-  async (config) => {
+  (config) => {
     const authState = loadAuthState()
 
     if (authState?.tokens?.accessToken) {
-      // Check if access token is expired
-      if (isTokenExpired(authState.tokens.accessExpiry)) {
-        try {
-          // Attempt to refresh the token
-          const response = await api.post<RefreshTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
-            refreshToken: authState.tokens.refreshToken,
-          })
-
-          // Update the stored tokens
-          const updatedTokens = {
-            ...authState.tokens,
-            accessToken: response.data.tokens.accessToken,
-            accessExpiry: response.data.tokens.accessExpiry,
-          }
-
-          // Save the updated tokens
-          const updatedState = {
-            ...authState,
-            tokens: updatedTokens,
-          }
-          saveAuthState(updatedState)
-
-          // Use the new access token
-          config.headers.Authorization = `Bearer ${response.data.tokens.accessToken}`
-        } catch (error) {
-          // Refresh failed, redirect to login or handle accordingly
-          console.error("Token refresh failed:", error)
-          // You might want to dispatch a logout action here
-        }
-      } else {
-        // Token is still valid, use it
-        config.headers.Authorization = `Bearer ${authState.tokens.accessToken}`
-      }
+      config.headers.Authorization = `Bearer ${authState.tokens.accessToken}`
     }
 
     return config
@@ -208,31 +227,41 @@ api.interceptors.response.use(
       if (authState?.tokens?.refreshToken) {
         try {
           // Attempt to refresh the token
-          const response = await api.post<RefreshTokenResponse>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
+          const response = await api.post<RefreshTokenResponse>(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH_TOKEN), {
             refreshToken: authState.tokens.refreshToken,
           })
 
-          // Update the stored tokens
-          const updatedTokens = {
-            ...authState.tokens,
-            accessToken: response.data.tokens.accessToken,
-            accessExpiry: response.data.tokens.accessExpiry,
-          }
+          if (response.data.isSuccess) {
+            // Update the stored tokens
+            const updatedTokens = {
+              accessToken: response.data.data.accessToken,
+              refreshToken: response.data.data.refreshToken,
+              expiresAt: response.data.data.expiresAt,
+            }
 
-          // Save the updated tokens
-          const updatedState = {
-            ...authState,
-            tokens: updatedTokens,
+            // Save the updated tokens
+            const updatedState = {
+              ...authState,
+              tokens: updatedTokens,
+              mustChangePassword: response.data.data.mustChangePassword,
+            } as AuthState
+            saveAuthState(updatedState)
+
+            // Update the authorization header and retry the original request
+            originalRequest.headers.Authorization = `Bearer ${response.data.data.accessToken}`
+            return api(originalRequest)
           }
-          saveAuthState(updatedState)
-          // Update the authorization header and retry the original request
-          originalRequest.headers.Authorization = `Bearer ${response.data.tokens.accessToken}`
-          return api(originalRequest)
         } catch (refreshError) {
           // Refresh failed, redirect to login or handle accordingly
           console.error("Token refresh failed:", refreshError)
-          // You might want to dispatch a logout action here
+          // Clear auth state on refresh failure
+          clearAuthState()
+          window.location.href = "/"
         }
+      } else {
+        // No refresh token available, redirect to login
+        clearAuthState()
+        window.location.href = "/"
       }
     }
 
@@ -242,24 +271,33 @@ api.interceptors.response.use(
 
 // Load initial state from localStorage if available
 const persistedState = loadAuthState()
-const initialState: AuthState = persistedState || {
-  user: null,
-  tokens: null,
+const initialState: AuthState = {
+  user: persistedState?.user || null,
+  tokens: persistedState?.tokens || null,
   loading: false,
   error: null,
-  isAuthenticated: false,
+  isAuthenticated: persistedState?.isAuthenticated || false,
   isRefreshing: false,
+  mustChangePassword: persistedState?.mustChangePassword || false,
+  isChangingPassword: false,
+  changePasswordError: null,
+  changePasswordSuccess: false,
 }
 
-export const loginUser = createAsyncThunk("auth/login", async (credentials: LoginCredentials, { rejectWithValue }) => {
+export const loginUser = createAsyncThunk("auth/", async (credentials: LoginCredentials, { rejectWithValue }) => {
   try {
-    const response = await api.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials)
+    const response = await api.post<LoginResponse>(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), credentials)
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Login failed")
+    }
+
     return response.data
   } catch (error: any) {
-    if (error.response) {
-      return rejectWithValue(error.response.data)
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Login failed")
     }
-    return rejectWithValue(error.message)
+    return rejectWithValue(error.message || "Network error during login")
   }
 })
 
@@ -274,20 +312,43 @@ const authSlice = createSlice({
       state.error = null
       state.loading = false
       state.isRefreshing = false
-      localStorage.removeItem("authState")
+      state.mustChangePassword = false
+      state.isChangingPassword = false
+      state.changePasswordError = null
+      state.changePasswordSuccess = false
+      clearAuthState()
     },
     clearError: (state) => {
       state.error = null
+      state.changePasswordError = null
+    },
+    clearChangePasswordStatus: (state) => {
+      state.changePasswordError = null
+      state.changePasswordSuccess = false
     },
     initializeAuth: (state) => {
       const persistedState = loadAuthState()
       if (persistedState) {
-        return { ...state, ...persistedState }
+        state.user = persistedState.user || null
+        state.tokens = persistedState.tokens || null
+        state.isAuthenticated = persistedState.isAuthenticated || false
+        state.mustChangePassword = persistedState.mustChangePassword || false
       }
+    },
+    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload }
+        saveAuthState(state)
+      }
+    },
+    resetMustChangePassword: (state) => {
+      state.mustChangePassword = false
+      saveAuthState(state)
     },
   },
   extraReducers: (builder) => {
     builder
+      // Login cases
       .addCase(loginUser.pending, (state) => {
         state.loading = true
         state.error = null
@@ -295,14 +356,25 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
         state.loading = false
         state.isAuthenticated = true
-        state.user = action.payload.user
-        state.tokens = action.payload.tokens
+        state.user = action.payload.data.user
+        state.tokens = {
+          accessToken: action.payload.data.accessToken,
+          refreshToken: action.payload.data.refreshToken,
+          expiresAt: action.payload.data.expiresAt,
+        }
+        state.mustChangePassword = action.payload.data.mustChangePassword
+        state.error = null
         saveAuthState(state)
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
         state.error = (action.payload as string) || "Login failed"
+        state.isAuthenticated = false
+        state.user = null
+        state.tokens = null
+        state.mustChangePassword = false
       })
+      // Refresh token cases
       .addCase(refreshAccessToken.pending, (state) => {
         state.isRefreshing = true
         state.error = null
@@ -310,22 +382,55 @@ const authSlice = createSlice({
       .addCase(refreshAccessToken.fulfilled, (state, action: PayloadAction<RefreshTokenResponse>) => {
         state.isRefreshing = false
         if (state.tokens) {
-          state.tokens.accessToken = action.payload.tokens.accessToken
-          state.tokens.accessExpiry = action.payload.tokens.accessExpiry
+          state.tokens.accessToken = action.payload.data.accessToken
+          state.tokens.refreshToken = action.payload.data.refreshToken
+          state.tokens.expiresAt = action.payload.data.expiresAt
+          state.mustChangePassword = action.payload.data.mustChangePassword
+          state.error = null
           saveAuthState(state)
         }
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.isRefreshing = false
         state.error = (action.payload as string) || "Token refresh failed"
-        // Optionally logout the user if refresh fails
+        // Logout the user if refresh fails
         state.user = null
         state.tokens = null
         state.isAuthenticated = false
-        localStorage.removeItem("authState")
+        state.mustChangePassword = false
+        clearAuthState()
+      })
+      // Change password cases
+      .addCase(changePassword.pending, (state) => {
+        state.isChangingPassword = true
+        state.changePasswordError = null
+        state.changePasswordSuccess = false
+      })
+      .addCase(changePassword.fulfilled, (state, action: PayloadAction<ChangePasswordResponse>) => {
+        state.isChangingPassword = false
+        state.changePasswordSuccess = true
+        state.changePasswordError = null
+
+        // If the user was required to change password, update the state
+        if (state.mustChangePassword) {
+          state.mustChangePassword = false
+          saveAuthState(state)
+        }
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.isChangingPassword = false
+        state.changePasswordError = (action.payload as string) || "Password change failed"
+        state.changePasswordSuccess = false
       })
   },
 })
 
-export const { logout, clearError, initializeAuth } = authSlice.actions
+export const {
+  logout,
+  clearError,
+  clearChangePasswordStatus,
+  initializeAuth,
+  updateUserProfile,
+  resetMustChangePassword,
+} = authSlice.actions
 export default authSlice.reducer
