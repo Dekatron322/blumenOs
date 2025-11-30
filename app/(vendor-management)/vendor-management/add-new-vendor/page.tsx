@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -10,6 +10,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { createBulkVendors } from "lib/redux/vendorSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
 
 interface VendorFormData {
   blumenpayId: string
@@ -48,6 +49,7 @@ const AddNewVendor = () => {
   )
   const { employees, employeesLoading } = useAppSelector((state) => state.employee)
 
+  const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -151,55 +153,72 @@ const AddNewVendor = () => {
     }
   }
 
-  const validateForm = (): boolean => {
+  const validateCurrentStep = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.blumenpayId.trim()) {
-      errors.blumenpayId = "BlumenPay ID is required"
-    }
+    switch (currentStep) {
+      case 1: // Basic Information
+        if (!formData.blumenpayId.trim()) {
+          errors.blumenpayId = "BlumenPay ID is required"
+        }
+        if (!formData.name.trim()) {
+          errors.name = "Vendor name is required"
+        }
+        if (!formData.phoneNumber.trim()) {
+          errors.phoneNumber = "Phone number is required"
+        } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+          errors.phoneNumber = "Please enter a valid Nigerian phone number"
+        }
+        if (!formData.email.trim()) {
+          errors.email = "Email is required"
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          errors.email = "Please enter a valid email address"
+        }
+        break
 
-    if (!formData.name.trim()) {
-      errors.name = "Vendor name is required"
-    }
+      case 2: // Location & Services
+        if (!formData.address.trim()) {
+          errors.address = "Address is required"
+        }
+        if (!formData.city.trim()) {
+          errors.city = "City is required"
+        }
+        if (!formData.state) {
+          errors.state = "State is required"
+        }
+        break
 
-    if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = "Phone number is required"
-    } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
-      errors.phoneNumber = "Please enter a valid Nigerian phone number"
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
-    }
-
-    if (!formData.address.trim()) {
-      errors.address = "Address is required"
-    }
-
-    if (!formData.city.trim()) {
-      errors.city = "City is required"
-    }
-
-    if (!formData.state) {
-      errors.state = "State is required"
-    }
-
-    if (!formData.commission) {
-      errors.commission = "Commission rate is required"
-    } else if (parseFloat(formData.commission) <= 0) {
-      errors.commission = "Commission rate must be greater than 0"
-    }
-
-    if (!formData.employeeUserId.trim()) {
-      errors.employeeUserId = "Employee User ID is required"
-    } else if (isNaN(Number(formData.employeeUserId))) {
-      errors.employeeUserId = "Employee User ID must be a number"
+      case 3: // Commission & Assignment
+        if (!formData.commission) {
+          errors.commission = "Commission rate is required"
+        } else if (parseFloat(formData.commission) <= 0) {
+          errors.commission = "Commission rate must be greater than 0"
+        }
+        if (!formData.employeeUserId.trim()) {
+          errors.employeeUserId = "Employee User ID is required"
+        } else if (isNaN(Number(formData.employeeUserId))) {
+          errors.employeeUserId = "Employee User ID must be a number"
+        }
+        break
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
+  }
+
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3))
+    } else {
+      notify("error", "Please fix the form errors before continuing", {
+        description: "Some required fields are missing or contain invalid data",
+        duration: 4000,
+      })
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
   const handleSingleSubmit = async (e: React.FormEvent) => {
@@ -208,7 +227,7 @@ const AddNewVendor = () => {
   }
 
   const submitSingleVendor = async () => {
-    if (!validateForm()) {
+    if (!validateCurrentStep()) {
       notify("error", "Please fix the form errors before submitting", {
         description: "Some fields are missing or contain invalid data",
         duration: 4000,
@@ -262,6 +281,7 @@ const AddNewVendor = () => {
           documentUrls: [],
         })
         setFormErrors({})
+        setCurrentStep(1)
       }
     } catch (error: any) {
       console.error("Failed to add vendor:", error)
@@ -291,6 +311,7 @@ const AddNewVendor = () => {
       documentUrls: [],
     })
     setFormErrors({})
+    setCurrentStep(1)
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -637,6 +658,47 @@ const AddNewVendor = () => {
     }))
   }
 
+  // Step progress component
+  const StepProgress = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
+                  step === currentStep
+                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    : step < currentStep
+                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    : "border-gray-300 bg-white text-gray-500"
+                }`}
+              >
+                {step < currentStep ? (
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  step
+                )}
+              </div>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0a0a0a]" : "text-gray-500"}`}>
+                {step === 1 && "Basic Info"}
+                {step === 2 && "Location"}
+                {step === 3 && "Commission"}
+              </span>
+            </div>
+            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0a0a0a]" : "bg-gray-300"}`} />}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <section className="size-full">
       <DashboardNav />
@@ -748,152 +810,184 @@ const AddNewVendor = () => {
                       <p className="text-sm text-gray-600">Fill in all required fields to register a new vendor</p>
                     </div>
 
+                    <StepProgress />
+
                     {/* Vendor Form */}
                     <form onSubmit={handleSingleSubmit} className="space-y-6">
-                      <div className="rounded-lg bg-[#F9F9F9] p-6">
-                        <h4 className="font-medium text-gray-900">Basic Information</h4>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                          {/* Basic Information */}
+                      <AnimatePresence mode="wait">
+                        {/* Step 1: Basic Information */}
+                        {currentStep === 1 && (
+                          <motion.div
+                            key="step-1"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                          >
+                            <div className="rounded-lg bg-[#F9F9F9] p-6">
+                              <h4 className="mb-4 font-medium text-gray-900">Basic Information</h4>
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormInputModule
+                                  label="BlumenPay ID"
+                                  name="blumenpayId"
+                                  type="text"
+                                  placeholder="Enter BlumenPay ID"
+                                  value={formData.blumenpayId}
+                                  onChange={handleInputChange}
+                                  error={formErrors.blumenpayId}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="BlumenPay ID"
-                            name="blumenpayId"
-                            type="text"
-                            placeholder="Enter BlumenPay ID"
-                            value={formData.blumenpayId}
-                            onChange={handleInputChange}
-                            error={formErrors.blumenpayId}
-                            required
-                          />
+                                <FormInputModule
+                                  label="Vendor Name"
+                                  name="name"
+                                  type="text"
+                                  placeholder="Enter vendor name"
+                                  value={formData.name}
+                                  onChange={handleInputChange}
+                                  error={formErrors.name}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Vendor Name"
-                            name="name"
-                            type="text"
-                            placeholder="Enter vendor name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            error={formErrors.name}
-                            required
-                          />
+                                <FormInputModule
+                                  label="Phone Number"
+                                  name="phoneNumber"
+                                  type="tel"
+                                  placeholder="Enter phone number (e.g., 08012345678)"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  error={formErrors.phoneNumber}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Phone Number"
-                            name="phoneNumber"
-                            type="tel"
-                            placeholder="Enter phone number (e.g., 08012345678)"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            error={formErrors.phoneNumber}
-                            required
-                          />
+                                <FormInputModule
+                                  label="Email Address"
+                                  name="email"
+                                  type="email"
+                                  placeholder="Enter email address"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  error={formErrors.email}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
 
-                          <FormInputModule
-                            label="Email Address"
-                            name="email"
-                            type="email"
-                            placeholder="Enter email address"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            error={formErrors.email}
-                            required
-                          />
-                        </div>
-                      </div>
-                      {/* Commission & Employee */}
-                      <div className="grid grid-cols-1 gap-6 rounded-lg bg-[#F9F9F9] p-6 md:grid-cols-2">
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Commission & Assignment</h4>
+                        {/* Step 2: Location & Services */}
+                        {currentStep === 2 && (
+                          <motion.div
+                            key="step-2"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                          >
+                            <div className="rounded-lg bg-[#F9F9F9] p-6">
+                              <h4 className="mb-4 font-medium text-gray-900">Location & Services</h4>
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormInputModule
+                                  label="Address"
+                                  name="address"
+                                  type="text"
+                                  placeholder="Enter complete address"
+                                  value={formData.address}
+                                  onChange={handleInputChange}
+                                  error={formErrors.address}
+                                  required
+                                />
 
-                          <FormSelectModule
-                            label="Commission Rate (%)"
-                            name="commission"
-                            value={formData.commission}
-                            onChange={handleInputChange}
-                            options={commissionOptions}
-                            error={formErrors.commission}
-                            required
-                          />
+                                <FormInputModule
+                                  label="City"
+                                  name="city"
+                                  type="text"
+                                  placeholder="Enter city"
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  error={formErrors.city}
+                                  required
+                                />
 
-                          <FormSelectModule
-                            label="Employee User ID"
-                            name="employeeUserId"
-                            value={formData.employeeUserId}
-                            onChange={handleInputChange}
-                            options={employeeOptions}
-                            error={formErrors.employeeUserId}
-                            required
-                          />
-                        </div>
+                                <FormSelectModule
+                                  label="State"
+                                  name="state"
+                                  value={formData.state}
+                                  onChange={handleInputChange}
+                                  options={stateOptions}
+                                  error={formErrors.state}
+                                  required
+                                />
 
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Documents</h4>
-                          <FormInputModule
-                            label="Document URLs (comma-separated)"
-                            name="documentUrls"
-                            type="text"
-                            placeholder="https://example.com/doc1.pdf, https://example.com/doc2.pdf"
-                            value={formData.documentUrls.join(", ")}
-                            onChange={handleDocumentUrlsChange}
-                          />
-                        </div>
-                      </div>
+                                <FormSelectModule
+                                  label="Can Process Postpaid"
+                                  name="canProcessPostpaid"
+                                  value={formData.canProcessPostpaid.toString()}
+                                  onChange={handleInputChange}
+                                  options={booleanOptions}
+                                  required
+                                />
 
-                      {/* Location & Services */}
-                      <div className="rounded-lg bg-[#F9F9F9] p-6">
-                        <h4 className="font-medium text-gray-900">Location & Services</h4>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                          <FormInputModule
-                            label="Address"
-                            name="address"
-                            type="text"
-                            placeholder="Enter complete address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            error={formErrors.address}
-                            required
-                          />
+                                <FormSelectModule
+                                  label="Can Process Prepaid"
+                                  name="canProcessPrepaid"
+                                  value={formData.canProcessPrepaid.toString()}
+                                  onChange={handleInputChange}
+                                  options={booleanOptions}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
 
-                          <FormInputModule
-                            label="City"
-                            name="city"
-                            type="text"
-                            placeholder="Enter city"
-                            value={formData.city}
-                            onChange={handleInputChange}
-                            error={formErrors.city}
-                            required
-                          />
+                        {/* Step 3: Commission & Assignment */}
+                        {currentStep === 3 && (
+                          <motion.div
+                            key="step-3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                          >
+                            <div className="rounded-lg bg-[#F9F9F9] p-6">
+                              <h4 className="mb-4 font-medium text-gray-900">Commission & Assignment</h4>
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormSelectModule
+                                  label="Commission Rate (%)"
+                                  name="commission"
+                                  value={formData.commission}
+                                  onChange={handleInputChange}
+                                  options={commissionOptions}
+                                  error={formErrors.commission}
+                                  required
+                                />
 
-                          <FormSelectModule
-                            label="State"
-                            name="state"
-                            value={formData.state}
-                            onChange={handleInputChange}
-                            options={stateOptions}
-                            error={formErrors.state}
-                            required
-                          />
+                                <FormSelectModule
+                                  label="Employee User ID"
+                                  name="employeeUserId"
+                                  value={formData.employeeUserId}
+                                  onChange={handleInputChange}
+                                  options={employeeOptions}
+                                  error={formErrors.employeeUserId}
+                                  required
+                                />
 
-                          <FormSelectModule
-                            label="Can Process Postpaid"
-                            name="canProcessPostpaid"
-                            value={formData.canProcessPostpaid.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Can Process Prepaid"
-                            name="canProcessPrepaid"
-                            value={formData.canProcessPrepaid.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
-                            required
-                          />
-                        </div>
-                      </div>
+                                <div className="md:col-span-2">
+                                  <FormInputModule
+                                    label="Document URLs (comma-separated)"
+                                    name="documentUrls"
+                                    type="text"
+                                    placeholder="https://example.com/doc1.pdf, https://example.com/doc2.pdf"
+                                    value={formData.documentUrls.join(", ")}
+                                    onChange={handleDocumentUrlsChange}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* Error Summary */}
                       {Object.keys(formErrors).length > 0 && (
@@ -923,24 +1017,56 @@ const AddNewVendor = () => {
                       )}
 
                       {/* Form Actions */}
-                      <div className="flex justify-end gap-4 border-t pt-6">
-                        <ButtonModule
-                          variant="dangerSecondary"
-                          size="lg"
-                          onClick={handleReset}
-                          disabled={isSubmitting}
-                          type="button"
-                        >
-                          Reset
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="primary"
-                          size="lg"
-                          type="submit"
-                          disabled={!isFormValid() || isSubmitting}
-                        >
-                          {isSubmitting ? "Adding Vendor..." : "Add Vendor"}
-                        </ButtonModule>
+                      <div className="flex justify-between gap-4 border-t pt-6">
+                        <div className="flex gap-4">
+                          {currentStep > 1 && (
+                            <ButtonModule
+                              variant="outline"
+                              size="lg"
+                              onClick={prevStep}
+                              disabled={isSubmitting}
+                              type="button"
+                              icon={<ArrowLeftIcon />}
+                              iconPosition="start"
+                            >
+                              Previous
+                            </ButtonModule>
+                          )}
+                        </div>
+
+                        <div className="flex gap-4">
+                          <ButtonModule
+                            variant="dangerSecondary"
+                            size="lg"
+                            onClick={handleReset}
+                            disabled={isSubmitting}
+                            type="button"
+                          >
+                            Reset
+                          </ButtonModule>
+
+                          {currentStep < 3 ? (
+                            <ButtonModule
+                              variant="primary"
+                              size="lg"
+                              onClick={nextStep}
+                              type="button"
+                              icon={<ArrowRightIcon />}
+                              iconPosition="end"
+                            >
+                              Next
+                            </ButtonModule>
+                          ) : (
+                            <ButtonModule
+                              variant="primary"
+                              size="lg"
+                              type="submit"
+                              disabled={!isFormValid() || isSubmitting}
+                            >
+                              {isSubmitting ? "Adding Vendor..." : "Add Vendor"}
+                            </ButtonModule>
+                          )}
+                        </div>
                       </div>
                     </form>
                   </motion.div>

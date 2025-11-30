@@ -344,8 +344,8 @@ const AllPayments: React.FC = () => {
         }
       case "Cash":
         return {
-          backgroundColor: "#F3E8FF",
-          color: "#9333EA",
+          backgroundColor: "#DBE8FE",
+          color: "#2563EB",
         }
       case "Pos":
         return {
@@ -389,8 +389,8 @@ const AllPayments: React.FC = () => {
         }
       case "Staff":
         return {
-          backgroundColor: "#F3E8FF",
-          color: "#9333EA",
+          backgroundColor: "#DBE8FE",
+          color: "#2563EB",
         }
       default:
         return {

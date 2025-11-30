@@ -1,12 +1,23 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
+import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
+import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { PlusIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import {
+  AddIcon,
+  ContractIcon,
+  DepartmentIcon,
+  EmployeeIcon,
+  PayrollIcon,
+  RefreshCircleIcon,
+} from "components/Icons/Icons"
+import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
-import AllVendors from "components/Tables/ViewAllVendors"
+import { useAppSelector } from "lib/hooks/useRedux"
+import AllChangeRequest from "components/Tables/AllChangeRequest"
+import VendorChangeRequests from "components/Tables/VendorChangeRequest"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -263,20 +274,54 @@ const LoadingState = ({ showDepartments = true }) => {
   )
 }
 
-export default function VendorManagement() {
-  const router = useRouter()
+// Generate mock employee data
+const generateEmployeeData = () => {
+  return {
+    totalEmployees: Math.floor(185 + Math.random() * 50),
+    activeEmployees: Math.floor(160 + Math.random() * 40),
+    onLeaveEmployees: Math.floor(15 + Math.random() * 10),
+    newHires: Math.floor(12 + Math.random() * 8),
+    fullTimeEmployees: Math.floor(130 + Math.random() * 30),
+    partTimeEmployees: Math.floor(35 + Math.random() * 15),
+    contractEmployees: Math.floor(20 + Math.random() * 10),
+    departments: 8,
+    avgTenure: (2.5 + Math.random() * 2).toFixed(1),
+    turnoverRate: (3.5 + Math.random() * 2).toFixed(1),
+  }
+}
+
+export default function EmployeeManagement() {
+  const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [employeeData, setEmployeeData] = useState(generateEmployeeData())
+
+  // Permissions: show Add Employee only if user has 'W'
+  const { user } = useAppSelector((state) => state.auth)
+  const canWrite = !!user?.privileges?.some((p) => p.actions?.includes("W"))
+
+  // Use mock data
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
 
+  const handleAddEmployeeSuccess = async () => {
+    setIsAddEmployeeModalOpen(false)
+    // Refresh data after adding employee
+    setEmployeeData(generateEmployeeData())
+  }
+
   const handleRefreshData = () => {
     setIsLoading(true)
     setTimeout(() => {
+      setEmployeeData(generateEmployeeData())
       setIsLoading(false)
     }, 1000)
+  }
+
+  const handleOpenAddEmployeeModal = () => {
+    setIsAddEmployeeModalOpen(true)
   }
 
   return (
@@ -288,8 +333,8 @@ export default function VendorManagement() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Vendor Management</h4>
-                <p>Manage vendor records, performance, and wallet operations</p>
+                <h4 className="text-2xl font-semibold">Change Request</h4>
+                <p>Manage employee change requests</p>
               </div>
 
               <motion.div
@@ -298,14 +343,6 @@ export default function VendorManagement() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
-                  variant="outline"
-                  size="md"
-                  icon={<PlusIcon />}
-                  onClick={() => router.push("/vendor-management/add-new-vendor")}
-                >
-                  Add New Vendor
-                </ButtonModule>
                 <ButtonModule
                   variant="primary"
                   size="md"
@@ -335,7 +372,7 @@ export default function VendorManagement() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                      <AllVendors />
+                      <VendorChangeRequests />
                     </motion.div>
                   </>
                 )}
@@ -344,6 +381,11 @@ export default function VendorManagement() {
           </div>
         </div>
       </div>
+      <AddEmployeeModal
+        isOpen={isAddEmployeeModalOpen}
+        onRequestClose={() => setIsAddEmployeeModalOpen(false)}
+        onSuccess={handleAddEmployeeSuccess}
+      />
     </section>
   )
 }

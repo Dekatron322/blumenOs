@@ -320,9 +320,7 @@ const AddCustomerPage = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleSubmit = async () => {
     if (!validateCurrentStep()) {
       notify("error", "Please fix the form errors before submitting", {
         description: "Some fields are missing or contain invalid data",
@@ -435,9 +433,9 @@ const AddCustomerPage = () => {
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
                   step === currentStep
-                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    ? "border-[#0A0A0A] bg-[#0A0A0A] text-white"
                     : step < currentStep
-                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    ? "border-[#0A0A0A] bg-[#0A0A0A] text-white"
                     : "border-gray-300 bg-white text-gray-500"
                 }`}
               >
@@ -453,7 +451,7 @@ const AddCustomerPage = () => {
                   step
                 )}
               </div>
-              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0a0a0a]" : "text-gray-500"}`}>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0A0A0A]" : "text-gray-500"}`}>
                 {step === 1 && "Personal"}
                 {step === 2 && "Address"}
                 {step === 3 && "Service"}
@@ -463,7 +461,7 @@ const AddCustomerPage = () => {
                 {step === 7 && "Additional"}
               </span>
             </div>
-            {step < 7 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0a0a0a]" : "bg-gray-300"}`} />}
+            {step < 7 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0A0A0A]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>
@@ -509,8 +507,8 @@ const AddCustomerPage = () => {
                 <ButtonModule
                   variant="primary"
                   size="md"
-                  type="submit"
-                  form="customer-form"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={!isFormValid() || createLoading}
                   icon={<AddCustomerIcon />}
                   iconPosition="start"
@@ -540,7 +538,13 @@ const AddCustomerPage = () => {
                   <StepProgress />
 
                   {/* Customer Form */}
-                  <form id="customer-form" onSubmit={handleSubmit} className="space-y-8">
+                  <form
+                    id="customer-form"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                    }}
+                    className="space-y-8"
+                  >
                     <AnimatePresence mode="wait">
                       {/* Step 1: Personal Information */}
                       {currentStep === 1 && (
@@ -549,7 +553,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Personal Information</h4>
@@ -621,7 +625,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Address Information</h4>
@@ -712,7 +716,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Service Information</h4>
@@ -791,7 +795,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Tariff Information</h4>
@@ -883,7 +887,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Meter and Service Options</h4>
@@ -943,7 +947,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Financial Information</h4>
@@ -991,7 +995,7 @@ const AddCustomerPage = () => {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          className="space-y-6 rounded-lg bg-[#F9f9f9] p-6"
                         >
                           <div className="border-b pb-4">
                             <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
@@ -1108,7 +1112,8 @@ const AddCustomerPage = () => {
                           <ButtonModule
                             variant="primary"
                             size="lg"
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             disabled={!isFormValid() || createLoading}
                           >
                             {createLoading ? "Adding Customer..." : "Add Customer"}

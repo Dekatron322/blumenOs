@@ -23,6 +23,10 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import TopUpWalletModal from "components/ui/Modal/top-up-wallet"
 import SuspendVendorModal from "components/ui/Modal/suspend-vendor-modal"
 import UpdateCommissionModal from "components/ui/Modal/update-commission-modal"
+import GenerateApiKeyModal from "components/ui/Modal/generate-api-key-modal"
+import VendorChangeRequestModal from "components/ui/Modal/vendor-change-request-modal"
+import VendorChangeRequestsTab from "components/Tabs/vendor-change-requests-tab"
+import VendorPaymentsTab from "components/Tabs/vendor-payments-tab"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   CalendarOutlineIcon,
@@ -37,6 +41,9 @@ import {
   SettingOutlineIcon,
   UserRoleIcon,
   VerifyOutlineIcon,
+  BasicInfoOutlineIcon,
+  ChangeRequestOutlineIcon,
+  PaymentDisputeOutlineIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearCurrentVendor, clearVendorWallet, fetchVendorById, fetchVendorWallet } from "lib/redux/vendorSlice"
@@ -63,6 +70,8 @@ const VendorDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
+  type TabType = "details" | "payments" | "change-requests"
+
   const [activeModal, setActiveModal] = useState<
     | "suspend"
     | "activate"
@@ -70,12 +79,14 @@ const VendorDetailsPage = () => {
     | "status"
     | "edit"
     | "resetPassword"
+    | "generateApiKey"
     | "changeRequest"
     | "updateCommission"
     | null
   >(null)
   const [isExporting, setIsExporting] = useState(false)
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>("details")
 
   useEffect(() => {
     if (vendorId) {
@@ -152,6 +163,7 @@ const VendorDetailsPage = () => {
       | "status"
       | "edit"
       | "resetPassword"
+      | "generateApiKey"
       | "changeRequest"
       | "updateCommission"
   ) => setActiveModal(modalType)
@@ -709,10 +721,10 @@ const VendorDetailsPage = () => {
                         <ButtonModule
                           variant="primary"
                           className="w-full justify-start gap-3"
-                          onClick={() => openModal("resetPassword")}
+                          onClick={() => openModal("generateApiKey")}
                         >
                           <PasswordOutlineIcon size={20} />
-                          Reset API Key
+                          Generate API Key
                         </ButtonModule>
                         <ButtonModule
                           variant={currentVendor.isSuspended ? "primary" : "danger"}
@@ -750,210 +762,266 @@ const VendorDetailsPage = () => {
                   </motion.div>
                 </div>
 
-                {/* Right Column - Detailed Information */}
+                {/* Main Content Area - Tabs */}
                 <div className="flex w-full flex-col space-y-6 xl:col-span-2">
-                  {/* Vendor Information */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <EmployeeInfoIcon />
-                      Vendor Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Account ID</label>
-                        <p className="font-semibold text-gray-900">{currentVendor.accountId}</p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Commission Rate</label>
-                        <p className="font-semibold text-gray-900">{formatCommission(currentVendor.commission)}</p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Status</label>
-                        <p className="font-semibold text-gray-900">
-                          <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
-                            <StatusIcon className="size-4" />
-                            {statusConfig.label}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Assigned Employee</label>
-                        <p className="font-semibold text-gray-900">{currentVendor.employeeName || "Not assigned"}</p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Suspension Reason</label>
-                        <p className="font-semibold text-gray-900">{currentVendor.suspensionReason || "N/A"}</p>
-                      </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Suspended</label>
-                        <p className="font-semibold text-gray-900">{currentVendor.isSuspended ? "Yes" : "No"}</p>
-                      </div>
+                  <div className="mb-4">
+                    <div className="w-fit rounded-md bg-white p-2">
+                      <nav className="-mb-px flex space-x-2">
+                        <button
+                          onClick={() => setActiveTab("details")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "details"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <BasicInfoOutlineIcon className="size-5" />
+                          <span>Vendor Details</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("payments")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "payments"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <PaymentDisputeOutlineIcon className="size-5" />
+                          <span>Payments</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("change-requests")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "change-requests"
+                              ? "bg-[#0a0a0a] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <ChangeRequestOutlineIcon className="size-5" />
+                          <span>Change Requests</span>
+                        </button>
+                      </nav>
                     </div>
-                  </motion.div>
+                  </div>
 
-                  {/* Contact & Location Details */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <User className="size-5" />
-                      Contact & Location Details
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <Phone className="size-5 text-blue-600" />
+                  {activeTab === "details" ? (
+                    <>
+                      {/* Vendor Information */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      >
+                        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                          <EmployeeInfoIcon />
+                          Vendor Information
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Account ID</label>
+                            <p className="font-semibold text-gray-900">{currentVendor.accountId}</p>
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Commission Rate</label>
+                            <p className="font-semibold text-gray-900">{formatCommission(currentVendor.commission)}</p>
+                          </div>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Status</label>
                             <p className="font-semibold text-gray-900">
-                              {formatPhoneNumber(currentVendor.phoneNumber)}
+                              <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
+                                <StatusIcon className="size-4" />
+                                {statusConfig.label}
+                              </span>
                             </p>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <Mail className="size-5 text-green-600" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Email Address</label>
-                            <p className="font-semibold text-gray-900">{currentVendor.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
-                            <MapPin className="size-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Address</label>
-                            <p className="font-semibold text-gray-900">{currentVendor.address}</p>
-                            <p className="text-sm text-gray-600">
-                              {currentVendor.city}, {currentVendor.state}
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Assigned Employee</label>
+                            <p className="font-semibold text-gray-900">
+                              {currentVendor.employeeName || "Not assigned"}
                             </p>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Service Capabilities Details */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <DepartmentInfoIcon />
-                      Service Capabilities
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className={`rounded-lg border border-gray-100 p-4 ${postpaidConfig.bg}`}>
-                          <label className="text-sm font-medium text-gray-600">Postpaid Processing</label>
-                          <p className={`font-semibold ${postpaidConfig.color}`}>{postpaidConfig.label}</p>
-                          <p className="mt-1 text-sm text-gray-600">Ability to process postpaid payment transactions</p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className={`rounded-lg border border-gray-100 p-4 ${prepaidConfig.bg}`}>
-                          <label className="text-sm font-medium text-gray-600">Prepaid Processing</label>
-                          <p className={`font-semibold ${prepaidConfig.color}`}>{prepaidConfig.label}</p>
-                          <p className="mt-1 text-sm text-gray-600">Ability to process prepaid payment transactions</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* System Information */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <CalendarOutlineIcon />
-                      System Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">API Key Issued</label>
-                          <p className="font-semibold text-gray-900">{formatDate(currentVendor.apiKeyIssuedAt)}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">API Key Last Used</label>
-                          <p className="font-semibold text-gray-900">{formatDate(currentVendor.apiKeyLastUsedAt)}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Last Login</label>
-                          <p className="font-semibold text-gray-900">{formatDate(currentVendor.lastLoginAt)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* API Information */}
-                  {currentVendor.apiPublicKey && (
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                    >
-                      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <VerifyOutlineIcon />
-                        API Information
-                      </h3>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Public API Key</label>
-                        <p className="break-all font-mono text-sm text-gray-900">{currentVendor.apiPublicKey}</p>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Document URLs */}
-                  {currentVendor.documentUrls && currentVendor.documentUrls.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                    >
-                      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <Shield className="size-5" />
-                        Documents
-                      </h3>
-                      <div className="space-y-2">
-                        {currentVendor.documentUrls.map((url, index) => (
-                          <div key={index} className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3">
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="break-all text-blue-600 hover:text-blue-800"
-                            >
-                              Document {index + 1}
-                            </a>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Suspension Reason</label>
+                            <p className="font-semibold text-gray-900">{currentVendor.suspensionReason || "N/A"}</p>
                           </div>
-                        ))}
-                      </div>
-                    </motion.div>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Suspended</label>
+                            <p className="font-semibold text-gray-900">{currentVendor.isSuspended ? "Yes" : "No"}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Contact & Location Details */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      >
+                        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                          <User className="size-5" />
+                          Contact & Location Details
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
+                                <Phone className="size-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                                <p className="font-semibold text-gray-900">
+                                  {formatPhoneNumber(currentVendor.phoneNumber)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
+                                <Mail className="size-5 text-green-600" />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Email Address</label>
+                                <p className="font-semibold text-gray-900">{currentVendor.email}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                              <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
+                                <MapPin className="size-5 text-purple-600" />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Address</label>
+                                <p className="font-semibold text-gray-900">{currentVendor.address}</p>
+                                <p className="text-sm text-gray-600">
+                                  {currentVendor.city}, {currentVendor.state}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Service Capabilities Details */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      >
+                        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                          <DepartmentInfoIcon />
+                          Service Capabilities
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div className="space-y-4">
+                            <div className={`rounded-lg border border-gray-100 p-4 ${postpaidConfig.bg}`}>
+                              <label className="text-sm font-medium text-gray-600">Postpaid Processing</label>
+                              <p className={`font-semibold ${postpaidConfig.color}`}>{postpaidConfig.label}</p>
+                              <p className="mt-1 text-sm text-gray-600">
+                                Ability to process postpaid payment transactions
+                              </p>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className={`rounded-lg border border-gray-100 p-4 ${prepaidConfig.bg}`}>
+                              <label className="text-sm font-medium text-gray-600">Prepaid Processing</label>
+                              <p className={`font-semibold ${prepaidConfig.color}`}>{prepaidConfig.label}</p>
+                              <p className="mt-1 text-sm text-gray-600">
+                                Ability to process prepaid payment transactions
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* System Information */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      >
+                        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                          <CalendarOutlineIcon />
+                          System Information
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          <div className="space-y-4">
+                            <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                              <label className="text-sm font-medium text-gray-600">API Key Issued</label>
+                              <p className="font-semibold text-gray-900">{formatDate(currentVendor.apiKeyIssuedAt)}</p>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                              <label className="text-sm font-medium text-gray-600">API Key Last Used</label>
+                              <p className="font-semibold text-gray-900">
+                                {formatDate(currentVendor.apiKeyLastUsedAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                              <label className="text-sm font-medium text-gray-600">Last Login</label>
+                              <p className="font-semibold text-gray-900">{formatDate(currentVendor.lastLoginAt)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* API Information */}
+                      {currentVendor.apiPublicKey && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                        >
+                          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                            <VerifyOutlineIcon />
+                            API Information
+                          </h3>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Public API Key</label>
+                            <p className="break-all font-mono text-sm text-gray-900">{currentVendor.apiPublicKey}</p>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Document URLs */}
+                      {currentVendor.documentUrls && currentVendor.documentUrls.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                        >
+                          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                            <Shield className="size-5" />
+                            Documents
+                          </h3>
+                          <div className="space-y-2">
+                            {currentVendor.documentUrls.map((url, index) => (
+                              <div key={index} className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3">
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="break-all text-blue-600 hover:text-blue-800"
+                                >
+                                  Document {index + 1}
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </>
+                  ) : activeTab === "payments" ? (
+                    <VendorPaymentsTab vendorId={currentVendor.id} />
+                  ) : (
+                    <VendorChangeRequestsTab vendorId={currentVendor.id} />
                   )}
                 </div>
               </div>
@@ -1000,6 +1068,16 @@ const VendorDetailsPage = () => {
         onSuccess={handleUpdateSuccess}
       />
 
+      <GenerateApiKeyModal
+        isOpen={activeModal === "generateApiKey"}
+        onRequestClose={closeAllModals}
+        vendorId={currentVendor.id}
+        vendorName={currentVendor.name}
+        onSuccess={() => {
+          handleUpdateSuccess()
+        }}
+      />
+
       {/* TODO: Implement UpdateVendorModal */}
       {/* <UpdateVendorModal
         isOpen={activeModal === "edit"}
@@ -1008,14 +1086,13 @@ const VendorDetailsPage = () => {
         vendor={currentVendor}
       /> */}
 
-      {/* TODO: Implement ChangeRequestModal for vendors */}
-      {/* <ChangeRequestModal
+      <VendorChangeRequestModal
         isOpen={activeModal === "changeRequest"}
         onRequestClose={closeAllModals}
         onSuccess={handleChangeRequestSuccess}
         vendorId={currentVendor.id}
         vendorName={currentVendor.name}
-      /> */}
+      />
     </section>
   )
 }

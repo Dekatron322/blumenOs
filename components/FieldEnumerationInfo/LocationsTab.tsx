@@ -510,7 +510,7 @@ const LocationsTab: React.FC = () => {
         }
       case "customer":
         return {
-          backgroundColor: "#F3E8FF",
+          backgroundColor: "#DBE8FE",
           color: "#7C3AED",
         }
       default:

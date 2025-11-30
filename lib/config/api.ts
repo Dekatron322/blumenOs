@@ -232,6 +232,14 @@ export const API_ENDPOINTS = {
     TOP_UP: "/vendors/{id}/wallet/top-up",
     SUSPEND: "/vendors/{id}/suspend",
     UPDATE_COMMISSION: "/vendors/{id}/commission",
+    GENERATE_API_KEY: "/vendors/{id}/api-keys/rotate",
+    CHANGE_REQUEST: "/vendors/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/vendors/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/vendors/change-requests",
+    CHANGE_REQUEST_DETAILS: "/vendors/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/decline",
+    VENDOR_PAYMENT: "/vendors/{id}/payments",
   },
 }
 

@@ -182,6 +182,12 @@ const allLinks: LinkItem[] = [
         privilegeKey: "vendors",
         requiredActions: ["W"],
       },
+      {
+        name: "Change Request",
+        href: "/vendor-management/change-request",
+        privilegeKey: "vendors",
+        requiredActions: ["E"],
+      },
     ],
   },
   {
@@ -468,7 +474,7 @@ export function Links({ isCollapsed }: LinksProps) {
           <div key={link.name} className="group">
             <div
               className={clsx(
-                "relative flex items-center rounded-xl transition-all duration-300 ease-out",
+                "relative flex items-center rounded-lg transition-all duration-300 ease-out",
                 "hover:bg-[#0a0a0a] hover:text-white",
                 {
                   "bg-[#0a0a0a] text-white shadow-sm": isLinkActive,
@@ -479,7 +485,7 @@ export function Links({ isCollapsed }: LinksProps) {
                 <button
                   type="button"
                   onClick={() => handleExpand(link.name, !isExpanded)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-2"
+                  className="flex w-full items-center justify-between gap-3 p-2"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -522,9 +528,9 @@ export function Links({ isCollapsed }: LinksProps) {
                   )}
                 </button>
               ) : (
-                <Link href={link.href || "#"} className="flex w-full items-center gap-3 px-4 py-3">
+                <Link href={link.href || "#"} className="flex w-full items-center gap-3 p-2">
                   <div
-                    className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
+                    className={clsx("flex size-8 items-center justify-center rounded-md transition-all duration-300", {
                       "bg-white text-[#0a0a0a] shadow-lg": isLinkActive,
                       "bg-gray-100 text-[#0a0a0a] group-hover:bg-white group-hover:text-[#0a0a0a]": !isLinkActive,
                     })}
@@ -550,14 +556,14 @@ export function Links({ isCollapsed }: LinksProps) {
                   "max-h-72 opacity-100": isExpanded,
                 })}
               >
-                <div className="ml-8 border-l-2 border-gray-200 py-2 pl-4">
+                <div className="ml-6 border-l-2 border-gray-200 py-2 pl-3">
                   {filteredChildren.map((child) => {
                     const isChildActive = pathname.startsWith(child.href)
                     return (
                       <Link key={child.name} href={child.href}>
                         <div
                           className={clsx(
-                            "group/child mb-2 rounded-lg px-3 py-2 transition-all duration-300 last:mb-0",
+                            "group/child mb-2 rounded-md p-2  transition-all duration-300 last:mb-0",
                             "hover:bg-[#0a0a0a] hover:text-white",
                             {
                               "bg-gray-100 text-[#0a0a0a]": isChildActive,

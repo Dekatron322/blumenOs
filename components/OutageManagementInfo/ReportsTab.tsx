@@ -499,7 +499,7 @@ const ReportsTab: React.FC = () => {
         }
       case "compliance":
         return {
-          backgroundColor: "#F3E8FF",
+          backgroundColor: "#DBE8FE",
           color: "#7C3AED",
         }
       case "financial":
