@@ -10,10 +10,10 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  type VendorPayment,
-  type VendorPaymentsRequestParams,
   clearVendorPayments,
   fetchVendorPayments,
+  type VendorPayment,
+  type VendorPaymentsRequestParams,
 } from "lib/redux/vendorSlice"
 
 // Channel filter options
