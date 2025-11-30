@@ -270,7 +270,9 @@ const VendorChangeRequestModal: React.FC<VendorChangeRequestModalProps> = ({
                         className="mb-0"
                       />
                       {(change.path === "canProcessPostpaid" || change.path === "canProcessPrepaid") && (
-                        <p className="mt-1 text-xs text-gray-500">Enter 'true' for Yes or 'false' for No</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Enter &apos;true&apos; for Yes or &apos;false&apos; for No
+                        </p>
                       )}
                       {change.path === "commission" && (
                         <p className="mt-1 text-xs text-gray-500">Enter commission percentage (e.g., 2.5 for 2.5%)</p>

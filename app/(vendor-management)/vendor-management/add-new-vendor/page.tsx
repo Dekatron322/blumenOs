@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"

@@ -12,8 +12,8 @@ import { ExportCsvIcon } from "components/Icons/Icons"
 import {
   type ChangeRequestListItem,
   type ChangeRequestsRequestParams,
-  fetchChangeRequestsByVendorId,
   clearChangeRequestsByVendor,
+  fetchChangeRequestsByVendorId,
 } from "lib/redux/vendorSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import VendorViewChangeRequestModal from "components/ui/Modal/view-vendor-change-request-modal"

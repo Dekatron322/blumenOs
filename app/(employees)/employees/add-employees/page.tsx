@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"

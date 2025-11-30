@@ -29,21 +29,21 @@ import VendorChangeRequestsTab from "components/Tabs/vendor-change-requests-tab"
 import VendorPaymentsTab from "components/Tabs/vendor-payments-tab"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
+  BasicInfoOutlineIcon,
   CalendarOutlineIcon,
+  ChangeRequestOutlineIcon,
   DepartmentInfoIcon,
   EmailOutlineIcon,
   EmployeeInfoIcon,
   ExportOutlineIcon,
   MapOutlineIcon,
   PasswordOutlineIcon,
+  PaymentDisputeOutlineIcon,
   PhoneOutlineIcon,
   PostpaidBillOutlineIcon,
   SettingOutlineIcon,
   UserRoleIcon,
   VerifyOutlineIcon,
-  BasicInfoOutlineIcon,
-  ChangeRequestOutlineIcon,
-  PaymentDisputeOutlineIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearCurrentVendor, clearVendorWallet, fetchVendorById, fetchVendorWallet } from "lib/redux/vendorSlice"

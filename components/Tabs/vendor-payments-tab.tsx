@@ -12,8 +12,8 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   type VendorPayment,
   type VendorPaymentsRequestParams,
-  fetchVendorPayments,
   clearVendorPayments,
+  fetchVendorPayments,
 } from "lib/redux/vendorSlice"
 
 // Channel filter options

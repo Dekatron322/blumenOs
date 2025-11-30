@@ -88,7 +88,7 @@ const SideBar = () => {
                   </button>
                   <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
                     <img src="/Icons/payment.svg" alt="Payment Types" className="size-4" />
-                    <span>Payment Types Mng't</span>
+                    <span>Payment Types Mngt</span>
                   </button>
                   <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
                     <img src="/Icons/building.svg" alt="Departments" className="size-4" />

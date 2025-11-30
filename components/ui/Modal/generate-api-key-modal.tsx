@@ -242,7 +242,7 @@ const GenerateApiKeyModal: React.FC<GenerateApiKeyModalProps> = ({
                       <h4 className="text-sm font-medium text-red-800">Security Alert</h4>
                       <div className="mt-2 text-sm text-red-700">
                         <p className="mb-1">
-                          <strong>Store your secret key securely!</strong> You won't be able to see it again after
+                          <strong>Store your secret key securely!</strong> You won&apos;t be able to see it again after
                           closing this dialog.
                         </p>
                         <p>Anyone with this secret key can make API requests on behalf of your vendor account.</p>
