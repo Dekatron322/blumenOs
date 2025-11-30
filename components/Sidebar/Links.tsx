@@ -456,7 +456,7 @@ export function Links({ isCollapsed }: LinksProps) {
   }
 
   return (
-    <div className="flex max-h-[calc(100svh-150px)] flex-col space-y-1 overflow-y-auto p-2">
+    <div className="flex max-h-[calc(100svh-150px)] w-full flex-col space-y-1 overflow-y-auto p-2">
       {filteredLinks.map((link) => {
         const LinkIcon = link.icon
         const hasChildren = Array.isArray(link.children) && link.children.length > 0

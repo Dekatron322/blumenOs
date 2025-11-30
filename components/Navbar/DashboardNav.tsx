@@ -278,10 +278,10 @@ const DashboardNav = () => {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="sticky top-0 z-50 block border-b bg-[#E9F0FF] px-16 py-4 max-md:px-3 md:hidden">
+      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-16 py-4 max-md:px-3 md:hidden">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
-            <UltraIcon />
+            <Image src="/blumen.png" alt="Dashboard" width={50} height={50} />
           </Link>
           <div className="flex items-center gap-4">
             {/* Mobile User Info */}
@@ -294,9 +294,11 @@ const DashboardNav = () => {
           </div>
         </div>
 
-        {/* Mobile Sidebar */}
+        {/* Mobile Sidebar + Backdrop */}
+        {isNavOpen && <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={toggleNav} />}
+
         <div
-          className={`fixed left-0 top-0 z-50 h-full w-[250px] bg-white transition-transform duration-300 ${
+          className={`fixed left-0 top-0 z-50 h-full w-[300px] bg-white transition-transform duration-300 ${
             isNavOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -313,7 +315,7 @@ const DashboardNav = () => {
             <RxCross2 className="cursor-pointer text-gray-500" onClick={toggleNav} />
           </div>
 
-          <div className="mt-4 flex flex-col items-start space-y-2 p-4">
+          <div className="mt-2 flex flex-col items-start space-y-2 ">
             <Links isCollapsed={false} />
 
             {/* Mobile Menu Items */}
@@ -341,7 +343,7 @@ const DashboardNav = () => {
                 setIsLogoutModalOpen(true)
                 setIsNavOpen(false)
               }}
-              className="fixed bottom-4 mt-10 flex items-center gap-2 rounded-lg px-3 py-2 text-red-600 hover:bg-red-50"
+              className="absolute bottom-0 left-0 right-0 z-50  mt-10 flex items-center gap-2  bg-red-100 px-3 py-3 text-red-600"
             >
               <LogoutIcon />
               <span className="text-sm font-medium">Sign Out</span>
