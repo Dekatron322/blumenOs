@@ -114,7 +114,7 @@ const SignIn: React.FC = () => {
   return (
     <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#ffffff] md:flex-row">
       {/* Form Container */}
-      <div className="container flex w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] px-5 py-8 md:w-[40%] md:border-b-0 md:border-r-2">
+      <div className="container flex min-h-screen w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] px-5 py-8 md:min-h-0 md:w-[40%] md:border-b-0 md:border-r-2">
         <motion.main
           className="flex w-full flex-col items-center justify-center"
           initial={{ opacity: 0, y: 20 }}
@@ -258,15 +258,15 @@ const SignIn: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.8 }}
-          className="absolute inset-0 z-0 flex"
+          className="relative z-0 flex items-start justify-center pt-8"
         >
-          <img src="/auth-background.svg" alt="auth-background" className="h-full w-full object-cover" />
+          <img src="/auth-background.svg" alt="auth-background" className="w-full object-contain" />
         </motion.div>
 
         {/* Text positioned at the bottom */}
         <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-24">
           <motion.h1
-            className="max-w-[60%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
+            className="mb-4 max-w-[70%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.0 }}

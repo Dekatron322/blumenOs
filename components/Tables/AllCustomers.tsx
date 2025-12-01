@@ -473,6 +473,35 @@ const AllCustomers = () => {
     return items
   }
 
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Example for early pages on mobile: 1,2,3,...,last
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    // Middle pages: 1, ..., current, ..., last
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    // Near the end: 1, ..., last-2, last-1, last
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "ACTIVE":
@@ -605,10 +634,10 @@ const AllCustomers = () => {
   )
 
   const CustomerListItem = ({ customer }: { customer: Customer }) => (
-    <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+    <div className="border-b bg-white p-2 transition-all hover:bg-gray-50 md:p-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center md:gap-4">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 max-sm:hidden">
             <span className="text-sm font-semibold text-blue-600">
               {customer.fullName
                 .split(" ")
@@ -617,8 +646,8 @@ const AllCustomers = () => {
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{customer.fullName}</h3>
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="font-semibold text-gray-900">{customer.fullName}</h3>
               <div
                 style={getStatusStyle(customer.status)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
@@ -648,7 +677,7 @@ const AllCustomers = () => {
                 Arrears: ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-600 max-sm:text-xs md:gap-4">
               <span>
                 <strong>Account:</strong> {customer.accountNumber}
               </span>
@@ -662,12 +691,12 @@ const AllCustomers = () => {
                 <strong>Tariff:</strong> {customer.band}
               </span>
             </div>
-            <p className="mt-2 text-sm text-gray-500">{customer.address}</p>
+            <p className="mt-2 text-sm text-gray-50 max-sm:hidden max-sm:text-xs">{customer.address}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
+        <div className="flex items-start justify-between md:items-center md:gap-3">
+          <div className="text-right text-sm max-sm:text-xs">
             <div className="font-medium text-gray-900">Phone: {customer.phoneNumber}</div>
             <div className="text-gray-600">Email: {customer.email}</div>
           </div>
@@ -809,9 +838,9 @@ const AllCustomers = () => {
 
   if (loading) {
     return (
-      <div className="flex-3 relative mt-5 flex items-start gap-6">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
         {/* Main Content Skeleton */}
-        <div className={`rounded-md border bg-white p-5 ${showCategories ? "flex-1" : "w-full"}`}>
+        <div className={`w-full rounded-md border bg-white p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <HeaderSkeleton />
 
           {/* Customer Display Area Skeleton */}
@@ -836,7 +865,7 @@ const AllCustomers = () => {
 
         {/* Categories Sidebar Skeleton */}
         {showCategories && (
-          <div className="w-80 rounded-md border bg-white p-5">
+          <div className="mt-4 w-full rounded-md border bg-white p-5 lg:mt-0 lg:w-80">
             <div className="border-b pb-4">
               <div className="h-6 w-40 rounded bg-gray-200"></div>
             </div>
@@ -867,21 +896,21 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative mt-5 flex items-start gap-6">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
         {/* Main Content - Customers List/Grid */}
-        <div className={`rounded-md border bg-white p-5 ${showCategories ? "flex-1" : "w-full"}`}>
+        <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
             <p className="text-2xl font-medium">All Customers</p>
-            <div className="mt-2 flex gap-4">
+            <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
               <SearchModule
                 value={filters.search}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onCancel={handleCancelSearch}
                 placeholder="Search by name, account number, or meter number"
-                className="max-w-[300px] "
+                className="w-full max-w-full md:max-w-[300px]"
               />
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
                   onClick={() => setViewMode("grid")}
@@ -1008,8 +1037,8 @@ const AllCustomers = () => {
 
           {/* Pagination */}
           {customers.length > 0 && (
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-1">
+            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-1 max-sm:hidden">
                 <p>Show rows</p>
                 <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
                   <option value={6}>6</option>
@@ -1020,7 +1049,7 @@ const AllCustomers = () => {
                 </select>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
                 <button
                   className={`px-3 py-2 ${
                     pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
@@ -1032,23 +1061,45 @@ const AllCustomers = () => {
                 </button>
 
                 <div className="flex items-center gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
+                  <div className="hidden items-center gap-2 md:flex">
+                    {getPageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 md:hidden">
+                    {getMobilePageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 <button
@@ -1063,7 +1114,7 @@ const AllCustomers = () => {
                   <BiSolidRightArrow />
                 </button>
               </div>
-              <p>
+              <p className="max-sm:hidden">
                 Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount} total records)
               </p>
             </div>
@@ -1079,7 +1130,7 @@ const AllCustomers = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ type: "spring", damping: 24, stiffness: 260 }}
-              className="w-80 rounded-md border bg-white p-5"
+              className="mt-4 w-full rounded-md border bg-white p-5 lg:mt-0 lg:w-80"
             >
               <div className="border-b pb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Customer Categories</h2>
