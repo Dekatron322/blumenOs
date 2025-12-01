@@ -14,7 +14,7 @@ import {
   UserIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearAgents, fetchAgents, type Agent } from "lib/redux/agentSlice"
+import { type Agent, clearAgents, fetchAgents } from "lib/redux/agentSlice"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
