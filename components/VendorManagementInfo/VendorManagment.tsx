@@ -137,7 +137,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-6"
+      className="flex flex-col gap-6 md:flex-row"
     >
       {/* Left Column - Vendor Directory */}
       <div className="flex-1">
@@ -159,7 +159,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
             {!loading && !error && vendors.length === 0 && <p className="text-sm text-gray-500">No vendors found.</p>}
             {vendors.map((vendor) => (
               <div key={vendor.id} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 hover:shadow-sm">
-                <div className="flex w-full items-start justify-between gap-3">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
@@ -174,7 +174,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
                       </span>
                     </div>
 
-                    <div className="mt-2 flex items-center gap-3">
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                       <div className="flex items-center gap-1">
                         <PhoneIcon />
                         <p className="mt-1 text-sm text-gray-600">{vendor.phone}</p>
@@ -185,13 +185,13 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
                       </div>
                     </div>
 
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex items-center gap-2 max-sm:hidden">
                       <p className="text-sm text-gray-500">Business Type:</p>
                       <p className="text-sm font-medium text-gray-700">{vendor.businessType}</p>
                     </div>
                   </div>
 
-                  <div className="text-right text-sm">
+                  <div className="w-full text-sm max-sm:flex max-sm:justify-between md:text-right">
                     <div>
                       <p className="font-semibold text-gray-900">{vendor.dailySales}</p>
                       <p className="text-gray-500">{vendor.transactionsToday} transactions today</p>
@@ -204,8 +204,8 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
                 </div>
 
                 {/* Status Indicators */}
-                <div className="mt-3 flex items-center justify-between gap-4 border-t pt-3 text-sm">
-                  <div className="flex flex-1 justify-between gap-4">
+                <div className="mt-3 flex flex-col gap-3 border-t pt-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-4 max-sm:hidden sm:flex-1 sm:flex-row sm:justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <BillsIcon />
