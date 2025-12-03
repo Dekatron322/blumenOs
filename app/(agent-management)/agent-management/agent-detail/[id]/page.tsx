@@ -28,17 +28,9 @@ import {
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
-import {
-  CalendarOutlineIcon,
-  CycleIcon,
-  ExportCsvIcon,
-  ExportOutlineIcon,
-  MapOutlineIcon,
-  StatusIcon,
-  UserRoleIcon,
-} from "components/Icons/Icons"
+import { ExportOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearCurrentAgent, fetchAgentById, Agent as ReduxAgent, AgentUser, CashClearance } from "lib/redux/agentSlice"
+import { Agent as ReduxAgent, AgentUser, CashClearance, clearCurrentAgent, fetchAgentById } from "lib/redux/agentSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
@@ -71,7 +63,7 @@ const LoadingSkeleton = () => (
             <div className="text-center">
               <div className="relative mx-auto mb-4">
                 <div className="mx-auto h-20 w-20 rounded-full bg-gray-200"></div>
-                <div className="absolute -right-1 bottom-1 h-6 w-6 rounded-full bg-gray-200"></div>
+                <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
               </div>
               <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
               <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
@@ -510,28 +502,27 @@ const AgentDetailsPage = () => {
                     </ButtonModule>
 
                     {canUpdate ? (
-                                          <ButtonModule
-                      variant="primary"
-                      size="sm"
-                      className="flex items-center gap-2"
-                      onClick={handleEditAgent}
-                      disabled={activeAction === "edit"}
-                    >
-                      <Edit3 className="size-4" />
-                      {activeAction === "edit" ? "Editing..." : "Edit Agent"}
-                    </ButtonModule>
-                                        ) : (
-                                          <ButtonModule
-                                            variant="primary"
-                                            size="sm"
-                                            className="flex items-center gap-2"
-                                            onClick={() => setIsChangeRequestModalOpen(true)}
-                                          >
-                                            <Edit3 className="size-4" />
-                                            Change Request
-                                          </ButtonModule>
-                                        )}
-                    
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={handleEditAgent}
+                        disabled={activeAction === "edit"}
+                      >
+                        <Edit3 className="size-4" />
+                        {activeAction === "edit" ? "Editing..." : "Edit Agent"}
+                      </ButtonModule>
+                    ) : (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => setIsChangeRequestModalOpen(true)}
+                      >
+                        <Edit3 className="size-4" />
+                        Change Request
+                      </ButtonModule>
+                    )}
 
                     <ButtonModule
                       variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}

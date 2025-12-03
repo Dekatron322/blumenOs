@@ -3,25 +3,12 @@
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle,
-  PlusCircle,
-  Shield,
-  Tag,
-  Users,
-  XCircle,
-  Key,
-  Lock,
-  Unlock,
-  Edit3,
-} from "lucide-react"
+import { ArrowLeft, CheckCircle, Edit3, Key, PlusCircle, Shield, Tag, Users, XCircle } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { createRole, resetCreateState, CreateRoleRequest, PrivilegeAssignment } from "lib/redux/roleSlice"
+import { createRole, CreateRoleRequest, PrivilegeAssignment, resetCreateState } from "lib/redux/roleSlice"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
@@ -81,7 +68,7 @@ const LoadingSkeleton = () => (
       {/* Form Skeleton */}
       <div className="grid gap-6 md:grid-cols-3">
         {/* Left Column Skeleton */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="space-y-6 md:col-span-2">
           {[1, 2, 3, 4].map((item) => (
             <div key={item} className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
               <div className="mb-4 h-6 w-48 rounded bg-gray-200"></div>
@@ -121,9 +108,7 @@ const CreateRolePage = () => {
   const dispatch = useAppDispatch()
 
   // Get role creation state from Redux store
-  const { createRoleLoading, createRoleSuccess, createRoleError, createdRole } = useAppSelector(
-    (state) => state.roles
-  )
+  const { createRoleLoading, createRoleSuccess, createRoleError, createdRole } = useAppSelector((state) => state.roles)
   const { user } = useAppSelector((state) => state.auth)
 
   // Temporarily allow creating roles for any authenticated user
@@ -135,7 +120,7 @@ const CreateRolePage = () => {
     category: "",
     privileges: [],
   })
-  
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
   const [selectedPrivileges, setSelectedPrivileges] = useState<Map<number, Set<number>>>(new Map())
@@ -143,15 +128,16 @@ const CreateRolePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("")
 
   // Filter privileges based on search and category
-  const filteredPrivileges = mockPrivileges.filter(privilege => {
-    const matchesSearch = privilege.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         privilege.key.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPrivileges = mockPrivileges.filter((privilege) => {
+    const matchesSearch =
+      privilege.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      privilege.key.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = !selectedCategory || privilege.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
   // Get unique categories from privileges
-  const privilegeCategories = Array.from(new Set(mockPrivileges.map(p => p.category)))
+  const privilegeCategories = Array.from(new Set(mockPrivileges.map((p) => p.category)))
 
   // Reset state when component unmounts
   useEffect(() => {
@@ -164,12 +150,12 @@ const CreateRolePage = () => {
   useEffect(() => {
     if (createRoleSuccess && createdRole) {
       notify("success", `Role "${formData.name}" has been created successfully`)
-      
+
       // Redirect to the newly created role's details page after a short delay
       const timer = setTimeout(() => {
         router.push(`/roles/details/${createdRole.id}`)
       }, 1500)
-      
+
       return () => clearTimeout(timer)
     }
   }, [createRoleSuccess, createdRole, formData.name, router])
@@ -181,54 +167,54 @@ const CreateRolePage = () => {
     }
   }, [createRoleError])
 
-  const handleInputChange = (field: keyof Omit<CreateRoleRequest, 'privileges'>) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const value = e.target.value
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
+  const handleInputChange =
+    (field: keyof Omit<CreateRoleRequest, "privileges">) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const value = e.target.value
+      setFormData((prev) => ({
         ...prev,
-        [field]: ""
+        [field]: value,
+      }))
+
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: "",
+        }))
+      }
+
+      // Mark field as touched
+      setTouched((prev) => ({
+        ...prev,
+        [field]: true,
       }))
     }
 
-    // Mark field as touched
-    setTouched(prev => ({
-      ...prev,
-      [field]: true
-    }))
-  }
+  const handleSelectChange =
+    (field: keyof Omit<CreateRoleRequest, "privileges">) =>
+    (e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }) => {
+      const value = "target" in e ? e.target.value : e
 
-  const handleSelectChange = (field: keyof Omit<CreateRoleRequest, 'privileges'>) => (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const value = "target" in e ? e.target.value : e
-
-    setFormData((prev) => ({
-      ...prev,
-      [field]: String(value),
-    }))
-
-    // Clear error when user selects an option
-    if (errors[field]) {
-      setErrors((prev) => ({
+      setFormData((prev) => ({
         ...prev,
-        [field]: "",
+        [field]: String(value),
+      }))
+
+      // Clear error when user selects an option
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: "",
+        }))
+      }
+
+      // Mark field as touched
+      setTouched((prev) => ({
+        ...prev,
+        [field]: true,
       }))
     }
-
-    // Mark field as touched
-    setTouched((prev) => ({
-      ...prev,
-      [field]: true,
-    }))
-  }
 
   // Handle privilege selection
   const handlePrivilegeActionToggle = (privilegeId: number, actionBit: number) => {
@@ -257,7 +243,7 @@ const CreateRolePage = () => {
 
   // Select all available actions for a privilege
   const handleSelectAllActions = (privilegeId: number, availableActions: number) => {
-    const privilege = mockPrivileges.find(p => p.id === privilegeId)
+    const privilege = mockPrivileges.find((p) => p.id === privilegeId)
     if (!privilege) return
 
     const actions = new Set<number>()
@@ -276,7 +262,7 @@ const CreateRolePage = () => {
 
   // Clear all actions for a privilege
   const handleClearAllActions = (privilegeId: number) => {
-    setSelectedPrivileges(prev => {
+    setSelectedPrivileges((prev) => {
       const newMap = new Map(prev)
       newMap.delete(privilegeId)
       return newMap
@@ -286,7 +272,7 @@ const CreateRolePage = () => {
   // Calculate total actions for a privilege
   const calculateActionsTotal = (actions: Set<number>): number => {
     let total = 0
-    actions.forEach(action => total += action)
+    actions.forEach((action) => (total += action))
     return total
   }
 
@@ -324,7 +310,7 @@ const CreateRolePage = () => {
       category: true,
       privileges: true,
     })
-    
+
     return Object.keys(newErrors).length === 0
   }
 
@@ -344,20 +330,20 @@ const CreateRolePage = () => {
       const actionsTotal = calculateActionsTotal(actions)
       privileges.push({
         privilegeId,
-        actions: actionsTotal
+        actions: actionsTotal,
       })
     })
 
     const submitData: CreateRoleRequest = {
       ...formData,
-      privileges
+      privileges,
     }
 
     try {
       const result = await dispatch(createRole(submitData))
 
       if (createRole.rejected.match(result)) {
-        const errorMessage = result.payload as string || "Failed to create role"
+        const errorMessage = (result.payload as string) || "Failed to create role"
         notify("error", errorMessage)
       }
     } catch (error: any) {
@@ -369,7 +355,7 @@ const CreateRolePage = () => {
     router.push("/roles-management/roles")
   }
 
-  const getError = (field: keyof Omit<CreateRoleRequest, 'privileges'> | 'privileges'): string => {
+  const getError = (field: keyof Omit<CreateRoleRequest, "privileges"> | "privileges"): string => {
     return touched[field] ? errors[field] || "" : ""
   }
 
@@ -428,7 +414,14 @@ const CreateRolePage = () => {
                         {isLoading ? (
                           <>
                             <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
                               <path
                                 className="opacity-75"
                                 fill="currentColor"
@@ -453,7 +446,7 @@ const CreateRolePage = () => {
             <div className="flex w-full px-16 py-8">
               <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Main Form Content - 2/3 width */}
-                <div className="md:col-span-2 space-y-6">
+                <div className="space-y-6 md:col-span-2">
                   {/* Role Information Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -477,8 +470,6 @@ const CreateRolePage = () => {
                         required
                         disabled={isLoading}
                         error={getError("name")}
-                        
-                       
                       />
 
                       {/* Category */}
@@ -491,14 +482,11 @@ const CreateRolePage = () => {
                         required
                         disabled={isLoading}
                         error={getError("category")}
-                        
                       />
 
                       {/* Description */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Description
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Description</label>
                         <div className="mt-1">
                           <textarea
                             value={formData.description}
@@ -539,9 +527,7 @@ const CreateRolePage = () => {
                         <Shield className="size-5" />
                         Privileges & Permissions
                       </h2>
-                      {getError("privileges") && (
-                        <p className="text-sm text-[#D14343]">{getError("privileges")}</p>
-                      )}
+                      {getError("privileges") && <p className="text-sm text-[#D14343]">{getError("privileges")}</p>}
                     </div>
 
                     {/* Search and Filter */}
@@ -564,15 +550,18 @@ const CreateRolePage = () => {
                             name="privilegeCategory"
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value as string)}
-                            options={[{ value: "", label: "All Categories" }, ...privilegeCategories.map(cat => ({
-                              value: cat,
-                              label: cat
-                            }))]}
+                            options={[
+                              { value: "", label: "All Categories" },
+                              ...privilegeCategories.map((cat) => ({
+                                value: cat,
+                                label: cat,
+                              })),
+                            ]}
                             disabled={isLoading}
                           />
                         </div>
                       </div>
-                      
+
                       {/* Selected Privileges Summary */}
                       {selectedPrivileges.size > 0 && (
                         <div className="rounded-lg bg-green-50 p-4">
@@ -581,8 +570,12 @@ const CreateRolePage = () => {
                               <span className="text-sm font-medium text-green-700">
                                 {selectedPrivileges.size} privilege(s) selected
                               </span>
-                              <p className="text-xs text-green-600 mt-1">
-                                Total actions: {Array.from(selectedPrivileges.values()).reduce((total, actions) => total + actions.size, 0)}
+                              <p className="mt-1 text-xs text-green-600">
+                                Total actions:{" "}
+                                {Array.from(selectedPrivileges.values()).reduce(
+                                  (total, actions) => total + actions.size,
+                                  0
+                                )}
                               </p>
                             </div>
                             <button
@@ -599,9 +592,9 @@ const CreateRolePage = () => {
                     </div>
 
                     {/* Privileges List */}
-                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    <div className="max-h-[500px] space-y-4 overflow-y-auto pr-2">
                       {filteredPrivileges.length === 0 ? (
-                        <div className="text-center py-8">
+                        <div className="py-8 text-center">
                           <Shield className="mx-auto size-12 text-gray-400" />
                           <p className="mt-2 text-gray-500">No privileges found matching your criteria</p>
                         </div>
@@ -619,13 +612,13 @@ const CreateRolePage = () => {
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
+                                  <div className="mb-1 flex items-center gap-2">
                                     <h4 className="font-semibold text-gray-900">{privilege.name}</h4>
                                     <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">
                                       {privilege.category}
                                     </span>
                                   </div>
-                                  <p className="text-sm text-gray-600 mb-3">{privilege.key}</p>
+                                  <p className="mb-3 text-sm text-gray-600">{privilege.key}</p>
 
                                   {/* Available Actions */}
                                   <div>
@@ -634,7 +627,9 @@ const CreateRolePage = () => {
                                       <div className="flex gap-2">
                                         <button
                                           type="button"
-                                          onClick={() => handleSelectAllActions(privilege.id, privilege.availableActions)}
+                                          onClick={() =>
+                                            handleSelectAllActions(privilege.id, privilege.availableActions)
+                                          }
                                           className="text-xs text-blue-600 hover:text-blue-800"
                                           disabled={isLoading}
                                         >
@@ -650,14 +645,14 @@ const CreateRolePage = () => {
                                         </button>
                                       </div>
                                     </div>
-                                    
+
                                     <div className="flex flex-wrap gap-2">
                                       {actionOptions.map((action) => {
                                         const isAvailable = privilege.availableActions & action.bit
                                         const isSelected = selectedActions.has(action.bit)
-                                        
+
                                         if (!isAvailable) return null
-                                        
+
                                         return (
                                           <button
                                             key={action.value}
@@ -676,7 +671,7 @@ const CreateRolePage = () => {
                                             ) : (
                                               <div className="size-3 rounded-full border border-gray-300" />
                                             )}
-                                            {action.label.split(' ')[0]}
+                                            {action.label.split(" ")[0]}
                                           </button>
                                         )
                                       })}
@@ -710,18 +705,16 @@ const CreateRolePage = () => {
                       <div className="rounded-lg bg-white p-4">
                         <div className="mb-2 text-xs font-medium text-gray-500">Category</div>
                         <div className="text-lg font-semibold text-gray-900">
-                          {formData.category ? 
-                            categoryOptions.find(opt => opt.value === formData.category)?.label || formData.category
+                          {formData.category
+                            ? categoryOptions.find((opt) => opt.value === formData.category)?.label || formData.category
                             : "(Not set)"}
                         </div>
                       </div>
-                      <div className="md:col-span-2 rounded-lg bg-white p-4">
+                      <div className="rounded-lg bg-white p-4 md:col-span-2">
                         <div className="mb-2 text-xs font-medium text-gray-500">Description</div>
-                        <div className="text-gray-900">
-                          {formData.description || "No description provided"}
-                        </div>
+                        <div className="text-gray-900">{formData.description || "No description provided"}</div>
                       </div>
-                      <div className="md:col-span-2 rounded-lg bg-white p-4">
+                      <div className="rounded-lg bg-white p-4 md:col-span-2">
                         <div className="mb-2 text-xs font-medium text-gray-500">Selected Privileges</div>
                         <div className="text-gray-900">
                           {selectedPrivileges.size === 0 ? (
@@ -729,11 +722,16 @@ const CreateRolePage = () => {
                           ) : (
                             <div className="space-y-2">
                               <div className="text-sm font-medium text-gray-700">
-                                {selectedPrivileges.size} privilege(s) with {Array.from(selectedPrivileges.values()).reduce((total, actions) => total + actions.size, 0)} action(s)
+                                {selectedPrivileges.size} privilege(s) with{" "}
+                                {Array.from(selectedPrivileges.values()).reduce(
+                                  (total, actions) => total + actions.size,
+                                  0
+                                )}{" "}
+                                action(s)
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {Array.from(selectedPrivileges.entries()).map(([privilegeId, actions]) => {
-                                  const privilege = mockPrivileges.find(p => p.id === privilegeId)
+                                  const privilege = mockPrivileges.find((p) => p.id === privilegeId)
                                   if (!privilege) return null
                                   return (
                                     <span
@@ -778,7 +776,14 @@ const CreateRolePage = () => {
                             {isLoading ? (
                               <span className="flex items-center justify-center gap-2">
                                 <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  />
                                   <path
                                     className="opacity-75"
                                     fill="currentColor"
@@ -803,7 +808,7 @@ const CreateRolePage = () => {
                       ) : (
                         <div className="rounded-lg bg-red-50 p-4">
                           <p className="text-sm text-red-700">
-                            You don't have permission to create roles. Please contact an administrator.
+                            You don&lsquo;t have permission to create roles. Please contact an administrator.
                           </p>
                           <ButtonModule
                             variant="secondary"

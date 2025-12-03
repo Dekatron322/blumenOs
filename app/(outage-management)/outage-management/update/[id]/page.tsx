@@ -224,7 +224,7 @@ const UpdateOutage = () => {
         <DashboardNav />
         <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
           <div className="text-center">
-            <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+            <div className="mb-4 size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
             <p className="text-gray-600">Loading outage details...</p>
           </div>
         </div>

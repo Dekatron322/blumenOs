@@ -28,18 +28,14 @@ import {
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
-import {
-  CalendarOutlineIcon,
-  ExportOutlineIcon,
-} from "components/Icons/Icons"
+import { CalendarOutlineIcon, ExportOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { 
-  clearCurrentRole, 
-  fetchRoleById, 
-  Role as ReduxRole, 
-  RolePrivilege,
+import {
+  clearCurrentRole,
+  clearDeleteRoleState,
   deleteRole,
-  clearDeleteRoleState
+  fetchRoleById,
+  Role as ReduxRole,
 } from "lib/redux/roleSlice"
 
 // Delete Confirmation Modal Component
@@ -51,13 +47,7 @@ interface DeleteRoleModalProps {
   roleName: string
 }
 
-const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
-  isOpen,
-  onRequestClose,
-  onConfirm,
-  loading,
-  roleName,
-}) => {
+const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({ isOpen, onRequestClose, onConfirm, loading, roleName }) => {
   if (!isOpen) return null
 
   return (
@@ -91,13 +81,7 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
             disabled={loading}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M15 5L5 15M5 5L15 15"
                 stroke="currentColor"
@@ -116,7 +100,8 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
               <div>
                 <h3 className="font-semibold text-red-700">Warning: This action cannot be undone</h3>
                 <p className="mt-1 text-sm text-red-600">
-                  Deleting this role will permanently remove it from the system. Users assigned to this role will lose their permissions.
+                  Deleting this role will permanently remove it from the system. Users assigned to this role will lose
+                  their permissions.
                 </p>
               </div>
             </div>
@@ -124,11 +109,10 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
 
           <div className="mb-6">
             <p className="text-gray-700">
-              Are you sure you want to delete the role <span className="font-bold text-gray-900">"{roleName}"</span>?
+              Are you sure you want to delete the role{" "}
+              <span className="font-bold text-gray-900">&quot;{roleName}&quot;</span>?
             </p>
-            <p className="mt-2 text-sm text-gray-600">
-              This action will:
-            </p>
+            <p className="mt-2 text-sm text-gray-600">This action will:</p>
             <ul className="mt-2 space-y-1 text-sm text-gray-600">
               <li className="flex items-start gap-2">
                 <div className="mt-0.5 size-1.5 rounded-full bg-red-500"></div>
@@ -150,22 +134,10 @@ const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({
           </div>
 
           <div className="flex gap-4">
-            <ButtonModule
-              variant="secondary"
-              size="lg"
-              className="flex-1"
-              onClick={onRequestClose}
-              disabled={loading}
-            >
+            <ButtonModule variant="secondary" size="lg" className="flex-1" onClick={onRequestClose} disabled={loading}>
               Cancel
             </ButtonModule>
-            <ButtonModule
-              variant="danger"
-              size="lg"
-              className="flex-1"
-              onClick={onConfirm}
-              disabled={loading}
-            >
+            <ButtonModule variant="danger" size="lg" className="flex-1" onClick={onConfirm} disabled={loading}>
               {loading ? (
                 <div className="flex items-center justify-center">
                   <svg
@@ -233,7 +205,7 @@ const LoadingSkeleton = () => (
             <div className="text-center">
               <div className="relative mx-auto mb-4">
                 <div className="mx-auto h-20 w-20 rounded-full bg-gray-200"></div>
-                <div className="absolute -right-1 bottom-1 h-6 w-6 rounded-full bg-gray-200"></div>
+                <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
               </div>
               <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
               <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
@@ -304,14 +276,8 @@ const RoleDetailsPage = () => {
   const roleId = params.id as string
 
   // Get role details from Redux store
-  const { 
-    currentRole, 
-    currentRoleLoading, 
-    currentRoleError,
-    deleteRoleLoading,
-    deleteRoleSuccess,
-    deleteRoleError 
-  } = useAppSelector((state) => state.roles)
+  const { currentRole, currentRoleLoading, currentRoleError, deleteRoleLoading, deleteRoleSuccess, deleteRoleError } =
+    useAppSelector((state) => state.roles)
   const { user } = useAppSelector((state) => state.auth)
 
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
@@ -492,7 +458,7 @@ const RoleDetailsPage = () => {
         yPosition += 10
 
         const totalPrivileges = currentRole.privileges.length
-        const categories = Array.from(new Set(currentRole.privileges.map(p => p.privilegeCategory)))
+        const categories = Array.from(new Set(currentRole.privileges.map((p) => p.privilegeCategory)))
         const totalActions = currentRole.privileges.reduce((sum, p) => {
           let actionCount = 0
           // Only count core CRUD actions in metrics (C, R, U, D)
@@ -566,7 +532,7 @@ const RoleDetailsPage = () => {
 
   const confirmDeleteRole = async () => {
     if (!currentRole) return
-    
+
     try {
       const result = await dispatch(deleteRole(currentRole.id))
       // The useEffect will handle navigation on success
@@ -707,7 +673,7 @@ const RoleDetailsPage = () => {
                         {activeAction === "permissions" ? "Managing..." : "Permissions"}
                       </ButtonModule>
                     )}
-                    
+
                     {!currentRole.isSystem && canUpdate && (
                       <ButtonModule
                         variant="danger"
@@ -737,10 +703,14 @@ const RoleDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className={`mx-auto mb-4 flex size-20 items-center justify-center rounded-full ${systemConfig.bg}`}>
+                        <div
+                          className={`mx-auto mb-4 flex size-20 items-center justify-center rounded-full ${systemConfig.bg}`}
+                        >
                           <SystemIcon className={`size-10 ${systemConfig.color}`} />
                         </div>
-                        <div className={`absolute -right-1 bottom-1 ${systemConfig.bg} rounded-full border-2 border-white p-1.5`}>
+                        <div
+                          className={`absolute -right-1 bottom-1 ${systemConfig.bg} rounded-full border-2 border-white p-1.5`}
+                        >
                           <SystemIcon className={`size-4 ${systemConfig.color}`} />
                         </div>
                       </div>
@@ -749,7 +719,9 @@ const RoleDetailsPage = () => {
                       <p className="mb-4 text-sm text-gray-600">{currentRole.slug}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
-                        <div className={`rounded-full px-3 py-1.5 text-sm font-medium ${systemConfig.bg} ${systemConfig.color}`}>
+                        <div
+                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${systemConfig.bg} ${systemConfig.color}`}
+                        >
                           {systemConfig.label}
                         </div>
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">
@@ -839,7 +811,7 @@ const RoleDetailsPage = () => {
                         <Users className="size-4" />
                         Assign to Users
                       </ButtonModule>
-                      
+
                       {!currentRole.isSystem && canUpdate && (
                         <ButtonModule
                           variant="danger"
@@ -868,9 +840,7 @@ const RoleDetailsPage = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Role Type:</span>
-                        <span className={`font-semibold ${systemConfig.color}`}>
-                          {systemConfig.label}
-                        </span>
+                        <span className={`font-semibold ${systemConfig.color}`}>{systemConfig.label}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Category:</span>
@@ -927,7 +897,9 @@ const RoleDetailsPage = () => {
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
                         <label className="block text-sm font-medium text-gray-600">System Role</label>
-                        <p className={`mt-1 font-semibold ${currentRole.isSystem ? "text-purple-600" : "text-blue-600"}`}>
+                        <p
+                          className={`mt-1 font-semibold ${currentRole.isSystem ? "text-purple-600" : "text-blue-600"}`}
+                        >
                           {currentRole.isSystem ? "Yes" : "No"}
                         </p>
                       </div>
@@ -958,16 +930,16 @@ const RoleDetailsPage = () => {
                           Privileges and Permissions
                         </h3>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">
-                            {currentRole.privileges.length} privilege(s)
-                          </span>
+                          <span className="text-sm text-gray-600">{currentRole.privileges.length} privilege(s)</span>
                           <button
                             onClick={() => toggleSection("privileges")}
                             className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
                           >
                             {expandedSection === "privileges" ? "Show Less" : "Show All"}
                             <ChevronDown
-                              className={`size-4 transition-transform ${expandedSection === "privileges" ? "rotate-180" : ""}`}
+                              className={`size-4 transition-transform ${
+                                expandedSection === "privileges" ? "rotate-180" : ""
+                              }`}
                             />
                           </button>
                         </div>
@@ -978,14 +950,16 @@ const RoleDetailsPage = () => {
                         <div className="mb-6">
                           <div className="mb-4 flex flex-wrap gap-2">
                             <span className="text-sm font-medium text-gray-700">Filter by Category:</span>
-                            {Array.from(new Set(currentRole.privileges.map(p => p.privilegeCategory))).map(category => (
-                              <button
-                                key={category}
-                                className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100"
-                              >
-                                {category}
-                              </button>
-                            ))}
+                            {Array.from(new Set(currentRole.privileges.map((p) => p.privilegeCategory))).map(
+                              (category) => (
+                                <button
+                                  key={category}
+                                  className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100"
+                                >
+                                  {category}
+                                </button>
+                              )
+                            )}
                           </div>
                         </div>
                       )}
@@ -1010,38 +984,42 @@ const RoleDetailsPage = () => {
                                     </span>
                                   </div>
                                   <p className="mt-1 text-sm text-gray-600">{privilege.privilegeKey}</p>
-                                  
+
                                   <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                       <div className="text-xs font-medium text-gray-500">Current Actions</div>
                                       <div className="mt-1 flex flex-wrap gap-1">
-                                        {getActionLabel(privilege.actions).split(", ").map(action => (
-                                          <span
-                                            key={action}
-                                            className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                                          >
-                                            {action}
-                                          </span>
-                                        ))}
+                                        {getActionLabel(privilege.actions)
+                                          .split(", ")
+                                          .map((action) => (
+                                            <span
+                                              key={action}
+                                              className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                                            >
+                                              {action}
+                                            </span>
+                                          ))}
                                       </div>
                                       <div className="mt-1 text-xs text-gray-500">
-                                        Binary: {privilege.actions.toString(2).padStart(6, '0')}
+                                        Binary: {privilege.actions.toString(2).padStart(6, "0")}
                                       </div>
                                     </div>
                                     <div>
                                       <div className="text-xs font-medium text-gray-500">Available Actions</div>
                                       <div className="mt-1 flex flex-wrap gap-1">
-                                        {getAvailableActionsLabel(privilege.availableActions).split(", ").map(action => (
-                                          <span
-                                            key={action}
-                                            className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700"
-                                          >
-                                            {action}
-                                          </span>
-                                        ))}
+                                        {getAvailableActionsLabel(privilege.availableActions)
+                                          .split(", ")
+                                          .map((action) => (
+                                            <span
+                                              key={action}
+                                              className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700"
+                                            >
+                                              {action}
+                                            </span>
+                                          ))}
                                       </div>
                                       <div className="mt-1 text-xs text-gray-500">
-                                        Binary: {privilege.availableActions.toString(2).padStart(6, '0')}
+                                        Binary: {privilege.availableActions.toString(2).padStart(6, "0")}
                                       </div>
                                     </div>
                                   </div>
@@ -1081,7 +1059,7 @@ const RoleDetailsPage = () => {
                             <div className="rounded-lg bg-green-50 p-4">
                               <div className="text-sm font-medium text-green-600">Categories</div>
                               <div className="text-3xl font-bold text-green-900">
-                                {Array.from(new Set(currentRole.privileges.map(p => p.privilegeCategory))).length}
+                                {Array.from(new Set(currentRole.privileges.map((p) => p.privilegeCategory))).length}
                               </div>
                             </div>
                             <div className="rounded-lg bg-purple-50 p-4">
@@ -1124,7 +1102,9 @@ const RoleDetailsPage = () => {
                         >
                           {expandedSection === "matrix" ? "Hide Matrix" : "Show Matrix"}
                           <ChevronDown
-                            className={`size-4 transition-transform ${expandedSection === "matrix" ? "rotate-180" : ""}`}
+                            className={`size-4 transition-transform ${
+                              expandedSection === "matrix" ? "rotate-180" : ""
+                            }`}
                           />
                         </button>
                       </div>
@@ -1249,7 +1229,6 @@ const RoleDetailsPage = () => {
                               <div className="flex items-center gap-1">
                                 <span className="font-medium">D:</span> Delete
                               </div>
-                              
                             </div>
                           </div>
                         </motion.div>

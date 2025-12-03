@@ -1,5 +1,5 @@
 "use client"
-import React, { useRef, useState, useEffect, ChangeEvent } from "react"
+import React, { ChangeEvent, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -11,10 +11,10 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   addAgent,
-  clearAddAgent,
   AddAgentRequest,
   addExistingUserAsAgent,
   AddExistingUserAsAgentRequest,
+  clearAddAgent,
   clearAddExistingUserAsAgent,
 } from "lib/redux/agentSlice"
 import { fetchRoles } from "lib/redux/roleSlice"
@@ -25,16 +25,15 @@ import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import {
   ArrowLeft,
   ArrowRight,
-  User,
   Briefcase,
-  MapPin,
   CreditCard,
-  Shield,
-  Home,
   FileText,
-  Users,
-  UserPlus,
+  Home,
+  MapPin,
+  User,
   UserCog,
+  UserPlus,
+  Users,
 } from "lucide-react"
 
 // === INTERFACES ===
@@ -665,7 +664,7 @@ const AddNewAgent = () => {
           <React.Fragment key={step}>
             <div className="flex flex-col items-center">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
+                className={`flex size-8 items-center justify-center rounded-full border-2 ${
                   step === currentStep
                     ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
                     : step < currentStep

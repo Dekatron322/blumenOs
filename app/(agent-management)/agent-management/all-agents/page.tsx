@@ -10,7 +10,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchAgents, type Agent as BackendAgent } from "lib/redux/agentSlice"
+import { type Agent as BackendAgent, fetchAgents } from "lib/redux/agentSlice"
 import { formatCurrency } from "utils/formatCurrency"
 
 const CyclesIcon = () => (

@@ -7,7 +7,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { submitChangeRequest } from "lib/redux/agentSlice"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { FormSelectModule } from "../Input/FormSelectModule"
 import { FormInputModule } from "../Input/Input"
 
@@ -192,15 +192,19 @@ const ChangeRequestModal: React.FC<ChangeRequestModalProps> = ({
       // Convert values to appropriate types based on path
       const formattedChanges = validChanges.map((change) => {
         let formattedValue = change.value
-        
+
         // Handle boolean values
         if (change.path === "canCollectCash") {
           formattedValue = change.value === "true" ? "true" : "false"
         }
-        
+
         // Handle numeric values
-        if (change.path === "cashCollectionLimit" || change.path === "areaOfficeId" || 
-            change.path === "serviceCenterId" || change.path === "supervisorId") {
+        if (
+          change.path === "cashCollectionLimit" ||
+          change.path === "areaOfficeId" ||
+          change.path === "serviceCenterId" ||
+          change.path === "supervisorId"
+        ) {
           // Ensure it's a valid number
           const numValue = parseFloat(change.value)
           if (!isNaN(numValue)) {
@@ -210,7 +214,7 @@ const ChangeRequestModal: React.FC<ChangeRequestModalProps> = ({
 
         return {
           path: change.path,
-          value: formattedValue
+          value: formattedValue,
         }
       })
 
@@ -339,7 +343,7 @@ const ChangeRequestModal: React.FC<ChangeRequestModalProps> = ({
     }
 
     const options = getValueOptions(change.path)
-    
+
     if (options) {
       return (
         <div className="flex-1">
@@ -546,8 +550,10 @@ const ChangeRequestModal: React.FC<ChangeRequestModalProps> = ({
                           <div key={index} className="rounded bg-white p-3">
                             <div className="mb-1 text-xs font-medium text-gray-500">{getPathLabel(change.path)}</div>
                             <div className="font-medium text-gray-900">
-                              {change.path === "canCollectCash" 
-                                ? (change.value === "true" ? "Yes" : "No")
+                              {change.path === "canCollectCash"
+                                ? change.value === "true"
+                                  ? "Yes"
+                                  : "No"
                                 : change.value}
                             </div>
                           </div>

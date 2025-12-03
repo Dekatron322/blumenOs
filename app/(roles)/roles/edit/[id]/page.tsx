@@ -3,21 +3,12 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle,
-  Edit3,
-  Shield,
-  Tag,
-  Users,
-  XCircle,
-} from "lucide-react"
+import { AlertCircle, ArrowLeft, CheckCircle, Edit3, Shield, Tag, Users, XCircle } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { updateRole, clearCurrentRole, fetchRoleById, UpdateRoleRequest, resetUpdateState } from "lib/redux/roleSlice"
+import { clearCurrentRole, fetchRoleById, updateRole, UpdateRoleRequest, resetUpdateState } from "lib/redux/roleSlice"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
@@ -55,7 +46,7 @@ const LoadingSkeleton = () => (
       {/* Form Skeleton */}
       <div className="grid gap-6 md:grid-cols-3">
         {/* Left Column Skeleton */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="space-y-6 md:col-span-2">
           {[1, 2, 3, 4].map((item) => (
             <div key={item} className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
               <div className="mb-4 h-6 w-48 rounded bg-gray-200"></div>
@@ -109,7 +100,7 @@ const EditRolePage = () => {
     description: "",
     category: "",
   })
-  
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -144,12 +135,12 @@ const EditRolePage = () => {
   useEffect(() => {
     if (updateRoleSuccess && currentRole) {
       notify("success", `Role "${formData.name}" has been updated successfully`)
-      
+
       // Redirect back to role details page after a short delay
       const timer = setTimeout(() => {
         router.push(`/roles/details/${currentRole.id}`)
       }, 1500)
-      
+
       return () => clearTimeout(timer)
     }
   }, [updateRoleSuccess, currentRole, formData.name, router])
@@ -162,54 +153,54 @@ const EditRolePage = () => {
     }
   }, [updateRoleError])
 
-  const handleInputChange = (field: keyof UpdateRoleRequest) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const value = e.target.value
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
+  const handleInputChange =
+    (field: keyof UpdateRoleRequest) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const value = e.target.value
+      setFormData((prev) => ({
         ...prev,
-        [field]: ""
+        [field]: value,
+      }))
+
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: "",
+        }))
+      }
+
+      // Mark field as touched
+      setTouched((prev) => ({
+        ...prev,
+        [field]: true,
       }))
     }
 
-    // Mark field as touched
-    setTouched(prev => ({
-      ...prev,
-      [field]: true
-    }))
-  }
+  const handleSelectChange =
+    (field: keyof UpdateRoleRequest) =>
+    (e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }) => {
+      const value = "target" in e ? e.target.value : e
 
-  const handleSelectChange = (field: keyof UpdateRoleRequest) => (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const value = "target" in e ? e.target.value : e
-
-    setFormData((prev) => ({
-      ...prev,
-      [field]: String(value),
-    }))
-
-    // Clear error when user selects an option
-    if (errors[field]) {
-      setErrors((prev) => ({
+      setFormData((prev) => ({
         ...prev,
-        [field]: "",
+        [field]: String(value),
+      }))
+
+      // Clear error when user selects an option
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: "",
+        }))
+      }
+
+      // Mark field as touched
+      setTouched((prev) => ({
+        ...prev,
+        [field]: true,
       }))
     }
-
-    // Mark field as touched
-    setTouched((prev) => ({
-      ...prev,
-      [field]: true,
-    }))
-  }
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {}
@@ -239,7 +230,7 @@ const EditRolePage = () => {
       description: true,
       category: true,
     })
-    
+
     return Object.keys(newErrors).length === 0
   }
 
@@ -266,13 +257,15 @@ const EditRolePage = () => {
     setIsSubmitting(true)
 
     try {
-      const result = await dispatch(updateRole({
-        roleId: currentRole.id,
-        roleData: formData
-      }))
+      const result = await dispatch(
+        updateRole({
+          roleId: currentRole.id,
+          roleData: formData,
+        })
+      )
 
       if (updateRole.rejected.match(result)) {
-        const errorMessage = result.payload as string || "Failed to update role"
+        const errorMessage = (result.payload as string) || "Failed to update role"
         notify("error", errorMessage)
         setIsSubmitting(false)
       }
@@ -306,7 +299,7 @@ const EditRolePage = () => {
         <div className="flex flex-col justify-center text-center">
           <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">Role Not Found</h1>
-          <p className="mb-6 text-gray-600">The role you're trying to edit doesn't exist.</p>
+          <p className="mb-6 text-gray-600">The role you&apos;re trying to edit doesn&apos;t exist.</p>
           <ButtonModule variant="primary" onClick={() => router.push("/roles")}>
             Back to Roles
           </ButtonModule>
@@ -368,7 +361,14 @@ const EditRolePage = () => {
                         {isLoading ? (
                           <>
                             <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
                               <path
                                 className="opacity-75"
                                 fill="currentColor"
@@ -393,7 +393,7 @@ const EditRolePage = () => {
             <div className="flex w-full px-16 py-8">
               <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Main Form Content - 2/3 width */}
-                <div className="md:col-span-2 space-y-6">
+                <div className="space-y-6 md:col-span-2">
                   {/* Info message for system roles */}
                   {currentRole.isSystem ? (
                     <motion.div
@@ -408,7 +408,8 @@ const EditRolePage = () => {
                         <div className="ml-4">
                           <h3 className="text-lg font-semibold text-purple-800">System Role</h3>
                           <p className="mt-1 text-purple-700">
-                            This is a system role. System roles cannot be modified as they are required for system functionality.
+                            This is a system role. System roles cannot be modified as they are required for system
+                            functionality.
                           </p>
                         </div>
                       </div>
@@ -438,8 +439,6 @@ const EditRolePage = () => {
                             required
                             disabled={isLoading || currentRole.isSystem}
                             error={getError("name")}
-                            
-                            
                           />
 
                           {/* Role Slug (Read-only) */}
@@ -463,14 +462,11 @@ const EditRolePage = () => {
                             required
                             disabled={isLoading || currentRole.isSystem}
                             error={getError("category")}
-                            
                           />
 
                           {/* Description */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                              Description
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
                             <div className="mt-1">
                               <textarea
                                 value={formData.description}
@@ -519,16 +515,15 @@ const EditRolePage = () => {
                           <div className="rounded-lg bg-white p-4">
                             <div className="mb-2 text-xs font-medium text-gray-500">Category</div>
                             <div className="text-lg font-semibold text-gray-900">
-                              {formData.category ? 
-                                categoryOptions.find(opt => opt.value === formData.category)?.label || formData.category
+                              {formData.category
+                                ? categoryOptions.find((opt) => opt.value === formData.category)?.label ||
+                                  formData.category
                                 : "(Not set)"}
                             </div>
                           </div>
-                          <div className="md:col-span-2 rounded-lg bg-white p-4">
+                          <div className="rounded-lg bg-white p-4 md:col-span-2">
                             <div className="mb-2 text-xs font-medium text-gray-500">Description</div>
-                            <div className="text-gray-900">
-                              {formData.description || "No description provided"}
-                            </div>
+                            <div className="text-gray-900">{formData.description || "No description provided"}</div>
                           </div>
                         </div>
                       </motion.div>
@@ -560,7 +555,9 @@ const EditRolePage = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Slug:</span>
-                        <code className="rounded bg-gray-100 px-2 py-1 font-mono text-xs text-gray-800">{currentRole.slug}</code>
+                        <code className="rounded bg-gray-100 px-2 py-1 font-mono text-xs text-gray-800">
+                          {currentRole.slug}
+                        </code>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Type:</span>
@@ -597,7 +594,11 @@ const EditRolePage = () => {
                     <div className="space-y-3">
                       <div className="rounded-lg bg-gray-50 p-3">
                         <div className="text-xs font-medium text-gray-500">Role Type</div>
-                        <div className={`mt-1 text-sm font-medium ${currentRole.isSystem ? "text-purple-600" : "text-blue-600"}`}>
+                        <div
+                          className={`mt-1 text-sm font-medium ${
+                            currentRole.isSystem ? "text-purple-600" : "text-blue-600"
+                          }`}
+                        >
                           {currentRole.isSystem ? "System Role" : "Custom Role"}
                         </div>
                       </div>
@@ -637,7 +638,14 @@ const EditRolePage = () => {
                             {isLoading ? (
                               <span className="flex items-center justify-center gap-2">
                                 <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  />
                                   <path
                                     className="opacity-75"
                                     fill="currentColor"
@@ -678,9 +686,7 @@ const EditRolePage = () => {
                           )}
                           {!canUpdate && (
                             <div className="rounded-lg bg-red-50 p-3">
-                              <p className="text-sm text-red-700">
-                                You don't have permission to update roles.
-                              </p>
+                              <p className="text-sm text-red-700">You don&apos;t have permission to update roles.</p>
                             </div>
                           )}
                         </>
@@ -707,7 +713,7 @@ const EditRolePage = () => {
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Add descriptions to explain the role's purpose</span>
+                        <span>Add descriptions to explain the role&apos;s purpose</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>

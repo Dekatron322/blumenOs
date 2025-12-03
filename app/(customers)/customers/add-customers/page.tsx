@@ -431,7 +431,7 @@ const AddCustomerPage = () => {
           <React.Fragment key={step}>
             <div className="flex flex-col items-center">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
+                className={`flex size-8 items-center justify-center rounded-full border-2 ${
                   step === currentStep
                     ? "border-[#0A0A0A] bg-[#0A0A0A] text-white"
                     : step < currentStep

@@ -994,7 +994,7 @@ const LoadingSkeleton = () => (
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         {/* Form Header Skeleton */}
         <div className="mb-6 border-b pb-4">
-          <div className="h-6 w-64 overflow-hidden rounded bg-gray-200">
+          <div className="size-64 overflow-hidden rounded bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{

@@ -766,7 +766,7 @@ const LoadingSkeleton = () => (
             <div className="text-center">
               <div className="relative mx-auto mb-4">
                 <div className="mx-auto h-20 w-20 rounded-full bg-gray-200"></div>
-                <div className="absolute -right-1 bottom-1 h-6 w-6 rounded-full bg-gray-200"></div>
+                <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
               </div>
               <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
               <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>

@@ -193,11 +193,11 @@ const LoadingSkeleton = () => {
       <div className="flex items-center justify-between border-t py-3">
         <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
+            <div key={i} className="size-8 rounded bg-gray-200"></div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
         </div>
       </div>
     </div>
