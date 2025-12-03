@@ -82,10 +82,13 @@ const SideBar = () => {
                 className="absolute bottom-full left-[-1rem] z-50 mb-1 w-[240px] overflow-hidden rounded-md bg-white text-xs shadow-2xl ring-1 ring-black ring-opacity-5 lg:text-sm"
               >
                 <div className="flex flex-col py-1">
-                  <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
+                  <Link
+                    href="/roles"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                  >
                     <img src="/Icons/ic_employee.svg" alt="Roles" className="size-4" />
                     <span>Roles</span>
-                  </button>
+                  </Link>
                   <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
                     <img src="/Icons/payment.svg" alt="Payment Types" className="size-4" />
                     <span>Payment Types Mngt</span>
