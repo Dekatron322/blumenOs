@@ -9,6 +9,7 @@ type ButtonVariant =
   | "secondary"
   | "outline"
   | "ghost"
+  | "success"
   | "danger"
   | "outlineDanger"
   | "dangerSecondary"
@@ -50,6 +51,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     black: "bg-[#131319] text-[#ffffff] hover:bg-[#000000] focus:ring-[#131319]",
     secondary: "bg-[#E6F0FF] text-[#003F9F] hover:bg-[#C4DBFF] focus:ring-[#003F9F]",
     outline: "border border-[#0A0A0A] text-[#0A0A0A] hover:bg-[#F3f4f6] focus:ring-[#0A0A0A]",
+    success: "bg-[#16A34A] text-white hover:bg-[#15803D] focus:ring-[#16A34A]",
     outlineDanger: "border border-[#D82E2E] text-[#D82E2E] hover:bg-[#FDF3F3] focus:ring-[#D82E2E]",
     ghost: "text-[#003F9F] hover:bg-[#E6F0FF] focus:ring-[#003F9F]",
     danger: "bg-[#D82E2E] text-white hover:bg-[#F14848] focus:ring-[#F14848]",

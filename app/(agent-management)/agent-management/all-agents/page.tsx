@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -8,6 +9,9 @@ import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon } from "components/Ic
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchAgents, type Agent as BackendAgent } from "lib/redux/agentSlice"
+import { formatCurrency } from "utils/formatCurrency"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -349,6 +353,8 @@ const generateAgentData = () => {
 }
 
 const AllAgents: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -358,73 +364,34 @@ const AllAgents: React.FC = () => {
   const [agentData, setAgentData] = useState(generateAgentData())
   const pageSize = 10
 
-  const agents: Agent[] = [
-    {
-      id: 1,
-      name: "Tunde Bakare",
-      status: "active",
-      phone: "+234801234567",
-      location: "Lagos Island",
-      dailyCollection: "₦12,500",
-      vendsToday: 45,
-      floatBalance: "₦850",
-      commissionRate: "2.5%",
-      performance: "Good",
-    },
-    {
-      id: 2,
-      name: "Amina Abdullahi",
-      status: "active",
-      phone: "+234802345678",
-      location: "Ikeja",
-      dailyCollection: "₦9,800",
-      vendsToday: 38,
-      floatBalance: "₦1,200",
-      commissionRate: "2.5%",
-      performance: "Good",
-    },
-    {
-      id: 3,
-      name: "Emeka Okonkwo",
-      status: "low float",
-      phone: "+234803456789",
-      location: "Surulere",
-      dailyCollection: "₦7,500",
-      vendsToday: 28,
-      floatBalance: "₦450",
-      commissionRate: "2%",
-      performance: "Good",
-    },
-    {
-      id: 4,
-      name: "Chinedu Okafor",
-      status: "inactive",
-      phone: "+234804567890",
-      location: "Victoria Island",
-      dailyCollection: "₦0",
-      vendsToday: 0,
-      floatBalance: "₦0",
-      commissionRate: "2%",
-      performance: "Poor",
-    },
-    {
-      id: 5,
-      name: "Fatima Hassan",
-      status: "active",
-      phone: "+234805678901",
-      location: "Lekki",
-      dailyCollection: "₦15,200",
-      vendsToday: 52,
-      floatBalance: "₦2,100",
-      commissionRate: "3%",
-      performance: "Excellent",
-    },
-  ]
+  const { agents: backendAgents, loading, error, pagination } = useAppSelector((state) => state.agents)
 
-  const isLoading = false
-  const isError = false
-  const totalRecords = agents.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  // Map backend agents into table display shape
+  const agents: Agent[] = backendAgents.map((agent: BackendAgent) => ({
+    id: agent.id,
+    name: agent.user.fullName,
+    status:
+      agent.status.toLowerCase() === "active"
+        ? "active"
+        : agent.status.toLowerCase() === "inactive"
+        ? "inactive"
+        : "low float",
+    phone: agent.user.phoneNumber,
+    location: agent.areaOfficeName || agent.serviceCenterName || "N/A",
+    // Using cashAtHand as daily collection placeholder for now
+    dailyCollection: formatCurrency(agent.cashAtHand, "₦"),
+    // Placeholder since backend does not expose vends count here
+    vendsToday: 0,
+    // Use cashCollectionLimit as a proxy for float balance
+    floatBalance: formatCurrency(agent.cashCollectionLimit, "₦"),
+    commissionRate: "-",
+    performance: "Good",
+  }))
+
+  const isLoading = loading
+  const isError = !!error
+  const totalRecords = pagination.totalCount || agents.length
+  const totalPages = pagination.totalPages || Math.ceil(totalRecords / pageSize)
 
   const getStatusStyle = (status: Agent["status"]) => {
     switch (status) {
@@ -504,6 +471,16 @@ const AllAgents: React.FC = () => {
   }
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+
+  useEffect(() => {
+    dispatch(
+      fetchAgents({
+        pageNumber: currentPage,
+        pageSize,
+        search: searchText || undefined,
+      })
+    )
+  }, [dispatch, currentPage, pageSize, searchText])
 
   if (isLoading) return <LoadingSkeleton />
   if (isError) return <div>Error loading agents</div>
@@ -742,7 +719,14 @@ const AllAgents: React.FC = () => {
                                     </motion.div>
                                   </td>
                                   <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                                    <ActionDropdown agent={agent} onViewDetails={setSelectedAgent} />
+                                    <ButtonModule
+                                      variant="outline"
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => router.push(`/agent-management/agent-detail/${agent.id}`)}
+                                    >
+                                      View details
+                                    </ButtonModule>
                                   </td>
                                 </motion.tr>
                               ))}

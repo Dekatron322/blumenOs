@@ -25,6 +25,15 @@ export const API_ENDPOINTS = {
 
   AGENTS: {
     GET: "/agents",
+    GET_BY_ID: "/agents/{id}",
+    ADD: "/agents/with-user",
+    ADD_EXISTING_USER: "/agents",
+    CHANGE_REQUEST: "/agents/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/agents/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/agents/change-requests",
+    CHANGE_REQUEST_DETAILS: "/agents/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/agents/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/agents/change-requests/{publicId}/decline",
   },
 
   EMPLOYEE: {

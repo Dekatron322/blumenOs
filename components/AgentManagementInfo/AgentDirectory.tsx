@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import {
   AddAgentIcon,
@@ -15,6 +16,8 @@ import {
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { type Agent, clearAgents, fetchAgents } from "lib/redux/agentSlice"
+import { ButtonModule } from "components/ui/Button/Button"
+import { EyeIcon } from "lucide-react"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -32,6 +35,7 @@ interface AgentDirectoryProps {
 
 const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const { agents, loading, error } = useAppSelector((state) => state.agents)
   const [searchText, setSearchText] = useState("")
 
@@ -158,10 +162,20 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                         </div>
                       </div>
 
-                      <div className="text-sm">
+                      <div className="flex items-center gap-3 text-sm">
                         <div>
                           <p className="font-semibold text-gray-900">{formatCurrency(agent.cashAtHand)}</p>
                           <p className="text-gray-500">Cash at hand</p>
+                        </div>
+                        <div className="flex justify-end">
+                          <ButtonModule
+                            variant="outline"
+                            type="button"
+                            size="sm"
+                            onClick={() => router.push(`/agent-management/agent-detail/${agent.id}`)}
+                          >
+                            View details
+                          </ButtonModule>
                         </div>
                       </div>
                     </div>
@@ -195,65 +209,6 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                   </div>
                 )
               })}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Column - Quick Actions */}
-      <div className="w-80">
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-blue-100 p-2">
-                    <AddAgentIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Register New Agent</h4>
-                    <p className="text-sm text-gray-600">Add a new field agent</p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-green-100 p-2">
-                    <RouteIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Assign Routes</h4>
-                    <p className="text-sm text-gray-600">Manage agent territories</p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm ">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-100 p-2">
-                    <FloatIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Float Management</h4>
-                    <p className="text-sm text-gray-600">Manage agent floats</p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9]  p-4 hover:shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-orange-100 p-2">
-                    <TargetIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Set Targets</h4>
-                    <p className="text-sm text-gray-600">Define performance goals</p>
-                  </div>
-                </div>
-              </button>
-            </div>
           </div>
         </div>
       </div>

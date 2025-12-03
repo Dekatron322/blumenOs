@@ -29,7 +29,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   const [isFocused, setIsFocused] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const selectedOption = options.find((option) => option.value === value)
+  const selectedOption = options.find((option) => String(option.value) === String(value))
 
   const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
 
@@ -121,11 +121,11 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
               <div
                 key={option.value}
                 className={`px-3 py-2 text-base hover:bg-[#D3D5DA] ${
-                  value === option.value ? "bg-[#D3D5DA] text-[#0a0a0a]" : ""
+                  String(value) === String(option.value) ? "bg-[#D3D5DA] text-[#0a0a0a]" : ""
                 }`}
                 onClick={() => handleSelect(option.value)}
                 role="option"
-                aria-selected={value === option.value}
+                aria-selected={String(value) === String(option.value)}
               >
                 {option.label}
               </div>
