@@ -260,7 +260,7 @@ const LoadingSkeleton = () => {
                   }}
                 />
               </div>
-              <div className="h-4 w-40 overflow-hidden rounded bg-gray-200">
+              <div className="size-40 overflow-hidden rounded bg-gray-200">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{

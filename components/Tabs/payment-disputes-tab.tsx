@@ -24,7 +24,7 @@ const SkeletonDisputeCard = () => (
       <div className="mb-4 flex items-start justify-between">
         <div className="space-y-2">
           <div className="h-6 w-32 rounded bg-gray-200"></div>
-          <div className="h-4 w-48 rounded bg-gray-200"></div>
+          <div className="size-48 rounded bg-gray-200"></div>
         </div>
         <div className="flex gap-2">
           <div className="h-6 w-20 rounded-full bg-gray-200"></div>
@@ -76,7 +76,7 @@ const SkeletonDisputeCard = () => (
 
 const SkeletonPagination = () => (
   <div className="mt-6 flex items-center justify-between">
-    <div className="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+    <div className="size-48 animate-pulse rounded bg-gray-200"></div>
     <div className="flex gap-2">
       <div className="h-9 w-20 animate-pulse rounded-md bg-gray-200"></div>
       <div className="h-9 w-16 animate-pulse rounded-md bg-gray-200"></div>

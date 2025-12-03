@@ -30,7 +30,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
 import { ExportOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { Agent as ReduxAgent, AgentUser, CashClearance, clearCurrentAgent, fetchAgentById } from "lib/redux/agentSlice"
+import { Agent, clearCurrentAgent, fetchAgentById } from "lib/redux/agentSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 

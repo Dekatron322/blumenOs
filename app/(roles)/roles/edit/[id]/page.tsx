@@ -8,7 +8,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearCurrentRole, fetchRoleById, updateRole, UpdateRoleRequest, resetUpdateState } from "lib/redux/roleSlice"
+import { clearCurrentRole, fetchRoleById, resetUpdateState, updateRole, UpdateRoleRequest } from "lib/redux/roleSlice"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 

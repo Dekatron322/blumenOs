@@ -433,19 +433,19 @@ const MapViewTab = () => {
                 <h4 className="mb-2 text-sm font-semibold">Assets</h4>
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center text-yellow-400">⚡</span>
+                    <span className="inline-flex size-4 items-center justify-center text-yellow-400">⚡</span>
                     <span>Feeder</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center">🏭</span>
+                    <span className="inline-flex size-4 items-center justify-center">🏭</span>
                     <span>Substation</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center">🔌</span>
+                    <span className="inline-flex size-4 items-center justify-center">🔌</span>
                     <span>Transformer</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center">🏢</span>
+                    <span className="inline-flex size-4 items-center justify-center">🏢</span>
                     <span>Service Center</span>
                   </div>
                 </div>
