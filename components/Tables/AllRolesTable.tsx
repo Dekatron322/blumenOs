@@ -7,21 +7,19 @@ import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
-  MdOutlineCheckBoxOutlineBlank,
-  MdOutlineShield,
   MdOutlineCategory,
-  MdOutlineKey,
-  MdOutlinePeople,
   MdOutlineDescription,
-  MdOutlineLabel,
+  MdOutlineKey,
   MdOutlineLock,
   MdOutlineLockOpen,
+  MdOutlinePeople,
+  MdOutlineShield,
   MdOutlineVisibility,
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchRoles, fetchPrivileges, Privilege, clearPrivileges, Role } from "lib/redux/roleSlice"
+import { clearPrivileges, fetchPrivileges, fetchRoles, Privilege, Role } from "lib/redux/roleSlice"
 
 interface ActionDropdownProps {
   role: Role

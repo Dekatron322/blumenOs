@@ -1,37 +1,33 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle,
-  Shield,
-  Users,
-  Tag,
-  Key,
   Edit3,
-  XCircle,
-  AlertCircle,
+  Key,
   RefreshCw,
   Save,
+  Shield,
+  Tag,
+  Users,
+  XCircle,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  fetchRoleById,
-  fetchPrivileges,
-  managePermissions,
-  resetManagePermissionsState,
   clearCurrentRole,
-  Privilege,
-  Role,
-  RolePrivilege,
-  PrivilegeAssignment,
+  fetchPrivileges,
+  fetchRoleById,
   getAvailableActions,
-  getActions,
+  managePermissions,
+  PrivilegeAssignment,
+  resetManagePermissionsState,
 } from "lib/redux/roleSlice"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -398,7 +394,7 @@ const UpdatePermissionsPage = () => {
         <div className="flex flex-col justify-center text-center">
           <Shield className="mx-auto mb-4 size-16 text-red-400" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900">Permission Denied</h1>
-          <p className="mb-6 text-gray-600">You don't have permission to manage permissions for this role.</p>
+          <p className="mb-6 text-gray-600">You don&apos;t have permission to manage permissions for this role.</p>
           <ButtonModule variant="primary" onClick={() => router.push("/roles")}>
             Back to Roles
           </ButtonModule>
@@ -1033,7 +1029,7 @@ const UpdatePermissionsPage = () => {
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Click "Select All" to quickly grant all available actions</span>
+                        <span>Click &quot;Select All&quot; to quickly grant all available actions</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>

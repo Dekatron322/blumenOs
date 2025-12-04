@@ -260,7 +260,7 @@ export const fetchRoleById = createAsyncThunk<Role, number, { rejectValue: strin
 
 export const fetchPrivileges = createAsyncThunk(
   "roles/fetchPrivileges",
-  async (params?: PrivilegesRequestParams, { rejectWithValue }) => {
+  async (params: PrivilegesRequestParams | undefined, { rejectWithValue }) => {
     try {
       // Build query parameters
       const queryParams: Record<string, any> = {}
