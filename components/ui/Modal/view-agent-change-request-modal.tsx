@@ -6,11 +6,7 @@ import CloseIcon from "public/close-icon"
 import { ButtonModule } from "../Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import {
-  approveChangeRequest,
-  declineChangeRequest,
-  fetchChangeRequestDetails,
-} from "lib/redux/agentSlice"
+import { approveChangeRequest, declineChangeRequest, fetchChangeRequestDetails } from "lib/redux/agentSlice"
 
 interface ViewAgentChangeRequestModalProps {
   isOpen: boolean
@@ -565,31 +561,33 @@ const ViewAgentChangeRequestModal: React.FC<ViewAgentChangeRequestModalProps> = 
                     </div>
                   ) : changeRequestDetails.patchDocument ? (
                     <div className="space-y-4">
-                      {parsePatchDocument(changeRequestDetails.patchDocument).map((change: PatchChange, index: number) => (
-                        <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                          <h4 className="mb-3 font-medium text-gray-900">
-                            {getFieldLabel(change.path || change.op || `Change ${index + 1}`)}
-                          </h4>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {change.value !== undefined && (
-                              <div>
-                                <span className="text-sm font-medium text-gray-600">New Value:</span>
-                                <p className="mt-1 rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
-                                  {renderValue(change.value)}
-                                </p>
-                              </div>
-                            )}
-                            {change.from !== undefined && (
-                              <div>
-                                <span className="text-sm font-medium text-gray-600">Current Value:</span>
-                                <p className="mt-1 rounded border bg-white p-2 text-sm text-gray-700">
-                                  {renderValue(change.from)}
-                                </p>
-                              </div>
-                            )}
+                      {parsePatchDocument(changeRequestDetails.patchDocument).map(
+                        (change: PatchChange, index: number) => (
+                          <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+                            <h4 className="mb-3 font-medium text-gray-900">
+                              {getFieldLabel(change.path || change.op || `Change ${index + 1}`)}
+                            </h4>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              {change.value !== undefined && (
+                                <div>
+                                  <span className="text-sm font-medium text-gray-600">New Value:</span>
+                                  <p className="mt-1 rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
+                                    {renderValue(change.value)}
+                                  </p>
+                                </div>
+                              )}
+                              {change.from !== undefined && (
+                                <div>
+                                  <span className="text-sm font-medium text-gray-600">Current Value:</span>
+                                  <p className="mt-1 rounded border bg-white p-2 text-sm text-gray-700">
+                                    {renderValue(change.from)}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   ) : (
                     <div className="py-8 text-center text-gray-500">No changes preview available</div>

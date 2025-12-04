@@ -225,7 +225,9 @@ const AllRoleTable: React.FC = () => {
   const entries = normalizedRoles.filter((e) =>
     searchText
       ? [e.name, e.slug, e.category, e.description].some((v) =>
-          String(v ?? "").toLowerCase().includes(searchText.toLowerCase())
+          String(v ?? "")
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
         )
       : true
   )
@@ -282,7 +284,7 @@ const AllRoleTable: React.FC = () => {
             className="w-[380px]"
             bgClassName="bg-white"
           />
-          <ButtonModule variant="primary" size="sm" onClick={() => router.push('/roles/create')}>
+          <ButtonModule variant="primary" size="sm" onClick={() => router.push("/roles/create")}>
             Create Role
           </ButtonModule>
         </div>
@@ -308,10 +310,7 @@ const AllRoleTable: React.FC = () => {
                   Name <RxCaretSort />
                 </div>
               </th>
-              <th
-                className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                onClick={() => toggleSort("slug")}
-              >
+              <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm" onClick={() => toggleSort("slug")}>
                 <div className="flex items-center gap-2">
                   Slug <RxCaretSort />
                 </div>
@@ -350,15 +349,11 @@ const AllRoleTable: React.FC = () => {
                   <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                     {entry.isSystem ? "System" : "Custom"}
                   </td>
-                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm max-w-xs truncate">
+                  <td className="max-w-xs truncate whitespace-nowrap border-b px-4 py-3 text-sm">
                     {entry.description}
                   </td>
                   <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                    <ButtonModule
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/roles/details/${entry.id}`)}
-                    >
+                    <ButtonModule variant="outline" size="sm" onClick={() => router.push(`/roles/details/${entry.id}`)}>
                       View details
                     </ButtonModule>
                   </td>

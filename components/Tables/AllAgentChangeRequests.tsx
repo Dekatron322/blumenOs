@@ -242,7 +242,15 @@ const AllAgentChangeRequests = () => {
         ...(selectedEntityType && { entityType: parseInt(selectedEntityType) }),
       })
     )
-  }, [dispatch, currentPage, changeRequestsPagination.pageSize, selectedStatus, selectedSource, searchText, selectedEntityType])
+  }, [
+    dispatch,
+    currentPage,
+    changeRequestsPagination.pageSize,
+    selectedStatus,
+    selectedSource,
+    searchText,
+    selectedEntityType,
+  ])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -304,7 +312,14 @@ const AllAgentChangeRequests = () => {
       10: { label: "HT Pole", color: "text-gray-600", bg: "bg-gray-50", icon: "🏗️" },
       11: { label: "Postpaid Billing", color: "text-cyan-600", bg: "bg-cyan-50", icon: "🧾" },
     }
-    return configs[entityType as keyof typeof configs] || { label: "Unknown", color: "text-gray-600", bg: "bg-gray-50", icon: "❓" }
+    return (
+      configs[entityType as keyof typeof configs] || {
+        label: "Unknown",
+        color: "text-gray-600",
+        bg: "bg-gray-50",
+        icon: "❓",
+      }
+    )
   }
 
   const handleApprove = (changeRequest: ChangeRequestListItem) => {
@@ -784,7 +799,7 @@ const AllAgentChangeRequests = () => {
                 </p>
                 {(searchText || selectedStatus || selectedSource || selectedEntityType !== "1") && (
                   <button
-                    className="mt-4 button-oulined"
+                    className="button-oulined mt-4"
                     onClick={() => {
                       setSearchText("")
                       setSelectedStatus("")

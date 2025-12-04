@@ -59,7 +59,7 @@ export const API_ENDPOINTS = {
     GET_BY_ID: "/roles-management/roles/{id}",
     UPDATE_ROLE: "/roles-management/roles/{id}",
     CREATE_ROLE: "/roles-management/roles",
-    DELETE_ROLE: "/roles-management/roles/{id}"
+    DELETE_ROLE: "/roles-management/roles/{id}",
   },
 
   AREA_OFFICE: {

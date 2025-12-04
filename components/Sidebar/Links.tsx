@@ -162,7 +162,12 @@ const allLinks: LinkItem[] = [
         privilegeKey: "agents",
         requiredActions: ["W"],
       },
-      { name: "Change Request", href: "/agent-management/change-request", privilegeKey: "agents", requiredActions: ["E"] },
+      {
+        name: "Change Request",
+        href: "/agent-management/change-request",
+        privilegeKey: "agents",
+        requiredActions: ["E"],
+      },
     ],
   },
   {
@@ -191,7 +196,6 @@ const allLinks: LinkItem[] = [
         privilegeKey: "vendors",
         requiredActions: ["E"],
       },
-      
     ],
   },
   {

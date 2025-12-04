@@ -176,9 +176,7 @@ export const fetchRoleById = createAsyncThunk<Role, number, { rejectValue: strin
   "roles/fetchRoleById",
   async (roleId: number, { rejectWithValue }) => {
     try {
-      const url = buildApiUrl(
-        API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString())
-      )
+      const url = buildApiUrl(API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString()))
       const response = await api.get<RoleDetailResponse>(url)
 
       if (!response.data.isSuccess) {
@@ -240,13 +238,13 @@ export const createRole = createAsyncThunk<Role, CreateRoleRequest, { rejectValu
         if (!privilege.privilegeId || privilege.privilegeId <= 0) {
           return rejectWithValue("Invalid privilege ID")
         }
-        if (typeof privilege.actions !== 'number' || privilege.actions < 0) {
+        if (typeof privilege.actions !== "number" || privilege.actions < 0) {
           return rejectWithValue("Invalid actions value for privilege")
         }
       }
 
       const url = buildApiUrl(API_ENDPOINTS.ROLES.CREATE_ROLE)
-      
+
       const response = await api.post<RoleDetailResponse>(url, roleData)
 
       if (!response.data.isSuccess) {
@@ -271,72 +269,67 @@ export const createRole = createAsyncThunk<Role, CreateRoleRequest, { rejectValu
   }
 )
 
-export const updateRole = createAsyncThunk<Role, { roleId: number; roleData: UpdateRoleRequest }, { rejectValue: string }>(
-  "roles/updateRole",
-  async ({ roleId, roleData }, { rejectWithValue, dispatch }) => {
-    try {
-      // Validate that role is not a system role (system roles shouldn't be updated via this endpoint)
-      // First, fetch the current role to check if it's a system role
-      const currentRoleUrl = buildApiUrl(
-        API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString())
-      )
-      const currentRoleResponse = await api.get<RoleDetailResponse>(currentRoleUrl)
-      
-      if (!currentRoleResponse.data.isSuccess) {
-        return rejectWithValue(currentRoleResponse.data.message || "Failed to fetch role details")
-      }
+export const updateRole = createAsyncThunk<
+  Role,
+  { roleId: number; roleData: UpdateRoleRequest },
+  { rejectValue: string }
+>("roles/updateRole", async ({ roleId, roleData }, { rejectWithValue, dispatch }) => {
+  try {
+    // Validate that role is not a system role (system roles shouldn't be updated via this endpoint)
+    // First, fetch the current role to check if it's a system role
+    const currentRoleUrl = buildApiUrl(API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString()))
+    const currentRoleResponse = await api.get<RoleDetailResponse>(currentRoleUrl)
 
-      const currentRole = currentRoleResponse.data.data
-      if (!currentRole) {
-        return rejectWithValue("Role not found")
-      }
-
-      if (currentRole.isSystem) {
-        return rejectWithValue("System roles cannot be updated")
-      }
-
-      // Proceed with the update
-      const url = buildApiUrl(
-        API_ENDPOINTS.ROLES.UPDATE_ROLE.replace("{id}", roleId.toString())
-      )
-      
-      const response = await api.put<RoleDetailResponse>(url, roleData)
-
-      if (!response.data.isSuccess) {
-        return rejectWithValue(response.data.message || "Failed to update role")
-      }
-
-      if (!response.data.data) {
-        return rejectWithValue("Role data not returned after update")
-      }
-
-      // Optionally, refetch the updated role details
-      dispatch(fetchRoleById(roleId))
-
-      return response.data.data
-    } catch (error: any) {
-      if (error.response?.data) {
-        const errorData = error.response.data
-        if (errorData.message) {
-          return rejectWithValue(errorData.message)
-        }
-        return rejectWithValue("Failed to update role")
-      }
-      return rejectWithValue(error.message || "Network error during role update")
+    if (!currentRoleResponse.data.isSuccess) {
+      return rejectWithValue(currentRoleResponse.data.message || "Failed to fetch role details")
     }
+
+    const currentRole = currentRoleResponse.data.data
+    if (!currentRole) {
+      return rejectWithValue("Role not found")
+    }
+
+    if (currentRole.isSystem) {
+      return rejectWithValue("System roles cannot be updated")
+    }
+
+    // Proceed with the update
+    const url = buildApiUrl(API_ENDPOINTS.ROLES.UPDATE_ROLE.replace("{id}", roleId.toString()))
+
+    const response = await api.put<RoleDetailResponse>(url, roleData)
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to update role")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Role data not returned after update")
+    }
+
+    // Optionally, refetch the updated role details
+    dispatch(fetchRoleById(roleId))
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      const errorData = error.response.data
+      if (errorData.message) {
+        return rejectWithValue(errorData.message)
+      }
+      return rejectWithValue("Failed to update role")
+    }
+    return rejectWithValue(error.message || "Network error during role update")
   }
-)
+})
 
 export const deleteRole = createAsyncThunk<number, number, { rejectValue: string }>(
   "roles/deleteRole",
   async (roleId: number, { rejectWithValue }) => {
     try {
       // First, fetch the current role to check if it's a system role
-      const currentRoleUrl = buildApiUrl(
-        API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString())
-      )
+      const currentRoleUrl = buildApiUrl(API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString()))
       const currentRoleResponse = await api.get<RoleDetailResponse>(currentRoleUrl)
-      
+
       if (!currentRoleResponse.data.isSuccess) {
         return rejectWithValue(currentRoleResponse.data.message || "Failed to fetch role details")
       }
@@ -352,10 +345,8 @@ export const deleteRole = createAsyncThunk<number, number, { rejectValue: string
       }
 
       // Proceed with the deletion
-      const url = buildApiUrl(
-        API_ENDPOINTS.ROLES.DELETE_ROLE.replace("{id}", roleId.toString())
-      )
-      
+      const url = buildApiUrl(API_ENDPOINTS.ROLES.DELETE_ROLE.replace("{id}", roleId.toString()))
+
       const response = await api.delete<DeleteRoleResponse>(url)
 
       if (!response.data.isSuccess) {
@@ -504,7 +495,7 @@ const roleSlice = createSlice({
 
     // Update a role in the list
     updateRoleInList: (state, action: PayloadAction<Role>) => {
-      const index = state.roles.findIndex(role => role.id === action.payload.id)
+      const index = state.roles.findIndex((role) => role.id === action.payload.id)
       if (index !== -1) {
         state.roles[index] = action.payload
       }
@@ -512,7 +503,7 @@ const roleSlice = createSlice({
 
     // Remove a role from the list
     removeRoleFromList: (state, action: PayloadAction<number>) => {
-      state.roles = state.roles.filter(role => role.id !== action.payload)
+      state.roles = state.roles.filter((role) => role.id !== action.payload)
       state.pagination.totalCount = Math.max(0, state.pagination.totalCount - 1)
       state.pagination.totalPages = Math.ceil(state.pagination.totalCount / state.pagination.pageSize)
     },
@@ -553,7 +544,7 @@ const roleSlice = createSlice({
           hasPrevious: false,
         }
       })
-      
+
       // Fetch role by ID cases
       .addCase(fetchRoleById.pending, (state) => {
         state.currentRoleLoading = true
@@ -569,7 +560,7 @@ const roleSlice = createSlice({
         state.currentRoleError = (action.payload as string) || "Failed to fetch role details"
         state.currentRole = null
       })
-      
+
       // Create role cases
       .addCase(createRole.pending, (state) => {
         state.createRoleLoading = true
@@ -582,7 +573,7 @@ const roleSlice = createSlice({
         state.createRoleSuccess = true
         state.createRoleError = null
         state.createdRole = action.payload
-        
+
         // Add the new role to the beginning of the list (optimistic update)
         state.roles.unshift(action.payload)
         state.pagination.totalCount += 1
@@ -594,7 +585,7 @@ const roleSlice = createSlice({
         state.createRoleError = (action.payload as string) || "Failed to create role"
         state.createdRole = null
       })
-      
+
       // Update role cases
       .addCase(updateRole.pending, (state) => {
         state.updateRoleLoading = true
@@ -605,14 +596,14 @@ const roleSlice = createSlice({
         state.updateRoleLoading = false
         state.updateRoleSuccess = true
         state.updateRoleError = null
-        
+
         // Update current role if it's the same role
         if (state.currentRole && state.currentRole.id === action.payload.id) {
           state.currentRole = action.payload
         }
-        
+
         // Update role in the list
-        const index = state.roles.findIndex(role => role.id === action.payload.id)
+        const index = state.roles.findIndex((role) => role.id === action.payload.id)
         if (index !== -1) {
           state.roles[index] = action.payload
         }
@@ -622,7 +613,7 @@ const roleSlice = createSlice({
         state.updateRoleSuccess = false
         state.updateRoleError = (action.payload as string) || "Failed to update role"
       })
-      
+
       // Delete role cases
       .addCase(deleteRole.pending, (state) => {
         state.deleteRoleLoading = true
@@ -635,12 +626,12 @@ const roleSlice = createSlice({
         state.deleteRoleSuccess = true
         state.deleteRoleError = null
         state.deletedRoleId = action.payload
-        
+
         // Remove the deleted role from the list
-        state.roles = state.roles.filter(role => role.id !== action.payload)
+        state.roles = state.roles.filter((role) => role.id !== action.payload)
         state.pagination.totalCount = Math.max(0, state.pagination.totalCount - 1)
         state.pagination.totalPages = Math.ceil(state.pagination.totalCount / state.pagination.pageSize)
-        
+
         // Clear current role if it's the deleted one
         if (state.currentRole && state.currentRole.id === action.payload) {
           state.currentRole = null
@@ -656,10 +647,10 @@ const roleSlice = createSlice({
   },
 })
 
-export const { 
-  clearRoles, 
-  clearError, 
-  clearCurrentRole, 
+export const {
+  clearRoles,
+  clearError,
+  clearCurrentRole,
   clearCreatedRole,
   clearDeleteRoleState,
   resetRoleState,
@@ -670,7 +661,7 @@ export const {
   updateCurrentRole,
   addRoleToList,
   updateRoleInList,
-  removeRoleFromList 
+  removeRoleFromList,
 } = roleSlice.actions
 
 export default roleSlice.reducer
