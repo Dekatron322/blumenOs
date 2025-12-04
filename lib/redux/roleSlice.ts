@@ -3,6 +3,16 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 
+// Interfaces for Privilege
+export interface Privilege {
+  id: number
+  key: string
+  name: string
+  category: string
+  availableActions: number
+  description: string
+}
+
 // Interfaces for Role Privileges
 export interface RolePrivilege {
   privilegeId: number
@@ -16,6 +26,18 @@ export interface RolePrivilege {
 export interface PrivilegeAssignment {
   privilegeId: number
   actions: number
+}
+
+// Manage Permissions Request Interface
+export interface ManagePermissionsRequest {
+  privileges: PrivilegeAssignment[]
+}
+
+// Manage Permissions Response Interface
+export interface ManagePermissionsResponse {
+  isSuccess: boolean
+  message: string
+  data?: Role // Optional role data that might be returned
 }
 
 // Interfaces for Role
@@ -50,6 +72,13 @@ export interface DeleteRoleResponse {
   message: string
 }
 
+// Privileges Response Interface
+export interface PrivilegesResponse {
+  isSuccess: boolean
+  message: string
+  data: Privilege[]
+}
+
 export interface RoleDetailResponse {
   isSuccess: boolean
   message: string
@@ -71,6 +100,12 @@ export interface RolesResponse {
 export interface RolesRequestParams {
   pageNumber: number
   pageSize: number
+}
+
+// Privileges Request Parameters (optional)
+export interface PrivilegesRequestParams {
+  category?: string
+  search?: string
 }
 
 // Role State
@@ -112,6 +147,19 @@ interface RoleState {
   deleteRoleSuccess: boolean
   deleteRoleError: string | null
   deletedRoleId: number | null
+
+  // Privileges state
+  privileges: Privilege[]
+  privilegesLoading: boolean
+  privilegesError: string | null
+  privilegesSuccess: boolean
+  privilegesCategories: string[]
+
+  // Manage permissions state
+  managePermissionsLoading: boolean
+  managePermissionsSuccess: boolean
+  managePermissionsError: string | null
+  managedRoleId: number | null
 }
 
 // Initial state
@@ -142,6 +190,15 @@ const initialState: RoleState = {
   deleteRoleSuccess: false,
   deleteRoleError: null,
   deletedRoleId: null,
+  privileges: [],
+  privilegesLoading: false,
+  privilegesError: null,
+  privilegesSuccess: false,
+  privilegesCategories: [],
+  managePermissionsLoading: false,
+  managePermissionsSuccess: false,
+  managePermissionsError: null,
+  managedRoleId: null,
 }
 
 // Async thunks
@@ -197,6 +254,39 @@ export const fetchRoleById = createAsyncThunk<Role, number, { rejectValue: strin
         return rejectWithValue("Failed to fetch role details")
       }
       return rejectWithValue(error.message || "Network error during role details fetch")
+    }
+  }
+)
+
+export const fetchPrivileges = createAsyncThunk(
+  "roles/fetchPrivileges",
+  async (params?: PrivilegesRequestParams, { rejectWithValue }) => {
+    try {
+      // Build query parameters
+      const queryParams: Record<string, any> = {}
+
+      if (params?.category) {
+        queryParams.category = params.category
+      }
+
+      if (params?.search) {
+        queryParams.search = params.search
+      }
+
+      const response = await api.get<PrivilegesResponse>(buildApiUrl(API_ENDPOINTS.ROLES.PRIVILEGES), {
+        params: queryParams,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch privileges")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch privileges")
+      }
+      return rejectWithValue(error.message || "Network error during privileges fetch")
     }
   }
 )
@@ -322,6 +412,84 @@ export const updateRole = createAsyncThunk<
   }
 })
 
+export const managePermissions = createAsyncThunk<
+  { roleId: number; privileges: RolePrivilege[] },
+  { roleId: number; privileges: PrivilegeAssignment[] },
+  { rejectValue: string }
+>("roles/managePermissions", async ({ roleId, privileges }, { rejectWithValue, dispatch }) => {
+  try {
+    // Validate that role is not a system role (system roles shouldn't have permissions modified via this endpoint)
+    // First, fetch the current role to check if it's a system role
+    const currentRoleUrl = buildApiUrl(API_ENDPOINTS.ROLES.GET_BY_ID.replace("{id}", roleId.toString()))
+    const currentRoleResponse = await api.get<RoleDetailResponse>(currentRoleUrl)
+
+    if (!currentRoleResponse.data.isSuccess) {
+      return rejectWithValue(currentRoleResponse.data.message || "Failed to fetch role details")
+    }
+
+    const currentRole = currentRoleResponse.data.data
+    if (!currentRole) {
+      return rejectWithValue("Role not found")
+    }
+
+    if (currentRole.isSystem) {
+      return rejectWithValue("System roles cannot have permissions modified")
+    }
+
+    // Validate privileges array
+    if (!Array.isArray(privileges)) {
+      return rejectWithValue("Privileges must be an array")
+    }
+
+    // Validate each privilege assignment
+    for (const privilege of privileges) {
+      if (!privilege.privilegeId || privilege.privilegeId <= 0) {
+        return rejectWithValue("Invalid privilege ID")
+      }
+      if (typeof privilege.actions !== "number" || privilege.actions < 0) {
+        return rejectWithValue("Invalid actions value for privilege")
+      }
+    }
+
+    // Proceed with managing permissions
+    const url = buildApiUrl(API_ENDPOINTS.ROLES.MANAGE_PERMISSIONS.replace("{id}", roleId.toString()))
+
+    const requestData: ManagePermissionsRequest = { privileges }
+
+    const response = await api.put<ManagePermissionsResponse>(url, requestData)
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to manage permissions")
+    }
+
+    // Refetch the updated role details to get the latest privileges
+    dispatch(fetchRoleById(roleId))
+
+    // We need to convert the privilege assignments back to role privileges for the state
+    // In a real implementation, the API might return the updated role with privileges
+    // For now, we'll return what we have and let the fetchRoleById update the state
+    const rolePrivileges: RolePrivilege[] = privileges.map((p) => ({
+      privilegeId: p.privilegeId,
+      privilegeKey: "", // Will be populated by fetchRoleById
+      privilegeName: "", // Will be populated by fetchRoleById
+      privilegeCategory: "", // Will be populated by fetchRoleById
+      actions: p.actions,
+      availableActions: 0, // Will be populated by fetchRoleById
+    }))
+
+    return { roleId, privileges: rolePrivileges }
+  } catch (error: any) {
+    if (error.response?.data) {
+      const errorData = error.response.data
+      if (errorData.message) {
+        return rejectWithValue(errorData.message)
+      }
+      return rejectWithValue("Failed to manage permissions")
+    }
+    return rejectWithValue(error.message || "Network error during permissions management")
+  }
+})
+
 export const deleteRole = createAsyncThunk<number, number, { rejectValue: string }>(
   "roles/deleteRole",
   async (roleId: number, { rejectWithValue }) => {
@@ -367,6 +535,68 @@ export const deleteRole = createAsyncThunk<number, number, { rejectValue: string
   }
 )
 
+// Helper function to extract unique categories from privileges
+const extractCategoriesFromPrivileges = (privileges: Privilege[]): string[] => {
+  const categories = new Set<string>()
+  privileges.forEach((privilege) => {
+    if (privilege.category) {
+      categories.add(privilege.category)
+    }
+  })
+  return Array.from(categories).sort()
+}
+
+// Helper function to convert Privilege to RolePrivilege for role creation
+export const convertToRolePrivilege = (privilege: Privilege, actions: number = 0): RolePrivilege => ({
+  privilegeId: privilege.id,
+  privilegeKey: privilege.key,
+  privilegeName: privilege.name,
+  privilegeCategory: privilege.category,
+  actions: actions,
+  availableActions: privilege.availableActions,
+})
+
+// Helper function to convert RolePrivilege to PrivilegeAssignment for API calls
+export const convertToPrivilegeAssignment = (rolePrivilege: RolePrivilege): PrivilegeAssignment => ({
+  privilegeId: rolePrivilege.privilegeId,
+  actions: rolePrivilege.actions,
+})
+
+// Helper function to get available actions as array of strings
+export const getAvailableActions = (availableActions: number): string[] => {
+  const actions: string[] = []
+  if (availableActions & 1) actions.push("Create")
+  if (availableActions & 2) actions.push("Read")
+  if (availableActions & 4) actions.push("Update")
+  if (availableActions & 8) actions.push("Delete")
+  if (availableActions & 16) actions.push("Approve")
+  if (availableActions & 32) actions.push("View All")
+  return actions
+}
+
+// Helper function to get actions as array of strings
+export const getActions = (actions: number): string[] => {
+  const actionList: string[] = []
+  if (actions & 1) actionList.push("Create")
+  if (actions & 2) actionList.push("Read")
+  if (actions & 4) actionList.push("Update")
+  if (actions & 8) actionList.push("Delete")
+  if (actions & 16) actionList.push("Approve")
+  if (actions & 32) actionList.push("View All")
+  return actionList
+}
+
+// Helper function to validate actions against available actions
+export const validateActions = (actions: number, availableActions: number): boolean => {
+  // Check if all requested actions are available
+  return (actions & ~availableActions) === 0
+}
+
+// Helper function to get valid actions (intersection of requested and available)
+export const getValidActions = (requestedActions: number, availableActions: number): number => {
+  return requestedActions & availableActions
+}
+
 // Role slice
 const roleSlice = createSlice({
   name: "roles",
@@ -394,6 +624,8 @@ const roleSlice = createSlice({
       state.updateRoleError = null
       state.createRoleError = null
       state.deleteRoleError = null
+      state.privilegesError = null
+      state.managePermissionsError = null
     },
 
     // Clear current role
@@ -415,6 +647,23 @@ const roleSlice = createSlice({
       state.deleteRoleSuccess = false
       state.deleteRoleError = null
       state.deletedRoleId = null
+    },
+
+    // Clear privileges state
+    clearPrivileges: (state) => {
+      state.privileges = []
+      state.privilegesLoading = false
+      state.privilegesError = null
+      state.privilegesSuccess = false
+      state.privilegesCategories = []
+    },
+
+    // Clear manage permissions state
+    clearManagePermissionsState: (state) => {
+      state.managePermissionsLoading = false
+      state.managePermissionsSuccess = false
+      state.managePermissionsError = null
+      state.managedRoleId = null
     },
 
     // Reset role state
@@ -445,6 +694,15 @@ const roleSlice = createSlice({
       state.deleteRoleSuccess = false
       state.deleteRoleError = null
       state.deletedRoleId = null
+      state.privileges = []
+      state.privilegesLoading = false
+      state.privilegesError = null
+      state.privilegesSuccess = false
+      state.privilegesCategories = []
+      state.managePermissionsLoading = false
+      state.managePermissionsSuccess = false
+      state.managePermissionsError = null
+      state.managedRoleId = null
     },
 
     // Reset update state
@@ -470,6 +728,21 @@ const roleSlice = createSlice({
       state.deletedRoleId = null
     },
 
+    // Reset privileges state
+    resetPrivilegesState: (state) => {
+      state.privilegesLoading = false
+      state.privilegesSuccess = false
+      state.privilegesError = null
+    },
+
+    // Reset manage permissions state
+    resetManagePermissionsState: (state) => {
+      state.managePermissionsLoading = false
+      state.managePermissionsSuccess = false
+      state.managePermissionsError = null
+      state.managedRoleId = null
+    },
+
     // Set pagination
     setPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.pagination.currentPage = action.payload.page
@@ -483,6 +756,13 @@ const roleSlice = createSlice({
           ...state.currentRole,
           ...action.payload,
         }
+      }
+    },
+
+    // Update current role privileges (for optimistic updates during permission management)
+    updateCurrentRolePrivileges: (state, action: PayloadAction<RolePrivilege[]>) => {
+      if (state.currentRole) {
+        state.currentRole.privileges = action.payload
       }
     },
 
@@ -501,11 +781,70 @@ const roleSlice = createSlice({
       }
     },
 
+    // Update role privileges in the list
+    updateRolePrivilegesInList: (state, action: PayloadAction<{ roleId: number; privileges: RolePrivilege[] }>) => {
+      const index = state.roles.findIndex((role) => role.id === action.payload.roleId)
+      if (index !== -1) {
+        const role = state.roles[index]
+        if (role) {
+          role.privileges = action.payload.privileges
+        }
+      }
+    },
+
     // Remove a role from the list
     removeRoleFromList: (state, action: PayloadAction<number>) => {
       state.roles = state.roles.filter((role) => role.id !== action.payload)
       state.pagination.totalCount = Math.max(0, state.pagination.totalCount - 1)
       state.pagination.totalPages = Math.ceil(state.pagination.totalCount / state.pagination.pageSize)
+    },
+
+    // Filter privileges by category
+    filterPrivilegesByCategory: (state, action: PayloadAction<string | null>) => {
+      if (!action.payload) {
+        // Reset to show all privileges
+        state.privileges = state.privileges
+      } else {
+        // Filter privileges by category
+        state.privileges = state.privileges.filter((privilege) => privilege.category === action.payload)
+      }
+    },
+
+    // Search privileges
+    searchPrivileges: (state, action: PayloadAction<string>) => {
+      const searchTerm = action.payload.toLowerCase()
+      if (!searchTerm) {
+        // Reset to show all privileges
+        state.privileges = state.privileges
+      } else {
+        // Filter privileges by search term
+        state.privileges = state.privileges.filter(
+          (privilege) =>
+            privilege.name.toLowerCase().includes(searchTerm) ||
+            privilege.key.toLowerCase().includes(searchTerm) ||
+            privilege.description?.toLowerCase().includes(searchTerm) ||
+            privilege.category.toLowerCase().includes(searchTerm)
+        )
+      }
+    },
+
+    // Optimistically update role privileges
+    optimisticUpdateRolePrivileges: (state, action: PayloadAction<{ roleId: number; privileges: RolePrivilege[] }>) => {
+      const { roleId, privileges } = action.payload
+
+      // Update current role if it's the same role
+      if (state.currentRole && state.currentRole.id === roleId) {
+        state.currentRole.privileges = privileges
+      }
+
+      // Update role in the list
+      const index = state.roles.findIndex((role) => role.id === roleId)
+      if (index !== -1) {
+        const role = state.roles[index]
+        if (role) {
+          role.privileges = privileges
+        }
+      }
     },
   },
   extraReducers: (builder) => {
@@ -561,6 +900,27 @@ const roleSlice = createSlice({
         state.currentRole = null
       })
 
+      // Fetch privileges cases
+      .addCase(fetchPrivileges.pending, (state) => {
+        state.privilegesLoading = true
+        state.privilegesError = null
+        state.privilegesSuccess = false
+      })
+      .addCase(fetchPrivileges.fulfilled, (state, action: PayloadAction<PrivilegesResponse>) => {
+        state.privilegesLoading = false
+        state.privilegesSuccess = true
+        state.privileges = action.payload.data
+        state.privilegesCategories = extractCategoriesFromPrivileges(action.payload.data)
+        state.privilegesError = null
+      })
+      .addCase(fetchPrivileges.rejected, (state, action) => {
+        state.privilegesLoading = false
+        state.privilegesSuccess = false
+        state.privilegesError = (action.payload as string) || "Failed to fetch privileges"
+        state.privileges = []
+        state.privilegesCategories = []
+      })
+
       // Create role cases
       .addCase(createRole.pending, (state) => {
         state.createRoleLoading = true
@@ -614,6 +974,32 @@ const roleSlice = createSlice({
         state.updateRoleError = (action.payload as string) || "Failed to update role"
       })
 
+      // Manage permissions cases
+      .addCase(managePermissions.pending, (state) => {
+        state.managePermissionsLoading = true
+        state.managePermissionsSuccess = false
+        state.managePermissionsError = null
+        state.managedRoleId = null
+      })
+      .addCase(
+        managePermissions.fulfilled,
+        (state, action: PayloadAction<{ roleId: number; privileges: RolePrivilege[] }>) => {
+          state.managePermissionsLoading = false
+          state.managePermissionsSuccess = true
+          state.managePermissionsError = null
+          state.managedRoleId = action.payload.roleId
+
+          // Note: The actual role privileges are updated by the fetchRoleById thunk
+          // that gets dispatched in managePermissions.fulfilled
+        }
+      )
+      .addCase(managePermissions.rejected, (state, action) => {
+        state.managePermissionsLoading = false
+        state.managePermissionsSuccess = false
+        state.managePermissionsError = (action.payload as string) || "Failed to manage permissions"
+        state.managedRoleId = null
+      })
+
       // Delete role cases
       .addCase(deleteRole.pending, (state) => {
         state.deleteRoleLoading = true
@@ -653,15 +1039,24 @@ export const {
   clearCurrentRole,
   clearCreatedRole,
   clearDeleteRoleState,
+  clearPrivileges,
+  clearManagePermissionsState,
   resetRoleState,
   resetUpdateState,
   resetCreateState,
   resetDeleteState,
+  resetPrivilegesState,
+  resetManagePermissionsState,
   setPagination,
   updateCurrentRole,
+  updateCurrentRolePrivileges,
   addRoleToList,
   updateRoleInList,
+  updateRolePrivilegesInList,
   removeRoleFromList,
+  filterPrivilegesByCategory,
+  searchPrivileges,
+  optimisticUpdateRolePrivileges,
 } = roleSlice.actions
 
 export default roleSlice.reducer

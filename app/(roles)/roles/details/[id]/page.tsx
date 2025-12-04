@@ -523,7 +523,8 @@ const RoleDetailsPage = () => {
     if (!currentRole) return
     console.log("Managing permissions for role:", currentRole.id)
     setActiveAction("permissions")
-    setTimeout(() => setActiveAction(null), 2000)
+    // Navigate to manage permissions page for this role
+    router.push(`/roles/manage-permission/${currentRole.id}`)
   }
 
   const handleDeleteRole = () => {

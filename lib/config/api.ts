@@ -60,6 +60,8 @@ export const API_ENDPOINTS = {
     UPDATE_ROLE: "/roles-management/roles/{id}",
     CREATE_ROLE: "/roles-management/roles",
     DELETE_ROLE: "/roles-management/roles/{id}",
+    PRIVILEGES: "/roles-management/privileges",
+    MANAGE_PERMISSIONS: "/roles-management/roles/{id}/permissions",
   },
 
   AREA_OFFICE: {
