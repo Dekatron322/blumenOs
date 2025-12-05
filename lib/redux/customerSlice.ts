@@ -219,6 +219,132 @@ export interface Customer {
   createdAt?: any
 }
 
+export interface CustomerMapItem {
+  id: number
+  accountNumber: string
+  fullName: string
+  status: number
+  outstanding: number
+  latitude: number
+  longitude: number
+  state: string
+  city: string
+  lga: string
+  feederId: number
+  feederName: string
+  distributionSubstationId: number
+  distributionSubstationCode: string
+  serviceCenterId: number
+  serviceCenterName: string
+  salesRepUserId: number
+  salesRepName: string
+}
+
+export interface AssetMapItem {
+  type: string
+  id: number
+  name: string
+  latitude: number
+  longitude: number
+  feederId: number
+  feederName: string
+  areaOfficeId: number
+  areaOfficeName: string
+}
+
+export interface CustomersMapResponse {
+  customers: CustomerMapItem[]
+  assets: AssetMapItem[]
+}
+
+export interface CustomersMapRequest {
+  state: string
+  feederId: number
+  paymentStatus: number
+  salesRepUserId: number
+  includeCustomers: boolean
+  includeAssets: boolean
+}
+
+const FALLBACK_MAP_CUSTOMERS: CustomerMapItem[] = [
+  {
+    id: 1,
+    accountNumber: "FAKE001",
+    fullName: "John Doe",
+    status: 3,
+    outstanding: 12000,
+    latitude: 10.52,
+    longitude: 7.44,
+    state: "Kaduna",
+    city: "Kaduna",
+    lga: "Chikun",
+    feederId: 533,
+    feederName: "11KV ABU",
+    distributionSubstationId: 1,
+    distributionSubstationCode: "DSS-001",
+    serviceCenterId: 1,
+    serviceCenterName: "Banawa",
+    salesRepUserId: 0,
+    salesRepName: "N/A",
+  },
+  {
+    id: 2,
+    accountNumber: "FAKE002",
+    fullName: "Jane Smith",
+    status: 1,
+    outstanding: 0,
+    latitude: 12.00,
+    longitude: 8.52,
+    state: "Kano",
+    city: "Kano",
+    lga: "Nassarawa",
+    feederId: 533,
+    feederName: "11KV ABU",
+    distributionSubstationId: 2,
+    distributionSubstationCode: "DSS-002",
+    serviceCenterId: 2,
+    serviceCenterName: "Center01",
+    salesRepUserId: 0,
+    salesRepName: "N/A",
+  },
+]
+
+const FALLBACK_MAP_ASSETS: AssetMapItem[] = [
+  {
+    type: "substation",
+    id: 101,
+    name: "Substation 1",
+    latitude: 10.56,
+    longitude: 7.47,
+    feederId: 533,
+    feederName: "11KV ABU",
+    areaOfficeId: 10,
+    areaOfficeName: "Banawa AO",
+  },
+  {
+    type: "transformer",
+    id: 102,
+    name: "Transformer 1",
+    latitude: 12.02,
+    longitude: 8.50,
+    feederId: 533,
+    feederName: "11KV ABU",
+    areaOfficeId: 11,
+    areaOfficeName: "Sabon Gari AO",
+  },
+  {
+    type: "service",
+    id: 103,
+    name: "Service Center",
+    latitude: 9.09,
+    longitude: 7.51,
+    feederId: 533,
+    feederName: "11KV ABU",
+    areaOfficeId: 10,
+    areaOfficeName: "Banawa AO",
+  },
+]
+
 export interface CustomersResponse {
   isSuccess: boolean
   message: string
@@ -567,6 +693,13 @@ interface CustomerState {
   error: string | null
   success: boolean
 
+  // Map state
+  mapCustomers: CustomerMapItem[]
+  mapAssets: AssetMapItem[]
+  mapLoading: boolean
+  mapError: string | null
+  mapSuccess: boolean
+
   // Pagination state
   pagination: {
     totalCount: number
@@ -705,6 +838,11 @@ const initialState: CustomerState = {
   loading: false,
   error: null,
   success: false,
+  mapCustomers: [],
+  mapAssets: [],
+  mapLoading: false,
+  mapError: null,
+  mapSuccess: false,
   pagination: {
     totalCount: 0,
     totalPages: 0,
@@ -842,6 +980,24 @@ export const fetchCustomers = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to fetch customers")
       }
       return rejectWithValue(error.message || "Network error during customers fetch")
+    }
+  }
+)
+
+export const fetchCustomersMap = createAsyncThunk(
+  "customers/fetchCustomersMap",
+  async (body: CustomersMapRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post(buildApiUrl(API_ENDPOINTS.CUSTOMER.MAP), body)
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch customers map")
+      }
+      return response.data.data as CustomersMapResponse
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch customers map")
+      }
+      return rejectWithValue(error.message || "Network error during customers map fetch")
     }
   }
 )
@@ -1713,6 +1869,39 @@ const customerSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Fetch customers cases
+      // Fetch customers map cases
+      .addCase(fetchCustomersMap.pending, (state) => {
+        state.mapLoading = true
+        state.mapError = null
+        state.mapSuccess = false
+      })
+      .addCase(fetchCustomersMap.fulfilled, (state, action: PayloadAction<CustomersMapResponse>) => {
+        state.mapLoading = false
+        const customers = (action.payload.customers || []).filter(
+          (c) => typeof c.latitude === "number" && typeof c.longitude === "number"
+        )
+        const assets = (action.payload.assets || []).filter(
+          (a) => typeof a.latitude === "number" && typeof a.longitude === "number"
+        )
+        if (customers.length === 0 && assets.length === 0) {
+          state.mapCustomers = FALLBACK_MAP_CUSTOMERS
+          state.mapAssets = FALLBACK_MAP_ASSETS
+          state.mapSuccess = false
+        } else {
+          state.mapCustomers = customers
+          state.mapAssets = assets
+          state.mapSuccess = true
+        }
+        state.mapError = null
+      })
+      .addCase(fetchCustomersMap.rejected, (state, action) => {
+        state.mapLoading = false
+        state.mapError = (action.payload as string) || "Failed to fetch customers map"
+        state.mapSuccess = false
+        state.mapCustomers = FALLBACK_MAP_CUSTOMERS
+        state.mapAssets = FALLBACK_MAP_ASSETS
+      })
       // Fetch customers cases
       .addCase(fetchCustomers.pending, (state) => {
         state.loading = true
