@@ -154,22 +154,6 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/customers/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
-    CUSTOMER_LOOKUP: "/customers/lookup",
-  },
-
-  CREATE_CUSTOMER: {
-    ADD: "/customers/bulk",
-  },
-
-  STATUS_MAP: {
-    GET: "/status-map",
-  },
-
-  PAYMENT_TYPE: {
-    GET: "/payments/types",
-    CREATE: "/payments/types",
-    UPDATE: "/payments/types/{id}",
-    DELETE: "/payments/types/{id}",
   },
 
   POSTPAID_BILLING: {
