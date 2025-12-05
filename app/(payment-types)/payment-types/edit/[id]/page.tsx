@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { ArrowLeft, CheckCircle, CreditCard, Pencil, Save, XCircle } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -315,7 +315,7 @@ const EditPaymentTypePage = () => {
             <CreditCard className="mb-4 size-16 text-gray-400" />
             <h2 className="mb-2 text-2xl font-bold text-gray-900">Payment Type Not Found</h2>
             <p className="mb-6 text-gray-600">
-              The payment type you're trying to edit doesn't exist or has been removed.
+              The payment type you&apos;re trying to edit doesn&apos;t exist or has been removed.
             </p>
             <ButtonModule
               variant="primary"
@@ -536,7 +536,7 @@ const EditPaymentTypePage = () => {
                               <div>
                                 <h4 className="text-sm font-medium text-yellow-800">Inactive Payment Type</h4>
                                 <p className="mt-1 text-sm text-yellow-600">
-                                  This payment type is not available for use. Users won't see it as an option when
+                                  This payment type is not available for use. Users won&apos;t see it as an option when
                                   processing transactions.
                                 </p>
                               </div>
@@ -684,7 +684,9 @@ const EditPaymentTypePage = () => {
                         </span>
                       </div>
                       {hasChanges && (
-                        <p className="mt-1 text-xs text-gray-600">You have made changes that haven't been saved yet.</p>
+                        <p className="mt-1 text-xs text-gray-600">
+                          You have made changes that haven&apos;t been saved yet.
+                        </p>
                       )}
                     </div>
                   </motion.div>

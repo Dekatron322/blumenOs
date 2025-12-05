@@ -391,8 +391,8 @@ const CreatePaymentTypePage = () => {
                               <div>
                                 <h4 className="text-sm font-medium text-yellow-800">Inactive Payment Type</h4>
                                 <p className="mt-1 text-sm text-yellow-600">
-                                  This payment type will be created but won't be available for use until you activate
-                                  it. Useful for setting up payment methods in advance.
+                                  This payment type will be created but won&apos;t be available for use until you
+                                  activate it. Useful for setting up payment methods in advance.
                                 </p>
                               </div>
                             </>
