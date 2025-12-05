@@ -51,70 +51,6 @@ interface ActionDropdownProps {
   onRefreshSubCategories: (categoryId: number) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({
-  category,
-  onViewDetails,
-  onEdit,
-  onDelete,
-  onRefreshSubCategories,
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
-  const calculateDropdownPosition = () => {
-    if (!dropdownRef.current) return
-
-    const buttonRect = dropdownRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - buttonRect.bottom
-    const spaceAbove = buttonRect.top
-    const dropdownHeight = 200
-
-    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-      setDropdownDirection("top")
-    } else {
-      setDropdownDirection("bottom")
-    }
-  }
-
-  const handleButtonClick = (e?: React.MouseEvent) => {
-    e?.preventDefault()
-    calculateDropdownPosition()
-    setIsOpen(!isOpen)
-  }
-
-  const handleAction = (action: "view" | "edit" | "delete" | "refresh") => {
-    setIsOpen(false)
-    switch (action) {
-      case "view":
-        onViewDetails(category)
-        break
-      case "edit":
-        onEdit(category)
-        break
-      case "delete":
-        onDelete(category)
-        break
-      case "refresh":
-        onRefreshSubCategories(category.id)
-        break
-    }
-  }
-}
-
 const SubCategoryCard: React.FC<{ subCategory: CustomerSubCategory }> = ({ subCategory }) => {
   return (
     <motion.div
@@ -190,13 +126,6 @@ const CategoryCard: React.FC<{
             </div>
           </div>
         </div>
-        <ActionDropdown
-          category={category}
-          onViewDetails={onViewDetails}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onRefreshSubCategories={onRefreshSubCategories}
-        />
       </div>
 
       <div className="space-y-4">
