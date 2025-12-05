@@ -109,10 +109,18 @@ const SideBar = () => {
                     <img src="/Icons/payment.svg" alt="Payment Types" className="size-4" />
                     <span>Payment Types Mngt</span>
                   </Link>
-                  <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
+                  <Link
+                    href="/departments"
+                    className={clsx(
+                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                      {
+                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/departments"),
+                      }
+                    )}
+                  >
                     <img src="/Icons/building.svg" alt="Departments" className="size-4" />
                     <span>Departments</span>
-                  </button>
+                  </Link>
                   <Link
                     href="/customer-categories"
                     className={clsx(
