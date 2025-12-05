@@ -2,6 +2,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import type { RootState } from "lib/redux/store"
 
 // Interfaces for Customer Categories
 export interface CustomerSubCategory {
@@ -174,33 +175,26 @@ export const {
 } = customerCategoriesSlice.actions
 
 // Selectors
-export const selectCategories = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.categories
+export const selectCategories = (state: RootState) => state.customerCategories.categories
 
-export const selectCategoriesLoading = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.loading
+export const selectCategoriesLoading = (state: RootState) => state.customerCategories.loading
 
-export const selectCategoriesError = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.error
+export const selectCategoriesError = (state: RootState) => state.customerCategories.error
 
-export const selectCategoriesSuccess = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.success
+export const selectCategoriesSuccess = (state: RootState) => state.customerCategories.success
 
-export const selectSelectedCategory = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.selectedCategory
+export const selectSelectedCategory = (state: RootState) => state.customerCategories.selectedCategory
 
-export const selectSelectedCategoryLoading = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.selectedCategoryLoading
+export const selectSelectedCategoryLoading = (state: RootState) => state.customerCategories.selectedCategoryLoading
 
-export const selectSelectedCategoryError = (state: { customerCategories: CustomerCategoriesState }) =>
-  state.customerCategories.selectedCategoryError
+export const selectSelectedCategoryError = (state: RootState) => state.customerCategories.selectedCategoryError
 
 // Helper selector to get category by ID
-export const selectCategoryById = (categoryId: number) => (state: { customerCategories: CustomerCategoriesState }) =>
+export const selectCategoryById = (categoryId: number) => (state: RootState) =>
   state.customerCategories.categories.find((cat) => cat.id === categoryId)
 
 // Helper selector to get flattened subcategories
-export const selectAllSubCategories = (state: { customerCategories: CustomerCategoriesState }) =>
+export const selectAllSubCategories = (state: RootState) =>
   state.customerCategories.categories.flatMap((cat) => cat.subCategories)
 
 export default customerCategoriesSlice.reducer
