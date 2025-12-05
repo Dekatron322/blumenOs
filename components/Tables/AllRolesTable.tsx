@@ -323,12 +323,6 @@ const PrivilegeCard: React.FC<{ privilege: Privilege }> = ({ privilege }) => {
             )}
           </div>
         </div>
-
-        <div className="text-right">
-          <span className="inline-block rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600">
-            ID: {privilege.id}
-          </span>
-        </div>
       </div>
     </motion.div>
   )

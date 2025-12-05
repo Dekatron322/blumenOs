@@ -167,6 +167,9 @@ export const API_ENDPOINTS = {
 
   PAYMENT_TYPE: {
     GET: "/payments/types",
+    CREATE: "/payments/types",
+    UPDATE: "/payments/types/{id}",
+    DELETE: "/payments/types/{id}",
   },
 
   POSTPAID_BILLING: {

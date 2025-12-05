@@ -7,9 +7,12 @@ import Image from "next/image"
 import clsx from "clsx"
 import { usePopover } from "components/Navbar/use-popover"
 import { AnimatePresence, motion } from "framer-motion"
+import { usePathname } from "next/navigation"
 
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const pathname = usePathname()
 
   const {
     anchorRef: systemSettingsRef,
@@ -84,15 +87,28 @@ const SideBar = () => {
                 <div className="flex flex-col py-1">
                   <Link
                     href="/roles"
-                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                    className={clsx(
+                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                      {
+                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/roles"),
+                      }
+                    )}
                   >
                     <img src="/Icons/ic_employee.svg" alt="Roles" className="size-4" />
                     <span>Roles</span>
                   </Link>
-                  <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
+                  <Link
+                    href="/payment-types"
+                    className={clsx(
+                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                      {
+                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/payment-types"),
+                      }
+                    )}
+                  >
                     <img src="/Icons/payment.svg" alt="Payment Types" className="size-4" />
                     <span>Payment Types Mngt</span>
-                  </button>
+                  </Link>
                   <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
                     <img src="/Icons/building.svg" alt="Departments" className="size-4" />
                     <span>Departments</span>

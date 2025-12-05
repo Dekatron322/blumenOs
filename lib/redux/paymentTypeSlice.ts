@@ -17,6 +17,31 @@ export interface PaymentTypesResponse {
   data: PaymentType[]
 }
 
+export interface PaymentTypeResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentType
+}
+
+export interface DeletePaymentTypeResponse {
+  isSuccess: boolean
+  message: string
+  data: null
+}
+
+export interface CreatePaymentTypeRequest {
+  name: string
+  description: string
+  isActive: boolean
+}
+
+export interface UpdatePaymentTypeRequest {
+  id: number
+  name: string
+  description: string
+  isActive: boolean
+}
+
 export interface PaymentTypeRequestParams {
   // You can add any future parameters here if needed
   // For now, the endpoint doesn't require any parameters
@@ -34,6 +59,19 @@ interface PaymentTypeState {
   currentPaymentType: PaymentType | null
   currentPaymentTypeLoading: boolean
   currentPaymentTypeError: string | null
+
+  // Operation states
+  creating: boolean
+  createError: string | null
+  createSuccess: boolean
+
+  updating: boolean
+  updateError: string | null
+  updateSuccess: boolean
+
+  deleting: boolean
+  deleteError: string | null
+  deleteSuccess: boolean
 }
 
 // Initial state
@@ -45,6 +83,15 @@ const initialState: PaymentTypeState = {
   currentPaymentType: null,
   currentPaymentTypeLoading: false,
   currentPaymentTypeError: null,
+  creating: false,
+  createError: null,
+  createSuccess: false,
+  updating: false,
+  updateError: null,
+  updateSuccess: false,
+  deleting: false,
+  deleteError: null,
+  deleteSuccess: false,
 }
 
 // Async thunks
@@ -65,6 +112,77 @@ export const fetchPaymentTypes = createAsyncThunk("paymentTypes/fetchPaymentType
   }
 })
 
+export const createPaymentType = createAsyncThunk(
+  "paymentTypes/createPaymentType",
+  async (paymentTypeData: CreatePaymentTypeRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<PaymentTypeResponse>(
+        buildApiUrl(API_ENDPOINTS.PAYMENT_TYPE.CREATE),
+        paymentTypeData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create payment type")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create payment type")
+      }
+      return rejectWithValue(error.message || "Network error during payment type creation")
+    }
+  }
+)
+
+export const updatePaymentType = createAsyncThunk(
+  "paymentTypes/updatePaymentType",
+  async (paymentTypeData: UpdatePaymentTypeRequest, { rejectWithValue }) => {
+    try {
+      // Extract id from the request data for the URL
+      const { id, ...updateData } = paymentTypeData
+
+      const response = await api.put<PaymentTypeResponse>(
+        buildApiUrl(API_ENDPOINTS.PAYMENT_TYPE.UPDATE.replace("{id}", id.toString())),
+        updateData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update payment type")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update payment type")
+      }
+      return rejectWithValue(error.message || "Network error during payment type update")
+    }
+  }
+)
+
+export const deletePaymentType = createAsyncThunk(
+  "paymentTypes/deletePaymentType",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await api.delete<DeletePaymentTypeResponse>(
+        buildApiUrl(API_ENDPOINTS.PAYMENT_TYPE.DELETE.replace("{id}", id.toString()))
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to delete payment type")
+      }
+
+      return { id, ...response.data }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to delete payment type")
+      }
+      return rejectWithValue(error.message || "Network error during payment type deletion")
+    }
+  }
+)
+
 // PaymentType slice
 const paymentTypeSlice = createSlice({
   name: "paymentTypes",
@@ -81,6 +199,9 @@ const paymentTypeSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentPaymentTypeError = null
+      state.createError = null
+      state.updateError = null
+      state.deleteError = null
     },
 
     // Clear current paymentType
@@ -98,6 +219,15 @@ const paymentTypeSlice = createSlice({
       state.currentPaymentType = null
       state.currentPaymentTypeLoading = false
       state.currentPaymentTypeError = null
+      state.creating = false
+      state.createError = null
+      state.createSuccess = false
+      state.updating = false
+      state.updateError = null
+      state.updateSuccess = false
+      state.deleting = false
+      state.deleteError = null
+      state.deleteSuccess = false
     },
 
     // Set current paymentType (for when we get paymentType data from other sources)
@@ -143,6 +273,27 @@ const paymentTypeSlice = createSlice({
     setInactivePaymentTypes: (state) => {
       state.paymentTypes = state.paymentTypes.filter((paymentType) => !paymentType.isActive)
     },
+
+    // Reset create state
+    resetCreateState: (state) => {
+      state.creating = false
+      state.createError = null
+      state.createSuccess = false
+    },
+
+    // Reset update state
+    resetUpdateState: (state) => {
+      state.updating = false
+      state.updateError = null
+      state.updateSuccess = false
+    },
+
+    // Reset delete state
+    resetDeleteState: (state) => {
+      state.deleting = false
+      state.deleteError = null
+      state.deleteSuccess = false
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -164,6 +315,81 @@ const paymentTypeSlice = createSlice({
         state.success = false
         state.paymentTypes = []
       })
+
+      // Create paymentType cases
+      .addCase(createPaymentType.pending, (state) => {
+        state.creating = true
+        state.createError = null
+        state.createSuccess = false
+      })
+      .addCase(createPaymentType.fulfilled, (state, action: PayloadAction<PaymentTypeResponse>) => {
+        state.creating = false
+        state.createSuccess = true
+        // Add the new payment type to the beginning of the list
+        state.paymentTypes.unshift(action.payload.data)
+        // Set it as current payment type
+        state.currentPaymentType = action.payload.data
+      })
+      .addCase(createPaymentType.rejected, (state, action) => {
+        state.creating = false
+        state.createError = (action.payload as string) || "Failed to create payment type"
+        state.createSuccess = false
+      })
+
+      // Update paymentType cases
+      .addCase(updatePaymentType.pending, (state) => {
+        state.updating = true
+        state.updateError = null
+        state.updateSuccess = false
+      })
+      .addCase(updatePaymentType.fulfilled, (state, action: PayloadAction<PaymentTypeResponse>) => {
+        state.updating = false
+        state.updateSuccess = true
+
+        const updatedPaymentType = action.payload.data
+
+        // Update payment type in the list
+        const index = state.paymentTypes.findIndex((paymentType) => paymentType.id === updatedPaymentType.id)
+        if (index !== -1) {
+          state.paymentTypes[index] = updatedPaymentType
+        }
+
+        // Update current payment type if it's the one being edited
+        if (state.currentPaymentType && state.currentPaymentType.id === updatedPaymentType.id) {
+          state.currentPaymentType = updatedPaymentType
+        }
+      })
+      .addCase(updatePaymentType.rejected, (state, action) => {
+        state.updating = false
+        state.updateError = (action.payload as string) || "Failed to update payment type"
+        state.updateSuccess = false
+      })
+
+      // Delete paymentType cases
+      .addCase(deletePaymentType.pending, (state) => {
+        state.deleting = true
+        state.deleteError = null
+        state.deleteSuccess = false
+      })
+      .addCase(deletePaymentType.fulfilled, (state, action) => {
+        state.deleting = false
+        state.deleteSuccess = true
+
+        const deletedId = action.payload.id
+
+        // Remove payment type from the list
+        state.paymentTypes = state.paymentTypes.filter((paymentType) => paymentType.id !== deletedId)
+
+        // Clear current payment type if it's the one being deleted
+        if (state.currentPaymentType && state.currentPaymentType.id === deletedId) {
+          state.currentPaymentType = null
+        }
+      })
+      .addCase(deletePaymentType.rejected, (state, action) => {
+        state.deleting = false
+        state.deleteError = (action.payload as string) || "Failed to delete payment type"
+        state.deleteSuccess = false
+      })
   },
 })
 
@@ -179,6 +405,9 @@ export const {
   togglePaymentTypeActiveStatus,
   setActivePaymentTypes,
   setInactivePaymentTypes,
+  resetCreateState,
+  resetUpdateState,
+  resetDeleteState,
 } = paymentTypeSlice.actions
 
 export default paymentTypeSlice.reducer
