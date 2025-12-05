@@ -112,9 +112,9 @@ const SignIn: React.FC = () => {
   const isButtonDisabled = loading || authLoading || email.trim() === "" || password.trim() === ""
 
   return (
-    <div className="relative flex min-h-screen grid-cols-1 bg-gradient-to-br from-[#ffffff]">
+    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#ffffff] md:flex-row">
       {/* Form Container */}
-      <div className="container flex flex-col items-center justify-center border-r-2 border-[#ffffff80] py-8 max-sm:px-5 md:w-[40%]">
+      <div className="container flex min-h-screen w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] px-5 py-8 md:min-h-0 md:w-[40%] md:border-b-0 md:border-r-2">
         <motion.main
           className="flex w-full flex-col items-center justify-center"
           initial={{ opacity: 0, y: 20 }}
@@ -253,20 +253,20 @@ const SignIn: React.FC = () => {
       </div>
 
       {/* Image Container with Text at Bottom */}
-      <div className="relative w-[60%] bg-[#0A0A0A] ">
+      <div className="relative hidden w-[60%] bg-[#0A0A0A] md:block ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.8 }}
-          className="absolute right-0 top-[-25%] z-0 flex h-full"
+          className="relative z-0 flex items-start justify-center pt-8"
         >
-          <img src="/auth-background.svg" alt="auth-background" className="w-full" />
+          <img src="/auth-background.svg" alt="auth-background" className="w-full object-contain" />
         </motion.div>
 
         {/* Text positioned at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center p-32">
+        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-24">
           <motion.h1
-            className="max-w-[60%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
+            className="mb-4 max-w-[70%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.0 }}
@@ -276,7 +276,7 @@ const SignIn: React.FC = () => {
             <span className="text-[#FFFFFF80]">for Utilities</span>
           </motion.h1>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center p-10 ">
+        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-10 ">
           <motion.p
             className="max-w-[80%] text-center  text-[#FFFFFF80]"
             initial={{ opacity: 0, y: 20 }}

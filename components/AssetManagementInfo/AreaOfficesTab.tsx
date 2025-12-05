@@ -196,11 +196,11 @@ const LoadingSkeleton = () => {
       <div className="flex items-center justify-between border-t py-3">
         <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
+            <div key={i} className="size-8 rounded bg-gray-200"></div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
         </div>
       </div>
     </div>
@@ -226,9 +226,9 @@ const AreaOfficesTab: React.FC = () => {
   // Fetch area offices on component mount and when search/pagination changes
   useEffect(() => {
     const fetchParams: AreaOfficesRequestParams = {
-      pageNumber: currentPage,
-      pageSize: pageSize,
-      ...(searchText && { search: searchText }),
+      PageNumber: currentPage,
+      PageSize: pageSize,
+      ...(searchText && { Search: searchText }),
     }
 
     dispatch(fetchAreaOffices(fetchParams))
@@ -437,12 +437,14 @@ const AreaOfficesTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">AO-{office.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.nameOfNewOAreaffice}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newKaedcoCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newNercCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.company.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.latitude}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.longitude}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {office.nameOfNewOAreaffice || "-"}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newKaedcoCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.newNercCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.company?.name ?? "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.latitude ?? "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{office.longitude ?? "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
                           style={getStatusStyle("operational")}

@@ -585,8 +585,8 @@ const AllDisputes: React.FC = () => {
         }
       case "Mobile Money":
         return {
-          backgroundColor: "#F3E8FF",
-          color: "#9333EA",
+          backgroundColor: "#DBE8FE",
+          color: "#2563EB",
         }
       case "POS Agent":
         return {

@@ -22,6 +22,9 @@ export interface ActiveDispute {
 }
 
 export interface PostpaidBill {
+  totalPaid: number
+  outstandingAmount: number
+  reference: any
   dueDate: any
   name: string
   id: number
@@ -32,6 +35,7 @@ export interface PostpaidBill {
   customerId: number
   customerName: string
   customerAccountNumber: string
+  publicReference: string
   distributionSubstationId: number
   distributionSubstationCode: string
   feederId: number
@@ -69,6 +73,69 @@ export interface PostpaidBill {
   createdAt: string
   lastUpdated: string
   ledgerEntries: LedgerEntry[]
+  customer?: {
+    lastLoginAt: string | null
+    suspensionReason: string | null
+    suspendedAt: string | null
+    distributionSubstationId: number
+    distributionSubstationCode: string
+    feederName: string
+    areaOfficeName: string | null
+    accountNumberHistory: any[]
+    meterHistory: any[]
+    id: number
+    customerNumber: number
+    customerID: string
+    accountNumber: string
+    autoNumber: string
+    isCustomerNew: boolean
+    isPostEnumerated: boolean
+    statusCode: string
+    isReadyforExtraction: boolean
+    fullName: string
+    phoneNumber: string
+    phoneOffice: string
+    gender: string
+    email: string
+    status: string
+    isSuspended: boolean
+    companyName: string | null
+    address: string | null
+    addressTwo: string | null
+    city: string
+    state: string
+    lga: string
+    serviceCenterId: number
+    serviceCenterName: string
+    latitude: number | null
+    longitude: number | null
+    tariff: number
+    tariffCode: string
+    tariffID: string
+    tariffInddex: string
+    tariffType: string
+    tariffClass: string
+    newRate: number | null
+    vat: number
+    isVATWaved: boolean
+    meterNumber: string
+    isPPM: boolean
+    isMD: boolean
+    isUrban: boolean
+    isHRB: boolean
+    isCustomerAccGovt: boolean
+    comment: string | null
+    band: string
+    storedAverage: number | null
+    totalMonthlyVend: number | null
+    totalMonthlyDebt: number | null
+    customerOutstandingDebtBalance: number | null
+    salesRepUserId: number
+    technicalEngineerUserId: number | null
+    category: string | null
+    subCategory: string | null
+    salesRepUser: any
+  } | null
 }
 
 export interface PostpaidBillsResponse {
@@ -350,6 +417,11 @@ interface PostpaidBillingState {
   currentBillLoading: boolean
   currentBillError: string | null
 
+  // Current bill by reference state
+  currentBillByReference: PostpaidBill | null
+  currentBillByReferenceLoading: boolean
+  currentBillByReferenceError: string | null
+
   // Billing jobs state
   billingJobs: BillingJob[]
   billingJobsLoading: boolean
@@ -479,6 +551,9 @@ const initialState: PostpaidBillingState = {
   currentBill: null,
   currentBillLoading: false,
   currentBillError: null,
+  currentBillByReference: null,
+  currentBillByReferenceLoading: false,
+  currentBillByReferenceError: null,
   billingJobs: [],
   billingJobsLoading: false,
   billingJobsError: null,
@@ -618,6 +693,31 @@ export const fetchPostpaidBillById = createAsyncThunk<PostpaidBill, number, { re
         return rejectWithValue(error.response.data.message || "Failed to fetch postpaid bill")
       }
       return rejectWithValue(error.message || "Network error during postpaid bill fetch")
+    }
+  }
+)
+
+export const fetchPostpaidBillByReference = createAsyncThunk<PostpaidBill, string, { rejectValue: string }>(
+  "postpaidBilling/fetchPostpaidBillByReference",
+  async (reference: string, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.GET_BY_REFERENCE, { reference })
+      const response = await api.get<PostpaidBillResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch postpaid bill by reference")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Postpaid bill not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch postpaid bill by reference")
+      }
+      return rejectWithValue(error.message || "Network error during postpaid bill by reference fetch")
     }
   }
 )
@@ -1005,6 +1105,7 @@ const postpaidSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentBillError = null
+      state.currentBillByReferenceError = null
       state.billingJobsError = null
       state.currentBillingJobError = null
       state.createBillingJobError = null
@@ -1022,6 +1123,13 @@ const postpaidSlice = createSlice({
     clearCurrentBill: (state) => {
       state.currentBill = null
       state.currentBillError = null
+    },
+
+    // Clear current bill by reference
+    clearCurrentBillByReference: (state) => {
+      state.currentBillByReference = null
+      state.currentBillByReferenceError = null
+      state.currentBillByReferenceLoading = false
     },
 
     // Clear finalize state
@@ -1120,6 +1228,9 @@ const postpaidSlice = createSlice({
       state.currentBill = null
       state.currentBillLoading = false
       state.currentBillError = null
+      state.currentBillByReference = null
+      state.currentBillByReferenceLoading = false
+      state.currentBillByReferenceError = null
       state.billingJobs = []
       state.billingJobsLoading = false
       state.billingJobsError = null
@@ -1287,6 +1398,21 @@ const postpaidSlice = createSlice({
         state.currentBillLoading = false
         state.currentBillError = (action.payload as string) || "Failed to fetch postpaid bill"
         state.currentBill = null
+      })
+      // Fetch postpaid bill by reference cases
+      .addCase(fetchPostpaidBillByReference.pending, (state) => {
+        state.currentBillByReferenceLoading = true
+        state.currentBillByReferenceError = null
+      })
+      .addCase(fetchPostpaidBillByReference.fulfilled, (state, action: PayloadAction<PostpaidBill>) => {
+        state.currentBillByReferenceLoading = false
+        state.currentBillByReference = action.payload
+        state.currentBillByReferenceError = null
+      })
+      .addCase(fetchPostpaidBillByReference.rejected, (state, action) => {
+        state.currentBillByReferenceLoading = false
+        state.currentBillByReferenceError = (action.payload as string) || "Failed to fetch postpaid bill by reference"
+        state.currentBillByReference = null
       })
       // Fetch billing jobs cases
       .addCase(fetchBillingJobs.pending, (state) => {
@@ -1642,6 +1768,7 @@ export const {
   clearCreateBillingJob,
   clearError,
   clearCurrentBill,
+  clearCurrentBillByReference,
   clearFinalizeState,
   clearFinalizeByAreaOfficeState,
   clearChangeRequestStatus,

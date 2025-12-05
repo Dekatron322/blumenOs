@@ -1,108 +1,144 @@
 "use client"
-import React, { useRef, useState } from "react"
-import { motion } from "framer-motion"
+import React, { useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { AddAgentIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { AddAgentIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { createBulkVendors } from "lib/redux/vendorSlice"
+import { fetchEmployees } from "lib/redux/employeeSlice"
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
 
 interface VendorFormData {
-  companyName: string
-  contactPerson: string
+  blumenpayId: string
+  name: string
   phoneNumber: string
   email: string
-  businessType: string
-  taxId: string
-  location: string
-  commissionRate: string
-  initialStock: string
-  deviceId: string
   address: string
+  city: string
+  state: string
+  canProcessPostpaid: boolean
+  canProcessPrepaid: boolean
+  commission: string
+  employeeUserId: string
+  documentUrls: string[]
 }
 
 interface CSVVendor {
-  companyName: string
-  contactPerson: string
+  blumenpayId: string
+  name: string
   phoneNumber: string
   email: string
-  businessType: string
-  taxId: string
-  location: string
-  commissionRate: string
-  initialStock: string
-  deviceId: string
   address: string
+  city: string
+  state: string
+  canProcessPostpaid: boolean
+  canProcessPrepaid: boolean
+  commission: string
+  employeeUserId: string
+  documentUrls: string[]
 }
 
 const AddNewVendor = () => {
+  const dispatch = useAppDispatch()
+  const { bulkCreateLoading, bulkCreateError, bulkCreateSuccess, createdVendors } = useAppSelector(
+    (state) => state.vendors
+  )
+  const { employees, employeesLoading } = useAppSelector((state) => state.employee)
+
+  const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVVendor[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
-  const [isBulkLoading, setIsBulkLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<VendorFormData>({
-    companyName: "",
-    contactPerson: "",
+    blumenpayId: "",
+    name: "",
     phoneNumber: "",
     email: "",
-    businessType: "",
-    taxId: "",
-    location: "",
-    commissionRate: "",
-    initialStock: "",
-    deviceId: "",
     address: "",
+    city: "",
+    state: "",
+    canProcessPostpaid: false,
+    canProcessPrepaid: false,
+    commission: "",
+    employeeUserId: "",
+    documentUrls: [],
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
+  // Load employees for assignment dropdown
+  useEffect(() => {
+    if (!employees || employees.length === 0) {
+      void dispatch(
+        fetchEmployees({
+          pageNumber: 1,
+          pageSize: 1000,
+        })
+      )
+    }
+  }, [dispatch, employees])
+
+  const employeeOptions = [
+    { value: "", label: "Select employee" },
+    ...employees.map((employee) => ({
+      value: employee.id.toString(),
+      label: `${employee.fullName} (${employee.email})`,
+    })),
+  ]
+
   // Options for dropdowns
-  const businessTypeOptions = [
-    { value: "", label: "Select business type" },
-    { value: "energy-retailer", label: "Energy Retailer" },
-    { value: "tech-solutions", label: "Tech Solutions" },
-    { value: "vending-services", label: "Vending Services" },
-    { value: "energy-distribution", label: "Energy Distribution" },
-    { value: "smart-meter-solutions", label: "Smart Meter Solutions" },
-    { value: "technology-retail", label: "Technology Retail" },
-    { value: "supermarket", label: "Supermarket" },
-    { value: "convenience-store", label: "Convenience Store" },
-    { value: "shopping-mall", label: "Shopping Mall" },
+  const stateOptions = [
+    { value: "", label: "Select state" },
+    { value: "Lagos", label: "Lagos" },
+    { value: "Abuja", label: "Abuja" },
+    { value: "Rivers", label: "Rivers" },
+    { value: "Kano", label: "Kano" },
+    { value: "Oyo", label: "Oyo" },
+    { value: "Edo", label: "Edo" },
+    { value: "Delta", label: "Delta" },
+    { value: "Kaduna", label: "Kaduna" },
+    { value: "Ogun", label: "Ogun" },
+    { value: "Enugu", label: "Enugu" },
   ]
 
-  const locationOptions = [
-    { value: "", label: "Select location" },
-    { value: "lagos-island", label: "Lagos Island" },
-    { value: "ikeja", label: "Ikeja" },
-    { value: "surulere", label: "Surulere" },
-    { value: "victoria-island", label: "Victoria Island" },
-    { value: "lekki", label: "Lekki" },
-    { value: "ajah", label: "Ajah" },
-    { value: "yaba", label: "Yaba" },
-    { value: "ilupeju", label: "Ilupeju" },
-    { value: "maryland", label: "Maryland" },
-  ]
-
-  const commissionRateOptions = [
+  const commissionOptions = [
     { value: "", label: "Select commission rate" },
+    { value: "1.0", label: "1.0%" },
     { value: "1.5", label: "1.5%" },
     { value: "2.0", label: "2.0%" },
     { value: "2.5", label: "2.5%" },
     { value: "3.0", label: "3.0%" },
     { value: "3.5", label: "3.5%" },
     { value: "4.0", label: "4.0%" },
+    { value: "4.5", label: "4.5%" },
+    { value: "5.0", label: "5.0%" },
+  ]
+
+  const booleanOptions = [
+    { value: "true", label: "Yes" },
+    { value: "false", label: "No" },
   ]
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+      | { target: { name: string; value: string | number | boolean } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
-    const normalizedValue = String(value)
+
+    let normalizedValue: string | boolean = value as string
+    if (name === "canProcessPostpaid" || name === "canProcessPrepaid") {
+      normalizedValue = value === "true"
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: normalizedValue,
@@ -117,61 +153,72 @@ const AddNewVendor = () => {
     }
   }
 
-  const validateForm = (): boolean => {
+  const validateCurrentStep = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.companyName.trim()) {
-      errors.companyName = "Company name is required"
-    }
+    switch (currentStep) {
+      case 1: // Basic Information
+        if (!formData.blumenpayId.trim()) {
+          errors.blumenpayId = "BlumenPay ID is required"
+        }
+        if (!formData.name.trim()) {
+          errors.name = "Vendor name is required"
+        }
+        if (!formData.phoneNumber.trim()) {
+          errors.phoneNumber = "Phone number is required"
+        } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+          errors.phoneNumber = "Please enter a valid Nigerian phone number"
+        }
+        if (!formData.email.trim()) {
+          errors.email = "Email is required"
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          errors.email = "Please enter a valid email address"
+        }
+        break
 
-    if (!formData.contactPerson.trim()) {
-      errors.contactPerson = "Contact person is required"
-    }
+      case 2: // Location & Services
+        if (!formData.address.trim()) {
+          errors.address = "Address is required"
+        }
+        if (!formData.city.trim()) {
+          errors.city = "City is required"
+        }
+        if (!formData.state) {
+          errors.state = "State is required"
+        }
+        break
 
-    if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = "Phone number is required"
-    } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
-      errors.phoneNumber = "Please enter a valid Nigerian phone number"
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
-    }
-
-    if (!formData.businessType) {
-      errors.businessType = "Business type is required"
-    }
-
-    if (!formData.taxId.trim()) {
-      errors.taxId = "Tax ID is required"
-    } else if (formData.taxId.length < 8) {
-      errors.taxId = "Tax ID must be at least 8 characters"
-    }
-
-    if (!formData.location) {
-      errors.location = "Location is required"
-    }
-
-    if (!formData.commissionRate) {
-      errors.commissionRate = "Commission rate is required"
-    } else if (parseFloat(formData.commissionRate) <= 0) {
-      errors.commissionRate = "Commission rate must be greater than 0"
-    }
-
-    if (!formData.initialStock.trim()) {
-      errors.initialStock = "Initial stock is required"
-    } else if (parseFloat(formData.initialStock.replace(/[₦,]/g, "")) <= 0) {
-      errors.initialStock = "Initial stock must be greater than 0"
-    }
-
-    if (!formData.address.trim()) {
-      errors.address = "Address is required"
+      case 3: // Commission & Assignment
+        if (!formData.commission) {
+          errors.commission = "Commission rate is required"
+        } else if (parseFloat(formData.commission) <= 0) {
+          errors.commission = "Commission rate must be greater than 0"
+        }
+        if (!formData.employeeUserId.trim()) {
+          errors.employeeUserId = "Employee User ID is required"
+        } else if (isNaN(Number(formData.employeeUserId))) {
+          errors.employeeUserId = "Employee User ID must be a number"
+        }
+        break
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
+  }
+
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3))
+    } else {
+      notify("error", "Please fix the form errors before continuing", {
+        description: "Some required fields are missing or contain invalid data",
+        duration: 4000,
+      })
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
   const handleSingleSubmit = async (e: React.FormEvent) => {
@@ -180,7 +227,7 @@ const AddNewVendor = () => {
   }
 
   const submitSingleVendor = async () => {
-    if (!validateForm()) {
+    if (!validateCurrentStep()) {
       notify("error", "Please fix the form errors before submitting", {
         description: "Some fields are missing or contain invalid data",
         duration: 4000,
@@ -191,38 +238,54 @@ const AddNewVendor = () => {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const vendorData = {
+        vendors: [
+          {
+            blumenpayId: formData.blumenpayId,
+            name: formData.name,
+            phoneNumber: formData.phoneNumber,
+            email: formData.email,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            canProcessPostpaid: formData.canProcessPostpaid,
+            canProcessPrepaid: formData.canProcessPrepaid,
+            commission: parseFloat(formData.commission),
+            employeeUserId: parseInt(formData.employeeUserId),
+            documentUrls: formData.documentUrls,
+          },
+        ],
+      }
 
-      console.log("Vendor data ready for submission:", {
-        ...formData,
-        initialStock: parseFloat(formData.initialStock.replace(/[₦,]/g, "")),
-        commissionRate: parseFloat(formData.commissionRate),
-      })
+      const result = await dispatch(createBulkVendors(vendorData)).unwrap()
 
-      notify("success", "Vendor created successfully", {
-        description: `${formData.companyName} has been registered as a vendor`,
-        duration: 5000,
-      })
+      if (result.isSuccess) {
+        notify("success", "Vendor created successfully", {
+          description: `${formData.name} has been registered as a vendor`,
+          duration: 5000,
+        })
 
-      // Reset form
-      setFormData({
-        companyName: "",
-        contactPerson: "",
-        phoneNumber: "",
-        email: "",
-        businessType: "",
-        taxId: "",
-        location: "",
-        commissionRate: "",
-        initialStock: "",
-        deviceId: "",
-        address: "",
-      })
-      setFormErrors({})
+        // Reset form
+        setFormData({
+          blumenpayId: "",
+          name: "",
+          phoneNumber: "",
+          email: "",
+          address: "",
+          city: "",
+          state: "",
+          canProcessPostpaid: false,
+          canProcessPrepaid: false,
+          commission: "",
+          employeeUserId: "",
+          documentUrls: [],
+        })
+        setFormErrors({})
+        setCurrentStep(1)
+      }
     } catch (error: any) {
       console.error("Failed to add vendor:", error)
-      const errorMessage = error?.data?.message || "An unexpected error occurred while adding the vendor"
+      const errorMessage = error || "An unexpected error occurred while adding the vendor"
       notify("error", "Failed to add vendor", {
         description: errorMessage,
         duration: 6000,
@@ -234,19 +297,21 @@ const AddNewVendor = () => {
 
   const handleReset = () => {
     setFormData({
-      companyName: "",
-      contactPerson: "",
+      blumenpayId: "",
+      name: "",
       phoneNumber: "",
       email: "",
-      businessType: "",
-      taxId: "",
-      location: "",
-      commissionRate: "",
-      initialStock: "",
-      deviceId: "",
       address: "",
+      city: "",
+      state: "",
+      canProcessPostpaid: false,
+      canProcessPrepaid: false,
+      commission: "",
+      employeeUserId: "",
+      documentUrls: [],
     })
     setFormErrors({})
+    setCurrentStep(1)
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -294,17 +359,18 @@ const AddNewVendor = () => {
 
         // Validate headers
         const expectedHeaders = [
-          "companyname",
-          "contactperson",
+          "blumenpayid",
+          "name",
           "phonenumber",
           "email",
-          "businesstype",
-          "taxid",
-          "location",
-          "commissionrate",
-          "initialstock",
-          "deviceid",
           "address",
+          "city",
+          "state",
+          "canprocesspostpaid",
+          "canprocessprepaid",
+          "commission",
+          "employeeuserid",
+          "documenturls",
         ]
 
         const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
@@ -334,17 +400,18 @@ const AddNewVendor = () => {
             errors.push(...rowErrors)
           } else {
             parsedData.push({
-              companyName: row.companyname,
-              contactPerson: row.contactperson,
+              blumenpayId: row.blumenpayid,
+              name: row.name,
               phoneNumber: row.phonenumber,
               email: row.email,
-              businessType: row.businesstype,
-              taxId: row.taxid,
-              location: row.location,
-              commissionRate: row.commissionrate,
-              initialStock: row.initialstock,
-              deviceId: row.deviceid || "",
               address: row.address,
+              city: row.city,
+              state: row.state,
+              canProcessPostpaid: row.canprocesspostpaid.toLowerCase() === "true",
+              canProcessPrepaid: row.canprocessprepaid.toLowerCase() === "true",
+              commission: row.commission,
+              employeeUserId: row.employeeuserid,
+              documentUrls: row.documenturls ? row.documenturls.split(";").filter((url: string) => url.trim()) : [],
             })
           }
         }
@@ -387,12 +454,12 @@ const AddNewVendor = () => {
   const validateCSVRow = (row: any, rowNumber: number): string[] => {
     const errors: string[] = []
 
-    if (!row.companyname?.trim()) {
-      errors.push(`Row ${rowNumber}: Company name is required`)
+    if (!row.blumenpayid?.trim()) {
+      errors.push(`Row ${rowNumber}: BlumenPay ID is required`)
     }
 
-    if (!row.contactperson?.trim()) {
-      errors.push(`Row ${rowNumber}: Contact person is required`)
+    if (!row.name?.trim()) {
+      errors.push(`Row ${rowNumber}: Vendor name is required`)
     }
 
     if (!row.phonenumber?.trim()) {
@@ -407,34 +474,40 @@ const AddNewVendor = () => {
       errors.push(`Row ${rowNumber}: Please enter a valid email address`)
     }
 
-    if (!row.businesstype?.trim()) {
-      errors.push(`Row ${rowNumber}: Business type is required`)
+    if (!row.address?.trim()) {
+      errors.push(`Row ${rowNumber}: Address is required`)
     }
 
-    if (!row.taxid?.trim()) {
-      errors.push(`Row ${rowNumber}: Tax ID is required`)
-    } else if (row.taxid.length < 8) {
-      errors.push(`Row ${rowNumber}: Tax ID must be at least 8 characters`)
+    if (!row.city?.trim()) {
+      errors.push(`Row ${rowNumber}: City is required`)
     }
 
-    if (!row.location?.trim()) {
-      errors.push(`Row ${rowNumber}: Location is required`)
+    if (!row.state?.trim()) {
+      errors.push(`Row ${rowNumber}: State is required`)
     }
 
-    if (!row.commissionrate?.trim()) {
+    if (!row.canprocesspostpaid?.trim()) {
+      errors.push(`Row ${rowNumber}: Can Process Postpaid is required (true/false)`)
+    } else if (!["true", "false"].includes(row.canprocesspostpaid.toLowerCase())) {
+      errors.push(`Row ${rowNumber}: Can Process Postpaid must be true or false`)
+    }
+
+    if (!row.canprocessprepaid?.trim()) {
+      errors.push(`Row ${rowNumber}: Can Process Prepaid is required (true/false)`)
+    } else if (!["true", "false"].includes(row.canprocessprepaid.toLowerCase())) {
+      errors.push(`Row ${rowNumber}: Can Process Prepaid must be true or false`)
+    }
+
+    if (!row.commission?.trim()) {
       errors.push(`Row ${rowNumber}: Commission rate is required`)
-    } else if (parseFloat(row.commissionrate) <= 0) {
+    } else if (parseFloat(row.commission) <= 0) {
       errors.push(`Row ${rowNumber}: Commission rate must be greater than 0`)
     }
 
-    if (!row.initialstock?.trim()) {
-      errors.push(`Row ${rowNumber}: Initial stock is required`)
-    } else if (parseFloat(row.initialstock.replace(/[₦,]/g, "")) <= 0) {
-      errors.push(`Row ${rowNumber}: Initial stock must be greater than 0`)
-    }
-
-    if (!row.address?.trim()) {
-      errors.push(`Row ${rowNumber}: Address is required`)
+    if (!row.employeeuserid?.trim()) {
+      errors.push(`Row ${rowNumber}: Employee User ID is required`)
+    } else if (isNaN(Number(row.employeeuserid))) {
+      errors.push(`Row ${rowNumber}: Employee User ID must be a number`)
     }
 
     return errors
@@ -457,78 +530,84 @@ const AddNewVendor = () => {
       return
     }
 
-    setIsBulkLoading(true)
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const bulkVendorData = {
+        vendors: csvData.map((vendor) => ({
+          ...vendor,
+          commission: parseFloat(vendor.commission),
+          employeeUserId: parseInt(vendor.employeeUserId),
+        })),
+      }
 
-      console.log("Bulk vendor data ready for upload:", csvData)
+      const result = await dispatch(createBulkVendors(bulkVendorData)).unwrap()
 
-      notify("success", "Bulk upload ready", {
-        description: `${csvData.length} vendors validated and ready for upload. Backend integration pending.`,
-        duration: 6000,
-      })
+      if (result.isSuccess) {
+        notify("success", "Bulk upload completed successfully", {
+          description: `${csvData.length} vendors have been registered successfully`,
+          duration: 6000,
+        })
 
-      // Reset form
-      setCsvFile(null)
-      setCsvData([])
-      setCsvErrors([])
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        // Reset form
+        setCsvFile(null)
+        setCsvData([])
+        setCsvErrors([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
       }
     } catch (error: any) {
       console.error("Failed to process bulk upload:", error)
       notify("error", "Bulk upload processing failed", {
-        description: "There was an error processing the bulk upload",
+        description: error || "There was an error processing the bulk upload",
         duration: 6000,
       })
-    } finally {
-      setIsBulkLoading(false)
     }
   }
 
   const downloadTemplate = () => {
     const headers = [
-      "companyName",
-      "contactPerson",
+      "blumenpayId",
+      "name",
       "phoneNumber",
       "email",
-      "businessType",
-      "taxId",
-      "location",
-      "commissionRate",
-      "initialStock",
-      "deviceId",
       "address",
+      "city",
+      "state",
+      "canProcessPostpaid",
+      "canProcessPrepaid",
+      "commission",
+      "employeeUserId",
+      "documentUrls",
     ]
 
     const exampleData = [
       {
-        companyName: "Buy Power",
-        contactPerson: "Mr. Johnson Ade",
+        blumenpayId: "BLU001",
+        name: "Buy Power Limited",
         phoneNumber: "08012345678",
-        email: "johnson@buypower.com",
-        businessType: "energy-retailer",
-        taxId: "TAX12345678",
-        location: "lagos-island",
-        commissionRate: "2.5",
-        initialStock: "500000",
-        deviceId: "POS001",
-        address: "123 Lagos Island, Lagos",
+        email: "info@buypower.com",
+        address: "123 Lagos Island",
+        city: "Lagos",
+        state: "Lagos",
+        canProcessPostpaid: "true",
+        canProcessPrepaid: "true",
+        commission: "2.5",
+        employeeUserId: "123",
+        documentUrls: "https://example.com/doc1.pdf;https://example.com/doc2.pdf",
       },
       {
-        companyName: "Blumentech",
-        contactPerson: "Ms. Sarah Blume",
+        blumenpayId: "BLU002",
+        name: "Energy Solutions Ltd",
         phoneNumber: "08087654321",
-        email: "sarah@blumentech.com",
-        businessType: "tech-solutions",
-        taxId: "TAX87654321",
-        location: "ikeja",
-        commissionRate: "3.0",
-        initialStock: "750000",
-        deviceId: "POS002",
-        address: "456 Ikeja, Lagos",
+        email: "contact@energysolutions.com",
+        address: "456 Ikeja",
+        city: "Lagos",
+        state: "Lagos",
+        canProcessPostpaid: "false",
+        canProcessPrepaid: "true",
+        commission: "3.0",
+        employeeUserId: "124",
+        documentUrls: "",
       },
     ]
 
@@ -541,7 +620,7 @@ const AddNewVendor = () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "vendor_upload_template.csv"
+    a.download = "vendor_bulk_upload_template.csv"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -555,45 +634,70 @@ const AddNewVendor = () => {
 
   const isFormValid = (): boolean => {
     return (
-      formData.companyName.trim() !== "" &&
-      formData.contactPerson.trim() !== "" &&
+      formData.blumenpayId.trim() !== "" &&
+      formData.name.trim() !== "" &&
       formData.phoneNumber.trim() !== "" &&
       formData.email.trim() !== "" &&
-      formData.businessType !== "" &&
-      formData.taxId.trim() !== "" &&
-      formData.location !== "" &&
-      formData.commissionRate !== "" &&
-      formData.initialStock.trim() !== "" &&
-      formData.address.trim() !== ""
+      formData.address.trim() !== "" &&
+      formData.city.trim() !== "" &&
+      formData.state !== "" &&
+      formData.commission !== "" &&
+      formData.employeeUserId.trim() !== ""
     )
   }
 
-  const formatCurrency = (value: string) => {
-    // Remove non-numeric characters
-    const numericValue = value.replace(/[₦,]/g, "")
-    if (!numericValue) return ""
-
-    // Format as currency
-    const number = parseFloat(numericValue)
-    if (isNaN(number)) return value
-
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })
-      .format(number)
-      .replace("NGN", "₦")
+  // Handle document URLs input
+  const handleDocumentUrlsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const urls = e.target.value
+      .split(",")
+      .map((url) => url.trim())
+      .filter((url) => url)
+    setFormData((prev) => ({
+      ...prev,
+      documentUrls: urls,
+    }))
   }
 
-  const handleCurrencyInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    const formattedValue = formatCurrency(value)
-    handleInputChange({
-      target: { name, value: formattedValue },
-    })
-  }
+  // Step progress component
+  const StepProgress = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex size-8 items-center justify-center rounded-full border-2 ${
+                  step === currentStep
+                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    : step < currentStep
+                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    : "border-gray-300 bg-white text-gray-500"
+                }`}
+              >
+                {step < currentStep ? (
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  step
+                )}
+              </div>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0a0a0a]" : "text-gray-500"}`}>
+                {step === 1 && "Basic Info"}
+                {step === 2 && "Location"}
+                {step === 3 && "Commission"}
+              </span>
+            </div>
+            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0a0a0a]" : "bg-gray-300"}`} />}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <section className="size-full">
@@ -626,7 +730,7 @@ const AddNewVendor = () => {
                         if (fileInputRef.current) fileInputRef.current.value = ""
                       }
                 }
-                disabled={isSubmitting || isBulkLoading}
+                disabled={isSubmitting || bulkCreateLoading}
               >
                 {activeTab === "single" ? "Reset Form" : "Clear CSV"}
               </ButtonModule>
@@ -645,7 +749,7 @@ const AddNewVendor = () => {
                 disabled={
                   activeTab === "single"
                     ? !isFormValid() || isSubmitting
-                    : csvData.length === 0 || csvErrors.length > 0 || isBulkLoading
+                    : csvData.length === 0 || csvErrors.length > 0 || bulkCreateLoading
                 }
                 icon={<AddAgentIcon />}
                 iconPosition="start"
@@ -654,13 +758,13 @@ const AddNewVendor = () => {
                   ? isSubmitting
                     ? "Adding Vendor..."
                     : "Add Vendor"
-                  : isBulkLoading
+                  : bulkCreateLoading
                   ? "Processing..."
                   : `Process ${csvData.length} Vendors`}
               </ButtonModule>
             </motion.div>
           </div>
-          <div className="container mx-auto flex max-w-4xl flex-col">
+          <div className="container mx-auto flex w-full flex-col">
             {/* Tab Navigation */}
             <div className="px-16 max-md:px-0 max-sm:px-3">
               <div className="rounded-t-lg border-b border-gray-200 bg-white">
@@ -706,140 +810,184 @@ const AddNewVendor = () => {
                       <p className="text-sm text-gray-600">Fill in all required fields to register a new vendor</p>
                     </div>
 
+                    <StepProgress />
+
                     {/* Vendor Form */}
                     <form onSubmit={handleSingleSubmit} className="space-y-6">
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Company Information */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Company Information</h4>
+                      <AnimatePresence mode="wait">
+                        {/* Step 1: Basic Information */}
+                        {currentStep === 1 && (
+                          <motion.div
+                            key="step-1"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                          >
+                            <div className="rounded-lg bg-[#F9F9F9] p-6">
+                              <h4 className="mb-4 font-medium text-gray-900">Basic Information</h4>
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormInputModule
+                                  label="BlumenPay ID"
+                                  name="blumenpayId"
+                                  type="text"
+                                  placeholder="Enter BlumenPay ID"
+                                  value={formData.blumenpayId}
+                                  onChange={handleInputChange}
+                                  error={formErrors.blumenpayId}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Company Name"
-                            name="companyName"
-                            type="text"
-                            placeholder="Enter company name"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            error={formErrors.companyName}
-                            required
-                          />
+                                <FormInputModule
+                                  label="Vendor Name"
+                                  name="name"
+                                  type="text"
+                                  placeholder="Enter vendor name"
+                                  value={formData.name}
+                                  onChange={handleInputChange}
+                                  error={formErrors.name}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Contact Person"
-                            name="contactPerson"
-                            type="text"
-                            placeholder="Enter contact person name"
-                            value={formData.contactPerson}
-                            onChange={handleInputChange}
-                            error={formErrors.contactPerson}
-                            required
-                          />
+                                <FormInputModule
+                                  label="Phone Number"
+                                  name="phoneNumber"
+                                  type="tel"
+                                  placeholder="Enter phone number (e.g., 08012345678)"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  error={formErrors.phoneNumber}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Phone Number"
-                            name="phoneNumber"
-                            type="tel"
-                            placeholder="Enter phone number (e.g., 08012345678)"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            error={formErrors.phoneNumber}
-                            required
-                          />
+                                <FormInputModule
+                                  label="Email Address"
+                                  name="email"
+                                  type="email"
+                                  placeholder="Enter email address"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  error={formErrors.email}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
 
-                          <FormInputModule
-                            label="Email Address"
-                            name="email"
-                            type="email"
-                            placeholder="Enter email address"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            error={formErrors.email}
-                            required
-                          />
+                        {/* Step 2: Location & Services */}
+                        {currentStep === 2 && (
+                          <motion.div
+                            key="step-2"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                          >
+                            <div className="rounded-lg bg-[#F9F9F9] p-6">
+                              <h4 className="mb-4 font-medium text-gray-900">Location & Services</h4>
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormInputModule
+                                  label="Address"
+                                  name="address"
+                                  type="text"
+                                  placeholder="Enter complete address"
+                                  value={formData.address}
+                                  onChange={handleInputChange}
+                                  error={formErrors.address}
+                                  required
+                                />
 
-                          <FormSelectModule
-                            label="Business Type"
-                            name="businessType"
-                            value={formData.businessType}
-                            onChange={handleInputChange}
-                            options={businessTypeOptions}
-                            error={formErrors.businessType}
-                            required
-                          />
-                        </div>
+                                <FormInputModule
+                                  label="City"
+                                  name="city"
+                                  type="text"
+                                  placeholder="Enter city"
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  error={formErrors.city}
+                                  required
+                                />
 
-                        {/* Vendor Details */}
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-gray-900">Vendor Details</h4>
+                                <FormSelectModule
+                                  label="State"
+                                  name="state"
+                                  value={formData.state}
+                                  onChange={handleInputChange}
+                                  options={stateOptions}
+                                  error={formErrors.state}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Tax ID"
-                            name="taxId"
-                            type="text"
-                            placeholder="Enter tax identification number"
-                            value={formData.taxId}
-                            onChange={handleInputChange}
-                            error={formErrors.taxId}
-                            required
-                          />
+                                <FormSelectModule
+                                  label="Can Process Postpaid"
+                                  name="canProcessPostpaid"
+                                  value={formData.canProcessPostpaid.toString()}
+                                  onChange={handleInputChange}
+                                  options={booleanOptions}
+                                  required
+                                />
 
-                          <FormSelectModule
-                            label="Location"
-                            name="location"
-                            value={formData.location}
-                            onChange={handleInputChange}
-                            options={locationOptions}
-                            error={formErrors.location}
-                            required
-                          />
+                                <FormSelectModule
+                                  label="Can Process Prepaid"
+                                  name="canProcessPrepaid"
+                                  value={formData.canProcessPrepaid.toString()}
+                                  onChange={handleInputChange}
+                                  options={booleanOptions}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
 
-                          <FormSelectModule
-                            label="Commission Rate (%)"
-                            name="commissionRate"
-                            value={formData.commissionRate}
-                            onChange={handleInputChange}
-                            options={commissionRateOptions}
-                            error={formErrors.commissionRate}
-                            required
-                          />
+                        {/* Step 3: Commission & Assignment */}
+                        {currentStep === 3 && (
+                          <motion.div
+                            key="step-3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                          >
+                            <div className="rounded-lg bg-[#F9F9F9] p-6">
+                              <h4 className="mb-4 font-medium text-gray-900">Commission & Assignment</h4>
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormSelectModule
+                                  label="Commission Rate (%)"
+                                  name="commission"
+                                  value={formData.commission}
+                                  onChange={handleInputChange}
+                                  options={commissionOptions}
+                                  error={formErrors.commission}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Initial Stock (₦)"
-                            name="initialStock"
-                            type="text"
-                            placeholder="Opening stock amount"
-                            value={formData.initialStock}
-                            onChange={handleCurrencyInput}
-                            error={formErrors.initialStock}
-                            required
-                          />
+                                <FormSelectModule
+                                  label="Employee User ID"
+                                  name="employeeUserId"
+                                  value={formData.employeeUserId}
+                                  onChange={handleInputChange}
+                                  options={employeeOptions}
+                                  error={formErrors.employeeUserId}
+                                  required
+                                />
 
-                          <FormInputModule
-                            label="Device ID (Optional)"
-                            name="deviceId"
-                            type="text"
-                            placeholder="POS terminal ID"
-                            value={formData.deviceId}
-                            onChange={handleInputChange}
-                            error={formErrors.deviceId}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Address */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-gray-900">Business Address</h4>
-                        <FormInputModule
-                          label="Address"
-                          name="address"
-                          type="text"
-                          placeholder="Enter complete business address"
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          error={formErrors.address}
-                          required
-                        />
-                      </div>
+                                <div className="md:col-span-2">
+                                  <FormInputModule
+                                    label="Document URLs (comma-separated)"
+                                    name="documentUrls"
+                                    type="text"
+                                    placeholder="https://example.com/doc1.pdf, https://example.com/doc2.pdf"
+                                    value={formData.documentUrls.join(", ")}
+                                    onChange={handleDocumentUrlsChange}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* Error Summary */}
                       {Object.keys(formErrors).length > 0 && (
@@ -869,24 +1017,56 @@ const AddNewVendor = () => {
                       )}
 
                       {/* Form Actions */}
-                      <div className="flex justify-end gap-4 border-t pt-6">
-                        <ButtonModule
-                          variant="dangerSecondary"
-                          size="lg"
-                          onClick={handleReset}
-                          disabled={isSubmitting}
-                          type="button"
-                        >
-                          Reset
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="primary"
-                          size="lg"
-                          type="submit"
-                          disabled={!isFormValid() || isSubmitting}
-                        >
-                          {isSubmitting ? "Adding Vendor..." : "Add Vendor"}
-                        </ButtonModule>
+                      <div className="flex justify-between gap-4 border-t pt-6">
+                        <div className="flex gap-4">
+                          {currentStep > 1 && (
+                            <ButtonModule
+                              variant="outline"
+                              size="lg"
+                              onClick={prevStep}
+                              disabled={isSubmitting}
+                              type="button"
+                              icon={<ArrowLeftIcon />}
+                              iconPosition="start"
+                            >
+                              Previous
+                            </ButtonModule>
+                          )}
+                        </div>
+
+                        <div className="flex gap-4">
+                          <ButtonModule
+                            variant="dangerSecondary"
+                            size="lg"
+                            onClick={handleReset}
+                            disabled={isSubmitting}
+                            type="button"
+                          >
+                            Reset
+                          </ButtonModule>
+
+                          {currentStep < 3 ? (
+                            <ButtonModule
+                              variant="primary"
+                              size="lg"
+                              onClick={nextStep}
+                              type="button"
+                              icon={<ArrowRightIcon />}
+                              iconPosition="end"
+                            >
+                              Next
+                            </ButtonModule>
+                          ) : (
+                            <ButtonModule
+                              variant="primary"
+                              size="lg"
+                              type="submit"
+                              disabled={!isFormValid() || isSubmitting}
+                            >
+                              {isSubmitting ? "Adding Vendor..." : "Add Vendor"}
+                            </ButtonModule>
+                          )}
+                        </div>
                       </div>
                     </form>
                   </motion.div>
@@ -979,8 +1159,8 @@ const AddNewVendor = () => {
                               Choose Different File
                             </ButtonModule>
                             {csvErrors.length === 0 && csvData.length > 0 && (
-                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={isBulkLoading}>
-                                {isBulkLoading ? "Processing..." : `Process ${csvData.length} Vendors`}
+                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={bulkCreateLoading}>
+                                {bulkCreateLoading ? "Processing..." : `Process ${csvData.length} Vendors`}
                               </ButtonModule>
                             )}
                           </div>
@@ -1033,13 +1213,13 @@ const AddNewVendor = () => {
                             <thead className="bg-gray-50">
                               <tr>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Company
+                                  BlumenPay ID
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Contact
+                                  Name
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Business Type
+                                  Phone
                                 </th>
                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
                                   Commission
@@ -1050,16 +1230,14 @@ const AddNewVendor = () => {
                               {csvData.slice(0, 5).map((vendor, index) => (
                                 <tr key={index}>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.companyName}
+                                    {vendor.blumenpayId}
+                                  </td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{vendor.name}</td>
+                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
+                                    {vendor.phoneNumber}
                                   </td>
                                   <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.contactPerson}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.businessType}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.commissionRate}%
+                                    {vendor.commission}%
                                   </td>
                                 </tr>
                               ))}

@@ -1,3 +1,4 @@
+import { MeterOutlineIcon } from "components/Icons/Icons"
 import React from "react"
 
 // Tab Icons
@@ -121,9 +122,9 @@ interface TabNavigationProps {
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: "BillingCycles", label: "Billing Cycles", icon: <InventoryIcon /> },
-    { id: "TariffManagement", label: "Tariff Management", icon: <ReadingsIcon /> },
+    { id: "MeterReadings", label: "Meter Readings", icon: <MeterOutlineIcon /> },
     { id: "RecentBills", label: "Recent Bills", icon: <AlertsIcon /> },
-    { id: "Exceptions", label: "Exceptions", icon: <QueueIcon /> },
+    { id: "FeederEnergyCaps", label: "Feeder Energy Caps", icon: <MeterOutlineIcon /> },
   ]
 
   return (

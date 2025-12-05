@@ -345,7 +345,7 @@ const DistributionSubstationChangeRequest = () => {
           {/* Header */}
           <div className="flex flex-col py-2">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-2xl font-medium">Distribution Substation Change Requests</p>
+              <p className="text-2xl font-medium">Distribution Station Change Requests</p>
               <button
                 className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
                 onClick={() => {

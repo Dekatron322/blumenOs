@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -14,6 +14,8 @@ import { clearInviteStatus, fetchEmployees, inviteEmployees } from "lib/redux/em
 import { fetchRoles } from "lib/redux/roleSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
+import TempPasswordModal from "components/ui/Modal/temp-password-modal"
+import { ArrowLeft, ArrowRight, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 interface EmployeeFormData {
   fullName: string
@@ -49,20 +51,7 @@ interface CSVEmployee {
 
 const AddEmployeePage = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { inviteLoading, inviteError, inviteSuccess, invitedUsers, employees, employeesLoading, employeesError } =
-    useSelector((state: RootState) => state.employee)
-  const { roles, loading: rolesLoading, error: rolesError } = useSelector((state: RootState) => state.roles)
-  const {
-    areaOffices,
-    loading: areaOfficesLoading,
-    error: areaOfficesError,
-  } = useSelector((state: RootState) => state.areaOffices)
-  const {
-    departments,
-    loading: departmentsLoading,
-    error: departmentsError,
-  } = useSelector((state: RootState) => state.departments)
-
+  const [currentStep, setCurrentStep] = useState(1)
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVEmployee[]>([])
@@ -71,6 +60,8 @@ const AddEmployeePage = () => {
 
   const [showTempPasswordBanner, setShowTempPasswordBanner] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null)
+  const [temporaryEmail, setTemporaryEmail] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<EmployeeFormData>({
     fullName: "",
@@ -90,6 +81,20 @@ const AddEmployeePage = () => {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
+  const { inviteLoading, inviteError, inviteSuccess, invitedUsers, employees, employeesLoading, employeesError } =
+    useSelector((state: RootState) => state.employee)
+  const { roles, loading: rolesLoading, error: rolesError } = useSelector((state: RootState) => state.roles)
+  const {
+    areaOffices,
+    loading: areaOfficesLoading,
+    error: areaOfficesError,
+  } = useSelector((state: RootState) => state.areaOffices)
+  const {
+    departments,
+    loading: departmentsLoading,
+    error: departmentsError,
+  } = useSelector((state: RootState) => state.departments)
+
   // Fetch roles, employees, area offices, and departments on component mount
   useEffect(() => {
     dispatch(
@@ -108,8 +113,8 @@ const AddEmployeePage = () => {
 
     dispatch(
       fetchAreaOffices({
-        pageNumber: 1,
-        pageSize: 100, // Fetch a reasonable number of area offices
+        PageNumber: 1,
+        PageSize: 100, // Fetch a reasonable number of area offices
       })
     )
 
@@ -207,67 +212,71 @@ const AddEmployeePage = () => {
     }
   }
 
-  const validateForm = (): boolean => {
+  const validateCurrentStep = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.employeeId.trim()) {
-      errors.employeeId = "Employee ID is required"
-    }
+    switch (currentStep) {
+      case 1: // Basic Information
+        if (!formData.employeeId.trim()) {
+          errors.employeeId = "Employee ID is required"
+        }
+        if (!formData.fullName.trim()) {
+          errors.fullName = "Full name is required"
+        }
+        if (!formData.position.trim()) {
+          errors.position = "Position is required"
+        }
+        if (!formData.departmentId || formData.departmentId === 0) {
+          errors.departmentId = "Department is required"
+        }
+        break
 
-    if (!formData.fullName.trim()) {
-      errors.fullName = "Full name is required"
-    }
+      case 2: // Employment Details
+        if (!formData.employmentType) {
+          errors.employmentType = "Employment type is required"
+        }
+        if (formData.roleIds.length === 0 || formData.roleIds[0] === 0) {
+          errors.roleIds = "Role is required"
+        }
+        if (formData.areaOfficeId === 0) {
+          errors.areaOfficeId = "Area office is required"
+        }
+        break
 
-    if (!formData.position.trim()) {
-      errors.position = "Position is required"
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
-    }
-
-    if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = "Phone number is required"
-    } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
-      errors.phoneNumber = "Please enter a valid Nigerian phone number"
-    }
-
-    if (!formData.address.trim()) {
-      errors.address = "Address is required"
-    }
-
-    if (!formData.emergencyContact.trim()) {
-      errors.emergencyContact = "Emergency contact is required"
-    }
-
-    if (!formData.employmentType) {
-      errors.employmentType = "Employment type is required"
-    }
-
-    // Validate role selection
-    if (formData.roleIds.length === 0 || formData.roleIds[0] === 0) {
-      errors.roleIds = "Role is required"
-    }
-
-    // Validate area office selection
-    if (formData.areaOfficeId === 0) {
-      errors.areaOfficeId = "Area office is required"
-    }
-
-    // Validate department selection
-    if (formData.departmentId === 0) {
-      errors.departmentId = "Department is required"
-    }
-
-    // Validate supervisor selection (optional field)
-    if (formData.supervisorId === 0) {
-      errors.supervisorId = "Please select a supervisor or choose 'No supervisor'"
+      case 3: // Contact Information
+        if (!formData.email.trim()) {
+          errors.email = "Email is required"
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          errors.email = "Please enter a valid email address"
+        }
+        if (!formData.phoneNumber.trim()) {
+          errors.phoneNumber = "Phone number is required"
+        } else if (!/^(\+?234|0)[789][01]\d{8}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+          errors.phoneNumber = "Please enter a valid Nigerian phone number"
+        }
+        if (!formData.address.trim()) {
+          errors.address = "Address is required"
+        }
+        break
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
+  }
+
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3))
+    } else {
+      notify("error", "Please fix the form errors before continuing", {
+        description: "Some required fields are missing or contain invalid data",
+        duration: 4000,
+      })
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
   const handleSingleSubmit = async (e: React.FormEvent) => {
@@ -276,7 +285,7 @@ const AddEmployeePage = () => {
   }
 
   const submitSingleEmployee = async () => {
-    if (!validateForm()) {
+    if (!validateCurrentStep()) {
       notify("error", "Please fix the form errors before submitting", {
         description: "Some fields are missing or contain invalid data",
         duration: 4000,
@@ -297,13 +306,13 @@ const AddEmployeePage = () => {
           duration: 5000,
         })
 
-        // Show temporary passwords if available
+        // Capture temporary password if available
         if (result.data && result.data.length > 0) {
           const tempPassword = result.data[0]!.temporaryPassword
-          notify("info", "Temporary password generated", {
-            description: `Temporary password: ${tempPassword}. Please share this with the employee securely.`,
-            duration: 8000,
-          })
+          const tempEmail = result.data[0]!.user.email ?? formData.email
+          setTemporaryPassword(tempPassword)
+          setTemporaryEmail(tempEmail)
+          setShowTempPasswordBanner(true)
         }
 
         // Reset form
@@ -323,6 +332,7 @@ const AddEmployeePage = () => {
           isActive: true,
         })
         setFormErrors({})
+        setCurrentStep(1)
       }
     } catch (error: any) {
       console.error("Failed to invite employee:", error)
@@ -353,6 +363,7 @@ const AddEmployeePage = () => {
       isActive: true,
     })
     setFormErrors({})
+    setCurrentStep(1)
     dispatch(clearInviteStatus())
   }
 
@@ -700,13 +711,11 @@ const AddEmployeePage = () => {
       formData.email.trim() !== "" &&
       formData.phoneNumber.trim() !== "" &&
       formData.address.trim() !== "" &&
-      formData.emergencyContact.trim() !== "" &&
       formData.employmentType !== "" &&
       formData.roleIds.length > 0 &&
       formData.roleIds[0] !== 0 &&
       formData.areaOfficeId !== 0 &&
-      formData.departmentId !== 0 &&
-      formData.supervisorId !== 0
+      formData.departmentId !== 0
     )
   }
 
@@ -721,6 +730,8 @@ const AddEmployeePage = () => {
     if (inviteSuccess && invitedUsers && invitedUsers.length > 0) {
       setShowTempPasswordBanner(true)
       setCopied(false)
+      setTemporaryPassword(invitedUsers[0]!.temporaryPassword)
+      setTemporaryEmail(invitedUsers[0]!.user.email)
     }
   }, [inviteSuccess, invitedUsers])
 
@@ -743,6 +754,47 @@ const AddEmployeePage = () => {
       })
     }
   }, [departmentsError])
+
+  // Step progress component
+  const StepProgress = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex size-8 items-center justify-center rounded-full border-2 ${
+                  step === currentStep
+                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    : step < currentStep
+                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    : "border-gray-300 bg-white text-gray-500"
+                }`}
+              >
+                {step < currentStep ? (
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  step
+                )}
+              </div>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0a0a0a]" : "text-gray-500"}`}>
+                {step === 1 && "Basic Info"}
+                {step === 2 && "Employment"}
+                {step === 3 && "Contact"}
+              </span>
+            </div>
+            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0a0a0a]" : "bg-gray-300"}`} />}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <section className="size-full">
@@ -839,7 +891,6 @@ const AddEmployeePage = () => {
                 </div>
               </div>
             </div>
-
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
@@ -851,244 +902,240 @@ const AddEmployeePage = () => {
                     transition={{ duration: 0.5 }}
                     className="rounded-b-lg  bg-white p-6 shadow-sm"
                   >
-                    {showTempPasswordBanner && invitedUsers && invitedUsers.length > 0 && (
-                      <div className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1">
-                            <p className="font-medium">Temporary password generated</p>
-                            <p className="text-blue-800">Share this one-time password with the employee securely.</p>
-                            <div className="mt-2 flex items-center gap-3">
-                              <code className="rounded bg-white px-3 py-1 text-base font-semibold text-blue-900 shadow-sm">
-                                {invitedUsers[0]!.temporaryPassword}
-                              </code>
-                              <ButtonModule
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(invitedUsers[0]!.temporaryPassword)
-                                  setCopied(true)
-                                  window.setTimeout(() => setCopied(false), 2000)
-                                }}
-                              >
-                                {copied ? "Copied" : "Copy"}
-                              </ButtonModule>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            className="text-blue-700 hover:text-blue-900"
-                            onClick={() => {
-                              setShowTempPasswordBanner(false)
-                              setCopied(false)
-                            }}
-                            aria-label="Dismiss temporary password"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    )}
                     {/* Form Header */}
                     <div className="mb-6 border-b pb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Employee Information</h3>
                       <p className="text-sm text-gray-600">Fill in all required fields to invite a new employee</p>
                     </div>
 
+                    <StepProgress />
+
                     {/* Employee Form */}
                     <form onSubmit={handleSingleSubmit} className="space-y-8">
-                      {/* Section 1: Basic Information */}
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
-                          <p className="text-sm text-gray-600">Enter the employee`&lsquo;s basic details</p>
-                        </div>
+                      <AnimatePresence mode="wait">
+                        {/* Step 1: Basic Information */}
+                        {currentStep === 1 && (
+                          <motion.div
+                            key="step-1"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          >
+                            <div className="border-b pb-4">
+                              <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
+                              <p className="text-sm text-gray-600">Enter the employee&apos;s basic details</p>
+                            </div>
 
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormInputModule
-                            label="Employee ID"
-                            name="employeeId"
-                            type="text"
-                            placeholder="Enter employee ID (e.g., EMP00123)"
-                            value={formData.employeeId}
-                            onChange={handleInputChange}
-                            error={formErrors.employeeId}
-                            required
-                          />
-
-                          <FormInputModule
-                            label="Full Name"
-                            name="fullName"
-                            type="text"
-                            placeholder="Enter employee full name"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            error={formErrors.fullName}
-                            required
-                          />
-
-                          <FormInputModule
-                            label="Position"
-                            name="position"
-                            type="text"
-                            placeholder="Enter employee position"
-                            value={formData.position}
-                            onChange={handleInputChange}
-                            error={formErrors.position}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Department"
-                            name="departmentId"
-                            value={formData.departmentId}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: "", label: departmentsLoading ? "Loading departments..." : "Select department" },
-                              ...departmentOptions.filter((option) => option.value !== 0),
-                            ]}
-                            error={formErrors.departmentId}
-                            required
-                            disabled={departmentsLoading}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Section 2: Employment Details */}
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Employment Details</h4>
-                          <p className="text-sm text-gray-600">Configure the employee`&lsquo;s work arrangements</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormSelectModule
-                            label="Employment Type"
-                            name="employmentType"
-                            value={formData.employmentType}
-                            onChange={handleInputChange}
-                            options={[{ value: "", label: "Select employment type" }, ...employmentTypeOptions]}
-                            error={formErrors.employmentType}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Role"
-                            name="roleIds"
-                            value={formData.roleIds[0] ?? ""}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: "", label: rolesLoading ? "Loading roles..." : "Select role" },
-                              ...roleOptions,
-                            ]}
-                            error={formErrors.roleIds}
-                            required
-                            disabled={rolesLoading}
-                          />
-
-                          <FormSelectModule
-                            label="Area Office"
-                            name="areaOfficeId"
-                            value={formData.areaOfficeId}
-                            onChange={handleInputChange}
-                            options={[
-                              {
-                                value: "",
-                                label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
-                              },
-                              ...areaOfficeOptions.filter((option) => option.value !== 0),
-                            ]}
-                            error={formErrors.areaOfficeId}
-                            required
-                            disabled={areaOfficesLoading}
-                          />
-
-                          <FormSelectModule
-                            label="Supervisor"
-                            name="supervisorId"
-                            value={formData.supervisorId}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: 0, label: employeesLoading ? "Loading supervisors..." : "Select supervisor" },
-                              ...supervisorOptions.filter((option) => option.value !== 0),
-                            ]}
-                            error={formErrors.supervisorId}
-                            required
-                            disabled={employeesLoading}
-                          />
-
-                          <div className="md:col-span-2">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                              <FormSelectModule
-                                label="Status"
-                                name="isActive"
-                                value={formData.isActive.toString()}
+                              <FormInputModule
+                                label="Employee ID"
+                                name="employeeId"
+                                type="text"
+                                placeholder="Enter employee ID (e.g., EMP00123)"
+                                value={formData.employeeId}
                                 onChange={handleInputChange}
-                                options={[
-                                  { value: "true", label: "Active" },
-                                  { value: "false", label: "Inactive" },
-                                ]}
+                                error={formErrors.employeeId}
                                 required
                               />
+
+                              <FormInputModule
+                                label="Full Name"
+                                name="fullName"
+                                type="text"
+                                placeholder="Enter employee full name"
+                                value={formData.fullName}
+                                onChange={handleInputChange}
+                                error={formErrors.fullName}
+                                required
+                              />
+
+                              <FormInputModule
+                                label="Position"
+                                name="position"
+                                type="text"
+                                placeholder="Enter employee position"
+                                value={formData.position}
+                                onChange={handleInputChange}
+                                error={formErrors.position}
+                                required
+                              />
+
+                              <FormSelectModule
+                                label="Department"
+                                name="departmentId"
+                                value={formData.departmentId}
+                                onChange={handleInputChange}
+                                options={[
+                                  {
+                                    value: "",
+                                    label: departmentsLoading ? "Loading departments..." : "Select department",
+                                  },
+                                  ...departmentOptions.filter((option) => option.value !== 0),
+                                ]}
+                                error={formErrors.departmentId}
+                                required
+                                disabled={departmentsLoading}
+                              />
                             </div>
-                          </div>
-                        </div>
-                      </div>
+                          </motion.div>
+                        )}
 
-                      {/* Section 3: Contact Information */}
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Contact Information</h4>
-                          <p className="text-sm text-gray-600">Provide contact details and address information</p>
-                        </div>
+                        {/* Step 2: Employment Details */}
+                        {currentStep === 2 && (
+                          <motion.div
+                            key="step-2"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          >
+                            <div className="border-b pb-4">
+                              <h4 className="text-lg font-medium text-gray-900">Employment Details</h4>
+                              <p className="text-sm text-gray-600">Configure the employee&apos;s work arrangements</p>
+                            </div>
 
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormInputModule
-                            label="Email Address"
-                            name="email"
-                            type="email"
-                            placeholder="Enter email address"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            error={formErrors.email}
-                            required
-                          />
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                              <FormSelectModule
+                                label="Employment Type"
+                                name="employmentType"
+                                value={formData.employmentType}
+                                onChange={handleInputChange}
+                                options={[{ value: "", label: "Select employment type" }, ...employmentTypeOptions]}
+                                error={formErrors.employmentType}
+                                required
+                              />
 
-                          <FormInputModule
-                            label="Phone Number"
-                            name="phoneNumber"
-                            type="tel"
-                            placeholder="Enter phone number (e.g., 08099998888)"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            error={formErrors.phoneNumber}
-                            required
-                          />
+                              <FormSelectModule
+                                label="Role"
+                                name="roleIds"
+                                value={formData.roleIds[0] ?? ""}
+                                onChange={handleInputChange}
+                                options={[
+                                  { value: "", label: rolesLoading ? "Loading roles..." : "Select role" },
+                                  ...roleOptions,
+                                ]}
+                                error={formErrors.roleIds}
+                                required
+                                disabled={rolesLoading}
+                              />
 
-                          <FormInputModule
-                            label="Emergency Contact"
-                            name="emergencyContact"
-                            type="tel"
-                            placeholder="Enter emergency contact number"
-                            value={formData.emergencyContact}
-                            onChange={handleInputChange}
-                            error={formErrors.emergencyContact}
-                            required
-                          />
+                              <FormSelectModule
+                                label="Area Office"
+                                name="areaOfficeId"
+                                value={formData.areaOfficeId}
+                                onChange={handleInputChange}
+                                options={[
+                                  {
+                                    value: "",
+                                    label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
+                                  },
+                                  ...areaOfficeOptions.filter((option) => option.value !== 0),
+                                ]}
+                                error={formErrors.areaOfficeId}
+                                required
+                                disabled={areaOfficesLoading}
+                              />
 
-                          <div className="md:col-span-2">
-                            <FormInputModule
-                              label="Address"
-                              name="address"
-                              type="text"
-                              placeholder="Enter complete address"
-                              value={formData.address}
-                              onChange={handleInputChange}
-                              error={formErrors.address}
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
+                              <FormSelectModule
+                                label="Supervisor"
+                                name="supervisorId"
+                                value={formData.supervisorId}
+                                onChange={handleInputChange}
+                                options={[
+                                  {
+                                    value: 0,
+                                    label: employeesLoading ? "Loading supervisors..." : "Select supervisor",
+                                  },
+                                  ...supervisorOptions.filter((option) => option.value !== 0),
+                                ]}
+                                error={formErrors.supervisorId}
+                                required
+                                disabled={employeesLoading}
+                              />
+
+                              <div className="md:col-span-2">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                  <FormSelectModule
+                                    label="Status"
+                                    name="isActive"
+                                    value={formData.isActive.toString()}
+                                    onChange={handleInputChange}
+                                    options={[
+                                      { value: "true", label: "Active" },
+                                      { value: "false", label: "Inactive" },
+                                    ]}
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {/* Step 3: Contact Information */}
+                        {currentStep === 3 && (
+                          <motion.div
+                            key="step-3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6 rounded-lg bg-[#f9f9f9] p-6"
+                          >
+                            <div className="border-b pb-4">
+                              <h4 className="text-lg font-medium text-gray-900">Contact Information</h4>
+                              <p className="text-sm text-gray-600">Provide contact details and address information</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                              <FormInputModule
+                                label="Email Address"
+                                name="email"
+                                type="email"
+                                placeholder="Enter email address"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                error={formErrors.email}
+                                required
+                              />
+
+                              <FormInputModule
+                                label="Phone Number"
+                                name="phoneNumber"
+                                type="tel"
+                                placeholder="Enter phone number (e.g., 08099998888)"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                error={formErrors.phoneNumber}
+                                required
+                              />
+
+                              <FormInputModule
+                                label="Emergency Contact"
+                                name="emergencyContact"
+                                type="tel"
+                                placeholder="Enter emergency contact number"
+                                value={formData.emergencyContact}
+                                onChange={handleInputChange}
+                                error={formErrors.emergencyContact}
+                              />
+
+                              <div className="md:col-span-2">
+                                <FormInputModule
+                                  label="Address"
+                                  name="address"
+                                  type="text"
+                                  placeholder="Enter complete address"
+                                  value={formData.address}
+                                  onChange={handleInputChange}
+                                  error={formErrors.address}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* Error Summary */}
                       {Object.keys(formErrors).length > 0 && (
@@ -1118,24 +1165,56 @@ const AddEmployeePage = () => {
                       )}
 
                       {/* Form Actions */}
-                      <div className="flex justify-end gap-4 border-t pt-6">
-                        <ButtonModule
-                          variant="dangerSecondary"
-                          size="lg"
-                          onClick={handleReset}
-                          disabled={inviteLoading}
-                          type="button"
-                        >
-                          Reset
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="primary"
-                          size="lg"
-                          type="submit"
-                          disabled={!isFormValid() || inviteLoading}
-                        >
-                          {inviteLoading ? "Inviting Employee..." : "Invite Employee"}
-                        </ButtonModule>
+                      <div className="flex justify-between gap-4 border-t pt-6">
+                        <div className="flex gap-4">
+                          {currentStep > 1 && (
+                            <ButtonModule
+                              variant="outline"
+                              size="lg"
+                              onClick={prevStep}
+                              disabled={inviteLoading}
+                              type="button"
+                              icon={<ArrowLeft />}
+                              iconPosition="start"
+                            >
+                              Previous
+                            </ButtonModule>
+                          )}
+                        </div>
+
+                        <div className="flex gap-4">
+                          <ButtonModule
+                            variant="dangerSecondary"
+                            size="lg"
+                            onClick={handleReset}
+                            disabled={inviteLoading}
+                            type="button"
+                          >
+                            Reset
+                          </ButtonModule>
+
+                          {currentStep < 3 ? (
+                            <ButtonModule
+                              variant="primary"
+                              size="lg"
+                              onClick={nextStep}
+                              type="button"
+                              icon={<ArrowRight />}
+                              iconPosition="end"
+                            >
+                              Next
+                            </ButtonModule>
+                          ) : (
+                            <ButtonModule
+                              variant="primary"
+                              size="lg"
+                              type="submit"
+                              disabled={!isFormValid() || inviteLoading}
+                            >
+                              {inviteLoading ? "Inviting Employee..." : "Invite Employee"}
+                            </ButtonModule>
+                          )}
+                        </div>
                       </div>
                     </form>
                   </motion.div>
@@ -1353,6 +1432,17 @@ const AddEmployeePage = () => {
           </div>
         </div>
       </div>
+      <TempPasswordModal
+        isOpen={showTempPasswordBanner && !!temporaryPassword}
+        onRequestClose={() => {
+          setShowTempPasswordBanner(false)
+          setCopied(false)
+          setTemporaryPassword(null)
+          setTemporaryEmail(null)
+        }}
+        temporaryPassword={temporaryPassword}
+        email={temporaryEmail}
+      />
     </section>
   )
 }

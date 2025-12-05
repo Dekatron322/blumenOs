@@ -328,7 +328,7 @@ export default function MeteringDashboard() {
                 <p>Tariff management, bill generation, and billing cycles</p>
               </div>
 
-              <motion.div
+              {/* <motion.div
                 className="flex items-center justify-end gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -339,11 +339,11 @@ export default function MeteringDashboard() {
                   size="md"
                   className="mt-2"
                   icon={<PlayIcon />}
-                  onClick={() => setIsStartBillingRunModalOpen(true)} // Add this onClick
+                  onClick={() => setIsStartBillingRunModalOpen(true)}
                 >
                   Start Billing Run
                 </ButtonModule>
-              </motion.div>
+              </motion.div> */}
             </div>
 
             {/* Main Content Area */}

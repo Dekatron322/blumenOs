@@ -7,7 +7,6 @@ import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
 import { Download, Printer } from "lucide-react"
 import { PostpaidBill } from "lib/redux/postpaidSlice"
-import * as QRCode from "qrcode"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
 
@@ -24,7 +23,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
   bill,
   loading = false,
 }) => {
-  const qrCodeRef = useRef<HTMLCanvasElement>(null)
+  const barcodeRef = useRef<HTMLCanvasElement>(null)
   const invoiceRef = useRef<HTMLDivElement>(null)
 
   const formatCurrency = (amount: number) => {
@@ -52,6 +51,21 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
     })
   }
 
+  const getCustomerStatusLabel = (code?: string | null) => {
+    switch (code) {
+      case "02":
+        return "Active"
+      case "04":
+        return "Suspended"
+      case "05":
+        return "PPM"
+      case "07":
+        return "Inactive"
+      default:
+        return code || "Unknown"
+    }
+  }
+
   const getStatusConfig = (status: number) => {
     const configs = {
       0: { color: "text-amber-600", bg: "bg-amber-50", label: "PENDING" },
@@ -65,55 +79,101 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
     window.print()
   }
 
-  // Generate QR code data for the invoice
-  const generateQRCodeData = () => {
-    if (!bill) return ""
-
-    const invoiceData = {
-      accountNumber: bill.customerAccountNumber,
-      accountName: bill.customerName,
-      period: bill.period,
-      totalDue: bill.totalDue,
-      dueDate: bill.dueDate,
-      invoiceDate: bill.createdAt,
-      consumption: bill.consumptionKwh,
-      company: "KAD-ELEC",
-      type: "ELECTRICITY_BILL",
-    }
-
-    return JSON.stringify(invoiceData)
-  }
-
-  // Generate scannable QR code
-  const generateQRCode = async () => {
-    if (!qrCodeRef.current || !bill) return
+  const handleShare = async () => {
+    if (!invoiceRef.current || !bill) return
 
     try {
-      const qrData = generateQRCodeData()
-
-      await QRCode.toCanvas(qrCodeRef.current, qrData, {
-        width: 120,
-        margin: 1,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
-        errorCorrectionLevel: "M",
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
       })
-    } catch (err) {
-      console.error("Error generating QR code:", err)
-      // Fallback: Draw simple QR code pattern
-      const canvas = qrCodeRef.current
-      const ctx = canvas.getContext("2d")
-      if (ctx) {
-        ctx.fillStyle = "#FFFFFF"
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      const imgData = canvas.toDataURL("image/png")
+
+      const margin = 32
+      const pageWidth = canvas.width + margin * 2
+      const pageHeight = canvas.height + margin * 2
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [pageWidth, pageHeight],
+      })
+
+      pdf.setFillColor(255, 255, 255)
+      pdf.rect(0, 0, pageWidth, pageHeight, "F")
+
+      pdf.addImage(imgData, "PNG", margin, margin, canvas.width, canvas.height)
+
+      const fileName = `KAD-ELEC-Invoice-${bill.customerAccountNumber}-${bill.period.replace(/\s+/g, "-")}.pdf`
+
+      const blob = pdf.output("blob")
+
+      if (
+        navigator.canShare &&
+        navigator.canShare({ files: [new File([blob], fileName, { type: "application/pdf" })] })
+      ) {
+        const file = new File([blob], fileName, { type: "application/pdf" })
+        await navigator.share({
+          files: [file],
+          title: "KAD-ELEC Invoice",
+          text: `Invoice for account ${bill.customerAccountNumber} (${bill.period})`,
+        })
+      } else {
+        pdf.save(fileName)
+      }
+    } catch (error) {
+      console.error("Error sharing invoice:", error)
+      alert("Error sharing invoice. Please try again.")
+    }
+  }
+
+  // Generate simple 1D-style barcode on canvas using the account number
+  const generateBarcode = () => {
+    if (!barcodeRef.current || !bill) return
+
+    const canvas = barcodeRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const value = String(bill.customerAccountNumber || "")
+
+    // Canvas sizing for crisp lines
+    const width = 220
+    const height = 60
+    canvas.width = width
+    canvas.height = height
+
+    // Background
+    ctx.fillStyle = "#FFFFFF"
+    ctx.fillRect(0, 0, width, height)
+
+    // Basic hash from the value to vary bar patterns
+    let hash = 0
+    for (let i = 0; i < value.length; i++) {
+      hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+    }
+
+    const barWidth = 2
+    const totalBars = Math.floor(width / barWidth)
+
+    for (let i = 0; i < totalBars; i++) {
+      // Derive a pseudo-random pattern from the hash and index
+      const bit = (hash >> i % 32) & 1
+      if (bit === 1) {
         ctx.fillStyle = "#000000"
-        ctx.font = "10px Arial"
-        ctx.textAlign = "center"
-        ctx.fillText("QR ERROR", canvas.width / 2, canvas.height / 2)
+        ctx.fillRect(i * barWidth, 4, barWidth, height - 16)
       }
     }
+
+    // Draw the human-readable value below the bars
+    ctx.fillStyle = "#000000"
+    ctx.font = "10px Arial"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "bottom"
+    ctx.fillText(value, width / 2, height - 2)
   }
 
   // Download PDF functionality
@@ -177,10 +237,10 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
     }
   }
 
-  // Initialize QR code when component mounts or bill changes
+  // Initialize barcode when component mounts or bill changes
   useEffect(() => {
     if (bill && isOpen) {
-      generateQRCode()
+      generateBarcode()
     }
   }, [bill, isOpen])
 
@@ -262,9 +322,12 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                 {/* Visible invoice content (also used for PDF capture) */}
                 <div ref={invoiceRef} className="">
                   {/* Header */}
-                  <div className="flex justify-between">
+                  <div className="flex items-center justify-between">
                     <div className="mb-8 text-center">
                       <img src="/kad.svg" alt="KAD-ELEC Logo" />
+                    </div>
+                    <div className="mb-8 flex flex-1 justify-center">
+                      <canvas ref={barcodeRef} className="h-14 w-52" />
                     </div>
                     <div className="mb-8 text-center">
                       <h1 className="mb-2 font-bold text-gray-900">KAD-ELEC.</h1>
@@ -275,97 +338,116 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   </div>
 
                   {/* Customer Information Grid */}
-                  <div className="mb-8 flex items-center justify-between gap-8 rounded-2xl bg-gradient-to-r from-[#008001] to-[#51A31D] p-6">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-[#ffffff]">
-                          ACCOUNT NUMBER
-                        </div>
-                        <div className="text-lg font-bold text-[#95EE94]">{bill.customerAccountNumber}</div>
-                      </div>
-                      <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-[#ffffff]">
-                          ACCOUNT NAME
-                        </div>
-                        <div className="text-lg font-bold text-[#95EE94]">{bill.customerName}</div>
-                      </div>
-                      <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-[#ffffff]">DATE</div>
-                        <div className="text-lg font-bold text-[#95EE94]">{formatDate(bill.createdAt)}</div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="flex items-center justify-center rounded-md bg-white p-2 shadow-sm">
-                        <canvas ref={qrCodeRef} width="120" height="120" className="border border-gray-200" />
-                      </div>
-                      <div className="mt-2 text-xs font-medium text-white">SCAN TO VERIFY INVOICE</div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-white">
-                          AREA OFFICE / SERVICE CENTER
-                        </div>
-                        <div className="text-lg text-[#95EE94]">
-                          {bill.areaOfficeName} / {bill.areaOfficeName}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-white">BILL NAME</div>
-                        <div className="text-lg text-[#95EE94]">{bill.name}</div>
-                      </div>
-                      <div>
-                        <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-white">
-                          CITY / STATE
-                        </div>
-                        <div className="text-lg text-[#95EE94]">Kaduna / Kaduna</div>
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Billing Details */}
-                  <div className="mb-8 grid grid-cols-2 overflow-hidden rounded-2xl border bg-white">
+                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff]">
+                    <p>BILLING INFORMATION</p>
+                  </div>
+                  <div className=" grid grid-cols-2  border bg-[#FFFFFF]">
                     <div className="space-y-3">
-                      <div className="w-full bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
-                        BILLING INFORMATION
+                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
+                        <p>AREA OFFICE</p>
+                        <p>{bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}</p>
                       </div>
-                      <div className="flex w-full justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">11 KV Feeder:</span>
-                        <span className="ml-2 text-sm text-gray-900">11 KVA {bill.feederName}</span>
-                      </div>
-                      <div className="flex w-full justify-between bg-[#EBEBEB] px-4 py-3">
-                        <span className="text-sm font-semibold text-gray-600">33 KV Injection:</span>
-                        <span className="ml-2 text-sm text-gray-900">33 KV {bill.distributionSubstationCode}</span>
-                      </div>
+                      <div className="flex flex-col bg-[#FFFFFFF]">
+                        <div className="flex w-full justify-between px-4 ">
+                          <span className="text-sm font-semibold text-gray-600"># Bill:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.customerAccountNumber}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Bill Month:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.name}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Customer Account:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.customerAccountNumber}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Account Name:</span>
+                          <span className="ml-2 text-sm text-gray-900">
+                            {bill.customer?.fullName || bill.customerName}
+                          </span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Address:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.customer?.address || "-"}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Phone number:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.customer?.phoneNumber || "-"}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">City:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.customer?.city || "-"}</span>
+                        </div>
+                        {/* <div className="flex w-full justify-between px-4">
+                          <span className="text-sm font-semibold text-gray-600">11 KV Feeder:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.feederName}</span>
+                        </div>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">33 KV Injection:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.distributionSubstationCode}</span>
+                        </div>
 
-                      <div className="flex w-full justify-between bg-[#EBEBEB] px-4 py-3">
-                        <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
-                        <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
-                      </div>
-                      <div className="flex w-full justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
-                        <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
-                      </div>
-                      <div className="flex w-full justify-between bg-[#EBEBEB] px-4 py-3">
-                        <span className="text-sm font-semibold text-gray-600">Consumption:</span>
-                        <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
-                      </div>
-                      <div className="flex w-full justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Tariff Rate:</span>
-                        <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
-                      </div>
-                      <div className="flex w-full justify-between bg-[#EBEBEB] px-4 py-3">
-                        <span className="text-sm font-semibold text-gray-600">Payment Status:</span>
-                        <span className="ml-2 text-sm text-gray-900">{statusConfig.label}</span>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4">
+                          <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
+                        </div>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">Consumption:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4">
+                          <span className="text-sm font-semibold text-gray-600">Tariff Rate:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">Payment Status:</span>
+                          <span className="ml-2 text-sm text-gray-900">{statusConfig.label}</span>
+                        </div> */}
                       </div>
                     </div>
 
-                    <div className="space-y-3 border-l border-gray-200 bg-[#EBEBEB] pb-4">
+                    <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
                       <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
-                        <p>Charges</p>
-                        <p>Total</p>
+                        <p>SERVICE CENTER:</p>
+                        <p>{bill.customer?.serviceCenterName || "-"}</p>
                       </div>
-                      <div className="flex items-center justify-between px-4 pt-3">
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">State:</span>
+                        <span className="text-sm text-gray-900">{bill.customer?.state || "-"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">11KV Feeder:</span>
+                        <span className="text-sm text-gray-900">{bill.feederName}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">33kv Feeder:</span>
+                        <span className="text-sm text-gray-900">
+                          {bill.distributionSubstationCode || bill.customer?.distributionSubstationCode || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">DT Name:</span>
+                        <span className="text-sm text-gray-900">DT Name</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Sales Rep:</span>
+                        <span className="text-sm text-gray-900">{bill.customer?.salesRepUser?.fullName || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Meter:</span>
+                        <span className="text-sm text-gray-900">No Meter</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Multiplier:</span>
+                        <span className="text-sm text-gray-900">1.00</span>
+                      </div>
+                      {/* <div className="flex items-center justify-between px-4 pt-3">
                         <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
                         <span className="text-sm text-gray-900">{formatCurrency(bill.openingBalance)}</span>
                       </div>
@@ -406,12 +488,189 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       <div className="flex items-center justify-between px-4">
                         <span className="text-sm font-semibold text-gray-600">Current Bill Amount:</span>
                         <span className="text-sm text-gray-900">{formatCurrency(bill.currentBillAmount)}</span>
+                      </div> */}
+                    </div>
+                  </div>
+
+                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff]">
+                    <p>BILLING CHARGES</p>
+                  </div>
+                  <div className="grid grid-cols-2  border bg-[#FFFFFF]">
+                    <div className="space-y-3">
+                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
+                        <p>CHARGES</p>
+                        <p>TOTAL</p>
+                      </div>
+                      <div className="flex flex-col bg-[#FFFFFF]">
+                        <div className="flex w-full justify-between px-4 ">
+                          <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.paymentsPrevMonth}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">ADC:</span>
+                          <span className="ml-2 text-sm text-gray-900">9.14 kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Present Reading:</span>
+                          <span className="ml-2 text-sm text-gray-900">0</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Previous Reading:</span>
+                          <span className="ml-2 text-sm text-gray-900">0</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Consumption:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Tarrif Rate:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4 pt-3">
+                          <span className="text-sm font-semibold text-gray-600">Tarrif Class:</span>
+                          <span className="ml-2 text-sm text-gray-900">A1</span>
+                        </div>
+                        {/* <div className="flex w-full justify-between px-4">
+                          <span className="text-sm font-semibold text-gray-600">11 KV Feeder:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.feederName}</span>
+                        </div>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">33 KV Injection:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.distributionSubstationCode}</span>
+                        </div>
+
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4">
+                          <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
+                        </div>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">Consumption:</span>
+                          <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between px-4">
+                          <span className="text-sm font-semibold text-gray-600">Tariff Rate:</span>
+                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
+                        </div>
+                        <div className="flex w-full justify-between  px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-600">Payment Status:</span>
+                          <span className="ml-2 text-sm text-gray-900">{statusConfig.label}</span>
+                        </div> */}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
+                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
+                        <p>CHARGES</p>
+                        <p>TOTAL</p>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Status Code:</span>
+                        <span className="text-sm text-gray-900">
+                          {getCustomerStatusLabel(bill.customer?.statusCode)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.openingBalance)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Adjustment:</span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(bill.adjustedOpeningBalance - bill.openingBalance)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Total Payment Amt:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Net Arrears:</span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Energy Charged:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.chargeBeforeVat)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">Fixed Charge:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(0)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4 ">
+                        <span className="text-sm font-semibold text-gray-600">VAT:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.vatAmount)}</span>
+                      </div>
+                      {/* <div className="flex items-center justify-between px-4 pt-3">
+                        <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.openingBalance)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">Adjustment:</span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(bill.adjustedOpeningBalance - bill.openingBalance)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">Total Payment Amount:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">Net Arrears:</span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">Energy Charged:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.chargeBeforeVat)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">Fixed Charged:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(0)}</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between border-t border-gray-200 px-4 pt-2">
+                        <span className="text-sm font-semibold text-gray-600">SUBTOTAL:</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(invoiceValues.subtotal)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">TAX VAT {bill.vatRate}%:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.vatAmount)}</span>
+                      </div>
+                      <div className="flex items-center justify-between px-4">
+                        <span className="text-sm font-semibold text-gray-600">Current Bill Amount:</span>
+                        <span className="text-sm text-gray-900">{formatCurrency(bill.currentBillAmount)}</span>
+                      </div> */}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2  border ">
+                    <div className="space-y-3">
+                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
+                        <p>-</p>
+                        <p>-</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 border-l border-gray-200 bg-[#E1E1E1] ">
+                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
+                        <p>TOTAL DUE:</p>
+                        <p>{formatCurrency(bill.totalDue)}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Thank You Message */}
-                  <div className="flex w-full items-stretch overflow-hidden rounded-2xl">
+                  {/* <div className="flex w-full items-stretch overflow-hidden rounded-2xl">
                     <div className="flex h-20 w-1/2 items-center bg-[#6BAE2A] p-4">
                       <div className="text-lg font-semibold text-[#ffffff]">THANK YOU FOR YOUR BUSINESS</div>
                     </div>
@@ -419,7 +678,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                       <div className="mb-1 text-sm font-semibold text-[#ffffff]">GRAND TOTAL</div>
                       <div className="text-2xl font-bold text-[#ffffff]">{formatCurrency(bill.totalDue)}</div>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Additional Information */}
                   {bill.isEstimated && (
@@ -459,9 +718,13 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   )}
 
                   {/* Contact Information */}
-                  <div className="mt-8 border-y border-t border-[#008002] py-3 pt-4 text-center text-sm text-gray-600">
-                    <div className="mb-2 text-[#008002]">
-                      Contact Us: Mail@Kadunaelectric.Com / Phone: +234(903)1754067 / Web: www.kadelectric.com
+                  <div className="mt-8   py-3 pt-4 text-center text-sm text-gray-600">
+                    <div className="mb-2">
+                      <p>
+                        PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
+                        OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYTMENT CHANNELS |
+                        <b> ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
+                      </p>
                     </div>
                   </div>
 
@@ -490,6 +753,10 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
               <ButtonModule variant="outline" className="flex items-center gap-2" size="lg" onClick={handlePrint}>
                 <Printer className="size-4" />
                 Print Invoice
+              </ButtonModule>
+              <ButtonModule variant="outline" className="flex items-center gap-2" size="lg" onClick={handleShare}>
+                <Printer className="size-4" />
+                Share Invoice
               </ButtonModule>
               <ButtonModule
                 variant="primary"

@@ -1,5 +1,4 @@
 "use client"
-
 import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -500,7 +499,7 @@ const ReportsTab: React.FC = () => {
         }
       case "compliance":
         return {
-          backgroundColor: "#F3E8FF",
+          backgroundColor: "#DBE8FE",
           color: "#7C3AED",
         }
       case "financial":

@@ -1,22 +1,23 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import {
   AddAgentIcon,
   BillsIcon,
-  CycleIcon,
-  DateIcon,
   FloatIcon,
   MapIcon,
   PerformanceIcon,
   PhoneIcon,
   RateIcon,
-  RevenueGeneratedIcon,
   RouteIcon,
-  StatusIcon,
   TargetIcon,
   UserIcon,
 } from "components/Icons/Icons"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { type Agent, clearAgents, fetchAgents } from "lib/redux/agentSlice"
+import { ButtonModule } from "components/ui/Button/Button"
+import { EyeIcon } from "lucide-react"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -28,68 +29,65 @@ const CyclesIcon = () => (
   </svg>
 )
 
-interface Agent {
-  id: number
-  name: string
-  status: "active" | "inactive" | "low float"
-  phone: string
-  location: string
-  dailyCollection: string
-  vendsToday: number
-  floatBalance: string
-  commissionRate: string
-  performance: "Excellent" | "Good" | "Average" | "Poor"
-}
-
 interface AgentDirectoryProps {
   onStartNewCycle?: () => void
 }
 
 const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { agents, loading, error } = useAppSelector((state) => state.agents)
   const [searchText, setSearchText] = useState("")
 
   const handleCancelSearch = () => {
     setSearchText("")
   }
 
-  const agents: Agent[] = [
-    {
-      id: 1,
-      name: "Tunde Bakare",
-      status: "active",
-      phone: "+234801234567",
-      location: "Lagos Island",
-      dailyCollection: "₦12,500",
-      vendsToday: 45,
-      floatBalance: "₦850",
-      commissionRate: "2.5%",
-      performance: "Good",
-    },
-    {
-      id: 2,
-      name: "Amina Abdullahi",
-      status: "active",
-      phone: "+234802345678",
-      location: "Ikeja",
-      dailyCollection: "₦9,800",
-      vendsToday: 38,
-      floatBalance: "₦1,200",
-      commissionRate: "2.5%",
-      performance: "Good",
-    },
-    {
-      id: 3,
-      name: "Emeka Okonkwo",
-      status: "low float",
-      phone: "+234803456789",
-      location: "Surulere",
-      dailyCollection: "₦7,500",
-      vendsToday: 28,
-      floatBalance: "₦450",
-      commissionRate: "2%",
-      performance: "Good",
-    },
-  ]
+  useEffect(() => {
+    dispatch(
+      fetchAgents({
+        pageNumber: 1,
+        pageSize: 10,
+      })
+    )
+
+    return () => {
+      dispatch(clearAgents())
+    }
+  }, [dispatch])
+
+  const filteredAgents: Agent[] = agents.filter((agent) => {
+    if (!searchText.trim()) return true
+    const search = searchText.toLowerCase()
+    return (
+      agent.user.fullName.toLowerCase().includes(search) ||
+      agent.user.phoneNumber.toLowerCase().includes(search) ||
+      agent.areaOfficeName.toLowerCase().includes(search) ||
+      agent.serviceCenterName.toLowerCase().includes(search)
+    )
+  })
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  const getStatusConfig = (status: string, canCollectCash: boolean) => {
+    const normalized = status.toLowerCase()
+    if (normalized === "active") {
+      return { label: "active", bg: "bg-green-100", text: "text-green-800" }
+    }
+    if (normalized === "inactive") {
+      return { label: "inactive", bg: "bg-gray-100", text: "text-gray-800" }
+    }
+    return canCollectCash
+      ? { label: "active", bg: "bg-green-100", text: "text-green-800" }
+      : { label: "inactive", bg: "bg-gray-100", text: "text-gray-800" }
+  }
 
   return (
     <motion.div
@@ -113,252 +111,104 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
 
           {/* Agents List */}
           <div className="space-y-4">
-            {/* Agent 1 */}
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <UserIcon />
-                      <h4 className="font-semibold text-gray-900">Tunde Bakare</h4>
-                    </div>
-                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                      active
-                    </span>
-                  </div>
-
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <PhoneIcon />
-                      <p className="mt-1 text-sm text-gray-600">+234801234567</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {" "}
-                      <MapIcon />
-                      <p className="text-sm text-gray-600">Lagos Island</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-900">₦12,500</p>
-                    <p className="text-gray-500">45 vends today</p>
-                  </div>
-                </div>
+            {loading && (
+              <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 text-sm text-gray-600">
+                Loading agents...
               </div>
+            )}
 
-              {/* Status Indicators */}
-              <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <BillsIcon />
-                    <p className="text-gray-500">Float Balance:</p>
-                  </div>
-                  <p className="font-medium text-green-600">₦850</p>
-                </div>
-                <div>
-                  <div className="flex gap-2">
-                    <RateIcon />
-                    <div>
-                      <p className="text-gray-500">Commission Rate:</p>
-                      <p className="font-medium text-green-600">2.5%</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <PerformanceIcon />
-                  <div>
-                    <p className="text-gray-500">Performance:</p>
-                    <p className="font-medium text-green-600">Good</p>
-                  </div>
-                </div>
+            {error && !loading && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+            )}
+
+            {!loading && !error && filteredAgents.length === 0 && (
+              <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 text-sm text-gray-600">
+                No agents found.
               </div>
-            </div>
+            )}
 
-            {/* Agent 2 */}
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <UserIcon />
-                      <h4 className="font-semibold text-gray-900">Amina Abdullahi</h4>
-                    </div>
-                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                      active
-                    </span>
-                  </div>
+            {!loading &&
+              !error &&
+              filteredAgents.map((agent) => {
+                const statusConfig = getStatusConfig(agent.status, agent.canCollectCash)
+                const phone = agent.user.phoneNumber
+                const location = agent.areaOfficeName || agent.serviceCenterName || "N/A"
 
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <PhoneIcon />
-                      <p className="mt-1 text-sm text-gray-600">+234801234567</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {" "}
-                      <MapIcon />
-                      <p className="text-sm text-gray-600">Lagos Island</p>
-                    </div>
-                  </div>
-                </div>
+                return (
+                  <div key={agent.id} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
+                    <div className="flex w-full items-start justify-between gap-3">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <UserIcon />
+                            <h4 className="font-semibold text-gray-900">{agent.user.fullName}</h4>
+                          </div>
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
+                          >
+                            {statusConfig.label}
+                          </span>
+                        </div>
 
-                <div className="text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-900">₦9,800</p>
-                    <p className="text-gray-500">38 vends today</p>
-                  </div>
-                </div>
-              </div>
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <PhoneIcon />
+                            <p className="mt-1 text-sm text-gray-600">{phone}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapIcon />
+                            <p className="text-sm text-gray-600">{location}</p>
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Status Indicators */}
-              <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <BillsIcon />
-                    <p className="text-gray-500">Float Balance:</p>
-                  </div>
-                  <p className="font-medium text-green-600">₦1,200</p>
-                </div>
-                <div>
-                  <div className="flex gap-2">
-                    <RateIcon />
-                    <div>
-                      <p className="text-gray-500">Commission Rate:</p>
-                      <p className="font-medium text-green-600">2.5%</p>
+                      <div className="flex items-center gap-3 text-sm">
+                        <div>
+                          <p className="font-semibold text-gray-900">{formatCurrency(agent.cashAtHand)}</p>
+                          <p className="text-gray-500">Cash at hand</p>
+                        </div>
+                        <div className="flex justify-end">
+                          <ButtonModule
+                            variant="outline"
+                            type="button"
+                            size="sm"
+                            onClick={() => router.push(`/agent-management/agent-detail/${agent.id}`)}
+                          >
+                            View details
+                          </ButtonModule>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <PerformanceIcon />
-                  <div>
-                    <p className="text-gray-500">Performance:</p>
-                    <p className="font-medium text-green-600">Good</p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Agent 3 */}
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <UserIcon />
-                      <h4 className="font-semibold text-gray-900">Emeka Okonkwo</h4>
-                    </div>
-                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
-                      low float
-                    </span>
-                  </div>
-
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <PhoneIcon />
-                      <p className="mt-1 text-sm text-gray-600">+234803456789</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapIcon />
-                      <p className="text-sm text-gray-600">Surulere</p>
+                    {/* Status Indicators */}
+                    <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <BillsIcon />
+                          <p className="text-gray-500">Collection limit:</p>
+                        </div>
+                        <p className="font-medium text-green-600">{formatCurrency(agent.cashCollectionLimit)}</p>
+                      </div>
+                      <div>
+                        <div className="flex gap-2">
+                          <RateIcon />
+                          <div>
+                            <p className="text-gray-500">Status:</p>
+                            <p className="font-medium text-green-600">{agent.status}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <PerformanceIcon />
+                        <div>
+                          <p className="text-gray-500">Last cash collection:</p>
+                          <p className="font-medium text-green-600">{agent.lastCashCollectionDate || "N/A"}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-900">₦7,500</p>
-                    <p className="text-gray-500">28 vends today</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Indicators */}
-              <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <BillsIcon />
-                    <p className="text-gray-500">Float Balance:</p>
-                  </div>
-                  <p className="font-medium text-red-600">₦450</p>
-                </div>
-                <div>
-                  <div className="flex gap-2">
-                    <RateIcon />
-                    <div>
-                      <p className="text-gray-500">Commission Rate:</p>
-                      <p className="font-medium text-green-600">2%</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <PerformanceIcon />
-                  <div>
-                    <p className="text-gray-500">Performance:</p>
-                    <p className="font-medium text-green-600">Good</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Column - Quick Actions */}
-      <div className="w-80">
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-blue-100 p-2">
-                    <AddAgentIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Register New Agent</h4>
-                    <p className="text-sm text-gray-600">Add a new field agent</p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-green-100 p-2">
-                    <RouteIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Assign Routes</h4>
-                    <p className="text-sm text-gray-600">Manage agent territories</p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm ">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-100 p-2">
-                    <FloatIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Float Management</h4>
-                    <p className="text-sm text-gray-600">Manage agent floats</p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full rounded-lg border border-gray-200 bg-[#f9f9f9]  p-4 hover:shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-orange-100 p-2">
-                    <TargetIcon />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Set Targets</h4>
-                    <p className="text-sm text-gray-600">Define performance goals</p>
-                  </div>
-                </div>
-              </button>
-            </div>
+                )
+              })}
           </div>
         </div>
       </div>

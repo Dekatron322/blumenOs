@@ -37,8 +37,8 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
     if (isOpen) {
       dispatch(
         fetchAreaOffices({
-          pageNumber: 1,
-          pageSize: 100, // Fetch all area offices
+          PageNumber: 1,
+          PageSize: 100, // Fetch all area offices
         })
       )
     }
@@ -195,7 +195,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[500px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative w-[500px] max-w-4xl  rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
@@ -219,7 +219,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              Finalize by Period
+              Publish by Period
             </button>
             <button
               onClick={() => setActiveTab("areaOffice")}
@@ -229,7 +229,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                   : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
-              Finalize by Area Office
+              Publish by Area Office
             </button>
           </nav>
         </div>
@@ -239,7 +239,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="size-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"
                     d="M8.485 3.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 3.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
@@ -298,7 +298,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           {error && (
             <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
               <div className="flex items-center">
-                <svg className="mr-2 h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="mr-2 size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"

@@ -13,6 +13,7 @@ import {
   BasicInfoOutlineIcon,
   ChangeRequestOutlineIcon,
   EmailOutlineIcon,
+  ExportCsvIcon,
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
@@ -22,14 +23,12 @@ import {
   PostpaidBillOutlineIcon,
   SettingOutlineIcon,
 } from "components/Icons/Icons"
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 
-import {
-  clearCurrentCustomer,
-  fetchCustomerById,
-  fetchPaymentDisputes,
-  PaymentDisputesRequestParams,
-} from "lib/redux/customerSlice"
+import { clearCurrentCustomer, fetchCustomerById } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchPayments } from "lib/redux/paymentSlice"
+import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
 
 // Import tab components
 import BasicInfoTab from "components/Tabs/basic-info-tab"
@@ -48,7 +47,7 @@ interface Asset {
 }
 
 // Tab types
-type TabType = "basic-info" | "payment-disputes" | "change-requests" | "postpaid-billing"
+type TabType = "basic-info" | "payments" | "change-requests" | "postpaid-billing"
 
 const CustomerDetailsPage = () => {
   const params = useParams()
@@ -57,15 +56,13 @@ const CustomerDetailsPage = () => {
 
   // Redux hooks
   const dispatch = useAppDispatch()
+  const { currentCustomer, currentCustomerLoading, currentCustomerError } = useAppSelector((state) => state.customers)
   const {
-    currentCustomer,
-    currentCustomerLoading,
-    currentCustomerError,
-    paymentDisputes,
-    paymentDisputesLoading,
-    paymentDisputesError,
-    paymentDisputesPagination,
-  } = useAppSelector((state) => state.customers)
+    payments,
+    loading: paymentsLoading,
+    error: paymentsError,
+    pagination: paymentsPagination,
+  } = useAppSelector((state) => state.payments)
 
   const [assets, setAssets] = useState<Asset[]>([])
   const [activeModal, setActiveModal] = useState<
@@ -76,9 +73,9 @@ const CustomerDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
-  // Payment disputes state
-  const [paymentDisputesPage, setPaymentDisputesPage] = useState(1)
-  const [paymentDisputesPageSize, setPaymentDisputesPageSize] = useState(10)
+  // Payments state
+  const [paymentsPage, setPaymentsPage] = useState(1)
+  const [paymentsPageSize, setPaymentsPageSize] = useState(10)
 
   // Fetch customer data when component mounts
   useEffect(() => {
@@ -105,17 +102,18 @@ const CustomerDetailsPage = () => {
     }
   }, [dispatch, customerId])
 
-  // Fetch payment disputes when tab is active
+  // Fetch payments when Payments tab is active
   useEffect(() => {
-    if (activeTab === "payment-disputes" && customerId && !isNaN(customerId)) {
-      const params: PaymentDisputesRequestParams & { customerId: number } = {
-        customerId,
-        pageNumber: paymentDisputesPage,
-        pageSize: paymentDisputesPageSize,
-      }
-      dispatch(fetchPaymentDisputes(params))
+    if (activeTab === "payments" && customerId && !isNaN(customerId)) {
+      dispatch(
+        fetchPayments({
+          pageNumber: paymentsPage,
+          pageSize: paymentsPageSize,
+          customerId,
+        })
+      )
     }
-  }, [activeTab, customerId, paymentDisputesPage, paymentDisputesPageSize, dispatch])
+  }, [activeTab, customerId, paymentsPage, paymentsPageSize, dispatch])
 
   // Generate assets based on customer data
   useEffect(() => {
@@ -174,8 +172,8 @@ const CustomerDetailsPage = () => {
   }
 
   // Format currency values
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString()}`
+  const formatCurrency = (amount: number | string) => {
+    return formatCurrencyUtil(amount, "₦")
   }
 
   // Format date
@@ -198,14 +196,14 @@ const CustomerDetailsPage = () => {
     })
   }
 
-  // Handle payment disputes pagination
-  const handlePaymentDisputesPageChange = (page: number) => {
-    setPaymentDisputesPage(page)
+  // Handle payments pagination
+  const handlePaymentsPageChange = (page: number) => {
+    setPaymentsPage(page)
   }
 
-  const handlePaymentDisputesPageSizeChange = (size: number) => {
-    setPaymentDisputesPageSize(size)
-    setPaymentDisputesPage(1) // Reset to first page when changing page size
+  const handlePaymentsPageSizeChange = (size: number) => {
+    setPaymentsPageSize(size)
+    setPaymentsPage(1) // Reset to first page when changing page size
   }
 
   // Show loading state
@@ -248,24 +246,158 @@ const CustomerDetailsPage = () => {
 
     if (activeTab === "basic-info") {
       return <BasicInfoTab {...commonProps} assets={assets} />
-    } else if (activeTab === "payment-disputes") {
+    } else if (activeTab === "payments") {
+      const totalPages = paymentsPagination.totalPages || 1
+      const totalRecords = paymentsPagination.totalCount || 0
+
       return (
-        <PaymentDisputesTab
-          paymentDisputes={paymentDisputes}
-          loading={paymentDisputesLoading}
-          error={paymentDisputesError}
-          pagination={paymentDisputesPagination}
-          currentPage={paymentDisputesPage}
-          pageSize={paymentDisputesPageSize}
-          onPageChange={handlePaymentDisputesPageChange}
-          onPageSizeChange={handlePaymentDisputesPageSizeChange}
-          formatCurrency={function (amount: number): string {
-            throw new Error("Function not implemented.")
-          }}
-          formatDateTime={function (dateString: string): string {
-            throw new Error("Function not implemented.")
-          }}
-        />
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Payments</h3>
+            <button
+              className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+              onClick={() => {
+                /* TODO: Implement CSV export for payments */
+              }}
+              disabled={!payments || payments.length === 0}
+            >
+              <ExportCsvIcon color="#2563EB" size={20} />
+              <p className="text-sm text-[#2563EB]">Export CSV</p>
+            </button>
+          </div>
+
+          {paymentsLoading ? (
+            <div className="py-8 text-center text-sm text-gray-500">Loading payments...</div>
+          ) : paymentsError ? (
+            <div className="py-8 text-center text-sm text-red-600">{paymentsError}</div>
+          ) : payments.length === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-500">No payments found for this customer.</div>
+          ) : (
+            <>
+              <div className="divide-y">
+                {payments.map((payment) => (
+                  <div key={payment.id} className="border-b bg-white p-4 transition-all hover:bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+                          <span className="text-sm font-semibold text-blue-600">
+                            {payment.customerName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="truncate font-semibold text-gray-900">{payment.customerName}</h3>
+                            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                              Ref: {payment.reference}
+                            </span>
+                            <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                              {payment.channel}
+                            </span>
+                            <span className="rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700">
+                              {payment.status}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <span>
+                              <strong>Amount:</strong> {formatCurrency(payment.amount)}
+                            </span>
+                            <span>
+                              <strong>Account:</strong> {payment.customerAccountNumber}
+                            </span>
+                            <span>
+                              <strong>Paid At:</strong> {formatDateTime(payment.paidAtUtc)}
+                            </span>
+                            <span>
+                              <strong>Bill Period:</strong> {payment.postpaidBillPeriod || "N/A"}
+                            </span>
+                          </div>
+                          {payment.externalReference && (
+                            <p className="mt-2 text-sm text-gray-500">{payment.externalReference}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right text-sm">
+                          <div className="text-lg font-bold text-gray-900">{formatCurrency(payment.amount)}</div>
+                          <div className="text-xs text-gray-500">Payment ID: {payment.id}</div>
+                        </div>
+                        <button
+                          onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
+                          className="button-oulined flex items-center gap-2"
+                        >
+                          <span>View</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {payments.length > 0 && (
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <p>Show rows</p>
+                    <select
+                      value={paymentsPageSize}
+                      onChange={(e) => handlePaymentsPageSizeChange(Number(e.target.value))}
+                      className="bg-[#F2F2F2] p-1"
+                    >
+                      <option value={6}>6</option>
+                      <option value={12}>12</option>
+                      <option value={18}>18</option>
+                      <option value={24}>24</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      className={`px-3 py-2 ${
+                        paymentsPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                      }`}
+                      onClick={() => handlePaymentsPageChange(paymentsPage - 1)}
+                      disabled={paymentsPage === 1}
+                    >
+                      <BiSolidLeftArrow />
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                          key={index + 1}
+                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                            paymentsPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => handlePaymentsPageChange(index + 1)}
+                        >
+                          {index + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      className={`px-3 py-2 ${
+                        paymentsPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                      }`}
+                      onClick={() => handlePaymentsPageChange(paymentsPage + 1)}
+                      disabled={paymentsPage === totalPages}
+                    >
+                      <BiSolidRightArrow />
+                    </button>
+                  </div>
+                  <p>
+                    Page {paymentsPage} of {totalPages} ({totalRecords} total records)
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )
     } else if (activeTab === "change-requests") {
       return <ChangeRequestsTab customerId={customerId} />
@@ -508,18 +640,18 @@ const CustomerDetailsPage = () => {
                           <span>Postpaid Billing</span>
                         </button>
                         <button
-                          onClick={() => setActiveTab("payment-disputes")}
+                          onClick={() => setActiveTab("payments")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-                            activeTab === "payment-disputes"
+                            activeTab === "payments"
                               ? "bg-[#0a0a0a] text-white"
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >
                           <PaymentDisputeOutlineIcon className="size-5" />
-                          <span>Payment Disputes</span>
-                          {paymentDisputes.length > 0 && (
-                            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-1 text-xs font-medium leading-none text-white">
-                              {paymentDisputes.length}
+                          <span>Payments</span>
+                          {paymentsPagination.totalCount > 0 && (
+                            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-emerald-500 px-2 py-1 text-xs font-medium leading-none text-white">
+                              {paymentsPagination.totalCount}
                             </span>
                           )}
                         </button>

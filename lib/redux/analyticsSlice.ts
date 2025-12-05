@@ -85,6 +85,153 @@ export interface PostpaidBillingAnalyticsParams {
   feederId?: number
 }
 
+// Interfaces for Payment Summary Analytics
+export interface PaymentSummaryByChannel {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryByCollector {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryByStatus {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryByPaymentType {
+  key: string
+  count: number
+  amount: number
+}
+
+export interface PaymentSummaryWindow {
+  window: string
+  count: number
+  amount: number
+  byChannel: PaymentSummaryByChannel[]
+  byCollector: PaymentSummaryByCollector[]
+  byStatus: PaymentSummaryByStatus[]
+  byPaymentType: PaymentSummaryByPaymentType[]
+}
+
+export interface PaymentSummaryData {
+  windows: PaymentSummaryWindow[]
+}
+
+export interface PaymentSummaryParams {
+  today?: boolean
+  yesterday?: boolean
+  thisWeek?: boolean
+  lastWeek?: boolean
+  thisMonth?: boolean
+  lastMonth?: boolean
+  thisYear?: boolean
+  allTime?: boolean
+}
+
+// Interfaces for Outage Summary Analytics
+export interface OutageSummaryByStatus {
+  key: string
+  count: number
+}
+
+export interface OutageSummaryByPriority {
+  key: string
+  count: number
+}
+
+export interface OutageSummaryByScope {
+  key: string
+  count: number
+}
+
+export interface OutageSummaryTimeline {
+  date: string
+  count: number
+}
+
+export interface OutageSummaryData {
+  total: number
+  open: number
+  resolved: number
+  byStatus: OutageSummaryByStatus[]
+  byPriority: OutageSummaryByPriority[]
+  byScope: OutageSummaryByScope[]
+  timeline: OutageSummaryTimeline[]
+}
+
+export interface OutageSummaryParams {
+  From?: string
+  To?: string
+  Scope?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+}
+
+// Interfaces for Maintenance Summary Analytics
+export interface MaintenanceSummaryByStatus {
+  key: string
+  count: number
+}
+
+export interface MaintenanceSummaryByPriority {
+  key: string
+  count: number
+}
+
+export interface MaintenanceSummaryByType {
+  key: string
+  count: number
+}
+
+export interface MaintenanceSummaryTimeline {
+  date: string
+  count: number
+}
+
+export interface MaintenanceSummaryData {
+  total: number
+  active: number
+  completed: number
+  byStatus: MaintenanceSummaryByStatus[]
+  byPriority: MaintenanceSummaryByPriority[]
+  byType: MaintenanceSummaryByType[]
+  timeline: MaintenanceSummaryTimeline[]
+}
+
+export interface MaintenanceSummaryParams {
+  From?: string
+  To?: string
+  Scope?: number
+  Type?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+}
+
+// Interfaces for Vendor Summary Analytics
+export interface VendorByState {
+  state: string
+  count: number
+}
+
+export interface VendorSummaryData {
+  totalVendors: number
+  activeVendors: number
+  suspendedVendors: number
+  vendorsByState: VendorByState[]
+}
+
+export interface VendorSummaryParams {
+  state?: string
+  status?: "active" | "suspended"
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -101,6 +248,30 @@ export interface PostpaidBillingAnalyticsResponse {
   isSuccess: boolean
   message: string
   data: PostpaidBillingAnalyticsData
+}
+
+export interface PaymentSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentSummaryData
+}
+
+export interface OutageSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: OutageSummaryData
+}
+
+export interface MaintenanceSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: MaintenanceSummaryData
+}
+
+export interface VendorSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: VendorSummaryData
 }
 
 // Analytics State
@@ -124,6 +295,34 @@ interface AnalyticsState {
   postpaidBillingAnalyticsSuccess: boolean
   postpaidBillingAnalyticsParams: PostpaidBillingAnalyticsParams | null
 
+  // Payment Summary Analytics state
+  paymentSummaryData: PaymentSummaryData | null
+  paymentSummaryLoading: boolean
+  paymentSummaryError: string | null
+  paymentSummarySuccess: boolean
+  paymentSummaryParams: PaymentSummaryParams | null
+
+  // Outage Summary Analytics state
+  outageSummaryData: OutageSummaryData | null
+  outageSummaryLoading: boolean
+  outageSummaryError: string | null
+  outageSummarySuccess: boolean
+  outageSummaryParams: OutageSummaryParams | null
+
+  // Maintenance Summary Analytics state
+  maintenanceSummaryData: MaintenanceSummaryData | null
+  maintenanceSummaryLoading: boolean
+  maintenanceSummaryError: string | null
+  maintenanceSummarySuccess: boolean
+  maintenanceSummaryParams: MaintenanceSummaryParams | null
+
+  // Vendor Summary Analytics state
+  vendorSummaryData: VendorSummaryData | null
+  vendorSummaryLoading: boolean
+  vendorSummaryError: string | null
+  vendorSummarySuccess: boolean
+  vendorSummaryParams: VendorSummaryParams | null
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -146,6 +345,30 @@ const initialState: AnalyticsState = {
   postpaidBillingAnalyticsError: null,
   postpaidBillingAnalyticsSuccess: false,
   postpaidBillingAnalyticsParams: null,
+
+  paymentSummaryData: null,
+  paymentSummaryLoading: false,
+  paymentSummaryError: null,
+  paymentSummarySuccess: false,
+  paymentSummaryParams: null,
+
+  outageSummaryData: null,
+  outageSummaryLoading: false,
+  outageSummaryError: null,
+  outageSummarySuccess: false,
+  outageSummaryParams: null,
+
+  maintenanceSummaryData: null,
+  maintenanceSummaryLoading: false,
+  maintenanceSummaryError: null,
+  maintenanceSummarySuccess: false,
+  maintenanceSummaryParams: null,
+
+  vendorSummaryData: null,
+  vendorSummaryLoading: false,
+  vendorSummaryError: null,
+  vendorSummarySuccess: false,
+  vendorSummaryParams: null,
 
   loading: false,
   error: null,
@@ -233,6 +456,130 @@ export const fetchPostpaidBillingAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchPaymentSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchPaymentSummaryAnalytics",
+  async (params: PaymentSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.post<PaymentSummaryResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.PAYMENT_SUMMARY),
+        params // Send as request body for POST
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Payment summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during payment summary analytics fetch")
+    }
+  }
+)
+
+export const fetchOutageSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchOutageSummaryAnalytics",
+  async (params: OutageSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<OutageSummaryResponse>(buildApiUrl(API_ENDPOINTS.ANALYTICS.OUTAGE_SUMMARY), {
+        params,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch outage summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Outage summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch outage summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during outage summary analytics fetch")
+    }
+  }
+)
+
+export const fetchMaintenanceSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchMaintenanceSummaryAnalytics",
+  async (params: MaintenanceSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<MaintenanceSummaryResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.MAINTENANCE_SUMMARY),
+        {
+          params,
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch maintenance summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Maintenance summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch maintenance summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during maintenance summary analytics fetch")
+    }
+  }
+)
+
+export const fetchVendorSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchVendorSummaryAnalytics",
+  async (params: VendorSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<VendorSummaryResponse>(buildApiUrl(API_ENDPOINTS.ANALYTICS.VENDOR_SUMMARY), {
+        params,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch vendor summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Vendor summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch vendor summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during vendor summary analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -263,9 +610,65 @@ const analyticsSlice = createSlice({
       state.postpaidBillingAnalyticsParams = null
     },
 
+    // Clear payment summary analytics state
+    clearPaymentSummaryAnalytics: (state) => {
+      state.paymentSummaryData = null
+      state.paymentSummaryError = null
+      state.paymentSummarySuccess = false
+      state.paymentSummaryLoading = false
+      state.paymentSummaryParams = null
+    },
+
+    // Clear outage summary analytics state
+    clearOutageSummaryAnalytics: (state) => {
+      state.outageSummaryData = null
+      state.outageSummaryError = null
+      state.outageSummarySuccess = false
+      state.outageSummaryLoading = false
+      state.outageSummaryParams = null
+    },
+
+    // Clear maintenance summary analytics state
+    clearMaintenanceSummaryAnalytics: (state) => {
+      state.maintenanceSummaryData = null
+      state.maintenanceSummaryError = null
+      state.maintenanceSummarySuccess = false
+      state.maintenanceSummaryLoading = false
+      state.maintenanceSummaryParams = null
+    },
+
+    // Clear vendor summary analytics state
+    clearVendorSummaryAnalytics: (state) => {
+      state.vendorSummaryData = null
+      state.vendorSummaryError = null
+      state.vendorSummarySuccess = false
+      state.vendorSummaryLoading = false
+      state.vendorSummaryParams = null
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
+    },
+
+    // Set payment summary analytics parameters
+    setPaymentSummaryAnalyticsParams: (state, action: PayloadAction<PaymentSummaryParams>) => {
+      state.paymentSummaryParams = action.payload
+    },
+
+    // Set outage summary analytics parameters
+    setOutageSummaryAnalyticsParams: (state, action: PayloadAction<OutageSummaryParams>) => {
+      state.outageSummaryParams = action.payload
+    },
+
+    // Set maintenance summary analytics parameters
+    setMaintenanceSummaryAnalyticsParams: (state, action: PayloadAction<MaintenanceSummaryParams>) => {
+      state.maintenanceSummaryParams = action.payload
+    },
+
+    // Set vendor summary analytics parameters
+    setVendorSummaryAnalyticsParams: (state, action: PayloadAction<VendorSummaryParams>) => {
+      state.vendorSummaryParams = action.payload
     },
 
     // Clear all errors
@@ -274,6 +677,10 @@ const analyticsSlice = createSlice({
       state.assetManagementError = null
       state.customerAnalyticsError = null
       state.postpaidBillingAnalyticsError = null
+      state.paymentSummaryError = null
+      state.outageSummaryError = null
+      state.maintenanceSummaryError = null
+      state.vendorSummaryError = null
     },
 
     // Reset analytics state
@@ -293,6 +700,30 @@ const analyticsSlice = createSlice({
       state.postpaidBillingAnalyticsError = null
       state.postpaidBillingAnalyticsSuccess = false
       state.postpaidBillingAnalyticsParams = null
+
+      state.paymentSummaryData = null
+      state.paymentSummaryLoading = false
+      state.paymentSummaryError = null
+      state.paymentSummarySuccess = false
+      state.paymentSummaryParams = null
+
+      state.outageSummaryData = null
+      state.outageSummaryLoading = false
+      state.outageSummaryError = null
+      state.outageSummarySuccess = false
+      state.outageSummaryParams = null
+
+      state.maintenanceSummaryData = null
+      state.maintenanceSummaryLoading = false
+      state.maintenanceSummaryError = null
+      state.maintenanceSummarySuccess = false
+      state.maintenanceSummaryParams = null
+
+      state.vendorSummaryData = null
+      state.vendorSummaryLoading = false
+      state.vendorSummaryError = null
+      state.vendorSummarySuccess = false
+      state.vendorSummaryParams = null
 
       state.loading = false
       state.error = null
@@ -366,6 +797,122 @@ const analyticsSlice = createSlice({
         state.postpaidBillingAnalyticsSuccess = false
         state.postpaidBillingAnalyticsData = null
       })
+
+      // Fetch payment summary analytics cases
+      .addCase(fetchPaymentSummaryAnalytics.pending, (state) => {
+        state.paymentSummaryLoading = true
+        state.paymentSummaryError = null
+        state.paymentSummarySuccess = false
+      })
+      .addCase(
+        fetchPaymentSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: PaymentSummaryData
+            params: PaymentSummaryParams
+          }>
+        ) => {
+          state.paymentSummaryLoading = false
+          state.paymentSummarySuccess = true
+          state.paymentSummaryData = action.payload.data
+          state.paymentSummaryParams = action.payload.params
+          state.paymentSummaryError = null
+        }
+      )
+      .addCase(fetchPaymentSummaryAnalytics.rejected, (state, action) => {
+        state.paymentSummaryLoading = false
+        state.paymentSummaryError = (action.payload as string) || "Failed to fetch payment summary analytics"
+        state.paymentSummarySuccess = false
+        state.paymentSummaryData = null
+      })
+
+      // Fetch outage summary analytics cases
+      .addCase(fetchOutageSummaryAnalytics.pending, (state) => {
+        state.outageSummaryLoading = true
+        state.outageSummaryError = null
+        state.outageSummarySuccess = false
+      })
+      .addCase(
+        fetchOutageSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: OutageSummaryData
+            params: OutageSummaryParams
+          }>
+        ) => {
+          state.outageSummaryLoading = false
+          state.outageSummarySuccess = true
+          state.outageSummaryData = action.payload.data
+          state.outageSummaryParams = action.payload.params
+          state.outageSummaryError = null
+        }
+      )
+      .addCase(fetchOutageSummaryAnalytics.rejected, (state, action) => {
+        state.outageSummaryLoading = false
+        state.outageSummaryError = (action.payload as string) || "Failed to fetch outage summary analytics"
+        state.outageSummarySuccess = false
+        state.outageSummaryData = null
+      })
+
+      // Fetch maintenance summary analytics cases
+      .addCase(fetchMaintenanceSummaryAnalytics.pending, (state) => {
+        state.maintenanceSummaryLoading = true
+        state.maintenanceSummaryError = null
+        state.maintenanceSummarySuccess = false
+      })
+      .addCase(
+        fetchMaintenanceSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: MaintenanceSummaryData
+            params: MaintenanceSummaryParams
+          }>
+        ) => {
+          state.maintenanceSummaryLoading = false
+          state.maintenanceSummarySuccess = true
+          state.maintenanceSummaryData = action.payload.data
+          state.maintenanceSummaryParams = action.payload.params
+          state.maintenanceSummaryError = null
+        }
+      )
+      .addCase(fetchMaintenanceSummaryAnalytics.rejected, (state, action) => {
+        state.maintenanceSummaryLoading = false
+        state.maintenanceSummaryError = (action.payload as string) || "Failed to fetch maintenance summary analytics"
+        state.maintenanceSummarySuccess = false
+        state.maintenanceSummaryData = null
+      })
+
+      // Fetch vendor summary analytics cases
+      .addCase(fetchVendorSummaryAnalytics.pending, (state) => {
+        state.vendorSummaryLoading = true
+        state.vendorSummaryError = null
+        state.vendorSummarySuccess = false
+      })
+      .addCase(
+        fetchVendorSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: VendorSummaryData
+            params: VendorSummaryParams
+          }>
+        ) => {
+          state.vendorSummaryLoading = false
+          state.vendorSummarySuccess = true
+          state.vendorSummaryData = action.payload.data
+          state.vendorSummaryParams = action.payload.params
+          state.vendorSummaryError = null
+        }
+      )
+      .addCase(fetchVendorSummaryAnalytics.rejected, (state, action) => {
+        state.vendorSummaryLoading = false
+        state.vendorSummaryError = (action.payload as string) || "Failed to fetch vendor summary analytics"
+        state.vendorSummarySuccess = false
+        state.vendorSummaryData = null
+      })
   },
 })
 
@@ -373,7 +920,15 @@ export const {
   clearAssetManagementAnalytics,
   clearCustomerAnalytics,
   clearPostpaidBillingAnalytics,
+  clearPaymentSummaryAnalytics,
+  clearOutageSummaryAnalytics,
+  clearMaintenanceSummaryAnalytics,
+  clearVendorSummaryAnalytics,
   setPostpaidBillingAnalyticsParams,
+  setPaymentSummaryAnalyticsParams,
+  setOutageSummaryAnalyticsParams,
+  setMaintenanceSummaryAnalyticsParams,
+  setVendorSummaryAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions

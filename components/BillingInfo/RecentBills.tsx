@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { VscEye } from "react-icons/vsc"
@@ -8,36 +9,40 @@ import { ButtonModule } from "components/ui/Button/Button"
 import BillDetailsModal from "components/ui/Modal/bill-details-modal"
 import { BillsIcon, BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
 import PdfFile from "public/pdf-file"
-
-interface RecentBill {
-  id: string
-  customer: string
-  meterNumber: string
-  amount: string
-  status: "generated" | "pending" | "approved"
-  category: string
-  consumption: string
-  dueDate: string
-}
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchPostpaidBills, PostpaidBill } from "lib/redux/postpaidSlice"
 
 interface RecentBillsProps {
   onExport?: () => void
   onGenerateBills?: () => void
-  onViewDetails?: (bill: RecentBill) => void
+  onViewDetails?: (bill: PostpaidBill) => void
 }
 
 const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, onViewDetails }) => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { bills, loading, error } = useAppSelector((state) => state.postpaidBilling)
+
   const [searchText, setSearchText] = useState("")
-  const [selectedBill, setSelectedBill] = useState<RecentBill | null>(null)
+  const [selectedBill, setSelectedBill] = useState<PostpaidBill | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  useEffect(() => {
+    void dispatch(
+      fetchPostpaidBills({
+        pageNumber: 1,
+        pageSize: 10,
+      })
+    )
+  }, [dispatch])
 
   const handleCancelSearch = () => {
     setSearchText("")
   }
 
-  const handleViewDetails = (bill: RecentBill) => {
-    setSelectedBill(bill)
-    setIsModalOpen(true)
+  const handleViewDetails = (bill: PostpaidBill) => {
+    // Navigate to the bill details page
+    router.push(`/billing/bills/${bill.id}`)
     onViewDetails?.(bill)
   }
 
@@ -46,40 +51,38 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     setSelectedBill(null)
   }
 
-  const recentBills: RecentBill[] = [
-    {
-      id: "INV-001234",
-      customer: "Fatima Hassan",
-      meterNumber: "2301567890",
-      amount: "₦562.5",
-      status: "generated",
-      category: "C1",
-      consumption: "450 kWh",
-      dueDate: "2024-02-15",
-    },
-    {
-      id: "INV-001235",
-      customer: "Adamu Ibrahim",
-      meterNumber: "2301567891",
-      amount: "₦259",
-      status: "pending",
-      category: "R2",
-      consumption: "280 kWh",
-      dueDate: "2024-02-15",
-    },
-    {
-      id: "INV-001236",
-      customer: "Grace Okonkwo",
-      meterNumber: "2301567892",
-      amount: "₦102",
-      status: "approved",
-      category: "R1",
-      consumption: "150 kWh",
-      dueDate: "2024-02-15",
-    },
-  ]
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+    }).format(amount)
+  }
 
-  const getStatusColor = (status: string) => {
+  const mapStatusToLabel = (status: number): "generated" | "pending" | "approved" => {
+    switch (status) {
+      case 0:
+        return "pending"
+      case 1:
+        return "generated"
+      case 2:
+        return "approved"
+      default:
+        return "pending"
+    }
+  }
+
+  const filteredBills = bills.filter((bill) => {
+    if (!searchText.trim()) return true
+    const query = searchText.toLowerCase()
+    return (
+      bill.customerName.toLowerCase().includes(query) ||
+      bill.customerAccountNumber.toLowerCase().includes(query) ||
+      bill.id.toString().toLowerCase().includes(query)
+    )
+  })
+
+  const getStatusColor = (status: "generated" | "pending" | "approved") => {
     switch (status) {
       case "approved":
         return "bg-green-100 text-green-800"
@@ -92,7 +95,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: "generated" | "pending" | "approved") => {
     switch (status) {
       case "approved":
         return (
@@ -174,95 +177,169 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
 
             {/* Recent Bills List */}
             <div className="space-y-4">
-              {recentBills.map((bill) => (
-                <motion.div
-                  key={bill.id}
-                  className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm"
-                  whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }}
-                >
-                  <div className="flex w-full items-start justify-between gap-3">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-gray-900">{bill.customer}</h4>
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(bill.status)}`}>
-                          {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
-                        </span>
-                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
-                          {bill.category}
-                        </span>
+              {loading && (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((skeleton) => (
+                    <div key={skeleton} className="animate-pulse rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
+                      <div className="flex w-full items-start justify-between gap-3">
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-4 w-32 rounded bg-gray-200" />
+                            <div className="h-5 w-20 rounded-full bg-gray-200" />
+                            <div className="h-5 w-16 rounded-full bg-gray-200" />
+                          </div>
+
+                          <div className="size-40 rounded bg-gray-200" />
+                          <div className="flex items-center gap-2">
+                            <div className="size-4 rounded-full bg-gray-200" />
+                            <div className="h-4 w-56 rounded bg-gray-200" />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="space-y-1 text-right">
+                            <div className="h-4 w-32 rounded bg-gray-200" />
+                            <div className="h-3 w-28 rounded bg-gray-200" />
+                            <div className="h-3 w-24 rounded bg-gray-200" />
+                          </div>
+                          <div className="h-8 w-24 rounded-md border border-gray-200 bg-white" />
+                        </div>
                       </div>
 
-                      <p className="mt-1 font-medium text-gray-900">{bill.meterNumber}</p>
-                      <div className="flex items-center gap-2">
-                        {" "}
-                        <DateIcon />
-                        <p className="text-sm text-gray-600">Due Date: {formatDate(bill.dueDate)}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">{bill.amount}</p>
-                        <p className="text-sm text-gray-500">{bill.consumption}</p>
-                      </div>
-                      <ButtonModule
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDetails(bill)}
-                        icon={<VscEye className="size-4" />}
-                        iconPosition="start"
-                        className="bg-white"
-                      >
-                        View Details
-                      </ButtonModule>
-                    </div>
-                  </div>
-
-                  {/* Status Indicators */}
-                  <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                    <div className="flex gap-2">
-                      <BillsIdIcon />
-                      <div>
-                        <p className="text-gray-500">Bill ID</p>
-                        <p className="font-medium text-gray-900">{bill.id}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex gap-2">
-                        <CategoryIcon />
-                        <div>
-                          <p className="text-gray-500">Category</p>
-                          <p className="font-medium text-gray-900">{bill.category}</p>
+                      <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
+                        <div className="flex gap-2">
+                          <div className="size-5 rounded-full bg-gray-200" />
+                          <div className="space-y-1">
+                            <div className="h-3 w-16 rounded bg-gray-200" />
+                            <div className="h-4 w-20 rounded bg-gray-200" />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="size-5 rounded-full bg-gray-200" />
+                          <div className="space-y-1">
+                            <div className="h-3 w-20 rounded bg-gray-200" />
+                            <div className="h-4 w-16 rounded bg-gray-200" />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="size-5 rounded-full bg-gray-200" />
+                          <div className="space-y-1">
+                            <div className="h-3 w-14 rounded bg-gray-200" />
+                            <div className="h-4 w-10 rounded bg-gray-200" />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="size-5 rounded-full bg-gray-200" />
+                          <div className="space-y-1">
+                            <div className="h-3 w-24 rounded bg-gray-200" />
+                            <div className="h-4 w-16 rounded bg-gray-200" />
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <CycleIcon />
-                      <div>
-                        <p className="text-gray-500">Status</p>
-                        <p
-                          className={`font-medium ${
-                            bill.status === "approved"
-                              ? "text-green-600"
-                              : bill.status === "generated"
-                              ? "text-blue-600"
-                              : "text-yellow-600"
-                          }`}
-                        >
-                          {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
-                        </p>
+                  ))}
+                </div>
+              )}
+              {!loading && error && <p className="text-sm text-red-500">Error loading bills: {error}</p>}
+              {!loading && !error && filteredBills.length === 0 && (
+                <p className="text-sm text-gray-500">No bills found.</p>
+              )}
+              {!loading &&
+                !error &&
+                filteredBills.map((bill) => {
+                  const statusLabel = mapStatusToLabel(bill.status)
+                  return (
+                    <motion.div
+                      key={bill.id}
+                      className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4  hover:shadow-sm"
+                      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }}
+                    >
+                      <div className="flex w-full items-start justify-between gap-3">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-gray-900">{bill.customerName}</h4>
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(statusLabel)}`}
+                            >
+                              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
+                            </span>
+                            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
+                              Cat {bill.category}
+                            </span>
+                          </div>
+
+                          <p className="mt-1 font-medium text-gray-900">{bill.customerAccountNumber}</p>
+                          <div className="flex items-center gap-2">
+                            {" "}
+                            <DateIcon />
+                            <p className="text-sm text-gray-600">Due Date: {formatDate(bill.dueDate ?? bill.period)}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
+                            <p className="text-sm text-gray-500">{bill.consumptionKwh.toLocaleString()} kWh</p>
+                          </div>
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(bill)}
+                            icon={<VscEye className="size-4" />}
+                            iconPosition="start"
+                            className="bg-white"
+                          >
+                            View Details
+                          </ButtonModule>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <RevenueGeneratedIcon />
-                      <div>
-                        <p className="text-gray-500">Amount</p>
-                        <p className="font-medium text-gray-900">{bill.amount}</p>
+
+                      {/* Status Indicators */}
+                      <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
+                        <div className="flex gap-2">
+                          <BillsIdIcon />
+                          <div>
+                            <p className="text-gray-500">Bill ID</p>
+                            <p className="font-medium text-gray-900">{bill.id}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex gap-2">
+                            <CategoryIcon />
+                            <div>
+                              <p className="text-gray-500">Category</p>
+                              <p className="font-medium text-gray-900">Cat {bill.category}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <CycleIcon />
+                          <div>
+                            <p className="text-gray-500">Status</p>
+                            <p
+                              className={`font-medium ${
+                                statusLabel === "approved"
+                                  ? "text-green-600"
+                                  : statusLabel === "generated"
+                                  ? "text-blue-600"
+                                  : "text-yellow-600"
+                              }`}
+                            >
+                              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <RevenueGeneratedIcon />
+                          <div>
+                            <p className="text-gray-500">Amount</p>
+                            <p className="font-medium text-gray-900">{formatAmount(bill.currentBillAmount)}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  )
+                })}
             </div>
           </div>
         </div>
@@ -377,8 +454,6 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
           </div>
         </div>
       </motion.div>
-
-      <BillDetailsModal isOpen={isModalOpen} onRequestClose={handleCloseModal} bill={selectedBill} />
     </>
   )
 }

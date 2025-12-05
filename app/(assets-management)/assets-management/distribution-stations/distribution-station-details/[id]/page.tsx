@@ -1275,7 +1275,7 @@ const DistributionStationDetailsPage = () => {
                     </motion.button>
 
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Distribution Substation Details</h1>
+                      <h1 className="text-2xl font-bold text-gray-900">Distribution Station Details</h1>
                       <p className="text-gray-600">Complete overview and management</p>
                     </div>
                   </div>
@@ -1340,7 +1340,7 @@ const DistributionStationDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-xl font-bold text-gray-900">{currentDistributionSubstation.dssCode}</h2>
-                      <p className="mb-4 text-gray-600">Distribution Substation #{currentDistributionSubstation.id}</p>
+                      <p className="mb-4 text-gray-600">Distribution Station #{currentDistributionSubstation.id}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div

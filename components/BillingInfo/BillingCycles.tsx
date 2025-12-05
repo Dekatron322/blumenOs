@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from "components/Icons/Icons"
+import { ButtonModule } from "components/ui/Button/Button"
+import { VscEye } from "react-icons/vsc"
 import { clearFilters, fetchPostpaidBills, setFilters, setPagination } from "lib/redux/postpaidSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
@@ -18,6 +21,7 @@ const CyclesIcon = () => (
 interface BillingCycle {
   id: number
   name: string
+  period: string
   status: "Completed" | "In Progress" | "Scheduled"
   startDate: string
   endDate: string
@@ -28,11 +32,13 @@ interface BillingCycle {
 
 interface BillingCyclesProps {
   onStartNewCycle?: () => void
+  onViewDetails?: (cycle: BillingCycle) => void
 }
 
-const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
+const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDetails }) => {
   const [searchText, setSearchText] = useState("")
   const dispatch = useAppDispatch()
+  const router = useRouter()
 
   // Get state from Redux store
   const { bills, loading, error, pagination, filters, success } = useAppSelector((state) => state.postpaidBilling)
@@ -153,6 +159,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
       return {
         id: data.bills[0]?.id || index + 1,
         name: cycleName,
+        period,
         status,
         startDate: startDate.toISOString().split("T")[0] as string,
         endDate: endDate.toISOString().split("T")[0] as string,
@@ -174,6 +181,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
     {
       id: 1,
       name: "January 2024 Billing",
+      period: "2023-12",
       status: "Completed",
       startDate: "2023-12-01",
       endDate: "2023-12-31",
@@ -184,6 +192,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
     {
       id: 2,
       name: "February 2024 Billing",
+      period: "2024-01",
       status: "In Progress",
       startDate: "2024-01-01",
       endDate: "2024-01-31",
@@ -236,6 +245,17 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
     return "text-green-600"
   }
 
+  const handleViewDetails = (cycle: BillingCycle) => {
+    const matchingBill = bills?.find((bill) => bill.period === cycle.period)
+
+    if (matchingBill) {
+      router.push(`/billing/bills/${matchingBill.id}`)
+      onViewDetails?.(cycle)
+    } else {
+      console.warn("No matching bill found for cycle period", cycle)
+    }
+  }
+
   if (loading && billingCycles.length === 0) {
     return (
       <motion.div
@@ -248,19 +268,57 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
           <div className="rounded-lg border bg-white p-6">
             <div className="mb-6">
               <h3 className="mb-2 text-lg font-semibold">Billing Cycles</h3>
-              <div className="h-12 animate-pulse rounded-lg bg-gray-200"></div>
+              <div className="h-12 animate-pulse rounded-lg bg-gray-200" />
             </div>
             <div className="space-y-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
-                  <div className="animate-pulse">
-                    <div className="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
-                    <div className="mb-4 h-3 w-1/2 rounded bg-gray-200"></div>
-                    <div className="flex justify-between">
-                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
-                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
-                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
-                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
+              {[1, 2, 3].map((skeleton) => (
+                <div key={skeleton} className="animate-pulse rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
+                  <div className="flex w-full items-start justify-between gap-3">
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="size-40 rounded bg-gray-200" />
+                        <div className="h-5 w-20 rounded-full bg-gray-200" />
+                        <div className="h-5 w-24 rounded-full bg-gray-200" />
+                      </div>
+
+                      <div className="size-48 rounded bg-gray-200" />
+                      <div className="h-3 w-40 rounded bg-gray-200" />
+                    </div>
+
+                    <div className="space-y-1 text-right">
+                      <div className="h-4 w-24 rounded bg-gray-200" />
+                      <div className="h-3 w-20 rounded bg-gray-200" />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
+                    <div className="flex gap-2">
+                      <div className="size-5 rounded-full bg-gray-200" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 rounded bg-gray-200" />
+                        <div className="h-4 w-24 rounded bg-gray-200" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="size-5 rounded-full bg-gray-200" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 rounded bg-gray-200" />
+                        <div className="h-4 w-16 rounded bg-gray-200" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="size-5 rounded-full bg-gray-200" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 rounded bg-gray-200" />
+                        <div className="h-4 w-16 rounded bg-gray-200" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="size-5 rounded-full bg-gray-200" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-24 rounded bg-gray-200" />
+                        <div className="h-4 w-20 rounded bg-gray-200" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -270,10 +328,13 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
         </div>
         <div className="w-80">
           <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-1/2 animate-pulse rounded bg-gray-200"></div>
+            <div className="mb-4 h-6 w-1/2 animate-pulse rounded bg-gray-200" />
             <div className="space-y-3">
               {[1, 2, 3, 4].map((item) => (
-                <div key={item} className="h-16 animate-pulse rounded bg-gray-200"></div>
+                <div key={item} className="flex items-center justify-between gap-4">
+                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+                  <div className="h-4 w-12 animate-pulse rounded bg-gray-200" />
+                </div>
               ))}
             </div>
           </div>
@@ -350,16 +411,27 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle }) => {
                       {cycle.approvedBy ? `Approved by: ${cycle.approvedBy}` : "Pending approval"}
                     </p>
                   </div>
-
-                  <div className="min-w-[120px] text-right text-sm">
-                    <p className={`font-semibold ${getAmountColor(cycle.totalAmount)}`}>{cycle.totalAmount}</p>
-                    <p className="text-gray-500">
-                      {cycle.status === "Completed"
-                        ? formatDate(cycle.endDate)
-                        : cycle.status === "In Progress"
-                        ? "In Progress"
-                        : `Starts: ${formatDate(cycle.startDate)}`}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="space-y-1 text-right text-sm">
+                      <p className={`font-semibold ${getAmountColor(cycle.totalAmount)}`}>{cycle.totalAmount}</p>
+                      <p className="text-gray-500">
+                        {cycle.status === "Completed"
+                          ? formatDate(cycle.endDate)
+                          : cycle.status === "In Progress"
+                          ? "In Progress"
+                          : `Starts: ${formatDate(cycle.startDate)}`}
+                      </p>
+                    </div>
+                    <ButtonModule
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewDetails(cycle)}
+                      icon={<VscEye className="size-4" />}
+                      iconPosition="start"
+                      className="bg-white"
+                    >
+                      View Details
+                    </ButtonModule>
                   </div>
                 </div>
 

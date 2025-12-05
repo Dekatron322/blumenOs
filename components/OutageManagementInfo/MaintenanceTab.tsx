@@ -1,874 +1,519 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import SearchInput from "components/Search/SearchInput"
+import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { SearchModule } from "components/ui/Search/search-module"
+import { MapIcon } from "components/Icons/Icons"
+import { clearFilters, fetchMaintenances, setFilters, setPagination } from "lib/redux/maintenanceSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { ButtonModule } from "components/ui/Button/Button"
 
-// Types
+const MaintenanceIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM10 18C5.58 18 2 14.42 2 10C2 5.58 5.58 2 10 2C14.42 2 18 5.58 18 10C18 14.42 14.42 18 10 18Z"
+      fill="currentColor"
+    />
+    <path
+      d="M15.66 6.34L10 0.68V4H8V0.68L2.34 6.34L3.76 7.76L8 3.52V6H10V3.52L14.24 7.76L15.66 6.34Z"
+      fill="currentColor"
+    />
+  </svg>
+)
+
 interface Maintenance {
-  id: string
+  id: number
+  referenceCode: string
   title: string
-  description: string
-  equipment: string
-  location: string
-  type: "preventive" | "corrective" | "emergency" | "scheduled"
-  status: "scheduled" | "in_progress" | "completed" | "cancelled"
-  priority: "low" | "medium" | "high" | "critical"
-  scheduledDate: string
-  startTime?: string
-  endTime?: string
-  assignedTeam: string
-  estimatedDuration: number
-  actualDuration?: number
-  cost: number
-  notes?: string
+  type: number
+  priority: number
+  status: number
+  scope: number
+  distributionSubstationId: number
+  feederId: number
+  distributionSubstationName: string
+  feederName: string
+  affectedCustomerCount: number
+  scheduledStartAt: string
+  scheduledEndAt: string
+  actualStartAt: string
+  completedAt: string
+  durationHours: number
 }
 
-interface ActionDropdownProps {
-  maintenance: Maintenance
-  onViewDetails: (maintenance: Maintenance) => void
+interface MaintenanceTabProps {
+  onViewMaintenanceDetails?: (maintenance: Maintenance) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ maintenance, onViewDetails }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
-  const dropdownRef = useRef<HTMLDivElement>(null)
+const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetails }) => {
+  const [searchText, setSearchText] = useState("")
+  const dispatch = useAppDispatch()
+  const router = useRouter()
 
+  // Get state from Redux store
+  const { maintenances, loading, error, pagination, filters } = useAppSelector((state) => state.maintenances)
+
+  console.log("MaintenanceTab Redux State:", {
+    maintenancesCount: maintenances?.length,
+    loading,
+    error,
+    pagination,
+    filters,
+  })
+
+  // Fetch maintenances on component mount and when filters/pagination change
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+    console.log("MaintenanceTab useEffect triggered - fetching maintenances...")
+
+    const fetchMaintenanceData = async () => {
+      const requestParams = {
+        pageNumber: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        ...filters,
+        ...(searchText && { search: searchText }),
+      }
+
+      console.log("MaintenanceTab Dispatching fetchMaintenances with params:", requestParams)
+
+      const result = await dispatch(fetchMaintenances(requestParams))
+
+      console.log("MaintenanceTab Fetch result:", result)
+
+      if (fetchMaintenances.fulfilled.match(result)) {
+        console.log("MaintenanceTab fetched successfully:", result.payload.data?.length)
+      } else if (fetchMaintenances.rejected.match(result)) {
+        console.error("MaintenanceTab failed to fetch maintenances:", result.error)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+    fetchMaintenanceData()
+  }, [dispatch, pagination.currentPage, pagination.pageSize, filters, searchText])
 
-  const calculateDropdownPosition = () => {
-    if (!dropdownRef.current) return
-
-    const buttonRect = dropdownRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - buttonRect.bottom
-    const spaceAbove = buttonRect.top
-    const dropdownHeight = 120
-
-    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-      setDropdownDirection("top")
+  // Handle search
+  const handleSearch = (text: string) => {
+    setSearchText(text)
+    if (text.trim()) {
+      dispatch(setFilters({ search: text.trim() }))
     } else {
-      setDropdownDirection("bottom")
+      dispatch(clearFilters())
     }
-  }
-
-  const handleButtonClick = () => {
-    calculateDropdownPosition()
-    setIsOpen(!isOpen)
-  }
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault()
-    onViewDetails(maintenance)
-    setIsOpen(false)
-  }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <motion.div
-        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
-        onClick={handleButtonClick}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <RxDotsVertical />
-      </motion.div>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            style={
-              dropdownDirection === "bottom"
-                ? {
-                    top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-                : {
-                    bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 2
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-            }
-            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -10 : 10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <div className="py-1">
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleViewDetails}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                View Details
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Update maintenance:", maintenance.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Status
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Assign team:", maintenance.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Assign Team
-              </motion.button>
-              {maintenance.status === "completed" && (
-                <motion.button
-                  className="block w-full px-4 py-2 text-left text-sm text-green-700 hover:bg-green-50"
-                  onClick={() => {
-                    console.log("Generate report:", maintenance.id)
-                    setIsOpen(false)
-                  }}
-                  whileHover={{ backgroundColor: "#f0f9f4" }}
-                  transition={{ duration: 0.1 }}
-                >
-                  Generate Report
-                </motion.button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-// Loading Skeleton Component
-const LoadingSkeleton = () => {
-  return (
-    <motion.div
-      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-          />
-        </div>
-        <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
-            />
-          </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-          <thead>
-            <tr>
-              {[...Array(6)].map((_, i) => (
-                <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
-                    <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
-                    />
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {[...Array(6)].map((_, cellIndex) => (
-                  <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
-                      <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 6 + cellIndex) * 0.05,
-                          },
-                        }}
-                      />
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
-          <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
-            }}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
-              }}
-            />
-          </div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
-              <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
-                }}
-              />
-            </div>
-          ))}
-          <div className="size-8 rounded bg-gray-200">
-            <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-// Mock data
-const mockMaintenance: Maintenance[] = [
-  {
-    id: "MAINT-001",
-    title: "Transformer Maintenance - Kaduna Central",
-    description: "Routine maintenance and inspection of main transformer",
-    equipment: "Transformer T-001",
-    location: "Kaduna Central Substation",
-    type: "preventive",
-    status: "scheduled",
-    priority: "medium",
-    scheduledDate: "2024-01-20T08:00:00Z",
-    assignedTeam: "Maintenance Team A",
-    estimatedDuration: 480,
-    cost: 150000,
-  },
-  {
-    id: "MAINT-002",
-    title: "Cable Replacement - Barnawa",
-    description: "Replace faulty underground cable causing intermittent outages",
-    equipment: "Underground Cable UC-002",
-    location: "Barnawa District",
-    type: "corrective",
-    status: "in_progress",
-    priority: "high",
-    scheduledDate: "2024-01-15T06:00:00Z",
-    startTime: "2024-01-15T06:30:00Z",
-    assignedTeam: "Maintenance Team B",
-    estimatedDuration: 360,
-    cost: 250000,
-  },
-  {
-    id: "MAINT-003",
-    title: "Switchgear Inspection",
-    description: "Annual inspection and testing of switchgear equipment",
-    equipment: "Switchgear SG-003",
-    location: "Rigasa Substation",
-    type: "scheduled",
-    status: "completed",
-    priority: "low",
-    scheduledDate: "2024-01-10T09:00:00Z",
-    startTime: "2024-01-10T09:15:00Z",
-    endTime: "2024-01-10T15:45:00Z",
-    assignedTeam: "Maintenance Team C",
-    estimatedDuration: 360,
-    actualDuration: 390,
-    cost: 75000,
-    notes: "All tests passed. Equipment in good condition.",
-  },
-  {
-    id: "MAINT-004",
-    title: "Emergency Pole Replacement",
-    description: "Emergency replacement of damaged utility pole",
-    equipment: "Utility Pole P-045",
-    location: "Ungwan Rimi Area",
-    type: "emergency",
-    status: "in_progress",
-    priority: "critical",
-    scheduledDate: "2024-01-16T14:00:00Z",
-    startTime: "2024-01-16T14:30:00Z",
-    assignedTeam: "Emergency Team D",
-    estimatedDuration: 180,
-    cost: 120000,
-  },
-  {
-    id: "MAINT-005",
-    title: "Meter Calibration",
-    description: "Quarterly calibration of industrial meters",
-    equipment: "Industrial Meters",
-    location: "Sabo Industrial Area",
-    type: "preventive",
-    status: "scheduled",
-    priority: "low",
-    scheduledDate: "2024-01-25T07:00:00Z",
-    assignedTeam: "Calibration Team E",
-    estimatedDuration: 240,
-    cost: 45000,
-  },
-]
-
-const MaintenanceTab: React.FC = () => {
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
-  const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedMaintenance, setSelectedMaintenance] = useState<Maintenance | null>(null)
-  const pageSize = 10
-
-  // In a real app, you would fetch this data from an API
-  const isLoading = false
-  const isError = false
-  const maintenance = mockMaintenance
-  const totalRecords = maintenance.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
-
-  const getStatusStyle = (status: Maintenance["status"]) => {
-    switch (status) {
-      case "scheduled":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "in_progress":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "completed":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "cancelled":
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const getTypeStyle = (type: Maintenance["type"]) => {
-    switch (type) {
-      case "preventive":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "corrective":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "emergency":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "scheduled":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const getPriorityStyle = (priority: Maintenance["priority"]) => {
-    switch (priority) {
-      case "critical":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "high":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "medium":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "low":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return `${hours}h ${mins}m`
-  }
-
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
-  }
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
-    setCurrentPage(1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    dispatch(clearFilters())
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
-
-  const filteredMaintenance = maintenance.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.equipment.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchText.toLowerCase())
-  )
-
-  if (isLoading) {
-    return <LoadingSkeleton />
+  // Helper functions for mapping API values to display values
+  const getStatusText = (status: number): string => {
+    const statusMap: { [key: number]: string } = {
+      1: "Scheduled",
+      2: "In Progress",
+      3: "Completed",
+      4: "Cancelled",
+      5: "Cancelled",
+    }
+    return statusMap[status] || "Scheduled"
   }
 
-  if (isError) {
+  const getTypeText = (type: number): string => {
+    const typeMap: { [key: number]: string } = {
+      1: "Preventive",
+      2: "Corrective",
+      3: "Emergency",
+    }
+    return typeMap[type] || "Scheduled"
+  }
+
+  const getPriorityText = (priority: number): string => {
+    const priorityMap: { [key: number]: string } = {
+      1: "Low",
+      2: "Medium",
+      3: "High",
+      4: "Critical",
+    }
+    return priorityMap[priority] || "Medium"
+  }
+
+  const getScopeText = (scope: number): string => {
+    const scopeMap: { [key: number]: string } = {
+      1: "Local",
+      2: "Regional",
+    }
+    return scopeMap[scope] || "Local"
+  }
+
+  const getStatusStyle = (status: number) => {
+    const statusMap: { [key: number]: string } = {
+      1: "bg-blue-100 text-blue-800", // Scheduled
+      2: "bg-yellow-100 text-yellow-800", // In Progress
+      3: "bg-green-100 text-green-800", // Completed
+      4: "bg-gray-100 text-gray-800", // Cancelled
+      5: "bg-gray-100 text-gray-800", // Cancelled
+    }
+    return statusMap[status] || statusMap[1]
+  }
+
+  const getTypeStyle = (type: number) => {
+    const typeMap: { [key: number]: string } = {
+      1: "bg-green-100 text-green-800", // Preventive
+      2: "bg-red-100 text-red-800", // Corrective
+      3: "bg-orange-100 text-orange-800", // Emergency
+    }
+    return typeMap[type] || "bg-blue-100 text-blue-800"
+  }
+
+  const getPriorityStyle = (priority: number) => {
+    const priorityMap: { [key: number]: string } = {
+      1: "bg-green-100 text-green-800", // Low
+      2: "bg-blue-100 text-blue-800", // Medium
+      3: "bg-yellow-100 text-yellow-800", // High
+      4: "bg-red-100 text-red-800", // Critical
+    }
+    return priorityMap[priority] || priorityMap[2]
+  }
+
+  const getScopeStyle = (scope: number) => {
+    const scopeMap: { [key: number]: string } = {
+      1: "bg-gray-100 text-gray-800", // Local
+      2: "bg-purple-100 text-purple-800", // Regional
+    }
+    return scopeMap[scope] || scopeMap[1]
+  }
+
+  const formatDuration = (hours: number) => {
+    if (hours < 1) {
+      const minutes = Math.round(hours * 60)
+      return `${minutes}m`
+    } else if (hours === Math.floor(hours)) {
+      return `${hours}h`
+    } else {
+      const wholeHours = Math.floor(hours)
+      const minutes = Math.round((hours - wholeHours) * 60)
+      return `${wholeHours}h ${minutes}m`
+    }
+  }
+
+  const [now, setNow] = useState<Date | null>(null)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date())
+    }, 1000)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [])
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return "Invalid Date"
+    }
+  }
+
+  const getCountdown = (endAt: string) => {
+    if (!endAt) return "-"
+
+    const end = new Date(endAt)
+    const current = now || new Date()
+    const diffMs = end.getTime() - current.getTime()
+
+    if (Number.isNaN(diffMs)) return "-"
+    if (diffMs <= 0) return "0s"
+
+    const totalSeconds = Math.floor(diffMs / 1000)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+
+    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`
+    if (minutes > 0) return `${minutes}m ${seconds}s`
+    return `${seconds}s`
+  }
+
+  const handleViewDetails = (maintenance: Maintenance) => {
+    // Navigate to the maintenance details page
+    router.push(`/outage-management/maintenance-detail/${maintenance.id}`)
+
+    // Still allow parent components to react if they provided a callback
+    if (onViewMaintenanceDetails) {
+      onViewMaintenanceDetails(maintenance)
+    }
+  }
+  // No fallback/sample data; only API/Redux data is used
+
+  // Loading state
+  if (loading && maintenances.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border bg-white">
-        <div className="text-center">
-          <p className="text-gray-500">Failed to load maintenance data</p>
-          <button className="mt-2 text-blue-600 hover:underline">Try again</button>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex gap-6"
+      >
+        <div className="flex-1">
+          <div className="rounded-lg border bg-white p-6">
+            <div className="mb-6">
+              <h3 className="mb-2 text-lg font-semibold">Maintenance Management</h3>
+              <div className="h-12 animate-pulse rounded-lg bg-gray-200"></div>
+            </div>
+
+            {/* Loading skeleton for table */}
+            <div className="overflow-hidden rounded-lg border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full  border-separate border-spacing-0 text-left">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {[...Array(8)].map((_, i) => (
+                        <th key={i} className="whitespace-nowrap border-y p-4">
+                          <div className="h-4 animate-pulse rounded bg-gray-200"></div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {[...Array(6)].map((_, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {[...Array(8)].map((_, colIndex) => (
+                          <td key={colIndex} className="whitespace-nowrap border-b px-4 py-3">
+                            <div className="h-3 animate-pulse rounded bg-gray-200"></div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Maintenance Management</p>
-          <p className="text-sm text-gray-500">Schedule and track equipment maintenance</p>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex gap-6"
+    >
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-4 left-4 z-50 rounded-lg bg-black bg-opacity-80 p-4 text-xs text-white">
+          <div>API Maintenances: {maintenances?.length || 0}</div>
+          <div>Loading: {loading ? "Yes" : "No"}</div>
+          <div>Error: {error || "None"}</div>
         </div>
-        <div className="flex gap-4">
-          <SearchInput
-            placeholder="Search maintenance..."
-            value={searchText}
-            onChange={handleSearch}
-            className="w-80"
-          />
-          <button className="rounded-md bg-[#0a0a0a] px-4 py-2 text-white hover:bg-[#000000]">
-            Schedule Maintenance
-          </button>
-        </div>
-      </motion.div>
+      )}
 
-      {filteredMaintenance.length === 0 ? (
-        <motion.div
-          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching maintenance found" : "No maintenance scheduled"}
-          </motion.p>
-        </motion.div>
-      ) : (
-        <>
-          <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+      {/* Main Content - Maintenance Table */}
+      <div className="container mx-auto">
+        <div className="rounded-lg border bg-white p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="mb-2 text-lg font-semibold">Maintenance Management</h3>
+              <SearchModule
+                value={searchText}
+                onChange={(e) => handleSearch(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search maintenance by title, reference code, or location..."
+              />
+            </div>
+            <ButtonModule
+              onClick={() => router.push("/outage-management/schedule-maintenance")}
+              variant="primary"
+              size="sm"
+              className="mt-2"
+            >
+              Schedule Maintenance
+            </ButtonModule>
+          </div>
+
+          {error && (
+            <div className="mt-2 rounded-lg bg-red-50 p-3">
+              <p className="text-sm text-red-600">Error loading maintenance data: {error}</p>
+            </div>
+          )}
+          {!loading && !error && maintenances.length === 0 && (
+            <div className="mb-4 mt-2 rounded-lg bg-yellow-50 p-3">
+              <p className="text-center text-sm text-yellow-600">No maintenance records found.</p>
+            </div>
+          )}
+
+          {/* Maintenance Table */}
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="w-full border-separate border-spacing-0 text-left">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
                       Maintenance Details
-                    </div>
-                  </th>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("equipment")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Equipment & Location <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("type")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Type & Priority <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("scheduledDate")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Schedule & Duration <RxCaretSort />
-                    </div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {filteredMaintenance.map((item, index) => (
+                    </th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                      Location & Equipment
+                    </th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                      Type & Priority
+                    </th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                      Status & Scope
+                    </th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">Schedule</th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">Duration</th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                      Affected Customers
+                    </th>
+                    <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {maintenances.map((maintenance, index) => (
                     <motion.tr
-                      key={item.id}
+                      key={maintenance.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
+                      className="hover:bg-gray-50"
                     >
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                        <div className="text-sm text-gray-500">{item.description}</div>
-                        <div className="text-sm text-gray-500">ID: {item.id}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm text-gray-900">{item.equipment}</div>
-                        <div className="text-sm text-gray-500">{item.location}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="flex flex-col gap-1">
-                          <motion.div
-                            style={getTypeStyle(item.type)}
-                            className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            <span
-                              className="size-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  item.type === "preventive"
-                                    ? "#589E67"
-                                    : item.type === "corrective"
-                                    ? "#AF4B4B"
-                                    : item.type === "emergency"
-                                    ? "#D97706"
-                                    : "#2563EB",
-                              }}
-                            ></span>
-                            {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                          </motion.div>
-                          <motion.div
-                            style={getPriorityStyle(item.priority)}
-                            className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            <span
-                              className="size-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  item.priority === "critical"
-                                    ? "#AF4B4B"
-                                    : item.priority === "high"
-                                    ? "#D97706"
-                                    : item.priority === "medium"
-                                    ? "#2563EB"
-                                    : "#589E67",
-                              }}
-                            ></span>
-                            {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
-                          </motion.div>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <div className="font-medium text-gray-900">{maintenance.title}</div>
+                            <div className="text-xs text-gray-500">Ref: {maintenance.referenceCode}</div>
+                            {/* <div className="text-xs text-gray-500">ID: {maintenance.id}</div> */}
+                          </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <motion.div
-                          style={getStatusStyle(item.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <MapIcon />
+                          <div>
+                            <div className="font-medium">{maintenance.distributionSubstationName || "N/A"}</div>
+                            <div className="text-xs text-gray-500">{maintenance.feederName || "No feeder"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        <div className="flex flex-col items-start gap-1">
                           <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                item.status === "scheduled"
-                                  ? "#2563EB"
-                                  : item.status === "in_progress"
-                                  ? "#D97706"
-                                  : item.status === "completed"
-                                  ? "#589E67"
-                                  : "#6B7280",
-                            }}
-                          ></span>
-                          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm text-gray-900">
-                          Scheduled: {new Date(item.scheduledDate).toLocaleString()}
+                            className={`inline-flex max-w-max rounded-full px-2 py-1 text-xs font-medium ${getTypeStyle(
+                              maintenance.type
+                            )}`}
+                          >
+                            {getTypeText(maintenance.type)}
+                          </span>
+                          <span
+                            className={`inline-flex max-w-max rounded-full px-2 py-1 text-xs font-medium ${getPriorityStyle(
+                              maintenance.priority
+                            )}`}
+                          >
+                            {getPriorityText(maintenance.priority)}
+                          </span>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          Est. Duration: {formatDuration(item.estimatedDuration)}
-                        </div>
-                        {item.actualDuration && (
-                          <div className="text-sm text-gray-500">Actual: {formatDuration(item.actualDuration)}</div>
-                        )}
-                        <div className="text-sm text-gray-500">Team: {item.assignedTeam}</div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown maintenance={item} onViewDetails={setSelectedMaintenance} />
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        <div className="flex flex-col items-start gap-1">
+                          <span
+                            className={`inline-flex max-w-max rounded-full px-2 py-1 text-xs font-medium ${getStatusStyle(
+                              maintenance.status
+                            )}`}
+                          >
+                            {getStatusText(maintenance.status)}
+                          </span>
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getScopeStyle(
+                              maintenance.scope
+                            )}`}
+                          >
+                            {getScopeText(maintenance.scope)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                        <div>
+                          <div className="font-medium">Start: {formatDate(maintenance.scheduledStartAt)}</div>
+                          <div className="text-xs">End: {formatDate(maintenance.scheduledEndAt)}</div>
+                          {maintenance.actualStartAt && (
+                            <div className="text-xs text-green-600">
+                              Actual: {formatDate(maintenance.actualStartAt)}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                        <div className="font-medium">{getCountdown(maintenance.scheduledEndAt)}</div>
+                        {maintenance.completedAt && <div className="text-xs text-green-600">Completed</div>}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                        <div className="font-medium">{maintenance.affectedCustomerCount}</div>
+                        <div className="text-xs">customers affected</div>
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        <button
+                          onClick={() => handleViewDetails(maintenance)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          View Details
+                        </button>
                       </td>
                     </motion.tr>
                   ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </motion.div>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-          <motion.div
-            className="flex items-center justify-between border-t py-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
+          {/* Pagination */}
+          <div className="mt-6 flex items-center justify-between">
             <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-              {totalRecords} entries
+              Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
+              {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}{" "}
+              entries
             </div>
             <div className="flex items-center gap-2">
-              <motion.button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowBackIosNew />
-              </motion.button>
-
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = index + 1
-                } else if (currentPage <= 3) {
-                  pageNum = index + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + index
-                } else {
-                  pageNum = currentPage - 2 + index
+              <button
+                onClick={() =>
+                  dispatch(setPagination({ page: pagination.currentPage - 1, pageSize: pagination.pageSize }))
                 }
-
-                return (
-                  <motion.button
-                    key={index}
-                    onClick={() => paginate(pageNum)}
-                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === pageNum
-                        ? "bg-[#0a0a0a] text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                  >
-                    {pageNum}
-                  </motion.button>
-                )
-              })}
-
-              {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-              {totalPages > 5 && currentPage < totalPages - 1 && (
-                <motion.button
-                  onClick={() => paginate(totalPages)}
-                  className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                    currentPage === totalPages
-                      ? "bg-[#0a0a0a] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {totalPages}
-                </motion.button>
-              )}
-
-              <motion.button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                disabled={!pagination.hasPrevious}
+                className={`rounded-md border px-3 py-1 text-sm ${
+                  pagination.hasPrevious
+                    ? "border-gray-300 hover:bg-gray-50"
+                    : "cursor-not-allowed border-gray-200 text-gray-400"
                 }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
               >
-                <MdOutlineArrowForwardIos />
-              </motion.button>
+                Previous
+              </button>
+              <span className="rounded-md bg-gray-900 px-3 py-1 text-sm text-white">{pagination.currentPage}</span>
+              <button
+                onClick={() =>
+                  dispatch(setPagination({ page: pagination.currentPage + 1, pageSize: pagination.pageSize }))
+                }
+                disabled={!pagination.hasNext}
+                className={`rounded-md border px-3 py-1 text-sm ${
+                  pagination.hasNext
+                    ? "border-gray-300 hover:bg-gray-50"
+                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                }`}
+              >
+                Next
+              </button>
             </div>
-          </motion.div>
-        </>
-      )}
+          </div>
+        </div>
+      </div>
     </motion.div>
   )
 }

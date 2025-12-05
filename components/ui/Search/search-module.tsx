@@ -70,7 +70,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
 
   return (
     <div
-      className={`flex h-[37px] w-[380px] items-center justify-between gap-3 rounded-md border px-0 text-[#707070] transition-all duration-200 focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] ${bgClassName} ${className}`}
+      className={`flex h-[37px] items-center justify-between gap-3 rounded-md border px-0 text-[#707070] transition-all duration-200 focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] md:w-[380px] ${bgClassName} ${className}`}
     >
       {/* Search type dropdown */}
       {onSearchTypeChange && (

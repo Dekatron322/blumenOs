@@ -78,8 +78,8 @@ const UpdateInjectionSubstationPage = () => {
     // Fetch area offices for the dropdown
     dispatch(
       fetchAreaOffices({
-        pageNumber: 1,
-        pageSize: 100,
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
   }, [dispatch, id, router])
@@ -266,7 +266,7 @@ const UpdateInjectionSubstationPage = () => {
             <DashboardNav />
             <div className="container mx-auto flex flex-1 items-center justify-center">
               <div className="text-center">
-                <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+                <div className="mb-4 size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                 <p className="text-gray-600">Loading injection substation data...</p>
               </div>
             </div>

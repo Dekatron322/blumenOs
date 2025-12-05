@@ -1,14 +1,20 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { ChangeEvent, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { Outage as ApiOutage, fetchOutages, OutageRequestParams } from "lib/redux/outageSlice"
 import SearchInput from "components/Search/SearchInput"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 // Types
 interface Outage {
   id: string
+  numericId: number
   title: string
   description: string
   location: string
@@ -30,6 +36,7 @@ interface ActionDropdownProps {
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ outage, onViewDetails }) => {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -123,7 +130,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ outage, onViewDetails }
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Update outage:", outage.id)
+                  router.push(`/outage-management/update/${outage.numericId}`)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
@@ -173,49 +180,26 @@ const LoadingSkeleton = () => {
       transition={{ duration: 0.3 }}
     >
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
+        <div className="h-8 w-40 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
+            className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
         <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
+          <div className="h-10 w-48 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
-              }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
             />
           </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
-              }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
             />
           </div>
         </div>
@@ -227,19 +211,11 @@ const LoadingSkeleton = () => {
             <tr>
               {[...Array(6)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
+                  <div className="h-4 w-24 overflow-hidden rounded bg-gray-200">
                     <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
-                      animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
-                      }}
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 }}
                     />
                   </div>
                 </th>
@@ -251,18 +227,15 @@ const LoadingSkeleton = () => {
               <tr key={rowIndex}>
                 {[...Array(6)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
+                    <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
                       <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 6 + cellIndex) * 0.05,
-                          },
+                        className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: (rowIndex * 6 + cellIndex) * 0.05,
                         }}
                       />
                     </div>
@@ -275,67 +248,40 @@ const LoadingSkeleton = () => {
       </div>
 
       <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
+        <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
-            }}
+            className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
+          <div className="size-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
-              }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
             />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
+            <div key={i} className="size-8 overflow-hidden rounded bg-gray-200">
               <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.8 + i * 0.1,
                 }}
               />
             </div>
           ))}
-          <div className="size-8 rounded bg-gray-200">
+          <div className="size-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
-              }}
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 1.3 }}
             />
           </div>
         </div>
@@ -344,100 +290,90 @@ const LoadingSkeleton = () => {
   )
 }
 
-// Mock data
-const mockOutages: Outage[] = [
-  {
-    id: "OUT-001",
-    title: "Power Outage - Kaduna Central",
-    description: "Complete power outage affecting the entire Kaduna Central area",
-    location: "Kaduna Central",
-    affectedCustomers: 150,
-    startTime: "2024-01-15T08:30:00Z",
-    estimatedRestoration: "2024-01-15T12:00:00Z",
-    status: "repairing",
-    priority: "critical",
-    cause: "Transformer failure",
-    assignedTeam: "Team Alpha",
-    reportedBy: "Customer Service",
-    estimatedDuration: 240,
-  },
-  {
-    id: "OUT-002",
-    title: "Partial Outage - Barnawa",
-    description: "Partial power outage affecting residential areas in Barnawa",
-    location: "Barnawa District",
-    affectedCustomers: 45,
-    startTime: "2024-01-15T14:20:00Z",
-    estimatedRestoration: "2024-01-15T18:00:00Z",
-    status: "investigating",
-    priority: "high",
-    cause: "Cable fault",
-    assignedTeam: "Team Beta",
-    reportedBy: "Field Engineer",
-    estimatedDuration: 180,
-  },
-  {
-    id: "OUT-003",
-    title: "Voltage Fluctuation - Rigasa",
-    description: "Voltage fluctuation causing equipment damage",
-    location: "Rigasa Area",
-    affectedCustomers: 25,
-    startTime: "2024-01-15T10:15:00Z",
-    estimatedRestoration: "2024-01-15T16:00:00Z",
-    actualRestoration: "2024-01-15T15:30:00Z",
-    status: "restored",
-    priority: "medium",
-    cause: "Load imbalance",
-    assignedTeam: "Team Gamma",
-    reportedBy: "Customer Complaint",
-    estimatedDuration: 300,
-  },
-  {
-    id: "OUT-004",
-    title: "Scheduled Maintenance - Sabo",
-    description: "Planned maintenance for system upgrades",
-    location: "Sabo Area",
-    affectedCustomers: 80,
-    startTime: "2024-01-16T09:00:00Z",
-    estimatedRestoration: "2024-01-16T14:00:00Z",
-    status: "reported",
-    priority: "low",
-    cause: "Planned maintenance",
-    assignedTeam: "Team Delta",
-    reportedBy: "Operations",
-    estimatedDuration: 300,
-  },
-  {
-    id: "OUT-005",
-    title: "Emergency Repair - Ungwan Rimi",
-    description: "Emergency repair due to pole damage",
-    location: "Ungwan Rimi",
-    affectedCustomers: 35,
-    startTime: "2024-01-15T16:45:00Z",
-    estimatedRestoration: "2024-01-15T20:00:00Z",
-    status: "repairing",
-    priority: "high",
-    cause: "Damaged pole",
-    assignedTeam: "Team Epsilon",
-    reportedBy: "Field Report",
-    estimatedDuration: 195,
-  },
-]
+// Helper functions to map API data to local interface
+const mapApiOutageToLocal = (apiOutage: ApiOutage): Outage => {
+  // Map API status numbers to local status strings
+  const statusMap: { [key: number]: Outage["status"] } = {
+    1: "reported",
+    2: "investigating",
+    3: "repairing",
+    4: "restored",
+    5: "cancelled",
+  }
+
+  // Map API priority numbers to local priority strings
+  const priorityMap: { [key: number]: Outage["priority"] } = {
+    1: "low",
+    2: "medium",
+    3: "high",
+    4: "critical",
+  }
+
+  // Calculate estimated duration in minutes (you might want to adjust this based on your API data)
+  const reportedAt = new Date(apiOutage.reportedAt)
+  const estimatedRestoration = new Date(reportedAt.getTime() + apiOutage.durationHours * 60 * 60 * 1000)
+
+  return {
+    id: apiOutage.referenceCode || `OUT-${apiOutage.id}`,
+    numericId: apiOutage.id,
+    title: apiOutage.title,
+    description: `Outage affecting ${apiOutage.affectedCustomerCount} customers`,
+    location: apiOutage.distributionSubstationName || apiOutage.feederName || "Unknown Location",
+    affectedCustomers: apiOutage.affectedCustomerCount,
+    startTime: apiOutage.reportedAt,
+    estimatedRestoration: estimatedRestoration.toISOString(),
+    status: statusMap[apiOutage.status] || "reported",
+    priority: priorityMap[apiOutage.priority] || "medium",
+    cause: "To be determined", // API doesn't provide cause, you might need to adjust this
+    assignedTeam: "Field Team", // API doesn't provide assigned team, you might need to adjust this
+    reportedBy: apiOutage.isCustomerGenerated ? "Customer" : "System",
+    estimatedDuration: apiOutage.durationHours * 60, // Convert hours to minutes
+  }
+}
 
 const OutagesTab: React.FC = () => {
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
+  const {
+    outages: apiOutages,
+    loading,
+    error,
+    totalCount,
+    currentPage: reduxCurrentPage,
+    pageSize,
+    hasNext,
+    hasPrevious,
+  } = useSelector((state: RootState) => state.outages)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOutage, setSelectedOutage] = useState<Outage | null>(null)
-  const pageSize = 10
+  const [filters, setFilters] = useState<Partial<OutageRequestParams>>({
+    Status: undefined,
+    Priority: undefined,
+    Scope: undefined,
+    CustomerGenerated: undefined,
+  })
 
-  // In a real app, you would fetch this data from an API
-  const isLoading = false
-  const isError = false
-  const outages = mockOutages
-  const totalRecords = outages.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+  // Map API outages to local format
+  const outages: Outage[] = apiOutages.map(mapApiOutageToLocal)
+
+  // Fetch outages on component mount and when filters/search change
+  useEffect(() => {
+    const params: OutageRequestParams = {
+      PageNumber: currentPage,
+      PageSize: pageSize || 10,
+      ...filters,
+    }
+
+    if (searchText) {
+      params.Search = searchText
+    }
+
+    dispatch(fetchOutages(params))
+  }, [dispatch, currentPage, pageSize, filters, searchText])
 
   const getStatusStyle = (status: Outage["status"]) => {
     switch (status) {
@@ -521,30 +457,86 @@ const OutagesTab: React.FC = () => {
     setCurrentPage(1)
   }
 
+  const handleFormSelectChange = (
+    e: ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
+  ) => {
+    const { name, value } = e.target
+
+    if (name === "Status") {
+      const numeric = value === "" ? undefined : Number(value)
+      handleFilterChange("Status", isNaN(numeric as number) ? undefined : numeric)
+      return
+    }
+
+    if (name === "Priority") {
+      const numeric = value === "" ? undefined : Number(value)
+      handleFilterChange("Priority", isNaN(numeric as number) ? undefined : numeric)
+      return
+    }
+
+    if (name === "CustomerGenerated") {
+      if (value === "") {
+        handleFilterChange("CustomerGenerated", undefined)
+      } else {
+        handleFilterChange("CustomerGenerated", value === "true")
+      }
+    }
+  }
+
   const handleCancelSearch = () => {
     setSearchText("")
     setCurrentPage(1)
   }
 
+  const handleViewOutageDetails = (outage: Outage) => {
+    // Use the numeric backend ID for the detail route
+    router.push(`/outage-management/outage-detail/${outage.numericId}`)
+  }
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
-  const filteredOutages = outages.filter(
-    (outage) =>
-      outage.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      outage.location.toLowerCase().includes(searchText.toLowerCase()) ||
-      outage.cause.toLowerCase().includes(searchText.toLowerCase())
-  )
+  const handleFilterChange = (filterType: keyof typeof filters, value: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterType]: value,
+    }))
+    setCurrentPage(1)
+  }
 
-  if (isLoading) {
+  const clearFilters = () => {
+    setFilters({
+      Status: undefined,
+      Priority: undefined,
+      Scope: undefined,
+      CustomerGenerated: undefined,
+    })
+    setSearchText("")
+    setCurrentPage(1)
+  }
+
+  if (loading) {
     return <LoadingSkeleton />
   }
 
-  if (isError) {
+  if (error) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border bg-white">
         <div className="text-center">
           <p className="text-gray-500">Failed to load outages data</p>
-          <button className="mt-2 text-blue-600 hover:underline">Try again</button>
+          <button
+            className="mt-2 text-blue-600 hover:underline"
+            onClick={() => {
+              const params: OutageRequestParams = {
+                PageNumber: currentPage,
+                PageSize: pageSize || 10,
+                ...filters,
+              }
+              if (searchText) params.Search = searchText
+              dispatch(fetchOutages(params))
+            }}
+          >
+            Try again
+          </button>
         </div>
       </div>
     )
@@ -564,11 +556,80 @@ const OutagesTab: React.FC = () => {
         </div>
         <div className="flex gap-4">
           <SearchInput placeholder="Search outages..." value={searchText} onChange={handleSearch} className="w-80" />
-          <button className="rounded-md bg-[#0a0a0a] px-4 py-2 text-white hover:bg-[#000000]">Report Outage</button>
+          <button
+            className="rounded-md bg-[#0a0a0a] px-4 py-2 text-white hover:bg-[#000000]"
+            onClick={() => router.push("/outage-management/report-outage")}
+          >
+            Report Outage
+          </button>
         </div>
       </motion.div>
 
-      {filteredOutages.length === 0 ? (
+      {/* Filter Controls */}
+      <motion.div
+        className="flex flex-wrap gap-4 py-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <div className="min-w-[220px]">
+          <FormSelectModule
+            label="Status"
+            name="Status"
+            value={filters.Status ?? ""}
+            onChange={handleFormSelectChange}
+            options={[
+              { value: "", label: "All Statuses" },
+              { value: 1, label: "Reported" },
+              { value: 2, label: "Investigating" },
+              { value: 3, label: "Repairing" },
+              { value: 4, label: "Restored" },
+              { value: 5, label: "Cancelled" },
+            ]}
+          />
+        </div>
+
+        <div className="min-w-[220px]">
+          <FormSelectModule
+            label="Priority"
+            name="Priority"
+            value={filters.Priority ?? ""}
+            onChange={handleFormSelectChange}
+            options={[
+              { value: "", label: "All Priorities" },
+              { value: 1, label: "Low" },
+              { value: 2, label: "Medium" },
+              { value: 3, label: "High" },
+              { value: 4, label: "Critical" },
+            ]}
+          />
+        </div>
+
+        <div className="min-w-[220px]">
+          <FormSelectModule
+            label="Source"
+            name="CustomerGenerated"
+            value={filters.CustomerGenerated === undefined ? "" : filters.CustomerGenerated ? "true" : "false"}
+            onChange={handleFormSelectChange}
+            options={[
+              { value: "", label: "All Sources" },
+              { value: "true", label: "Customer Reported" },
+              { value: "false", label: "System Detected" },
+            ]}
+          />
+        </div>
+
+        {(filters.Status !== undefined ||
+          filters.Priority !== undefined ||
+          filters.CustomerGenerated !== undefined ||
+          searchText) && (
+          <button className="rounded-md bg-gray-200 px-3 py-2 text-sm hover:bg-gray-300" onClick={clearFilters}>
+            Clear Filters
+          </button>
+        )}
+      </motion.div>
+
+      {outages.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -581,8 +642,15 @@ const OutagesTab: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText ? "No matching outages found" : "No outages reported"}
+            {searchText || Object.values(filters).some((f) => f !== undefined)
+              ? "No matching outages found"
+              : "No outages reported"}
           </motion.p>
+          {(searchText || Object.values(filters).some((f) => f !== undefined)) && (
+            <button className="text-blue-600 hover:underline" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
         </motion.div>
       ) : (
         <>
@@ -640,7 +708,7 @@ const OutagesTab: React.FC = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {filteredOutages.map((outage, index) => (
+                  {outages.map((outage, index) => (
                     <motion.tr
                       key={outage.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -712,7 +780,7 @@ const OutagesTab: React.FC = () => {
                         <div className="text-sm text-gray-500">
                           Est. Duration: {formatDuration(outage.estimatedDuration)}
                         </div>
-                        {outage.actualRestoration && (
+                        {outage.status === "restored" && outage.actualRestoration && (
                           <div className="text-sm text-green-600">
                             Restored: {new Date(outage.actualRestoration).toLocaleString()}
                           </div>
@@ -724,7 +792,7 @@ const OutagesTab: React.FC = () => {
                         <div className="text-sm text-gray-500">Reported by: {outage.reportedBy}</div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown outage={outage} onViewDetails={setSelectedOutage} />
+                        <ActionDropdown outage={outage} onViewDetails={handleViewOutageDetails} />
                       </td>
                     </motion.tr>
                   ))}
@@ -740,23 +808,24 @@ const OutagesTab: React.FC = () => {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-              {totalRecords} entries
+              Showing {(currentPage - 1) * (pageSize || 10) + 1} to{" "}
+              {Math.min(currentPage * (pageSize || 10), totalCount)} of {totalCount} entries
             </div>
             <div className="flex items-center gap-2">
               <motion.button
                 onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={!hasPrevious}
                 className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                  !hasPrevious ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
                 }`}
-                whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                whileHover={{ scale: !hasPrevious ? 1 : 1.1 }}
+                whileTap={{ scale: !hasPrevious ? 1 : 0.95 }}
               >
                 <MdOutlineArrowBackIosNew />
               </motion.button>
 
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+              {Array.from({ length: Math.min(5, Math.ceil(totalCount / (pageSize || 10))) }).map((_, index) => {
+                const totalPages = Math.ceil(totalCount / (pageSize || 10))
                 let pageNum
                 if (totalPages <= 5) {
                   pageNum = index + 1
@@ -788,31 +857,33 @@ const OutagesTab: React.FC = () => {
                 )
               })}
 
-              {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+              {Math.ceil(totalCount / (pageSize || 10)) > 5 &&
+                currentPage < Math.ceil(totalCount / (pageSize || 10)) - 2 && <span className="px-2">...</span>}
 
-              {totalPages > 5 && currentPage < totalPages - 1 && (
-                <motion.button
-                  onClick={() => paginate(totalPages)}
-                  className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                    currentPage === totalPages
-                      ? "bg-[#0a0a0a] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {totalPages}
-                </motion.button>
-              )}
+              {Math.ceil(totalCount / (pageSize || 10)) > 5 &&
+                currentPage < Math.ceil(totalCount / (pageSize || 10)) - 1 && (
+                  <motion.button
+                    onClick={() => paginate(Math.ceil(totalCount / (pageSize || 10)))}
+                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                      currentPage === Math.ceil(totalCount / (pageSize || 10))
+                        ? "bg-[#0a0a0a] text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {Math.ceil(totalCount / (pageSize || 10))}
+                  </motion.button>
+                )}
 
               <motion.button
                 onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={!hasNext}
                 className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                  !hasNext ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
                 }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                whileHover={{ scale: !hasNext ? 1 : 1.1 }}
+                whileTap={{ scale: !hasNext ? 1 : 0.95 }}
               >
                 <MdOutlineArrowForwardIos />
               </motion.button>

@@ -1,5 +1,6 @@
 "use client"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -7,7 +8,11 @@ import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOu
 import { PlusIcon, UserIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
-import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { fetchMeterReadings, setPagination } from "lib/redux/meterReadingSlice"
+import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -19,44 +24,41 @@ const CyclesIcon = () => (
   </svg>
 )
 
-interface PostpaidBillDispute {
+interface MeterReading {
   id: number
+  customerId: number
+  period: string
+  previousReadingKwh: number
+  presentReadingKwh: number
+  capturedAtUtc: string
+  capturedByUserId: number
+  capturedByName: string
   customerName: string
-  accountNumber: string
-  billingCycle: string
-  disputedAmount: string
-  originalAmount: string
-  status: "pending" | "under-review" | "resolved" | "rejected" | "escalated"
-  disputeType:
-    | "meter-reading-error"
-    | "tariff-application"
-    | "service-charge"
-    | "penalty-charge"
-    | "billing-cycle"
-    | "other"
-  disputeCategory: "meter-issue" | "billing-error" | "service-issue" | "penalty-dispute"
-  submittedDate: string
-  dueDate: string
-  priority: "low" | "medium" | "high" | "critical"
-  assignedTo: string
-  description: string
-  resolution?: string
-  meterNumber: string
-  previousReading: string
-  currentReading: string
-  consumption: string
-  tariffPlan: string
-  location: string
-  customerType: "Residential" | "Commercial" | "Industrial"
+  customerAccountNumber: string
+  notes: string
+  validConsumptionKwh: number
+  invalidConsumptionKwh: number
+  averageConsumptionBaselineKwh: number
+  standardDeviationKwh: number
+  lowThresholdKwh: number
+  highThresholdKwh: number
+  anomalyScore: number
+  validationStatus: number
+  isFlaggedForReview: boolean
+  isRollover: boolean
+  rolloverCount: number
+  rolloverAdjustmentKwh: number
+  estimatedConsumptionKwh: number
+  validatedAtUtc: string | null
+  validationNotes: string | null
 }
 
 interface ActionDropdownProps {
-  dispute: PostpaidBillDispute
-  onViewDetails: (dispute: PostpaidBillDispute) => void
+  reading: MeterReading
+  onViewDetails: (reading: MeterReading) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ dispute, onViewDetails }) => {
-  const [isAddDisputeModalOpen, setIsAddDisputeModalOpen] = useState(false)
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ reading, onViewDetails }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -96,7 +98,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ dispute, onViewDetails 
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
-    onViewDetails(dispute)
+    onViewDetails(reading)
     setIsOpen(false)
   }
 
@@ -150,35 +152,35 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ dispute, onViewDetails 
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Update dispute:", dispute.id)
+                  console.log("Validate reading:", reading.id)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Update Status
+                Validate Reading
               </motion.button>
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Assign dispute:", dispute.id)
+                  console.log("Flag for review:", reading.id)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Assign to Agent
+                Flag for Review
               </motion.button>
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Adjust bill:", dispute.id)
+                  console.log("Adjust reading:", reading.id)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#eff6ff" }}
                 transition={{ duration: 0.1 }}
               >
-                Adjust Bill
+                Adjust Reading
               </motion.button>
             </div>
           </motion.div>
@@ -197,48 +199,45 @@ const LoadingSkeleton = () => {
       transition={{ duration: 0.3 }}
     >
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div className="h-8 w-40 rounded bg-gray-200">
+        <div className="h-8 w-40 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
+            className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
             animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
+              x: ["-100%", "100%"],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
             }}
           />
         </div>
         <div className="mt-3 flex gap-4 md:mt-0">
-          <div className="h-10 w-48 rounded bg-gray-200">
+          <div className="h-10 w-48 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.2,
               }}
             />
           </div>
-          <div className="h-10 w-24 rounded bg-gray-200">
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.4,
               }}
             />
           </div>
@@ -251,18 +250,17 @@ const LoadingSkeleton = () => {
             <tr>
               {[...Array(11)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-4">
-                  <div className="h-4 w-24 rounded bg-gray-200">
+                  <div className="h-4 w-24 overflow-hidden rounded bg-gray-200">
                     <motion.div
-                      className="size-full rounded bg-gray-300"
-                      initial={{ opacity: 0.3 }}
+                      className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                       animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.1,
-                        },
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.1,
                       }}
                     />
                   </div>
@@ -275,18 +273,17 @@ const LoadingSkeleton = () => {
               <tr key={rowIndex}>
                 {[...Array(11)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
-                    <div className="h-4 w-full rounded bg-gray-200">
+                    <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
                       <motion.div
-                        className="size-full rounded bg-gray-300"
-                        initial={{ opacity: 0.3 }}
+                        className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                         animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: (rowIndex * 11 + cellIndex) * 0.05,
-                          },
+                          x: ["-100%", "100%"],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: (rowIndex * 11 + cellIndex) * 0.05,
                         }}
                       />
                     </div>
@@ -299,66 +296,62 @@ const LoadingSkeleton = () => {
       </div>
 
       <div className="flex items-center justify-between border-t py-3">
-        <div className="size-48 rounded bg-gray-200">
+        <div className="h-10 w-48 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="size-full rounded bg-gray-300"
-            initial={{ opacity: 0.3 }}
+            className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
             animate={{
-              opacity: [0.3, 0.6, 0.3],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              },
+              x: ["-100%", "100%"],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.6,
             }}
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded bg-gray-200">
+          <div className="size-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.8,
               }}
             />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="size-8 rounded bg-gray-200">
+            <div key={i} className="size-8 overflow-hidden rounded bg-gray-200">
               <motion.div
-                className="size-full rounded bg-gray-300"
-                initial={{ opacity: 0.3 }}
+                className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.8 + i * 0.1,
-                  },
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.8 + i * 0.1,
                 }}
               />
             </div>
           ))}
-          <div className="size-8 rounded bg-gray-200">
+          <div className="size-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="size-full rounded bg-gray-300"
-              initial={{ opacity: 0.3 }}
+              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
-                opacity: [0.3, 0.6, 0.3],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1.3,
-                },
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1.3,
               }}
             />
           </div>
@@ -368,229 +361,138 @@ const LoadingSkeleton = () => {
   )
 }
 
-const generateDisputeData = () => {
+const generateReadingData = () => {
   return {
-    totalDisputes: 156,
-    pendingDisputes: 42,
-    resolvedDisputes: 89,
-    escalatedDisputes: 25,
+    totalReadings: 2456,
+    validatedReadings: 1890,
+    pendingValidation: 342,
+    flaggedForReview: 224,
+    averageConsumption: 45.2,
+    totalConsumption: 110890,
   }
 }
 
-const PostpaidBillDisputes: React.FC = () => {
-  const [isAddDisputeModalOpen, setIsAddDisputeModalOpen] = useState(false)
+const MeterReadings: React.FC = () => {
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { meterReadings, meterReadingsLoading, meterReadingsError, meterReadingsSuccess, pagination } = useAppSelector(
+    (state) => state.meterReadings
+  )
+  const { customers } = useAppSelector((state) => state.customers)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedDispute, setSelectedDispute] = useState<PostpaidBillDispute | null>(null)
-  const [disputeData, setDisputeData] = useState(generateDisputeData())
+  const [readingData, setReadingData] = useState(generateReadingData())
+  const [filters, setFilters] = useState({
+    period: "",
+    customerId: "",
+    areaOfficeId: "",
+    feederId: "",
+    distributionSubstationId: "",
+  })
+
+  const generatePeriodOptions = () => {
+    const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
+
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    })
+
+    // Include current month + next 5 months
+    for (let i = 0; i <= 5; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      const value = `${year}-${month}`
+      const label = formatter.format(date)
+
+      options.push({ value, label })
+    }
+
+    const existingPeriods = Array.from(new Set(meterReadings.map((reading) => reading.period)))
+    existingPeriods.forEach((period) => {
+      const alreadyExists = options.some((opt) => opt.value === period)
+      if (!alreadyExists) {
+        let label = period
+        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
+        if (match && match[1] && match[2]) {
+          const year = parseInt(match[1], 10)
+          const monthIndex = parseInt(match[2], 10) - 1
+          const date = new Date(year, monthIndex, 1)
+          label = formatter.format(date)
+        }
+        options.push({ value: period, label })
+      }
+    })
+
+    return options
+  }
+
+  const periodOptions = useMemo(() => generatePeriodOptions(), [meterReadings])
+
   const pageSize = 10
+  const currentPage = pagination.currentPage
 
-  const disputes: PostpaidBillDispute[] = [
-    {
-      id: 1,
-      customerName: "Fatima Hassan",
-      accountNumber: "2301567890",
-      billingCycle: "January 2024",
-      disputedAmount: "₦425",
-      originalAmount: "₦625",
-      status: "pending",
-      disputeType: "meter-reading-error",
-      disputeCategory: "meter-issue",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-23",
-      priority: "medium",
-      assignedTo: "John Adebayo",
-      description: "Customer claims meter reading is incorrect - actual reading should be lower",
-      meterNumber: "MTR-789456",
-      previousReading: "2450",
-      currentReading: "2485",
-      consumption: "35 units",
-      tariffPlan: "Residential Tier 1",
-      location: "Lagos Island",
-      customerType: "Residential",
-    },
-    {
-      id: 2,
-      customerName: "Tech Solutions Ltd",
-      accountNumber: "2301789012",
-      billingCycle: "January 2024",
-      disputedAmount: "₦1,250",
-      originalAmount: "₦2,150",
-      status: "under-review",
-      disputeType: "tariff-application",
-      disputeCategory: "billing-error",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-25",
-      priority: "high",
-      assignedTo: "Sarah Johnson",
-      description: "Commercial customer claims incorrect tariff was applied to their account",
-      meterNumber: "MTR-789123",
-      previousReading: "12450",
-      currentReading: "12680",
-      consumption: "230 units",
-      tariffPlan: "Commercial Tier 3",
-      location: "Victoria Island",
-      customerType: "Commercial",
-    },
-    {
-      id: 3,
-      customerName: "Michael Johnson",
-      accountNumber: "2301890123",
-      billingCycle: "January 2024",
-      disputedAmount: "₦320",
-      originalAmount: "₦520",
-      status: "resolved",
-      disputeType: "service-charge",
-      disputeCategory: "service-issue",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      priority: "low",
-      assignedTo: "James Okafor",
-      description: "Customer disputes service charge for maintenance not performed",
-      resolution: "Service charge waived - maintenance log confirmed no service was rendered",
-      meterNumber: "MTR-456789",
-      previousReading: "3450",
-      currentReading: "3480",
-      consumption: "30 units",
-      tariffPlan: "Residential Tier 1",
-      location: "Lekki",
-      customerType: "Residential",
-    },
-    {
-      id: 4,
-      customerName: "Grace Okonkwo",
-      accountNumber: "2301678901",
-      billingCycle: "January 2024",
-      disputedAmount: "₦187",
-      originalAmount: "₦287",
-      status: "escalated",
-      disputeType: "penalty-charge",
-      disputeCategory: "penalty-dispute",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-30",
-      priority: "critical",
-      assignedTo: "Legal Department",
-      description: "Customer disputes late payment penalty claiming payment was made on time",
-      meterNumber: "MTR-456123",
-      previousReading: "5670",
-      currentReading: "5725",
-      consumption: "55 units",
-      tariffPlan: "Commercial Tier 2",
-      location: "Surulere",
-      customerType: "Commercial",
-    },
-    {
-      id: 5,
-      customerName: "Sarah Blumenthal",
-      accountNumber: "2301901234",
-      billingCycle: "January 2024",
-      disputedAmount: "₦550",
-      originalAmount: "₦750",
-      status: "rejected",
-      disputeType: "billing-cycle",
-      disputeCategory: "billing-error",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      priority: "medium",
-      assignedTo: "John Adebayo",
-      description: "Customer claims billing cycle dates are incorrect",
-      resolution: "Dispute rejected - billing cycle verified as correct",
-      meterNumber: "MTR-987654",
-      previousReading: "45670",
-      currentReading: "46250",
-      consumption: "580 units",
-      tariffPlan: "Industrial Tier 1",
-      location: "Ilupeju",
-      customerType: "Industrial",
-    },
-    {
-      id: 6,
-      customerName: "Adebayo Enterprises",
-      accountNumber: "2302012345",
-      billingCycle: "January 2024",
-      disputedAmount: "₦2,150",
-      originalAmount: "₦3,150",
-      status: "under-review",
-      disputeType: "other",
-      disputeCategory: "service-issue",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-24",
-      priority: "high",
-      assignedTo: "Sarah Johnson",
-      description: "Large commercial account disputes multiple charges on the bill",
-      meterNumber: "MTR-123789",
-      previousReading: "78900",
-      currentReading: "79250",
-      consumption: "350 units",
-      tariffPlan: "Industrial Tier 2",
-      location: "Ikeja",
-      customerType: "Industrial",
-    },
-  ]
+  useEffect(() => {
+    // Load customers for the customer filter dropdown
+    dispatch(
+      fetchCustomers({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
 
-  const isLoading = false
-  const isError = false
-  const totalRecords = disputes.length
-  const totalPages = Math.ceil(totalRecords / pageSize)
+    // Load area offices for the area office filter dropdown
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
+  }, [dispatch])
 
-  const getStatusStyle = (status: PostpaidBillDispute["status"]) => {
+  useEffect(() => {
+    // Fetch meter readings when component mounts or filters change
+    dispatch(
+      fetchMeterReadings({
+        pageNumber: currentPage,
+        pageSize,
+        ...(filters.period && { period: filters.period }),
+        ...(filters.customerId && { customerId: parseInt(filters.customerId) }),
+        ...(filters.areaOfficeId && { areaOfficeId: parseInt(filters.areaOfficeId) }),
+        ...(filters.feederId && { feederId: parseInt(filters.feederId) }),
+        ...(filters.distributionSubstationId && {
+          distributionSubstationId: parseInt(filters.distributionSubstationId),
+        }),
+      })
+    )
+  }, [dispatch, currentPage, filters])
+
+  const getValidationStatusStyle = (status: number) => {
     switch (status) {
-      case "pending":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "under-review":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "resolved":
+      case 1: // Validated
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
         }
-      case "rejected":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "escalated":
-        return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const getPriorityStyle = (priority: PostpaidBillDispute["priority"]) => {
-    switch (priority) {
-      case "low":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "medium":
+      case 2: // Pending
         return {
           backgroundColor: "#FEF6E6",
           color: "#D97706",
         }
-      case "high":
+      case 3: // Flagged
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
         }
-      case "critical":
+      case 4: // Adjusted
         return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
+          backgroundColor: "#EFF6FF",
+          color: "#2563EB",
         }
       default:
         return {
@@ -600,68 +502,67 @@ const PostpaidBillDisputes: React.FC = () => {
     }
   }
 
-  const getDisputeTypeStyle = (type: PostpaidBillDispute["disputeType"]) => {
-    switch (type) {
-      case "meter-reading-error":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "tariff-application":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "service-charge":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "penalty-charge":
-        return {
-          backgroundColor: "#FDF2F8",
-          color: "#DB2777",
-        }
-      case "billing-cycle":
-        return {
-          backgroundColor: "#F0FDF4",
-          color: "#16A34A",
-        }
-      case "other":
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
+  const getValidationStatusText = (status: number) => {
+    switch (status) {
+      case 1:
+        return "Validated"
+      case 2:
+        return "Pending"
+      case 3:
+        return "Flagged"
+      case 4:
+        return "Adjusted"
       default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
+        return "Unknown"
     }
   }
 
-  const getCustomerTypeStyle = (type: PostpaidBillDispute["customerType"]) => {
-    switch (type) {
-      case "Residential":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#2563EB",
-        }
-      case "Commercial":
-        return {
-          backgroundColor: "#F0FDF4",
-          color: "#16A34A",
-        }
-      case "Industrial":
-        return {
-          backgroundColor: "#FFFBEB",
-          color: "#D97706",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
+  const getAnomalyScoreStyle = (score: number) => {
+    if (score >= 80) {
+      return {
+        backgroundColor: "#F7EDED",
+        color: "#AF4B4B",
+      }
+    } else if (score >= 60) {
+      return {
+        backgroundColor: "#FEF6E6",
+        color: "#D97706",
+      }
+    } else if (score >= 40) {
+      return {
+        backgroundColor: "#EFF6FF",
+        color: "#2563EB",
+      }
+    } else {
+      return {
+        backgroundColor: "#EEF5F0",
+        color: "#589E67",
+      }
+    }
+  }
+
+  const getConsumptionStyle = (consumption: number, baseline: number) => {
+    const ratio = consumption / baseline
+    if (ratio > 1.5) {
+      return {
+        backgroundColor: "#F7EDED",
+        color: "#AF4B4B",
+      }
+    } else if (ratio > 1.2) {
+      return {
+        backgroundColor: "#FEF6E6",
+        color: "#D97706",
+      }
+    } else if (ratio < 0.8) {
+      return {
+        backgroundColor: "#EFF6FF",
+        color: "#2563EB",
+      }
+    } else {
+      return {
+        backgroundColor: "#EEF5F0",
+        color: "#589E67",
+      }
     }
   }
 
@@ -673,24 +574,54 @@ const PostpaidBillDisputes: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    setCurrentPage(1)
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    setCurrentPage(1)
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const handleAddDisputeSuccess = async () => {
-    setIsAddDisputeModalOpen(false)
-    // Refresh data after adding dispute
-    setDisputeData(generateDisputeData())
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+    dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const handleFilterSelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
+  ) => {
+    const { name, value } = e.target
+    handleFilterChange(name, String(value))
+  }
 
-  if (isLoading) return <LoadingSkeleton />
-  if (isError) return <div>Error loading disputes</div>
+  const paginate = (pageNumber: number) => {
+    dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const handleViewDetails = (reading: MeterReading) => {
+    router.push(`/billing/meter-readings/details/${reading.id}`)
+  }
+
+  if (meterReadingsLoading) return <LoadingSkeleton />
+  if (meterReadingsError) return <div>Error loading meter readings: {meterReadingsError}</div>
 
   return (
     <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
@@ -700,8 +631,8 @@ const PostpaidBillDisputes: React.FC = () => {
           <div className="container mx-auto px-4 py-8 max-sm:px-2 lg:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
-                <h4 className="text-2xl font-semibold">Postpaid Bill Disputes</h4>
-                <p className="text-gray-600">Manage and resolve customer billing disputes and adjustments</p>
+                <h4 className="text-2xl font-semibold">Meter Readings</h4>
+                <p className="text-gray-600">Manage and validate customer meter readings</p>
               </div>
 
               <motion.div
@@ -714,9 +645,9 @@ const PostpaidBillDisputes: React.FC = () => {
                   variant="primary"
                   size="md"
                   icon={<PlusIcon />}
-                  onClick={() => setIsAddDisputeModalOpen(true)}
+                  onClick={() => router.push("/billing/meter-readings/add")}
                 >
-                  New Dispute
+                  New Reading
                 </ButtonModule>
               </motion.div>
             </div>
@@ -727,7 +658,7 @@ const PostpaidBillDisputes: React.FC = () => {
               transition={{ duration: 0.3 }}
               className="w-full"
             >
-              {/* Dispute Table Container */}
+              {/* Reading Table Container */}
               <div className="w-full">
                 <motion.div
                   className="w-full rounded-lg border bg-white p-4 lg:p-6"
@@ -736,7 +667,7 @@ const PostpaidBillDisputes: React.FC = () => {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-6">
-                    <h3 className="mb-3 text-lg font-semibold">Dispute Directory</h3>
+                    <h3 className="mb-3 text-lg font-semibold">Meter Reading Directory</h3>
                     <div className="max-w-md">
                       <SearchModule
                         placeholder="Search customers, accounts, or meter numbers..."
@@ -745,9 +676,51 @@ const PostpaidBillDisputes: React.FC = () => {
                         onCancel={handleCancelSearch}
                       />
                     </div>
+
+                    {/* Filters */}
+                    <div className="mt-4 flex flex-wrap gap-4">
+                      <FormSelectModule
+                        label="Period"
+                        name="period"
+                        value={filters.period}
+                        onChange={handleFilterSelectChange}
+                        options={periodOptions}
+                        className="w-52"
+                      />
+
+                      <FormSelectModule
+                        label="Customer"
+                        name="customerId"
+                        value={filters.customerId}
+                        onChange={handleFilterSelectChange}
+                        options={[
+                          { value: "", label: "All Customers" },
+                          ...customers.map((customer) => ({
+                            value: String(customer.id),
+                            label: `${customer.fullName}`,
+                          })),
+                        ]}
+                        className="w-56"
+                      />
+
+                      <FormSelectModule
+                        label="Area Office"
+                        name="areaOfficeId"
+                        value={filters.areaOfficeId}
+                        onChange={handleFilterSelectChange}
+                        options={[
+                          { value: "", label: "All Area Offices" },
+                          ...areaOffices.map((office) => ({
+                            value: String(office.id),
+                            label: office.nameOfNewOAreaffice,
+                          })),
+                        ]}
+                        className="w-56"
+                      />
+                    </div>
                   </div>
 
-                  {disputes.length === 0 ? (
+                  {meterReadings.length === 0 ? (
                     <motion.div
                       className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -760,7 +733,7 @@ const PostpaidBillDisputes: React.FC = () => {
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
                       >
-                        {searchText ? "No matching disputes found" : "No disputes available"}
+                        {searchText ? "No matching readings found" : "No meter readings available"}
                       </motion.p>
                     </motion.div>
                   ) : (
@@ -768,7 +741,7 @@ const PostpaidBillDisputes: React.FC = () => {
                       {/* Table Container with Max Width and Scroll */}
                       <div className="w-full overflow-hidden rounded-lg border border-gray-200">
                         <div className="max-w-full overflow-x-auto">
-                          <table className="w-full min-w-[1400px] border-separate border-spacing-0 text-left">
+                          <table className="w-full min-w-[1600px] border-separate border-spacing-0 text-left">
                             <thead className="bg-gray-50">
                               <tr>
                                 <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
@@ -779,23 +752,39 @@ const PostpaidBillDisputes: React.FC = () => {
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("billingCycle")}
+                                  onClick={() => toggleSort("period")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Billing Cycle <RxCaretSort className="text-gray-400" />
+                                    Period <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("disputedAmount")}
+                                  onClick={() => toggleSort("previousReadingKwh")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Disputed Amount <RxCaretSort className="text-gray-400" />
+                                    Previous Reading <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("status")}
+                                  onClick={() => toggleSort("presentReadingKwh")}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    Present Reading <RxCaretSort className="text-gray-400" />
+                                  </div>
+                                </th>
+                                <th
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  onClick={() => toggleSort("validConsumptionKwh")}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    Consumption <RxCaretSort className="text-gray-400" />
+                                  </div>
+                                </th>
+                                <th
+                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                  onClick={() => toggleSort("validationStatus")}
                                 >
                                   <div className="flex items-center gap-2">
                                     Status <RxCaretSort className="text-gray-400" />
@@ -803,50 +792,34 @@ const PostpaidBillDisputes: React.FC = () => {
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("disputeType")}
+                                  onClick={() => toggleSort("anomalyScore")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Dispute Type <RxCaretSort className="text-gray-400" />
+                                    Anomaly Score <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("priority")}
+                                  onClick={() => toggleSort("isFlaggedForReview")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Priority <RxCaretSort className="text-gray-400" />
+                                    Review Flag <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("customerType")}
+                                  onClick={() => toggleSort("capturedAtUtc")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Customer Type <RxCaretSort className="text-gray-400" />
+                                    Captured Date <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th
                                   className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("submittedDate")}
+                                  onClick={() => toggleSort("capturedByName")}
                                 >
                                   <div className="flex items-center gap-2">
-                                    Submitted <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("dueDate")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Due Date <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("assignedTo")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Assigned To <RxCaretSort className="text-gray-400" />
+                                    Captured By <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
                                 <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
@@ -856,9 +829,9 @@ const PostpaidBillDisputes: React.FC = () => {
                             </thead>
                             <tbody className="bg-white">
                               <AnimatePresence>
-                                {disputes.map((dispute, index) => (
+                                {meterReadings.map((reading, index) => (
                                   <motion.tr
-                                    key={dispute.id}
+                                    key={reading.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -869,22 +842,43 @@ const PostpaidBillDisputes: React.FC = () => {
                                       <div className="flex items-center gap-2">
                                         <UserIcon />
                                         <div>
-                                          <div className="font-medium text-gray-900">{dispute.customerName}</div>
-                                          <div className="text-xs text-gray-500">{dispute.accountNumber}</div>
-                                          <div className="text-xs text-blue-600">{dispute.meterNumber}</div>
+                                          <div className="font-medium text-gray-900">{reading.customerName}</div>
+                                          <div className="text-xs text-gray-500">{reading.customerAccountNumber}</div>
+                                          <div className="text-xs text-blue-600">ID: {reading.customerId}</div>
                                         </div>
                                       </div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {dispute.billingCycle}
+                                      {reading.period}
                                     </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <div className="font-semibold text-gray-900">{dispute.disputedAmount}</div>
-                                      <div className="text-xs text-gray-500">Original: {dispute.originalAmount}</div>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {reading.previousReadingKwh.toLocaleString()} kWh
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                                      {reading.presentReadingKwh.toLocaleString()} kWh
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <motion.div
-                                        style={getStatusStyle(dispute.status)}
+                                        style={getConsumptionStyle(
+                                          reading.validConsumptionKwh,
+                                          reading.averageConsumptionBaselineKwh
+                                        )}
+                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                        whileHover={{ scale: 1.05 }}
+                                        transition={{ duration: 0.1 }}
+                                      >
+                                        {reading.validConsumptionKwh.toLocaleString()} kWh
+                                      </motion.div>
+                                      <div className="mt-1 text-xs text-gray-500">
+                                        Baseline:{" "}
+                                        {reading.averageConsumptionBaselineKwh != null
+                                          ? `${reading.averageConsumptionBaselineKwh.toLocaleString()} kWh`
+                                          : "N/A"}
+                                      </div>
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                      <motion.div
+                                        style={getValidationStatusStyle(reading.validationStatus)}
                                         className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
                                         whileHover={{ scale: 1.05 }}
                                         transition={{ duration: 0.1 }}
@@ -893,84 +887,52 @@ const PostpaidBillDisputes: React.FC = () => {
                                           className="size-2 rounded-full"
                                           style={{
                                             backgroundColor:
-                                              dispute.status === "pending"
-                                                ? "#D97706"
-                                                : dispute.status === "under-review"
-                                                ? "#2563EB"
-                                                : dispute.status === "resolved"
+                                              reading.validationStatus === 1
                                                 ? "#589E67"
-                                                : dispute.status === "rejected"
+                                                : reading.validationStatus === 2
+                                                ? "#D97706"
+                                                : reading.validationStatus === 3
                                                 ? "#AF4B4B"
-                                                : "#DB2777",
+                                                : "#2563EB",
                                           }}
                                         ></span>
-                                        {dispute.status.charAt(0).toUpperCase() +
-                                          dispute.status.slice(1).replace("-", " ")}
+                                        {getValidationStatusText(reading.validationStatus)}
                                       </motion.div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <motion.div
-                                        style={getDisputeTypeStyle(dispute.disputeType)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                        style={getAnomalyScoreStyle(reading.anomalyScore)}
+                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
                                         whileHover={{ scale: 1.05 }}
                                         transition={{ duration: 0.1 }}
                                       >
-                                        {dispute.disputeType
-                                          .split("-")
-                                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                                          .join(" ")}
+                                        {reading.anomalyScore}%
                                       </motion.div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <motion.div
-                                        style={getPriorityStyle(dispute.priority)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                        className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs ${
+                                          reading.isFlaggedForReview
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-green-100 text-green-800"
+                                        }`}
                                         whileHover={{ scale: 1.05 }}
                                         transition={{ duration: 0.1 }}
                                       >
-                                        <span
-                                          className="size-2 rounded-full"
-                                          style={{
-                                            backgroundColor:
-                                              dispute.priority === "low"
-                                                ? "#589E67"
-                                                : dispute.priority === "medium"
-                                                ? "#D97706"
-                                                : dispute.priority === "high"
-                                                ? "#AF4B4B"
-                                                : "#DB2777",
-                                          }}
-                                        ></span>
-                                        {dispute.priority.charAt(0).toUpperCase() + dispute.priority.slice(1)}
-                                      </motion.div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getCustomerTypeStyle(dispute.customerType)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        {dispute.customerType}
+                                        {reading.isFlaggedForReview ? "Flagged" : "Clear"}
                                       </motion.div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {dispute.submittedDate}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <div
-                                        className={`font-medium ${
-                                          new Date(dispute.dueDate) < new Date() ? "text-red-600" : "text-gray-600"
-                                        }`}
-                                      >
-                                        {dispute.dueDate}
+                                      <div>{formatDate(reading.capturedAtUtc)}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {formatDateTime(reading.capturedAtUtc)}
                                       </div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {dispute.assignedTo}
+                                      {reading.capturedByName}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ActionDropdown dispute={dispute} onViewDetails={setSelectedDispute} />
+                                      <ActionDropdown reading={reading} onViewDetails={handleViewDetails} />
                                     </td>
                                   </motion.tr>
                                 ))}
@@ -988,8 +950,8 @@ const PostpaidBillDisputes: React.FC = () => {
                         transition={{ duration: 0.4, delay: 0.2 }}
                       >
                         <div className="text-sm text-gray-700">
-                          Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)}{" "}
-                          of {totalRecords} entries
+                          Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                          {Math.min(currentPage * pageSize, pagination.totalCount)} of {pagination.totalCount} entries
                         </div>
                         <div className="flex items-center gap-1">
                           <motion.button
@@ -1006,14 +968,14 @@ const PostpaidBillDisputes: React.FC = () => {
                             <MdOutlineArrowBackIosNew size={16} />
                           </motion.button>
 
-                          {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                          {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, index) => {
                             let pageNum
-                            if (totalPages <= 5) {
+                            if (pagination.totalPages <= 5) {
                               pageNum = index + 1
                             } else if (currentPage <= 3) {
                               pageNum = index + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + index
+                            } else if (currentPage >= pagination.totalPages - 2) {
+                              pageNum = pagination.totalPages - 4 + index
                             } else {
                               pageNum = currentPage - 2 + index
                             }
@@ -1038,35 +1000,35 @@ const PostpaidBillDisputes: React.FC = () => {
                             )
                           })}
 
-                          {totalPages > 5 && currentPage < totalPages - 2 && (
+                          {pagination.totalPages > 5 && currentPage < pagination.totalPages - 2 && (
                             <span className="px-1 text-gray-500">...</span>
                           )}
 
-                          {totalPages > 5 && currentPage < totalPages - 1 && (
+                          {pagination.totalPages > 5 && currentPage < pagination.totalPages - 1 && (
                             <motion.button
-                              onClick={() => paginate(totalPages)}
+                              onClick={() => paginate(pagination.totalPages)}
                               className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                                currentPage === totalPages
+                                currentPage === pagination.totalPages
                                   ? "bg-[#0a0a0a] text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                               }`}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              {totalPages}
+                              {pagination.totalPages}
                             </motion.button>
                           )}
 
                           <motion.button
                             onClick={() => paginate(currentPage + 1)}
-                            disabled={currentPage === totalPages}
+                            disabled={currentPage === pagination.totalPages}
                             className={`flex items-center justify-center rounded-md p-2 ${
-                              currentPage === totalPages
+                              currentPage === pagination.totalPages
                                 ? "cursor-not-allowed text-gray-400"
                                 : "text-[#003F9F] hover:bg-gray-100"
                             }`}
-                            whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                            whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                            whileHover={{ scale: currentPage === pagination.totalPages ? 1 : 1.1 }}
+                            whileTap={{ scale: currentPage === pagination.totalPages ? 1 : 0.95 }}
                           >
                             <MdOutlineArrowForwardIos size={16} />
                           </motion.button>
@@ -1080,13 +1042,8 @@ const PostpaidBillDisputes: React.FC = () => {
           </div>
         </div>
       </div>
-      <AddAgentModal
-        isOpen={isAddDisputeModalOpen}
-        onRequestClose={() => setIsAddDisputeModalOpen(false)}
-        onSuccess={handleAddDisputeSuccess}
-      />
     </section>
   )
 }
 
-export default PostpaidBillDisputes
+export default MeterReadings

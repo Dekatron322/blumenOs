@@ -35,16 +35,42 @@ export interface ServiceCenter {
   longitude: number
 }
 
+export interface TechnicalEngineerUser {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  employeeId: string
+  position: string
+  employmentType: string
+  employmentStartAt: string
+  employmentEndAt: string
+  departmentId: number
+  departmentName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  lastLoginAt: string
+  createdAt: string
+  lastUpdated: string
+}
+
 export interface InjectionSubstation {
   id: number
   nercCode: string
   injectionSubstationCode: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
   areaOffice: AreaOffice
 }
 
 export interface HtPole {
   id: number
   htPoleNumber: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
 }
 
 export interface Feeder {
@@ -53,6 +79,8 @@ export interface Feeder {
   nercCode: string
   kaedcoFeederCode: string
   feederVoltage: number
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
   injectionSubstation: InjectionSubstation
   htPole: HtPole
 }
@@ -66,6 +94,8 @@ export interface DistributionSubstation {
   latitude: number
   longitude: number
   status: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
   feeder: Feeder
   numberOfUnit: number
   unitOneCode: string
@@ -83,19 +113,60 @@ export interface SalesRepUser {
   phoneNumber: string
 }
 
-export interface TechnicalEngineerUser {
-  id: number
-  fullName: string
-  email: string
-  phoneNumber: string
+export interface AccountNumberHistory {
+  oldAccountNumber: string
+  newAccountNumber: string
+  requestedByUserId: number
+  requestedAtUtc: string
+  reason: string
+  oldAddress: string
+  oldAddressTwo: string
+  oldCity: string
+  oldState: string
+  oldLatitude: number
+  oldLongitude: number
+  newAddress: string
+  newAddressTwo: string
+  newCity: string
+  newState: string
+  newLatitude: number
+  newLongitude: number
+}
+
+export interface MeterHistory {
+  oldMeterNumber: string
+  newMeterNumber: string
+  requestedByUserId: number
+  requestedAtUtc: string
+  reason: string
+  oldAddress: string
+  oldAddressTwo: string
+  oldCity: string
+  oldState: string
+  oldLatitude: number
+  oldLongitude: number
+  newAddress: string
+  newAddressTwo: string
+  newCity: string
+  newState: string
+  newLatitude: number
+  newLongitude: number
 }
 
 export interface Customer {
-  createdAt: any
   id: number
+  customerNumber: number
+  customerID: string
   accountNumber: string
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
   fullName: string
   phoneNumber: string
+  phoneOffice: string
+  gender: string
   email: string
   status: string
   isSuspended: boolean
@@ -108,14 +179,26 @@ export interface Customer {
   addressTwo: string
   city: string
   state: string
+  lga: string
   serviceCenterId: number
   serviceCenterName: string
   latitude: number
   longitude: number
   tariff: number
+  tariffCode: string
+  tariffID: string
+  tariffInddex: string
+  tariffType: string
+  tariffClass: string
+  newRate: number
+  vat: number
+  isVATWaved: boolean
   meterNumber: string
   isPPM: boolean
   isMD: boolean
+  isUrban: boolean
+  isHRB: boolean
+  isCustomerAccGovt: boolean
   comment: string
   band: string
   storedAverage: number
@@ -131,6 +214,9 @@ export interface Customer {
   distributionSubstation: DistributionSubstation
   technicalEngineerUser: TechnicalEngineerUser
   serviceCenter: ServiceCenter
+  accountNumberHistory: AccountNumberHistory[]
+  meterHistory: MeterHistory[]
+  createdAt?: any
 }
 
 export interface CustomerMapItem {
@@ -587,6 +673,18 @@ export interface DeclineChangeRequestResponse {
   data: ChangeRequestResponseData
 }
 
+// Customer Lookup Interfaces
+export interface CustomerLookupParams {
+  reference: string
+  type: string
+}
+
+export interface CustomerLookupResponse {
+  isSuccess: boolean
+  message: string
+  data: Customer
+}
+
 // Customer State
 interface CustomerState {
   // Customers list state
@@ -616,6 +714,12 @@ interface CustomerState {
   currentCustomer: Customer | null
   currentCustomerLoading: boolean
   currentCustomerError: string | null
+
+  // Customer lookup state
+  customerLookup: Customer | null
+  customerLookupLoading: boolean
+  customerLookupError: string | null
+  customerLookupSuccess: boolean
 
   // Create customer state
   createLoading: boolean
@@ -750,6 +854,10 @@ const initialState: CustomerState = {
   currentCustomer: null,
   currentCustomerLoading: false,
   currentCustomerError: null,
+  customerLookup: null,
+  customerLookupLoading: false,
+  customerLookupError: null,
+  customerLookupSuccess: false,
   createLoading: false,
   createError: null,
   createSuccess: false,
@@ -915,6 +1023,37 @@ export const fetchCustomerById = createAsyncThunk<Customer, number, { rejectValu
         return rejectWithValue(error.response.data.message || "Failed to fetch customer")
       }
       return rejectWithValue(error.message || "Network error during customer fetch")
+    }
+  }
+)
+
+export const lookupCustomer = createAsyncThunk(
+  "customers/lookupCustomer",
+  async (params: CustomerLookupParams, { rejectWithValue }) => {
+    try {
+      const { reference, type } = params
+
+      const response = await api.get<CustomerLookupResponse>(buildApiUrl(API_ENDPOINTS.CUSTOMER.CUSTOMER_LOOKUP), {
+        params: {
+          reference,
+          type,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to lookup customer")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Customer not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to lookup customer")
+      }
+      return rejectWithValue(error.message || "Network error during customer lookup")
     }
   }
 )
@@ -1290,6 +1429,7 @@ const customerSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentCustomerError = null
+      state.customerLookupError = null
       state.createError = null
       state.updateError = null
       state.suspendError = null
@@ -1309,6 +1449,14 @@ const customerSlice = createSlice({
       state.currentCustomerError = null
     },
 
+    // Clear customer lookup
+    clearCustomerLookup: (state) => {
+      state.customerLookup = null
+      state.customerLookupError = null
+      state.customerLookupLoading = false
+      state.customerLookupSuccess = false
+    },
+
     // Reset customer state
     resetCustomerState: (state) => {
       state.customers = []
@@ -1326,6 +1474,10 @@ const customerSlice = createSlice({
       state.currentCustomer = null
       state.currentCustomerLoading = false
       state.currentCustomerError = null
+      state.customerLookup = null
+      state.customerLookupLoading = false
+      state.customerLookupError = null
+      state.customerLookupSuccess = false
       state.createLoading = false
       state.createError = null
       state.createSuccess = false
@@ -1799,6 +1951,24 @@ const customerSlice = createSlice({
         state.currentCustomerError = (action.payload as string) || "Failed to fetch customer"
         state.currentCustomer = null
       })
+      // Lookup customer cases
+      .addCase(lookupCustomer.pending, (state) => {
+        state.customerLookupLoading = true
+        state.customerLookupError = null
+        state.customerLookupSuccess = false
+      })
+      .addCase(lookupCustomer.fulfilled, (state, action: PayloadAction<Customer>) => {
+        state.customerLookupLoading = false
+        state.customerLookupSuccess = true
+        state.customerLookup = action.payload
+        state.customerLookupError = null
+      })
+      .addCase(lookupCustomer.rejected, (state, action) => {
+        state.customerLookupLoading = false
+        state.customerLookupError = (action.payload as string) || "Failed to lookup customer"
+        state.customerLookupSuccess = false
+        state.customerLookup = null
+      })
       // Create customer cases
       .addCase(createCustomer.pending, (state) => {
         state.createLoading = true
@@ -2199,6 +2369,7 @@ export const {
   clearCustomers,
   clearError,
   clearCurrentCustomer,
+  clearCustomerLookup,
   resetCustomerState,
   setPagination,
   setPaymentDisputesPagination,

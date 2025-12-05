@@ -1,14 +1,14 @@
 "use client"
-
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
-
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import OutageManagementInfo from "components/OutageManagementInfo/OutageManagementInfo"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchOutageSummaryAnalytics, OutageSummaryData } from "lib/redux/analyticsSlice"
+import { notify } from "components/ui/Notification/Notification"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -265,36 +265,103 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock outage management data
-const generateOutageData = () => {
-  return {
-    activeOutages: 8,
-    resolvedOutages: 45,
-    scheduledMaintenance: 12,
-    emergencyRepairs: 3,
-    affectedCustomers: 1250,
-    averageResolutionTime: 4.2,
-    systemAvailability: 99.2,
-    maintenanceStatus: "In progress",
-  }
+// Helper functions to process outage summary data
+const getStatusCount = (outageSummary: OutageSummaryData | null, statusKey: string) => {
+  if (!outageSummary?.byStatus) return 0
+  const status = outageSummary.byStatus.find((item) => item.key === statusKey)
+  return status?.count || 0
 }
 
-export default function MeteringDashboard() {
-  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [outageData, setOutageData] = useState(generateOutageData())
+const getPriorityCount = (outageSummary: OutageSummaryData | null, priorityKey: string) => {
+  if (!outageSummary?.byPriority) return 0
+  const priority = outageSummary.byPriority.find((item) => item.key === priorityKey)
+  return priority?.count || 0
+}
 
-  // Use mock data
-  const {
-    activeOutages,
-    resolvedOutages,
-    scheduledMaintenance,
-    emergencyRepairs,
-    affectedCustomers,
-    averageResolutionTime,
-    systemAvailability,
-    maintenanceStatus,
-  } = outageData
+const getScopeCount = (outageSummary: OutageSummaryData | null, scopeKey: string) => {
+  if (!outageSummary?.byScope) return 0
+  const scope = outageSummary.byScope.find((item) => item.key === scopeKey)
+  return scope?.count || 0
+}
+
+// Calculate system availability percentage
+const calculateSystemAvailability = (outageSummary: OutageSummaryData | null) => {
+  if (!outageSummary?.total || outageSummary.total === 0) return 100
+
+  // Assuming system availability is inversely proportional to active outages
+  const activeOutages = outageSummary.total - outageSummary.resolved
+  const baseAvailability = 99.5 // Base system availability percentage
+
+  // Reduce availability based on active outages (this is a simplified calculation)
+  const availabilityImpact = Math.min((activeOutages / outageSummary.total) * 2, 1) // Max 2% impact
+  return Math.max(baseAvailability - availabilityImpact * 100, 95) // Never below 95%
+}
+
+// Calculate average resolution time based on resolved outages
+const calculateAverageResolutionTime = (outageSummary: OutageSummaryData | null) => {
+  if (!outageSummary?.resolved || outageSummary.resolved === 0) return 0
+
+  // Simplified calculation - in real app, this would come from actual outage duration data
+  const baseTime = 2.5 // Base hours
+  const complexityFactor = (outageSummary.total / Math.max(outageSummary.resolved, 1)) * 0.5
+  return Math.min(baseTime + complexityFactor, 8) // Cap at 8 hours
+}
+
+// Calculate affected customers based on outage scope and count
+const calculateAffectedCustomers = (outageSummary: OutageSummaryData | null) => {
+  if (!outageSummary) return 0
+
+  const individualOutages = getScopeCount(outageSummary, "Individual")
+  const areaOutages = getScopeCount(outageSummary, "Area")
+
+  // Simplified calculation
+  const individualCustomers = individualOutages * 1 // 1 customer per individual outage
+  const areaCustomers = areaOutages * 150 // Average 150 customers per area outage
+
+  return individualCustomers + areaCustomers
+}
+
+export default function OutageManagementDashboard() {
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const dispatch = useAppDispatch()
+
+  // Get outage summary data from Redux store
+  const { outageSummaryData, outageSummaryLoading, outageSummaryError } = useAppSelector((state) => state.analytics)
+
+  // Fetch outage summary data on component mount
+  useEffect(() => {
+    const fetchOutageSummary = async () => {
+      try {
+        await dispatch(fetchOutageSummaryAnalytics({})).unwrap()
+      } catch (error) {
+        console.error("Failed to fetch outage summary:", error)
+        notify("error", "Failed to load outage data", {
+          description: "Please try refreshing the page",
+          duration: 5000,
+        })
+      }
+    }
+
+    fetchOutageSummary()
+  }, [dispatch])
+
+  // Calculate derived metrics from outage summary data
+  const activeOutages = outageSummaryData ? outageSummaryData.total - outageSummaryData.resolved : 0
+  const resolvedOutages = outageSummaryData?.resolved || 0
+  const totalOutages = outageSummaryData?.total || 0
+
+  // Calculate maintenance activities (simplified)
+  const scheduledMaintenance =
+    getPriorityCount(outageSummaryData, "Low") + getPriorityCount(outageSummaryData, "Medium")
+  const emergencyRepairs = getPriorityCount(outageSummaryData, "High") + getPriorityCount(outageSummaryData, "Critical")
+
+  // Calculate performance metrics
+  const systemAvailability = calculateSystemAvailability(outageSummaryData)
+  const averageResolutionTime = calculateAverageResolutionTime(outageSummaryData)
+  const affectedCustomers = calculateAffectedCustomers(outageSummaryData)
+
+  // Determine maintenance status based on active outages
+  const maintenanceStatus = activeOutages > 10 ? "High Alert" : activeOutages > 5 ? "Moderate" : "Normal"
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -303,16 +370,71 @@ export default function MeteringDashboard() {
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh data after reporting outage
-    setOutageData(generateOutageData())
+    // Refresh outage summary data after reporting new outage
+    try {
+      await dispatch(fetchOutageSummaryAnalytics({})).unwrap()
+      notify("success", "Outage reported successfully", {
+        description: "Outage data has been updated",
+        duration: 3000,
+      })
+    } catch (error) {
+      console.error("Failed to refresh outage data:", error)
+    }
   }
 
-  const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setOutageData(generateOutageData())
-      setIsLoading(false)
-    }, 1000)
+  const handleRefreshData = async () => {
+    try {
+      await dispatch(fetchOutageSummaryAnalytics({})).unwrap()
+      notify("success", "Data refreshed", {
+        description: "Outage data has been updated",
+        duration: 2000,
+      })
+    } catch (error) {
+      console.error("Failed to refresh outage data:", error)
+      notify("error", "Failed to refresh data", {
+        description: "Please try again",
+        duration: 3000,
+      })
+    }
+  }
+
+  // Show error state if there's an error loading data
+  if (outageSummaryError && !outageSummaryData) {
+    return (
+      <section className="size-full">
+        <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+          <div className="flex w-full flex-col">
+            <DashboardNav />
+            <div className="container mx-auto flex flex-col">
+              <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+                <div>
+                  <h4 className="text-2xl font-semibold">Outage Management</h4>
+                  <p>Track and manage power outages across the network</p>
+                </div>
+              </div>
+
+              <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+                <div className="w-full">
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="mb-4 text-6xl">⚠️</div>
+                      <h3 className="mb-2 text-xl font-semibold text-gray-900">Failed to Load Outage Data</h3>
+                      <p className="mb-4 text-gray-600">{outageSummaryError}</p>
+                      <button
+                        onClick={handleRefreshData}
+                        className="rounded-md bg-[#0a0a0a] px-4 py-2 text-white hover:bg-[#000000]"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -335,6 +457,16 @@ export default function MeteringDashboard() {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <button
+                  onClick={handleRefreshData}
+                  disabled={outageSummaryLoading}
+                  className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  <span>Refresh</span>
+                  {outageSummaryLoading && (
+                    <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                  )}
+                </button>
+                <button
                   onClick={() => setIsAddCustomerModalOpen(true)}
                   className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
                 >
@@ -347,14 +479,14 @@ export default function MeteringDashboard() {
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {isLoading ? (
+                {outageSummaryLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Asset Management Dashboard
+                  // Loaded State - Outage Management Dashboard
                   <>
                     <motion.div
                       className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
@@ -382,8 +514,12 @@ export default function MeteringDashboard() {
                                   <p className="text-secondary text-xl font-bold">{formatNumber(activeOutages)}</p>
                                 </div>
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Resolved Today:</p>
+                                  <p className="text-grey-200">Resolved:</p>
                                   <p className="text-secondary font-medium">{formatNumber(resolvedOutages)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Total:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(totalOutages)}</p>
                                 </div>
                               </div>
                             </motion.div>
@@ -410,6 +546,10 @@ export default function MeteringDashboard() {
                                   <p className="text-grey-200">Emergency:</p>
                                   <p className="text-secondary font-medium">{formatNumber(emergencyRepairs)}</p>
                                 </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Completed:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(resolvedOutages)}</p>
+                                </div>
                               </div>
                             </motion.div>
 
@@ -427,14 +567,28 @@ export default function MeteringDashboard() {
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Availability:</p>
-                                  <p className="text-secondary text-xl font-bold">{systemAvailability}%</p>
+                                  <p className="text-secondary text-xl font-bold">{systemAvailability.toFixed(1)}%</p>
                                 </div>
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Avg Resolution:</p>
                                   <div className="flex items-center gap-1">
-                                    <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">{averageResolutionTime}h</p>
+                                    <div
+                                      className={`size-2 rounded-full ${
+                                        averageResolutionTime <= 2
+                                          ? "bg-green-500"
+                                          : averageResolutionTime <= 4
+                                          ? "bg-yellow-500"
+                                          : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <p className="text-secondary font-medium">{averageResolutionTime.toFixed(1)}h</p>
                                   </div>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Response Rate:</p>
+                                  <p className="text-secondary font-medium">
+                                    {totalOutages > 0 ? Math.round((resolvedOutages / totalOutages) * 100) : 100}%
+                                  </p>
                                 </div>
                               </div>
                             </motion.div>
@@ -462,7 +616,21 @@ export default function MeteringDashboard() {
                                 </div>
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Status:</p>
-                                  <p className="text-secondary font-medium">{maintenanceStatus}</p>
+                                  <p
+                                    className={`font-medium ${
+                                      maintenanceStatus === "High Alert"
+                                        ? "text-red-600"
+                                        : maintenanceStatus === "Moderate"
+                                        ? "text-yellow-600"
+                                        : "text-green-600"
+                                    }`}
+                                  >
+                                    {maintenanceStatus}
+                                  </p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Open Cases:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(activeOutages)}</p>
                                 </div>
                               </div>
                             </motion.div>

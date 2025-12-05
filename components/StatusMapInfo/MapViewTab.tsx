@@ -53,62 +53,85 @@ const MapViewTab: React.FC = () => {
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
   const [isClient, setIsClient] = useState(false)
 
-  const paymentStatusOptions = ["All Status", "Paid", "Partial", "Unpaid"]
+  const paymentStatusOptions = ["All Status", "Paid", "Unpaid", "Partial", "Unknown"]
 
-  const dispatch = useAppDispatch()
-  const { mapCustomers, mapAssets } = useAppSelector((s) => s.customers)
+  type Customer = {
+    id: number
+    position: [number, number]
+    state: string
+    feeder: string
+    status: "Paid" | "Unpaid" | "Partial" | "Unknown"
+  }
+
+  type Asset = {
+    id: number
+    position: [number, number]
+    type: "feeder" | "substation" | "transformer" | "service"
+  }
 
   const nigeriaCenter: [number, number] = [9.082, 8.6753]
 
-  const statusToLabel = (s: number): "Paid" | "Partial" | "Unpaid" =>
-    s === 1 ? "Paid" : s === 2 ? "Partial" : "Unpaid"
+  const customers: Customer[] = [
+    { id: 1, position: [10.52, 7.44], state: "Kaduna", feeder: "Feeder 1", status: "Paid" },
+    { id: 2, position: [10.54, 7.46], state: "Kaduna", feeder: "Feeder 2", status: "Unpaid" },
+    { id: 3, position: [10.5, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Partial" },
+    { id: 4, position: [12.0, 8.52], state: "Kano", feeder: "Feeder 1", status: "Unknown" },
+    { id: 5, position: [12.03, 8.55], state: "Kano", feeder: "Feeder 2", status: "Paid" },
+    { id: 6, position: [12.02, 8.5], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
+    { id: 7, position: [9.07, 7.49], state: "Abuja", feeder: "Feeder 1", status: "Partial" },
+    { id: 8, position: [9.05, 7.52], state: "Abuja", feeder: "Feeder 2", status: "Paid" },
+  ]
 
-  // helper to normalize strings for case-insensitive comparisons
-  const normalize = (v: any) => String(v ?? "").trim().toLowerCase()
+  const assets: Asset[] = [
+    { id: 1, position: [10.52, 7.44], type: "feeder" },
+    { id: 2, position: [10.54, 7.46], type: "feeder" },
+    { id: 3, position: [10.5, 7.42], type: "feeder" },
+    { id: 4, position: [12.0, 8.52], type: "feeder" },
+    { id: 5, position: [12.03, 8.55], type: "feeder" },
+    { id: 6, position: [9.07, 7.49], type: "feeder" },
+    { id: 7, position: [9.05, 7.52], type: "feeder" },
 
-  // Remove white box by using inline styles and empty className for divIcon
-  const assetIcon = (html: string) =>
-    LRef.current!.divIcon({
-      html: `<div style="background:transparent;box-shadow:none;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center">${html}</div>`,
-      className: "",
-      iconSize: [24, 24],
-    })
+    { id: 8, position: [10.55, 7.4], type: "transformer" },
+    { id: 9, position: [10.48, 7.45], type: "transformer" },
+    { id: 10, position: [12.02, 8.5], type: "transformer" },
+    { id: 11, position: [12.01, 8.56], type: "transformer" },
+    { id: 12, position: [9.06, 7.47], type: "transformer" },
+
+    { id: 13, position: [10.56, 7.47], type: "substation" },
+    { id: 14, position: [10.51, 7.38], type: "substation" },
+    { id: 15, position: [11.98, 8.48], type: "substation" },
+    { id: 16, position: [12.04, 8.53], type: "substation" },
+    { id: 17, position: [9.08, 7.52], type: "substation" },
+
+    { id: 18, position: [10.53, 7.43], type: "service" },
+    { id: 19, position: [12.05, 8.55], type: "service" },
+    { id: 20, position: [9.09, 7.51], type: "service" },
+    { id: 21, position: [9.1, 7.53], type: "service" },
+  ]
 
   const getAssetIcon = (type: string) => {
     switch (type) {
+      case "feeder":
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center;color:#facc15">⚡</span>'
+        )
+      case "substation":
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏭</span>'
+        )
       case "transformer":
-        return assetIcon('<span style="font-size:18px;line-height:1">🔌</span>')
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🔌</span>'
+        )
       case "service":
-        return assetIcon('<span style="font-size:18px;line-height:1">🏢</span>')
-      default:
-        return assetIcon('<span style="font-size:18px;line-height:1">📍</span>')
+        return assetIcon(
+          '<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏢</span>'
+        )
     }
   }
 
-  const stateOptions = ["All States", "Kaduna", "Kebbi", "Sokoto"]
-  const salesRepOptions = [
-    { id: null as number | null, name: "All Sales Reps" },
-    ...Array.from(
-      new Map(
-        mapCustomers
-          .filter((c: Customer) => typeof c.salesRepUserId === "number" && c.salesRepUserId! > 0)
-          .map((c: Customer) => [c.salesRepUserId, { id: c.salesRepUserId, name: c.salesRepName }])
-      ).values()
-    ),
-  ]
-  const transformerOptions = [
-    "All Transformers",
-    ...Array.from(
-      new Set(
-        mapAssets
-          .filter((a: Asset) => {
-            const t = String(a.type).toLowerCase()
-            return t === "transformer" || t === "substation"
-          })
-          .map((a: Asset) => a.name)
-      )
-    ).sort(),
-  ]
+  const stateOptions = ["All States", ...Array.from(new Set(customers.map((c) => c.state))).sort()]
+  const feederOptions = ["All Feeders", ...Array.from(new Set(customers.map((c) => c.feeder))).sort()]
 
   const dot = (color: string) =>
     LRef.current!.divIcon({
@@ -138,31 +161,17 @@ const MapViewTab: React.FC = () => {
     assetsGroupRef.current?.clearLayers()
 
     if (customersLayerEnabled) {
-      const filtered = (mapCustomers as Customer[]).filter((cust) => {
-        const stateOk =
-          selectedState === "All States" ||
-          normalize(cust.state).includes(normalize(selectedState))
-        const statusLabel = statusToLabel(cust.status)
-        const statusOk =
-          selectedPaymentStatus === "All Status" ||
-          statusLabel === selectedPaymentStatus
-        const salesRepOk =
-          selectedSalesRepName === "All Sales Reps" ||
-          (selectedSalesRepId != null
-            ? cust.salesRepUserId === selectedSalesRepId
-            : normalize(cust.salesRepName) === normalize(selectedSalesRepName))
-
-        return stateOk && statusOk && salesRepOk
+      const filtered = customers.filter((cust) => {
+        const stateOk = selectedState === "All States" || cust.state === selectedState
+        const feederOk = selectedFeeder === "All Feeders" || cust.feeder === selectedFeeder
+        const statusOk = selectedPaymentStatus === "All Status" || cust.status === selectedPaymentStatus
+        return stateOk && feederOk && statusOk
       })
 
       filtered.forEach((c) => {
-        if (typeof c.latitude !== "number" || typeof c.longitude !== "number") return
-        const label = statusToLabel(c.status)
-        const icon = getCustomerIcon(label)
-        const marker = LRef.current
-          .marker([c.latitude as number, c.longitude as number], { icon })
-          .bindPopup(
-            `<div class="space-y-1">
+        const icon = getCustomerIcon(c.status)
+        LRef.current.marker(c.position, { icon }).bindPopup(
+          `<div class="space-y-1">
               <div class="font-semibold">${c.fullName}</div>
               <div class="text-xs">Acct: ${c.accountNumber}</div>
               <div class="text-xs">Status: ${label}</div>
@@ -171,7 +180,7 @@ const MapViewTab: React.FC = () => {
               <div class="text-xs">DSS: ${c.distributionSubstationCode}</div>
               <div class="text-xs">Service Center: ${c.serviceCenterName}</div>
             </div>`
-          )
+        )
         marker.addTo(customersGroupRef.current!)
         marker.on("mouseover", () => marker.openPopup())
         marker.on("mouseout", () => marker.closePopup())
@@ -179,36 +188,14 @@ const MapViewTab: React.FC = () => {
     }
 
     if (assetsLayerEnabled) {
-      const allowedTypes = new Set(["service", "servicecenter", "transformer", "substation"])
-      const filteredAssets = (mapAssets as Asset[]).filter((a) => {
-        if (typeof a.latitude !== "number" || typeof a.longitude !== "number") return false
-        const typeLower = normalize(a.type)
-        if (!allowedTypes.has(typeLower)) return false
-        const normalizedType =
-          typeLower === "substation"
-            ? "transformer"
-            : typeLower === "servicecenter" || typeLower === "service center"
-            ? "service"
-            : typeLower
-        const transformerOk =
-          selectedTransformerName === "All Transformers" ||
-          (normalizedType === "transformer" &&
-            normalize(a.name) === normalize(selectedTransformerName))
-        return transformerOk
-      })
-      filteredAssets.forEach((a) => {
-        const typeLower = normalize(a.type)
-        const normalizedType =
-          typeLower === "substation"
-            ? "transformer"
-            : typeLower === "servicecenter" || typeLower === "service center"
-            ? "service"
-            : typeLower
-        const icon = getAssetIcon(normalizedType as string)
+      assets.forEach((a) => {
+        const icon = getAssetIcon(a.type)
         LRef.current
-          .marker([a.latitude as number, a.longitude as number], { icon })
+          .marker(a.position, { icon })
           .bindPopup(
-            `<div class="space-y-1"><div class="font-semibold capitalize">${normalizedType}</div><div class="text-xs">${a.name}</div><div class="text-xs">Feeder: ${a.feederName ?? "-"}</div><div class="text-xs">Area Office: ${a.areaOfficeName ?? "-"}</div></div>`
+            `<div class="space-y-1"><div class="font-semibold capitalize">${
+              a.type
+            }</div><div class="text-xs">Lat: ${a.position[0].toFixed(2)}, Lng: ${a.position[1].toFixed(2)}</div></div>`
           )
           .addTo(assetsGroupRef.current!)
       })
@@ -265,8 +252,7 @@ const MapViewTab: React.FC = () => {
     const body = {
       state: stateValue,
       feederId: null,
-      paymentStatus:
-        selectedPaymentStatus === "All Status" ? null : paymentStatusMap[selectedPaymentStatus] ?? null,
+      paymentStatus: selectedPaymentStatus === "All Status" ? null : paymentStatusMap[selectedPaymentStatus] ?? null,
       salesRepUserId: salesRepValue,
       includeCustomers: customersLayerEnabled,
       includeAssets: assetsLayerEnabled,
@@ -337,7 +323,7 @@ const MapViewTab: React.FC = () => {
                     </svg>
                   </div>
                   {stateDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
+                    <div className="modal-style absolute left-0 top-[50px] z-10 max-h-48 w-full overflow-y-auto rounded-lg border border-[#FFFFFF1A] shadow-lg">
                       {stateOptions.map((option) => (
                         <div
                           key={option}
@@ -386,7 +372,7 @@ const MapViewTab: React.FC = () => {
                     </svg>
                   </div>
                   {salesRepDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
+                    <div className="modal-style absolute left-0 top-[50px] z-10 max-h-48 w-full overflow-y-auto rounded-lg border border-[#FFFFFF1A] shadow-lg">
                       {salesRepOptions.map((opt) => (
                         <div
                           key={opt.id ?? "all"}
@@ -423,7 +409,9 @@ const MapViewTab: React.FC = () => {
                   <div className="flex h-[46px] items-center justify-between">
                     <span className="text-sm">{selectedTransformerName}</span>
                     <svg
-                      className={`size-4 transition-transform ${transformerDropdownOpen ? "rotate-180" : ""} text-black`}
+                      className={`size-4 transition-transform ${
+                        transformerDropdownOpen ? "rotate-180" : ""
+                      } text-black`}
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -436,7 +424,7 @@ const MapViewTab: React.FC = () => {
                     </svg>
                   </div>
                   {transformerDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
+                    <div className="modal-style absolute left-0 top-[50px] z-10 max-h-48 w-full overflow-y-auto rounded-lg border border-[#FFFFFF1A] shadow-lg">
                       {transformerOptions.map((name) => (
                         <div
                           key={name}
@@ -472,7 +460,9 @@ const MapViewTab: React.FC = () => {
                   <div className="flex h-[46px] items-center justify-between">
                     <span className="text-sm">{selectedPaymentStatus}</span>
                     <svg
-                      className={`size-4 transition-transform ${paymentStatusDropdownOpen ? "rotate-180" : ""} text-black`}
+                      className={`size-4 transition-transform ${
+                        paymentStatusDropdownOpen ? "rotate-180" : ""
+                      } text-black`}
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -485,7 +475,7 @@ const MapViewTab: React.FC = () => {
                     </svg>
                   </div>
                   {paymentStatusDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
+                    <div className="modal-style absolute left-0 top-[50px] z-10 max-h-48 w-full overflow-y-auto rounded-lg border border-[#FFFFFF1A] shadow-lg">
                       {paymentStatusOptions.map((option) => (
                         <div
                           key={option}
@@ -566,9 +556,22 @@ const MapViewTab: React.FC = () => {
               <div>
                 <h4 className="mb-2 text-sm font-semibold">Customers</h4>
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-green-500"></span><span>Paid</span></div>
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-red-500"></span><span>Unpaid</span></div>
-                  <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-amber-500"></span><span>Partial</span></div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-green-500"></span>
+                    <span>Paid</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-red-500"></span>
+                    <span>Unpaid</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-amber-500"></span>
+                    <span>Partial</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-gray-500"></span>
+                    <span>Unknown</span>
+                  </div>
                 </div>
               </div>
 
@@ -576,16 +579,23 @@ const MapViewTab: React.FC = () => {
                 <h4 className="mb-2 text-sm font-semibold">Assets</h4>
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center">🔌</span>
+                    <span className="inline-flex h-4 w-4 items-center justify-center text-yellow-400">⚡</span>
+                    <span>Feeder</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-4 w-4 items-center justify-center">🏭</span>
+                    <span>Substation</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex size-4 items-center justify-center">🔌</span>
                     <span>Transformer</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center">🏢</span>
+                    <span className="inline-flex size-4 items-center justify-center">🏢</span>
                     <span>Service Center</span>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>

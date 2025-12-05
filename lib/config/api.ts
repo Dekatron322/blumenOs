@@ -23,6 +23,19 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: "/identity/auth/change-password",
   },
 
+  AGENTS: {
+    GET: "/agents",
+    GET_BY_ID: "/agents/{id}",
+    ADD: "/agents/with-user",
+    ADD_EXISTING_USER: "/agents",
+    CHANGE_REQUEST: "/agents/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/agents/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/agents/change-requests",
+    CHANGE_REQUEST_DETAILS: "/agents/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/agents/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/agents/change-requests/{publicId}/decline",
+  },
+
   EMPLOYEE: {
     EMPLOYEE: "/identity/users",
     INVITE: "/identity/users/invite",
@@ -43,6 +56,12 @@ export const API_ENDPOINTS = {
 
   ROLES: {
     GET: "/roles-management/roles",
+    GET_BY_ID: "/roles-management/roles/{id}",
+    UPDATE_ROLE: "/roles-management/roles/{id}",
+    CREATE_ROLE: "/roles-management/roles",
+    DELETE_ROLE: "/roles-management/roles/{id}",
+    PRIVILEGES: "/roles-management/privileges",
+    MANAGE_PERMISSIONS: "/roles-management/roles/{id}/permissions",
   },
 
   AREA_OFFICE: {
@@ -135,7 +154,6 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/customers/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
-    MAP: "/customers/map",
   },
 
   POSTPAID_BILLING: {
@@ -144,6 +162,7 @@ export const API_ENDPOINTS = {
     FINALIZE: "/billing/postpaid/finalize-period",
     FINALIZE_BY_AREA_OFFICE_ID: "/billing/postpaid/area-offices/{areaOfficeId}/finalize",
     BILLING_JOBS: "/billing/postpaid/jobs",
+    GET_BY_REFERENCE: "/billing/postpaid/public/{reference}",
     BILLING_JOBS_BY_ID: "/billing/postpaid/jobs/{id}",
     ADD_BILLING_JOB: "/billing/postpaid/jobs",
     CHANGE_REQUEST: "/billing/postpaid/{id}/change-requests",
@@ -154,10 +173,75 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/decline",
   },
 
+  METER_READINGS: {
+    GET: "/billing/postpaid/meter-readings",
+    GET_BY_ID: "/billing/postpaid/meter-readings/{id}",
+    ADD: "/billing/postpaid/meter-readings",
+  },
+
+  FEEDER_ENERGY_CAP: {
+    GET: "/billing/postpaid/feeder-energy-caps",
+    GET_BY_ID: "/billing/postpaid/feeder-energy-caps/{id}",
+    ADD: "/billing/postpaid/feeder-energy-caps/apply-all",
+  },
+
   ANALYTICS: {
     ASSET_MANAGEMENT: "/assets/reports/summary",
     CUSTOMER: "/customers/reports/summary",
     POSTPAID_BILLING: "/billing/postpaid/summary",
+    PAYMENT_SUMMARY: "/payments/reports/summary",
+    OUTAGE_SUMMARY: "/outages/report/summary",
+    MAINTENANCE_SUMMARY: "/maintenance/report/summary",
+    VENDOR_SUMMARY: "/vendors/reports/summary",
+  },
+
+  OUTAGE_MANAGEMENT: {
+    GET: "/outages",
+    ADD: "/outages",
+    GET_BY_ID: "/outages/{id}",
+    UPDATE: "/outages/{id}",
+  },
+
+  MAINTENANCE: {
+    GET: "/maintenance",
+    ADD: "/maintenance",
+    GET_BY_ID: "/maintenance/{id}",
+    UPDATE: "/maintenance/{id}",
+  },
+
+  PAYMENTS: {
+    GET: "/payments",
+    GET_BY_ID: "/payments/{id}",
+    ADD: "/payments",
+    CHANGE_REQUEST: "/payments/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/payments/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/payments/change-requests",
+    CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/decline",
+  },
+
+  PAYMENT_DUNNING: {
+    GET: "/payments/dunning/cases",
+    ADD: "/payments/dunning/cases",
+  },
+
+  VENDORS: {
+    GET: "/vendors",
+    GET_BY_ID: "/vendors/{id}",
+    ADD: "/vendors/bulk",
+    GET_VENDOR_WALLET: "/vendors/{id}/wallet",
+    TOP_UP: "/vendors/{id}/wallet/top-up",
+    SUSPEND: "/vendors/{id}/suspend",
+    UPDATE_COMMISSION: "/vendors/{id}/commission",
+    GENERATE_API_KEY: "/vendors/{id}/api-keys/rotate",
+    CHANGE_REQUEST: "/vendors/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/vendors/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/vendors/change-requests",
+    CHANGE_REQUEST_DETAILS: "/vendors/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/decline",
+    VENDOR_PAYMENT: "/vendors/{id}/payments",
   },
 }
 

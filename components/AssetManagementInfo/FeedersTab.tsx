@@ -208,11 +208,11 @@ const LoadingSkeleton = () => {
       <div className="flex items-center justify-between border-t py-3">
         <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
+            <div key={i} className="size-8 rounded bg-gray-200"></div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
         </div>
       </div>
     </div>
@@ -444,15 +444,15 @@ const FeedersTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">FD-{feeder.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.kaedcoFeederCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.feederVoltage} KV</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.kaedcoFeederCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.feederVoltage ?? "-"} KV</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder.injectionSubstation.injectionSubstationCode}
+                        {feeder?.injectionSubstation?.injectionSubstationCode || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder.htPole?.htPoleNumber || "N/A"}
+                        {feeder.htPole?.htPoleNumber || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div

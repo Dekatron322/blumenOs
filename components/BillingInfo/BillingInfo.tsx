@@ -5,6 +5,8 @@ import BillingCycles from "./BillingCycles"
 import TariffManagement from "./TariffManagement"
 import RecentBills from "./RecentBills"
 import Exceptions from "./Exceptions"
+import MeterReadings from "./MeterReadings"
+import FeederEnergyCaps from "./FeederEnergyCaps"
 
 const MeteringInfo = () => {
   const [activeTab, setActiveTab] = useState("BillingCycles")
@@ -14,10 +16,10 @@ const MeteringInfo = () => {
     switch (activeTab) {
       case "BillingCycles":
         return <BillingCycles />
-      case "TariffManagement":
-        return <TariffManagement />
-      case "Exceptions":
-        return <Exceptions />
+      case "MeterReadings":
+        return <MeterReadings />
+      case "FeederEnergyCaps":
+        return <FeederEnergyCaps />
       case "RecentBills":
         return <RecentBills />
       default:

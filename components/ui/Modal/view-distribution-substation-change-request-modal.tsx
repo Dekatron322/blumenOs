@@ -237,7 +237,7 @@ const ViewDistributionSubstationChangeRequestModal: React.FC<ViewDistributionSub
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Distribution Substation Change Request Details</h2>
+          <h2 className="text-xl font-bold text-gray-900">Distribution Station Change Request Details</h2>
           <button
             onClick={onRequestClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"

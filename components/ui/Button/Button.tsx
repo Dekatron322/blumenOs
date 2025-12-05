@@ -9,6 +9,7 @@ type ButtonVariant =
   | "secondary"
   | "outline"
   | "ghost"
+  | "success"
   | "danger"
   | "outlineDanger"
   | "dangerSecondary"
@@ -50,6 +51,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     black: "bg-[#131319] text-[#ffffff] hover:bg-[#000000] focus:ring-[#131319]",
     secondary: "bg-[#E6F0FF] text-[#003F9F] hover:bg-[#C4DBFF] focus:ring-[#003F9F]",
     outline: "border border-[#0A0A0A] text-[#0A0A0A] hover:bg-[#F3f4f6] focus:ring-[#0A0A0A]",
+    success: "bg-[#16A34A] text-white hover:bg-[#15803D] focus:ring-[#16A34A]",
     outlineDanger: "border border-[#D82E2E] text-[#D82E2E] hover:bg-[#FDF3F3] focus:ring-[#D82E2E]",
     ghost: "text-[#003F9F] hover:bg-[#E6F0FF] focus:ring-[#003F9F]",
     danger: "bg-[#D82E2E] text-white hover:bg-[#F14848] focus:ring-[#F14848]",
@@ -77,7 +79,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
       {iconPosition === "start" && (
         <span className="inline-flex items-center">
           {loading ? (
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
@@ -90,7 +92,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
       {iconPosition === "end" && (
         <span className=" inline-flex items-center">
           {loading ? (
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>

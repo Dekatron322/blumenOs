@@ -1,4 +1,6 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import {
@@ -17,6 +19,9 @@ import {
   TargetIcon,
   UserIcon,
 } from "components/Icons/Icons"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchVendors } from "lib/redux/vendorSlice"
+import { ButtonModule } from "components/ui/Button/Button"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -49,104 +54,57 @@ interface VendorManagementProps {
 }
 
 const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) => {
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { vendors: apiVendors, loading, error } = useAppSelector((state) => state.vendors)
   const [searchText, setSearchText] = useState("")
 
   const handleCancelSearch = () => {
     setSearchText("")
   }
 
-  const vendors: Vendor[] = [
-    {
-      id: 1,
-      name: "Buy Power",
-      status: "active",
-      phone: "+234801234567",
-      location: "Lagos Island",
-      dailySales: "₦12,500",
-      transactionsToday: 45,
-      stockBalance: "₦8,500",
-      commissionRate: "2.5%",
-      performance: "Excellent",
-      businessType: "Energy Retailer",
-      totalRevenue: "₦2.4M",
-      contactPerson: "Mr. Johnson Ade",
-    },
-    {
-      id: 2,
-      name: "Blumentech",
-      status: "active",
-      phone: "+234802345678",
-      location: "Ikeja",
-      dailySales: "₦9,800",
-      transactionsToday: 38,
-      stockBalance: "₦12,000",
-      commissionRate: "2.5%",
-      performance: "Good",
-      businessType: "Tech Solutions",
-      totalRevenue: "₦1.8M",
-      contactPerson: "Ms. Sarah Blume",
-    },
-    {
-      id: 3,
-      name: "PowerVend",
-      status: "low stock",
-      phone: "+234803456789",
-      location: "Surulere",
-      dailySales: "₦7,500",
-      transactionsToday: 28,
-      stockBalance: "₦4,500",
-      commissionRate: "2%",
-      performance: "Good",
-      businessType: "Vending Services",
-      totalRevenue: "₦1.2M",
-      contactPerson: "Mr. James Okafor",
-    },
-    {
-      id: 4,
-      name: "EnergyPlus",
-      status: "active",
-      phone: "+234804567890",
-      location: "Victoria Island",
-      dailySales: "₦15,200",
-      transactionsToday: 52,
-      stockBalance: "₦15,000",
-      commissionRate: "3%",
-      performance: "Excellent",
-      businessType: "Energy Distribution",
-      totalRevenue: "₦3.1M",
-      contactPerson: "Dr. Fatima Bello",
-    },
-    {
-      id: 5,
-      name: "TechVendors",
-      status: "inactive",
-      phone: "+234805678901",
-      location: "Yaba",
-      dailySales: "₦0",
-      transactionsToday: 0,
-      stockBalance: "₦2,000",
-      commissionRate: "2%",
-      performance: "Average",
-      businessType: "Technology Retail",
-      totalRevenue: "₦850K",
-      contactPerson: "Mr. Chinedu Nwosu",
-    },
-    {
-      id: 6,
-      name: "SmartEnergy",
-      status: "active",
-      phone: "+234806789012",
-      location: "Lekki",
-      dailySales: "₦18,300",
-      transactionsToday: 61,
-      stockBalance: "₦20,000",
-      commissionRate: "3.5%",
-      performance: "Excellent",
-      businessType: "Smart Meter Solutions",
-      totalRevenue: "₦4.2M",
-      contactPerson: "Ms. Amina Yusuf",
-    },
-  ]
+  useEffect(() => {
+    dispatch(
+      fetchVendors({
+        pageNumber: 1,
+        pageSize: 50,
+      })
+    )
+  }, [dispatch])
+
+  const mapStatus = (status: string, isSuspended: boolean): Vendor["status"] => {
+    if (isSuspended) return "inactive"
+    const normalized = status.toLowerCase()
+    if (normalized.includes("inactive")) return "inactive"
+    if (normalized.includes("low")) return "low stock"
+    return "active"
+  }
+
+  const mappedVendors: Vendor[] = apiVendors.map((v) => ({
+    id: v.id,
+    name: v.name,
+    status: mapStatus(v.status, v.isSuspended),
+    phone: v.phoneNumber,
+    location: [v.city, v.state].filter(Boolean).join(", "),
+    dailySales: "₦0",
+    transactionsToday: 0,
+    stockBalance: "₦0",
+    commissionRate: `${v.commission}%`,
+    performance: "Good",
+    businessType: "",
+    totalRevenue: "₦0",
+    contactPerson: v.employeeName,
+  }))
+
+  const vendors = mappedVendors.filter((vendor) => {
+    if (!searchText) return true
+    const q = searchText.toLowerCase()
+    return (
+      vendor.name.toLowerCase().includes(q) ||
+      vendor.contactPerson.toLowerCase().includes(q) ||
+      vendor.location.toLowerCase().includes(q)
+    )
+  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -179,7 +137,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-6"
+      className="flex flex-col gap-6 md:flex-row"
     >
       {/* Left Column - Vendor Directory */}
       <div className="flex-1">
@@ -196,9 +154,12 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
 
           {/* Vendors List */}
           <div className="space-y-4">
+            {loading && vendors.length === 0 && <p className="text-sm text-gray-500">Loading vendors...</p>}
+            {!loading && error && vendors.length === 0 && <p className="text-sm text-red-600">{error}</p>}
+            {!loading && !error && vendors.length === 0 && <p className="text-sm text-gray-500">No vendors found.</p>}
             {vendors.map((vendor) => (
               <div key={vendor.id} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 hover:shadow-sm">
-                <div className="flex w-full items-start justify-between gap-3">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
@@ -213,7 +174,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
                       </span>
                     </div>
 
-                    <div className="mt-2 flex items-center gap-3">
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                       <div className="flex items-center gap-1">
                         <PhoneIcon />
                         <p className="mt-1 text-sm text-gray-600">{vendor.phone}</p>
@@ -224,13 +185,13 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
                       </div>
                     </div>
 
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex items-center gap-2 max-sm:hidden">
                       <p className="text-sm text-gray-500">Business Type:</p>
                       <p className="text-sm font-medium text-gray-700">{vendor.businessType}</p>
                     </div>
                   </div>
 
-                  <div className="text-right text-sm">
+                  <div className="w-full text-sm max-sm:flex max-sm:justify-between md:text-right">
                     <div>
                       <p className="font-semibold text-gray-900">{vendor.dailySales}</p>
                       <p className="text-gray-500">{vendor.transactionsToday} transactions today</p>
@@ -243,44 +204,53 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
                 </div>
 
                 {/* Status Indicators */}
-                <div className="mt-3 flex justify-between gap-4 border-t pt-3 text-sm">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <BillsIcon />
-                      <p className="text-gray-500">Stock Balance:</p>
+                <div className="mt-3 flex flex-col gap-3 border-t pt-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-4 max-sm:hidden sm:flex-1 sm:flex-row sm:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <BillsIcon />
+                        <p className="text-gray-500">Stock Balance:</p>
+                      </div>
+                      <p className={`font-medium ${vendor.status === "low stock" ? "text-red-600" : "text-green-600"}`}>
+                        {vendor.stockBalance}
+                      </p>
                     </div>
-                    <p className={`font-medium ${vendor.status === "low stock" ? "text-red-600" : "text-green-600"}`}>
-                      {vendor.stockBalance}
-                    </p>
-                  </div>
-                  <div>
+                    <div>
+                      <div className="flex gap-2">
+                        <RateIcon />
+                        <div>
+                          <p className="text-gray-500">Commission Rate:</p>
+                          <p className="font-medium text-green-600">{vendor.commissionRate}</p>
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex gap-2">
-                      <RateIcon />
+                      <PerformanceIcon />
                       <div>
-                        <p className="text-gray-500">Commission Rate:</p>
-                        <p className="font-medium text-green-600">{vendor.commissionRate}</p>
+                        <p className="text-gray-500">Performance:</p>
+                        <p
+                          className={`font-medium ${
+                            vendor.performance === "Excellent"
+                              ? "text-green-600"
+                              : vendor.performance === "Good"
+                              ? "text-blue-600"
+                              : vendor.performance === "Average"
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {vendor.performance}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <PerformanceIcon />
-                    <div>
-                      <p className="text-gray-500">Performance:</p>
-                      <p
-                        className={`font-medium ${
-                          vendor.performance === "Excellent"
-                            ? "text-green-600"
-                            : vendor.performance === "Good"
-                            ? "text-blue-600"
-                            : vendor.performance === "Average"
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {vendor.performance}
-                      </p>
-                    </div>
-                  </div>
+                  <ButtonModule
+                    variant="primary"
+                    size="sm"
+                    onClick={() => router.push(`/vendor-management/vendor-detail/${vendor.id}`)}
+                  >
+                    View details
+                  </ButtonModule>
                 </div>
               </div>
             ))}
@@ -304,7 +274,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
               </div>
               <div>
                 <p className="text-gray-500">Total Daily Sales</p>
-                <p className="font-semibold">₦62,800</p>
+                <p className="font-semibold">₦0</p>
               </div>
             </div>
           </div>

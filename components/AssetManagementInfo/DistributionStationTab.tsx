@@ -235,11 +235,11 @@ const LoadingSkeleton = () => {
       <div className="flex items-center justify-between border-t py-3">
         <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 w-8 rounded bg-gray-200"></div>
+            <div key={i} className="size-8 rounded bg-gray-200"></div>
           ))}
-          <div className="h-8 w-8 rounded bg-gray-200"></div>
+          <div className="size-8 rounded bg-gray-200"></div>
         </div>
       </div>
     </div>
@@ -311,8 +311,12 @@ const DistributionStationTab: React.FC = () => {
     }
   }
 
-  const getStatusDisplayText = (status: string) => {
-    return status
+  const getStatusDisplayText = (status: string | null | undefined) => {
+    if (!status) return "Unknown"
+
+    const normalized = String(status).toLowerCase()
+
+    return normalized
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ")
@@ -360,8 +364,8 @@ const DistributionStationTab: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Distribution Substations</p>
-          <p className="text-sm text-gray-600">Monitor and manage distribution substation infrastructure</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Distribution Stations</p>
+          <p className="text-sm text-gray-600">Monitor and manage distribution station infrastructure</p>
         </div>
         <div className="flex gap-4">
           <SearchModule
@@ -480,17 +484,17 @@ const DistributionStationTab: React.FC = () => {
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">DS-{substation.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.dssCode}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.nercCode}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.dssCode || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.nercCode || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         {substation.transformerCapacityInKva.toLocaleString()} kVA
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.feeder.name}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{substation.feeder?.name || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {substation.feeder.injectionSubstation.injectionSubstationCode}
+                        {substation.feeder?.injectionSubstation?.injectionSubstationCode || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {substation.feeder.injectionSubstation.areaOffice.nameOfNewOAreaffice}
+                        {substation.feeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice || "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div

@@ -1,4 +1,3 @@
-// src/lib/redux/store.ts
 import { configureStore } from "@reduxjs/toolkit"
 import authReducer from "./authSlice"
 import employeeReducer from "./employeeSlice"
@@ -14,6 +13,16 @@ import serviceStationReducer from "./serviceStationsSlice"
 import analyticsReducer from "./analyticsSlice"
 import customerReducer from "./customerSlice"
 import postpaidBillingReducer from "./postpaidSlice"
+import meterReadingReducer from "./meterReadingSlice"
+import feederEnergyCapReducer from "./feederEnergyCapSlice"
+import paymentReducer from "./paymentSlice"
+import vendorReducer from "./vendorSlice"
+import agentReducer from "./agentSlice"
+import paymentTypeReducer from "./paymentTypeSlice"
+import paymentDunningReducer from "./paymentDunningSlice"
+import outageReducer from "./outageSlice"
+import maintenanceReducer from "./maintenanceSlice"
+import createCustomerReducer from "./createCustomerSlice"
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +39,16 @@ export const store = configureStore({
     analytics: analyticsReducer,
     customers: customerReducer,
     postpaidBilling: postpaidBillingReducer,
+    meterReadings: meterReadingReducer,
+    feederEnergyCaps: feederEnergyCapReducer,
+    payments: paymentReducer,
+    vendors: vendorReducer,
+    agents: agentReducer,
+    paymentTypes: paymentTypeReducer,
+    paymentDunnings: paymentDunningReducer,
+    outages: outageReducer,
+    maintenances: maintenanceReducer,
+    createCustomer: createCustomerReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

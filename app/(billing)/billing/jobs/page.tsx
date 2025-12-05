@@ -559,7 +559,7 @@ const BillingJobs: React.FC = () => {
                   icon={<PlusIcon />}
                   onClick={() => setIsAddJobModalOpen(true)}
                 >
-                  New Job
+                  Generate Jobs
                 </ButtonModule>
               </motion.div>
             </div>
@@ -710,7 +710,7 @@ const BillingJobs: React.FC = () => {
                                       </div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.areaOfficeName}
+                                      {job.areaOfficeName || "General Bill"}
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                       <motion.div

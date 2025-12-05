@@ -2,8 +2,8 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useEffect, useState } from "react"
-import AddCustomerModal from "components/ui/Modal/add-customer-modal"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   AddCustomerIcon,
@@ -100,183 +100,8 @@ const CategoriesSkeleton = () => {
   )
 }
 
-// Enhanced Skeleton for the table and grid view
-const TableSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex gap-4">
-          <div className="h-10 w-80 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-gray-200"></div>
-                <div>
-                  <div className="h-5 w-32 rounded bg-gray-200"></div>
-                  <div className="mt-1 flex gap-2">
-                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="size-6 rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 w-20 rounded bg-gray-200"></div>
-                  <div className="h-4 w-16 rounded bg-gray-200"></div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
-// List View Skeleton
-const ListSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex gap-4">
-          <div className="h-10 w-80 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* List View Skeleton */}
-      <div className="divide-y">
-        {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-gray-200"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="h-5 w-40 rounded bg-gray-200"></div>
-                    <div className="flex gap-2">
-                      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
-                    ))}
-                  </div>
-                  <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-20 rounded bg-gray-200"></div>
-                  <div className="size-6 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
-// Main Loading Component
-const LoadingState = ({ showCategories = true }) => {
-  return (
-    <div className="flex-3 relative mt-5 flex items-start gap-6">
-      {showCategories ? (
-        <>
-          <TableSkeleton />
-          <CategoriesSkeleton />
-        </>
-      ) : (
-        <div className="w-full">
-          <TableSkeleton />
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function AllTransactions() {
-  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const router = useRouter()
 
   // Redux hooks
   const dispatch = useAppDispatch()
@@ -288,19 +113,13 @@ export default function AllTransactions() {
     dispatch(fetchCustomerAnalytics())
   }, [dispatch])
 
-  const handleAddCustomerSuccess = async () => {
-    setIsAddCustomerModalOpen(false)
-    // Refresh customer analytics after adding customer
-    dispatch(fetchCustomerAnalytics())
-  }
-
   const handleRefreshData = () => {
     dispatch(clearCustomerAnalytics())
     dispatch(fetchCustomerAnalytics())
   }
 
-  const handleOpenAddCustomerModal = () => {
-    setIsAddCustomerModalOpen(true)
+  const handleGoToAddCustomerPage = () => {
+    router.push("/customers/add-customers")
   }
 
   // Format numbers with commas
@@ -330,7 +149,7 @@ export default function AllTransactions() {
                 <ButtonModule
                   variant="outline"
                   size="md"
-                  onClick={handleOpenAddCustomerModal}
+                  onClick={handleGoToAddCustomerPage}
                   icon={<AddCustomerIcon />}
                   iconPosition="start"
                 >
@@ -367,7 +186,6 @@ export default function AllTransactions() {
                   // Loading State
                   <>
                     <SkeletonLoader />
-                    <LoadingState showCategories={true} />
                   </>
                 ) : (
                   // Loaded State
@@ -417,11 +235,6 @@ export default function AllTransactions() {
           </div>
         </div>
       </div>
-      <AddCustomerModal
-        isOpen={isAddCustomerModalOpen}
-        onRequestClose={() => setIsAddCustomerModalOpen(false)}
-        onSuccess={handleAddCustomerSuccess}
-      />
     </section>
   )
 }
