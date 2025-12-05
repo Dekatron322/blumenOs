@@ -74,7 +74,7 @@ export default function StatusMapDashboard() {
                       transition={{ duration: 0.5 }}
                     >
                       {/* Payment Rate Card */}
-                      <motion.div
+                      {/* <motion.div
                         className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                         whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                       >
@@ -96,10 +96,10 @@ export default function StatusMapDashboard() {
                             </p>
                           </div>
                         </div>
-                      </motion.div>
+                      </motion.div> */}
 
                       {/* Total Collections Card */}
-                      <motion.div
+                      {/* <motion.div
                         className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                         whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                       >
@@ -121,10 +121,10 @@ export default function StatusMapDashboard() {
                             </p>
                           </div>
                         </div>
-                      </motion.div>
+                      </motion.div> */}
 
                       {/* Missing Location Card */}
-                      <motion.div
+                      {/* <motion.div
                         className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                         whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                       >
@@ -144,10 +144,10 @@ export default function StatusMapDashboard() {
                             <p className="text-secondary font-medium">{metricsData.missingLocation.label}</p>
                           </div>
                         </div>
-                      </motion.div>
+                      </motion.div> */}
 
                       {/* Network Outages Card */}
-                      <motion.div
+                      {/* <motion.div
                         className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
                         whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                       >
@@ -167,7 +167,7 @@ export default function StatusMapDashboard() {
                             <p className="text-secondary font-medium">{metricsData.networkOutages.label}</p>
                           </div>
                         </div>
-                      </motion.div>
+                      </motion.div> */}
                     </motion.div>
 
                     {/* Status Map Info Component */}

@@ -2,7 +2,6 @@ import React, { useState } from "react"
 import MapViewTab from "./MapViewTab"
 import TableViewTab from "./TableViewTab"
 import TabNavigation from "./TabNavigation"
-import WebhookTestTab from "./WebhookTestTab"
 
 const StatusMapInfo = () => {
   const [activeTab, setActiveTab] = useState("map-view")
@@ -14,8 +13,6 @@ const StatusMapInfo = () => {
         return <MapViewTab />
       case "table-view":
         return <TableViewTab />
-      case "webhook-test":
-        return <WebhookTestTab />
       default:
         return <MapViewTab />
     }

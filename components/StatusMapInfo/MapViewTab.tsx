@@ -2,95 +2,119 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import "leaflet/dist/leaflet.css"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchCustomersMap } from "lib/redux/customerSlice"
+import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 
-const MapViewTab = () => {
+type Customer = {
+  id: number
+  accountNumber: string
+  fullName: string
+  status: number
+  outstanding: number
+  latitude?: number | null
+  longitude?: number | null
+  state?: string | null
+  city?: string | null
+  lga?: string | null
+  feederId?: number | null
+  feederName?: string | null
+  distributionSubstationId?: number | null
+  distributionSubstationCode?: string | null
+  serviceCenterId?: number | null
+  serviceCenterName?: string | null
+  salesRepUserId?: number | null
+  salesRepName?: string | null
+}
+
+type Asset = {
+  type: string
+  id: number
+  name: string
+  latitude?: number | null
+  longitude?: number | null
+  feederId?: number | null
+  feederName?: string | null
+  areaOfficeId?: number | null
+  areaOfficeName?: string | null
+}
+
+const MapViewTab: React.FC = () => {
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false)
-  const [feederDropdownOpen, setFeederDropdownOpen] = useState(false)
   const [paymentStatusDropdownOpen, setPaymentStatusDropdownOpen] = useState(false)
+  const [salesRepDropdownOpen, setSalesRepDropdownOpen] = useState(false)
+  const [transformerDropdownOpen, setTransformerDropdownOpen] = useState(false)
   const [selectedState, setSelectedState] = useState("All States")
-  const [selectedFeeder, setSelectedFeeder] = useState("All Feeders")
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All Status")
+  const [selectedSalesRepName, setSelectedSalesRepName] = useState("All Sales Reps")
+  const [selectedSalesRepId, setSelectedSalesRepId] = useState<number | null>(null)
+  const [selectedTransformerName, setSelectedTransformerName] = useState("All Transformers")
   const [customersLayerEnabled, setCustomersLayerEnabled] = useState(true)
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
+  const [isClient, setIsClient] = useState(false)
 
   const paymentStatusOptions = ["All Status", "Paid", "Partial", "Unpaid"]
 
-  type Customer = {
-    id: number
-    position: [number, number]
-    state: string
-    feeder: string
-    status: "Paid" | "Partial" | "Unpaid" 
-  }
-
-  type Asset = {
-    id: number
-    position: [number, number]
-    type: "feeder" | "substation" | "transformer" | "service"
-  }
+  const dispatch = useAppDispatch()
+  const { mapCustomers, mapAssets } = useAppSelector((s) => s.customers)
 
   const nigeriaCenter: [number, number] = [9.082, 8.6753]
 
-  const customers: Customer[] = [
-    { id: 1, position: [10.52, 7.44], state: "Kaduna", feeder: "Feeder 1", status: "Paid" },
-    { id: 2, position: [10.54, 7.46], state: "Kaduna", feeder: "Feeder 2", status: "Unpaid" },
-    { id: 3, position: [10.50, 7.42], state: "Kaduna", feeder: "Feeder 3", status: "Unpaid" },
-    { id: 4, position: [12.00, 8.52], state: "Kano", feeder: "Feeder 1", status: "Partial" },
-    { id: 5, position: [12.03, 8.55], state: "Kano", feeder: "Feeder 2", status: "Paid" },
-    { id: 6, position: [12.02, 8.50], state: "Kano", feeder: "Feeder 3", status: "Unpaid" },
-    { id: 7, position: [9.07, 7.49], state: "Abuja", feeder: "Feeder 1", status: "Partial" },
-    { id: 8, position: [9.05, 7.52], state: "Abuja", feeder: "Feeder 2", status: "Paid" },
-  ]
+  const statusToLabel = (s: number): "Paid" | "Partial" | "Unpaid" =>
+    s === 1 ? "Paid" : s === 2 ? "Partial" : "Unpaid"
 
-  const assets: Asset[] = [
-    { id: 1, position: [10.52, 7.44], type: "feeder" },
-    { id: 2, position: [10.54, 7.46], type: "feeder" },
-    { id: 3, position: [10.50, 7.42], type: "feeder" },
-    { id: 4, position: [12.00, 8.52], type: "feeder" },
-    { id: 5, position: [12.03, 8.55], type: "feeder" },
-    { id: 6, position: [9.07, 7.49], type: "feeder" },
-    { id: 7, position: [9.05, 7.52], type: "feeder" },
+  // helper to normalize strings for case-insensitive comparisons
+  const normalize = (v: any) => String(v ?? "").trim().toLowerCase()
 
-    { id: 8, position: [10.55, 7.40], type: "transformer" },
-    { id: 9, position: [10.48, 7.45], type: "transformer" },
-    { id: 10, position: [12.02, 8.50], type: "transformer" },
-    { id: 11, position: [12.01, 8.56], type: "transformer" },
-    { id: 12, position: [9.06, 7.47], type: "transformer" },
+  // Remove white box by using inline styles and empty className for divIcon
+  const assetIcon = (html: string) =>
+    LRef.current!.divIcon({
+      html: `<div style="background:transparent;box-shadow:none;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center">${html}</div>`,
+      className: "",
+      iconSize: [24, 24],
+    })
 
-    { id: 13, position: [10.56, 7.47], type: "substation" },
-    { id: 14, position: [10.51, 7.38], type: "substation" },
-    { id: 15, position: [11.98, 8.48], type: "substation" },
-    { id: 16, position: [12.04, 8.53], type: "substation" },
-    { id: 17, position: [9.08, 7.52], type: "substation" },
-
-    { id: 18, position: [10.53, 7.43], type: "service" },
-    { id: 19, position: [12.05, 8.55], type: "service" },
-    { id: 20, position: [9.09, 7.51], type: "service" },
-    { id: 21, position: [9.10, 7.53], type: "service" },
-  ]
-
-  const getAssetIcon = (type: Asset["type"]) => {
+  const getAssetIcon = (type: string) => {
     switch (type) {
-      case "feeder":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center;color:#facc15">⚡</span>')
-      case "substation":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏭</span>')
       case "transformer":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🔌</span>')
+        return assetIcon('<span style="font-size:18px;line-height:1">🔌</span>')
       case "service":
-        return assetIcon('<span style="display:inline-flex;width:60px;height:60px;align-items:center;justify-content:center">🏢</span>')
+        return assetIcon('<span style="font-size:18px;line-height:1">🏢</span>')
+      default:
+        return assetIcon('<span style="font-size:18px;line-height:1">📍</span>')
     }
   }
 
-        
-  const stateOptions = ["All States", ...Array.from(new Set(customers.map((c) => c.state))).sort()]
-  const feederOptions = ["All Feeders", ...Array.from(new Set(customers.map((c) => c.feeder))).sort()]
+  const stateOptions = ["All States", "Kaduna", "Kebbi", "Sokoto"]
+  const salesRepOptions = [
+    { id: null as number | null, name: "All Sales Reps" },
+    ...Array.from(
+      new Map(
+        mapCustomers
+          .filter((c: Customer) => typeof c.salesRepUserId === "number" && c.salesRepUserId! > 0)
+          .map((c: Customer) => [c.salesRepUserId, { id: c.salesRepUserId, name: c.salesRepName }])
+      ).values()
+    ),
+  ]
+  const transformerOptions = [
+    "All Transformers",
+    ...Array.from(
+      new Set(
+        mapAssets
+          .filter((a: Asset) => {
+            const t = String(a.type).toLowerCase()
+            return t === "transformer" || t === "substation"
+          })
+          .map((a: Asset) => a.name)
+      )
+    ).sort(),
+  ]
 
   const dot = (color: string) =>
     LRef.current!.divIcon({
-      html: `<span style="background:${color};width:16px;height:16px;border-radius:50%;display:block;border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,.4)"></span>`,
+      html: `<span style="background:${color};width:12px;height:12px;border-radius:50%;display:block;box-shadow:none"></span>`,
       className: "",
-      iconSize: [16, 16],
+      iconSize: [12, 12],
     })
 
   const getCustomerIcon = (status: "Paid" | "Unpaid" | "Partial") => {
@@ -98,19 +122,15 @@ const MapViewTab = () => {
       Paid: "#22c55e",
       Unpaid: "#ef4444",
       Partial: "#f59e0b",
-      
     }
     return dot(colorMap[status])
   }
 
-  const assetIcon = (html: string) => LRef.current?.divIcon({ html, className: "", iconSize: [60, 60] })
-
   const mapDivRef = useRef<HTMLDivElement>(null)
-const mapRef = useRef<any>(null)
-const customersGroupRef = useRef<any>(null)
-const assetsGroupRef = useRef<any>(null)
-const LRef = useRef<any>(null)
-
+  const mapRef = useRef<any>(null)
+  const customersGroupRef = useRef<any>(null)
+  const assetsGroupRef = useRef<any>(null)
+  const LRef = useRef<any>(null)
 
   const renderLayers = () => {
     if (!LRef.current || !mapRef.current) return
@@ -118,30 +138,77 @@ const LRef = useRef<any>(null)
     assetsGroupRef.current?.clearLayers()
 
     if (customersLayerEnabled) {
+      const filtered = (mapCustomers as Customer[]).filter((cust) => {
+        const stateOk =
+          selectedState === "All States" ||
+          normalize(cust.state).includes(normalize(selectedState))
+        const statusLabel = statusToLabel(cust.status)
+        const statusOk =
+          selectedPaymentStatus === "All Status" ||
+          statusLabel === selectedPaymentStatus
+        const salesRepOk =
+          selectedSalesRepName === "All Sales Reps" ||
+          (selectedSalesRepId != null
+            ? cust.salesRepUserId === selectedSalesRepId
+            : normalize(cust.salesRepName) === normalize(selectedSalesRepName))
 
-      const filtered = customers.filter((cust) => {
-        const stateOk = selectedState === "All States" || cust.state === selectedState
-        const feederOk = selectedFeeder === "All Feeders" || cust.feeder === selectedFeeder
-        const statusOk = selectedPaymentStatus === "All Status" || cust.status === selectedPaymentStatus
-        return stateOk && feederOk && statusOk
+        return stateOk && statusOk && salesRepOk
       })
 
       filtered.forEach((c) => {
-        const icon = getCustomerIcon(c.status)
-        LRef.current.marker(c.position, { icon })
+        if (typeof c.latitude !== "number" || typeof c.longitude !== "number") return
+        const label = statusToLabel(c.status)
+        const icon = getCustomerIcon(label)
+        const marker = LRef.current
+          .marker([c.latitude as number, c.longitude as number], { icon })
           .bindPopup(
-            `<div class="space-y-1"><div class="font-semibold">${c.state}</div><div class="text-xs">${c.feeder}</div><div class="text-xs">Status: ${c.status}</div></div>`
+            `<div class="space-y-1">
+              <div class="font-semibold">${c.fullName}</div>
+              <div class="text-xs">Acct: ${c.accountNumber}</div>
+              <div class="text-xs">Status: ${label}</div>
+              <div class="text-xs">Outstanding: ${c.outstanding}</div>
+              <div class="text-xs">Feeder: ${c.feederName}</div>
+              <div class="text-xs">DSS: ${c.distributionSubstationCode}</div>
+              <div class="text-xs">Service Center: ${c.serviceCenterName}</div>
+            </div>`
           )
-          .addTo(customersGroupRef.current!)
+        marker.addTo(customersGroupRef.current!)
+        marker.on("mouseover", () => marker.openPopup())
+        marker.on("mouseout", () => marker.closePopup())
       })
     }
 
     if (assetsLayerEnabled) {
-      assets.forEach((a) => {
-        const icon = getAssetIcon(a.type)
-        LRef.current.marker(a.position, { icon })
+      const allowedTypes = new Set(["service", "servicecenter", "transformer", "substation"])
+      const filteredAssets = (mapAssets as Asset[]).filter((a) => {
+        if (typeof a.latitude !== "number" || typeof a.longitude !== "number") return false
+        const typeLower = normalize(a.type)
+        if (!allowedTypes.has(typeLower)) return false
+        const normalizedType =
+          typeLower === "substation"
+            ? "transformer"
+            : typeLower === "servicecenter" || typeLower === "service center"
+            ? "service"
+            : typeLower
+        const transformerOk =
+          selectedTransformerName === "All Transformers" ||
+          (normalizedType === "transformer" &&
+            normalize(a.name) === normalize(selectedTransformerName))
+        return transformerOk
+      })
+      filteredAssets.forEach((a) => {
+        const typeLower = normalize(a.type)
+        const normalizedType =
+          typeLower === "substation"
+            ? "transformer"
+            : typeLower === "servicecenter" || typeLower === "service center"
+            ? "service"
+            : typeLower
+        const icon = getAssetIcon(normalizedType as string)
+        LRef.current
+          .marker([a.latitude as number, a.longitude as number], { icon })
           .bindPopup(
-            `<div class="space-y-1"><div class="font-semibold capitalize">${a.type}</div><div class="text-xs">Lat: ${a.position[0].toFixed(2)}, Lng: ${a.position[1].toFixed(2)}</div></div>`
+            `<div class="space-y-1"><div class="font-semibold capitalize">${normalizedType}</div><div class="text-xs">${a.name}</div><div class="text-xs">Feeder: ${a.feederName ?? "-"}</div><div class="text-xs">Area Office: ${a.areaOfficeName ?? "-"}</div></div>`
           )
           .addTo(assetsGroupRef.current!)
       })
@@ -150,6 +217,7 @@ const LRef = useRef<any>(null)
 
   useEffect(() => {
     let mounted = true
+    setIsClient(true)
     const init = async () => {
       if (!mapRef.current && mapDivRef.current) {
         const Leaflet = await import("leaflet")
@@ -164,27 +232,69 @@ const LRef = useRef<any>(null)
         customersGroupRef.current = L.layerGroup().addTo(map)
         assetsGroupRef.current = L.layerGroup().addTo(map)
         renderLayers()
+        dispatch(fetchServiceStations({ pageNumber: 1, pageSize: 500 }))
       }
     }
     init()
     return () => {
       mounted = false
-      mapRef.current?.remove()
+      const map = mapRef.current
+      if (map && typeof map.remove === "function") {
+        try {
+          map.remove()
+        } catch (_) {}
+      }
       mapRef.current = null
       customersGroupRef.current = null
       assetsGroupRef.current = null
       LRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
+    const paymentStatusMap: Record<string, number> = {
+      Paid: 1,
+      Partial: 2,
+      Unpaid: 3,
+    }
+    // for the request body: send empty string for All States, otherwise the exact selectedState
+    // (server may accept lowercase — if it requires lowercase change to normalize(selectedState))
+    const stateValue = selectedState === "All States" ? "" : selectedState
+    const salesRepValue = selectedSalesRepName === "All Sales Reps" ? null : selectedSalesRepId
+    const body = {
+      state: stateValue,
+      feederId: null,
+      paymentStatus:
+        selectedPaymentStatus === "All Status" ? null : paymentStatusMap[selectedPaymentStatus] ?? null,
+      salesRepUserId: salesRepValue,
+      includeCustomers: customersLayerEnabled,
+      includeAssets: assetsLayerEnabled,
+    } as any
+    dispatch(fetchCustomersMap(body))
     renderLayers()
-  }, [selectedState, selectedFeeder, selectedPaymentStatus, customersLayerEnabled, assetsLayerEnabled])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedState,
+    selectedPaymentStatus,
+    selectedSalesRepName,
+    selectedSalesRepId,
+    selectedTransformerName,
+    customersLayerEnabled,
+    assetsLayerEnabled,
+  ])
+
+  useEffect(() => {
+    renderLayers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapCustomers, mapAssets])
 
   const handleReset = () => {
     setSelectedState("All States")
-    setSelectedFeeder("All Feeders")
     setSelectedPaymentStatus("All Status")
+    setSelectedSalesRepName("All Sales Reps")
+    setSelectedSalesRepId(null)
+    setSelectedTransformerName("All Transformers")
   }
 
   return (
@@ -208,7 +318,6 @@ const LRef = useRef<any>(null)
                   className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
                     setStateDropdownOpen(!stateDropdownOpen)
-                    setFeederDropdownOpen(false)
                     setPaymentStatusDropdownOpen(false)
                   }}
                 >
@@ -228,7 +337,7 @@ const LRef = useRef<any>(null)
                     </svg>
                   </div>
                   {stateDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg">
+                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
                       {stateOptions.map((option) => (
                         <div
                           key={option}
@@ -250,20 +359,21 @@ const LRef = useRef<any>(null)
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Feeder</label>
+              <label className="mb-2 block text-sm font-medium">Sales Rep</label>
               <div className="mt-3">
                 <div
                   className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
                   onClick={() => {
-                    setFeederDropdownOpen(!feederDropdownOpen)
+                    setSalesRepDropdownOpen(!salesRepDropdownOpen)
                     setStateDropdownOpen(false)
                     setPaymentStatusDropdownOpen(false)
+                    setTransformerDropdownOpen(false)
                   }}
                 >
                   <div className="flex h-[46px] items-center justify-between">
-                    <span className="text-sm">{selectedFeeder}</span>
+                    <span className="text-sm">{selectedSalesRepName}</span>
                     <svg
-                      className={`size-4 transition-transform ${feederDropdownOpen ? "rotate-180" : ""} text-black`}
+                      className={`size-4 transition-transform ${salesRepDropdownOpen ? "rotate-180" : ""} text-black`}
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -275,20 +385,70 @@ const LRef = useRef<any>(null)
                       />
                     </svg>
                   </div>
-                  {feederDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg">
-                      {feederOptions.map((option) => (
+                  {salesRepDropdownOpen && (
+                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
+                      {salesRepOptions.map((opt) => (
                         <div
-                          key={option}
+                          key={opt.id ?? "all"}
                           className={`cursor-pointer px-3 py-2 text-sm hover:bg-[#1B5EED4D] ${
-                            selectedFeeder === option ? "bg-[#1B5EED4D]" : ""
+                            selectedSalesRepName === opt.name ? "bg-[#1B5EED4D]" : ""
                           }`}
                           onClick={() => {
-                            setSelectedFeeder(option)
-                            setFeederDropdownOpen(false)
+                            setSelectedSalesRepName(opt.name ?? "")
+                            setSelectedSalesRepId(opt.id ?? null)
+                            setSalesRepDropdownOpen(false)
                           }}
                         >
-                          {option}
+                          {opt.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium">Transformer</label>
+              <div className="mt-3">
+                <div
+                  className="modal-style relative h-[46px] w-full cursor-pointer rounded-lg border px-3 focus-within:border-[#1B5EED4D] focus-within:bg-[#FBFAFC] max-sm:mb-2"
+                  onClick={() => {
+                    setTransformerDropdownOpen(!transformerDropdownOpen)
+                    setStateDropdownOpen(false)
+                    setPaymentStatusDropdownOpen(false)
+                    setSalesRepDropdownOpen(false)
+                  }}
+                >
+                  <div className="flex h-[46px] items-center justify-between">
+                    <span className="text-sm">{selectedTransformerName}</span>
+                    <svg
+                      className={`size-4 transition-transform ${transformerDropdownOpen ? "rotate-180" : ""} text-black`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 12a1 1 0 01-.707-.293l-6-6a1 1 0 011.414-1.414L10 9.586l5.293-5.293A1 1 0 0117.707 5.293l-6 6A1 1 0 0110 12z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  {transformerDropdownOpen && (
+                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
+                      {transformerOptions.map((name) => (
+                        <div
+                          key={name}
+                          className={`cursor-pointer px-3 py-2 text-sm hover:bg-[#1B5EED4D] ${
+                            selectedTransformerName === name ? "bg-[#1B5EED4D]" : ""
+                          }`}
+                          onClick={() => {
+                            setSelectedTransformerName(name)
+                            setTransformerDropdownOpen(false)
+                          }}
+                        >
+                          {name}
                         </div>
                       ))}
                     </div>
@@ -305,15 +465,14 @@ const LRef = useRef<any>(null)
                   onClick={() => {
                     setPaymentStatusDropdownOpen(!paymentStatusDropdownOpen)
                     setStateDropdownOpen(false)
-                    setFeederDropdownOpen(false)
+                    setSalesRepDropdownOpen(false)
+                    setTransformerDropdownOpen(false)
                   }}
                 >
                   <div className="flex h-[46px] items-center justify-between">
                     <span className="text-sm">{selectedPaymentStatus}</span>
                     <svg
-                      className={`size-4 transition-transform ${
-                        paymentStatusDropdownOpen ? "rotate-180" : ""
-                      } text-black`}
+                      className={`size-4 transition-transform ${paymentStatusDropdownOpen ? "rotate-180" : ""} text-black`}
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -326,7 +485,7 @@ const LRef = useRef<any>(null)
                     </svg>
                   </div>
                   {paymentStatusDropdownOpen && (
-                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg">
+                    <div className="modal-style absolute left-0 top-[50px] z-10 w-full rounded-lg border border-[#FFFFFF1A] shadow-lg max-h-48 overflow-y-auto">
                       {paymentStatusOptions.map((option) => (
                         <div
                           key={option}
@@ -396,7 +555,7 @@ const LRef = useRef<any>(null)
         {/* Map Display */}
         <div className="relative h-[600px] w-full overflow-hidden rounded-md bg-gray-100">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <div ref={mapDivRef} className="h-[600px] w-full rounded-md" />
+          <div suppressHydrationWarning={true} ref={mapDivRef} className="h-[600px] w-full rounded-md" />
 
           {/* Map Controls */}
 
@@ -410,21 +569,12 @@ const LRef = useRef<any>(null)
                   <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-green-500"></span><span>Paid</span></div>
                   <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-red-500"></span><span>Unpaid</span></div>
                   <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-amber-500"></span><span>Partial</span></div>
-                  {/* <div className="flex items-center gap-2"><span className="inline-block size-3 rounded-full bg-gray-500"></span><span>Unknown</span></div> */}
                 </div>
               </div>
 
               <div>
                 <h4 className="mb-2 text-sm font-semibold">Assets</h4>
                 <div className="space-y-1 text-xs">
-                  {/* <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center text-yellow-400">⚡</span>
-                    <span>Feeder</span>
-                  </div> */}
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center">🏭</span>
-                    <span>Substation</span>
-                  </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-flex h-4 w-4 items-center justify-center">🔌</span>
                     <span>Transformer</span>

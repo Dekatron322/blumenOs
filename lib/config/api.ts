@@ -135,6 +135,7 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/customers/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
+    MAP: "/customers/map",
   },
 
   POSTPAID_BILLING: {
