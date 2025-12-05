@@ -23,6 +23,7 @@ import paymentDunningReducer from "./paymentDunningSlice"
 import outageReducer from "./outageSlice"
 import maintenanceReducer from "./maintenanceSlice"
 import createCustomerReducer from "./createCustomerSlice"
+import customerCategoriesReducer from "./customersCategoriesSlice"
 
 export const store = configureStore({
   reducer: {
@@ -49,6 +50,7 @@ export const store = configureStore({
     outages: outageReducer,
     maintenances: maintenanceReducer,
     createCustomer: createCustomerReducer,
+    customerCategories: customerCategoriesReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

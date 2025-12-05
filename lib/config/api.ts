@@ -161,6 +161,10 @@ export const API_ENDPOINTS = {
     ADD: "/customers/bulk",
   },
 
+  CUSTOMER_CATEGORIES: {
+    GET: "/customers/categories",
+  },
+
   STATUS_MAP: {
     GET: "/status-map",
   },
