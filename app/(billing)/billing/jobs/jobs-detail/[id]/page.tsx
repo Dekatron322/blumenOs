@@ -42,7 +42,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-md bg-gray-200"></div>
+          <div className="size-9 rounded-md bg-gray-200"></div>
           <div>
             <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
             <div className="h-4 w-32 rounded bg-gray-200"></div>
@@ -62,7 +62,7 @@ const LoadingSkeleton = () => (
           <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
             <div className="text-center">
               <div className="relative mx-auto mb-4">
-                <div className="mx-auto h-20 w-20 rounded-full bg-gray-200"></div>
+                <div className="mx-auto size-20 rounded-full bg-gray-200"></div>
                 <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
               </div>
               <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
@@ -526,7 +526,7 @@ const BillingJobDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-3xl font-bold text-blue-600">
+                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-blue-100 text-3xl font-bold text-blue-600">
                           <CycleIcon />
                         </div>
                         <div

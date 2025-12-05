@@ -1,39 +1,24 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  ArrowLeft,
-  CheckCircle,
-  Save,
-  XCircle,
-  FolderPlus,
-  Tag,
-  Info,
-  AlertCircle,
-  Layers,
-  BarChart3,
-  Edit,
-  History,
-  RefreshCw,
-} from "lucide-react"
+import { AlertCircle, ArrowLeft, CheckCircle, Edit, History, Info, RefreshCw, Save, Tag, XCircle } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { FormInputModule } from "components/ui/Input/Input"
 import {
-  editCategory,
   clearEditCategoryState,
-  selectEditCategoryLoading,
-  selectEditCategoryError,
-  selectEditCategorySuccess,
-  selectEditCategoryResponse,
+  editCategory,
   fetchCustomerCategories,
+  fetchSubCategoriesByCategoryId,
   selectCategoryById,
   selectCategoryExists,
-  fetchSubCategoriesByCategoryId,
+  selectEditCategoryError,
+  selectEditCategoryResponse,
+  selectEditCategorySuccess,
   selectSubCategoriesByCategoryId,
 } from "lib/redux/customersCategoriesSlice"
 
@@ -45,7 +30,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-md bg-gray-200"></div>
+          <div className="size-9 rounded-md bg-gray-200"></div>
           <div>
             <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
             <div className="h-4 w-32 rounded bg-gray-200"></div>

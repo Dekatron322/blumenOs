@@ -150,7 +150,7 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
             {/* Info Icon */}
             <div className="mb-6 flex items-center justify-center">
               <div
-                className={`flex h-20 w-20 items-center justify-center rounded-full ${
+                className={`flex size-20 items-center justify-center rounded-full ${
                   isCommissionIncreased ? "bg-green-50" : "bg-blue-50"
                 }`}
               >

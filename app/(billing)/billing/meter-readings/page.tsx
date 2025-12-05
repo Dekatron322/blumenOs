@@ -201,7 +201,7 @@ const LoadingSkeleton = () => {
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
         <div className="h-8 w-40 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+            className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
             animate={{
               x: ["-100%", "100%"],
             }}
@@ -215,7 +215,7 @@ const LoadingSkeleton = () => {
         <div className="mt-3 flex gap-4 md:mt-0">
           <div className="h-10 w-48 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
                 x: ["-100%", "100%"],
               }}
@@ -229,7 +229,7 @@ const LoadingSkeleton = () => {
           </div>
           <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
                 x: ["-100%", "100%"],
               }}
@@ -252,7 +252,7 @@ const LoadingSkeleton = () => {
                 <th key={i} className="whitespace-nowrap border-b p-4">
                   <div className="h-4 w-24 overflow-hidden rounded bg-gray-200">
                     <motion.div
-                      className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                       animate={{
                         x: ["-100%", "100%"],
                       }}
@@ -275,7 +275,7 @@ const LoadingSkeleton = () => {
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
                     <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
                       <motion.div
-                        className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                        className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                         animate={{
                           x: ["-100%", "100%"],
                         }}
@@ -298,7 +298,7 @@ const LoadingSkeleton = () => {
       <div className="flex items-center justify-between border-t py-3">
         <div className="h-10 w-48 overflow-hidden rounded bg-gray-200">
           <motion.div
-            className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+            className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
             animate={{
               x: ["-100%", "100%"],
             }}
@@ -313,7 +313,7 @@ const LoadingSkeleton = () => {
         <div className="flex items-center gap-2">
           <div className="size-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
                 x: ["-100%", "100%"],
               }}
@@ -328,7 +328,7 @@ const LoadingSkeleton = () => {
           {[...Array(5)].map((_, i) => (
             <div key={i} className="size-8 overflow-hidden rounded bg-gray-200">
               <motion.div
-                className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
                   x: ["-100%", "100%"],
                 }}
@@ -343,7 +343,7 @@ const LoadingSkeleton = () => {
           ))}
           <div className="size-8 overflow-hidden rounded bg-gray-200">
             <motion.div
-              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              className="size-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
                 x: ["-100%", "100%"],
               }}

@@ -36,7 +36,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-200">
+          <div className="size-9 overflow-hidden rounded-md bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
@@ -119,7 +119,7 @@ const LoadingSkeleton = () => (
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
             <div className="text-center">
               <div className="relative mx-auto mb-4">
-                <div className="mx-auto h-20 w-20 overflow-hidden rounded-full bg-gray-200">
+                <div className="mx-auto size-20 overflow-hidden rounded-full bg-gray-200">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -1334,7 +1334,7 @@ const DistributionStationDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-blue-100">
                           <Zap className="size-8 text-blue-600" />
                         </div>
                       </div>

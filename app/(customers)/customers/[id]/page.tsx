@@ -491,7 +491,7 @@ const CustomerDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#0a0a0a]">
+                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#0a0a0a]">
                           {currentCustomer.fullName
                             .split(" ")
                             .map((n) => n[0])

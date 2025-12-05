@@ -90,7 +90,7 @@ const ActivateAccountModal: React.FC<ActivateAccountModalProps> = ({
           <div className="flex flex-col items-center px-6 pb-6 pt-6">
             {/* Success Icon */}
             <div className="mb-6 flex items-center justify-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
+              <div className="flex size-20 items-center justify-center rounded-full bg-green-50">
                 <svg className="size-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"

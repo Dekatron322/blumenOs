@@ -900,7 +900,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-200">
+          <div className="size-9 overflow-hidden rounded-md bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{

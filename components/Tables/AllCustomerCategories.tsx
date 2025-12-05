@@ -1,55 +1,43 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
+import { RxCaretSort } from "react-icons/rx"
 import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
   MdOutlineCategory,
   MdOutlineDescription,
-  MdOutlineKey,
   MdOutlineAdd,
   MdOutlineEdit,
-  MdOutlineDelete,
-  MdOutlineVisibility,
-  MdOutlineSearch,
-  MdOutlineFilterList,
-  MdOutlineSort,
-  MdOutlineSubdirectoryArrowRight,
-  MdOutlinePeople,
-  MdOutlineFolder,
-  MdOutlineRefresh,
   MdOutlineError,
+  MdOutlineFolder,
+  MdOutlinePeople,
+  MdOutlineRefresh,
+  MdOutlineSearch,
+  MdOutlineSubdirectoryArrowRight,
+  MdOutlineVisibility,
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  fetchCustomerCategories,
-  fetchSubCategoriesByCategoryId,
   clearCategories,
   clearSubCategories,
-  selectCategories,
-  selectCategoriesLoading,
-  selectCategoriesError,
-  selectCategoriesSuccess,
-  selectSubCategories,
-  selectSubCategoriesLoading,
-  selectSubCategoriesError,
-  selectSubCategoriesSuccess,
   CustomerCategory,
   CustomerSubCategory,
+  fetchCustomerCategories,
+  fetchSubCategoriesByCategoryId,
+  selectCategories,
+  selectCategoriesError,
+  selectCategoriesLoading,
+  selectCategoriesSuccess,
+  selectSubCategories,
+  selectSubCategoriesError,
+  selectSubCategoriesLoading,
+  selectSubCategoriesSuccess,
 } from "lib/redux/customersCategoriesSlice"
-
-interface ActionDropdownProps {
-  category: CustomerCategory
-  onViewDetails: (category: CustomerCategory) => void
-  onEdit: (category: CustomerCategory) => void
-  onDelete: (category: CustomerCategory) => void
-  onRefreshSubCategories: (categoryId: number) => void
-}
 
 const SubCategoryCard: React.FC<{ subCategory: CustomerSubCategory }> = ({ subCategory }) => {
   return (
@@ -199,7 +187,7 @@ const CategoryCard: React.FC<{
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="mb-2 flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-md bg-gray-200" />
+                                <div className="size-8 rounded-md bg-gray-200" />
                                 <div className="flex-1 space-y-2">
                                   <div className="h-4 w-32 rounded bg-gray-200" />
                                   <div className="h-3 w-24 rounded bg-gray-200" />
@@ -320,7 +308,7 @@ const CardsLoadingSkeleton = () => {
                 </div>
               </div>
             </div>
-            <div className="h-7 w-7 rounded-full bg-gray-200" />
+            <div className="size-7 rounded-full bg-gray-200" />
           </div>
           <div className="space-y-4">
             <div className="h-4 w-48 rounded bg-gray-200" />
@@ -344,7 +332,7 @@ const SubCategoriesLoadingSkeleton = () => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="mb-2 flex items-center gap-2">
-                <div className="h-8 w-8 rounded-md bg-gray-200" />
+                <div className="size-8 rounded-md bg-gray-200" />
                 <div className="flex-1">
                   <div className="mb-1 h-4 w-32 rounded bg-gray-200" />
                   <div className="h-3 w-24 rounded bg-gray-200" />

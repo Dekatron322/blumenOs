@@ -4,16 +4,16 @@ import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
+  AlertCircle,
   ArrowLeft,
+  BarChart3,
   CheckCircle,
+  FolderPlus,
+  Info,
+  Layers,
   PlusCircle,
   XCircle,
-  FolderPlus,
   Tag,
-  Info,
-  AlertCircle,
-  Layers,
-  BarChart3,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -23,12 +23,11 @@ import { FormInputModule } from "components/ui/Input/Input"
 import {
   addCategory,
   clearAddCategoryState,
-  selectAddCategoryLoading,
-  selectAddCategoryError,
-  selectAddCategorySuccess,
-  selectAddCategoryResponse,
   fetchCustomerCategories,
-  selectCategoryExists,
+  selectAddCategoryError,
+  selectAddCategoryLoading,
+  selectAddCategoryResponse,
+  selectAddCategorySuccess,
 } from "lib/redux/customersCategoriesSlice"
 
 // Loading Skeleton Component
@@ -39,7 +38,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-md bg-gray-200"></div>
+          <div className="size-9 rounded-md bg-gray-200"></div>
           <div>
             <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
             <div className="h-4 w-32 rounded bg-gray-200"></div>

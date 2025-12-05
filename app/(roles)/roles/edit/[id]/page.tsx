@@ -31,7 +31,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-md bg-gray-200"></div>
+          <div className="size-9 rounded-md bg-gray-200"></div>
           <div>
             <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
             <div className="h-4 w-32 rounded bg-gray-200"></div>

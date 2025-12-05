@@ -21,7 +21,7 @@ const LoadingSkeleton = () => (
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-200">
+          <div className="size-9 overflow-hidden rounded-md bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
@@ -118,7 +118,7 @@ const LoadingSkeleton = () => (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+                  <div className="size-10 rounded-full bg-gray-200"></div>
                   <div className="flex-1">
                     <div className="mb-1 h-4 w-24 rounded bg-gray-200"></div>
                     <div className="h-3 w-16 rounded bg-gray-200"></div>
