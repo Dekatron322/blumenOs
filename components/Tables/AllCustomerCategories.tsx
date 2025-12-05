@@ -20,17 +20,25 @@ import {
   MdOutlineSubdirectoryArrowRight,
   MdOutlinePeople,
   MdOutlineFolder,
+  MdOutlineRefresh,
+  MdOutlineError,
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   fetchCustomerCategories,
+  fetchSubCategoriesByCategoryId,
   clearCategories,
+  clearSubCategories,
   selectCategories,
   selectCategoriesLoading,
   selectCategoriesError,
   selectCategoriesSuccess,
+  selectSubCategories,
+  selectSubCategoriesLoading,
+  selectSubCategoriesError,
+  selectSubCategoriesSuccess,
   CustomerCategory,
   CustomerSubCategory,
 } from "lib/redux/customersCategoriesSlice"
@@ -40,9 +48,16 @@ interface ActionDropdownProps {
   onViewDetails: (category: CustomerCategory) => void
   onEdit: (category: CustomerCategory) => void
   onDelete: (category: CustomerCategory) => void
+  onRefreshSubCategories: (categoryId: number) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ category, onViewDetails, onEdit, onDelete }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({
+  category,
+  onViewDetails,
+  onEdit,
+  onDelete,
+  onRefreshSubCategories,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -66,7 +81,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ category, onViewDetails
     const buttonRect = dropdownRef.current.getBoundingClientRect()
     const spaceBelow = window.innerHeight - buttonRect.bottom
     const spaceAbove = buttonRect.top
-    const dropdownHeight = 160
+    const dropdownHeight = 200
 
     if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
       setDropdownDirection("top")
@@ -81,7 +96,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ category, onViewDetails
     setIsOpen(!isOpen)
   }
 
-  const handleAction = (action: "view" | "edit" | "delete") => {
+  const handleAction = (action: "view" | "edit" | "delete" | "refresh") => {
     setIsOpen(false)
     switch (action) {
       case "view":
@@ -93,78 +108,11 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ category, onViewDetails
       case "delete":
         onDelete(category)
         break
+      case "refresh":
+        onRefreshSubCategories(category.id)
+        break
     }
   }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <motion.div
-        className="focus::bg-gray-100 flex size-7 cursor-pointer items-center justify-center gap-2 rounded-full transition-all duration-200 ease-in-out hover:bg-gray-200"
-        onClick={handleButtonClick}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        aria-label="Open actions"
-        role="button"
-      >
-        <RxDotsVertical />
-      </motion.div>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed z-50 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            style={
-              dropdownDirection === "bottom"
-                ? {
-                    top: dropdownRef.current
-                      ? dropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 6
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-                : {
-                    bottom: dropdownRef.current
-                      ? window.innerHeight - dropdownRef.current.getBoundingClientRect().top + window.scrollY + 6
-                      : 0,
-                    right: dropdownRef.current
-                      ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right
-                      : 0,
-                  }
-            }
-            initial={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -6 : 6 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownDirection === "bottom" ? -6 : 6 }}
-            transition={{ duration: 0.12, ease: "easeOut" }}
-          >
-            <div className="py-1">
-              <button
-                onClick={() => handleAction("view")}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <MdOutlineVisibility className="size-4" />
-                View Details
-              </button>
-              <button
-                onClick={() => handleAction("edit")}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <MdOutlineEdit className="size-4" />
-                Edit Category
-              </button>
-              <button
-                onClick={() => handleAction("delete")}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                <MdOutlineDelete className="size-4" />
-                Delete
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
 }
 
 const SubCategoryCard: React.FC<{ subCategory: CustomerSubCategory }> = ({ subCategory }) => {
@@ -184,10 +132,6 @@ const SubCategoryCard: React.FC<{ subCategory: CustomerSubCategory }> = ({ subCa
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">{subCategory.name}</h4>
-              <p className="flex items-center gap-1 text-xs text-gray-500">
-                <MdOutlineKey className="size-3" />
-                ID: {subCategory.id}
-              </p>
             </div>
           </div>
 
@@ -197,10 +141,6 @@ const SubCategoryCard: React.FC<{ subCategory: CustomerSubCategory }> = ({ subCa
               <p className="line-clamp-2 text-xs text-gray-700">{subCategory.description}</p>
             </div>
           )}
-
-          <div className="mt-3 text-xs text-gray-500">
-            <span className="font-medium">Parent Category ID:</span> {subCategory.customerCategoryId}
-          </div>
         </div>
       </div>
     </motion.div>
@@ -212,8 +152,23 @@ const CategoryCard: React.FC<{
   onViewDetails: (category: CustomerCategory) => void
   onEdit: (category: CustomerCategory) => void
   onDelete: (category: CustomerCategory) => void
-}> = ({ category, onViewDetails, onEdit, onDelete }) => {
+  onRefreshSubCategories: (categoryId: number) => void
+}> = ({ category, onViewDetails, onEdit, onDelete, onRefreshSubCategories }) => {
   const [showSubCategories, setShowSubCategories] = useState(false)
+  const [subCategoriesLoading, setSubCategoriesLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleRefreshSubCategories = async () => {
+    setSubCategoriesLoading(true)
+    setError(null)
+    try {
+      await onRefreshSubCategories(category.id)
+    } catch (err) {
+      setError("Failed to refresh sub-categories")
+    } finally {
+      setSubCategoriesLoading(false)
+    }
+  }
 
   return (
     <motion.div
@@ -232,22 +187,19 @@ const CategoryCard: React.FC<{
             <h3 className="font-semibold text-gray-900">{category.name}</h3>
             <div className="mt-1 flex items-center gap-2">
               <div className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">Category</div>
-              <div className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                ID: {category.id}
-              </div>
             </div>
           </div>
         </div>
-        <ActionDropdown category={category} onViewDetails={onViewDetails} onEdit={onEdit} onDelete={onDelete} />
+        <ActionDropdown
+          category={category}
+          onViewDetails={onViewDetails}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRefreshSubCategories={onRefreshSubCategories}
+        />
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MdOutlineKey className="size-4" />
-          <span className="font-medium">ID:</span>
-          <code className="rounded bg-gray-50 px-2 py-1 font-mono text-xs">{category.id}</code>
-        </div>
-
         {category.description && (
           <div>
             <div className="mb-1 flex items-center gap-2 text-sm text-gray-600">
@@ -269,17 +221,37 @@ const CategoryCard: React.FC<{
           </div>
         </div>
 
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-2">
+            <div className="flex items-center gap-2 text-xs text-red-700">
+              <MdOutlineError className="size-3" />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
+
         {category.subCategories.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-medium text-gray-600">Sub-Categories</div>
-              <button
-                onClick={() => setShowSubCategories(!showSubCategories)}
-                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
-              >
-                {showSubCategories ? "Hide" : "Show"} All
-                <RxCaretSort className={`size-3 transition-transform ${showSubCategories ? "rotate-180" : ""}`} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefreshSubCategories}
+                  disabled={subCategoriesLoading}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                  title="Refresh sub-categories from API"
+                >
+                  <MdOutlineRefresh className={`size-3 ${subCategoriesLoading ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
+                <button
+                  onClick={() => setShowSubCategories(!showSubCategories)}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                >
+                  {showSubCategories ? "Hide" : "Show"} All
+                  <RxCaretSort className={`size-3 transition-transform ${showSubCategories ? "rotate-180" : ""}`} />
+                </button>
+              </div>
             </div>
 
             <AnimatePresence>
@@ -291,13 +263,35 @@ const CategoryCard: React.FC<{
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {category.subCategories.slice(0, 3).map((subCategory, index) => (
-                    <SubCategoryCard key={subCategory.id} subCategory={subCategory} />
-                  ))}
-                  {category.subCategories.length > 3 && (
-                    <div className="text-center text-xs text-gray-500">
-                      +{category.subCategories.length - 3} more sub-categories
+                  {subCategoriesLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="animate-pulse rounded-lg border border-gray-200 bg-gray-50 p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="mb-2 flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-md bg-gray-200" />
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 w-32 rounded bg-gray-200" />
+                                  <div className="h-3 w-24 rounded bg-gray-200" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    <>
+                      {category.subCategories.slice(0, 3).map((subCategory, index) => (
+                        <SubCategoryCard key={subCategory.id} subCategory={subCategory} />
+                      ))}
+                      {category.subCategories.length > 3 && (
+                        <div className="text-center text-xs text-gray-500">
+                          +{category.subCategories.length - 3} more sub-categories
+                        </div>
+                      )}
+                    </>
                   )}
                 </motion.div>
               )}
@@ -306,15 +300,21 @@ const CategoryCard: React.FC<{
         )}
 
         <div className="border-t pt-3">
-          <ButtonModule
-            variant="outline"
-            size="sm"
-            className="w-full justify-center"
-            onClick={() => onViewDetails(category)}
-          >
-            <MdOutlineVisibility className="mr-2 size-4" />
-            View Details
-          </ButtonModule>
+          <div className="flex gap-2">
+            <ButtonModule
+              variant="outline"
+              size="sm"
+              className="w-1/2 justify-center"
+              onClick={() => onViewDetails(category)}
+            >
+              <MdOutlineVisibility className="mr-2 size-4" />
+              View Details
+            </ButtonModule>
+            <ButtonModule variant="primary" size="sm" className="w-1/2 justify-center" onClick={() => onEdit(category)}>
+              <MdOutlineEdit className="mr-2 size-4" />
+              Edit
+            </ButtonModule>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -440,6 +440,10 @@ const AllCustomerCategoriesTable: React.FC = () => {
   const loading = useAppSelector(selectCategoriesLoading)
   const error = useAppSelector(selectCategoriesError)
   const success = useAppSelector(selectCategoriesSuccess)
+  const subCategories = useAppSelector(selectSubCategories)
+  const subCategoriesLoading = useAppSelector(selectSubCategoriesLoading)
+  const subCategoriesError = useAppSelector(selectSubCategoriesError)
+  const subCategoriesSuccess = useAppSelector(selectSubCategoriesSuccess)
 
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -458,8 +462,17 @@ const AllCustomerCategoriesTable: React.FC = () => {
     // Cleanup function
     return () => {
       dispatch(clearCategories())
+      dispatch(clearSubCategories())
     }
   }, [dispatch])
+
+  const handleRefreshCategories = () => {
+    dispatch(fetchCustomerCategories())
+  }
+
+  const handleRefreshSubCategories = (categoryId: number) => {
+    dispatch(fetchSubCategoriesByCategoryId(categoryId))
+  }
 
   // Filter categories based on search and filters
   const filteredCategories = categories
@@ -510,15 +523,30 @@ const AllCustomerCategoriesTable: React.FC = () => {
       }
     })
 
-  // Get selected category's sub-categories filtered by search
-  const filteredSubCategories = selectedCategory
-    ? selectedCategory.subCategories.filter(
+  // Get selected category's sub-categories (using Redux state or category's subCategories)
+  const getSelectedCategorySubCategories = () => {
+    if (!selectedCategory) return []
+
+    // Use the subCategories from Redux state if they belong to the selected category
+    if (subCategories.length > 0 && subCategories[0]?.customerCategoryId === selectedCategory.id) {
+      return subCategories.filter(
         (subCategory) =>
           subCategorySearch === "" ||
           subCategory.name.toLowerCase().includes(subCategorySearch.toLowerCase()) ||
           subCategory.description?.toLowerCase().includes(subCategorySearch.toLowerCase())
       )
-    : []
+    }
+
+    // Fall back to the category's subCategories
+    return selectedCategory.subCategories.filter(
+      (subCategory) =>
+        subCategorySearch === "" ||
+        subCategory.name.toLowerCase().includes(subCategorySearch.toLowerCase()) ||
+        subCategory.description?.toLowerCase().includes(subCategorySearch.toLowerCase())
+    )
+  }
+
+  const filteredSubCategories = getSelectedCategorySubCategories()
 
   const totalRecords = filteredCategories.length
   const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize))
@@ -550,10 +578,12 @@ const AllCustomerCategoriesTable: React.FC = () => {
   const handleViewDetails = (category: CustomerCategory) => {
     setSelectedCategory(category)
     setShowSubCategories(true)
+    // Fetch sub-categories for this category
+    dispatch(fetchSubCategoriesByCategoryId(category.id))
   }
 
   const handleEdit = (category: CustomerCategory) => {
-    router.push(`/customers/categories/edit/${category.id}`)
+    router.push(`/customer-categories/edit/${category.id}`)
   }
 
   const handleDelete = (category: CustomerCategory) => {
@@ -569,6 +599,12 @@ const AllCustomerCategoriesTable: React.FC = () => {
     } else {
       setSortBy(column)
       setSortOrder("asc")
+    }
+  }
+
+  const refreshSelectedCategorySubCategories = () => {
+    if (selectedCategory) {
+      dispatch(fetchSubCategoriesByCategoryId(selectedCategory.id))
     }
   }
 
@@ -603,7 +639,11 @@ const AllCustomerCategoriesTable: React.FC = () => {
             className="w-[380px]"
             bgClassName="bg-white"
           />
-          <ButtonModule variant="primary" size="sm" onClick={() => router.push("/customers/categories/create")}>
+          <ButtonModule variant="outline" size="sm" onClick={handleRefreshCategories} disabled={loading}>
+            <MdOutlineRefresh className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </ButtonModule>
+          <ButtonModule variant="primary" size="sm" onClick={() => router.push("/customer-categories/add")}>
             <MdOutlineAdd className="mr-2 size-4" />
             Create Category
           </ButtonModule>
@@ -675,7 +715,25 @@ const AllCustomerCategoriesTable: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="text-red-700">Error: {error}</div>
             <button
-              onClick={() => dispatch(fetchCustomerCategories())}
+              onClick={handleRefreshCategories}
+              className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+            >
+              Retry
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {subCategoriesError && selectedCategory && (
+        <motion.div
+          className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-red-700">Error loading sub-categories: {subCategoriesError}</div>
+            <button
+              onClick={() => dispatch(fetchSubCategoriesByCategoryId(selectedCategory.id))}
               className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
             >
               Retry
@@ -781,7 +839,7 @@ const AllCustomerCategoriesTable: React.FC = () => {
               <p className="mb-6 text-gray-600">
                 {searchText ? "Try adjusting your search or filters" : "Create your first category to get started"}
               </p>
-              <ButtonModule variant="primary" onClick={() => router.push("/customers/categories/create")}>
+              <ButtonModule variant="primary" onClick={() => router.push("/customer-categories/add")}>
                 Create New Category
               </ButtonModule>
             </div>
@@ -806,6 +864,7 @@ const AllCustomerCategoriesTable: React.FC = () => {
                       onViewDetails={handleViewDetails}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onRefreshSubCategories={handleRefreshSubCategories}
                     />
                   </motion.div>
                 ))}
@@ -870,6 +929,13 @@ const AllCustomerCategoriesTable: React.FC = () => {
                             <ButtonModule variant="outline" size="sm" onClick={() => handleEdit(category)}>
                               Edit
                             </ButtonModule>
+                            <button
+                              onClick={() => handleRefreshSubCategories(category.id)}
+                              className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+                              title="Refresh sub-categories"
+                            >
+                              <MdOutlineRefresh className="size-3" />
+                            </button>
                           </div>
                         </td>
                       </motion.tr>
@@ -989,18 +1055,28 @@ const AllCustomerCategoriesTable: React.FC = () => {
                         {selectedCategory.subCategories.length}
                       </span>
                     </div>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory(null)
-                        setShowSubCategories(false)
-                      }}
-                      className="text-gray-400 hover:text-gray-600"
-                      title="Close details"
-                    >
-                      <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={refreshSelectedCategorySubCategories}
+                        disabled={subCategoriesLoading}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                        title="Refresh sub-categories"
+                      >
+                        <MdOutlineRefresh className={`size-4 ${subCategoriesLoading ? "animate-spin" : ""}`} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedCategory(null)
+                          setShowSubCategories(false)
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                        title="Close details"
+                      >
+                        <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-3">
@@ -1015,10 +1091,6 @@ const AllCustomerCategoriesTable: React.FC = () => {
                   </div>
 
                   <div className="mt-3 text-xs text-gray-600">
-                    <div className="flex items-center justify-between">
-                      <span>Category ID:</span>
-                      <code className="font-mono">{selectedCategory.id}</code>
-                    </div>
                     {selectedCategory.description && (
                       <div className="mt-1">
                         <span className="font-medium">Description:</span> {selectedCategory.description}
@@ -1033,7 +1105,16 @@ const AllCustomerCategoriesTable: React.FC = () => {
                       <MdOutlineFolder className="mx-auto mb-2 size-8 text-gray-300" />
                       <p className="text-sm text-gray-500">No sub-categories found</p>
                       <p className="mt-1 text-xs text-gray-400">Add sub-categories to this category</p>
+                      <button
+                        onClick={refreshSelectedCategorySubCategories}
+                        disabled={subCategoriesLoading}
+                        className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                      >
+                        {subCategoriesLoading ? "Loading..." : "Refresh from API"}
+                      </button>
                     </div>
+                  ) : subCategoriesLoading ? (
+                    <SubCategoriesLoadingSkeleton />
                   ) : filteredSubCategories.length === 0 ? (
                     <div className="py-8 text-center">
                       <MdOutlineSearch className="mx-auto mb-2 size-8 text-gray-300" />
@@ -1049,8 +1130,12 @@ const AllCustomerCategoriesTable: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="mb-2 text-xs text-gray-500">
-                        Showing {filteredSubCategories.length} of {selectedCategory.subCategories.length} sub-categories
+                      <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
+                        <span>
+                          Showing {filteredSubCategories.length} of {selectedCategory.subCategories.length}{" "}
+                          sub-categories
+                        </span>
+                        <span className="text-xs text-blue-600">API Loaded: {subCategoriesSuccess ? "Yes" : "No"}</span>
                       </div>
                       <AnimatePresence>
                         {filteredSubCategories.map((subCategory, index) => (
@@ -1072,13 +1157,17 @@ const AllCustomerCategoriesTable: React.FC = () => {
                 <div className="border-t bg-gray-50 p-4">
                   <div className="flex items-center justify-between">
                     <div className="text-xs text-gray-600">
-                      <div className="font-medium">Total Sub-Categories:</div>
-                      <div className="mt-1">{selectedCategory.subCategories.length}</div>
+                      <div className="font-medium">Sub-Category Source:</div>
+                      <div className="mt-1">
+                        {subCategories.length > 0 && subCategories[0]?.customerCategoryId === selectedCategory.id
+                          ? "Loaded from API"
+                          : "From Category Data"}
+                      </div>
                     </div>
                     <ButtonModule
                       variant="primary"
                       size="sm"
-                      onClick={() => router.push(`/customers/categories/${selectedCategory.id}/sub-categories/create`)}
+                      onClick={() => router.push(`/customer-categories/${selectedCategory.id}/sub-categories/create`)}
                     >
                       <MdOutlineAdd className="mr-1 size-3.5" />
                       Add Sub-Category

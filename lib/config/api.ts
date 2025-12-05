@@ -163,6 +163,10 @@ export const API_ENDPOINTS = {
 
   CUSTOMER_CATEGORIES: {
     GET: "/customers/categories",
+    GET_SUBCATEGORIES: "/customers/categories/{categoryId}/subcategories",
+    ADD_SUBCATEGORIES: "/customers/categories/{categoryId}/subcategories",
+    ADD_CATEGORY: "/customers/categories",
+    EDIT_CATEGORY: "/customers/categories/{id}",
   },
 
   STATUS_MAP: {
