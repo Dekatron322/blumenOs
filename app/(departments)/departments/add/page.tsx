@@ -1,27 +1,42 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, ArrowLeft, CheckCircle, Edit, History, Info, RefreshCw, Save, Tag, XCircle } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  BarChart3,
+  Building,
+  CheckCircle,
+  Info,
+  Layers,
+  PlusCircle,
+  XCircle,
+  Users,
+  Globe,
+  Target,
+  Shield,
+  Briefcase,
+} from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import type { RootState } from "lib/redux/store"
 import { FormInputModule } from "components/ui/Input/Input"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import {
-  clearEditCategoryState,
-  editCategory,
-  fetchCustomerCategories,
-  fetchSubCategoriesByCategoryId,
-  selectCategoryById,
-  selectCategoryExists,
-  selectEditCategoryError,
-  selectEditCategoryLoading,
-  selectEditCategoryResponse,
-  selectEditCategorySuccess,
-  selectSubCategoriesByCategoryId,
-} from "lib/redux/customersCategoriesSlice"
+  createDepartment,
+  clearOperationState,
+  clearDepartments,
+  selectOperationLoading,
+  selectOperationError,
+  selectOperationSuccess,
+  fetchDepartments,
+  CreateDepartmentRequest,
+} from "lib/redux/departmentSlice"
+import { fetchCompanies, type Company } from "lib/redux/companySlice"
 
 // Loading Skeleton Component
 const LoadingSkeleton = () => (
@@ -81,150 +96,75 @@ const LoadingSkeleton = () => (
   </div>
 )
 
-const EditCategoryPage = () => {
+const CreateDepartmentPage = () => {
   const router = useRouter()
-  const params = useParams()
   const dispatch = useAppDispatch()
 
-  // Get categoryId from URL parameters
-  const categoryId = params.id ? parseInt(params.id as string) : undefined
-
   // Get state from Redux store
-  const editCategoryLoading = useAppSelector(selectEditCategoryLoading)
-  const editCategoryError = useAppSelector(selectEditCategoryError)
-  const editCategorySuccess = useAppSelector(selectEditCategorySuccess)
-  const editCategoryResponse = useAppSelector(selectEditCategoryResponse)
+  const operationLoading = useAppSelector(selectOperationLoading)
+  const operationError = useAppSelector(selectOperationError)
+  const operationSuccess = useAppSelector(selectOperationSuccess)
+  const { companies, companiesLoading } = useAppSelector((state: RootState) => state.companies)
 
-  // Get the category data
-  const category = useAppSelector((state) => (categoryId ? selectCategoryById(categoryId)(state) : null))
-
-  // Get subcategories for this category
-  const subCategories = useAppSelector((state) =>
-    categoryId ? selectSubCategoriesByCategoryId(categoryId)(state) : []
-  )
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateDepartmentRequest>({
+    companyId: 0,
     name: "",
     description: "",
-  })
-
-  const [originalData, setOriginalData] = useState({
-    name: "",
-    description: "",
+    isActive: true,
   })
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
-  const [isDuplicateName, setIsDuplicateName] = useState(false)
-  const [hasChanges, setHasChanges] = useState(false)
-
-  // Normalized category name and duplicate check
-  const trimmedName = formData.name.trim()
-  const lowerName = trimmedName.toLowerCase()
-  const checkDuplicate = useAppSelector((state) => selectCategoryExists(lowerName, categoryId)(state))
-
-  // Load category data if not available
-  useEffect(() => {
-    if (categoryId) {
-      dispatch(fetchCustomerCategories())
-      dispatch(fetchSubCategoriesByCategoryId(categoryId))
-    }
-  }, [categoryId, dispatch])
-
-  // Initialize form data when category is loaded
-  useEffect(() => {
-    if (category) {
-      const newFormData = {
-        name: category.name || "",
-        description: category.description || "",
-      }
-      setFormData(newFormData)
-      setOriginalData(newFormData)
-    }
-  }, [category])
-
-  // Check for changes
-  useEffect(() => {
-    if (category) {
-      const hasNameChanged = formData.name !== originalData.name
-      const hasDescriptionChanged = formData.description !== originalData.description
-      setHasChanges(hasNameChanged || hasDescriptionChanged)
-    }
-  }, [formData, originalData, category])
-
-  // Check for duplicate category name (excluding current category)
-  useEffect(() => {
-    if (!trimmedName) {
-      setIsDuplicateName(false)
-      if (errors.name === "A category with this name already exists") {
-        setErrors((prev) => {
-          const newErrors = { ...prev }
-          delete newErrors.name
-          return newErrors
-        })
-      }
-      return
-    }
-
-    setIsDuplicateName(checkDuplicate)
-
-    // Update error if duplicate exists
-    if (checkDuplicate && touched.name) {
-      setErrors((prev) => ({
-        ...prev,
-        name: "A category with this name already exists",
-      }))
-    } else if (errors.name === "A category with this name already exists") {
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors.name
-        return newErrors
-      })
-    }
-  }, [trimmedName, checkDuplicate, touched.name, errors.name])
 
   // Reset state when component unmounts
   useEffect(() => {
     return () => {
-      dispatch(clearEditCategoryState())
+      dispatch(clearOperationState())
     }
+  }, [dispatch])
+
+  // Fetch companies for the company select
+  useEffect(() => {
+    dispatch(
+      fetchCompanies({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
   }, [dispatch])
 
   // Handle success notification and redirect
   useEffect(() => {
-    if (editCategorySuccess && editCategoryResponse) {
-      notify("success", `Category "${formData.name}" has been updated successfully`)
+    if (operationSuccess) {
+      notify("success", `Department "${formData.name}" has been created successfully`)
 
-      // Refresh categories list
-      dispatch(fetchCustomerCategories())
+      // Refresh departments list
+      dispatch(clearDepartments())
 
-      // Refresh subcategories for this category
-      if (categoryId) {
-        dispatch(fetchSubCategoriesByCategoryId(categoryId))
-      }
+      // Redirect to the departments page after a short delay
+      const timer = setTimeout(() => {
+        router.push("/departments")
+      }, 1500)
 
-      // Update original data to match new state
-      setOriginalData({
-        name: editCategoryResponse.name || "",
-        description: editCategoryResponse.description || "",
-      })
-      setHasChanges(false)
+      return () => clearTimeout(timer)
     }
-  }, [editCategorySuccess, editCategoryResponse, formData.name, categoryId, router, dispatch])
+  }, [operationSuccess, formData.name, router, dispatch])
 
   // Handle error notification
   useEffect(() => {
-    if (editCategoryError) {
-      notify("error", editCategoryError)
+    if (operationError) {
+      notify("error", operationError)
     }
-  }, [editCategoryError])
+  }, [operationError])
 
   const handleInputChange =
-    (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const value = e.target.value
+    (field: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const value = field === "isActive" ? (e.target as HTMLSelectElement).value === "true" : e.target.value
+
       setFormData((prev) => ({
         ...prev,
-        [field]: value,
+        [field]: field === "companyId" ? parseInt(e.target.value) || 0 : value,
       }))
 
       // Clear error when user starts typing
@@ -242,31 +182,34 @@ const EditCategoryPage = () => {
       }))
     }
 
-  const handleResetForm = () => {
-    if (category) {
-      setFormData({
-        name: category.name || "",
-        description: category.description || "",
-      })
-      setErrors({})
-      setTouched({})
-      setIsDuplicateName(false)
-      setHasChanges(false)
-    }
+  const toggleActiveStatus = () => {
+    setFormData((prev) => ({
+      ...prev,
+      isActive: !prev.isActive,
+    }))
+
+    // Mark field as touched
+    setTouched((prev) => ({
+      ...prev,
+      isActive: true,
+    }))
   }
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {}
 
+    // Validate company
+    if (!formData.companyId || formData.companyId <= 0) {
+      newErrors.companyId = "Please select a company"
+    }
+
     // Validate name
     if (!formData.name.trim()) {
-      newErrors.name = "Category name is required"
+      newErrors.name = "Department name is required"
     } else if (formData.name.length < 2) {
-      newErrors.name = "Category name must be at least 2 characters"
+      newErrors.name = "Department name must be at least 2 characters"
     } else if (formData.name.length > 100) {
-      newErrors.name = "Category name must be less than 100 characters"
-    } else if (isDuplicateName) {
-      newErrors.name = "A category with this name already exists"
+      newErrors.name = "Department name must be less than 100 characters"
     }
 
     // Validate description
@@ -276,8 +219,10 @@ const EditCategoryPage = () => {
 
     setErrors(newErrors)
     setTouched({
+      companyId: true,
       name: true,
       description: true,
+      isActive: true,
     })
 
     return Object.keys(newErrors).length === 0
@@ -288,57 +233,44 @@ const EditCategoryPage = () => {
       return
     }
 
-    if (!categoryId) {
-      notify("error", "Category ID is missing")
-      return
-    }
-
-    if (!hasChanges) {
-      notify("info", "No changes detected")
-      return
-    }
-
-    // Prepare category data
-    const categoryData = {
+    // Prepare department data
+    const departmentData: CreateDepartmentRequest = {
+      companyId: formData.companyId,
       name: formData.name.trim(),
       description: formData.description.trim(),
+      isActive: formData.isActive,
     }
 
     try {
-      const result = await dispatch(
-        editCategory({
-          id: categoryId,
-          categoryData,
-        })
-      )
+      const result = await dispatch(createDepartment(departmentData))
 
-      if (editCategory.rejected.match(result)) {
-        const errorMessage = (result.payload as string) || "Failed to update category"
+      if (createDepartment.rejected.match(result)) {
+        const errorMessage = (result.payload as string) || "Failed to create department"
         notify("error", errorMessage)
       }
     } catch (error: any) {
-      notify("error", error.message || "Failed to update category")
+      notify("error", error.message || "Failed to create department")
     }
   }
 
   const handleCancel = () => {
-    if (categoryId) {
-      router.push(`/customers/categories/details/${categoryId}`)
-    } else {
-      router.push("/customers/categories")
-    }
+    router.push("/departments")
   }
 
   const getError = (field: keyof typeof formData): string => {
     return touched[field] ? errors[field] || "" : ""
   }
 
-  const isLoading = editCategoryLoading
+  const isLoading = operationLoading || companiesLoading
 
-  // Show loading skeleton if category is being fetched
-  if (!category) {
-    return <LoadingSkeleton />
-  }
+  // Get selected company name
+  const selectedCompany = companies.find((company: Company) => company.id === formData.companyId)
+  const selectedCompanyName = selectedCompany ? selectedCompany.name : ""
+
+  const companyOptions = [
+    { value: 0, label: "Select a company" },
+    ...companies.map((company: Company) => ({ value: company.id, label: company.name })),
+  ]
 
   return (
     <section className="size-full">
@@ -365,10 +297,8 @@ const EditCategoryPage = () => {
                     </motion.button>
 
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Edit Category</h1>
-                      <p className="text-gray-600">
-                        Update category: <span className="font-semibold">{category.name}</span>
-                      </p>
+                      <h1 className="text-2xl font-bold text-gray-900">Create New Department</h1>
+                      <p className="text-gray-600">Define a new department for organizing employees and resources</p>
                     </div>
                   </div>
 
@@ -389,7 +319,7 @@ const EditCategoryPage = () => {
                       size="sm"
                       className="flex items-center gap-2"
                       onClick={handleSubmit}
-                      disabled={isLoading || !hasChanges}
+                      disabled={isLoading}
                     >
                       {isLoading ? (
                         <>
@@ -408,12 +338,12 @@ const EditCategoryPage = () => {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          Saving...
+                          Creating...
                         </>
                       ) : (
                         <>
-                          <Save className="size-4" />
-                          Save Changes
+                          <PlusCircle className="size-4" />
+                          Create Department
                         </>
                       )}
                     </ButtonModule>
@@ -426,31 +356,36 @@ const EditCategoryPage = () => {
               <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Main Form Content - 2/3 width */}
                 <div className="space-y-6 md:col-span-2">
-                  {/* Category Information Card */}
+                  {/* Company & Department Information Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
-                    <div className="mb-6 flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-                        <Edit className="size-5" />
-                        Edit Category Information
-                      </h2>
-                      {hasChanges && (
-                        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
-                          Unsaved Changes
-                        </span>
-                      )}
-                    </div>
+                    <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-gray-900">
+                      <Building className="size-5" />
+                      Department Information
+                    </h2>
 
                     <div className="space-y-6">
-                      {/* Category Name */}
+                      {/* Company Selection */}
+                      <FormSelectModule
+                        label="Company"
+                        name="companyId"
+                        value={formData.companyId}
+                        onChange={(e) => handleInputChange("companyId")(e as any)}
+                        options={companyOptions}
+                        required
+                        disabled={isLoading}
+                        error={getError("companyId")}
+                      />
+
+                      {/* Department Name */}
                       <FormInputModule
-                        label="Category Name"
+                        label="Department Name"
                         type="text"
                         name="name"
-                        placeholder="Enter category name (e.g., 'Corporate Clients', 'Retail Customers', 'Government')"
+                        placeholder="Enter department name (e.g., 'Engineering', 'Sales', 'Human Resources')"
                         value={formData.name}
                         onChange={handleInputChange("name")}
                         required
@@ -465,7 +400,7 @@ const EditCategoryPage = () => {
                           <textarea
                             value={formData.description}
                             onChange={handleInputChange("description")}
-                            placeholder="Enter a brief description of this category's purpose and characteristics..."
+                            placeholder="Enter a brief description of this department's purpose, responsibilities, and functions..."
                             rows={4}
                             className={`
                               w-full rounded-md border px-3 py-2 text-sm
@@ -487,50 +422,37 @@ const EditCategoryPage = () => {
                         </div>
                       </div>
 
-                      {/* Reset Form Button */}
-                      {hasChanges && (
-                        <div className="pt-4">
+                      {/* Status Toggle */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Status</label>
+                        <div className="mt-3 flex items-center gap-3">
                           <button
                             type="button"
-                            onClick={handleResetForm}
-                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                            onClick={toggleActiveStatus}
                             disabled={isLoading}
+                            className={`
+                              relative inline-flex h-6 w-11 items-center rounded-full
+                              ${formData.isActive ? "bg-green-500" : "bg-gray-300"}
+                              transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                              disabled:opacity-50
+                            `}
                           >
-                            <RefreshCw className="size-4" />
-                            Reset to original values
+                            <span
+                              className={`
+                                inline-block size-4 transform rounded-full bg-white transition-transform duration-200
+                                ${formData.isActive ? "translate-x-6" : "translate-x-1"}
+                              `}
+                            />
                           </button>
+                          <div>
+                            <div className="font-medium text-gray-900">{formData.isActive ? "Active" : "Inactive"}</div>
+                            <div className="text-xs text-gray-500">
+                              {formData.isActive
+                                ? "Department will be immediately available for use"
+                                : "Department will be created but not available for use"}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </motion.div>
-
-                  {/* Current Information Card */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-blue-50 p-6 shadow-sm"
-                  >
-                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900">
-                      <History className="size-5" />
-                      Current Category Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="rounded-lg bg-white p-4">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Category ID</div>
-                        <div className="font-mono text-lg font-semibold text-gray-900">{category.id}</div>
-                      </div>
-                      <div className="rounded-lg bg-white p-4">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Sub-Categories</div>
-                        <div className="text-lg font-semibold text-gray-900">{subCategories.length}</div>
-                      </div>
-                      <div className="rounded-lg bg-white p-4 md:col-span-2">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Current Name</div>
-                        <div className="text-lg font-semibold text-gray-900">{category.name}</div>
-                      </div>
-                      <div className="rounded-lg bg-white p-4 md:col-span-2">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Current Description</div>
-                        <div className="text-gray-900">{category.description || "No description provided"}</div>
                       </div>
                     </div>
                   </motion.div>
@@ -539,44 +461,84 @@ const EditCategoryPage = () => {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="rounded-lg border border-gray-200 bg-blue-50 p-6 shadow-sm"
+                  >
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900">
+                      <CheckCircle className="size-5" />
+                      Department Preview
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="rounded-lg bg-white p-4">
+                        <div className="mb-2 text-xs font-medium text-gray-500">Department Name</div>
+                        <div className="text-lg font-semibold text-gray-900">{formData.name || "(Not set)"}</div>
+                      </div>
+                      <div className="rounded-lg bg-white p-4">
+                        <div className="mb-2 text-xs font-medium text-gray-500">Company</div>
+                        <div className="text-lg font-semibold text-blue-600">
+                          {selectedCompanyName || "(Not selected)"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white p-4">
+                        <div className="mb-2 text-xs font-medium text-gray-500">Company ID</div>
+                        <div className="font-mono text-lg font-semibold text-gray-900">
+                          {formData.companyId > 0 ? `#${formData.companyId}` : "N/A"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white p-4">
+                        <div className="mb-2 text-xs font-medium text-gray-500">Status</div>
+                        <div
+                          className={`text-lg font-semibold ${formData.isActive ? "text-green-600" : "text-gray-600"}`}
+                        >
+                          {formData.isActive ? "Active" : "Inactive"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white p-4 md:col-span-2">
+                        <div className="mb-2 text-xs font-medium text-gray-500">Description</div>
+                        <div className="text-gray-900">{formData.description || "No description provided"}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Benefits Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     className="rounded-lg border border-gray-200 bg-green-50 p-6 shadow-sm"
                   >
                     <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-green-900">
-                      <CheckCircle className="size-5" />
-                      Updated Category Preview
+                      <BarChart3 className="size-5" />
+                      Benefits of Using Departments
                     </h3>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="rounded-lg bg-white p-4">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Updated Name</div>
-                        <div className="text-lg font-semibold text-gray-900">{formData.name || "(Not set)"}</div>
-                        {formData.name !== originalData.name && (
-                          <div className="mt-1 text-xs text-green-600">
-                            Changed from: <span className="line-through">{originalData.name}</span>
-                          </div>
-                        )}
+                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900">
+                          <Users className="size-4" />
+                          <span>Team Organization</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Group employees logically for better management</p>
                       </div>
                       <div className="rounded-lg bg-white p-4">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Type</div>
-                        <div className="text-lg font-semibold text-blue-600">Main Category</div>
-                      </div>
-                      <div className="rounded-lg bg-white p-4 md:col-span-2">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Updated Description</div>
-                        <div className="text-gray-900">{formData.description || "No description provided"}</div>
-                        {formData.description !== originalData.description && (
-                          <div className="mt-1 text-xs text-green-600">
-                            Changed from:{" "}
-                            <span className="line-through">{originalData.description || "No description"}</span>
-                          </div>
-                        )}
+                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900">
+                          <Target className="size-4" />
+                          <span>Resource Allocation</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Allocate budgets and resources by department</p>
                       </div>
                       <div className="rounded-lg bg-white p-4">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Status</div>
-                        <div className="text-lg font-semibold text-green-600">Active</div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900">
+                          <Shield className="size-4" />
+                          <span>Security & Access</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Control access to data and systems by department</p>
                       </div>
                       <div className="rounded-lg bg-white p-4">
-                        <div className="mb-2 text-xs font-medium text-gray-500">Sub-Categories</div>
-                        <div className="text-lg font-semibold text-gray-900">{subCategories.length}</div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900">
+                          <Globe className="size-4" />
+                          <span>Performance Tracking</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Track performance metrics by department</p>
                       </div>
                     </div>
                   </motion.div>
@@ -592,7 +554,7 @@ const EditCategoryPage = () => {
                     className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <Save className="size-4" />
+                      <Briefcase className="size-4" />
                       Actions
                     </h3>
                     <div className="space-y-3">
@@ -600,7 +562,7 @@ const EditCategoryPage = () => {
                         variant="primary"
                         className="w-full justify-center"
                         onClick={handleSubmit}
-                        disabled={isLoading || !hasChanges}
+                        disabled={isLoading}
                       >
                         {isLoading ? (
                           <span className="flex items-center justify-center gap-2">
@@ -619,10 +581,10 @@ const EditCategoryPage = () => {
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                               />
                             </svg>
-                            Saving...
+                            Creating...
                           </span>
                         ) : (
-                          "Save Changes"
+                          "Create Department"
                         )}
                       </ButtonModule>
                       <ButtonModule
@@ -633,21 +595,7 @@ const EditCategoryPage = () => {
                       >
                         Cancel
                       </ButtonModule>
-                      <ButtonModule
-                        variant="outline"
-                        className="w-full justify-center"
-                        onClick={handleResetForm}
-                        disabled={isLoading || !hasChanges}
-                      >
-                        <RefreshCw className="mr-2 size-4" />
-                        Reset Form
-                      </ButtonModule>
                     </div>
-                    {!hasChanges && (
-                      <div className="mt-4 rounded-lg bg-gray-50 p-3">
-                        <p className="text-center text-sm text-gray-600">No changes to save</p>
-                      </div>
-                    )}
                   </motion.div>
 
                   {/* Help Card */}
@@ -657,27 +605,27 @@ const EditCategoryPage = () => {
                     transition={{ delay: 0.15 }}
                     className="rounded-lg border border-gray-200 bg-blue-50 p-6 shadow-sm"
                   >
-                    <h3 className="mb-3 text-sm font-semibold text-blue-900">Editing Tips</h3>
+                    <h3 className="mb-3 text-sm font-semibold text-blue-900">Tips for Creating Departments</h3>
                     <ul className="space-y-2 text-sm text-blue-700">
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Consider how name changes affect existing customers in this category</span>
+                        <span>Use clear, descriptive names that reflect the department's function</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Update descriptions to reflect current business needs</span>
+                        <span>Ensure department names are unique within the same company</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Ensure category names remain distinct to avoid confusion</span>
+                        <span>Add detailed descriptions to clarify roles and responsibilities</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Sub-categories will remain unchanged when editing the main category</span>
+                        <span>Consider the organizational hierarchy when naming departments</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Review changes carefully before saving</span>
+                        <span>Think about how departments will be used in reporting and analytics</span>
                       </li>
                     </ul>
                   </motion.div>
@@ -705,9 +653,9 @@ const EditCategoryPage = () => {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Changes:</span>
-                        <span className={`font-semibold ${hasChanges ? "text-yellow-600" : "text-gray-600"}`}>
-                          {hasChanges ? "Unsaved" : "No Changes"}
+                        <span className="text-sm text-gray-600">Company Selected:</span>
+                        <span className={`font-semibold ${formData.companyId > 0 ? "text-green-600" : "text-red-600"}`}>
+                          {formData.companyId > 0 ? "Yes" : "No"}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -731,19 +679,15 @@ const EditCategoryPage = () => {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Duplicate Check:</span>
-                        <span className={`font-semibold ${isDuplicateName ? "text-red-600" : "text-green-600"}`}>
-                          {isDuplicateName ? "Exists" : "Unique"}
+                        <span className="text-sm text-gray-600">Department Status:</span>
+                        <span className={`font-semibold ${formData.isActive ? "text-green-600" : "text-gray-600"}`}>
+                          {formData.isActive ? "Active" : "Inactive"}
                         </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Sub-Categories:</span>
-                        <span className="font-semibold text-purple-600">{subCategories.length}</span>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Example Categories Card */}
+                  {/* Example Departments Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -751,31 +695,43 @@ const EditCategoryPage = () => {
                     className="rounded-lg border border-gray-200 bg-purple-50 p-6 shadow-sm"
                   >
                     <h3 className="mb-4 flex items-center gap-2 font-semibold text-purple-900">
-                      <Tag className="size-4" />
-                      Category Naming Examples
+                      <Layers className="size-4" />
+                      Example Department Names
                     </h3>
                     <div className="space-y-2">
-                      <div className="text-sm text-purple-700">Clear, descriptive names:</div>
+                      <div className="text-sm text-purple-700">Common department names:</div>
                       <ul className="space-y-1 text-sm text-purple-600">
                         <li className="flex items-center gap-2">
                           <div className="size-1 rounded-full bg-purple-400"></div>
-                          <span>Corporate Clients</span>
+                          <span>Engineering</span>
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="size-1 rounded-full bg-purple-400"></div>
-                          <span>Retail Customers</span>
+                          <span>Sales & Marketing</span>
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="size-1 rounded-full bg-purple-400"></div>
-                          <span>Government Agencies</span>
+                          <span>Human Resources</span>
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="size-1 rounded-full bg-purple-400"></div>
-                          <span>Educational Institutions</span>
+                          <span>Finance & Accounting</span>
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="size-1 rounded-full bg-purple-400"></div>
-                          <span>Healthcare Providers</span>
+                          <span>Customer Support</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="size-1 rounded-full bg-purple-400"></div>
+                          <span>Research & Development</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="size-1 rounded-full bg-purple-400"></div>
+                          <span>Operations</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="size-1 rounded-full bg-purple-400"></div>
+                          <span>Information Technology</span>
                         </li>
                       </ul>
                     </div>
@@ -805,7 +761,7 @@ const EditCategoryPage = () => {
                   )}
 
                   {/* Success Preview Card */}
-                  {editCategorySuccess && editCategoryResponse && (
+                  {operationSuccess && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -817,10 +773,10 @@ const EditCategoryPage = () => {
                         Success!
                       </h3>
                       <div className="space-y-2 text-sm text-green-700">
-                        <p>Category updated successfully!</p>
+                        <p>Department created successfully!</p>
                         <div className="mt-2 rounded bg-white p-3">
-                          <div className="font-medium">Category ID: {editCategoryResponse.id}</div>
-                          <div className="text-xs text-gray-600">Changes saved successfully</div>
+                          <div className="font-medium">{formData.name}</div>
+                          <div className="text-xs text-gray-600">Redirecting to departments list...</div>
                         </div>
                       </div>
                     </motion.div>
@@ -835,4 +791,4 @@ const EditCategoryPage = () => {
   )
 }
 
-export default EditCategoryPage
+export default CreateDepartmentPage

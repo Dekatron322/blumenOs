@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, ArrowLeft, CheckCircle, Folder, FolderPlus, Info, PlusCircle, XCircle, Tag } from "lucide-react"
+import { AlertCircle, ArrowLeft, CheckCircle, Folder, FolderPlus, Info, PlusCircle, Tag, XCircle } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"

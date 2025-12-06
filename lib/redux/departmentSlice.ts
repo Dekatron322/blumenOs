@@ -2,6 +2,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import type { RootState } from "lib/redux/store"
 
 // Interfaces for Department
 export interface Department {
@@ -11,6 +12,15 @@ export interface Department {
   isActive: boolean
   companyId: number
   companyName: string
+  createdAt?: string
+  lastUpdated?: string
+}
+
+// Interface for single department response
+export interface DepartmentResponse {
+  isSuccess: boolean
+  message: string
+  data: Department
 }
 
 export interface DepartmentsResponse {
@@ -31,6 +41,28 @@ export interface DepartmentsRequestParams {
   companyId?: number
   search?: string
   isActive?: boolean
+}
+
+// Create Department Request Interface
+export interface CreateDepartmentRequest {
+  companyId: number
+  name: string
+  description: string
+  isActive: boolean
+}
+
+// Update Department Request Interface
+export interface UpdateDepartmentRequest {
+  id: number
+  companyId: number
+  name: string
+  description: string
+  isActive: boolean
+}
+
+// Delete Department Request Interface
+export interface DeleteDepartmentRequest {
+  id: number
 }
 
 // Department State
@@ -55,6 +87,11 @@ interface DepartmentState {
   currentDepartment: Department | null
   currentDepartmentLoading: boolean
   currentDepartmentError: string | null
+
+  // Create/Update/Delete state
+  operationLoading: boolean
+  operationError: string | null
+  operationSuccess: boolean
 }
 
 // Initial state
@@ -74,6 +111,9 @@ const initialState: DepartmentState = {
   currentDepartment: null,
   currentDepartmentLoading: false,
   currentDepartmentError: null,
+  operationLoading: false,
+  operationError: null,
+  operationSuccess: false,
 }
 
 // Async thunks
@@ -111,27 +151,95 @@ export const fetchDepartmentById = createAsyncThunk<Department, number, { reject
   "departments/fetchDepartmentById",
   async (departmentId: number, { rejectWithValue }) => {
     try {
-      // Note: This assumes there's a GET by ID endpoint
-      // You might need to adjust this based on your actual API
-      const response = await api.get<DepartmentsResponse>(
-        `${buildApiUrl(API_ENDPOINTS.DEPARTMENT.GET)}/${departmentId}`
-      )
+      // Build URL with parameter replacement for {id}
+      const url = buildApiUrl(API_ENDPOINTS.DEPARTMENT.GET_DETAIL).replace("{id}", departmentId.toString())
+
+      const response = await api.get<DepartmentResponse>(url)
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch department")
       }
 
-      const department = response.data.data?.[0]
-      if (!department) {
-        return rejectWithValue("Department not found")
-      }
-
-      return department
+      return response.data.data
     } catch (error: any) {
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch department")
       }
       return rejectWithValue(error.message || "Network error during department fetch")
+    }
+  }
+)
+
+export const createDepartment = createAsyncThunk<Department, CreateDepartmentRequest, { rejectValue: string }>(
+  "departments/createDepartment",
+  async (departmentData: CreateDepartmentRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<DepartmentResponse>(buildApiUrl(API_ENDPOINTS.DEPARTMENT.ADD), departmentData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create department")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create department")
+      }
+      return rejectWithValue(error.message || "Network error during department creation")
+    }
+  }
+)
+
+export const updateDepartment = createAsyncThunk<Department, UpdateDepartmentRequest, { rejectValue: string }>(
+  "departments/updateDepartment",
+  async (departmentData: UpdateDepartmentRequest, { rejectWithValue }) => {
+    try {
+      // Build URL with parameter replacement for {id} using the UPDATE endpoint
+      const url = buildApiUrl(API_ENDPOINTS.DEPARTMENT.UPDATE).replace("{id}", departmentData.id.toString())
+
+      // Prepare request body
+      const requestBody = {
+        companyId: departmentData.companyId,
+        name: departmentData.name,
+        description: departmentData.description,
+        isActive: departmentData.isActive,
+      }
+
+      const response = await api.put<DepartmentResponse>(url, requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update department")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update department")
+      }
+      return rejectWithValue(error.message || "Network error during department update")
+    }
+  }
+)
+
+export const deleteDepartment = createAsyncThunk<number, number, { rejectValue: string }>(
+  "departments/deleteDepartment",
+  async (departmentId: number, { rejectWithValue }) => {
+    try {
+      // Build URL with parameter replacement for {id}
+      const url = buildApiUrl(API_ENDPOINTS.DEPARTMENT.GET_DETAIL).replace("{id}", departmentId.toString())
+
+      const response = await api.delete<DepartmentResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to delete department")
+      }
+
+      return departmentId
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to delete department")
+      }
+      return rejectWithValue(error.message || "Network error during department deletion")
     }
   }
 )
@@ -160,6 +268,7 @@ const departmentSlice = createSlice({
     clearError: (state) => {
       state.error = null
       state.currentDepartmentError = null
+      state.operationError = null
     },
 
     // Clear current department
@@ -168,23 +277,16 @@ const departmentSlice = createSlice({
       state.currentDepartmentError = null
     },
 
+    // Clear operation state
+    clearOperationState: (state) => {
+      state.operationLoading = false
+      state.operationError = null
+      state.operationSuccess = false
+    },
+
     // Reset department state
-    resetDepartmentState: (state) => {
-      state.departments = []
-      state.loading = false
-      state.error = null
-      state.success = false
-      state.pagination = {
-        totalCount: 0,
-        totalPages: 0,
-        currentPage: 1,
-        pageSize: 10,
-        hasNext: false,
-        hasPrevious: false,
-      }
-      state.currentDepartment = null
-      state.currentDepartmentLoading = false
-      state.currentDepartmentError = null
+    resetDepartmentState: () => {
+      return initialState
     },
 
     // Set pagination
@@ -205,17 +307,25 @@ const departmentSlice = createSlice({
     },
 
     // Update a department in the list
-    updateDepartment: (state, action: PayloadAction<Department>) => {
+    updateDepartmentInList: (state, action: PayloadAction<Department>) => {
       const index = state.departments.findIndex((dept) => dept.id === action.payload.id)
       if (index !== -1) {
         state.departments[index] = action.payload
       }
+      // Also update current department if it's the same one
+      if (state.currentDepartment?.id === action.payload.id) {
+        state.currentDepartment = action.payload
+      }
     },
 
     // Remove a department from the list
-    removeDepartment: (state, action: PayloadAction<number>) => {
+    removeDepartmentFromList: (state, action: PayloadAction<number>) => {
       state.departments = state.departments.filter((dept) => dept.id !== action.payload)
       state.pagination.totalCount -= 1
+      // Clear current department if it's the same one
+      if (state.currentDepartment?.id === action.payload) {
+        state.currentDepartment = null
+      }
     },
   },
   extraReducers: (builder) => {
@@ -254,6 +364,7 @@ const departmentSlice = createSlice({
           hasPrevious: false,
         }
       })
+
       // Fetch department by ID cases
       .addCase(fetchDepartmentById.pending, (state) => {
         state.currentDepartmentLoading = true
@@ -269,6 +380,82 @@ const departmentSlice = createSlice({
         state.currentDepartmentError = (action.payload as string) || "Failed to fetch department"
         state.currentDepartment = null
       })
+
+      // Create department cases
+      .addCase(createDepartment.pending, (state) => {
+        state.operationLoading = true
+        state.operationError = null
+        state.operationSuccess = false
+      })
+      .addCase(createDepartment.fulfilled, (state, action: PayloadAction<Department>) => {
+        state.operationLoading = false
+        state.operationSuccess = true
+        state.operationError = null
+        // Add the new department to the beginning of the list
+        state.departments.unshift(action.payload)
+        state.pagination.totalCount += 1
+        // Also set as current department
+        state.currentDepartment = action.payload
+      })
+      .addCase(createDepartment.rejected, (state, action) => {
+        state.operationLoading = false
+        state.operationError = (action.payload as string) || "Failed to create department"
+        state.operationSuccess = false
+      })
+
+      // Update department cases
+      .addCase(updateDepartment.pending, (state) => {
+        state.operationLoading = true
+        state.operationError = null
+        state.operationSuccess = false
+      })
+      .addCase(updateDepartment.fulfilled, (state, action: PayloadAction<Department>) => {
+        state.operationLoading = false
+        state.operationSuccess = true
+        state.operationError = null
+
+        // Update in the list
+        const index = state.departments.findIndex((dept) => dept.id === action.payload.id)
+        if (index !== -1) {
+          state.departments[index] = action.payload
+        }
+
+        // Update current department if it's the same one
+        if (state.currentDepartment?.id === action.payload.id) {
+          state.currentDepartment = action.payload
+        }
+      })
+      .addCase(updateDepartment.rejected, (state, action) => {
+        state.operationLoading = false
+        state.operationError = (action.payload as string) || "Failed to update department"
+        state.operationSuccess = false
+      })
+
+      // Delete department cases
+      .addCase(deleteDepartment.pending, (state) => {
+        state.operationLoading = true
+        state.operationError = null
+        state.operationSuccess = false
+      })
+      .addCase(deleteDepartment.fulfilled, (state, action: PayloadAction<number>) => {
+        state.operationLoading = false
+        state.operationSuccess = true
+        state.operationError = null
+
+        // Remove from the list
+        state.departments = state.departments.filter((dept) => dept.id !== action.payload)
+        state.pagination.totalCount -= 1
+
+        // Clear current department if it's the same one
+        if (state.currentDepartment?.id === action.payload) {
+          state.currentDepartment = null
+        }
+      })
+      .addCase(deleteDepartment.rejected, (state, action) => {
+        state.operationLoading = false
+        state.operationError = (action.payload as string) || "Failed to delete department"
+        state.operationSuccess = false
+      })
   },
 })
 
@@ -276,12 +463,36 @@ export const {
   clearDepartments,
   clearError,
   clearCurrentDepartment,
+  clearOperationState,
   resetDepartmentState,
   setPagination,
   setCurrentDepartment,
   addDepartment,
-  updateDepartment,
-  removeDepartment,
+  updateDepartmentInList,
+  removeDepartmentFromList,
 } = departmentSlice.actions
+
+// Selectors
+export const selectDepartments = (state: RootState) => state.departments.departments
+
+export const selectDepartmentsLoading = (state: RootState) => state.departments.loading
+
+export const selectDepartmentsError = (state: RootState) => state.departments.error
+
+export const selectDepartmentsSuccess = (state: RootState) => state.departments.success
+
+export const selectDepartmentsPagination = (state: RootState) => state.departments.pagination
+
+export const selectCurrentDepartment = (state: RootState) => state.departments.currentDepartment
+
+export const selectCurrentDepartmentLoading = (state: RootState) => state.departments.currentDepartmentLoading
+
+export const selectCurrentDepartmentError = (state: RootState) => state.departments.currentDepartmentError
+
+export const selectOperationLoading = (state: RootState) => state.departments.operationLoading
+
+export const selectOperationError = (state: RootState) => state.departments.operationError
+
+export const selectOperationSuccess = (state: RootState) => state.departments.operationSuccess
 
 export default departmentSlice.reducer

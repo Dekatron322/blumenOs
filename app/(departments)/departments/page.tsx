@@ -9,6 +9,7 @@ import MaintenanceTab from "components/OutageManagementInfo/MaintenanceTab"
 import AuditTrailTab from "components/ComplainceInfo/AuditTrailTab"
 import AllRoleTable from "components/Tables/AllRolesTable"
 import AllCustomerCategories from "components/Tables/AllCustomerCategories"
+import DepartmentsTable from "components/Tables/AllDepartments"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -236,7 +237,7 @@ export default function MeteringDashboard() {
                       transition={{ duration: 0.5, delay: 0.3 }}
                       className="mt-6"
                     >
-                      <AllCustomerCategories />
+                      <DepartmentsTable />
                     </motion.div>
                   </>
                 )}

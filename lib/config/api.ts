@@ -138,6 +138,13 @@ export const API_ENDPOINTS = {
 
   DEPARTMENT: {
     GET: "/departments",
+    GET_DETAIL: "/departments/{id}",
+    ADD: "/departments",
+    UPDATE: "/departments/{id}",
+  },
+
+  COMPANY: {
+    GET: "/assets/companies",
   },
 
   CUSTOMER: {

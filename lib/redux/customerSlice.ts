@@ -293,7 +293,7 @@ const FALLBACK_MAP_CUSTOMERS: CustomerMapItem[] = [
     fullName: "Jane Smith",
     status: 1,
     outstanding: 0,
-    latitude: 12.00,
+    latitude: 12.0,
     longitude: 8.52,
     state: "Kano",
     city: "Kano",
@@ -326,7 +326,7 @@ const FALLBACK_MAP_ASSETS: AssetMapItem[] = [
     id: 102,
     name: "Transformer 1",
     latitude: 12.02,
-    longitude: 8.50,
+    longitude: 8.5,
     feederId: 533,
     feederName: "11KV ABU",
     areaOfficeId: 11,
@@ -984,23 +984,23 @@ export const fetchCustomers = createAsyncThunk(
   }
 )
 
-export const fetchCustomersMap = createAsyncThunk(
-  "customers/fetchCustomersMap",
-  async (body: CustomersMapRequest, { rejectWithValue }) => {
-    try {
-      const response = await api.post(buildApiUrl(API_ENDPOINTS.CUSTOMER.MAP), body)
-      if (!response.data.isSuccess) {
-        return rejectWithValue(response.data.message || "Failed to fetch customers map")
-      }
-      return response.data.data as CustomersMapResponse
-    } catch (error: any) {
-      if (error.response?.data) {
-        return rejectWithValue(error.response.data.message || "Failed to fetch customers map")
-      }
-      return rejectWithValue(error.message || "Network error during customers map fetch")
-    }
-  }
-)
+// export const fetchCustomersMap = createAsyncThunk(
+//   "customers/fetchCustomersMap",
+//   async (body: CustomersMapRequest, { rejectWithValue }) => {
+//     try {
+//       const response = await api.post(buildApiUrl(API_ENDPOINTS.CUSTOMER.MAP), body)
+//       if (!response.data.isSuccess) {
+//         return rejectWithValue(response.data.message || "Failed to fetch customers map")
+//       }
+//       return response.data.data as CustomersMapResponse
+//     } catch (error: any) {
+//       if (error.response?.data) {
+//         return rejectWithValue(error.response.data.message || "Failed to fetch customers map")
+//       }
+//       return rejectWithValue(error.message || "Network error during customers map fetch")
+//     }
+//   }
+// )
 
 export const fetchCustomerById = createAsyncThunk<Customer, number, { rejectValue: string }>(
   "customers/fetchCustomerById",
@@ -1871,37 +1871,37 @@ const customerSlice = createSlice({
     builder
       // Fetch customers cases
       // Fetch customers map cases
-      .addCase(fetchCustomersMap.pending, (state) => {
-        state.mapLoading = true
-        state.mapError = null
-        state.mapSuccess = false
-      })
-      .addCase(fetchCustomersMap.fulfilled, (state, action: PayloadAction<CustomersMapResponse>) => {
-        state.mapLoading = false
-        const customers = (action.payload.customers || []).filter(
-          (c) => typeof c.latitude === "number" && typeof c.longitude === "number"
-        )
-        const assets = (action.payload.assets || []).filter(
-          (a) => typeof a.latitude === "number" && typeof a.longitude === "number"
-        )
-        if (customers.length === 0 && assets.length === 0) {
-          state.mapCustomers = FALLBACK_MAP_CUSTOMERS
-          state.mapAssets = FALLBACK_MAP_ASSETS
-          state.mapSuccess = false
-        } else {
-          state.mapCustomers = customers
-          state.mapAssets = assets
-          state.mapSuccess = true
-        }
-        state.mapError = null
-      })
-      .addCase(fetchCustomersMap.rejected, (state, action) => {
-        state.mapLoading = false
-        state.mapError = (action.payload as string) || "Failed to fetch customers map"
-        state.mapSuccess = false
-        state.mapCustomers = FALLBACK_MAP_CUSTOMERS
-        state.mapAssets = FALLBACK_MAP_ASSETS
-      })
+      // .addCase(fetchCustomersMap.pending, (state) => {
+      //   state.mapLoading = true
+      //   state.mapError = null
+      //   state.mapSuccess = false
+      // })
+      // .addCase(fetchCustomersMap.fulfilled, (state, action: PayloadAction<CustomersMapResponse>) => {
+      //   state.mapLoading = false
+      //   const customers = (action.payload.customers || []).filter(
+      //     (c) => typeof c.latitude === "number" && typeof c.longitude === "number"
+      //   )
+      //   const assets = (action.payload.assets || []).filter(
+      //     (a) => typeof a.latitude === "number" && typeof a.longitude === "number"
+      //   )
+      //   if (customers.length === 0 && assets.length === 0) {
+      //     state.mapCustomers = FALLBACK_MAP_CUSTOMERS
+      //     state.mapAssets = FALLBACK_MAP_ASSETS
+      //     state.mapSuccess = false
+      //   } else {
+      //     state.mapCustomers = customers
+      //     state.mapAssets = assets
+      //     state.mapSuccess = true
+      //   }
+      //   state.mapError = null
+      // })
+      // .addCase(fetchCustomersMap.rejected, (state, action) => {
+      //   state.mapLoading = false
+      //   state.mapError = (action.payload as string) || "Failed to fetch customers map"
+      //   state.mapSuccess = false
+      //   state.mapCustomers = FALLBACK_MAP_CUSTOMERS
+      //   state.mapAssets = FALLBACK_MAP_ASSETS
+      // })
       // Fetch customers cases
       .addCase(fetchCustomers.pending, (state) => {
         state.loading = true
