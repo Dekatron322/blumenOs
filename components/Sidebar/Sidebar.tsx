@@ -52,8 +52,8 @@ const SideBar = () => {
     >
       <div className="flex-1 border-0 border-red-700 lg:mt-2">
         <div className="flex items-center gap-2 border-b border-[#E4E4E4] px-7 py-2 transition-opacity lg:block">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/kadco.svg" alt="Dashboard" width={150} height={150} />
+          <Link href="/" className="mb-2 flex items-center gap-2">
+            <Image src="/kadco.svg" alt="Dashboard" width={135} height={130} />
           </Link>
         </div>
 
