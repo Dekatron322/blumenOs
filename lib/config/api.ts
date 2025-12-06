@@ -181,7 +181,8 @@ export const API_ENDPOINTS = {
   },
 
   STATUS_MAP: {
-    GET: "/status-map",
+    GET: "/customers/map/customers",
+    ASSETS: "/customers/map/assets",
   },
 
   PAYMENT_TYPE: {

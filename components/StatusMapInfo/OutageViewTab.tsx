@@ -13,7 +13,7 @@ import {
   StatusMapCustomer,
 } from "lib/redux/statusMapSlice"
 
-const MapViewTab = () => {
+const OutageViewTabe = () => {
   const [selectedState, setSelectedState] = useState("All States")
   const [selectedFeeder, setSelectedFeeder] = useState("All Feeders")
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All Status")
@@ -632,4 +632,4 @@ const MapViewTab = () => {
   )
 }
 
-export default MapViewTab
+export default OutageViewTabe

@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import MapViewTab from "./MapViewTab"
 import TableViewTab from "./TableViewTab"
 import TabNavigation from "./TabNavigation"
+import OutageViewTabe from "./OutageViewTab"
 
 const StatusMapInfo = () => {
   const [activeTab, setActiveTab] = useState("map-view")
@@ -11,8 +12,8 @@ const StatusMapInfo = () => {
     switch (activeTab) {
       case "map-view":
         return <MapViewTab />
-      case "table-view":
-        return <TableViewTab />
+      case "outage-view":
+        return <OutageViewTabe />
       default:
         return <MapViewTab />
     }

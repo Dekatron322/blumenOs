@@ -275,7 +275,13 @@ const allLinks: LinkItem[] = [
     privilegeKey: "notifications",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/analytics/overview", privilegeKey: "notifications", requiredActions: ["W"] },
+      // { name: "Overview", href: "/analytics/overview", privilegeKey: "notifications", requiredActions: ["W"] },
+      {
+        name: "Status Map",
+        href: "/analytics/status-map",
+        privilegeKey: "assets",
+        requiredActions: ["R"],
+      },
       {
         name: "Revenue Analytics",
         href: "/analytics/revenue-analytics",
@@ -296,13 +302,13 @@ const allLinks: LinkItem[] = [
       },
     ],
   },
-  {
-    name: "Status Map",
-    href: "/status-map",
-    icon: PaymentIcon,
-    privilegeKey: "assets",
-    requiredActions: ["R"],
-  },
+  // {
+  //   name: "Status Map",
+  //   href: "/status-map",
+  //   icon: PaymentIcon,
+  //   privilegeKey: "assets",
+  //   requiredActions: ["R"],
+  // },
   {
     name: "Complaince & Audit",
     href: "/complaince",
