@@ -147,6 +147,10 @@ export const API_ENDPOINTS = {
     GET: "/assets/companies",
   },
 
+  BACKGROUND_JOB: {
+    GET: "/quartz",
+  },
+
   CUSTOMER: {
     GET: "/customers",
     GET_BY_ID: "/customers/{id}",

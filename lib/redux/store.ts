@@ -25,6 +25,7 @@ import maintenanceReducer from "./maintenanceSlice"
 import createCustomerReducer from "./createCustomerSlice"
 import customerCategoriesReducer from "./customersCategoriesSlice"
 import companyReducer from "./companySlice"
+import backgroundJobsReducer from "./backgroundJobsSlice"
 
 export const store = configureStore({
   reducer: {
@@ -53,6 +54,7 @@ export const store = configureStore({
     createCustomer: createCustomerReducer,
     customerCategories: customerCategoriesReducer,
     companies: companyReducer,
+    backgroundJobs: backgroundJobsReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
