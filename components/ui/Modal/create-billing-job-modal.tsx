@@ -26,35 +26,15 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
     areaOfficeId: "",
   })
 
+  const [month, setMonth] = useState("")
+  const [year, setYear] = useState("")
+
   const [errors, setErrors] = useState({
     period: "",
     areaOfficeId: "",
   })
 
-  // Period options (typically current and previous months)
-  const getPeriodOptions = () => {
-    const options: { value: string; label: string }[] = [{ value: "", label: "Select Billing Period" }]
-
-    const now = new Date()
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      year: "numeric",
-    })
-
-    // Include current month + next 5 months
-    for (let i = 0; i <= 5; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const value = `${year}-${month}`
-      const label = formatter.format(date)
-      options.push({ value, label })
-    }
-
-    return options
-  }
-
-  const periodOptions = getPeriodOptions()
+  // Period is represented as YYYY-MM (billing month)
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -67,6 +47,8 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
         period: "",
         areaOfficeId: "",
       })
+      setMonth("")
+      setYear("")
       dispatch(clearCreateBillingJob())
 
       // Load area offices for the dropdown if not already loaded
@@ -124,21 +106,20 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
       newErrors.period = "Period must be in YYYY-MM format"
     }
 
-    if (!formData.areaOfficeId.trim()) {
-      newErrors.areaOfficeId = "Area office is required"
-    }
-
     setErrors(newErrors)
-    return !newErrors.period && !newErrors.areaOfficeId
+    return !newErrors.period
   }
 
   const handleSubmit = async () => {
     if (!validateForm()) return
 
     try {
-      const requestData = {
+      const requestData: { period: string; areaOfficeId?: number } = {
         period: formData.period,
-        areaOfficeId: parseInt(formData.areaOfficeId),
+      }
+
+      if (formData.areaOfficeId.trim()) {
+        requestData.areaOfficeId = parseInt(formData.areaOfficeId)
       }
 
       await dispatch(createBillingJob(requestData)).unwrap()
@@ -151,7 +132,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
   }
 
   const isFormValid = () => {
-    return formData.period.trim() && formData.areaOfficeId.trim()
+    return !!formData.period.trim()
   }
 
   const getCurrentPeriod = () => {
@@ -168,6 +149,10 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
       period: currentPeriod,
     }))
 
+    const [, currentMonth] = currentPeriod.split("-")
+    setMonth(currentMonth ?? "")
+    setYear(currentPeriod.split("-")[0] ?? "")
+
     // Clear period error if any
     if (errors.period) {
       setErrors((prev) => ({
@@ -177,7 +162,77 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
     }
   }
 
+  const handleMonthChange = (
+    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
+  ) => {
+    const { value } = ("target" in e ? e.target : e) as { name: string; value: string | number }
+    const selectedMonth = String(value)
+    setMonth(selectedMonth)
+
+    const now = new Date()
+    const currentYear = String(now.getFullYear())
+    const selectedYear = year || currentYear
+
+    setFormData((prev) => ({
+      ...prev,
+      period: selectedMonth ? `${selectedYear}-${selectedMonth}` : "",
+    }))
+
+    if (errors.period) {
+      setErrors((prev) => ({
+        ...prev,
+        period: "",
+      }))
+    }
+  }
+
+  const handleYearChange = (
+    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
+  ) => {
+    const { value } = ("target" in e ? e.target : e) as { name: string; value: string | number }
+    const selectedYear = String(value)
+    setYear(selectedYear)
+
+    setFormData((prev) => ({
+      ...prev,
+      period: selectedYear && month ? `${selectedYear}-${month}` : "",
+    }))
+
+    if (errors.period) {
+      setErrors((prev) => ({
+        ...prev,
+        period: "",
+      }))
+    }
+  }
+
   if (!isOpen) return null
+
+  const monthOptions = [
+    { value: "", label: "Select month" },
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ]
+
+  const yearOptions = [
+    { value: "", label: "Select year" },
+    { value: "2023", label: "2023" },
+    { value: "2024", label: "2024" },
+    { value: "2025", label: "2025" },
+    { value: "2026", label: "2026" },
+    { value: "2027", label: "2027" },
+    { value: "2028", label: "2028" },
+  ]
 
   const areaOfficeOptions = [
     { value: "", label: areaOfficesLoading ? "Loading area offices..." : "Select Area Office" },
@@ -284,35 +339,42 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <FormSelectModule
-                      label="Billing Period"
-                      name="period"
-                      value={formData.period}
-                      onChange={handleInputChange}
-                      options={periodOptions}
-                      required
-                      error={errors.period}
-                    />
-                  </div>
+                  <FormSelectModule
+                    label="Month"
+                    name="month"
+                    value={month}
+                    onChange={handleMonthChange}
+                    options={monthOptions}
+                    required
+                    error={errors.period}
+                  />
 
-                  {formData.period && (
-                    <div className="col-span-2">
-                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-                        <div className="flex items-center">
-                          <svg className="mr-2 size-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                              fillRule="evenodd"
-                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="text-sm font-medium text-blue-800">Selected Period: {formData.period}</span>
-                        </div>
+                  <FormSelectModule
+                    label="Year"
+                    name="year"
+                    value={year}
+                    onChange={handleYearChange}
+                    options={yearOptions}
+                    required
+                  />
+                </div>
+
+                {formData.period && (
+                  <div className="col-span-2">
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                      <div className="flex items-center">
+                        <svg className="mr-2 size-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-800">Selected Period: {formData.period}</span>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {!formData.period && (
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -331,8 +393,6 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                   value={formData.areaOfficeId}
                   onChange={handleInputChange}
                   options={areaOfficeOptions}
-                  required
-                  error={errors.areaOfficeId}
                 />
 
                 {formData.areaOfficeId && (
@@ -349,6 +409,15 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                         {areaOfficeOptions.find((opt) => opt.value === formData.areaOfficeId)?.label}
                       </span>
                     </div>
+                  </div>
+                )}
+
+                {!formData.areaOfficeId && formData.period && (
+                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                    <p className="text-xs text-blue-700">
+                      No area office selected. Billing jobs will be generated for{" "}
+                      <span className="font-semibold">all area offices</span> for the selected period.
+                    </p>
                   </div>
                 )}
               </div>

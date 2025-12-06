@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -119,13 +119,14 @@ const AddPaymentPage = () => {
   const [isValidatingCustomer, setIsValidatingCustomer] = useState(false)
   const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null)
   const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
 
   const [formData, setFormData] = useState<PaymentFormData>({
     postpaidBillId: 0,
     customerId: 0,
     latitude: 0,
     longitude: 0,
-    paymentTypeId: 0,
+    paymentTypeId: 1,
     amount: 0,
     channel: "Cash",
     currency: "NGN",
@@ -154,6 +155,8 @@ const AddPaymentPage = () => {
   const paymentTypeOptions = paymentTypes
     .filter((paymentType) => paymentType.isActive)
     .map((paymentType) => ({ value: paymentType.id, label: paymentType.name }))
+
+  const energyBillPaymentType = paymentTypes.find((paymentType) => paymentType.name.toLowerCase() === "bills payment")
 
   // Validate payment reference
   const validatePaymentReference = async () => {
@@ -199,7 +202,7 @@ const AddPaymentPage = () => {
       setBillInfo(null)
       setFormData((prev) => ({
         ...prev,
-        postpaidBillId: 0,
+        postpaidBillId: 1,
         amount: 0,
       }))
     } finally {
@@ -370,7 +373,7 @@ const AddPaymentPage = () => {
       }
     }
 
-    if (formData.paymentTypeId === 0) {
+    if (identifierType === "customer" && formData.paymentTypeId === 0) {
       errors.paymentTypeId = "Payment Type is required"
     }
 
@@ -430,8 +433,13 @@ const AddPaymentPage = () => {
       // Prepare the data for API
       const { postpaidBillId, customerId, agentId, vendorId, ...rest } = formData
 
+      // Ensure paymentTypeId is never 0 in the payload
+      const resolvedPaymentTypeId =
+        identifierType === "postpaidBill" ? energyBillPaymentType?.id ?? 1 : formData.paymentTypeId
+
       const paymentData = {
         ...rest,
+        paymentTypeId: resolvedPaymentTypeId,
         ...(identifierType === "postpaidBill" && { postpaidBillId }),
         ...(identifierType === "customer" && { customerId }),
         // Only include optional fields if they have values
@@ -449,6 +457,8 @@ const AddPaymentPage = () => {
           description: `Payment of ${formData.amount} ${formData.currency} has been recorded`,
           duration: 5000,
         })
+
+        setIsSuccessModalOpen(true)
 
         if (result.data?.channel === "BankTransfer" && result.data.virtualAccount) {
           setVirtualAccount(result.data.virtualAccount)
@@ -475,7 +485,7 @@ const AddPaymentPage = () => {
       customerId: 0,
       latitude: 0,
       longitude: 0,
-      paymentTypeId: 0,
+      paymentTypeId: 1,
       amount: 0,
       channel: "Cash",
       currency: "NGN",
@@ -492,6 +502,7 @@ const AddPaymentPage = () => {
     setCustomerInfo(null)
     setVirtualAccount(null)
     setIsVirtualAccountModalOpen(false)
+    setIsSuccessModalOpen(false)
     setIdentifierType("postpaidBill")
     setFormErrors({})
     dispatch(clearCreatePayment())
@@ -549,7 +560,6 @@ const AddPaymentPage = () => {
 
   const isFormValid = (): boolean => {
     const baseValidation =
-      formData.paymentTypeId > 0 &&
       formData.amount > 0 &&
       !!formData.channel &&
       formData.currency !== "" &&
@@ -557,11 +567,21 @@ const AddPaymentPage = () => {
       formData.paidAtUtc !== ""
 
     if (identifierType === "postpaidBill") {
+      // For postpaid bills, payment type is auto-set to Energy Bill when available;
+      // do not block button click on its presence here.
       return baseValidation && paymentReference.trim() !== "" && isReferenceVerified
     } else {
-      return baseValidation && customerReference.trim() !== "" && isReferenceVerified
+      // For customers, user must explicitly choose a payment type
+      return baseValidation && formData.paymentTypeId > 0 && customerReference.trim() !== "" && isReferenceVerified
     }
   }
+
+  // Automatically set default payment type for postpaid bills when payment types are loaded
+  useEffect(() => {
+    if (identifierType === "postpaidBill" && energyBillPaymentType && formData.paymentTypeId === 0) {
+      setFormData((prev) => ({ ...prev, paymentTypeId: energyBillPaymentType.id }))
+    }
+  }, [identifierType, energyBillPaymentType, formData.paymentTypeId])
 
   // Handle success state
   useEffect(() => {
@@ -680,6 +700,13 @@ const AddPaymentPage = () => {
                             setCustomerReference("")
                             setBillInfo(null)
                             setCustomerInfo(null)
+
+                            // Reset payment type appropriately when switching modes
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentTypeId:
+                                value === "customer" ? 0 : energyBillPaymentType ? energyBillPaymentType.id : 0,
+                            }))
                           }}
                           options={[
                             { value: "postpaidBill", label: "Postpaid Bill" },
@@ -797,9 +824,6 @@ const AddPaymentPage = () => {
                                 <p>
                                   <strong>Status:</strong> {getStatusText(billInfo.status)}
                                 </p>
-                                <p>
-                                  <strong>Bill ID:</strong> {billInfo.id}
-                                </p>
                               </div>
                             </div>
                           </div>
@@ -851,21 +875,23 @@ const AddPaymentPage = () => {
 
                         {isReferenceVerified && (
                           <>
-                            <FormSelectModule
-                              label="Payment Type"
-                              name="paymentTypeId"
-                              value={formData.paymentTypeId}
-                              onChange={handleInputChange}
-                              options={[
-                                {
-                                  value: 0,
-                                  label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
-                                },
-                                ...paymentTypeOptions,
-                              ]}
-                              error={formErrors.paymentTypeId}
-                              required
-                            />
+                            {identifierType === "customer" && (
+                              <FormSelectModule
+                                label="Payment Type"
+                                name="paymentTypeId"
+                                value={formData.paymentTypeId}
+                                onChange={handleInputChange}
+                                options={[
+                                  {
+                                    value: 0,
+                                    label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
+                                  },
+                                  ...paymentTypeOptions,
+                                ]}
+                                error={formErrors.paymentTypeId}
+                                required
+                              />
+                            )}
 
                             <FormInputModule
                               label="Amount"
@@ -891,7 +917,7 @@ const AddPaymentPage = () => {
                               required
                             />
 
-                            <FormSelectModule
+                            {/* <FormSelectModule
                               label="Currency"
                               name="currency"
                               value={formData.currency}
@@ -899,7 +925,7 @@ const AddPaymentPage = () => {
                               options={[{ value: "", label: "Select currency" }, ...currencyOptions]}
                               error={formErrors.currency}
                               required
-                            />
+                            /> */}
 
                             <FormInputModule
                               label="Payment Date & Time"
@@ -1093,6 +1119,84 @@ const AddPaymentPage = () => {
         onRequestClose={() => setIsVirtualAccountModalOpen(false)}
         virtualAccount={virtualAccount}
       />
+      <AnimatePresence>
+        {isSuccessModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[999] bg-black/30 backdrop-blur-sm"
+              onClick={() => setIsSuccessModalOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center px-4"
+            >
+              <div className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl">
+                <div className="border-b bg-[#F9F9F9] p-6">
+                  <h2 className="text-lg font-bold text-gray-900">Payment Recorded Successfully</h2>
+                  <p className="mt-1 text-sm text-gray-600">The payment has been recorded in the system.</p>
+                </div>
+                <div className="space-y-3 p-6 text-sm text-gray-700">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-semibold">
+                      {formData.amount.toLocaleString()} {formData.currency}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Channel:</span>
+                    <span className="font-semibold">{formData.channel}</span>
+                  </div>
+                  {/* {identifierType === "postpaidBill" && billInfo && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Bill ID:</span>
+                      <span className="font-semibold">{billInfo.id}</span>
+                    </div>
+                  )} */}
+                  {identifierType === "customer" && customerInfo && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Customer:</span>
+                      <span className="font-semibold">{customerInfo.fullName}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="border-t bg-[#F9F9F9] p-6">
+                  <div className="flex gap-3">
+                    <ButtonModule
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => {
+                        setIsSuccessModalOpen(false)
+                        if (createdPayment?.id) {
+                          router.push(`/payment/payment-detail/${createdPayment.id}`)
+                        } else {
+                          router.push("/payment")
+                        }
+                      }}
+                    >
+                      Close
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="primary"
+                      className="flex-1"
+                      onClick={() => {
+                        setIsSuccessModalOpen(false)
+                        handleReset()
+                      }}
+                    >
+                      Record Another Payment
+                    </ButtonModule>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -219,7 +219,7 @@ export interface BillingJobsRequestParams {
 // Create Billing Job Interfaces
 export interface CreateBillingJobRequest {
   period: string
-  areaOfficeId: number
+  areaOfficeId?: number
 }
 
 export interface CreateBillingJobResponse {
