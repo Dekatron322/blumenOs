@@ -355,7 +355,7 @@ const PeriodSelector = ({
         <button
           id="period-select"
           type="button"
-          className="flex min-w-[160px] items-center justify-between gap-2 rounded-md border border-[#0a0a0a] bg-transparent px-3 py-2 text-sm focus:border-[#0a0a0a] focus:outline-none focus:ring-1 focus:ring-[#0a0a0a]"
+          className="flex min-w-[160px] items-center justify-between gap-2 rounded-md border border-[#004B23] bg-transparent px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
           onClick={() => setIsDropdownOpen((prev) => !prev)}
         >
           <span>{periods.find((p) => p.value === selectedValue)?.label ?? selectedValue}</span>

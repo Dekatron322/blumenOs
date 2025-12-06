@@ -666,9 +666,9 @@ const AddNewAgent = () => {
               <div
                 className={`flex size-8 items-center justify-center rounded-full border-2 ${
                   step === currentStep
-                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    ? "border-[#004B23] bg-[#004B23] text-white"
                     : step < currentStep
-                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    ? "border-[#004B23] bg-[#004B23] text-white"
                     : "border-gray-300 bg-white text-gray-500"
                 }`}
               >
@@ -684,7 +684,7 @@ const AddNewAgent = () => {
                   step
                 )}
               </div>
-              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0a0a0a]" : "text-gray-500"}`}>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#004B23]" : "text-gray-500"}`}>
                 {step === 1 && "Personal"}
                 {step === 2 && "Employment"}
                 {step === 3 && "Department"}
@@ -692,7 +692,7 @@ const AddNewAgent = () => {
                 {step === 5 && "Additional"}
               </span>
             </div>
-            {step < 5 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0a0a0a]" : "bg-gray-300"}`} />}
+            {step < 5 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>
@@ -780,7 +780,7 @@ const AddNewAgent = () => {
                     }}
                     className={`flex-1 rounded-tl-lg px-6 py-4 text-sm font-medium transition-colors ${
                       activeTab === "new"
-                        ? "border-b-2 border-[#0a0a0a] text-blue-600"
+                        ? "border-b-2 border-[#004B23] text-blue-600"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -793,7 +793,7 @@ const AddNewAgent = () => {
                     onClick={() => setActiveTab("existing")}
                     className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                       activeTab === "existing"
-                        ? "border-b-2 border-[#0a0a0a] text-blue-600"
+                        ? "border-b-2 border-[#004B23] text-blue-600"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -806,7 +806,7 @@ const AddNewAgent = () => {
                     onClick={() => setActiveTab("bulk")}
                     className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
                       activeTab === "bulk"
-                        ? "border-b-2 border-[#0a0a0a] text-blue-600"
+                        ? "border-b-2 border-[#004B23] text-blue-600"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -968,7 +968,7 @@ const AddNewAgent = () => {
                                         <button
                                           type="button"
                                           onClick={() => removeRole(roleId)}
-                                          className="ml-1 text-[#0a0a0a] hover:text-blue-700"
+                                          className="ml-1 text-[#004B23] hover:text-blue-700"
                                         >
                                           ×
                                         </button>
@@ -1074,7 +1074,7 @@ const AddNewAgent = () => {
                           >
                             <div className="border-b pb-4">
                               <div className="flex items-center gap-2">
-                                <CreditCard className="size-5 text-[#0a0a0a]" />
+                                <CreditCard className="size-5 text-[#004B23]" />
                                 <h4 className="text-lg font-medium text-gray-900">Cash & Status</h4>
                               </div>
                               <p className="text-sm text-gray-600">

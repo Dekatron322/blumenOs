@@ -521,7 +521,7 @@ const FeedersTab: React.FC = () => {
                     onClick={() => paginate(pageNum)}
                     className={`flex size-8 items-center justify-center rounded-md text-sm ${
                       currentPage === pageNum
-                        ? "bg-[#0a0a0a] text-white"
+                        ? "bg-[#004B23] text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     whileHover={{ scale: 1.1 }}
@@ -542,7 +542,7 @@ const FeedersTab: React.FC = () => {
                   onClick={() => paginate(totalPages)}
                   className={`flex size-8 items-center justify-center rounded-md text-sm ${
                     currentPage === totalPages
-                      ? "bg-[#0a0a0a] text-white"
+                      ? "bg-[#004B23] text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   whileHover={{ scale: 1.1 }}

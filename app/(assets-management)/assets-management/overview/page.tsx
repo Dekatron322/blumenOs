@@ -420,7 +420,7 @@ export default function MeteringDashboard() {
                 <div className="relative" ref={addAssetButtonRef}>
                   <button
                     onClick={toggleAddAssetMenu}
-                    className="flex items-center gap-2 rounded-md bg-[#0a0a0a] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#000000]"
+                    className="flex items-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#000000]"
                   >
                     <PlusIcon />
                     Add New Asset

@@ -160,7 +160,7 @@ const ManageAlertModal: React.FC<ManageAlertModalProps> = ({ isOpen, onRequestCl
                 rows={4}
                 value={formData.resolutionNotes}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-[#F3F4F6] px-3 py-2 text-sm placeholder-gray-400 focus:border-[#0a0a0a] focus:outline-none focus:ring-1 focus:ring-[#0a0a0a]"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-[#F3F4F6] px-3 py-2 text-sm placeholder-gray-400 focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
                 placeholder="Describe the resolution steps, findings, or any relevant information..."
                 required
               />

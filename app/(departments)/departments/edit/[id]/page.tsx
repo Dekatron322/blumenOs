@@ -513,7 +513,7 @@ const EditDepartmentPage = () => {
                               ${getError("description") ? "border-[#D14343]" : "border-[#E0E0E0]"}
                               bg-[#F9F9F9] transition-all duration-200 focus:bg-[#FBFAFC] focus:outline-none
                               focus:ring-2
-                              focus:ring-[#0a0a0a] disabled:bg-gray-100
+                              focus:ring-[#004B23] disabled:bg-gray-100
                             `}
                             disabled={isLoading}
                             maxLength={500}

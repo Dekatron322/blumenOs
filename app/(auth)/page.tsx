@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { initializeAuth, loginUser } from "lib/redux/authSlice"
 import { motion } from "framer-motion"
+import Image from "next/image"
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("")
@@ -121,7 +122,7 @@ const SignIn: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h5 className="font-bold text-[#0a0a0a]">BlumenOS</h5>
+          <Image src="/kadco.svg" alt="Dashboard" width={120} height={120} />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -129,7 +130,7 @@ const SignIn: React.FC = () => {
             className="w-full max-w-xl rounded-2xl md:p-8 "
           >
             <div className="mx-4 mb-8 border-b pb-6 text-center">
-              <h1 className="text-3xl font-bold text-[#0a0a0a]">Welcome back</h1>
+              <h1 className="text-3xl font-bold text-[#004B23]">Welcome back</h1>
               <p className="mt-2 text-gray-500">Enter your details to jump right into your account</p>
             </div>
 
@@ -165,14 +166,14 @@ const SignIn: React.FC = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="size-4 rounded border-gray-300  text-[#0a0a0a] focus:ring-[#0a0a0a]"
+                    className="size-4 rounded border-gray-300  text-[#004B23] focus:ring-[#004B23]"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                     Remember me
                   </label>
                 </div>
 
-                <Link href="/forgot-password" className="text-sm font-medium text-[#0a0a0a] hover:text-[#0a0a0a]">
+                <Link href="/forgot-password" className="text-sm font-medium text-[#004B23] hover:text-[#004B23]">
                   Forgot password?
                 </Link>
               </motion.div>
@@ -253,7 +254,7 @@ const SignIn: React.FC = () => {
       </div>
 
       {/* Image Container with Text at Bottom */}
-      <div className="relative hidden w-[60%] bg-[#0A0A0A] md:block ">
+      <div className="relative hidden w-[60%] bg-[#004B23] md:block ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

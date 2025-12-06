@@ -53,8 +53,7 @@ const SideBar = () => {
       <div className="flex-1 border-0 border-red-700 lg:mt-2">
         <div className="flex items-center gap-2 border-b border-[#E4E4E4] px-7 py-2 transition-opacity lg:block">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/blumen.png" alt="Dashboard" width={50} height={50} />
-            <h1 className="pt-2 text-xl font-bold">BlumenOS</h1>
+            <Image src="/kadco.svg" alt="Dashboard" width={150} height={150} />
           </Link>
         </div>
 

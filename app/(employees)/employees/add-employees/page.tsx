@@ -765,9 +765,9 @@ const AddEmployeePage = () => {
               <div
                 className={`flex size-8 items-center justify-center rounded-full border-2 ${
                   step === currentStep
-                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    ? "border-[#004B23] bg-[#004B23] text-white"
                     : step < currentStep
-                    ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                    ? "border-[#004B23] bg-[#004B23] text-white"
                     : "border-gray-300 bg-white text-gray-500"
                 }`}
               >
@@ -783,13 +783,13 @@ const AddEmployeePage = () => {
                   step
                 )}
               </div>
-              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0a0a0a]" : "text-gray-500"}`}>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#004B23]" : "text-gray-500"}`}>
                 {step === 1 && "Basic Info"}
                 {step === 2 && "Employment"}
                 {step === 3 && "Contact"}
               </span>
             </div>
-            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0a0a0a]" : "bg-gray-300"}`} />}
+            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>

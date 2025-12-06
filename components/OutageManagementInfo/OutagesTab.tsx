@@ -557,7 +557,7 @@ const OutagesTab: React.FC = () => {
         <div className="flex gap-4">
           <SearchInput placeholder="Search outages..." value={searchText} onChange={handleSearch} className="w-80" />
           <button
-            className="rounded-md bg-[#0a0a0a] px-4 py-2 text-white hover:bg-[#000000]"
+            className="rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000]"
             onClick={() => router.push("/outage-management/report-outage")}
           >
             Report Outage
@@ -843,7 +843,7 @@ const OutagesTab: React.FC = () => {
                     onClick={() => paginate(pageNum)}
                     className={`flex size-8 items-center justify-center rounded-md text-sm ${
                       currentPage === pageNum
-                        ? "bg-[#0a0a0a] text-white"
+                        ? "bg-[#004B23] text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     whileHover={{ scale: 1.1 }}
@@ -866,7 +866,7 @@ const OutagesTab: React.FC = () => {
                     onClick={() => paginate(Math.ceil(totalCount / (pageSize || 10)))}
                     className={`flex size-8 items-center justify-center rounded-md text-sm ${
                       currentPage === Math.ceil(totalCount / (pageSize || 10))
-                        ? "bg-[#0a0a0a] text-white"
+                        ? "bg-[#004B23] text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     whileHover={{ scale: 1.1 }}

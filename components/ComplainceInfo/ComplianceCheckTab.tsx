@@ -477,7 +477,7 @@ const ComplianceChecksTab: React.FC = () => {
                 key={index}
                 onClick={() => paginate(pageNum)}
                 className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                  currentPage === pageNum ? "bg-[#0a0a0a] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  currentPage === pageNum ? "bg-[#004B23] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

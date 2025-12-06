@@ -132,27 +132,27 @@ body {
 
 .dashboard-style {
   @apply relative flex items-center whitespace-nowrap rounded-xl px-4 py-3 
-         text-[#0a0a0a] transition-all duration-300 ease-out
-         hover:bg-[#0a0a0a] hover:text-white
+         text-[#004B23] transition-all duration-300 ease-out
+         hover:bg-[#004B23] hover:text-white
          max-md:my-2 max-md:h-11 max-md:items-center max-sm:grow 
          lg:justify-normal lg:space-x-2;
 }
 
 .dropdown-style {
-  @apply flex whitespace-nowrap rounded-lg px-3 py-2 text-[#0a0a0a] 
+  @apply flex whitespace-nowrap rounded-lg px-3 py-2 text-[#004B23] 
          transition-all duration-300 ease-out
-         hover:bg-[#0a0a0a] hover:text-white
+         hover:bg-[#004B23] hover:text-white
          max-md:my-2 max-md:h-11 max-md:items-center max-sm:grow 
          lg:justify-normal;
 }
 
 .active-dropdown {
-  @apply bg-gray-100 font-semibold text-[#0a0a0a]
+  @apply bg-gray-100 font-semibold text-[#004B23]
          max-md:my-2 max-md:rounded-md;
 }
 
 .active-dashboard {
-  @apply bg-[#0a0a0a] font-semibold text-white shadow-sm
+  @apply bg-[#004B23] font-semibold text-white shadow-sm
          max-md:my-2 max-md:rounded-md;
 }
 
@@ -177,14 +177,14 @@ body {
 /* Smooth focus states */
 .dashboard-style:focus-visible,
 .dropdown-style:focus-visible {
-  @apply outline-none ring-2 ring-[#0a0a0a] ring-offset-2;
+  @apply outline-none ring-2 ring-[#004B23] ring-offset-2;
 }
 
 /* Enhanced hover effects */
 .dashboard-style::before {
   content: "";
   @apply absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full 
-         bg-[#0a0a0a] opacity-0 transition-all duration-300;
+         bg-[#004B23] opacity-0 transition-all duration-300;
 }
 
 .active-dashboard::before {
@@ -198,7 +198,7 @@ body {
 /* Active state indicator for dropdown items */
 .active-dropdown::before {
   content: "";
-  @apply absolute left-0 h-2 w-1 rounded-r-full bg-[#0a0a0a];
+  @apply absolute left-0 h-2 w-1 rounded-r-full bg-[#004B23];
 }
 
 .tab-bg {

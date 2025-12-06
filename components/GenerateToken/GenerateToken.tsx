@@ -376,7 +376,7 @@ const GenerateToken = () => {
             >
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">Recent Vends</h2>
-                <button className="rounded-md bg-[#f3f4f6] px-2 py-1 text-sm font-medium text-[#0a0a0a] transition-colors duration-200 ease-in-out hover:bg-[#e5e7eb] hover:text-[#000000]">
+                <button className="rounded-md bg-[#f3f4f6] px-2 py-1 text-sm font-medium text-[#004B23] transition-colors duration-200 ease-in-out hover:bg-[#e5e7eb] hover:text-[#000000]">
                   View All
                 </button>
               </div>
@@ -400,7 +400,7 @@ const GenerateToken = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#f6f6f6] px-2 py-1 text-[#0a0a0a]">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#f6f6f6] px-2 py-1 text-[#004B23]">
                         {vend.channel}
                       </span>
                       <span className="text-gray-500">{vend.timestamp}</span>

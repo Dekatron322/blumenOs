@@ -653,7 +653,7 @@ export default function BillingDashboard() {
                       onClick={() => handleTimeFilterChange(tab.key)}
                       className={`flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out ${
                         tab.isActive
-                          ? "bg-[#0a0a0a] text-white"
+                          ? "bg-[#004B23] text-white"
                           : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                       } ${showLoading ? "cursor-not-allowed opacity-70" : ""}`}
                       disabled={showLoading}

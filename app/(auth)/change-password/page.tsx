@@ -200,7 +200,7 @@ const ChangePassword: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h5 className="font-bold text-[#0a0a0a]">BlumenOS</h5>
+          <h5 className="font-bold text-[#004B23]">BlumenOS</h5>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -208,7 +208,7 @@ const ChangePassword: React.FC = () => {
             className="w-full max-w-xl rounded-2xl md:p-8"
           >
             <div className="mx-4 mb-8 border-b pb-6 text-center">
-              <h1 className="text-3xl font-bold text-[#0a0a0a]">Change Your Password</h1>
+              <h1 className="text-3xl font-bold text-[#004B23]">Change Your Password</h1>
               <p className="mt-2 text-gray-500">
                 {mustChangePassword
                   ? "For security reasons, please change your password to continue."
@@ -372,7 +372,7 @@ const ChangePassword: React.FC = () => {
       </div>
 
       {/* Image Container with Text at Bottom */}
-      <div className="relative w-[60%] bg-[#0A0A0A]">
+      <div className="relative w-[60%] bg-[#004B23]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

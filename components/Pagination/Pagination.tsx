@@ -72,7 +72,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
               disabled={page === "..."}
               className={`rounded-md px-3 py-1 text-sm ${
                 page === currentPage
-                  ? "bg-[#0a0a0a] text-white"
+                  ? "bg-[#004B23] text-white"
                   : page === "..."
                   ? "cursor-default"
                   : "border border-gray-300 hover:bg-gray-50"

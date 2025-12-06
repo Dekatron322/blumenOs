@@ -433,9 +433,9 @@ const AddCustomerPage = () => {
               <div
                 className={`flex size-8 items-center justify-center rounded-full border-2 ${
                   step === currentStep
-                    ? "border-[#0A0A0A] bg-[#0A0A0A] text-white"
+                    ? "border-[#004B23] bg-[#004B23] text-white"
                     : step < currentStep
-                    ? "border-[#0A0A0A] bg-[#0A0A0A] text-white"
+                    ? "border-[#004B23] bg-[#004B23] text-white"
                     : "border-gray-300 bg-white text-gray-500"
                 }`}
               >
@@ -451,7 +451,7 @@ const AddCustomerPage = () => {
                   step
                 )}
               </div>
-              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#0A0A0A]" : "text-gray-500"}`}>
+              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#004B23]" : "text-gray-500"}`}>
                 {step === 1 && "Personal"}
                 {step === 2 && "Address"}
                 {step === 3 && "Service"}
@@ -461,7 +461,7 @@ const AddCustomerPage = () => {
                 {step === 7 && "Additional"}
               </span>
             </div>
-            {step < 7 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#0A0A0A]" : "bg-gray-300"}`} />}
+            {step < 7 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>

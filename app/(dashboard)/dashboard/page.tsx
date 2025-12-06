@@ -146,7 +146,7 @@ export default function Dashboard() {
     <button
       onClick={() => handleTimeFilterChange(filter)}
       className={`flex items-center justify-center rounded-md px-3 py-1 pt-2 text-sm font-medium ${
-        timeFilter === filter ? "bg-[#0a0a0a] text-[#FFFFFF]" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+        timeFilter === filter ? "bg-[#004B23] text-[#FFFFFF]" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
       }`}
     >
       {label}

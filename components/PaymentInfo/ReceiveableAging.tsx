@@ -182,7 +182,7 @@ const ReceiveableAging = () => {
                   key={index}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full rounded-lg border-[#0a0a0a]  bg-[#f3f4f6] p-4 text-left transition-all duration-200 hover:border-blue-300 hover:shadow-sm"
+                  className="w-full rounded-lg border-[#004B23]  bg-[#f3f4f6] p-4 text-left transition-all duration-200 hover:border-blue-300 hover:shadow-sm"
                 >
                   <div className="flex items-start gap-3">
                     <div>{action.icon}</div>

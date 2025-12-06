@@ -537,7 +537,7 @@ const VendorDetailsPage = () => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#0a0a0a]">
+                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#004B23]">
                           {currentVendor.name
                             .split(" ")
                             .map((n) => n[0])
@@ -771,7 +771,7 @@ const VendorDetailsPage = () => {
                           onClick={() => setActiveTab("details")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
                             activeTab === "details"
-                              ? "bg-[#0a0a0a] text-white"
+                              ? "bg-[#004B23] text-white"
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >
@@ -782,7 +782,7 @@ const VendorDetailsPage = () => {
                           onClick={() => setActiveTab("payments")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
                             activeTab === "payments"
-                              ? "bg-[#0a0a0a] text-white"
+                              ? "bg-[#004B23] text-white"
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >
@@ -793,7 +793,7 @@ const VendorDetailsPage = () => {
                           onClick={() => setActiveTab("change-requests")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
                             activeTab === "change-requests"
-                              ? "bg-[#0a0a0a] text-white"
+                              ? "bg-[#004B23] text-white"
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
                           }`}
                         >

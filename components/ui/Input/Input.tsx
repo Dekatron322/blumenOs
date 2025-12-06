@@ -47,7 +47,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
         className={`
         flex h-[46px] items-center rounded-md border px-3
         py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
-        ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#0a0a0a]" : "bg-[#F9F9F9]"}
+        ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#004B23]" : "bg-[#F9F9F9]"}
         ${disabled ? "bg-gray-100" : ""}
         transition-all duration-200
       `}

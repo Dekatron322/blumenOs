@@ -87,7 +87,7 @@
 //           <button
 //             onClick={handleTest}
 //             disabled={!webhookUrl || isLoading}
-//             className="rounded-md bg-[#0a0a0a] px-6 py-2 text-white hover:bg-[#000000] disabled:opacity-50"
+//             className="rounded-md bg-[#004B23] px-6 py-2 text-white hover:bg-[#000000] disabled:opacity-50"
 //           >
 //             {isLoading ? "Testing..." : "Test Webhook"}
 //           </button>

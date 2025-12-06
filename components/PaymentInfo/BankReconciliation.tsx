@@ -62,7 +62,7 @@ const BankReconciliation: React.FC<BankReconciliationProps> = ({ onViewDetails, 
           </button>
           <button
             onClick={onReconcileNow}
-            className="rounded-md bg-[#0a0a0a] px-4 py-2 text-sm text-white hover:bg-[#000000]"
+            className="rounded-md bg-[#004B23] px-4 py-2 text-sm text-white hover:bg-[#000000]"
           >
             Reconcile Now
           </button>

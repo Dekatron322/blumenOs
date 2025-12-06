@@ -51,7 +51,7 @@ const TariffManagement: React.FC<TariffManagementProps> = ({ onCreateNewTariff, 
         <h3 className="text-lg font-semibold">Tariff Plans</h3>
         <button
           onClick={onCreateNewTariff}
-          className="rounded-md bg-[#0a0a0a] px-4 py-2 text-sm text-white hover:bg-[#000000]"
+          className="rounded-md bg-[#004B23] px-4 py-2 text-sm text-white hover:bg-[#000000]"
         >
           Create New Tariff
         </button>

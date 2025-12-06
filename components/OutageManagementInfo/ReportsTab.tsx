@@ -582,7 +582,7 @@ const ReportsTab: React.FC = () => {
         </div>
         <div className="flex gap-4">
           <SearchInput placeholder="Search reports..." value={searchText} onChange={handleSearch} className="w-80" />
-          <button className="rounded-md bg-[#0a0a0a] px-4 py-2 text-white hover:bg-[#000000]">Generate Report</button>
+          <button className="rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000]">Generate Report</button>
         </div>
       </motion.div>
 
@@ -804,7 +804,7 @@ const ReportsTab: React.FC = () => {
                     onClick={() => paginate(pageNum)}
                     className={`flex size-8 items-center justify-center rounded-md text-sm ${
                       currentPage === pageNum
-                        ? "bg-[#0a0a0a] text-white"
+                        ? "bg-[#004B23] text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     whileHover={{ scale: 1.1 }}
@@ -825,7 +825,7 @@ const ReportsTab: React.FC = () => {
                   onClick={() => paginate(totalPages)}
                   className={`flex size-8 items-center justify-center rounded-md text-sm ${
                     currentPage === totalPages
-                      ? "bg-[#0a0a0a] text-white"
+                      ? "bg-[#004B23] text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   whileHover={{ scale: 1.1 }}

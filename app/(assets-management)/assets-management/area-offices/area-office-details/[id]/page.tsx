@@ -601,7 +601,7 @@ const ChangeRequestCard = ({
       <div className="mt-3 flex gap-2">
         <button
           onClick={() => onViewDetails(changeRequest)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#f9f9f9]"
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9]"
         >
           <VscEye className="size-4" />
           View Details

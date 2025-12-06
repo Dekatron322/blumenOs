@@ -41,7 +41,7 @@ export const PasswordInputModule: React.FC<PasswordInputProps> = ({
         py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
         ${
           isFocused
-            ? "bg-[#FBFAFC] focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a]"
+            ? "bg-[#FBFAFC] focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23]"
             : "bg-[#f9f9f9]"
         }
         transition-all duration-200
