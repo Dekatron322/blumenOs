@@ -4,22 +4,22 @@ import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import {
+  MdKeyboardArrowDown,
+  MdKeyboardArrowUp,
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
   MdOutlineCheckBoxOutlineBlank,
-  MdKeyboardArrowDown,
-  MdKeyboardArrowUp,
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   fetchBackgroundJobs,
+  getFilteredJobs,
   pauseJob,
   resumeJob,
-  triggerJob,
   setSearchTerm,
   setSortOptions,
-  getFilteredJobs,
+  triggerJob,
 } from "lib/redux/backgroundJobsSlice"
 import type { BackgroundJob } from "lib/redux/backgroundJobsSlice"
 
