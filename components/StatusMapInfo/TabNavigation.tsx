@@ -23,7 +23,6 @@ const TableViewIcon = () => (
   </svg>
 )
 
-
 interface TabNavigationProps {
   activeTab: string
   setActiveTab: (tab: string) => void
