@@ -155,9 +155,14 @@ const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/agent-management/overview", privilegeKey: "agents", requiredActions: ["W"] },
-      { name: "View All Agents", href: "/agent-management/all-agents", privilegeKey: "agents", requiredActions: ["R"] },
       {
-        name: "Add New Agent",
+        name: "View All Sales Rep",
+        href: "/agent-management/all-agents",
+        privilegeKey: "agents",
+        requiredActions: ["R"],
+      },
+      {
+        name: "Add New Sales Rep",
         href: "/agent-management/add-new-agent",
         privilegeKey: "agents",
         requiredActions: ["W"],

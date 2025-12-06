@@ -1,24 +1,19 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   AlertCircle,
   ArrowLeft,
   BarChart3,
+  Briefcase,
   Building,
   CheckCircle,
   Edit,
   Info,
-  Layers,
   Save,
   XCircle,
-  Users,
-  Globe,
-  Target,
-  Shield,
-  Briefcase,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -28,19 +23,19 @@ import type { RootState } from "lib/redux/store"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import {
-  updateDepartment,
-  fetchDepartmentById,
-  clearOperationState,
   clearCurrentDepartment,
-  selectOperationLoading,
-  selectOperationError,
-  selectOperationSuccess,
+  clearOperationState,
+  fetchDepartmentById,
   selectCurrentDepartment,
-  selectCurrentDepartmentLoading,
   selectCurrentDepartmentError,
+  selectCurrentDepartmentLoading,
+  selectOperationError,
+  selectOperationLoading,
+  selectOperationSuccess,
+  updateDepartment,
   UpdateDepartmentRequest,
 } from "lib/redux/departmentSlice"
-import { fetchCompanies, type Company } from "lib/redux/companySlice"
+import { type Company, fetchCompanies } from "lib/redux/companySlice"
 
 // Loading Skeleton Component
 const LoadingSkeleton = () => (

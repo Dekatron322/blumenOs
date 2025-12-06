@@ -7,17 +7,17 @@ import {
   AlertCircle,
   ArrowLeft,
   BarChart3,
+  Briefcase,
   Building,
   CheckCircle,
+  Globe,
   Info,
   Layers,
   PlusCircle,
-  XCircle,
-  Users,
-  Globe,
-  Target,
   Shield,
-  Briefcase,
+  Target,
+  Users,
+  XCircle,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -27,16 +27,15 @@ import type { RootState } from "lib/redux/store"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import {
-  createDepartment,
-  clearOperationState,
   clearDepartments,
-  selectOperationLoading,
-  selectOperationError,
-  selectOperationSuccess,
-  fetchDepartments,
+  clearOperationState,
+  createDepartment,
   CreateDepartmentRequest,
+  selectOperationError,
+  selectOperationLoading,
+  selectOperationSuccess,
 } from "lib/redux/departmentSlice"
-import { fetchCompanies, type Company } from "lib/redux/companySlice"
+import { type Company, fetchCompanies } from "lib/redux/companySlice"
 
 // Loading Skeleton Component
 const LoadingSkeleton = () => (
@@ -609,7 +608,7 @@ const CreateDepartmentPage = () => {
                     <ul className="space-y-2 text-sm text-blue-700">
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
-                        <span>Use clear, descriptive names that reflect the department's function</span>
+                        <span>Use clear, descriptive names that reflect the department&apos;s function</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <div className="mt-0.5 size-1.5 rounded-full bg-blue-400"></div>
