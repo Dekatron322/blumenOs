@@ -3,7 +3,7 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { FiDollarSign } from "react-icons/fi"
+
 import {
   BillingIcon,
   CollectionIcon,
@@ -17,23 +17,23 @@ import {
   TokenGeneratedIcon,
   VendingIcon,
 } from "components/Icons/Icons"
-import ProfitChart from "components/Dashboard/ProfitChart"
+
 import {
-  BarChart,
+  Area,
+  AreaChart,
   Bar,
-  LineChart,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
   Line,
+  LineChart,
   PieChart,
   Pie,
-  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
 } from "recharts"
 
 // Time filter types
