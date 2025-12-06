@@ -840,7 +840,9 @@ const AddPaymentPage = () => {
                                 </p>
                                 <p>
                                   <strong>Outstanding Balance:</strong> ₦
-                                  {customerInfo.customerOutstandingDebtBalance.toLocaleString()}
+                                  {customerInfo.customerOutstandingDebtBalance != null
+                                    ? customerInfo.customerOutstandingDebtBalance.toLocaleString()
+                                    : "0"}
                                 </p>
                               </div>
                             </div>
