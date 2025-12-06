@@ -1,7 +1,6 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { FiDollarSign } from "react-icons/fi"
@@ -19,6 +18,23 @@ import {
   VendingIcon,
 } from "components/Icons/Icons"
 import ProfitChart from "components/Dashboard/ProfitChart"
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts"
 
 // Time filter types
 type TimeFilter = "day" | "week" | "month" | "all"
@@ -27,8 +43,66 @@ export default function Dashboard() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
   const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("NGN")
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
+  const [activeView, setActiveView] = useState<"kpi" | "statistics">("kpi")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  // Mock data for charts based on the image
+  const energyData = [
+    { name: "B1D1F", delivered: 1200, billed: 1150 },
+    { name: "B2D2F", delivered: 1800, billed: 1720 },
+    { name: "B3D3F", delivered: 1500, billed: 1420 },
+    { name: "B4D4F", delivered: 2200, billed: 2100 },
+    { name: "B5D5F", delivered: 1900, billed: 1850 },
+    { name: "B6D6F", delivered: 2400, billed: 2300 },
+    { name: "B7D7F", delivered: 2100, billed: 2050 },
+    { name: "B8D8F", delivered: 1700, billed: 1650 },
+    { name: "B9D9F", delivered: 1300, billed: 1250 },
+    { name: "B10D10F", delivered: 1600, billed: 1550 },
+  ]
+
+  const collectionByBandData = [
+    { name: "Band A", value: 18900023.46, percentage: 54 },
+    { name: "Band B", value: 18900023.46, percentage: 56.93 },
+    { name: "Band C", value: 18900023.46, percentage: 56.93 },
+    { name: "Band D", value: 18900023.46, percentage: 56.93 },
+    { name: "Total", value: 75600093.84, percentage: 56.93 },
+  ]
+
+  const dailyCollectionData = [
+    { day: "Mon", collection: 4200000 },
+    { day: "Tue", collection: 5200000 },
+    { day: "Wed", collection: 3800000 },
+    { day: "Thu", collection: 6100000 },
+    { day: "Fri", collection: 4900000 },
+    { day: "Sat", collection: 3200000 },
+    { day: "Sun", collection: 2800000 },
+  ]
+
+  const cboPerformanceData = [
+    { name: "Hero.db", performance: 95 },
+    { name: "Mt2.db", performance: 87 },
+    { name: "Hto.db", performance: 92 },
+    { name: "Hta.db", performance: 78 },
+  ]
+
+  const serviceTypeData = [
+    { name: "H1A", collection: 85, total: 100 },
+    { name: "Other", collection: 60, total: 100 },
+  ]
+
+  const atcLossesData = [
+    { month: "Sep", losses: 12.5 },
+    { month: "Oct", losses: 11.2 },
+    { month: "Nov", losses: 9.8 },
+  ]
+
+  const activeCustomersData = [
+    { name: "Postpaid", value: 35000 },
+    { name: "Prepaid", value: 85000 },
+  ]
+
+  const COLORS = ["#004B23", "#006400", "#007200", "#38b000", "#70e000"]
 
   // Mock currencies data
   const currenciesData = {
@@ -175,7 +249,7 @@ export default function Dashboard() {
                   Real-time overview of customer accounts, revenue, and operational metrics
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
                   <span className="text-sm font-medium text-gray-500">Time Range:</span>
                   <TimeFilterButton filter="day" label="Today" />
@@ -186,266 +260,396 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Customer Metrics */}
-            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <Card title="Total Customers" icon={<CustomeraIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>All Customer Accounts</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>{utilityData.totalCustomers.toLocaleString()}</Metric>
-                    <TrendIndicator value="2.5%" positive={true} />
-                  </div>
-                )}
-              </Card>
+            {activeView === "kpi" && (
+              <>
+                {/* Customer Metrics */}
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card title="Total Customers" icon={<CustomeraIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>All Customer Accounts</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric>{utilityData.totalCustomers.toLocaleString()}</Metric>
+                        <TrendIndicator value="2.5%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
 
-              <Card title="Prepaid Customers" icon={<PrepaidIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Token-based Meters</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>{utilityData.prepaidCustomers.toLocaleString()}</Metric>
-                    <TrendIndicator value="4.1%" positive={true} />
-                  </div>
-                )}
-              </Card>
+                  <Card title="Prepaid Customers" icon={<PrepaidIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Token-based Meters</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric>{utilityData.prepaidCustomers.toLocaleString()}</Metric>
+                        <TrendIndicator value="4.1%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
 
-              <Card title="Postpaid Customers" icon={<PostpaidIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Billed Monthly</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>{utilityData.postpaidCustomers.toLocaleString()}</Metric>
-                    <TrendIndicator value="0.8%" positive={true} />
-                  </div>
-                )}
-              </Card>
+                  <Card title="Postpaid Customers" icon={<PostpaidIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Billed Monthly</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric>{utilityData.postpaidCustomers.toLocaleString()}</Metric>
+                        <TrendIndicator value="0.8%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
 
-              <Card title="Estimated Billing" icon={<BillingIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Unmetered Customers</Text>
+                  <Card title="Estimated Billing" icon={<BillingIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Unmetered Customers</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric>{utilityData.estimatedBillingCustomers.toLocaleString()}</Metric>
+                        <TrendIndicator value="-1.2%" positive={false} />
+                      </div>
+                    )}
+                  </Card>
                 </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>{utilityData.estimatedBillingCustomers.toLocaleString()}</Metric>
-                    <TrendIndicator value="-1.2%" positive={false} />
-                  </div>
-                )}
-              </Card>
-            </div>
 
-            {/* Financial Metrics */}
-            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <Card title="Total Revenue" icon={<RevenueIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>All Channels</Text>
-                  <Text className="text-xs">
-                    {timeFilter === "day"
-                      ? "Today"
-                      : timeFilter === "week"
-                      ? "This Week"
-                      : timeFilter === "month"
-                      ? "MTD"
-                      : "YTD"}
-                  </Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>
-                      {selectedCurrencySymbol}
-                      {utilityData.totalRevenue.toLocaleString()}
-                    </Metric>
-                    <TrendIndicator value="12.5%" positive={true} />
-                  </div>
-                )}
-              </Card>
+                {/* ENERGY DELIVERED vs ENERGY BILLED Chart */}
+                <Card title="ENERGY DELIVERED vs ENERGY BILLED" className="mb-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={energyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="delivered" name="Energy Delivered" fill="#004B23" />
+                      <Bar dataKey="billed" name="Energy Billed" fill="#38b000" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Card>
 
-              <Card title="Collection Efficiency" icon={<CollectionIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Revenue Collection Rate</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <Metric>{utilityData.collectionEfficiency.toFixed(1)}%</Metric>
-                )}
-                <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
-                  <div
-                    className={`h-2 rounded-full ${
-                      utilityData.collectionEfficiency >= 90
-                        ? "bg-green-500"
-                        : utilityData.collectionEfficiency >= 80
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
-                    }`}
-                    style={{ width: `${utilityData.collectionEfficiency}%` }}
-                  ></div>
-                </div>
-              </Card>
+                {/* Financial Metrics */}
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  <Card title="Total Revenue" icon={<RevenueIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>All Channels</Text>
+                      <Text className="text-xs">
+                        {timeFilter === "day"
+                          ? "Today"
+                          : timeFilter === "week"
+                          ? "This Week"
+                          : timeFilter === "month"
+                          ? "MTD"
+                          : "YTD"}
+                      </Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric>
+                          {selectedCurrencySymbol}
+                          {utilityData.totalRevenue.toLocaleString()}
+                        </Metric>
+                        <TrendIndicator value="12.5%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
 
-              <Card title="Outstanding Arrears" icon={<OutstandingIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Total Receivables</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>
-                      {selectedCurrencySymbol}
-                      {utilityData.outstandingArrears.toLocaleString()}
-                    </Metric>
-                    <TrendIndicator value="-3.2%" positive={false} />
-                  </div>
-                )}
-              </Card>
-            </div>
+                  <Card title="Collection Efficiency" icon={<CollectionIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Revenue Collection Rate</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <Metric>{utilityData.collectionEfficiency.toFixed(1)}%</Metric>
+                    )}
+                    <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                      <div
+                        className={`h-2 rounded-full ${
+                          utilityData.collectionEfficiency >= 90
+                            ? "bg-green-500"
+                            : utilityData.collectionEfficiency >= 80
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                        style={{ width: `${utilityData.collectionEfficiency}%` }}
+                      ></div>
+                    </div>
+                  </Card>
 
-            {/* Operational Metrics */}
-            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <Card title="New Connections (MTD)" icon={<ConnectionIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Meter Installations</Text>
+                  <Card title="Outstanding Arrears" icon={<OutstandingIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Total Receivables</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric>
+                          {selectedCurrencySymbol}
+                          {utilityData.outstandingArrears.toLocaleString()}
+                        </Metric>
+                        <TrendIndicator value="-3.2%" positive={false} />
+                      </div>
+                    )}
+                  </Card>
                 </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric size="lg">{utilityData.newConnectionsMTD.toLocaleString()}</Metric>
-                    <TrendIndicator value="8.7%" positive={true} />
-                  </div>
-                )}
-              </Card>
 
-              <Card title="Prepaid Vends" icon={<VendingIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Token Transactions</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric size="lg">{utilityData.prepaidVends.toLocaleString()}</Metric>
-                    <TrendIndicator value="15.3%" positive={true} />
-                  </div>
-                )}
-              </Card>
+                {/* Collection by BAND Section */}
+                <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <Card title="Collection by BAND">
+                    <div className="mb-4">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="py-2 text-left">Band</th>
+                            <th className="py-2 text-right">Collection</th>
+                            <th className="py-2 text-right">%</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {collectionByBandData.map((item, index) => (
+                            <tr key={item.name} className="border-b">
+                              <td className="py-2">{item.name}</td>
+                              <td className="py-2 text-right">
+                                {selectedCurrencySymbol}
+                                {item.value.toLocaleString()}
+                              </td>
+                              <td className="py-2 text-right">{item.percentage}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={collectionByBandData.slice(0, -1)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="percentage" name="Collection %" fill="#004B23" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Card>
 
-              <Card title="Tokens Generated" icon={<TokenGeneratedIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>KCT, CTT, CCT Tokens</Text>
-                </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric size="lg">{utilityData.tokensGenerated.toLocaleString()}</Metric>
-                    <TrendIndicator value="12.1%" positive={true} />
-                  </div>
-                )}
-              </Card>
+                  <div className="grid grid-cols-1 gap-6">
+                    <Card title="Daily Collection">
+                      <ResponsiveContainer width="100%" height={200}>
+                        <AreaChart data={dailyCollectionData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="day" />
+                          <YAxis />
+                          <Tooltip />
+                          <Area
+                            type="monotone"
+                            dataKey="collection"
+                            stroke="#004B23"
+                            fill="#004B23"
+                            fillOpacity={0.3}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </Card>
 
-              <Card title="Meters Programmed" icon={<MetersProgrammedIcon />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>{utilityData.pendingMeterProgramming} pending</Text>
+                    <Card title="CBO Performance">
+                      <ResponsiveContainer width="100%" height={150}>
+                        <BarChart data={cboPerformanceData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis domain={[0, 100]} />
+                          <Tooltip />
+                          <Bar dataKey="performance" name="Performance %" fill="#004B23" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Card>
+                  </div>
                 </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric size="lg">{utilityData.metersProgrammed.toLocaleString()}</Metric>
-                    <TrendIndicator value="5.6%" positive={true} />
-                  </div>
-                )}
-              </Card>
-            </div>
 
-            {/* Additional Financial Metric */}
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card title="Arrears Collected (MTD)" icon={<FiDollarSign className="size-6" />}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Via Prepaid Deductions</Text>
-                  <Text className="text-xs">Month to Date</Text>
+                {/* Operational Metrics */}
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card title="New Connections (MTD)" icon={<ConnectionIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Meter Installations</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric size="lg">{utilityData.newConnectionsMTD.toLocaleString()}</Metric>
+                        <TrendIndicator value="8.7%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
+
+                  <Card title="Prepaid Vends" icon={<VendingIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>Token Transactions</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric size="lg">{utilityData.prepaidVends.toLocaleString()}</Metric>
+                        <TrendIndicator value="15.3%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
+
+                  <Card title="Tokens Generated" icon={<TokenGeneratedIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>KCT, CTT, CCT Tokens</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric size="lg">{utilityData.tokensGenerated.toLocaleString()}</Metric>
+                        <TrendIndicator value="12.1%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
+
+                  <Card title="Meters Programmed" icon={<MetersProgrammedIcon />}>
+                    <div className="mb-2 flex items-center justify-between border-b py-2">
+                      <Text>{utilityData.pendingMeterProgramming} pending</Text>
+                    </div>
+                    {isLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Metric size="lg">{utilityData.metersProgrammed.toLocaleString()}</Metric>
+                        <TrendIndicator value="5.6%" positive={true} />
+                      </div>
+                    )}
+                  </Card>
                 </div>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 w-32 rounded bg-gray-200"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Metric>
-                      {selectedCurrencySymbol}
-                      {utilityData.arrearsCollectedMTD.toLocaleString()}
-                    </Metric>
-                    <div className="flex items-center">
-                      <TrendIndicator value="18.4%" positive={true} />
+
+                {/* Additional Charts Section */}
+                <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                  <Card title="SERVICE TYPE COLLECTION SUMMARY">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={serviceTypeData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry) => `${entry.name}: ${entry.collection}/${entry.total}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="collection"
+                        >
+                          {serviceTypeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </Card>
+
+                  <Card title="ATC AND C LOSSES 3 MONTH TREND ANALYSIS">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={atcLossesData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis domain={[0, 15]} />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="losses" stroke="#004B23" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Card>
+
+                  <Card title="ACTIVE CUSTOMERS SUMMARY">
+                    <div className="text-center">
+                      <div className="mb-4 text-2xl font-bold text-gray-900">
+                        {utilityData.totalCustomers.toLocaleString()}
+                      </div>
+                      <div className="mb-4 text-sm text-gray-600">Total Active Customers</div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <PieChart>
+                        <Pie
+                          data={activeCustomersData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={60}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {activeCustomersData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <div className="font-medium text-gray-900">Postpaid</div>
+                        <div className="text-gray-600">{utilityData.postpaidCustomers.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">Prepaid</div>
+                        <div className="text-gray-600">{utilityData.prepaidCustomers.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Date Range */}
+                <Card className="mb-6">
+                  <div className="flex items-center justify-between">
+                    <Text>Selected Date Range:</Text>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Text>From:</Text>
+                        <span className="font-medium text-gray-900">11/03/2025</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Text>To:</Text>
+                        <span className="font-medium text-gray-900">11/03/2025</span>
+                      </div>
                     </div>
                   </div>
-                )}
-                <div className="mt-3 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Target:</span>
-                    <span>{selectedCurrencySymbol}15,000,000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Achievement:</span>
-                    <span>{((utilityData.arrearsCollectedMTD / 15000000) * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Transaction Volume Charts */}
-              <Card
-                title={`Revenue Trend - ${
-                  timeFilter === "day"
-                    ? "Today"
-                    : timeFilter === "week"
-                    ? "This Week"
-                    : timeFilter === "month"
-                    ? "This Month"
-                    : "All Time"
-                }`}
-              >
-                <div className="mt-4 h-64">
-                  <ProfitChart />
-                </div>
-              </Card>
-            </div>
+                </Card>
+              </>
+            )}
           </div>
         </div>
       </div>
