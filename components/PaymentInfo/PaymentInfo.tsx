@@ -1,9 +1,9 @@
 import React, { useState } from "react"
 import TabNavigation from "./TabNavigation"
 import RecentPayments from "./RecentPayments"
-import ReceiveableAging from "./ReceiveableAging"
 import BankReconciliation from "./BankReconciliation"
 import DunningManagement from "./DunningManagement"
+import RecentDisputes from "./RecentDisputes"
 
 const PaymentInfo = () => {
   const [activeTab, setActiveTab] = useState("RecentPayments")
@@ -13,8 +13,8 @@ const PaymentInfo = () => {
     switch (activeTab) {
       case "RecentPayments":
         return <RecentPayments />
-      case "ReceiveableAging":
-        return <ReceiveableAging />
+      case "RecentDisputes":
+        return <RecentDisputes />
       case "BankReconciliation":
         return <BankReconciliation />
       case "DunningManagement":

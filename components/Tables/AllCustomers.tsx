@@ -1,37 +1,19 @@
-import React, { useState } from "react"
-import { RxDotsVertical } from "react-icons/rx"
+import React, { useEffect, useState } from "react"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { PiNoteBold } from "react-icons/pi"
-import Image from "next/image"
 import { IoMdFunnel } from "react-icons/io"
-import { IoFunnelOutline } from "react-icons/io5"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { GoXCircle } from "react-icons/go"
-import { WiTime3 } from "react-icons/wi"
 import { VscEye } from "react-icons/vsc"
-import { LiaTimesSolid } from "react-icons/lia"
+import { ChevronDown } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
-import { FiXCircle } from "react-icons/fi"
-import { FaRegCheckCircle } from "react-icons/fa"
-import Dropdown from "components/Dropdown/Dropdown"
-import Link from "next/link"
+import { AnimatePresence, motion } from "framer-motion"
+import SendReminderModal from "components/ui/Modal/send-reminder-modal"
+import { useRouter } from "next/navigation"
+import { Customer, fetchCustomers, setFilters, setPagination } from "lib/redux/customerSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 type SortOrder = "asc" | "desc" | null
-type Customer = {
-  id: string
-  name: string
-  status: "active" | "inactive" | "suspended"
-  region: string
-  accountNumber: string
-  meterNumber: string
-  tariff: string
-  address: string
-  customerType: "prepaid" | "postpaid" | "estimated"
-  lastPayment: string
-  balance: number
-}
 
-type CustomerCategory = {
+interface CustomerCategory {
   name: string
   code: string
   customerCount: number
@@ -39,249 +21,494 @@ type CustomerCategory = {
   type: "residential" | "commercial"
 }
 
+interface Asset {
+  serialNo: number
+  supplyStructureType?: string
+  company: string
+  companyNercCode?: string
+  oldAreaOffice?: string
+  newAreaOffice?: string
+  newAreaOfficeNercCode?: string
+  oldKaedcoAoCode?: string
+  newKaedcoAoCode?: string
+  injectionSubstation?: string
+  injectionSubstationCode?: string
+  feederName?: string
+  feederNercCode?: string
+  feederKaedcoCode?: string
+  feederVoltageKv?: 11 | 33
+  htPoleNo?: string
+  dssName?: string
+  oldDssName?: string
+  dssNercCode?: string
+  dssCode?: string
+  transformerCapacityKva?: number
+  latitude?: number
+  longitude?: number
+  units?: number
+  unitCodes?: string[]
+  isDedicated?: boolean
+  status?: "ACTIVE" | "INACTIVE" | "NEW PROJECT" | "NON-EXISTENT" | string
+  remarks?: string
+}
+
+// Sample data for generating random customers
+const sampleCustomerData = {
+  customerName: "BASIRU ATIKU ILLELA",
+  customerAccountNo: undefined,
+  customerAddress1: "OPP MURTALA ZAKI ILLELA AREA",
+  customerCity: "Tambuwal",
+  customerState: "SOKOTO",
+  telephoneNumber: undefined,
+  tariff: "R2SP",
+  feederName: "TAMBUWAL",
+  transformers: "NAMAKKA S/S",
+  dtNumber: "TAM011",
+  technicalEngineer: "MUSTAPHA SHAAIBU",
+  employeeNo: ";02694",
+  areaOffice: "SOKOTO",
+  serviceCenter: "TAMBUWAL",
+  storedAverage: 140,
+}
+
+const regions = ["North", "South", "East", "West", "Central"]
+const serviceBands = ["Band A", "Band B", "Band C", "Band D"]
+const tariffClasses = ["R1", "R2", "R3", "C1", "C2", "C3"]
+const businessUnits = ["Unit A", "Unit B", "Unit C", "Unit D"]
+const statuses: ("ACTIVE" | "INACTIVE" | "SUSPENDED")[] = ["ACTIVE", "INACTIVE", "SUSPENDED"]
+const customerTypes: ("PREPAID" | "POSTPAID")[] = ["PREPAID", "POSTPAID"]
+
+// Generate random assets
+const generateRandomAssets = (count: number): Asset[] => {
+  return Array.from({ length: count }, (_, index) => ({
+    serialNo: index + 1,
+    supplyStructureType: ["OVERHEAD", "UNDERGROUND"][Math.floor(Math.random() * 2)],
+    company: "KAEDCO",
+    companyNercCode: "NERC001",
+    oldAreaOffice: `Old Office ${index + 1}`,
+    newAreaOffice: `New Office ${index + 1}`,
+    newAreaOfficeNercCode: `NERC-AO-${index + 1}`,
+    oldKaedcoAoCode: `OLD-KAEDCO-${index + 1}`,
+    newKaedcoAoCode: `NEW-KAEDCO-${index + 1}`,
+    injectionSubstation: `Substation ${index + 1}`,
+    injectionSubstationCode: `SUB-${index + 1}`,
+    feederName: `Feeder ${index + 1}`,
+    feederNercCode: `NERC-FEEDER-${index + 1}`,
+    feederKaedcoCode: `KAEDCO-FEEDER-${index + 1}`,
+    feederVoltageKv: ([11, 33] as const)[Math.floor(Math.random() * 2)],
+    htPoleNo: `POLE-${index + 1}`,
+    dssName: `DSS-${index + 1}`,
+    oldDssName: `OLD-DSS-${index + 1}`,
+    dssNercCode: `NERC-DSS-${index + 1}`,
+    dssCode: `DSS-CODE-${index + 1}`,
+    transformerCapacityKva: [100, 200, 300, 500][Math.floor(Math.random() * 4)],
+    latitude: 11.5 + Math.random(),
+    longitude: 4.5 + Math.random(),
+    units: Math.floor(Math.random() * 4) + 1,
+    unitCodes: Array.from({ length: Math.floor(Math.random() * 4) + 1 }, (_, i) => `UNIT-${i + 1}`),
+    isDedicated: Math.random() > 0.5,
+    status: ["ACTIVE", "INACTIVE", "NEW PROJECT", "NON-EXISTENT"][Math.floor(Math.random() * 4)],
+    remarks: Math.random() > 0.7 ? "Some remarks here" : undefined,
+  }))
+}
+
+// Skeleton Components
+const CustomerCardSkeleton = () => (
+  <motion.div
+    className="rounded-lg border bg-white p-4 shadow-sm"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="size-12 rounded-full bg-gray-200"></div>
+        <div>
+          <div className="h-5 w-32 rounded bg-gray-200"></div>
+          <div className="mt-1 flex gap-2">
+            <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+            <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+          </div>
+        </div>
+      </div>
+      <div className="size-6 rounded bg-gray-200"></div>
+    </div>
+
+    <div className="mt-4 space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex justify-between">
+          <div className="h-4 w-20 rounded bg-gray-200"></div>
+          <div className="h-4 w-16 rounded bg-gray-200"></div>
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-3 border-t pt-3">
+      <div className="h-4 w-full rounded bg-gray-200"></div>
+    </div>
+
+    <div className="mt-3 flex gap-2">
+      <div className="h-9 flex-1 rounded bg-gray-200"></div>
+    </div>
+  </motion.div>
+)
+
+const CustomerListItemSkeleton = () => (
+  <motion.div
+    className="border-b bg-white p-4"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="size-10 rounded-full bg-gray-200"></div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-40 rounded bg-gray-200"></div>
+            <div className="flex gap-2">
+              <div className="h-6 w-16 rounded-full bg-gray-200"></div>
+              <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
+            ))}
+          </div>
+          <div className="mt-2 h-4 w-64 rounded bg-gray-200"></div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="text-right">
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+          <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-20 rounded bg-gray-200"></div>
+          <div className="size-6 rounded bg-gray-200"></div>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+)
+
+const CategoryCardSkeleton = () => (
+  <motion.div
+    className="rounded-lg border bg-white p-3"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="h-5 w-12 rounded bg-gray-200"></div>
+        <div className="h-5 w-20 rounded bg-gray-200"></div>
+      </div>
+      <div className="h-4 w-16 rounded bg-gray-200"></div>
+    </div>
+    <div className="mt-3 space-y-1">
+      <div className="flex justify-between">
+        <div className="h-4 w-20 rounded bg-gray-200"></div>
+        <div className="h-4 w-16 rounded bg-gray-200"></div>
+      </div>
+    </div>
+  </motion.div>
+)
+
+const PaginationSkeleton = () => (
+  <motion.div
+    className="mt-4 flex items-center justify-between"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="flex items-center gap-2">
+      <div className="h-4 w-16 rounded bg-gray-200"></div>
+      <div className="h-8 w-16 rounded bg-gray-200"></div>
+    </div>
+
+    <div className="flex items-center gap-3">
+      <div className="size-8 rounded bg-gray-200"></div>
+      <div className="flex gap-2">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="size-7 rounded bg-gray-200"></div>
+        ))}
+      </div>
+      <div className="size-8 rounded bg-gray-200"></div>
+    </div>
+
+    <div className="h-4 w-24 rounded bg-gray-200"></div>
+  </motion.div>
+)
+
+const HeaderSkeleton = () => (
+  <motion.div
+    className="flex flex-col py-2"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    <div className="h-8 w-40 rounded bg-gray-200"></div>
+    <div className="mt-2 flex gap-4">
+      <div className="h-10 w-80 rounded bg-gray-200"></div>
+      <div className="flex gap-2">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+        ))}
+      </div>
+    </div>
+  </motion.div>
+)
+
 const AllCustomers = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
-  const [rowsPerPage, setRowsPerPage] = useState(6)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showCategories, setShowCategories] = useState(true)
+  const [selectedRegion, setSelectedRegion] = useState("")
 
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
 
-  const toggleDropdown = (index: number) => {
-    setActiveDropdown(activeDropdown === index ? null : index)
+  // Modal states - only one modal can be open at a time
+  const [activeModal, setActiveModal] = useState<"details" | "suspend" | "reminder" | "status" | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [customerAssets, setCustomerAssets] = useState<Asset[]>([])
+  const router = useRouter()
+
+  // Redux hooks
+  const dispatch = useAppDispatch()
+  const { customers, loading, error, pagination, filters } = useAppSelector((state) => state.customers)
+
+  // Fetch customers on component mount and when filters/pagination change
+  useEffect(() => {
+    const fetchData = async () => {
+      await dispatch(
+        fetchCustomers({
+          pageNumber: pagination.currentPage,
+          pageSize: pagination.pageSize,
+          search: filters.search,
+          status: filters.status,
+          isSuspended: filters.isSuspended || undefined,
+          distributionSubstationId: filters.distributionSubstationId || undefined,
+          serviceCenterId: filters.serviceCenterId || undefined,
+        })
+      )
+    }
+
+    fetchData()
+  }, [dispatch, pagination.currentPage, pagination.pageSize, filters])
+
+  // Generate assets when customer is selected
+  useEffect(() => {
+    if (selectedCustomer) {
+      setCustomerAssets(generateRandomAssets(3))
+    }
+  }, [selectedCustomer])
+
+  const toggleDropdown = (id: string) => {
+    setActiveDropdown(activeDropdown === id ? null : id)
   }
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
-  const [isModalReminderOpen, setIsModalReminderOpen] = useState(false)
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
 
-  const handleCancelOrder = () => {
-    setIsModalOpen(true)
+      if (!target.closest('[data-dropdown-root="customer-actions"]')) {
+        setActiveDropdown(null)
+      }
+
+      if (!target.closest('[data-dropdown-root="status-filter"]')) {
+        setIsStatusFilterOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", onDocClick)
+    return () => document.removeEventListener("mousedown", onDocClick)
+  }, [])
+
+  // Modal management functions
+  const closeAllModals = () => {
+    setActiveModal(null)
+    setSelectedCustomer(null)
+    setActiveDropdown(null)
   }
 
-  const handleStatusOrder = () => {
-    setIsStatusModalOpen(true)
+  const openModal = (modalType: "details" | "suspend" | "reminder" | "status", customer?: Customer) => {
+    closeAllModals()
+    setActiveModal(modalType)
+    if (customer) {
+      setSelectedCustomer(customer)
+    }
+    setActiveDropdown(null)
   }
 
-  const confirmStatusChange = () => {
-    console.log("Status changed")
-    setIsStatusModalOpen(false)
+  // Specific modal handlers
+  const handleViewDetails = (customer: Customer) => {
+    // Navigate to customer details page
+    router.push(`/customers/${customer.id}`)
   }
 
-  const confirmCancellation = () => {
+  const handleOpenSuspendModal = () => {
+    openModal("suspend")
+  }
+
+  const handleOpenReminderModal = () => {
+    openModal("reminder")
+  }
+
+  const handleOpenStatusModal = (customer?: Customer) => {
+    openModal("status", customer ?? selectedCustomer ?? undefined)
+  }
+
+  // Modal confirmation handlers
+  const handleConfirmSuspend = () => {
     console.log("Customer suspended")
-    setIsModalOpen(false)
+    closeAllModals()
   }
 
-  const closeReminderModal = () => {
-    setIsModalReminderOpen(false)
+  const handleConfirmReminder = (message: string) => {
+    console.log("Reminder sent:", message)
+    closeAllModals()
   }
 
-  const handleCancelReminderOrder = () => {
-    setIsModalReminderOpen(true)
+  const handleConfirmStatusChange = (status: string) => {
+    console.log("Status changed to:", status)
+    closeAllModals()
   }
 
-  const confirmReminder = () => {
-    console.log("Reminder Sent")
-    setIsModalReminderOpen(false)
+  // Search and filter handlers
+  const handleSearchChange = (value: string) => {
+    dispatch(setFilters({ search: value }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
+  const handleCancelSearch = () => {
+    dispatch(setFilters({ search: "" }))
   }
 
-  const closeStatusModal = () => {
-    setIsStatusModalOpen(false)
+  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = Number(event.target.value)
+    dispatch(setPagination({ page: 1, pageSize: newPageSize }))
   }
 
-  const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: "1",
-      name: "John Adebayo",
-      status: "active",
-      region: "R2",
-      accountNumber: "2301456789",
-      meterNumber: "MTR001234567",
-      tariff: "Band A (20+ hrs)",
-      address: "15 Victoria Street, Lagos Island",
-      customerType: "prepaid",
-      lastPayment: "2024-12-19",
-      balance: 0,
-    },
-    {
-      id: "2",
-      name: "Chioma Okoro",
-      status: "active",
-      region: "R1",
-      accountNumber: "2301456790",
-      meterNumber: "MTR001234568",
-      tariff: "Band B (16-20 hrs)",
-      address: "42 Allen Avenue, Ikeja",
-      customerType: "prepaid",
-      lastPayment: "2024-12-18",
-      balance: 1500,
-    },
-    {
-      id: "3",
-      name: "Emeka Nwankwo",
-      status: "inactive",
-      region: "R3",
-      accountNumber: "2301456791",
-      meterNumber: "MTR001234569",
-      tariff: "Band C (12-16 hrs)",
-      address: "8 Broad Street, Lagos Island",
-      customerType: "postpaid",
-      lastPayment: "2024-11-15",
-      balance: 8500,
-    },
-    {
-      id: "4",
-      name: "Bola Ahmed",
-      status: "suspended",
-      region: "R2",
-      accountNumber: "2301456792",
-      meterNumber: "MTR001234570",
-      tariff: "Band A (20+ hrs)",
-      address: "23 Marina Road, CMS",
-      customerType: "prepaid",
-      lastPayment: "2024-10-20",
-      balance: 0,
-    },
-    {
-      id: "5",
-      name: "Funke Adeleke",
-      status: "active",
-      region: "R1",
-      accountNumber: "2301456793",
-      meterNumber: "MTR001234571",
-      tariff: "Band B (16-20 hrs)",
-      address: "17 Awolowo Road, Ikoyi",
-      customerType: "estimated",
-      lastPayment: "2024-12-17",
-      balance: 0,
-    },
-    {
-      id: "6",
-      name: "Tunde Johnson",
-      status: "active",
-      region: "R3",
-      accountNumber: "2301456794",
-      meterNumber: "MTR001234572",
-      tariff: "Band C (12-16 hrs)",
-      address: "5 Herbert Macaulay, Yaba",
-      customerType: "prepaid",
-      lastPayment: "2024-12-16",
-      balance: 3200,
-    },
-    {
-      id: "7",
-      name: "Grace Okafor",
-      status: "inactive",
-      region: "R2",
-      accountNumber: "2301456795",
-      meterNumber: "MTR001234573",
-      tariff: "Band A (20+ hrs)",
-      address: "29 Nnamdi Azikiwe, Lagos Island",
-      customerType: "postpaid",
-      lastPayment: "2024-11-28",
-      balance: 12500,
-    },
-    {
-      id: "8",
-      name: "Kunle Martins",
-      status: "active",
-      region: "R1",
-      accountNumber: "2301456796",
-      meterNumber: "MTR001234574",
-      tariff: "Band B (16-20 hrs)",
-      address: "14 Adeola Odeku, Victoria Island",
-      customerType: "prepaid",
-      lastPayment: "2024-12-15",
-      balance: 0,
-    },
-    {
-      id: "9",
-      name: "Aisha Bello",
-      status: "suspended",
-      region: "R3",
-      accountNumber: "2301456797",
-      meterNumber: "MTR001234575",
-      tariff: "Band C (12-16 hrs)",
-      address: "36 Agege Motor Road, Mushin",
-      customerType: "estimated",
-      lastPayment: "2024-09-10",
-      balance: 0,
-    },
-    {
-      id: "10",
-      name: "David Chukwu",
-      status: "active",
-      region: "R2",
-      accountNumber: "2301456798",
-      meterNumber: "MTR001234576",
-      tariff: "Band A (20+ hrs)",
-      address: "9 Catholic Mission Street, Lagos Island",
-      customerType: "prepaid",
-      lastPayment: "2024-12-14",
-      balance: 1800,
-    },
-  ])
+  const handleStatusFilterChange = (status: string) => {
+    dispatch(setFilters({ status }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setIsStatusFilterOpen(false)
+  }
 
-  const customerCategories: CustomerCategory[] = [
-    {
-      name: "Residential - R1",
-      code: "R1",
-      customerCount: 45200,
-      rate: "₦68/kWh",
-      type: "residential",
-    },
-    {
-      name: "Residential - R2",
-      code: "R2",
-      customerCount: 38150,
-      rate: "₦92.5/kWh",
-      type: "residential",
-    },
-    {
-      name: "Residential - R3",
-      code: "R3",
-      customerCount: 22800,
-      rate: "₦118/kWh",
-      type: "residential",
-    },
-    {
-      name: "Commercial - C1",
-      code: "C1",
-      customerCount: 8400,
-      rate: "₦125/kWh",
-      type: "commercial",
-    },
-    {
-      name: "Commercial - C2",
-      code: "C2",
-      customerCount: 4200,
-      rate: "₦142.5/kWh",
-      type: "commercial",
-    },
-    {
-      name: "Commercial - C3",
-      code: "C3",
-      customerCount: 2800,
-      rate: "₦168/kWh",
-      type: "commercial",
-    },
-  ]
+  const changePage = (page: number) => {
+    if (page > 0 && page <= pagination.totalPages) {
+      dispatch(setPagination({ page, pageSize: pagination.pageSize }))
+    }
+  }
+
+  const getPageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Always show first page
+    items.push(1)
+
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      // Close to the start: show first few pages
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      // Close to the end: show ellipsis then last few pages
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      // In the middle: show ellipsis, surrounding pages, then ellipsis
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    // Always show last page
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Example for early pages on mobile: 1,2,3,...,last
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    // Middle pages: 1, ..., current, ..., last
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    // Near the end: 1, ..., last-2, last-1, last
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return { backgroundColor: "#EEF5F0", color: "#589E67" }
-      case "inactive":
+      case "INACTIVE":
         return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
-      case "suspended":
+      case "SUSPENDED":
         return { backgroundColor: "#F7EDED", color: "#AF4B4B" }
       default:
         return {}
@@ -290,84 +517,60 @@ const AllCustomers = () => {
 
   const getCustomerTypeStyle = (type: string) => {
     switch (type) {
-      case "prepaid":
+      case "PREPAID":
         return { backgroundColor: "#EDF2FE", color: "#4976F4" }
-      case "postpaid":
+      case "POSTPAID":
         return { backgroundColor: "#F4EDF7", color: "#954BAF" }
-      case "estimated":
-        return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
       default:
-        return {}
+        return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
+    }
+  }
+
+  const getArrearsStyle = (arrears: string) => {
+    const amount = parseFloat(arrears)
+    if (amount === 0) {
+      return { backgroundColor: "#EEF5F0", color: "#589E67" }
+    } else if (amount <= 5000) {
+      return { backgroundColor: "#FBF4EC", color: "#D28E3D" }
+    } else {
+      return { backgroundColor: "#F7EDED", color: "#AF4B4B" }
     }
   }
 
   const dotStyle = (status: string) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return { backgroundColor: "#589E67" }
-      case "inactive":
+      case "INACTIVE":
         return { backgroundColor: "#D28E3D" }
-      case "suspended":
+      case "SUSPENDED":
         return { backgroundColor: "#AF4B4B" }
       default:
         return {}
     }
   }
 
-  const toggleSort = (column: keyof Customer) => {
+  const toggleSort = (column: string) => {
     const isAscending = sortColumn === column && sortOrder === "asc"
     setSortOrder(isAscending ? "desc" : "asc")
     setSortColumn(column)
-
-    const sortedCustomers = [...customers].sort((a, b) => {
-      if (a[column] < b[column]) return isAscending ? 1 : -1
-      if (a[column] > b[column]) return isAscending ? -1 : 1
-      return 0
-    })
-
-    setCustomers(sortedCustomers)
-  }
-
-  const handleCancelSearch = () => {
-    setSearchText("")
-  }
-
-  const filteredCustomers = customers.filter((customer) =>
-    Object.values(customer).some((value) => value.toString().toLowerCase().includes(searchText.toLowerCase()))
-  )
-
-  const indexOfLastRow = currentPage * rowsPerPage
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage
-  const currentRows = filteredCustomers.slice(indexOfFirstRow, indexOfLastRow)
-  const [selectedOption, setSelectedOption] = React.useState<string>("")
-  const [isDropdownOpen, setDropdownOpen] = React.useState<boolean>(false)
-
-  const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage)
-
-  const changePage = (page: number) => {
-    if (page > 0 && page <= totalPages) setCurrentPage(page)
-  }
-
-  const handleRowsChange = (event: { target: { value: any } }) => {
-    setRowsPerPage(Number(event.target.value))
-    setCurrentPage(1)
   }
 
   const CustomerCard = ({ customer }: { customer: Customer }) => (
-    <div className="rounded-lg border bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
             <span className="font-semibold text-blue-600">
-              {customer.name
+              {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{customer.name}</h3>
-            <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900">{customer.fullName}</h3>
+            <div className="mt-1 flex items-center gap-2">
               <div
                 style={getStatusStyle(customer.status)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
@@ -375,75 +578,76 @@ const AllCustomers = () => {
                 <span className="size-2 rounded-full" style={dotStyle(customer.status)}></span>
                 {customer.status}
               </div>
-              <div style={getCustomerTypeStyle(customer.customerType)} className="rounded-full px-2 py-1 text-xs">
-                {customer.customerType}
+              <div
+                style={getCustomerTypeStyle(customer.isPPM ? "PREPAID" : "POSTPAID")}
+                className="rounded-full px-2 py-1 text-xs"
+              >
+                {customer.isPPM ? "PREPAID" : "POSTPAID"}
               </div>
             </div>
           </div>
         </div>
-        <RxDotsVertical
-          onClick={() => toggleDropdown(parseInt(customer.id))}
-          className="cursor-pointer text-gray-400 hover:text-gray-600"
-        />
       </div>
 
       <div className="mt-4 space-y-2 text-sm text-gray-600">
-        <div className="flex justify-between">
-          <span>Region:</span>
-          <span className="font-medium">{customer.region}</span>
-        </div>
         <div className="flex justify-between">
           <span>Account No:</span>
           <span className="font-medium">{customer.accountNumber}</span>
         </div>
         <div className="flex justify-between">
-          <span>Meter No:</span>
-          <span className="font-medium">{customer.meterNumber}</span>
+          <span>Region:</span>
+          <span className="font-medium">{customer.state}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Service Center:</span>
+          <span className="font-medium">{customer.serviceCenterName}</span>
         </div>
         <div className="flex justify-between">
           <span>Tariff:</span>
-          <span className="font-medium">{customer.tariff}</span>
+          <span className="font-medium">{customer.band}</span>
         </div>
-        <div className="flex justify-between">
-          <span>Last Payment:</span>
-          <span className="font-medium">{customer.lastPayment}</span>
-        </div>
-        {customer.balance > 0 && (
-          <div className="flex justify-between">
-            <span>Balance:</span>
-            <span className="font-medium text-red-600">₦{customer.balance.toLocaleString()}</span>
+        <div className="flex items-center justify-between">
+          <span>Outstanding Arrears:</span>
+          <div
+            style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
+            className="rounded-full px-2 py-1 text-xs font-medium"
+          >
+            ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
           </div>
-        )}
+        </div>
       </div>
 
       <div className="mt-3 border-t pt-3">
         <p className="text-xs text-gray-500">{customer.address}</p>
       </div>
 
-      <div className="mt-3 flex gap-2 ">
-        <Link href="#" className="button-oulined flex-1 justify-center text-center">
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={() => handleViewDetails(customer)}
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#f9f9f9]"
+        >
           <VscEye className="size-4" />
           View Details
-        </Link>
+        </button>
       </div>
     </div>
   )
 
   const CustomerListItem = ({ customer }: { customer: Customer }) => (
-    <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+    <div className="border-b bg-white p-2 transition-all hover:bg-gray-50 md:p-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center md:gap-4">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 max-sm:hidden">
             <span className="text-sm font-semibold text-blue-600">
-              {customer.name
+              {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{customer.name}</h3>
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="font-semibold text-gray-900">{customer.fullName}</h3>
               <div
                 style={getStatusStyle(customer.status)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
@@ -451,91 +655,163 @@ const AllCustomers = () => {
                 <span className="size-2 rounded-full" style={dotStyle(customer.status)}></span>
                 {customer.status}
               </div>
-              <div style={getCustomerTypeStyle(customer.customerType)} className="rounded-full px-2 py-1 text-xs">
-                {customer.customerType}
+              <div
+                style={getCustomerTypeStyle(customer.isPPM ? "PREPAID" : "POSTPAID")}
+                className="rounded-full px-2 py-1 text-xs"
+              >
+                {customer.isPPM ? "PREPAID" : "POSTPAID"}
+              </div>
+              {customer.isMD && (
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">isMD: true</div>
+              )}
+              {customer.isUrban && (
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">isUrban: true</div>
+              )}
+              {customer.isHRB && (
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">isHRB: true</div>
+              )}
+              <div
+                style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
+                className="rounded-full px-2 py-1 text-xs font-medium"
+              >
+                Arrears: ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
               </div>
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span>
-                <strong>Region:</strong> {customer.region}
-              </span>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-600 max-sm:text-xs md:gap-4">
               <span>
                 <strong>Account:</strong> {customer.accountNumber}
               </span>
               <span>
-                <strong>Meter:</strong> {customer.meterNumber}
+                <strong>Region:</strong> {customer.state}
               </span>
               <span>
-                <strong>Tariff:</strong> {customer.tariff}
+                <strong>Service Center:</strong> {customer.serviceCenterName}
+              </span>
+              <span>
+                <strong>Tariff:</strong> {customer.band}
               </span>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{customer.address}</p>
+            <p className="mt-2 text-sm text-gray-50 max-sm:hidden max-sm:text-xs">{customer.address}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
-            <div className="font-medium text-gray-900">Last Payment: {customer.lastPayment}</div>
-            {customer.balance > 0 && <div className="text-red-600">Balance: ₦{customer.balance.toLocaleString()}</div>}
+        <div className="flex items-start justify-between md:items-center md:gap-3">
+          <div className="text-right text-sm max-sm:text-xs">
+            <div className="font-medium text-gray-900">Phone: {customer.phoneNumber}</div>
+            <div className="text-gray-600">Email: {customer.email}</div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="#" className="button-oulined">
+            <button onClick={() => handleViewDetails(customer)} className="button-oulined flex items-center gap-2">
               <VscEye className="size-4" />
               View
-            </Link>
-            <div className="relative">
-              <RxDotsVertical
-                onClick={() => toggleDropdown(parseInt(customer.id))}
-                className="cursor-pointer text-gray-400 hover:text-gray-600"
-              />
-              {activeDropdown === parseInt(customer.id) && (
-                <div className="modal-style absolute right-0 top-full z-[100] mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-                  <ul className="text-sm">
-                    <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
-                      <VscEye />
-                      Update Status
-                    </li>
-                    <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
-                      <WiTime3 /> Send Reminder
-                    </li>
-                    <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
-                      <GoXCircle /> Suspend Account
-                    </li>
-                    <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                      <PiNoteBold />
-                      Export Data
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
+            </button>
           </div>
         </div>
       </div>
-
-      {/* <div className="modal-style z-100 absolute right-5 mt-2 w-48 rounded border border-gray-300 bg-white shadow-lg">
-        <ul className="text-sm">
-          <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
-            <VscEye />
-            Update Status
-          </li>
-          <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
-            <WiTime3 /> Send Reminder
-          </li>
-          <li className="flex cursor-pointer items-center gap-2 border-b px-4 py-2 hover:bg-gray-100">
-            <GoXCircle /> Suspend Account
-          </li>
-          <li className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-gray-100">
-            <PiNoteBold />
-            Export Data
-          </li>
-        </ul>
-      </div> */}
     </div>
   )
 
+  const customerCategories: CustomerCategory[] = React.useMemo(() => {
+    const counts = {
+      prepaid: 0,
+      postpaid: 0,
+      md: 0,
+      urban: 0,
+      hrb: 0,
+      govt: 0,
+    }
+
+    customers.forEach((customer) => {
+      if (customer.isPPM) {
+        counts.prepaid += 1
+      } else {
+        counts.postpaid += 1
+      }
+
+      if (customer.isMD) {
+        counts.md += 1
+      }
+
+      if (customer.isUrban) {
+        counts.urban += 1
+      }
+
+      if (customer.isHRB) {
+        counts.hrb += 1
+      }
+
+      if (customer.isCustomerAccGovt) {
+        counts.govt += 1
+      }
+    })
+
+    const categories: CustomerCategory[] = []
+
+    if (counts.prepaid > 0) {
+      categories.push({
+        name: "Prepaid Customers",
+        code: "Prepaid",
+        customerCount: counts.prepaid,
+        rate: "",
+        type: "residential",
+      })
+    }
+
+    if (counts.postpaid > 0) {
+      categories.push({
+        name: "Postpaid Customers",
+        code: "Postpaid",
+        customerCount: counts.postpaid,
+        rate: "",
+        type: "residential",
+      })
+    }
+
+    if (counts.md > 0) {
+      categories.push({
+        name: "MD Customers",
+        code: "MD",
+        customerCount: counts.md,
+        rate: "",
+        type: "commercial",
+      })
+    }
+
+    if (counts.urban > 0) {
+      categories.push({
+        name: "Urban Customers",
+        code: "Urban",
+        customerCount: counts.urban,
+        rate: "",
+        type: "commercial",
+      })
+    }
+
+    if (counts.hrb > 0) {
+      categories.push({
+        name: "HRB Customers",
+        code: "HRB",
+        customerCount: counts.hrb,
+        rate: "",
+        type: "commercial",
+      })
+    }
+
+    if (counts.govt > 0) {
+      categories.push({
+        name: "Government Accounts",
+        code: "Government",
+        customerCount: counts.govt,
+        rate: "",
+        type: "commercial",
+      })
+    }
+
+    return categories
+  }, [customers])
+
   const CategoryCard = ({ category }: { category: CustomerCategory }) => (
-    <div className="rounded-lg border bg-white p-3 transition-all hover:shadow-sm">
+    <div className="rounded-lg border bg-[#f9f9f9] p-3 transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-gray-900">{category.code}</h3>
@@ -560,240 +836,362 @@ const AllCustomers = () => {
     </div>
   )
 
-  return (
-    <div className="flex-3 relative mt-5 flex items-start gap-6">
-      {/* Main Content - Customers List/Grid */}
-      <div className={`rounded-md border bg-white p-5 ${showCategories ? "flex-1" : "w-full"}`}>
-        <div className="flex flex-col   py-2">
-          <p className="text-2xl font-medium">All Customers</p>
-          <div className="mt-2 flex gap-4">
-            <SearchModule
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onCancel={handleCancelSearch}
-              placeholder="Search by name, account number, or meter number"
-            />
+  if (loading) {
+    return (
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
+        {/* Main Content Skeleton */}
+        <div className={`w-full rounded-md border bg-white p-5 ${showCategories ? "lg:flex-1" : ""}`}>
+          <HeaderSkeleton />
 
-            <div className="flex gap-2">
-              <button
-                className={`button-oulined ${viewMode === "grid" ? "bg-gray-100" : ""}`}
-                onClick={() => setViewMode("grid")}
-              >
-                <MdGridView />
-                <p>Grid</p>
-              </button>
-              <button
-                className={`button-oulined ${viewMode === "list" ? "bg-gray-100" : ""}`}
-                onClick={() => setViewMode("list")}
-              >
-                <MdFormatListBulleted />
-                <p>List</p>
-              </button>
-            </div>
-
-            <button className="button-oulined" onClick={() => setShowCategories(!showCategories)}>
-              {showCategories ? "Hide Categories" : "Show Categories"}
-            </button>
-
-            <button className="button-oulined" type="button">
-              <IoMdFunnel />
-              <p>Sort By</p>
-            </button>
-            <button className="button-oulined" type="button">
-              <IoFunnelOutline />
-              <p>Filter</p>
-            </button>
+          {/* Customer Display Area Skeleton */}
+          <div className="w-full">
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, index) => (
+                  <CustomerCardSkeleton key={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="divide-y">
+                {[...Array(5)].map((_, index) => (
+                  <CustomerListItemSkeleton key={index} />
+                ))}
+              </div>
+            )}
           </div>
+
+          <PaginationSkeleton />
         </div>
 
-        {/* Customer Display Area */}
-        <div className="w-full">
-          {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {currentRows.map((customer) => (
-                <CustomerCard key={customer.id} customer={customer} />
+        {/* Categories Sidebar Skeleton */}
+        {showCategories && (
+          <div className="mt-4 w-full rounded-md border bg-white p-5 lg:mt-0 lg:w-80">
+            <div className="border-b pb-4">
+              <div className="h-6 w-40 rounded bg-gray-200"></div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {[...Array(6)].map((_, index) => (
+                <CategoryCardSkeleton key={index} />
               ))}
             </div>
-          ) : (
-            <div className="divide-y">
-              {currentRows.map((customer) => (
-                <CustomerListItem key={customer.id} customer={customer} />
-              ))}
+
+            {/* Summary Stats Skeleton */}
+            <div className="mt-6 rounded-lg bg-gray-50 p-3">
+              <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
+              <div className="space-y-1">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex justify-between">
+                    <div className="h-4 w-24 rounded bg-gray-200"></div>
+                    <div className="h-4 w-12 rounded bg-gray-200"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
+        {/* Main Content - Customers List/Grid */}
+        <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
+          <div className="flex flex-col py-2">
+            <p className="text-2xl font-medium">All Customers</p>
+            <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
+              <SearchModule
+                value={filters.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search by name, account number, or meter number"
+                className="w-full max-w-full md:max-w-[300px]"
+              />
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <MdGridView />
+                  <p>Grid</p>
+                </button>
+                <button
+                  className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                  onClick={() => setViewMode("list")}
+                >
+                  <MdFormatListBulleted />
+                  <p>List</p>
+                </button>
+              </div>
+
+              <button className="button-oulined" onClick={() => setShowCategories(!showCategories)}>
+                {showCategories ? "Hide Categories" : "Show Categories"}
+              </button>
+
+              <div className="relative" data-dropdown-root="status-filter">
+                <button
+                  type="button"
+                  className="button-oulined flex items-center gap-2"
+                  onClick={() => setIsStatusFilterOpen((open) => !open)}
+                >
+                  <IoMdFunnel />
+                  <span>
+                    {filters.status === "ACTIVE"
+                      ? "Active"
+                      : filters.status === "INACTIVE"
+                      ? "Inactive"
+                      : filters.status === "SUSPENDED"
+                      ? "Suspended"
+                      : "All Status"}
+                  </span>
+                  <ChevronDown
+                    className={`size-4 text-gray-500 transition-transform ${isStatusFilterOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {isStatusFilterOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("")}
+                      >
+                        All Status
+                      </button>
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "ACTIVE" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("ACTIVE")}
+                      >
+                        Active
+                      </button>
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "INACTIVE" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("INACTIVE")}
+                      >
+                        Inactive
+                      </button>
+                      <button
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                          filters.status === "SUSPENDED" ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => handleStatusFilterChange("SUSPENDED")}
+                      >
+                        Suspended
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button className="button-oulined" type="button">
+                <IoMdFunnel />
+                <p>Sort By</p>
+              </button>
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-4 text-red-700">
+              <p>Error loading customers: {error}</p>
+            </div>
+          )}
+
+          {/* Customer Display Area */}
+          <div className="w-full">
+            {customers.length === 0 && !loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
+                    <VscEye className="size-6 text-gray-400" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-medium text-gray-900">No customers found</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {filters.search ? "Try adjusting your search criteria" : "No customers available"}
+                  </p>
+                </div>
+              </div>
+            ) : viewMode === "grid" ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {customers.map((customer: Customer) => (
+                  <CustomerCard key={customer.id} customer={customer} />
+                ))}
+              </div>
+            ) : (
+              <div className="divide-y">
+                {customers.map((customer: Customer) => (
+                  <CustomerListItem key={customer.id} customer={customer} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {customers.length > 0 && (
+            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-1 max-sm:hidden">
+                <p>Show rows</p>
+                <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
+                  <option value={6}>6</option>
+                  <option value={12}>12</option>
+                  <option value={18}>18</option>
+                  <option value={24}>24</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
+                <button
+                  className={`px-3 py-2 ${
+                    pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  <BiSolidLeftArrow />
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <div className="hidden items-center gap-2 md:flex">
+                    {getPageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 md:hidden">
+                    {getMobilePageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  className={`px-3 py-2 ${
+                    pagination.currentPage === pagination.totalPages
+                      ? "cursor-not-allowed text-gray-400"
+                      : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  <BiSolidRightArrow />
+                </button>
+              </div>
+              <p className="max-sm:hidden">
+                Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount} total records)
+              </p>
             </div>
           )}
         </div>
 
-        {/* Pagination */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <p>Show rows</p>
-            <select value={rowsPerPage} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={30}>30</option>
-              <option value={40}>40</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
-              onClick={() => changePage(currentPage - 1)}
-              disabled={currentPage === 1}
+        {/* Customer Categories Sidebar */}
+        <AnimatePresence initial={false}>
+          {showCategories && (
+            <motion.div
+              key="categories-sidebar"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ type: "spring", damping: 24, stiffness: 260 }}
+              className="mt-4 w-full rounded-md border bg-white p-5 lg:mt-0 lg:w-80"
             >
-              <BiSolidLeftArrow />
-            </button>
+              <div className="border-b pb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Customer Categories</h2>
+              </div>
 
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                    currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                  }`}
-                  onClick={() => changePage(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
+              <div className="mt-4 space-y-3">
+                {customerCategories.map((category, index) => (
+                  <CategoryCard key={index} category={category} />
+                ))}
+              </div>
 
-            <button
-              className={`px-3 py-2 ${
-                currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-              }`}
-              onClick={() => changePage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <BiSolidRightArrow />
-            </button>
-          </div>
-          <p>
-            Page {currentPage} of {totalPages}
-          </p>
-        </div>
+              {/* Summary Stats */}
+              <div className="mt-6 rounded-lg bg-gray-50 p-3">
+                <h3 className="mb-2 font-medium text-gray-900">Summary</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total:</span>
+                    <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Active:</span>
+                    <span className="font-medium">
+                      {customers.filter((c) => c.status === "ACTIVE").length.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Suspended:</span>
+                    <span className="font-medium">
+                      {customers.filter((c) => c.status === "SUSPENDED").length.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Customer Categories Sidebar */}
-      {showCategories && (
-        <div className="w-80 rounded-md border bg-white p-5">
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Customer Categories</h2>
-          </div>
+      {/* Modal Components - Only one modal can be open at a time */}
+      {/* <CustomerDetailsModal
+        isOpen={activeModal === "details"}
+        onRequestClose={closeAllModals}
+        customer={selectedCustomer}
+        assets={customerAssets}
+        onUpdateStatus={handleOpenStatusModal}
+        onSendReminder={handleOpenReminderModal}
+        onSuspendAccount={handleOpenSuspendModal}
+      /> */}
 
-          <div className="mt-4 space-y-3">
-            {customerCategories.map((category, index) => (
-              <CategoryCard key={index} category={category} />
-            ))}
-          </div>
+      <SendReminderModal
+        isOpen={activeModal === "reminder"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleConfirmReminder}
+      />
 
-          {/* Summary Stats */}
-          <div className="mt-6 rounded-lg bg-gray-50 p-3">
-            <h3 className="mb-2 font-medium text-gray-900">Summary</h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total:</span>
-                <span className="font-medium">121,550</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Residential:</span>
-                <span className="font-medium">106,150</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Commercial:</span>
-                <span className="font-medium">15,400</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modals remain the same */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="modal-style w-80 rounded-md p-4 shadow-md">
-            <div className="flex justify-between">
-              <h2 className="mb-4 text-lg font-medium">Suspend Account</h2>
-              <LiaTimesSolid onClick={closeModal} className="cursor-pointer" />
-            </div>
-            <div className="my-3 flex w-full items-center justify-center">
-              <img src="/DashboardImages/WarningCircle.png" alt="" />
-            </div>
-            <p className="mb-4 text-center text-xl font-medium">Are you sure you want to suspend this account?</p>
-            <div className="flex w-full justify-between gap-3">
-              <button className="button__primary flex w-full" onClick={confirmCancellation}>
-                <FaRegCheckCircle />
-                <p className="text-sm">Yes, Suspend</p>
-              </button>
-              <button className="button__danger w-full" onClick={closeModal}>
-                <FiXCircle />
-                <p className="text-sm">No, Leave</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isModalReminderOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="modal-style rounded-md shadow-md sm:w-[620px]">
-            <div className="flex justify-between border-b px-4 pt-4">
-              <h2 className="mb-4 text-lg font-medium">Send Reminder</h2>
-              <LiaTimesSolid onClick={closeReminderModal} className="cursor-pointer" />
-            </div>
-            <div className="p-4">
-              <p className="px-2 pb-1 pt-2 text-sm">Message</p>
-              <div className="search-bg mb-3 items-center  justify-between  rounded-md focus:bg-[#FBFAFC] max-sm:mb-2 ">
-                <textarea
-                  className="h-[120px] w-full rounded-md border-0 bg-transparent  p-2 text-sm outline-none focus:outline-none"
-                  placeholder="Enter Your Message Here"
-                ></textarea>
-              </div>
-            </div>
-
-            <div className="flex w-full justify-between gap-3 px-4 pb-4">
-              <button className="button__secondary w-full" onClick={confirmReminder}>
-                <p>Cancel</p>
-              </button>
-              <button className="button__black flex w-full" onClick={closeReminderModal}>
-                <p>Send</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isStatusModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="modal-style rounded-md shadow-md sm:w-[620px]">
-            <div className="flex justify-between border-b px-4 pt-4">
-              <h2 className="mb-4 text-lg font-medium">Update Status</h2>
-              <LiaTimesSolid onClick={closeStatusModal} className="cursor-pointer" />
-            </div>
-            <div className="p-4">
-              <Dropdown
-                label=""
-                options={["active", "inactive", "suspended"]}
-                value={selectedOption}
-                onSelect={setSelectedOption}
-                isOpen={isDropdownOpen}
-                toggleDropdown={() => setDropdownOpen(!isDropdownOpen)}
-                disabled={false}
-              />
-            </div>
-            <div className="flex w-full justify-between gap-3 px-4 pb-4">
-              <button className="button__secondary w-full" onClick={confirmStatusChange}>
-                <p>Cancel</p>
-              </button>
-              <button className="button__black flex w-full" onClick={closeStatusModal}>
-                <p>Update</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* <UpdateStatusModal
+        isOpen={activeModal === "status"}
+        onRequestClose={closeAllModals}
+        customer={selectedCustomer}
+      /> */}
+    </>
   )
 }
 

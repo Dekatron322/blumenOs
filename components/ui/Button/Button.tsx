@@ -9,6 +9,7 @@ type ButtonVariant =
   | "secondary"
   | "outline"
   | "ghost"
+  | "success"
   | "danger"
   | "outlineDanger"
   | "dangerSecondary"
@@ -26,6 +27,7 @@ interface ButtonProps extends MotionProps {
   icon?: React.ReactNode
   /** Position of the icon relative to the button text */
   iconPosition?: "start" | "end"
+  loading?: boolean
 }
 
 export const ButtonModule: React.FC<ButtonProps> = ({
@@ -38,9 +40,10 @@ export const ButtonModule: React.FC<ButtonProps> = ({
   children,
   icon,
   iconPosition = "start",
+  loading = false,
 }) => {
   const baseClasses =
-    "flex z-0 items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "flex  z-0  items-center overflow-hidden justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
 
   const variantClasses = {
     primary:
@@ -48,6 +51,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     black: "bg-[#131319] text-[#ffffff] hover:bg-[#000000] focus:ring-[#131319]",
     secondary: "bg-[#E6F0FF] text-[#003F9F] hover:bg-[#C4DBFF] focus:ring-[#003F9F]",
     outline: "border border-[#0A0A0A] text-[#0A0A0A] hover:bg-[#F3f4f6] focus:ring-[#0A0A0A]",
+    success: "bg-[#16A34A] text-white hover:bg-[#15803D] focus:ring-[#16A34A]",
     outlineDanger: "border border-[#D82E2E] text-[#D82E2E] hover:bg-[#FDF3F3] focus:ring-[#D82E2E]",
     ghost: "text-[#003F9F] hover:bg-[#E6F0FF] focus:ring-[#003F9F]",
     danger: "bg-[#D82E2E] text-white hover:bg-[#F14848] focus:ring-[#F14848]",
@@ -60,18 +64,43 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     lg: "h-12 px-6 text-lg",
   }
 
+  const isDisabled = disabled || loading
+
   return (
     <button
       type={type}
-      disabled={disabled}
+      disabled={isDisabled}
       onClick={onClick}
+      aria-busy={loading}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
-        disabled ? "z-0 cursor-not-allowed opacity-50" : ""
+        isDisabled ? "z-0 cursor-not-allowed opacity-50" : "gap-1"
       } ${className}`}
     >
-      {icon && iconPosition === "start" && <span className="mr-2 inline-flex items-center">{icon}</span>}
+      {iconPosition === "start" && (
+        <span className="inline-flex items-center">
+          {loading ? (
+            <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          ) : (
+            icon
+          )}
+        </span>
+      )}
       {children}
-      {icon && iconPosition === "end" && <span className="ml-2 inline-flex items-center">{icon}</span>}
+      {iconPosition === "end" && (
+        <span className=" inline-flex items-center">
+          {loading ? (
+            <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          ) : (
+            icon
+          )}
+        </span>
+      )}
     </button>
   )
 }

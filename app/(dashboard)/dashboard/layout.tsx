@@ -1,5 +1,6 @@
 import SideBar from "components/Sidebar/Sidebar"
 import { NotificationProvider } from "components/ui/Notification/Notification"
+import ProtectedRoute from "lib/protectedRoutes"
 import { Metadata } from "next"
 import "styles/tailwind.css"
 
@@ -33,14 +34,14 @@ export const metadata: Metadata = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    // <ProtectedRoute>
-    <div className="flex h-screen w-screen flex-col-reverse border-0 border-blue-700 lg:flex-row">
-      <div className="">
-        <SideBar />
+    <ProtectedRoute>
+      <div className="flex h-screen w-screen flex-col-reverse border-0 border-blue-700 lg:flex-row">
+        <div className="">
+          <SideBar />
+        </div>
+        <div className="grow overflow-y-auto border-0 border-black ">{children}</div>
+        <NotificationProvider position="top-center" />
       </div>
-      <div className="grow overflow-y-auto border-0 border-black ">{children}</div>
-      <NotificationProvider position="top-center" />
-    </div>
-    // </ProtectedRoute>
+    </ProtectedRoute>
   )
 }

@@ -12,13 +12,19 @@ import { initializeAuth, loginUser } from "lib/redux/authSlice"
 import { motion } from "framer-motion"
 
 const SignIn: React.FC = () => {
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
-  const { isAuthenticated, user, loading: authLoading } = useSelector((state: RootState) => state.auth)
+  const {
+    isAuthenticated,
+    user,
+    loading: authLoading,
+    error: authError,
+    mustChangePassword,
+  } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
     dispatch(initializeAuth())
@@ -26,50 +32,89 @@ const SignIn: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
-      router.push("/dashboard")
+      notify("success", "Login successful!", {
+        description: "Redirecting to dashboard...",
+        duration: 3000,
+      })
+
+      // Check if user needs to change password
+      if (mustChangePassword) {
+        setTimeout(() => router.push("/change-password"), 1000)
+      } else {
+        setTimeout(() => router.push("/dashboard"), 1000)
+      }
     }
-  }, [isAuthenticated, user, authLoading, router])
+  }, [isAuthenticated, user, authLoading, mustChangePassword, router])
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError)
+      notify("error", "Login failed", {
+        description: authError,
+      })
+    }
+  }, [authError])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setLoading(true)
     setError(null)
 
+    // Basic validation
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password")
+      setLoading(false)
+      return
+    }
+
     try {
-      // Mock successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const result = await dispatch(
+        loginUser({
+          email: email.trim(),
+          password: password.trim(),
+        })
+      )
 
-      notify("success", "Login successful!", {
-        description: "Redirecting to dashboard...",
-        duration: 3000,
-      })
-
-      setTimeout(() => router.push("/dashboard"), 1000)
+      if (loginUser.rejected.match(result)) {
+        const errorPayload = result.payload as string
+        const errorMessage = errorPayload || "Login failed. Please check your credentials and try again."
+        setError(errorMessage)
+      } else if (loginUser.fulfilled.match(result)) {
+        // Login successful - the useEffect will handle redirect based on mustChangePassword
+        const userFullName = result.payload.data.user.fullName
+        // Store user roles and privileges in localStorage for sidebar access
+        const userData = {
+          roles: result.payload.data.user.roles,
+          privileges: result.payload.data.user.privileges,
+        }
+        localStorage.setItem("userPermissions", JSON.stringify(userData))
+      }
     } catch (error: any) {
-      const errorMessage = "Login failed. Please try again."
+      const errorMessage = "An unexpected error occurred. Please try again."
       setError(errorMessage)
-      notify("error", "Login failed", {
-        description: errorMessage,
-      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(event.target.value)
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(event.target.value)
+    // Clear error when user starts typing
+    if (error) setError(null)
   }
 
   const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value)
+    // Clear error when user starts typing
+    if (error) setError(null)
   }
 
-  const isButtonDisabled = loading || username.trim() === "" || password.trim() === ""
+  const isButtonDisabled = loading || authLoading || email.trim() === "" || password.trim() === ""
 
   return (
-    <div className="relative flex min-h-screen grid-cols-1 bg-gradient-to-br from-[#ffffff]">
+    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#ffffff] md:flex-row">
       {/* Form Container */}
-      <div className="container flex flex-col items-center justify-center border-r-2 border-[#ffffff80] py-8 max-sm:px-5 md:w-[40%]">
+      <div className="container flex min-h-screen w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] px-5 py-8 md:min-h-0 md:w-[40%] md:border-b-0 md:border-r-2">
         <motion.main
           className="flex w-full flex-col items-center justify-center"
           initial={{ opacity: 0, y: 20 }}
@@ -94,8 +139,8 @@ const SignIn: React.FC = () => {
                   label="Email Address"
                   type="email"
                   placeholder="your@email.com"
-                  value={username}
-                  onChange={handleUsernameChange}
+                  value={email}
+                  onChange={handleEmailChange}
                   required
                 />
               </motion.div>
@@ -127,7 +172,7 @@ const SignIn: React.FC = () => {
                   </label>
                 </div>
 
-                <Link href="#" className="text-sm font-medium text-[#0a0a0a] hover:text-[#0a0a0a]">
+                <Link href="/forgot-password" className="text-sm font-medium text-[#0a0a0a] hover:text-[#0a0a0a]">
                   Forgot password?
                 </Link>
               </motion.div>
@@ -142,17 +187,27 @@ const SignIn: React.FC = () => {
                 </motion.div>
               )}
 
+              {mustChangePassword && isAuthenticated && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-700"
+                >
+                  For security reasons, please change your password to continue.
+                </motion.div>
+              )}
+
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.7 }}>
                 <ButtonModule
                   type="submit"
                   variant="primary"
                   size="lg"
                   disabled={isButtonDisabled}
-                  className="w-full transform rounded-xl py-3 font-medium transition-all hover:scale-[1.01]"
+                  className="w-full transform rounded-xl py-3 font-medium transition-all hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
                   whileHover={!isButtonDisabled ? { scale: 1.01 } : {}}
                   whileTap={!isButtonDisabled ? { scale: 0.99 } : {}}
                 >
-                  {loading ? (
+                  {loading || authLoading ? (
                     <div className="flex items-center justify-center">
                       <svg
                         className="mr-2 size-5 animate-spin"
@@ -182,6 +237,8 @@ const SignIn: React.FC = () => {
                 </ButtonModule>
               </motion.div>
             </form>
+
+            {/* Demo credentials hint */}
           </motion.div>
 
           <motion.div
@@ -196,20 +253,20 @@ const SignIn: React.FC = () => {
       </div>
 
       {/* Image Container with Text at Bottom */}
-      <div className="relative w-[60%] bg-[#0A0A0A] ">
+      <div className="relative hidden w-[60%] bg-[#0A0A0A] md:block ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.8 }}
-          className="absolute right-0 top-[-25%] z-0 flex h-full"
+          className="relative z-0 flex items-start justify-center pt-8"
         >
-          <img src="/auth-background.svg" alt="auth-background" className="w-full" />
+          <img src="/auth-background.svg" alt="auth-background" className="w-full object-contain" />
         </motion.div>
 
         {/* Text positioned at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center p-32">
+        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-24">
           <motion.h1
-            className="max-w-[60%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
+            className="mb-4 max-w-[70%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.0 }}
@@ -219,7 +276,7 @@ const SignIn: React.FC = () => {
             <span className="text-[#FFFFFF80]">for Utilities</span>
           </motion.h1>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center p-10 ">
+        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-10 ">
           <motion.p
             className="max-w-[80%] text-center  text-[#FFFFFF80]"
             initial={{ opacity: 0, y: 20 }}

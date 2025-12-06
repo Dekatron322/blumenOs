@@ -66,7 +66,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onRequestClose, onCon
           </button>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="p-6">
           <p className="mb-6 text-gray-600">Are you sure you want to log out?</p>
 
           <div className="flex gap-4">
