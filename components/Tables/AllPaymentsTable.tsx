@@ -11,13 +11,13 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearError,
   clearPayments,
+  CollectorType,
   fetchPayments,
-  setPaymentsPagination,
   Payment,
   PaymentChannel,
-  PaymentStatus,
-  CollectorType,
   PaymentsRequestParams,
+  PaymentStatus,
+  setPaymentsPagination,
 } from "lib/redux/agentSlice"
 
 interface ActionDropdownProps {
