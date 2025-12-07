@@ -1416,8 +1416,11 @@ const agentSlice = createSlice({
       }
       // Also update in agents list
       const index = state.agents.findIndex((agent) => agent.id === state.currentAgent?.id)
-      if (index !== -1 && state.agents[index]) {
-        state.agents[index].cashAtHand = action.payload
+      if (index !== -1) {
+        const agent = state.agents[index]
+        if (agent) {
+          agent.cashAtHand = action.payload
+        }
       }
     },
   },
