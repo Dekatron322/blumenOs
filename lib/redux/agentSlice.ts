@@ -1566,8 +1566,11 @@ const agentSlice = createSlice({
 
           // Update agent in list if exists
           const index = state.agents.findIndex((agent) => agent.id === action.payload.agentId)
-          if (index !== -1 && state.agents[index]) {
-            state.agents[index].cashAtHand = action.payload.data.cashAtHandAfter
+          if (index !== -1) {
+            const agent = state.agents[index]
+            if (agent) {
+              agent.cashAtHand = action.payload.data.cashAtHandAfter
+            }
           }
 
           // Add the new clearance to the clearances list
