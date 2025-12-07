@@ -744,6 +744,15 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
               </div>
 
               <form onSubmit={handleClearCashSubmit} className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <p className="font-semibold">Before you clear cash:</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                    <li>Count and confirm the physical cash matches the amount you are clearing.</li>
+                    <li>Verify the clearance amount does not exceed the agents cash at hand.</li>
+                    <li>Ensure your notes clearly describe how the cash was counted and received.</li>
+                  </ul>
+                </div>
+
                 {clearCashError && (
                   <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
                     {clearCashError}
@@ -792,10 +801,10 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
                     onChange={(e) => handleClearCashInputChange("notes", e.target.value)}
                     placeholder="Enter notes for this cash clearance"
                     rows={3}
-                    className={`w-full rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    className={`w-full rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       clearCashFormErrors.notes
                         ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        : "border-gray-300 focus:border-[#004b23] focus:ring-[#004b23]"
                     }`}
                     required
                   />

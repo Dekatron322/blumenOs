@@ -152,6 +152,7 @@ const SignIn: React.FC = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={handlePasswordChange}
+                  hideToggle
                 />
               </motion.div>
 
@@ -173,7 +174,7 @@ const SignIn: React.FC = () => {
                   </label>
                 </div>
 
-                <Link href="/forgot-password" className="text-sm font-medium text-[#004B23] hover:text-[#004B23]">
+                <Link href="#" className="text-sm font-medium text-[#004B23] hover:text-[#004B23]">
                   Forgot password?
                 </Link>
               </motion.div>

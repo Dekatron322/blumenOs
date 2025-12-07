@@ -12,6 +12,7 @@ interface PasswordInputProps {
   onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   disabled?: boolean
+  hideToggle?: boolean
 }
 
 export const PasswordInputModule: React.FC<PasswordInputProps> = ({
@@ -24,6 +25,7 @@ export const PasswordInputModule: React.FC<PasswordInputProps> = ({
   onKeyPress,
   onKeyDown,
   disabled = false,
+  hideToggle = false,
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -64,9 +66,11 @@ export const PasswordInputModule: React.FC<PasswordInputProps> = ({
           onKeyDown={onKeyDown}
           disabled={disabled}
         />
-        <button type="button" className="ml-2 rounded-full p-1 focus:outline-none" onClick={togglePasswordVisibility}>
-          {isPasswordVisible ? <EyesOpenIcon /> : <EyesCloseIcon />}
-        </button>
+        {!hideToggle && (
+          <button type="button" className="ml-2 rounded-full p-1 focus:outline-none" onClick={togglePasswordVisibility}>
+            {isPasswordVisible ? <EyesOpenIcon /> : <EyesCloseIcon />}
+          </button>
+        )}
       </div>
     </div>
   )

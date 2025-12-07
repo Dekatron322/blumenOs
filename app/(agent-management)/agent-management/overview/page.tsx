@@ -3,6 +3,7 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   CustomeraIcon,
@@ -285,6 +286,7 @@ const generateAgentData = () => {
 }
 
 export default function AgentManagementDashboard() {
+  const router = useRouter()
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -353,7 +355,7 @@ export default function AgentManagementDashboard() {
                   size="md"
                   className="mt-2"
                   icon={<PlusIcon />}
-                  onClick={() => setIsAddAgentModalOpen(true)}
+                  onClick={() => router.push("/agent-management/add-new-agent")}
                 >
                   Add New Agent
                 </ButtonModule>
