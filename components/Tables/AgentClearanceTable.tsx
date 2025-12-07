@@ -12,9 +12,9 @@ import {
   ClearancesRequestParams,
   clearCash,
   ClearCashRequest,
+  clearCashStatus,
   clearClearances,
   clearError,
-  clearCashStatus,
   fetchClearances,
   setClearancesPagination,
 } from "lib/redux/agentSlice"
