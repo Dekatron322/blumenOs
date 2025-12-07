@@ -328,7 +328,7 @@ const allLinks: LinkItem[] = [
     privilegeKey: "system-settings",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
+      // { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
       {
         name: "Audit Trails",
         href: "/complaince/audit-trails",
