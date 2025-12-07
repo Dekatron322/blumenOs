@@ -84,6 +84,32 @@ export interface CashClearance {
   clearedBy: CollectionOfficer
 }
 
+// Interface for Clear Cash Response
+export interface ClearCashResponseData {
+  id: number
+  createdAt: string
+  amountCleared: number
+  cashAtHandBefore: number
+  cashAtHandAfter: number
+  clearedAt: string
+  notes: string
+  collectionOfficer: CollectionOfficer
+  clearedBy: CollectionOfficer
+}
+
+export interface ClearCashResponse {
+  isSuccess: boolean
+  message: string
+  data: ClearCashResponseData
+}
+
+// Interface for Clear Cash Request Body
+export interface ClearCashRequest {
+  collectionOfficerUserId: number
+  amount: number
+  notes: string
+}
+
 // Interface for Agent (Full Details)
 export interface Agent {
   id: number
@@ -325,6 +351,113 @@ export interface DeclineChangeRequestResponse {
   data: ChangeRequestResponseData
 }
 
+// Interface for Clearances List Response
+export interface ClearancesResponse {
+  isSuccess: boolean
+  message: string
+  data: CashClearance[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+// Interface for Clearances Request Parameters
+export interface ClearancesRequestParams {
+  id: number
+  pageNumber: number
+  pageSize: number
+}
+
+// Interfaces for Payments
+export enum PaymentChannel {
+  Cash = "Cash",
+  BankTransfer = "BankTransfer",
+  Pos = "Pos",
+  Card = "Card",
+  VendorWallet = "VendorWallet",
+  Chaque = "Chaque",
+}
+
+export enum PaymentStatus {
+  Pending = "Pending",
+  Confirmed = "Confirmed",
+  Failed = "Failed",
+  Reversed = "Reversed",
+}
+
+export enum CollectorType {
+  Customer = "Customer",
+  SalesRep = "SalesRep",
+  Vendor = "Vendor",
+  Staff = "Staff",
+}
+
+export interface Payment {
+  id: number
+  reference: string
+  latitude: number
+  longitude: number
+  channel: PaymentChannel
+  status: PaymentStatus
+  collectorType: CollectorType
+  amount: number
+  amountApplied: number
+  overPaymentAmount: number
+  outstandingAfterPayment: number
+  outstandingBeforePayment: number
+  currency: string
+  paidAtUtc: string
+  confirmedAtUtc: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  postpaidBillId: number
+  postpaidBillPeriod: string
+  billTotalDue: number
+  vendorId: number
+  vendorName: string
+  agentId: number
+  agentCode: string
+  agentName: string
+  areaOfficeName: string
+  distributionSubstationCode: string
+  feederName: string
+  paymentTypeId: number
+  paymentTypeName: string
+}
+
+export interface PaymentsResponse {
+  isSuccess: boolean
+  message: string
+  data: Payment[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface PaymentsRequestParams {
+  id?: number
+  pageNumber: number
+  pageSize: number
+  customerId?: number
+  vendorId?: number
+  agentId?: number
+  postpaidBillId?: number
+  paymentTypeId?: number
+  channel?: PaymentChannel
+  status?: PaymentStatus
+  collectorType?: CollectorType
+  paidFromUtc?: string
+  paidToUtc?: string
+  search?: string
+}
+
 // Agent State
 interface AgentState {
   // Agents list state
@@ -359,6 +492,12 @@ interface AgentState {
   addExistingUserAsAgentError: string | null
   addExistingUserAsAgentSuccess: boolean
   newlyAddedExistingUserAgent: Agent | null
+
+  // Clear Cash state
+  clearCashLoading: boolean
+  clearCashError: string | null
+  clearCashSuccess: boolean
+  clearCashResponse: ClearCashResponseData | null
 
   // Change Request state
   changeRequestLoading: boolean
@@ -411,6 +550,34 @@ interface AgentState {
   declineChangeRequestError: string | null
   declineChangeRequestSuccess: boolean
   declineChangeRequestResponse: ChangeRequestResponseData | null
+
+  // Clearances state
+  clearances: CashClearance[]
+  clearancesLoading: boolean
+  clearancesError: string | null
+  clearancesSuccess: boolean
+  clearancesPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Payments state
+  payments: Payment[]
+  paymentsLoading: boolean
+  paymentsError: string | null
+  paymentsSuccess: boolean
+  paymentsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 }
 
 // Initial state
@@ -438,6 +605,10 @@ const initialState: AgentState = {
   addExistingUserAsAgentError: null,
   addExistingUserAsAgentSuccess: false,
   newlyAddedExistingUserAgent: null,
+  clearCashLoading: false,
+  clearCashError: null,
+  clearCashSuccess: false,
+  clearCashResponse: null,
   changeRequestLoading: false,
   changeRequestError: null,
   changeRequestSuccess: false,
@@ -478,6 +649,30 @@ const initialState: AgentState = {
   declineChangeRequestError: null,
   declineChangeRequestSuccess: false,
   declineChangeRequestResponse: null,
+  clearances: [],
+  clearancesLoading: false,
+  clearancesError: null,
+  clearancesSuccess: false,
+  clearancesPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  payments: [],
+  paymentsLoading: false,
+  paymentsError: null,
+  paymentsSuccess: false,
+  paymentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
 }
 
 // Async thunks
@@ -583,6 +778,74 @@ export const addExistingUserAsAgent = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to add existing user as agent")
       }
       return rejectWithValue(error.message || "Network error during existing user agent addition")
+    }
+  }
+)
+
+// Clear Cash Async Thunk
+export const clearCash = createAsyncThunk(
+  "agents/clearCash",
+  async (
+    {
+      id,
+      clearCashData,
+    }: {
+      id: number
+      clearCashData: ClearCashRequest
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const endpoint = API_ENDPOINTS.AGENTS.CLEAR_CASH.replace("{id}", id.toString())
+      const response = await api.post<ClearCashResponse>(buildApiUrl(endpoint), clearCashData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to clear cash")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Clear cash response data not found")
+      }
+
+      return {
+        agentId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to clear cash")
+      }
+      return rejectWithValue(error.message || "Network error during cash clearance")
+    }
+  }
+)
+
+// Clearances Async Thunks
+export const fetchClearances = createAsyncThunk(
+  "agents/fetchClearances",
+  async (params: ClearancesRequestParams, { rejectWithValue }) => {
+    try {
+      const { id, pageNumber, pageSize } = params
+
+      const response = await api.get<ClearancesResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.CLEARANCE), {
+        params: {
+          id,
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch clearances")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch clearances")
+      }
+      return rejectWithValue(error.message || "Network error during clearances fetch")
     }
   }
 )
@@ -782,6 +1045,61 @@ export const declineChangeRequest = createAsyncThunk(
   }
 )
 
+// Payments Async Thunk
+export const fetchPayments = createAsyncThunk(
+  "agents/fetchPayments",
+  async (params: PaymentsRequestParams, { rejectWithValue }) => {
+    try {
+      const {
+        id,
+        pageNumber,
+        pageSize,
+        customerId,
+        vendorId,
+        agentId,
+        postpaidBillId,
+        paymentTypeId,
+        channel,
+        status,
+        collectorType,
+        paidFromUtc,
+        paidToUtc,
+        search,
+      } = params
+
+      const response = await api.get<PaymentsResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENTS), {
+        params: {
+          ...(id !== undefined && { id }),
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(customerId !== undefined && { CustomerId: customerId }),
+          ...(vendorId !== undefined && { VendorId: vendorId }),
+          ...(agentId !== undefined && { AgentId: agentId }),
+          ...(postpaidBillId !== undefined && { PostpaidBillId: postpaidBillId }),
+          ...(paymentTypeId !== undefined && { PaymentTypeId: paymentTypeId }),
+          ...(channel && { Channel: channel }),
+          ...(status && { Status: status }),
+          ...(collectorType && { CollectorType: collectorType }),
+          ...(paidFromUtc && { PaidFromUtc: paidFromUtc }),
+          ...(paidToUtc && { PaidToUtc: paidToUtc }),
+          ...(search && { Search: search }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payments")
+      }
+      return rejectWithValue(error.message || "Network error during payments fetch")
+    }
+  }
+)
+
 // Agent slice
 const agentSlice = createSlice({
   name: "agents",
@@ -808,12 +1126,15 @@ const agentSlice = createSlice({
       state.currentAgentError = null
       state.addAgentError = null
       state.addExistingUserAsAgentError = null
+      state.clearCashError = null
       state.changeRequestError = null
       state.changeRequestsByAgentError = null
       state.changeRequestsError = null
       state.changeRequestDetailsError = null
       state.approveChangeRequestError = null
       state.declineChangeRequestError = null
+      state.clearancesError = null
+      state.paymentsError = null
     },
 
     // Clear current agent
@@ -836,6 +1157,44 @@ const agentSlice = createSlice({
       state.addExistingUserAsAgentError = null
       state.addExistingUserAsAgentSuccess = false
       state.newlyAddedExistingUserAgent = null
+    },
+
+    // Clear cash state
+    clearCashStatus: (state) => {
+      state.clearCashLoading = false
+      state.clearCashError = null
+      state.clearCashSuccess = false
+      state.clearCashResponse = null
+    },
+
+    // Clear clearances state
+    clearClearances: (state) => {
+      state.clearances = []
+      state.clearancesError = null
+      state.clearancesSuccess = false
+      state.clearancesPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear payments state
+    clearPayments: (state) => {
+      state.payments = []
+      state.paymentsError = null
+      state.paymentsSuccess = false
+      state.paymentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
 
     // Reset agent state
@@ -863,6 +1222,10 @@ const agentSlice = createSlice({
       state.addExistingUserAsAgentError = null
       state.addExistingUserAsAgentSuccess = false
       state.newlyAddedExistingUserAgent = null
+      state.clearCashLoading = false
+      state.clearCashError = null
+      state.clearCashSuccess = false
+      state.clearCashResponse = null
       state.changeRequestLoading = false
       state.changeRequestError = null
       state.changeRequestSuccess = false
@@ -903,6 +1266,30 @@ const agentSlice = createSlice({
       state.declineChangeRequestError = null
       state.declineChangeRequestSuccess = false
       state.declineChangeRequestResponse = null
+      state.clearances = []
+      state.clearancesLoading = false
+      state.clearancesError = null
+      state.clearancesSuccess = false
+      state.clearancesPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.payments = []
+      state.paymentsLoading = false
+      state.paymentsError = null
+      state.paymentsSuccess = false
+      state.paymentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
 
     // Set pagination
@@ -921,6 +1308,18 @@ const agentSlice = createSlice({
     setChangeRequestsByAgentPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.changeRequestsByAgentPagination.currentPage = action.payload.page
       state.changeRequestsByAgentPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set clearances pagination
+    setClearancesPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.clearancesPagination.currentPage = action.payload.page
+      state.clearancesPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set payments pagination
+    setPaymentsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.paymentsPagination.currentPage = action.payload.page
+      state.paymentsPagination.pageSize = action.payload.pageSize
     },
 
     // Set current agent (for when we get agent data from other sources)
@@ -1008,6 +1407,18 @@ const agentSlice = createSlice({
       state.declineChangeRequestSuccess = false
       state.declineChangeRequestLoading = false
       state.declineChangeRequestResponse = null
+    },
+
+    // Update cash at hand in current agent (after clearance)
+    updateCurrentAgentCashAtHand: (state, action: PayloadAction<number>) => {
+      if (state.currentAgent) {
+        state.currentAgent.cashAtHand = action.payload
+      }
+      // Also update in agents list
+      const index = state.agents.findIndex((agent) => agent.id === state.currentAgent?.id)
+      if (index !== -1 && state.agents[index]) {
+        state.agents[index].cashAtHand = action.payload
+      }
     },
   },
   extraReducers: (builder) => {
@@ -1121,6 +1532,98 @@ const agentSlice = createSlice({
         state.addExistingUserAsAgentError = (action.payload as string) || "Failed to add existing user as agent"
         state.addExistingUserAsAgentSuccess = false
         state.newlyAddedExistingUserAgent = null
+      })
+
+      // Clear cash cases
+      .addCase(clearCash.pending, (state) => {
+        state.clearCashLoading = true
+        state.clearCashError = null
+        state.clearCashSuccess = false
+        state.clearCashResponse = null
+      })
+      .addCase(
+        clearCash.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            agentId: number
+            data: ClearCashResponseData
+            message: string
+          }>
+        ) => {
+          state.clearCashLoading = false
+          state.clearCashSuccess = true
+          state.clearCashError = null
+          state.clearCashResponse = action.payload.data
+
+          // Update current agent's cash at hand to the new value
+          if (state.currentAgent) {
+            state.currentAgent.cashAtHand = action.payload.data.cashAtHandAfter
+          }
+
+          // Update agent in list if exists
+          const index = state.agents.findIndex((agent) => agent.id === action.payload.agentId)
+          if (index !== -1 && state.agents[index]) {
+            state.agents[index].cashAtHand = action.payload.data.cashAtHandAfter
+          }
+
+          // Add the new clearance to the clearances list
+          const newClearance: CashClearance = {
+            id: action.payload.data.id,
+            amountCleared: action.payload.data.amountCleared,
+            cashAtHandBefore: action.payload.data.cashAtHandBefore,
+            cashAtHandAfter: action.payload.data.cashAtHandAfter,
+            clearedAt: action.payload.data.clearedAt,
+            notes: action.payload.data.notes,
+            collectionOfficer: action.payload.data.collectionOfficer,
+            clearedBy: action.payload.data.clearedBy,
+          }
+
+          // Add to beginning of clearances list and update pagination
+          state.clearances.unshift(newClearance)
+          state.clearancesPagination.totalCount += 1
+        }
+      )
+      .addCase(clearCash.rejected, (state, action) => {
+        state.clearCashLoading = false
+        state.clearCashError = (action.payload as string) || "Failed to clear cash"
+        state.clearCashSuccess = false
+        state.clearCashResponse = null
+      })
+
+      // Fetch clearances cases
+      .addCase(fetchClearances.pending, (state) => {
+        state.clearancesLoading = true
+        state.clearancesError = null
+        state.clearancesSuccess = false
+      })
+      .addCase(fetchClearances.fulfilled, (state, action: PayloadAction<ClearancesResponse>) => {
+        state.clearancesLoading = false
+        state.clearancesSuccess = true
+        state.clearances = action.payload.data || []
+        state.clearancesPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.clearancesError = null
+      })
+      .addCase(fetchClearances.rejected, (state, action) => {
+        state.clearancesLoading = false
+        state.clearancesError = (action.payload as string) || "Failed to fetch clearances"
+        state.clearancesSuccess = false
+        state.clearances = []
+        state.clearancesPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
       })
 
       // Change request cases
@@ -1351,6 +1854,41 @@ const agentSlice = createSlice({
         state.declineChangeRequestSuccess = false
         state.declineChangeRequestResponse = null
       })
+
+      // Fetch payments cases
+      .addCase(fetchPayments.pending, (state) => {
+        state.paymentsLoading = true
+        state.paymentsError = null
+        state.paymentsSuccess = false
+      })
+      .addCase(fetchPayments.fulfilled, (state, action: PayloadAction<PaymentsResponse>) => {
+        state.paymentsLoading = false
+        state.paymentsSuccess = true
+        state.payments = action.payload.data || []
+        state.paymentsPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.paymentsError = null
+      })
+      .addCase(fetchPayments.rejected, (state, action) => {
+        state.paymentsLoading = false
+        state.paymentsError = (action.payload as string) || "Failed to fetch payments"
+        state.paymentsSuccess = false
+        state.payments = []
+        state.paymentsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
   },
 })
 
@@ -1360,10 +1898,15 @@ export const {
   clearCurrentAgent,
   clearAddAgent,
   clearAddExistingUserAsAgent,
+  clearCashStatus,
+  clearClearances,
+  clearPayments,
   resetAgentState,
   setPagination,
   setChangeRequestsPagination,
   setChangeRequestsByAgentPagination,
+  setClearancesPagination,
+  setPaymentsPagination,
   setCurrentAgent,
   updateAgentInList,
   addAgentToList,
@@ -1374,6 +1917,7 @@ export const {
   clearChangeRequestDetails,
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
+  updateCurrentAgentCashAtHand,
 } = agentSlice.actions
 
 export default agentSlice.reducer

@@ -34,6 +34,9 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/agents/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/agents/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/agents/change-requests/{publicId}/decline",
+    CLEARANCE: "/agents/clearances",
+    CLEAR_CASH: "/agents/{id}/clear-cash",
+    PAYMENTS: "/agents/payments",
   },
 
   EMPLOYEE: {

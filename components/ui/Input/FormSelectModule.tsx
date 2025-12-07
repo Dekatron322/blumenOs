@@ -74,7 +74,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
         className={`
           flex h-[46px] cursor-pointer items-center justify-between rounded-md border px-3
           py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
-          ${isFocused ? "bg-[#FBFAFC] ring-2 ring-[#f58634]" : "bg-[#F9F9F9]"}
+          ${isFocused ? "bg-[#F0fdf4] ring-2 ring-[#f58634]" : "bg-[#F9F9F9]"}
           ${disabled ? "cursor-not-allowed bg-[#a0a0a0]" : ""}
           transition-all duration-200
         `}
@@ -120,8 +120,8 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
             {filteredOptions.map((option) => (
               <div
                 key={option.value}
-                className={`px-3 py-2 text-base hover:bg-[#D3D5DA] ${
-                  String(value) === String(option.value) ? "bg-[#D3D5DA] text-[#004B23]" : ""
+                className={`px-3 py-2 text-base hover:bg-[#F0fdf4] ${
+                  String(value) === String(option.value) ? "bg-[#F0fdf4] text-[#004B23]" : ""
                 }`}
                 onClick={() => handleSelect(option.value)}
                 role="option"

@@ -723,7 +723,9 @@ const AllAgents: React.FC = () => {
                                       variant="outline"
                                       type="button"
                                       size="sm"
-                                      onClick={() => router.push(`/agent-management/agent-detail/${agent.id}`)}
+                                      onClick={() =>
+                                        router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)
+                                      }
                                     >
                                       View details
                                     </ButtonModule>

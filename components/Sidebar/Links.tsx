@@ -168,6 +168,18 @@ const allLinks: LinkItem[] = [
         requiredActions: ["W"],
       },
       {
+        name: "Clearance",
+        href: "/agent-management/clearance",
+        privilegeKey: "agents",
+        requiredActions: ["W"],
+      },
+      {
+        name: "Payments",
+        href: "/agent-management/payments",
+        privilegeKey: "agents",
+        requiredActions: ["W"],
+      },
+      {
         name: "Change Request",
         href: "/agent-management/change-request",
         privilegeKey: "agents",
