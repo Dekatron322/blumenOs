@@ -387,16 +387,6 @@ const ChangeRequestsTab: React.FC<ChangeRequestsTabProps> = ({ customerId }) => 
       >
         <div className="mb-6 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Change Requests</h3>
-          <button
-            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
-            onClick={() => {
-              /* TODO: Implement CSV export for customer change requests */
-            }}
-            disabled={!changeRequestsByCustomer || changeRequestsByCustomer.length === 0}
-          >
-            <ExportCsvIcon color="#2563EB" size={20} />
-            <p className="text-sm text-[#2563EB]">Export CSV</p>
-          </button>
         </div>
 
         {/* Filters and Controls */}

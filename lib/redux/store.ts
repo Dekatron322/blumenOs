@@ -24,6 +24,7 @@ import outageReducer from "./outageSlice"
 import maintenanceReducer from "./maintenanceSlice"
 import createCustomerReducer from "./createCustomerSlice"
 import customerCategoriesReducer from "./customersCategoriesSlice"
+import countriesReducer from "./countriesSlice"
 import companyReducer from "./companySlice"
 import backgroundJobsReducer from "./backgroundJobsSlice"
 import statusMapReducer from "./statusMapSlice"
@@ -54,6 +55,7 @@ export const store = configureStore({
     maintenances: maintenanceReducer,
     createCustomer: createCustomerReducer,
     customerCategories: customerCategoriesReducer,
+    countries: countriesReducer,
     companies: companyReducer,
     backgroundJobs: backgroundJobsReducer,
     statusMap: statusMapReducer,

@@ -23,6 +23,10 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: "/identity/auth/change-password",
   },
 
+  COUNTRIES: {
+    GET: "/system/countries",
+  },
+
   AGENTS: {
     GET: "/agents",
     GET_BY_ID: "/agents/{id}",

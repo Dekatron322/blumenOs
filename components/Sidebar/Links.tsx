@@ -284,7 +284,7 @@ const allLinks: LinkItem[] = [
     name: "Analytics & Reports",
     href: "/analytics",
     icon: AnalyticsIcon,
-    privilegeKey: "notifications",
+    privilegeKey: "reporting-analytics",
     requiredActions: ["R"],
     children: [
       // { name: "Overview", href: "/analytics/overview", privilegeKey: "notifications", requiredActions: ["W"] },
@@ -434,9 +434,6 @@ export function Links({ isCollapsed }: LinksProps) {
   }, [userPermissions])
 
   const hasPermission = (link: LinkItem, permissions: UserPermission): boolean => {
-    // Dashboard is always accessible
-    if (link.name === "Dashboard") return true
-
     // Check if user has super admin role
     const isSuperAdmin = permissions.roles.some((role) => role.slug === "superadmin")
     if (isSuperAdmin) return true

@@ -15,6 +15,8 @@ import { clearCreateState, createCustomer, CreateCustomerRequest } from "lib/red
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
+import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
+import { fetchCountries } from "lib/redux/countriesSlice"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
 interface CustomerFormData {
@@ -79,6 +81,20 @@ const AddCustomerPage = () => {
 
   const { employees, employeesLoading, employeesError } = useSelector((state: RootState) => state.employee)
 
+  const {
+    categories: customerCategories,
+    loading: customerCategoriesLoading,
+    error: customerCategoriesError,
+  } = useSelector((state: RootState) => state.customerCategories)
+
+  const { subCategories, subCategoriesLoading } = useSelector((state: RootState) => state.customerCategories)
+
+  const {
+    countries,
+    loading: countriesLoading,
+    error: countriesError,
+  } = useSelector((state: RootState) => state.countries)
+
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: "",
     phoneNumber: "",
@@ -139,7 +155,19 @@ const AddCustomerPage = () => {
         pageSize: 100,
       })
     )
+
+    dispatch(fetchCustomerCategories())
+
+    // Load countries so we can populate provinces (states) for Nigeria
+    dispatch(fetchCountries())
   }, [dispatch])
+
+  // Fetch subcategories whenever a customer category is selected
+  React.useEffect(() => {
+    if (formData.customerCategoryId && formData.customerCategoryId !== 0) {
+      dispatch(fetchSubCategoriesByCategoryId(formData.customerCategoryId))
+    }
+  }, [dispatch, formData.customerCategoryId])
 
   // Handle success and error states
   React.useEffect(() => {
@@ -202,6 +230,36 @@ const AddCustomerPage = () => {
       value: substation.id,
       label: `${substation.dssCode} (${substation.nercCode})`,
     })),
+  ]
+
+  // Customer category options from fetched data
+  const customerCategoryOptions = [
+    { value: 0, label: "Select customer category" },
+    ...customerCategories.map((category) => ({
+      value: category.id,
+      label: category.name,
+    })),
+  ]
+
+  // Customer sub-category options based on selected category
+  const customerSubCategoryOptions = [
+    { value: 0, label: "Select sub-category" },
+    ...subCategories
+      .filter((sub) => sub.customerCategoryId === formData.customerCategoryId)
+      .map((sub) => ({ value: sub.id, label: sub.name })),
+  ]
+
+  // Province (state) options from countries endpoint (Nigeria only)
+  const nigeria = countries.find(
+    (country) => country.name.toLowerCase() === "nigeria" || country.abbreviation.toUpperCase() === "NG"
+  )
+
+  const provinceOptions = [
+    { value: "", label: "Select state" },
+    ...((nigeria?.provinces ?? []).map((province) => ({
+      value: province.name,
+      label: province.name,
+    })) || []),
   ]
 
   // Service center options from fetched data
@@ -635,6 +693,34 @@ const AddCustomerPage = () => {
                           </div>
 
                           <div className="grid grid-cols-1 gap-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                              <FormInputModule
+                                label="City"
+                                name="city"
+                                type="text"
+                                placeholder="Enter city"
+                                value={formData.city}
+                                onChange={handleInputChange}
+                              />
+
+                              <FormSelectModule
+                                label="State"
+                                name="state"
+                                value={formData.state}
+                                onChange={handleInputChange}
+                                options={provinceOptions}
+                                disabled={countriesLoading}
+                              />
+
+                              <FormInputModule
+                                label="LGA"
+                                name="lga"
+                                type="text"
+                                placeholder="Enter LGA"
+                                value={formData.lga}
+                                onChange={handleInputChange}
+                              />
+                            </div>
                             <FormInputModule
                               label="Address Line 1"
                               name="address"
@@ -655,36 +741,7 @@ const AddCustomerPage = () => {
                               onChange={handleInputChange}
                             />
 
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                              <FormInputModule
-                                label="City"
-                                name="city"
-                                type="text"
-                                placeholder="Enter city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                              />
-
-                              <FormInputModule
-                                label="State"
-                                name="state"
-                                type="text"
-                                placeholder="Enter state"
-                                value={formData.state}
-                                onChange={handleInputChange}
-                              />
-
-                              <FormInputModule
-                                label="LGA"
-                                name="lga"
-                                type="text"
-                                placeholder="Enter LGA"
-                                value={formData.lga}
-                                onChange={handleInputChange}
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            {/* <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                               <FormInputModule
                                 label="Latitude"
                                 name="latitude"
@@ -704,7 +761,7 @@ const AddCustomerPage = () => {
                                 onChange={handleInputChange}
                                 step="0.000001"
                               />
-                            </div>
+                            </div> */}
                           </div>
                         </motion.div>
                       )}
@@ -753,7 +810,7 @@ const AddCustomerPage = () => {
                               name="tariff"
                               type="number"
                               placeholder="Enter tariff"
-                              value={formData.tariff}
+                              value={formData.tariff === 0 ? "" : formData.tariff}
                               onChange={handleInputChange}
                               step="0.01"
                             />
@@ -814,14 +871,14 @@ const AddCustomerPage = () => {
                               onChange={handleInputChange}
                             />
 
-                            <FormInputModule
+                            {/* <FormInputModule
                               label="Tariff ID"
                               name="tariffID"
                               type="text"
                               placeholder="Enter tariff ID"
                               value={formData.tariffID}
                               onChange={handleInputChange}
-                            />
+                            /> */}
 
                             <FormInputModule
                               label="Tariff Index"
@@ -848,7 +905,7 @@ const AddCustomerPage = () => {
                               value={formData.tariffClass}
                               onChange={handleInputChange}
                             />
-
+                            {/* 
                             <FormInputModule
                               label="New Rate"
                               name="newRate"
@@ -857,9 +914,9 @@ const AddCustomerPage = () => {
                               value={formData.newRate}
                               onChange={handleInputChange}
                               step="0.01"
-                            />
+                            /> */}
 
-                            <FormInputModule
+                            {/* <FormInputModule
                               label="VAT"
                               name="vat"
                               type="number"
@@ -867,7 +924,7 @@ const AddCustomerPage = () => {
                               value={formData.vat}
                               onChange={handleInputChange}
                               step="0.01"
-                            />
+                            /> */}
 
                             <FormSelectModule
                               label="VAT Waved"
@@ -962,27 +1019,27 @@ const AddCustomerPage = () => {
                               name="storedAverage"
                               type="number"
                               placeholder="Enter stored average"
-                              value={formData.storedAverage}
+                              value={formData.storedAverage === 0 ? "" : formData.storedAverage}
                               onChange={handleInputChange}
                               step="0.01"
                             />
 
-                            <FormInputModule
-                              label="Customer Category ID"
+                            <FormSelectModule
+                              label="Customer Category"
                               name="customerCategoryId"
-                              type="number"
-                              placeholder="Enter category ID"
                               value={formData.customerCategoryId}
                               onChange={handleInputChange}
+                              options={customerCategoryOptions}
+                              disabled={customerCategoriesLoading}
                             />
 
-                            <FormInputModule
-                              label="Customer Sub-Category ID"
+                            <FormSelectModule
+                              label="Customer Sub-Category"
                               name="customerSubCategoryId"
-                              type="number"
-                              placeholder="Enter sub-category ID"
                               value={formData.customerSubCategoryId}
                               onChange={handleInputChange}
+                              options={customerSubCategoryOptions}
+                              disabled={subCategoriesLoading || !formData.customerCategoryId}
                             />
                           </div>
                         </motion.div>

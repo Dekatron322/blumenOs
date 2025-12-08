@@ -17,6 +17,7 @@ import {
   ExportOutlineIcon,
   FinanceOutlineIcon,
   MapOutlineIcon,
+  MeterOutlineIcon,
   NotificationOutlineIcon,
   PaymentDisputeOutlineIcon,
   PhoneOutlineIcon,
@@ -28,6 +29,8 @@ import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { clearCurrentCustomer, fetchCustomerById } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPayments } from "lib/redux/paymentSlice"
+import type { Payment } from "lib/redux/paymentSlice"
+import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
 
 // Import tab components
@@ -72,6 +75,10 @@ const CustomerDetailsPage = () => {
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
+
+  // Payment receipt modal state
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
 
   // Payments state
   const [paymentsPage, setPaymentsPage] = useState(1)
@@ -151,6 +158,17 @@ const CustomerDetailsPage = () => {
     // Refresh customer data to get updated suspension status
     dispatch(fetchCustomerById(customerId))
     closeAllModals()
+  }
+
+  // Payment receipt handlers
+  const handleViewPaymentReceipt = (payment: Payment) => {
+    setSelectedPayment(payment)
+    setIsReceiptModalOpen(true)
+  }
+
+  const handleCloseReceiptModal = () => {
+    setIsReceiptModalOpen(false)
+    setSelectedPayment(null)
   }
 
   const handleActivateSuccess = () => {
@@ -326,7 +344,7 @@ const CustomerDetailsPage = () => {
                           <div className="text-xs text-gray-500">Payment ID: {payment.id}</div>
                         </div>
                         <button
-                          onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
+                          onClick={() => handleViewPaymentReceipt(payment)}
                           className="button-oulined flex items-center gap-2"
                         >
                           <span>View</span>
@@ -555,6 +573,30 @@ const CustomerDetailsPage = () => {
                     </h3>
                     <div className="space-y-3">
                       <ButtonModule
+                        variant="primary"
+                        className="w-full justify-start gap-3"
+                        onClick={() => openModal("reminder")}
+                      >
+                        <PaymentDisputeOutlineIcon />
+                        Record Payment
+                      </ButtonModule>
+                      <ButtonModule
+                        variant="outline"
+                        className="w-full justify-start gap-3"
+                        onClick={() => openModal("reminder")}
+                      >
+                        <PostpaidBillOutlineIcon className="size-4" />
+                        Generate Bill
+                      </ButtonModule>
+                      <ButtonModule
+                        variant="outline"
+                        className="w-full justify-start gap-3"
+                        onClick={() => openModal("reminder")}
+                      >
+                        <MeterOutlineIcon className="size-4" />
+                        Generate Meter Reading
+                      </ButtonModule>
+                      <ButtonModule
                         variant="secondary"
                         className="w-full justify-start gap-3"
                         onClick={() => openModal("reminder")}
@@ -711,6 +753,12 @@ const CustomerDetailsPage = () => {
         customerName={currentCustomer.fullName}
         accountNumber={currentCustomer.accountNumber}
         onSuccess={handleActivateSuccess}
+      />
+
+      <PaymentReceiptModal
+        isOpen={isReceiptModalOpen}
+        onRequestClose={handleCloseReceiptModal}
+        payment={selectedPayment}
       />
     </section>
   )

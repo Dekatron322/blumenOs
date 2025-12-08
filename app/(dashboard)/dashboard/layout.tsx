@@ -3,6 +3,7 @@ import { NotificationProvider } from "components/ui/Notification/Notification"
 import ProtectedRoute from "lib/protectedRoutes"
 import { Metadata } from "next"
 import "styles/tailwind.css"
+import { DashboardAccessGuard } from "components/Dashboard/DashboardAccessGuard"
 
 export const metadata: Metadata = {
   title: "BlumenOS Admin Dashboard",
@@ -35,13 +36,15 @@ export const metadata: Metadata = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="flex h-screen w-screen flex-col-reverse border-0 border-blue-700 lg:flex-row">
-        <div className="">
-          <SideBar />
+      <DashboardAccessGuard>
+        <div className="flex h-screen w-screen flex-col-reverse border-0 border-blue-700 lg:flex-row">
+          <div className="">
+            <SideBar />
+          </div>
+          <div className="grow overflow-y-auto border-0 border-black ">{children}</div>
+          <NotificationProvider position="top-center" />
         </div>
-        <div className="grow overflow-y-auto border-0 border-black ">{children}</div>
-        <NotificationProvider position="top-center" />
-      </div>
+      </DashboardAccessGuard>
     </ProtectedRoute>
   )
 }
