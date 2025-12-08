@@ -436,10 +436,10 @@ const MapViewTab = () => {
               <div>
                 <h4 className="mb-2 text-sm font-semibold">Customers</h4>
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <span className="inline-block size-3 rounded-full bg-gray-500"></span>
                     <span>Unknown</span>
-                  </div>
+                  </div> */}
                   <div className="flex items-center gap-2">
                     <span className="inline-block size-3 rounded-full bg-green-500"></span>
                     <span>Paid</span>

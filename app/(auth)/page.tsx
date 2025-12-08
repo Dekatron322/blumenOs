@@ -113,9 +113,9 @@ const SignIn: React.FC = () => {
   const isButtonDisabled = loading || authLoading || email.trim() === "" || password.trim() === ""
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#ffffff] md:flex-row">
+    <div className="relative flex min-h-screen flex-col  bg-gradient-to-br from-[#ffffff] lg:flex-row">
       {/* Form Container */}
-      <div className="container flex min-h-screen w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] px-5 py-8 md:min-h-0 md:w-[40%] md:border-b-0 md:border-r-2">
+      <div className="container flex min-h-screen w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] px-5 py-8 lg:w-[40%] lg:border-b-0 lg:border-r-2">
         <motion.main
           className="flex w-full flex-col items-center justify-center"
           initial={{ opacity: 0, y: 20 }}
@@ -255,7 +255,7 @@ const SignIn: React.FC = () => {
       </div>
 
       {/* Image Container with Text at Bottom */}
-      <div className="relative hidden w-[60%] bg-[#004B23] md:block ">
+      <div className="relative hidden w-[60%] bg-[#004B23] lg:block ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

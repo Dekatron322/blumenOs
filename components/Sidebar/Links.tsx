@@ -34,7 +34,7 @@ const allLinks: LinkItem[] = [
     href: "/dashboard",
     icon: DashboardIcon,
     privilegeKey: "reporting-analytics",
-    requiredActions: ["E"],
+    requiredActions: ["R"],
     // Dashboard is accessible to everyone who is authenticated
   },
   {
