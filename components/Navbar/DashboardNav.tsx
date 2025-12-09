@@ -281,7 +281,7 @@ const DashboardNav = () => {
       <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-16 py-4 max-md:px-3 md:hidden">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
-            <Image src="/blumen.png" alt="Dashboard" width={50} height={50} />
+            <Image src="/kadco.svg" alt="Dashboard" width={100} height={50} />
           </Link>
           <div className="flex items-center gap-4">
             {/* Mobile User Info */}
