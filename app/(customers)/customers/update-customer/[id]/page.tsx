@@ -20,6 +20,7 @@ import {
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
+import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface CustomerFormData {
   fullName: string
@@ -99,6 +100,8 @@ const UpdateCustomerPage = () => {
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState<string>("personal")
 
   // Fetch customer data and related data when component mounts or ID changes
   useEffect(() => {
@@ -414,6 +417,152 @@ const UpdateCustomerPage = () => {
     }
   }, [dispatch])
 
+  // Mobile Navigation Component
+  const MobileNavigation = () => {
+    const sections = [
+      { id: "personal", label: "Personal Info" },
+      { id: "address", label: "Address Info" },
+      { id: "service", label: "Service Info" },
+      { id: "financial", label: "Financial Info" },
+      { id: "additional", label: "Additional Info" },
+      { id: "current", label: "Current Info" },
+    ]
+
+    return (
+      <>
+        {/* Mobile Navigation Button */}
+        <div className="sticky top-0 z-40 mb-4 rounded-lg bg-white p-3 shadow-sm sm:hidden">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              className="flex items-center gap-2 text-sm font-medium text-gray-700"
+              onClick={() => setIsMobileNavOpen(true)}
+            >
+              <Menu className="size-4" />
+              <span>Navigation</span>
+            </button>
+            <div className="text-sm font-medium text-gray-900">
+              {activeSection === "personal" && "Personal"}
+              {activeSection === "address" && "Address"}
+              {activeSection === "service" && "Service"}
+              {activeSection === "financial" && "Financial"}
+              {activeSection === "additional" && "Additional"}
+              {activeSection === "current" && "Current"}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Sidebar */}
+        {isMobileNavOpen && (
+          <>
+            {/* Backdrop */}
+            <div className="fixed inset-0 z-50 bg-black/50 sm:hidden" onClick={() => setIsMobileNavOpen(false)} />
+
+            {/* Sidebar */}
+            <div className="fixed left-0 top-0 z-50 h-full w-72 bg-white shadow-xl sm:hidden">
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="border-b bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">Sections</h3>
+                    <button
+                      type="button"
+                      className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                      onClick={() => setIsMobileNavOpen(false)}
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-600">Navigate through form sections</p>
+                </div>
+
+                {/* Sections List */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <nav className="space-y-2">
+                    {sections.map((section) => (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveSection(section.id)
+                          setIsMobileNavOpen(false)
+                          // Scroll to section
+                          document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth" })
+                        }}
+                        className={`flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors ${
+                          activeSection === section.id ? "bg-[#004B23] text-white" : "bg-gray-50 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span className="text-sm font-medium">{section.label}</span>
+                        {activeSection === section.id && <ChevronRight className="size-4" />}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="border-t bg-gray-50 p-4">
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      disabled={updateLoading}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileNavOpen(false)}
+                      className="w-full rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+                    >
+                      Close Menu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </>
+    )
+  }
+
+  // Mobile Bottom Navigation
+  const MobileBottomNavigation = () => (
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={updateLoading}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={updateLoading}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Reset
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={submitCustomerUpdate}
+          disabled={!isFormValid() || updateLoading}
+          className="rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {updateLoading ? "Updating..." : "Update"}
+        </button>
+      </div>
+    </div>
+  )
+
   // Show loading skeleton while fetching customer data
   if (currentCustomerLoading) {
     return <LoadingSkeleton />
@@ -426,7 +575,7 @@ const UpdateCustomerPage = () => {
         <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
           <div className="flex w-full flex-col">
             <DashboardNav />
-            <div className="container mx-auto flex flex-1 items-center justify-center">
+            <div className="container mx-auto flex flex-1 items-center justify-center p-4">
               <div className="text-center">
                 <div className="mb-4 text-red-500">
                   <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -457,437 +606,437 @@ const UpdateCustomerPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="container mx-auto flex flex-col">
-            {/* Page Header */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
-              <div>
-                <h4 className="text-2xl font-semibold">Update Customer</h4>
-                <p className="text-gray-600">
-                  {currentCustomer ? `Update details for ${currentCustomer.fullName}` : "Update customer details"}
-                </p>
-              </div>
-
-              <motion.div
-                className="flex items-center justify-end gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <ButtonModule variant="outline" size="md" onClick={handleCancel} disabled={updateLoading}>
-                  Cancel
-                </ButtonModule>
-                <ButtonModule variant="outline" size="md" onClick={handleReset} disabled={updateLoading}>
-                  Reset Form
-                </ButtonModule>
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  onClick={submitCustomerUpdate}
-                  disabled={!isFormValid() || updateLoading}
-                  iconPosition="start"
-                >
-                  {updateLoading ? "Updating Customer..." : "Update Customer"}
-                </ButtonModule>
-              </motion.div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
-              <div className="w-full">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="rounded-lg bg-white p-6 shadow-sm"
-                >
-                  {/* Form Header */}
-                  <div className="mb-6 border-b pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Customer Information</h3>
+          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+            {/* Page Header - Mobile Optimized */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft className="size-4" />
+                  </button>
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Update Customer</h1>
                     <p className="text-sm text-gray-600">
-                      Update the required fields to modify the customer information
+                      {currentCustomer ? `Update details for ${currentCustomer.fullName}` : "Update customer details"}
                     </p>
                   </div>
+                </div>
 
-                  {/* Customer Form */}
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Section 1: Personal Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Personal Information</h4>
-                        <p className="text-sm text-gray-600">Update the customer&apos;s personal and contact details</p>
-                      </div>
+                <div className="hidden items-center gap-3 sm:flex">
+                  <ButtonModule variant="outline" size="sm" onClick={handleCancel} disabled={updateLoading}>
+                    Cancel
+                  </ButtonModule>
+                  <ButtonModule variant="outline" size="sm" onClick={handleReset} disabled={updateLoading}>
+                    Reset Form
+                  </ButtonModule>
+                  <ButtonModule
+                    variant="primary"
+                    size="sm"
+                    onClick={submitCustomerUpdate}
+                    disabled={!isFormValid() || updateLoading}
+                    iconPosition="start"
+                  >
+                    {updateLoading ? "Updating..." : "Update Customer"}
+                  </ButtonModule>
+                </div>
+              </div>
+            </div>
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormInputModule
-                          label="Full Name"
-                          name="fullName"
-                          type="text"
-                          placeholder="Enter full name"
-                          value={formData.fullName}
-                          onChange={handleInputChange}
-                          error={formErrors.fullName}
-                          required
-                        />
+            {/* Mobile Navigation */}
+            <MobileNavigation />
 
-                        <FormInputModule
-                          label="Phone Number"
-                          name="phoneNumber"
-                          type="text"
-                          placeholder="Enter phone number"
-                          value={formData.phoneNumber}
-                          onChange={handleInputChange}
-                          error={formErrors.phoneNumber}
-                          required
-                        />
+            {/* Main Content Area */}
+            <div className="w-full">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="rounded-lg bg-white p-4 shadow-sm sm:p-6"
+              >
+                {/* Form Header */}
+                <div className="mb-6 border-b pb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Customer Information</h3>
+                  <p className="text-sm text-gray-600">Update the required fields to modify the customer information</p>
+                </div>
 
-                        <FormInputModule
-                          label="Email Address"
-                          name="email"
-                          type="email"
-                          placeholder="Enter email address"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          error={formErrors.email}
-                          required
-                        />
-
-                        <FormSelectModule
-                          label="Status"
-                          name="status"
-                          value={formData.status}
-                          onChange={handleInputChange}
-                          options={statusOptions}
-                          error={formErrors.status}
-                          required
-                        />
-                      </div>
+                {/* Customer Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Section 1: Personal Information */}
+                  <div id="personal" className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-3">
+                      <h4 className="text-lg font-medium text-gray-900">Personal Information</h4>
+                      <p className="text-sm text-gray-600">Update the customer&apos;s personal and contact details</p>
                     </div>
 
-                    {/* Section 2: Address Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Address Information</h4>
-                        <p className="text-sm text-gray-600">Update the customer&apos;s address and location details</p>
-                      </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                      <FormInputModule
+                        label="Full Name"
+                        name="fullName"
+                        type="text"
+                        placeholder="Enter full name"
+                        value={formData.fullName}
+                        onChange={handleInputChange}
+                        error={formErrors.fullName}
+                        required
+                      />
 
-                      <div className="grid grid-cols-1 gap-6">
-                        <FormInputModule
-                          label="Address Line 1"
-                          name="address"
-                          type="text"
-                          placeholder="Enter address line 1"
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          error={formErrors.address}
-                          required
-                        />
+                      <FormInputModule
+                        label="Phone Number"
+                        name="phoneNumber"
+                        type="text"
+                        placeholder="Enter phone number"
+                        value={formData.phoneNumber}
+                        onChange={handleInputChange}
+                        error={formErrors.phoneNumber}
+                        required
+                      />
 
-                        <FormInputModule
-                          label="Address Line 2"
-                          name="addressTwo"
-                          type="text"
-                          placeholder="Enter address line 2 (optional)"
-                          value={formData.addressTwo}
-                          onChange={handleInputChange}
-                        />
+                      <FormInputModule
+                        label="Email Address"
+                        name="email"
+                        type="email"
+                        placeholder="Enter email address"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        error={formErrors.email}
+                        required
+                      />
 
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormInputModule
-                            label="City"
-                            name="city"
-                            type="text"
-                            placeholder="Enter city"
-                            value={formData.city}
-                            onChange={handleInputChange}
-                          />
+                      <FormSelectModule
+                        label="Status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        options={statusOptions}
+                        error={formErrors.status}
+                        required
+                      />
+                    </div>
+                  </div>
 
-                          <FormInputModule
-                            label="State"
-                            name="state"
-                            type="text"
-                            placeholder="Enter state"
-                            value={formData.state}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormInputModule
-                            label="Latitude"
-                            name="latitude"
-                            type="number"
-                            placeholder="Enter latitude"
-                            value={formData.latitude}
-                            onChange={handleInputChange}
-                            step="0.000001"
-                          />
-
-                          <FormInputModule
-                            label="Longitude"
-                            name="longitude"
-                            type="number"
-                            placeholder="Enter longitude"
-                            value={formData.longitude}
-                            onChange={handleInputChange}
-                            step="0.000001"
-                          />
-                        </div>
-                      </div>
+                  {/* Section 2: Address Information */}
+                  <div id="address" className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-3">
+                      <h4 className="text-lg font-medium text-gray-900">Address Information</h4>
+                      <p className="text-sm text-gray-600">Update the customer&apos;s address and location details</p>
                     </div>
 
-                    {/* Section 3: Service Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Service Information</h4>
-                        <p className="text-sm text-gray-600">
-                          Update the customer&apos;s service and distribution details
-                        </p>
-                      </div>
+                    <div className="space-y-4">
+                      <FormInputModule
+                        label="Address Line 1"
+                        name="address"
+                        type="text"
+                        placeholder="Enter address line 1"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        error={formErrors.address}
+                        required
+                      />
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormSelectModule
-                          label="Distribution Substation"
-                          name="distributionSubstationId"
-                          value={formData.distributionSubstationId}
-                          onChange={handleInputChange}
-                          options={distributionSubstationOptions}
-                          error={formErrors.distributionSubstationId}
-                          required
-                          disabled={distributionSubstationsLoading}
-                        />
+                      <FormInputModule
+                        label="Address Line 2"
+                        name="addressTwo"
+                        type="text"
+                        placeholder="Enter address line 2 (optional)"
+                        value={formData.addressTwo}
+                        onChange={handleInputChange}
+                      />
 
-                        <FormSelectModule
-                          label="Service Center"
-                          name="serviceCenterId"
-                          value={formData.serviceCenterId}
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                        <FormInputModule
+                          label="City"
+                          name="city"
+                          type="text"
+                          placeholder="Enter city"
+                          value={formData.city}
                           onChange={handleInputChange}
-                          options={serviceCenterOptions}
-                          error={formErrors.serviceCenterId}
-                          required
-                          disabled={serviceStationsLoading}
                         />
 
                         <FormInputModule
-                          label="Tariff"
-                          name="tariff"
+                          label="State"
+                          name="state"
+                          type="text"
+                          placeholder="Enter state"
+                          value={formData.state}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                        <FormInputModule
+                          label="Latitude"
+                          name="latitude"
                           type="number"
-                          placeholder="Enter tariff"
-                          value={formData.tariff}
+                          placeholder="Enter latitude"
+                          value={formData.latitude}
                           onChange={handleInputChange}
-                          step="0.01"
+                          step="0.000001"
+                        />
+
+                        <FormInputModule
+                          label="Longitude"
+                          name="longitude"
+                          type="number"
+                          placeholder="Enter longitude"
+                          value={formData.longitude}
+                          onChange={handleInputChange}
+                          step="0.000001"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Service Information */}
+                  <div id="service" className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-3">
+                      <h4 className="text-lg font-medium text-gray-900">Service Information</h4>
+                      <p className="text-sm text-gray-600">
+                        Update the customer&apos;s service and distribution details
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                      <FormSelectModule
+                        label="Distribution Substation"
+                        name="distributionSubstationId"
+                        value={formData.distributionSubstationId}
+                        onChange={handleInputChange}
+                        options={distributionSubstationOptions}
+                        error={formErrors.distributionSubstationId}
+                        required
+                        disabled={distributionSubstationsLoading}
+                      />
+
+                      <FormSelectModule
+                        label="Service Center"
+                        name="serviceCenterId"
+                        value={formData.serviceCenterId}
+                        onChange={handleInputChange}
+                        options={serviceCenterOptions}
+                        error={formErrors.serviceCenterId}
+                        required
+                        disabled={serviceStationsLoading}
+                      />
+
+                      <FormInputModule
+                        label="Tariff"
+                        name="tariff"
+                        type="number"
+                        placeholder="Enter tariff"
+                        value={formData.tariff}
+                        onChange={handleInputChange}
+                        step="0.01"
+                      />
+
+                      <FormSelectModule
+                        label="Band"
+                        name="band"
+                        value={formData.band}
+                        onChange={handleInputChange}
+                        options={bandOptions}
+                        error={formErrors.band}
+                        required
+                      />
+                    </div>
+
+                    {distributionSubstationsLoading && (
+                      <p className="text-sm text-gray-500">Loading distribution substations...</p>
+                    )}
+                    {distributionSubstationsError && (
+                      <p className="text-sm text-red-500">
+                        Error loading distribution substations: {distributionSubstationsError}
+                      </p>
+                    )}
+                    {serviceStationsLoading && <p className="text-sm text-gray-500">Loading service centers...</p>}
+                    {serviceStationsError && (
+                      <p className="text-sm text-red-500">Error loading service centers: {serviceStationsError}</p>
+                    )}
+                  </div>
+
+                  {/* Section 5: Financial Information */}
+                  <div id="financial" className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-3">
+                      <h4 className="text-lg font-medium text-gray-900">Financial Information</h4>
+                      <p className="text-sm text-gray-600">Update the customer&apos;s financial and billing details</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-1">
+                      <FormInputModule
+                        label="Stored Average"
+                        name="storedAverage"
+                        type="number"
+                        placeholder="Enter stored average"
+                        value={formData.storedAverage}
+                        onChange={handleInputChange}
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Section 6: Additional Information */}
+                  <div id="additional" className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-3">
+                      <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
+                      <p className="text-sm text-gray-600">Update additional customer details and comments</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <FormInputModule
+                        label="Comment"
+                        name="comment"
+                        type="text"
+                        placeholder="Enter any comments or notes"
+                        value={formData.comment}
+                        onChange={handleInputChange}
+                      />
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                        <FormSelectModule
+                          label="Sales Representative"
+                          name="salesRepUserId"
+                          value={formData.salesRepUserId}
+                          onChange={handleInputChange}
+                          options={employeeOptions}
+                          disabled={employeesLoading}
                         />
 
                         <FormSelectModule
-                          label="Band"
-                          name="band"
-                          value={formData.band}
+                          label="Technical Engineer"
+                          name="technicalEngineerUserId"
+                          value={formData.technicalEngineerUserId}
                           onChange={handleInputChange}
-                          options={bandOptions}
-                          error={formErrors.band}
-                          required
+                          options={employeeOptions}
+                          disabled={employeesLoading}
                         />
                       </div>
 
-                      {distributionSubstationsLoading && (
-                        <p className="text-sm text-gray-500">Loading distribution substations...</p>
-                      )}
-                      {distributionSubstationsError && (
-                        <p className="text-sm text-red-500">
-                          Error loading distribution substations: {distributionSubstationsError}
-                        </p>
-                      )}
-                      {serviceStationsLoading && <p className="text-sm text-gray-500">Loading service centers...</p>}
-                      {serviceStationsError && (
-                        <p className="text-sm text-red-500">Error loading service centers: {serviceStationsError}</p>
+                      {employeesLoading && <p className="text-sm text-gray-500">Loading employees...</p>}
+                      {employeesError && (
+                        <p className="text-sm text-red-500">Error loading employees: {employeesError}</p>
                       )}
                     </div>
+                  </div>
 
-                    {/* Section 4: Meter Information */}
-
-                    {/* Section 5: Financial Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Financial Information</h4>
-                        <p className="text-sm text-gray-600">
-                          Update the customer&apos;s financial and billing details
-                        </p>
+                  {/* Current Information Display */}
+                  {currentCustomer && (
+                    <div id="current" className="space-y-4 rounded-lg bg-blue-50 p-4 sm:space-y-6 sm:p-6">
+                      <div className="border-b border-blue-200 pb-3">
+                        <h4 className="text-lg font-medium text-blue-900">Current Information</h4>
+                        <p className="text-sm text-blue-700">This is the current data for this customer</p>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1">
-                        <FormInputModule
-                          label="Stored Average"
-                          name="storedAverage"
-                          type="number"
-                          placeholder="Enter stored average"
-                          value={formData.storedAverage}
-                          onChange={handleInputChange}
-                          step="0.01"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Section 6: Additional Information */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                        <p className="text-sm text-gray-600">Update additional customer details and comments</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6">
-                        <FormInputModule
-                          label="Comment"
-                          name="comment"
-                          type="text"
-                          placeholder="Enter any comments or notes"
-                          value={formData.comment}
-                          onChange={handleInputChange}
-                        />
-
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormSelectModule
-                            label="Sales Representative"
-                            name="salesRepUserId"
-                            value={formData.salesRepUserId}
-                            onChange={handleInputChange}
-                            options={employeeOptions}
-                            disabled={employeesLoading}
-                          />
-
-                          <FormSelectModule
-                            label="Technical Engineer"
-                            name="technicalEngineerUserId"
-                            value={formData.technicalEngineerUserId}
-                            onChange={handleInputChange}
-                            options={employeeOptions}
-                            disabled={employeesLoading}
-                          />
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="rounded-lg border border-blue-200 bg-white p-4">
+                          <label className="text-sm font-medium text-blue-600">Account Number</label>
+                          <p className="font-semibold text-blue-900">{currentCustomer.accountNumber}</p>
                         </div>
-
-                        {employeesLoading && <p className="text-sm text-gray-500">Loading employees...</p>}
-                        {employeesError && (
-                          <p className="text-sm text-red-500">Error loading employees: {employeesError}</p>
+                        <div className="rounded-lg border border-blue-200 bg-white p-4">
+                          <label className="text-sm font-medium text-blue-600">Current Status</label>
+                          <p className="font-semibold text-blue-900">{currentCustomer.status}</p>
+                        </div>
+                        <div className="rounded-lg border border-blue-200 bg-white p-4">
+                          <label className="text-sm font-medium text-blue-600">Suspension Status</label>
+                          <p className="font-semibold text-blue-900">
+                            {currentCustomer.isSuspended ? "Suspended" : "Active"}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-blue-200 bg-white p-4">
+                          <label className="text-sm font-medium text-blue-600">Distribution Station</label>
+                          <p className="font-semibold text-blue-900">{currentCustomer.distributionSubstationCode}</p>
+                        </div>
+                        <div className="rounded-lg border border-blue-200 bg-white p-4">
+                          <label className="text-sm font-medium text-blue-600">Service Center</label>
+                          <p className="font-semibold text-blue-900">{currentCustomer.serviceCenterName}</p>
+                        </div>
+                        <div className="rounded-lg border border-blue-200 bg-white p-4">
+                          <label className="text-sm font-medium text-blue-600">Area Office</label>
+                          <p className="font-semibold text-blue-900">{currentCustomer.areaOfficeName}</p>
+                        </div>
+                        {currentCustomer.salesRepUser && (
+                          <div className="rounded-lg border border-blue-200 bg-white p-4">
+                            <label className="text-sm font-medium text-blue-600">Current Sales Rep</label>
+                            <p className="font-semibold text-blue-900">{currentCustomer.salesRepUser.fullName}</p>
+                            <p className="text-sm text-blue-700">{currentCustomer.salesRepUser.email}</p>
+                          </div>
+                        )}
+                        {currentCustomer.technicalEngineerUser && (
+                          <div className="rounded-lg border border-blue-200 bg-white p-4">
+                            <label className="text-sm font-medium text-blue-600">Current Technical Engineer</label>
+                            <p className="font-semibold text-blue-900">
+                              {currentCustomer.technicalEngineerUser.fullName}
+                            </p>
+                            <p className="text-sm text-blue-700">{currentCustomer.technicalEngineerUser.email}</p>
+                          </div>
                         )}
                       </div>
                     </div>
+                  )}
 
-                    {/* Current Information Display */}
-                    {currentCustomer && (
-                      <div className="space-y-6 rounded-lg bg-blue-50 p-6">
-                        <div className="border-b border-blue-200 pb-4">
-                          <h4 className="text-lg font-medium text-blue-900">Current Information</h4>
-                          <p className="text-sm text-blue-700">This is the current data for this customer</p>
+                  {/* Error Summary */}
+                  {Object.keys(formErrors).length > 0 && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
                         </div>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Account Number</label>
-                            <p className="font-semibold text-blue-900">{currentCustomer.accountNumber}</p>
-                          </div>
-                          <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Current Status</label>
-                            <p className="font-semibold text-blue-900">{currentCustomer.status}</p>
-                          </div>
-                          <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Suspension Status</label>
-                            <p className="font-semibold text-blue-900">
-                              {currentCustomer.isSuspended ? "Suspended" : "Active"}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Distribution Station</label>
-                            <p className="font-semibold text-blue-900">{currentCustomer.distributionSubstationCode}</p>
-                          </div>
-                          <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Service Center</label>
-                            <p className="font-semibold text-blue-900">{currentCustomer.serviceCenterName}</p>
-                          </div>
-                          <div className="rounded-lg border border-blue-200 bg-white p-4">
-                            <label className="text-sm font-medium text-blue-600">Area Office</label>
-                            <p className="font-semibold text-blue-900">{currentCustomer.areaOfficeName}</p>
-                          </div>
-                          {currentCustomer.salesRepUser && (
-                            <div className="rounded-lg border border-blue-200 bg-white p-4">
-                              <label className="text-sm font-medium text-blue-600">Current Sales Rep</label>
-                              <p className="font-semibold text-blue-900">{currentCustomer.salesRepUser.fullName}</p>
-                              <p className="text-sm text-blue-700">{currentCustomer.salesRepUser.email}</p>
-                            </div>
-                          )}
-                          {currentCustomer.technicalEngineerUser && (
-                            <div className="rounded-lg border border-blue-200 bg-white p-4">
-                              <label className="text-sm font-medium text-blue-600">Current Technical Engineer</label>
-                              <p className="font-semibold text-blue-900">
-                                {currentCustomer.technicalEngineerUser.fullName}
-                              </p>
-                              <p className="text-sm text-blue-700">{currentCustomer.technicalEngineerUser.email}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Error Summary */}
-                    {Object.keys(formErrors).length > 0 && (
-                      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
-                            <div className="mt-2 text-sm text-amber-700">
-                              <ul className="list-disc space-y-1 pl-5">
-                                {Object.values(formErrors).map((error, index) => (
-                                  <li key={index}>{error}</li>
-                                ))}
-                              </ul>
-                            </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
+                          <div className="mt-2 text-sm text-amber-700">
+                            <ul className="list-disc space-y-1 pl-5">
+                              {Object.values(formErrors).map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-4 border-t pt-6">
-                      <ButtonModule
-                        variant="dangerSecondary"
-                        size="lg"
-                        onClick={handleCancel}
-                        disabled={updateLoading}
-                        type="button"
-                      >
-                        Cancel
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="outline"
-                        size="lg"
-                        onClick={handleReset}
-                        disabled={updateLoading}
-                        type="button"
-                      >
-                        Reset
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="primary"
-                        size="lg"
-                        type="submit"
-                        disabled={!isFormValid() || updateLoading}
-                      >
-                        {updateLoading ? "Updating Customer..." : "Update Customer"}
-                      </ButtonModule>
                     </div>
-                  </form>
-                </motion.div>
-              </div>
+                  )}
+
+                  {/* Desktop Form Actions */}
+                  <div className="hidden justify-end gap-4 border-t pt-6 sm:flex">
+                    <ButtonModule
+                      variant="dangerSecondary"
+                      size="lg"
+                      onClick={handleCancel}
+                      disabled={updateLoading}
+                      type="button"
+                    >
+                      Cancel
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="outline"
+                      size="lg"
+                      onClick={handleReset}
+                      disabled={updateLoading}
+                      type="button"
+                    >
+                      Reset
+                    </ButtonModule>
+                    <ButtonModule variant="primary" size="lg" type="submit" disabled={!isFormValid() || updateLoading}>
+                      {updateLoading ? "Updating Customer..." : "Update Customer"}
+                    </ButtonModule>
+                  </div>
+                </form>
+              </motion.div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavigation />
     </section>
   )
 }
@@ -896,7 +1045,7 @@ const UpdateCustomerPage = () => {
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <DashboardNav />
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 sm:p-6">
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -944,7 +1093,7 @@ const LoadingSkeleton = () => (
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="hidden gap-3 sm:flex">
           <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
@@ -990,11 +1139,20 @@ const LoadingSkeleton = () => (
         </div>
       </div>
 
+      {/* Mobile Header Skeleton */}
+      <div className="mb-4 flex items-center gap-3 sm:hidden">
+        <div className="h-8 w-8 rounded bg-gray-200"></div>
+        <div>
+          <div className="mb-1 h-6 w-32 rounded bg-gray-200"></div>
+          <div className="h-4 w-48 rounded bg-gray-200"></div>
+        </div>
+      </div>
+
       {/* Form Skeleton */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         {/* Form Header Skeleton */}
         <div className="mb-6 border-b pb-4">
-          <div className="size-64 overflow-hidden rounded bg-gray-200">
+          <div className="h-6 w-64 overflow-hidden rounded bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
@@ -1024,11 +1182,11 @@ const LoadingSkeleton = () => (
         </div>
 
         {/* Form Sections Skeleton */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {[1, 2, 3, 4, 5, 6].map((section) => (
-            <div key={section} className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+            <div key={section} className="space-y-6 rounded-lg bg-[#f9f9f9] p-4 sm:p-6">
               {/* Section Header */}
-              <div className="border-b pb-4">
+              <div className="border-b pb-3 sm:pb-4">
                 <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
@@ -1060,7 +1218,7 @@ const LoadingSkeleton = () => (
               </div>
 
               {/* Form Fields Skeleton */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                 {[1, 2, 3, 4].map((field) => (
                   <div key={field} className="space-y-2">
                     <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
@@ -1098,8 +1256,8 @@ const LoadingSkeleton = () => (
           ))}
 
           {/* Current Information Skeleton */}
-          <div className="space-y-6 rounded-lg bg-blue-50 p-6">
-            <div className="border-b border-blue-200 pb-4">
+          <div className="space-y-6 rounded-lg bg-blue-50 p-4 sm:p-6">
+            <div className="border-b border-blue-200 pb-3 sm:pb-4">
               <div className="h-6 w-48 overflow-hidden rounded bg-blue-200">
                 <motion.div
                   className="h-full bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"
