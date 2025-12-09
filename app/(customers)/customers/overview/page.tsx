@@ -293,7 +293,7 @@ const CustomerAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
     >
       <div className="flex w-full max-sm:flex-col">
         <div className="w-full">
-          <div className="mb-3 grid w-full cursor-pointer grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-3 grid w-full cursor-pointer grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-4">
             {/* Total Customers Card */}
             <motion.div
               className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
@@ -431,9 +431,9 @@ export default function AllTransactions() {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col xl:container">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
               <div>
                 <h4 className="text-2xl font-semibold">Customer Management</h4>
                 <p>Manage customer accounts, KYC, and service connections</p>
@@ -479,7 +479,7 @@ export default function AllTransactions() {
             )}
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 xl:px-16">
               <div className="w-full">
                 {customerAnalyticsLoading ? (
                   // Loading State

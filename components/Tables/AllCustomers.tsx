@@ -923,7 +923,7 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 xl:flex-row">
+      <div className="flex-3 relative mt-5 flex flex-col-reverse items-start gap-6 2xl:flex-row">
         {/* Main Content - Customers List/Grid */}
         <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
@@ -1196,13 +1196,13 @@ const AllCustomers = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ type: "spring", damping: 24, stiffness: 260 }}
-              className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 xl:w-80"
+              className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 2xl:w-80"
             >
               <div className="border-b pb-3 md:pb-4">
                 <h2 className="text-base font-semibold text-gray-900 md:text-lg">Customer Categories</h2>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 xl:grid-cols-1">
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 2xl:grid-cols-1">
                 {customerCategories.map((category, index) => (
                   <CategoryCard key={index} category={category} />
                 ))}
