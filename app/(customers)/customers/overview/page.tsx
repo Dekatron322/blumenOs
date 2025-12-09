@@ -293,7 +293,7 @@ const CustomerAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
     >
       <div className="flex w-full max-sm:flex-col">
         <div className="w-full">
-          <div className="mb-3 grid w-full cursor-pointer grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-4">
+          <div className="grid w-full cursor-pointer grid-cols-1 gap-3 px-3 md:grid-cols-2 2xl:mb-3 2xl:grid-cols-4">
             {/* Total Customers Card */}
             <motion.div
               className="small-card rounded-md bg-white p-2 transition duration-500 md:border"

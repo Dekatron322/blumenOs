@@ -923,7 +923,7 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative mt-5 flex flex-col-reverse items-start gap-6 2xl:flex-row">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Customers List/Grid */}
         <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
