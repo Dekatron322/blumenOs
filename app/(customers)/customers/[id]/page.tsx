@@ -958,12 +958,12 @@ const CustomerDetailsPage = () => {
             <div className="flex w-full px-3 py-8 2xl:px-16">
               <div className=" w-full gap-6  xl:flex">
                 {/* Right Sidebar - Always Visible */}
-                <div className="flex w-full gap-6 space-y-6 sm:flex-col lg:max-w-full lg:flex-row lg:space-y-0 xl:max-w-[30%] xl:flex-col">
+                <div className="flex w-full  space-y-6 max-sm:flex-col sm:flex-col xl:max-w-[30%]">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
@@ -1019,7 +1019,7 @@ const CustomerDetailsPage = () => {
                   </motion.div>
 
                   {/* Quick Actions */}
-                  <div className=" max-xl:flex max-xl:w-full max-xl:gap-4 max-sm:flex-col max-sm:gap-3 lg:flex-col">
+                  <div className=" max-xl:flex max-xl:w-full max-xl:gap-4 max-sm:flex-col max-sm:gap-3">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
