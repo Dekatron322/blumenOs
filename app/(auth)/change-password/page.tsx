@@ -191,9 +191,9 @@ const ChangePassword: React.FC = () => {
     isChangingPassword || !currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()
 
   return (
-    <div className="relative flex min-h-screen grid-cols-1 bg-gradient-to-br from-[#ffffff]">
+    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#ffffff] lg:flex-row">
       {/* Form Container */}
-      <div className="container flex flex-col items-center justify-center border-r-2 border-[#ffffff80] py-8 max-sm:px-5 md:w-[40%]">
+      <div className="flex min-h-screen w-full flex-col items-center justify-center border-b-2 border-[#ffffff80] py-8 max-sm:px-5 lg:w-[40%] lg:border-b-0 lg:border-r-2">
         <motion.main
           className="flex w-full flex-col items-center justify-center"
           initial={{ opacity: 0, y: 20 }}
@@ -372,7 +372,7 @@ const ChangePassword: React.FC = () => {
       </div>
 
       {/* Image Container with Text at Bottom */}
-      <div className="relative w-[60%] bg-[#004B23]">
+      <div className="relative hidden w-[60%] bg-[#004B23] lg:block">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

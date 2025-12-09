@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { IoMdFunnel } from "react-icons/io"
+import { IoMdFunnel, IoMdSearch } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { ChevronDown } from "lucide-react"
@@ -10,6 +10,7 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import { useRouter } from "next/navigation"
 import { Customer, fetchCustomers, setFilters, setPagination } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import Image from "next/image"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -112,7 +113,7 @@ const generateRandomAssets = (count: number): Asset[] => {
   }))
 }
 
-// Skeleton Components
+// Responsive Skeleton Components
 const CustomerCardSkeleton = () => (
   <motion.div
     className="rounded-lg border bg-white p-4 shadow-sm"
@@ -128,40 +129,40 @@ const CustomerCardSkeleton = () => (
   >
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
-        <div className="size-12 rounded-full bg-gray-200"></div>
-        <div>
-          <div className="h-5 w-32 rounded bg-gray-200"></div>
-          <div className="mt-1 flex gap-2">
-            <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-            <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+        <div className="size-10 rounded-full bg-gray-200 md:size-12"></div>
+        <div className="min-w-0 flex-1">
+          <div className="h-5 w-24 rounded bg-gray-200 md:w-32"></div>
+          <div className="mt-1 flex flex-wrap gap-1 md:gap-2">
+            <div className="mt-1 h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
+            <div className="mt-1 h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
           </div>
         </div>
       </div>
-      <div className="size-6 rounded bg-gray-200"></div>
+      <div className="size-5 rounded bg-gray-200 md:size-6"></div>
     </div>
 
-    <div className="mt-4 space-y-2">
+    <div className="mt-3 space-y-2 md:mt-4">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex justify-between">
-          <div className="h-4 w-20 rounded bg-gray-200"></div>
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
+        <div key={i} className="flex items-center justify-between">
+          <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
+          <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
         </div>
       ))}
     </div>
 
-    <div className="mt-3 border-t pt-3">
-      <div className="h-4 w-full rounded bg-gray-200"></div>
+    <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
+      <div className="h-3 w-full rounded bg-gray-200 md:h-4"></div>
     </div>
 
-    <div className="mt-3 flex gap-2">
-      <div className="h-9 flex-1 rounded bg-gray-200"></div>
+    <div className="mt-2 flex gap-2 md:mt-3">
+      <div className="h-8 flex-1 rounded bg-gray-200 md:h-9"></div>
     </div>
   </motion.div>
 )
 
 const CustomerListItemSkeleton = () => (
   <motion.div
-    className="border-b bg-white p-4"
+    className="border-b bg-white p-3 md:p-4"
     initial={{ opacity: 0.6 }}
     animate={{
       opacity: [0.6, 1, 0.6],
@@ -172,34 +173,34 @@ const CustomerListItemSkeleton = () => (
       },
     }}
   >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className="size-10 rounded-full bg-gray-200"></div>
+    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
+      <div className="flex items-start gap-3 md:items-center md:gap-4">
+        <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <div className="h-5 w-40 rounded bg-gray-200"></div>
-            <div className="flex gap-2">
-              <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-              <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
+            <div className="flex flex-wrap gap-1 md:gap-2">
+              <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
+              <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
             </div>
           </div>
-          <div className="mt-2 flex flex-wrap gap-4">
+          <div className="mt-2 flex flex-wrap gap-2 md:gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
+              <div key={i} className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-24"></div>
             ))}
           </div>
-          <div className="mt-2 h-4 w-64 rounded bg-gray-200"></div>
+          <div className="mt-2 hidden h-3 w-40 rounded bg-gray-200 md:block md:h-4 md:w-64"></div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <div className="h-4 w-24 rounded bg-gray-200"></div>
-          <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
+      <div className="flex items-center justify-between gap-2 md:justify-end md:gap-3">
+        <div className="hidden text-right md:block">
+          <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
+          <div className="mt-1 h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-9 w-20 rounded bg-gray-200"></div>
-          <div className="size-6 rounded bg-gray-200"></div>
+          <div className="h-7 w-14 rounded bg-gray-200 md:h-9 md:w-20"></div>
+          <div className="size-5 rounded bg-gray-200 md:size-6"></div>
         </div>
       </div>
     </div>
@@ -221,15 +222,15 @@ const CategoryCardSkeleton = () => (
   >
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="h-5 w-12 rounded bg-gray-200"></div>
-        <div className="h-5 w-20 rounded bg-gray-200"></div>
+        <div className="h-5 w-10 rounded bg-gray-200 md:w-12"></div>
+        <div className="h-5 w-16 rounded bg-gray-200 md:w-20"></div>
       </div>
-      <div className="h-4 w-16 rounded bg-gray-200"></div>
+      <div className="h-4 w-12 rounded bg-gray-200 md:w-16"></div>
     </div>
-    <div className="mt-3 space-y-1">
+    <div className="mt-2 space-y-1 md:mt-3">
       <div className="flex justify-between">
-        <div className="h-4 w-20 rounded bg-gray-200"></div>
-        <div className="h-4 w-16 rounded bg-gray-200"></div>
+        <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
+        <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
       </div>
     </div>
   </motion.div>
@@ -237,7 +238,7 @@ const CategoryCardSkeleton = () => (
 
 const PaginationSkeleton = () => (
   <motion.div
-    className="mt-4 flex items-center justify-between"
+    className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0"
     initial={{ opacity: 0.6 }}
     animate={{
       opacity: [0.6, 1, 0.6],
@@ -248,22 +249,22 @@ const PaginationSkeleton = () => (
       },
     }}
   >
-    <div className="flex items-center gap-2">
-      <div className="h-4 w-16 rounded bg-gray-200"></div>
-      <div className="h-8 w-16 rounded bg-gray-200"></div>
+    <div className="order-2 flex items-center gap-2 md:order-1">
+      <div className="hidden h-4 w-12 rounded bg-gray-200 md:block md:w-16"></div>
+      <div className="h-7 w-12 rounded bg-gray-200 md:h-8 md:w-16"></div>
     </div>
 
-    <div className="flex items-center gap-3">
-      <div className="size-8 rounded bg-gray-200"></div>
-      <div className="flex gap-2">
+    <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
+      <div className="size-7 rounded bg-gray-200 md:size-8"></div>
+      <div className="flex gap-1 md:gap-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="size-7 rounded bg-gray-200"></div>
+          <div key={i} className="size-6 rounded bg-gray-200 md:size-7"></div>
         ))}
       </div>
-      <div className="size-8 rounded bg-gray-200"></div>
+      <div className="size-7 rounded bg-gray-200 md:size-8"></div>
     </div>
 
-    <div className="h-4 w-24 rounded bg-gray-200"></div>
+    <div className="order-3 hidden h-4 w-20 rounded bg-gray-200 md:block md:w-24"></div>
   </motion.div>
 )
 
@@ -280,15 +281,34 @@ const HeaderSkeleton = () => (
       },
     }}
   >
-    <div className="h-8 w-40 rounded bg-gray-200"></div>
-    <div className="mt-2 flex gap-4">
-      <div className="h-10 w-80 rounded bg-gray-200"></div>
-      <div className="flex gap-2">
+    <div className="h-7 w-32 rounded bg-gray-200 md:h-8 md:w-40"></div>
+    <div className="mt-2 flex flex-col gap-3 md:mt-3 md:flex-row md:gap-4">
+      <div className="h-9 w-full rounded bg-gray-200 md:h-10 md:w-60 lg:w-80"></div>
+      <div className="flex flex-wrap gap-1 md:gap-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+          <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 lg:w-24"></div>
         ))}
       </div>
     </div>
+  </motion.div>
+)
+
+const MobileFilterSkeleton = () => (
+  <motion.div
+    className="flex gap-2 md:hidden"
+    initial={{ opacity: 0.6 }}
+    animate={{
+      opacity: [0.6, 1, 0.6],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }}
+  >
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="h-8 w-20 rounded-full bg-gray-200"></div>
+    ))}
   </motion.div>
 )
 
@@ -297,6 +317,7 @@ const AllCustomers = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showCategories, setShowCategories] = useState(true)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState("")
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
@@ -560,8 +581,8 @@ const AllCustomers = () => {
     <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
-            <span className="font-semibold text-blue-600">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 md:size-12">
+            <span className="text-sm font-semibold text-blue-600 md:text-base">
               {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
@@ -569,8 +590,8 @@ const AllCustomers = () => {
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{customer.fullName}</h3>
-            <div className="mt-1 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 md:text-base">{customer.fullName}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-1 md:gap-2">
               <div
                 style={getStatusStyle(customer.status)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
@@ -589,25 +610,25 @@ const AllCustomers = () => {
         </div>
       </div>
 
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
+      <div className="mt-3 space-y-2 text-sm text-gray-600 md:mt-4">
         <div className="flex justify-between">
-          <span>Account No:</span>
-          <span className="font-medium">{customer.accountNumber}</span>
+          <span className="text-xs md:text-sm">Account No:</span>
+          <span className="text-xs font-medium md:text-sm">{customer.accountNumber}</span>
         </div>
         <div className="flex justify-between">
-          <span>Region:</span>
-          <span className="font-medium">{customer.state}</span>
+          <span className="text-xs md:text-sm">Region:</span>
+          <span className="text-xs font-medium md:text-sm">{customer.state}</span>
         </div>
         <div className="flex justify-between">
-          <span>Service Center:</span>
-          <span className="font-medium">{customer.serviceCenterName}</span>
+          <span className="text-xs md:text-sm">Service Center:</span>
+          <span className="text-xs font-medium md:text-sm">{customer.serviceCenterName}</span>
         </div>
         <div className="flex justify-between">
-          <span>Tariff:</span>
-          <span className="font-medium">{customer.band}</span>
+          <span className="text-xs md:text-sm">Tariff:</span>
+          <span className="text-xs font-medium md:text-sm">{customer.band}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Outstanding Arrears:</span>
+          <span className="text-xs md:text-sm">Outstanding Arrears:</span>
           <div
             style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
             className="rounded-full px-2 py-1 text-xs font-medium"
@@ -617,16 +638,16 @@ const AllCustomers = () => {
         </div>
       </div>
 
-      <div className="mt-3 border-t pt-3">
+      <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
         <p className="text-xs text-gray-500">{customer.address}</p>
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2 flex gap-2 md:mt-3">
         <button
           onClick={() => handleViewDetails(customer)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9]"
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-sm transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] md:text-base"
         >
-          <VscEye className="size-4" />
+          <VscEye className="size-3 md:size-4" />
           View Details
         </button>
       </div>
@@ -634,11 +655,11 @@ const AllCustomers = () => {
   )
 
   const CustomerListItem = ({ customer }: { customer: Customer }) => (
-    <div className="border-b bg-white p-2 transition-all hover:bg-gray-50 md:p-4">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center md:gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 max-sm:hidden">
-            <span className="text-sm font-semibold text-blue-600">
+    <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 md:p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
+        <div className="flex items-start gap-3 md:items-center md:gap-4">
+          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden md:size-10">
+            <span className="text-xs font-semibold text-blue-600 md:text-sm">
               {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
@@ -646,40 +667,38 @@ const AllCustomers = () => {
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-3">
-              <h3 className="font-semibold text-gray-900">{customer.fullName}</h3>
-              <div
-                style={getStatusStyle(customer.status)}
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
-              >
-                <span className="size-2 rounded-full" style={dotStyle(customer.status)}></span>
-                {customer.status}
-              </div>
-              <div
-                style={getCustomerTypeStyle(customer.isPPM ? "PREPAID" : "POSTPAID")}
-                className="rounded-full px-2 py-1 text-xs"
-              >
-                {customer.isPPM ? "PREPAID" : "POSTPAID"}
-              </div>
-              {customer.isMD && (
-                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">isMD: true</div>
-              )}
-              {customer.isUrban && (
-                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">isUrban: true</div>
-              )}
-              {customer.isHRB && (
-                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">isHRB: true</div>
-              )}
-              <div
-                style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
-                className="rounded-full px-2 py-1 text-xs font-medium"
-              >
-                Arrears: ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+              <h3 className="text-sm font-semibold text-gray-900 md:text-base">{customer.fullName}</h3>
+              <div className="flex flex-wrap gap-1 md:gap-2">
+                <div
+                  style={getStatusStyle(customer.status)}
+                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+                >
+                  <span className="size-2 rounded-full" style={dotStyle(customer.status)}></span>
+                  {customer.status}
+                </div>
+                <div
+                  style={getCustomerTypeStyle(customer.isPPM ? "PREPAID" : "POSTPAID")}
+                  className="rounded-full px-2 py-1 text-xs"
+                >
+                  {customer.isPPM ? "PREPAID" : "POSTPAID"}
+                </div>
+                {customer.isMD && <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">MD</div>}
+                {customer.isUrban && (
+                  <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">Urban</div>
+                )}
+                <div
+                  style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
+                  className="rounded-full px-2 py-1 text-xs font-medium"
+                >
+                  ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
+                </div>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-600 max-sm:text-xs md:gap-4">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 md:gap-4 md:text-sm">
               <span>
-                <strong>Account:</strong> {customer.accountNumber}
+                <strong className="md:hidden">Acc:</strong>
+                <strong className="hidden md:inline">Account:</strong> {customer.accountNumber}
               </span>
               <span>
                 <strong>Region:</strong> {customer.state}
@@ -691,19 +710,22 @@ const AllCustomers = () => {
                 <strong>Tariff:</strong> {customer.band}
               </span>
             </div>
-            <p className="mt-2 text-sm text-gray-50 max-sm:hidden max-sm:text-xs">{customer.address}</p>
+            <p className="mt-2 hidden text-xs text-gray-500 md:block md:text-sm">{customer.address}</p>
           </div>
         </div>
 
         <div className="flex items-start justify-between md:items-center md:gap-3">
-          <div className="text-right text-sm max-sm:text-xs">
-            <div className="font-medium text-gray-900">Phone: {customer.phoneNumber}</div>
-            <div className="text-gray-600">Email: {customer.email}</div>
+          <div className="text-right text-xs md:text-sm">
+            <div className="hidden font-medium text-gray-900 md:block">Phone: {customer.phoneNumber}</div>
+            <div className="hidden text-gray-600 md:block">Email: {customer.email}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => handleViewDetails(customer)} className="button-oulined flex items-center gap-2">
-              <VscEye className="size-4" />
-              View
+            <button
+              onClick={() => handleViewDetails(customer)}
+              className="button-oulined flex items-center gap-2 text-xs md:text-sm"
+            >
+              <VscEye className="size-3 md:size-4" />
+              <span className="hidden md:inline">View</span>
             </button>
           </div>
         </div>
@@ -814,7 +836,7 @@ const AllCustomers = () => {
     <div className="rounded-lg border bg-[#f9f9f9] p-3 transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-medium text-gray-900">{category.code}</h3>
+          <h3 className="text-sm font-medium text-gray-900 md:text-base">{category.code}</h3>
           <div
             className={`rounded px-2 py-1 text-xs ${
               category.type === "residential" ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700"
@@ -827,8 +849,8 @@ const AllCustomers = () => {
           <span className="font-medium">{category.rate}</span>
         </div>
       </div>
-      <div className="mt-3 space-y-1">
-        <div className="flex justify-between text-sm">
+      <div className="mt-2 space-y-1 md:mt-3">
+        <div className="flex justify-between text-xs md:text-sm">
           <span className="text-gray-600">Customers:</span>
           <span className="font-medium">{category.customerCount.toLocaleString()}</span>
         </div>
@@ -840,13 +862,18 @@ const AllCustomers = () => {
     return (
       <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
         {/* Main Content Skeleton */}
-        <div className={`w-full rounded-md border bg-white p-5 ${showCategories ? "lg:flex-1" : ""}`}>
+        <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <HeaderSkeleton />
 
+          {/* Mobile Filters Skeleton */}
+          <div className="mt-3 md:hidden">
+            <MobileFilterSkeleton />
+          </div>
+
           {/* Customer Display Area Skeleton */}
-          <div className="w-full">
+          <div className="mt-4 w-full">
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
                 {[...Array(6)].map((_, index) => (
                   <CustomerCardSkeleton key={index} />
                 ))}
@@ -865,25 +892,25 @@ const AllCustomers = () => {
 
         {/* Categories Sidebar Skeleton */}
         {showCategories && (
-          <div className="mt-4 w-full rounded-md border bg-white p-5 lg:mt-0 lg:w-80">
-            <div className="border-b pb-4">
-              <div className="h-6 w-40 rounded bg-gray-200"></div>
+          <div className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 lg:w-80">
+            <div className="border-b pb-3 md:pb-4">
+              <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 lg:grid-cols-1">
               {[...Array(6)].map((_, index) => (
                 <CategoryCardSkeleton key={index} />
               ))}
             </div>
 
             {/* Summary Stats Skeleton */}
-            <div className="mt-6 rounded-lg bg-gray-50 p-3">
-              <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
+            <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <div className="mb-2 h-5 w-16 rounded bg-gray-200 md:w-20"></div>
               <div className="space-y-1">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="flex justify-between">
-                    <div className="h-4 w-24 rounded bg-gray-200"></div>
-                    <div className="h-4 w-12 rounded bg-gray-200"></div>
+                    <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
+                    <div className="h-3 w-10 rounded bg-gray-200 md:h-4 md:w-12"></div>
                   </div>
                 ))}
               </div>
@@ -896,48 +923,81 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 xl:flex-row">
         {/* Main Content - Customers List/Grid */}
         <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
-            <p className="text-2xl font-medium">All Customers</p>
-            <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
-              <SearchModule
-                value={filters.search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onCancel={handleCancelSearch}
-                placeholder="Search by name, account number, or meter number"
-                className="w-full max-w-full md:max-w-[300px]"
-              />
+            <div className="mb-3 flex w-full items-center justify-between gap-3">
+              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">All Customers</p>
 
+              <div className="flex items-center gap-2">
+                {/* Mobile search icon button */}
+                <button
+                  type="button"
+                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
+                  onClick={() => setShowMobileSearch((prev) => !prev)}
+                  aria-label="Toggle search"
+                >
+                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
+                </button>
+
+                {/* Desktop/Tablet search input */}
+                <div className="hidden sm:block">
+                  <SearchModule
+                    value={filters.search}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onCancel={handleCancelSearch}
+                    placeholder="Search by name, account number, or meter number"
+                    className="w-full max-w-full md:max-w-[300px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile search input revealed when icon is tapped */}
+            {showMobileSearch && (
+              <div className="mb-3 sm:hidden">
+                <SearchModule
+                  value={filters.search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onCancel={handleCancelSearch}
+                  placeholder="Search by name, account number, or meter number"
+                  className="w-full"
+                />
+              </div>
+            )}
+            <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
               <div className="flex flex-wrap gap-2">
                 <button
                   className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
                   onClick={() => setViewMode("grid")}
                 >
-                  <MdGridView />
-                  <p>Grid</p>
+                  <MdGridView className="size-4 md:size-5" />
+                  <p className="text-sm md:text-base">Grid</p>
                 </button>
                 <button
                   className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
                   onClick={() => setViewMode("list")}
                 >
-                  <MdFormatListBulleted />
-                  <p>List</p>
+                  <MdFormatListBulleted className="size-4 md:size-5" />
+                  <p className="text-sm md:text-base">List</p>
                 </button>
               </div>
 
-              <button className="button-oulined" onClick={() => setShowCategories(!showCategories)}>
+              <button
+                className="button-oulined hidden text-sm sm:block md:text-base xl:block"
+                onClick={() => setShowCategories(!showCategories)}
+              >
                 {showCategories ? "Hide Categories" : "Show Categories"}
               </button>
 
               <div className="relative" data-dropdown-root="status-filter">
                 <button
                   type="button"
-                  className="button-oulined flex items-center gap-2"
+                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
                   onClick={() => setIsStatusFilterOpen((open) => !open)}
                 >
-                  <IoMdFunnel />
+                  <IoMdFunnel className="size-4 md:size-5" />
                   <span>
                     {filters.status === "ACTIVE"
                       ? "Active"
@@ -948,15 +1008,17 @@ const AllCustomers = () => {
                       : "All Status"}
                   </span>
                   <ChevronDown
-                    className={`size-4 text-gray-500 transition-transform ${isStatusFilterOpen ? "rotate-180" : ""}`}
+                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
+                      isStatusFilterOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
                 {isStatusFilterOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
                     <div className="py-1">
                       <button
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
                           filters.status === "" ? "bg-gray-50" : ""
                         }`}
                         onClick={() => handleStatusFilterChange("")}
@@ -964,7 +1026,7 @@ const AllCustomers = () => {
                         All Status
                       </button>
                       <button
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
                           filters.status === "ACTIVE" ? "bg-gray-50" : ""
                         }`}
                         onClick={() => handleStatusFilterChange("ACTIVE")}
@@ -972,7 +1034,7 @@ const AllCustomers = () => {
                         Active
                       </button>
                       <button
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
                           filters.status === "INACTIVE" ? "bg-gray-50" : ""
                         }`}
                         onClick={() => handleStatusFilterChange("INACTIVE")}
@@ -980,7 +1042,7 @@ const AllCustomers = () => {
                         Inactive
                       </button>
                       <button
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
                           filters.status === "SUSPENDED" ? "bg-gray-50" : ""
                         }`}
                         onClick={() => handleStatusFilterChange("SUSPENDED")}
@@ -992,16 +1054,16 @@ const AllCustomers = () => {
                 )}
               </div>
 
-              <button className="button-oulined" type="button">
-                <IoMdFunnel />
-                <p>Sort By</p>
+              <button className="button-oulined text-sm md:text-base" type="button">
+                <IoMdFunnel className="size-4 md:size-5" />
+                <p className="text-sm md:text-base">Sort By</p>
               </button>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 rounded-md bg-red-50 p-4 text-red-700">
+            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
               <p>Error loading customers: {error}</p>
             </div>
           )}
@@ -1009,19 +1071,19 @@ const AllCustomers = () => {
           {/* Customer Display Area */}
           <div className="w-full">
             {customers.length === 0 && !loading ? (
-              <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-8 md:py-12">
                 <div className="text-center">
-                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
-                    <VscEye className="size-6 text-gray-400" />
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
+                    <VscEye className="size-5 text-gray-400 md:size-6" />
                   </div>
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">No customers found</h3>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No customers found</h3>
+                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
                     {filters.search ? "Try adjusting your search criteria" : "No customers available"}
                   </p>
                 </div>
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
                 {customers.map((customer: Customer) => (
                   <CustomerCard key={customer.id} customer={customer} />
                 ))}
@@ -1039,8 +1101,12 @@ const AllCustomers = () => {
           {customers.length > 0 && (
             <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-1 max-sm:hidden">
-                <p>Show rows</p>
-                <select value={pagination.pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
+                <p className="text-sm md:text-base">Show rows</p>
+                <select
+                  value={pagination.pageSize}
+                  onChange={handleRowsChange}
+                  className="bg-[#F2F2F2] p-1 text-sm md:text-base"
+                >
                   <option value={6}>6</option>
                   <option value={12}>12</option>
                   <option value={18}>18</option>
@@ -1051,22 +1117,22 @@ const AllCustomers = () => {
 
               <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
                 <button
-                  className={`px-3 py-2 ${
+                  className={`px-2 py-1 md:px-3 md:py-2 ${
                     pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
                   }`}
                   onClick={() => changePage(pagination.currentPage - 1)}
                   disabled={pagination.currentPage === 1}
                 >
-                  <BiSolidLeftArrow />
+                  <BiSolidLeftArrow className="size-4 md:size-5" />
                 </button>
 
-                <div className="flex items-center gap-2">
-                  <div className="hidden items-center gap-2 md:flex">
+                <div className="flex items-center gap-1 md:gap-2">
+                  <div className="hidden items-center gap-1 md:flex md:gap-2">
                     {getPageItems().map((item, index) =>
                       typeof item === "number" ? (
                         <button
                           key={item}
-                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                          className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
                             pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                           }`}
                           onClick={() => changePage(item)}
@@ -1081,12 +1147,12 @@ const AllCustomers = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 md:hidden">
+                  <div className="flex items-center gap-1 md:hidden">
                     {getMobilePageItems().map((item, index) =>
                       typeof item === "number" ? (
                         <button
                           key={item}
-                          className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                          className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:w-8 ${
                             pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                           }`}
                           onClick={() => changePage(item)}
@@ -1094,7 +1160,7 @@ const AllCustomers = () => {
                           {item}
                         </button>
                       ) : (
-                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                        <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
                           {item}
                         </span>
                       )
@@ -1103,7 +1169,7 @@ const AllCustomers = () => {
                 </div>
 
                 <button
-                  className={`px-3 py-2 ${
+                  className={`px-2 py-1 md:px-3 md:py-2 ${
                     pagination.currentPage === pagination.totalPages
                       ? "cursor-not-allowed text-gray-400"
                       : "text-[#000000]"
@@ -1111,10 +1177,10 @@ const AllCustomers = () => {
                   onClick={() => changePage(pagination.currentPage + 1)}
                   disabled={pagination.currentPage === pagination.totalPages}
                 >
-                  <BiSolidRightArrow />
+                  <BiSolidRightArrow className="size-4 md:size-5" />
                 </button>
               </div>
-              <p className="max-sm:hidden">
+              <p className="text-sm max-sm:hidden md:text-base">
                 Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalCount} total records)
               </p>
             </div>
@@ -1130,22 +1196,22 @@ const AllCustomers = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ type: "spring", damping: 24, stiffness: 260 }}
-              className="mt-4 w-full rounded-md border bg-white p-5 lg:mt-0 lg:w-80"
+              className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 xl:w-80"
             >
-              <div className="border-b pb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Customer Categories</h2>
+              <div className="border-b pb-3 md:pb-4">
+                <h2 className="text-base font-semibold text-gray-900 md:text-lg">Customer Categories</h2>
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 xl:grid-cols-1">
                 {customerCategories.map((category, index) => (
                   <CategoryCard key={index} category={category} />
                 ))}
               </div>
 
               {/* Summary Stats */}
-              <div className="mt-6 rounded-lg bg-gray-50 p-3">
-                <h3 className="mb-2 font-medium text-gray-900">Summary</h3>
-                <div className="space-y-1 text-sm">
+              <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+                <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+                <div className="space-y-1 text-xs md:text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total:</span>
                     <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
@@ -1170,27 +1236,11 @@ const AllCustomers = () => {
       </div>
 
       {/* Modal Components - Only one modal can be open at a time */}
-      {/* <CustomerDetailsModal
-        isOpen={activeModal === "details"}
-        onRequestClose={closeAllModals}
-        customer={selectedCustomer}
-        assets={customerAssets}
-        onUpdateStatus={handleOpenStatusModal}
-        onSendReminder={handleOpenReminderModal}
-        onSuspendAccount={handleOpenSuspendModal}
-      /> */}
-
       <SendReminderModal
         isOpen={activeModal === "reminder"}
         onRequestClose={closeAllModals}
         onConfirm={handleConfirmReminder}
       />
-
-      {/* <UpdateStatusModal
-        isOpen={activeModal === "status"}
-        onRequestClose={closeAllModals}
-        customer={selectedCustomer}
-      /> */}
     </>
   )
 }

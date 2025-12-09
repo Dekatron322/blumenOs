@@ -45,6 +45,7 @@ export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
   const [activeView, setActiveView] = useState<"kpi" | "statistics">("kpi")
   const [isLoading, setIsLoading] = useState(false)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const router = useRouter()
 
   // Mock data for charts based on the image
@@ -162,6 +163,14 @@ export default function Dashboard() {
 
   const handleTimeFilterChange = (filter: TimeFilter) => {
     setTimeFilter(filter)
+    setIsMobileFilterOpen(false)
+  }
+
+  const getTimeFilterLabel = (filter: TimeFilter) => {
+    if (filter === "day") return "Today"
+    if (filter === "week") return "This Week"
+    if (filter === "month") return "This Month"
+    return "All Time"
   }
 
   const Card = ({
@@ -219,7 +228,7 @@ export default function Dashboard() {
   const TimeFilterButton = ({ filter, label }: { filter: TimeFilter; label: string }) => (
     <button
       onClick={() => handleTimeFilterChange(filter)}
-      className={`flex items-center justify-center rounded-md px-3 py-1 pt-2 text-sm font-medium ${
+      className={`shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
         timeFilter === filter ? "bg-[#004B23] text-[#FFFFFF]" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
       }`}
     >
@@ -241,21 +250,95 @@ export default function Dashboard() {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="container mx-auto px-16 py-8 max-sm:px-3">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="container mx-auto px-4 py-8 md:px-16">
+            <div className="mb-6 flex flex-col gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Utility Dashboard Overview</h1>
                 <p className="text-sm font-medium text-gray-500">
                   Real-time overview of customer accounts, revenue, and operational metrics
                 </p>
               </div>
-              <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
-                  <span className="text-sm font-medium text-gray-500">Time Range:</span>
-                  <TimeFilterButton filter="day" label="Today" />
-                  <TimeFilterButton filter="week" label="This Week" />
-                  <TimeFilterButton filter="month" label="This Month" />
-                  <TimeFilterButton filter="all" label="All Time" />
+
+              {/* Fixed Time Filter Section with Mobile Slider */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="w-full sm:w-auto">
+                  <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm">
+                    <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
+                      <span className="text-sm font-medium text-gray-500">Time Range:</span>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden items-center gap-2 sm:flex">
+                        <TimeFilterButton filter="day" label="Today" />
+                        <TimeFilterButton filter="week" label="This Week" />
+                        <TimeFilterButton filter="month" label="This Month" />
+                        <TimeFilterButton filter="all" label="All Time" />
+                      </div>
+
+                      {/* Mobile Dropdown Layout */}
+                      <div className="relative sm:hidden">
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileFilterOpen((prev) => !prev)}
+                          className="inline-flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                        >
+                          <span>{getTimeFilterLabel(timeFilter)}</span>
+                          <svg
+                            className="size-4 text-gray-500"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+
+                        {isMobileFilterOpen && (
+                          <div className="absolute right-0 z-10 mt-2 w-40 rounded-md border border-gray-100 bg-white py-1 text-sm shadow-lg">
+                            <button
+                              type="button"
+                              onClick={() => handleTimeFilterChange("day")}
+                              className={`block w-full px-3 py-2 text-left ${
+                                timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              Today
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleTimeFilterChange("week")}
+                              className={`block w-full px-3 py-2 text-left ${
+                                timeFilter === "week" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              This Week
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleTimeFilterChange("month")}
+                              className={`block w-full px-3 py-2 text-left ${
+                                timeFilter === "month" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              This Month
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleTimeFilterChange("all")}
+                              className={`block w-full px-3 py-2 text-left ${
+                                timeFilter === "all" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              All Time
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -263,7 +346,7 @@ export default function Dashboard() {
             {activeView === "kpi" && (
               <>
                 {/* Customer Metrics */}
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-4">
                   <Card title="Total Customers" icon={<CustomeraIcon />}>
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>All Customer Accounts</Text>
@@ -345,7 +428,7 @@ export default function Dashboard() {
                 </Card>
 
                 {/* Financial Metrics */}
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3">
                   <Card title="Total Revenue" icon={<RevenueIcon />}>
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>All Channels</Text>
@@ -399,7 +482,7 @@ export default function Dashboard() {
                     </div>
                   </Card>
 
-                  <Card title="Outstanding Arrears" icon={<OutstandingIcon />}>
+                  <Card title="Outstanding Arrears" icon={<OutstandingIcon />} className="lg:col-span-2 2xl:col-span-1">
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>Total Receivables</Text>
                     </div>
@@ -420,7 +503,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Collection by BAND Section */}
-                <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
                   <Card title="Collection by BAND">
                     <div className="mb-4">
                       <table className="w-full">
@@ -456,7 +539,7 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                   </Card>
 
-                  <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-1  gap-6">
                     <Card title="Daily Collection">
                       <ResponsiveContainer width="100%" height={200}>
                         <AreaChart data={dailyCollectionData}>
@@ -490,7 +573,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Operational Metrics */}
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-4">
                   <Card title="New Connections (MTD)" icon={<ConnectionIcon />}>
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>Meter Installations</Text>
@@ -557,7 +640,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Additional Charts Section */}
-                <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-3">
                   <Card title="SERVICE TYPE COLLECTION SUMMARY">
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
@@ -634,9 +717,9 @@ export default function Dashboard() {
 
                 {/* Date Range */}
                 <Card className="mb-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <Text>Selected Date Range:</Text>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                       <div className="flex items-center gap-2">
                         <Text>From:</Text>
                         <span className="font-medium text-gray-900">11/03/2025</span>

@@ -168,7 +168,7 @@ const allLinks: LinkItem[] = [
         requiredActions: ["W"],
       },
       {
-        name: "Clearance",
+        name: "Cash Clearance",
         href: "/agent-management/clearance",
         privilegeKey: "agents",
         requiredActions: ["W"],
