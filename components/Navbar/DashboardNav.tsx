@@ -187,7 +187,7 @@ const DashboardNav = () => {
 
   return (
     <>
-      <nav className="containerbg sticky top-0 z-50 hidden w-full border-b bg-white md:block">
+      <nav className="containerbg sticky top-0 z-50 hidden w-full border-b bg-white xl:block">
         <div className="flexBetween container mx-auto px-16 py-2 max-sm:px-3">
           <SearchModule
             value={searchText}
@@ -278,7 +278,7 @@ const DashboardNav = () => {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-16 py-4 max-md:px-3 md:hidden">
+      <nav className="sticky top-0 z-50 block border-b bg-[#F9f9f9] px-3 py-4 max-md:px-3 xl:hidden xl:px-16">
         <div className="flex items-center justify-between">
           <Link href="/" className="content-center">
             <Image src="/kadco.svg" alt="Dashboard" width={100} height={50} />
