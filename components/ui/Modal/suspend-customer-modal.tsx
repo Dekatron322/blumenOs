@@ -90,7 +90,7 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 px-3 backdrop-blur-sm sm:px-4"
       onClick={onRequestClose}
     >
       <motion.div
@@ -98,26 +98,31 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[500px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl sm:max-w-lg md:max-w-xl 2xl:max-w-4xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Suspend Customer Account</h2>
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] px-4 py-4 sm:px-6 sm:py-5">
+          <h2 className="text-base font-bold text-gray-900 sm:text-lg md:text-xl">Suspend Customer Account</h2>
           <button
             onClick={onRequestClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="flex size-7 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 sm:size-8"
             disabled={isLoading}
           >
             <CloseIcon />
           </button>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto">
-          <div className="flex flex-col items-center px-6 pb-6 pt-6">
+        <div className="max-h-[80vh] overflow-y-auto">
+          <div className="flex flex-col items-center px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
             {/* Warning Icon */}
             <div className="mb-6 flex items-center justify-center">
-              <div className="flex size-20 items-center justify-center rounded-full bg-yellow-50">
-                <svg className="size-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex size-16 items-center justify-center rounded-full bg-yellow-50 sm:size-20">
+                <svg
+                  className="size-8 text-yellow-500 sm:size-10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -130,22 +135,24 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
 
             {/* Customer Information */}
             <div className="mb-4 w-full text-center">
-              <h3 className="mb-2 text-lg font-semibold text-gray-900">{customerName}</h3>
-              <p className="text-sm text-gray-600">Account: {accountNumber}</p>
+              <h3 className="mb-2 text-base font-semibold text-gray-900 sm:text-lg">{customerName}</h3>
+              <p className="text-xs text-gray-600 sm:text-sm">Account: {accountNumber}</p>
             </div>
 
             {/* Message */}
-            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Confirm Account Suspension</h3>
-            <p className="mb-4 text-center text-gray-600">
+            <h3 className="mb-2 text-center text-base font-semibold text-gray-900 sm:mb-3 sm:text-lg">
+              Confirm Account Suspension
+            </h3>
+            <p className="mb-3 px-2 text-center text-sm text-gray-600 sm:mb-4 sm:px-0">
               Are you sure you want to suspend this customer&apos;s account?
             </p>
-            <p className="mb-6 text-center text-sm text-gray-500">
+            <p className="mb-5 px-2 text-center text-xs text-gray-500 sm:mb-6 sm:px-0 sm:text-sm">
               The customer will not be able to access services until the account is reactivated.
             </p>
 
             {/* Suspension Reason Input */}
             <div className="w-full">
-              <label htmlFor="suspensionReason" className="mb-2 block text-sm font-medium text-gray-700">
+              <label htmlFor="suspensionReason" className="mb-2 block text-xs font-medium text-gray-700 sm:text-sm">
                 Suspension Reason *
               </label>
               <textarea
@@ -154,25 +161,31 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
                 onChange={(e) => setSuspensionReason(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Please provide the reason for suspending this account..."
-                className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-xs placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:text-sm"
                 rows={3}
                 disabled={isLoading}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">
                 This reason will be recorded and visible in the customer&apos;s account history.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose} disabled={isLoading}>
+        <div className="flex  gap-3 bg-white px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]  sm:gap-4 sm:px-6 sm:py-5">
+          <ButtonModule
+            variant="secondary"
+            className="flex-1 text-sm sm:text-base"
+            size="sm"
+            onClick={onRequestClose}
+            disabled={isLoading}
+          >
             Cancel
           </ButtonModule>
           <ButtonModule
             variant="danger"
-            className="flex-1"
-            size="lg"
+            className="flex-1 text-sm sm:text-base"
+            size="sm"
             onClick={handleConfirm}
             disabled={isLoading || !suspensionReason.trim()}
           >
