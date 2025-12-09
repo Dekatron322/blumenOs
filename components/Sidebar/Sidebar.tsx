@@ -43,7 +43,7 @@ const SideBar = () => {
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(false)}
       className={clsx(
-        "sidebar relative z-[60] flex h-screen flex-col overflow-hidden border-r border-[#E4E4E4] max-sm:hidden",
+        "sidebar relative z-[60] flex h-screen flex-col overflow-hidden border-r border-[#E4E4E4] max-xl:hidden ",
         {
           "w-20": isCollapsed,
           "w-64": !isCollapsed,

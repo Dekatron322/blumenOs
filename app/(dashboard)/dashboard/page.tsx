@@ -250,8 +250,8 @@ export default function Dashboard() {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="container mx-auto px-4 py-8 md:px-16">
-            <div className="mb-6 flex flex-col gap-4">
+          <div className="mx-auto w-full px-3 py-8 xl:container xl:px-16">
+            <div className="mb-6 flex w-full flex-col gap-4">
               <div className="flex w-full items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Utility Dashboard Overview</h1>
