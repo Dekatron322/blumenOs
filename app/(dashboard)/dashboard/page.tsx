@@ -252,30 +252,44 @@ export default function Dashboard() {
 
           <div className="container mx-auto px-4 py-8 md:px-16">
             <div className="mb-6 flex flex-col gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Utility Dashboard Overview</h1>
-                <p className="text-sm font-medium text-gray-500">
-                  Real-time overview of customer accounts, revenue, and operational metrics
-                </p>
+              <div className="flex w-full items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Utility Dashboard Overview</h1>
+                  <p className="text-sm font-medium text-gray-500">
+                    Real-time overview of customer accounts, revenue, and operational metrics
+                  </p>
+                </div>
+                <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
+                  <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
+                    <span className="text-sm  font-medium text-gray-500">Time Range:</span>
+
+                    {/* Desktop Layout */}
+                    <div className="hidden items-center gap-2 sm:flex">
+                      <TimeFilterButton filter="day" label="Today" />
+                      <TimeFilterButton filter="week" label="This Week" />
+                      <TimeFilterButton filter="month" label="This Month" />
+                      <TimeFilterButton filter="all" label="All Time" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Fixed Time Filter Section with Mobile Slider */}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="w-full sm:w-auto">
-                  <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm">
+                  <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:hidden">
                     <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
                       <span className="text-sm font-medium text-gray-500">Time Range:</span>
 
-                      {/* Desktop Layout */}
-                      <div className="hidden items-center gap-2 sm:flex">
+                      {/* <div className="hidden items-center gap-2 sm:flex">
                         <TimeFilterButton filter="day" label="Today" />
                         <TimeFilterButton filter="week" label="This Week" />
                         <TimeFilterButton filter="month" label="This Month" />
                         <TimeFilterButton filter="all" label="All Time" />
-                      </div>
+                      </div> */}
 
                       {/* Mobile Dropdown Layout */}
-                      <div className="relative sm:hidden">
+                      <div className="relative xl:hidden">
                         <button
                           type="button"
                           onClick={() => setIsMobileFilterOpen((prev) => !prev)}
