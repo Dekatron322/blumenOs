@@ -17,7 +17,7 @@ import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
-import { ArrowLeft, ArrowRight, Menu, X, ChevronRight, ChevronLeft } from "lucide-react"
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface CustomerFormData {
   fullName: string
