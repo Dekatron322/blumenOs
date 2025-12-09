@@ -581,8 +581,8 @@ const AllCustomers = () => {
     <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 md:size-12">
-            <span className="text-sm font-semibold text-blue-600 md:text-base">
+          <div className="flex size-10 items-center justify-center rounded-full bg-green-100 md:size-12">
+            <span className="text-sm font-semibold text-green-600 md:text-base">
               {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
@@ -658,8 +658,8 @@ const AllCustomers = () => {
     <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 md:p-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
         <div className="flex items-start gap-3 md:items-center md:gap-4">
-          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden md:size-10">
-            <span className="text-xs font-semibold text-blue-600 md:text-sm">
+          <div className="flex size-8 items-center justify-center rounded-full bg-green-100 max-sm:hidden md:size-10">
+            <span className="text-xs font-semibold text-green-600 md:text-sm">
               {customer.fullName
                 .split(" ")
                 .map((n) => n[0])
@@ -923,7 +923,7 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 2xl:mt-5 2xl:flex-row">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Customers List/Grid */}
         <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showCategories ? "lg:flex-1" : ""}`}>
           <div className="flex flex-col py-2">
@@ -1099,7 +1099,7 @@ const AllCustomers = () => {
 
           {/* Pagination */}
           {customers.length > 0 && (
-            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="mt-4 flex w-full flex-row items-center justify-between gap-3 md:flex-row">
               <div className="flex items-center gap-1 max-sm:hidden">
                 <p className="text-sm md:text-base">Show rows</p>
                 <select
