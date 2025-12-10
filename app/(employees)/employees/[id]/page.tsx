@@ -126,8 +126,8 @@ const ChangeRequestCard = ({
     <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
-            <span className="font-semibold text-blue-600">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 sm:size-12">
+            <span className="text-sm font-semibold text-blue-600 sm:text-base">
               {changeRequest.requestedBy
                 .split(" ")
                 .map((n) => n[0])
@@ -135,8 +135,8 @@ const ChangeRequestCard = ({
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{changeRequest.entityLabel}</h3>
-            <div className="mt-1 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{changeRequest.entityLabel}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
               <div
                 className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
               >
@@ -149,7 +149,7 @@ const ChangeRequestCard = ({
         </div>
       </div>
 
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
+      <div className="mt-4 space-y-2 text-xs text-gray-600 sm:text-sm">
         <div className="flex justify-between">
           <span>Reference:</span>
           <span className="font-medium">{changeRequest.reference}</span>
@@ -181,7 +181,7 @@ const ChangeRequestCard = ({
       <div className="mt-3 flex gap-2">
         <button
           onClick={() => onViewDetails(changeRequest)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9]"
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-sm transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] sm:text-base"
         >
           <VscEye className="size-4" />
           View Details
@@ -235,9 +235,9 @@ const ChangeRequestListItem = ({
 
   return (
     <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 max-sm:hidden">
             <span className="text-sm font-semibold text-blue-600">
               {changeRequest.requestedBy
                 .split(" ")
@@ -246,42 +246,48 @@ const ChangeRequestListItem = ({
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{changeRequest.entityLabel}</h3>
-              <div
-                className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
-              >
-                <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
-                {statusConfig.label}
-              </div>
-              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
-              <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                Ref: {changeRequest.reference}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <h3 className="truncate text-sm font-semibold text-gray-900 sm:text-base">{changeRequest.entityLabel}</h3>
+              <div className="flex flex-wrap gap-2">
+                <div
+                  className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
+                >
+                  <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
+                  {statusConfig.label}
+                </div>
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
+                <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                  Ref: {changeRequest.reference}
+                </div>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
               <span>
-                <strong>Requested By:</strong> {changeRequest.requestedBy}
+                <strong>By:</strong> {changeRequest.requestedBy}
               </span>
               <span>
-                <strong>Entity Type:</strong> {changeRequest.entityType === 1 ? "Employee" : "Other"}
+                <strong>Type:</strong> {changeRequest.entityType === 1 ? "Employee" : "Other"}
               </span>
               <span>
-                <strong>Requested:</strong> {formatDate(changeRequest.requestedAtUtc)}
+                <strong>At:</strong> {formatDate(changeRequest.requestedAtUtc)}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <div className="hidden text-right text-sm sm:block">
             <div className="font-medium text-gray-900">Status: {statusConfig.label}</div>
             <div className="mt-1 text-xs text-gray-500">{sourceConfig.label}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => onViewDetails(changeRequest)} className="button-oulined flex items-center gap-2">
+            <button
+              onClick={() => onViewDetails(changeRequest)}
+              className="button-oulined flex items-center gap-2 text-sm"
+            >
               <VscEye className="size-4" />
-              View
+              <span className="max-sm:hidden">View</span>
+              <span className="sm:hidden">Details</span>
             </button>
           </div>
         </div>
@@ -375,6 +381,72 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
     }
   }
 
+  const getPageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Always show first page
+    items.push(1)
+
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      // Close to the start: show first few pages
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      // Close to the end: show ellipsis then last few pages
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      // In the middle: show ellipsis, surrounding pages, then ellipsis
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    // Always show last page
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Example for early pages on mobile: 1,2,3,...,last
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    // Middle pages: 1, ..., current, ..., last
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    // Near the end: 1, ..., last-2, last-1, last
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
+
   // Loading skeleton
   if (changeRequestsByEmployeeLoading) {
     return (
@@ -382,18 +454,18 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
       >
         <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
           <UpdateUserOutlineIcon />
           Change Requests
         </h3>
         <div className="animate-pulse">
-          <div className="mb-4 flex gap-4">
-            <div className="h-10 w-80 rounded bg-gray-200"></div>
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:gap-4">
+            <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
             <div className="flex gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+                <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
               ))}
             </div>
           </div>
@@ -413,136 +485,146 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
             <UpdateUserOutlineIcon />
             Change Requests
           </h3>
           <button
-            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:text-base"
             onClick={() => {
               /* TODO: Implement CSV export for employee change requests */
             }}
             disabled={!changeRequestsByEmployee || changeRequestsByEmployee.length === 0}
           >
-            <ExportCsvIcon color="#2563EB" size={20} />
-            <p className="text-sm text-[#2563EB]">Export CSV</p>
+            <ExportCsvIcon color="#2563EB" size={18} className="sm:size-5" />
+            <p className="text-xs text-[#2563EB] sm:text-sm">Export CSV</p>
           </button>
         </div>
 
         {/* Filters and Controls */}
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <SearchModule
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onCancel={handleCancelSearch}
             placeholder="Search by reference or requester"
-            className="max-w-[300px]"
+            className="w-full sm:max-w-[300px]"
           />
 
-          <div className="flex gap-2">
-            <button
-              className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-              onClick={() => setViewMode("grid")}
-            >
-              <MdGridView />
-              <p>Grid</p>
-            </button>
-            <button
-              className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-              onClick={() => setViewMode("list")}
-            >
-              <MdFormatListBulleted />
-              <p>List</p>
-            </button>
-          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
+              <button
+                className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                onClick={() => setViewMode("grid")}
+              >
+                <MdGridView className="size-4" />
+                <p className="max-sm:hidden">Grid</p>
+              </button>
+              <button
+                className={`button-oulined text-sm ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                <MdFormatListBulleted className="size-4" />
+                <p className="max-sm:hidden">List</p>
+              </button>
+            </div>
 
-          {/* Status Filter */}
-          <div className="relative" data-dropdown-root="status-filter">
-            <button
-              type="button"
-              className="button-oulined flex items-center gap-2"
-              onClick={() => setIsStatusOpen((v) => !v)}
-              aria-haspopup="menu"
-              aria-expanded={isStatusOpen}
-            >
-              <IoMdFunnel />
-              <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
-              <ChevronDown
-                className={`size-4 text-gray-500 transition-transform ${isStatusOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-            {isStatusOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-                <div className="py-1">
-                  {statusOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
-                        selectedStatus === option.value ? "bg-gray-50" : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedStatus(option.value)
-                        setIsStatusOpen(false)
-                      }}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+            {/* Status Filter */}
+            <div className="relative" data-dropdown-root="status-filter">
+              <button
+                type="button"
+                className="button-oulined flex items-center gap-2 text-sm"
+                onClick={() => setIsStatusOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={isStatusOpen}
+              >
+                <IoMdFunnel className="size-4" />
+                <span className="max-sm:hidden">
+                  {statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}
+                </span>
+                <span className="sm:hidden">Status</span>
+                <ChevronDown
+                  className={`size-4 text-gray-500 transition-transform ${isStatusOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {isStatusOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-64">
+                  <div className="py-1">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                          selectedStatus === option.value ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedStatus(option.value)
+                          setIsStatusOpen(false)
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Source Filter */}
-          <div className="relative" data-dropdown-root="source-filter">
-            <button
-              type="button"
-              className="button-oulined flex items-center gap-2"
-              onClick={() => setIsSourceOpen((v) => !v)}
-              aria-haspopup="menu"
-              aria-expanded={isSourceOpen}
-            >
-              <IoMdFunnel />
-              <span>{sourceOptions.find((opt) => opt.value === selectedSource)?.label || "All Sources"}</span>
-              <ChevronDown
-                className={`size-4 text-gray-500 transition-transform ${isSourceOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-            {isSourceOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-                <div className="py-1">
-                  {sourceOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
-                        selectedSource === option.value ? "bg-gray-50" : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedSource(option.value)
-                        setIsSourceOpen(false)
-                      }}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+            {/* Source Filter */}
+            <div className="relative" data-dropdown-root="source-filter">
+              <button
+                type="button"
+                className="button-oulined flex items-center gap-2 text-sm"
+                onClick={() => setIsSourceOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={isSourceOpen}
+              >
+                <IoMdFunnel className="size-4" />
+                <span className="max-sm:hidden">
+                  {sourceOptions.find((opt) => opt.value === selectedSource)?.label || "All Sources"}
+                </span>
+                <span className="sm:hidden">Source</span>
+                <ChevronDown
+                  className={`size-4 text-gray-500 transition-transform ${isSourceOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {isSourceOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-64">
+                  <div className="py-1">
+                    {sourceOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                          selectedSource === option.value ? "bg-gray-50" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedSource(option.value)
+                          setIsSourceOpen(false)
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
         {/* Change Requests Display */}
         {changeRequestsByEmployeeError ? (
           <div className="py-8 text-center">
-            <AlertCircle className="mx-auto mb-4 size-12 text-gray-400" />
-            <p className="text-gray-500">Error loading change requests: {changeRequestsByEmployeeError}</p>
+            <AlertCircle className="mx-auto mb-4 size-10 text-gray-400 sm:size-12" />
+            <p className="text-sm text-gray-500 sm:text-base">
+              Error loading change requests: {changeRequestsByEmployeeError}
+            </p>
           </div>
         ) : changeRequestsByEmployee.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-gray-500">No change requests found for this employee</p>
+            <p className="text-sm text-gray-500 sm:text-base">No change requests found for this employee</p>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -568,13 +650,14 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
 
         {/* Pagination */}
         {changeRequestsByEmployee.length > 0 && (
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <p>Show rows</p>
+          <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row sm:gap-0">
+            <div className="order-2 flex items-center gap-1 sm:order-1">
+              <p className="text-sm max-sm:hidden sm:text-base">Show rows</p>
+              <p className="text-sm sm:hidden">Rows</p>
               <select
                 value={changeRequestsByEmployeePagination.pageSize}
                 onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1"
+                className="bg-[#F2F2F2] p-1 text-sm sm:text-base"
               >
                 <option value={6}>6</option>
                 <option value={12}>12</option>
@@ -584,40 +667,73 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
               </select>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="order-1 flex items-center justify-center gap-2 sm:order-2 sm:gap-3">
               <button
-                className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                }`}
                 onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                <BiSolidLeftArrow />
+                <BiSolidLeftArrow className="size-4 sm:size-5" />
               </button>
 
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                      currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                    }`}
-                    onClick={() => changePage(index + 1)}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1 sm:gap-2">
+                {/* Desktop Pagination */}
+                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                  {getPageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
+
+                {/* Mobile Pagination */}
+                <div className="flex items-center gap-1 sm:hidden">
+                  {getMobilePageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs ${
+                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
               </div>
 
               <button
-                className={`px-3 py-2 ${
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
                   currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
                 }`}
                 onClick={() => changePage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                <BiSolidRightArrow />
+                <BiSolidRightArrow className="size-4 sm:size-5" />
               </button>
             </div>
-            <p>
+
+            <p className="order-3 text-sm max-sm:hidden sm:text-base">
               Page {currentPage} of {totalPages} ({totalRecords} total records)
             </p>
           </div>
@@ -959,11 +1075,11 @@ const EmployeeDetailsPage = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
         <div className="flex flex-col justify-center text-center">
-          <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+          <AlertCircle className="mx-auto mb-4 size-12 text-gray-400 sm:size-16" />
+          <h1 className="mb-2 text-xl font-bold text-gray-900 sm:text-2xl">
             {employeeDetailsError ? "Error Loading Employee" : "Employee Not Found"}
           </h1>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-sm text-gray-600 sm:text-base">
             {employeeDetailsError || "The employee you're looking for doesn't exist."}
           </p>
           <ButtonModule variant="primary" onClick={() => router.back()}>
@@ -984,15 +1100,15 @@ const EmployeeDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
+              <div className="mx-auto w-full px-3 py-4 sm:px-3 xl:px-16">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-[#f9f9f9]"
+                      className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-gray-50 sm:size-9"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
@@ -1015,42 +1131,45 @@ const EmployeeDetailsPage = () => {
                     </motion.button>
 
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Employee Details</h1>
-                      <p className="text-gray-600">Complete overview and management</p>
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl xl:text-2xl">Employee Details</h1>
+                      <p className="text-xs text-gray-600 sm:text-sm">Complete overview and management</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <ButtonModule
                       variant="secondary"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm"
                       onClick={exportToPDF}
                       disabled={isExporting}
                     >
-                      <ExportOutlineIcon className="size-4" />
-                      {isExporting ? "Exporting..." : "Export"}
+                      <ExportOutlineIcon className="size-3 sm:size-4" />
+                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export"}</span>
+                      <span className="sm:hidden">Export</span>
                     </ButtonModule>
 
                     {canUpdate ? (
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 text-sm"
                         onClick={() => openModal("edit")}
                       >
-                        <Edit3 className="size-4" />
-                        Edit
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="max-sm:hidden">Edit</span>
+                        <span className="sm:hidden">Edit</span>
                       </ButtonModule>
                     ) : (
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 text-sm"
                         onClick={() => openModal("changeRequest")}
                       >
-                        <Edit3 className="size-4" />
-                        Change Request
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="max-sm:hidden">Change Request</span>
+                        <span className="sm:hidden">Request</span>
                       </ButtonModule>
                     )}
                   </div>
@@ -1058,53 +1177,53 @@ const EmployeeDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-6 sm:px-3 sm:py-8 xl:px-16">
+              <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Profile & Quick Actions */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-[#f9f9f9] text-3xl font-bold text-[#004B23]">
+                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#f9f9f9] text-2xl font-bold text-[#004B23] sm:size-20 sm:text-3xl">
                           {employeeDetails.fullName
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </div>
                         <div
-                          className={`absolute -right-1 bottom-1 ${statusConfig.bg} ${statusConfig.border} rounded-full border-2 p-1.5`}
+                          className={`absolute -right-1 bottom-1 ${statusConfig.bg} ${statusConfig.border} rounded-full border-2 p-1 sm:p-1.5`}
                         >
-                          <StatusIcon className={`size-4 ${statusConfig.color}`} />
+                          <StatusIcon className={`size-3 ${statusConfig.color} sm:size-4`} />
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{employeeDetails.fullName}</h2>
-                      <p className="mb-4 text-gray-600">Employee #{employeeDetails.employeeId}</p>
+                      <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{employeeDetails.fullName}</h2>
+                      <p className="mb-4 text-sm text-gray-600 sm:text-base">Employee #{employeeDetails.employeeId}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${statusConfig.bg} ${statusConfig.color} sm:text-sm`}
                         >
                           {statusConfig.label}
                         </div>
                         <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${employmentTypeConfig.bg} ${employmentTypeConfig.color}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${employmentTypeConfig.bg} ${employmentTypeConfig.color} sm:text-sm`}
                         >
                           {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
                         </div>
                         {employeeDetails.mustChangePassword && (
-                          <div className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600">
+                          <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 sm:text-sm">
                             Password Reset
                           </div>
                         )}
                       </div>
 
-                      <div className="space-y-3 text-sm">
+                      <div className="space-y-3 text-xs sm:text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
                           <PhoneOutlineIcon />
                           {formatPhoneNumber(employeeDetails.phoneNumber)}
@@ -1127,16 +1246,17 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
-                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+                      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
                         <SettingOutlineIcon />
                         Quick Actions
                       </h3>
-                      <div className="space-y-3">
+                      <div className="flex gap-3 max-sm:flex-col max-sm:gap-3 sm:flex 2xl:flex-col">
                         <ButtonModule
-                          variant="secondary"
-                          className="w-full justify-start gap-3"
+                          variant="outline"
+                          size="md"
+                          className="w-full justify-start gap-3 text-sm"
                           onClick={() => openModal("reminder")}
                         >
                           <NotificationOutlineIcon />
@@ -1144,19 +1264,21 @@ const EmployeeDetailsPage = () => {
                         </ButtonModule>
                         <ButtonModule
                           variant="primary"
-                          className="w-full justify-start gap-3"
+                          size="md"
+                          className="w-full justify-start gap-3 text-sm"
                           onClick={() => openModal("resetPassword")}
                         >
-                          <PasswordOutlineIcon size={20} />
+                          <PasswordOutlineIcon size={18} className="sm:size-5" />
                           Reset Password
                         </ButtonModule>
                         <ButtonModule
                           variant={employeeDetails.isActive ? "danger" : "primary"}
-                          className="w-full justify-start gap-3"
+                          size="md"
+                          className="w-full justify-start gap-3 text-sm"
                           onClick={() => openModal(employeeDetails.isActive ? "suspend" : "activate")}
                         >
                           {employeeDetails.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
-                          {employeeDetails.isActive ? "Deactivate Account" : "Activate Account"}
+                          {employeeDetails.isActive ? "Deactivate" : "Activate"}
                         </ButtonModule>
                       </div>
                     </motion.div>
@@ -1168,17 +1290,17 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
-                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                        <UserRoleIcon />
+                      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                        <UserRoleIcon className="size-4 sm:size-5" />
                         Roles & Permissions
                       </h3>
                       <div className="space-y-3">
                         {employeeDetails.roles.map((role, index) => (
                           <div key={role.roleId} className="rounded-lg bg-[#f9f9f9] p-3">
-                            <div className="font-medium text-gray-900">{role.name}</div>
-                            <div className="text-sm text-gray-600">{role.category}</div>
+                            <div className="text-sm font-medium text-gray-900 sm:text-base">{role.name}</div>
+                            <div className="text-xs text-gray-600 sm:text-sm">{role.category}</div>
                           </div>
                         ))}
                       </div>
@@ -1187,48 +1309,54 @@ const EmployeeDetailsPage = () => {
                 </div>
 
                 {/* Right Column - Detailed Information */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
+                <div className="flex w-full flex-col space-y-6 xl:w-[70%]">
                   {/* Employment Information */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
                       <EmployeeInfoIcon />
                       Employment Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Employee ID</label>
-                          <p className="font-semibold text-gray-900">{employeeDetails.employeeId}</p>
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Employee ID</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {employeeDetails.employeeId}
+                          </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Position</label>
-                          <p className="font-semibold text-gray-900">{employeeDetails.position || "Not specified"}</p>
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Position</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {employeeDetails.position || "Not specified"}
+                          </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Account ID</label>
-                          <p className="font-semibold text-gray-900">{employeeDetails.accountId}</p>
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Account ID</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {employeeDetails.accountId}
+                          </p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Department</label>
-                          <p className="font-semibold text-gray-900">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Department</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {employeeDetails.departmentName || "Not assigned"}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Employment Type</label>
-                          <p className="font-semibold text-gray-900">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Employment Type</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {employeeDetails.employmentType?.replace("_", " ") ?? "FULL TIME"}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Area Office</label>
-                          <p className="font-semibold text-gray-900">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {employeeDetails.areaOfficeName || "Not specified"}
                           </p>
                         </div>
@@ -1236,14 +1364,14 @@ const EmployeeDetailsPage = () => {
 
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Supervisor</label>
-                          <p className="font-semibold text-gray-900">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Supervisor</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {employeeDetails.supervisorName || "Not assigned"}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Status</label>
-                          <p className="font-semibold text-gray-900">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Status</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
                               <StatusIcon className="size-4" />
                               {statusConfig.label}
@@ -1251,8 +1379,8 @@ const EmployeeDetailsPage = () => {
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Password Reset</label>
-                          <p className="font-semibold text-gray-900">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Password Reset</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {employeeDetails.mustChangePassword ? "Required" : "Not required"}
                           </p>
                         </div>
@@ -1265,7 +1393,7 @@ const EmployeeDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
                       <User className="size-5" />
@@ -1274,16 +1402,16 @@ const EmployeeDetailsPage = () => {
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <Phone className="size-5 text-blue-600" />
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 sm:size-10">
+                            <Phone className="size-4 text-blue-600 sm:size-5" />
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">Phone Number</label>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-gray-900">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Phone Number</label>
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                              <p className="text-sm font-semibold text-gray-900 sm:text-base">
                                 {formatPhoneNumber(employeeDetails.phoneNumber)}
                               </p>
-                              <div className="text-[#f9f9f9]0 text-xs">
+                              <div className="text-xs">
                                 {employeeDetails.isPhoneVerified ? (
                                   <span className="text-emerald-600">✓ Verified</span>
                                 ) : (
@@ -1294,14 +1422,16 @@ const EmployeeDetailsPage = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <Mail className="size-5 text-green-600" />
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 sm:size-10">
+                            <Mail className="size-4 text-green-600 sm:size-5" />
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">Email Address</label>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-gray-900">{employeeDetails.email}</p>
-                              <div className="text-[#f9f9f9]0 text-xs">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Email Address</label>
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                              <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                                {employeeDetails.email}
+                              </p>
+                              <div className="text-xs">
                                 {employeeDetails.isEmailVerified ? (
                                   <span className="text-emerald-600">✓ Verified</span>
                                 ) : (
@@ -1314,21 +1444,23 @@ const EmployeeDetailsPage = () => {
                       </div>
                       <div className="space-y-4">
                         <div className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
-                            <MapPin className="size-5 text-purple-600" />
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 sm:size-10">
+                            <MapPin className="size-4 text-purple-600 sm:size-5" />
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">Address</label>
-                            <p className="font-semibold text-gray-900">{employeeDetails.address || "Not provided"}</p>
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Address</label>
+                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                              {employeeDetails.address || "Not provided"}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-red-100">
-                            <Shield className="size-5 text-red-600" />
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-red-100 sm:size-10">
+                            <Shield className="size-4 text-red-600 sm:size-5" />
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">Emergency Contact</label>
-                            <p className="font-semibold text-gray-900">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Emergency Contact</label>
+                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
                               {employeeDetails.emergencyContact || "Not provided"}
                             </p>
                           </div>
@@ -1343,31 +1475,33 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
                       <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
                         <DepartmentInfoIcon />
                         Department Information
                       </h3>
-                      <div className="grid grid-cols-1 gap-4  md:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-4">
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Department</label>
-                            <p className="font-semibold text-gray-900">{employeeDetails.departmentName}</p>
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Department</label>
+                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                              {employeeDetails.departmentName}
+                            </p>
                           </div>
                         </div>
                         <div className="space-y-4">
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Area Office</label>
-                            <p className="font-semibold text-gray-900">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
+                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
                               {employeeDetails.areaOfficeName || "Not specified"}
                             </p>
                           </div>
                         </div>
                         <div className="space-y-4">
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Supervisor</label>
-                            <p className="font-semibold text-gray-900">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Supervisor</label>
+                            <p className="text-sm font-semibold text-gray-900 sm:text-base">
                               {employeeDetails.supervisorName || "Not assigned"}
                             </p>
                           </div>
@@ -1381,29 +1515,35 @@ const EmployeeDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                       <CalendarOutlineIcon />
                       System Information
                     </h3>
-                    <div className=" grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Account Created</label>
-                          <p className="font-semibold text-gray-900">{formatDate(employeeDetails.createdAt)}</p>
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Account Created</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {formatDate(employeeDetails.createdAt)}
+                          </p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Account Updated</label>
-                          <p className="font-semibold text-gray-900">{formatDate(employeeDetails.updatedAt)}</p>
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Account Updated</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {formatDate(employeeDetails.updatedAt)}
+                          </p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Last Login</label>
-                          <p className="font-semibold text-gray-900">{formatDate(employeeDetails.lastLoginAt)}</p>
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Last Login</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {formatDate(employeeDetails.lastLoginAt)}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1415,7 +1555,7 @@ const EmployeeDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
                       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                         <VerifyOutlineIcon />
@@ -1424,8 +1564,8 @@ const EmployeeDetailsPage = () => {
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {employeeDetails.privileges.map((privilege, index) => (
                           <div key={index} className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <div className="font-medium text-gray-900">{privilege.name}</div>
-                            <div className="text-sm text-gray-600">{privilege.category}</div>
+                            <div className="text-sm font-medium text-gray-900 sm:text-base">{privilege.name}</div>
+                            <div className="text-xs text-gray-600 sm:text-sm">{privilege.category}</div>
                             {privilege.actions && privilege.actions.length > 0 && (
                               <div className="mt-2 flex flex-wrap gap-1">
                                 {privilege.actions.map((action, actionIndex) => (
@@ -1504,42 +1644,42 @@ const EmployeeDetailsPage = () => {
   )
 }
 
-// LoadingSkeleton component remains the same...
+// LoadingSkeleton component
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 sm:p-6">
       {/* Header Skeleton */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="size-9 rounded-md bg-gray-200"></div>
+          <div className="size-8 rounded-md bg-gray-200 sm:size-9"></div>
           <div>
-            <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
+            <div className="mb-2 h-6 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
+            <div className="h-4 w-40 rounded bg-gray-200 sm:w-48"></div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
+        <div className="flex gap-2 sm:gap-3">
+          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
+          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
+          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
         </div>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col gap-6 xl:flex-row">
         {/* Left Column Skeleton */}
-        <div className="w-[30%] space-y-6">
+        <div className="w-full space-y-6 xl:w-[30%]">
           {/* Profile Card Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
             <div className="text-center">
               <div className="relative mx-auto mb-4">
-                <div className="mx-auto size-20 rounded-full bg-gray-200"></div>
-                <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
+                <div className="mx-auto size-16 rounded-full bg-gray-200 sm:size-20"></div>
+                <div className="absolute -right-1 bottom-1 size-5 rounded-full bg-gray-200 sm:size-6"></div>
               </div>
-              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
+              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200 sm:h-7"></div>
               <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
               <div className="mb-6 flex justify-center gap-2">
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
+                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
               </div>
               <div className="space-y-3">
                 <div className="h-4 w-full rounded bg-gray-200"></div>
@@ -1550,18 +1690,18 @@ const LoadingSkeleton = () => (
           </div>
 
           {/* Quick Actions Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-32 rounded bg-gray-200"></div>
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
             <div className="space-y-3">
-              <div className="h-10 w-full rounded bg-gray-200"></div>
-              <div className="h-10 w-full rounded bg-gray-200"></div>
-              <div className="h-10 w-full rounded bg-gray-200"></div>
+              <div className="h-9 w-full rounded bg-gray-200 sm:h-10"></div>
+              <div className="h-9 w-full rounded bg-gray-200 sm:h-10"></div>
+              <div className="h-9 w-full rounded bg-gray-200 sm:h-10"></div>
             </div>
           </div>
 
           {/* Roles Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-32 rounded bg-gray-200"></div>
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
             <div className="space-y-3">
               <div className="h-16 w-full rounded bg-gray-200"></div>
             </div>
@@ -1571,9 +1711,9 @@ const LoadingSkeleton = () => (
         {/* Right Column Skeleton */}
         <div className="flex-1 space-y-6">
           {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
-              <div className="mb-6 h-6 w-48 rounded bg-gray-200"></div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div key={item} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+              <div className="mb-6 h-6 w-40 rounded bg-gray-200 sm:w-48"></div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-4">
                   <div className="h-4 w-32 rounded bg-gray-200"></div>
                   <div className="h-4 w-32 rounded bg-gray-200"></div>

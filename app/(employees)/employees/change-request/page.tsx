@@ -273,54 +273,40 @@ const LoadingState = ({ showDepartments = true }) => {
   )
 }
 
-// Generate mock employee data
-const generateEmployeeData = () => {
+// Generate mock change request data
+const generateChangeRequestData = () => {
   return {
-    totalEmployees: Math.floor(185 + Math.random() * 50),
-    activeEmployees: Math.floor(160 + Math.random() * 40),
-    onLeaveEmployees: Math.floor(15 + Math.random() * 10),
-    newHires: Math.floor(12 + Math.random() * 8),
-    fullTimeEmployees: Math.floor(130 + Math.random() * 30),
-    partTimeEmployees: Math.floor(35 + Math.random() * 15),
-    contractEmployees: Math.floor(20 + Math.random() * 10),
-    departments: 8,
-    avgTenure: (2.5 + Math.random() * 2).toFixed(1),
-    turnoverRate: (3.5 + Math.random() * 2).toFixed(1),
+    totalChangeRequests: Math.floor(35 + Math.random() * 15),
+    pendingApproval: Math.floor(20 + Math.random() * 10),
+    approved: Math.floor(8 + Math.random() * 6),
+    declined: Math.floor(5 + Math.random() * 3),
+    employeeInfoChanges: Math.floor(25 + Math.random() * 10),
+    roleUpdates: Math.floor(6 + Math.random() * 4),
+    departmentChanges: Math.floor(4 + Math.random() * 3),
+    avgProcessingTime: (2.5 + Math.random() * 1.5).toFixed(1),
+    approvalRate: (70 + Math.random() * 25).toFixed(1),
   }
 }
 
-export default function EmployeeManagement() {
-  const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
+export default function EmployeeChangeRequestManagement() {
   const [isLoading, setIsLoading] = useState(false)
-  const [employeeData, setEmployeeData] = useState(generateEmployeeData())
+  const [changeRequestData, setChangeRequestData] = useState(generateChangeRequestData())
 
-  // Permissions: show Add Employee only if user has 'W'
+  // Permissions: check if user can approve/decline change requests
   const { user } = useAppSelector((state) => state.auth)
-  const canWrite = !!user?.privileges?.some((p) => p.actions?.includes("W"))
-
-  // Use mock data
+  const canApprove = !!user?.privileges?.some((p) => p.actions?.includes("A")) // Approve permission
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
 
-  const handleAddEmployeeSuccess = async () => {
-    setIsAddEmployeeModalOpen(false)
-    // Refresh data after adding employee
-    setEmployeeData(generateEmployeeData())
-  }
-
   const handleRefreshData = () => {
     setIsLoading(true)
     setTimeout(() => {
-      setEmployeeData(generateEmployeeData())
+      setChangeRequestData(generateChangeRequestData())
       setIsLoading(false)
     }, 1000)
-  }
-
-  const handleOpenAddEmployeeModal = () => {
-    setIsAddEmployeeModalOpen(true)
   }
 
   return (
@@ -328,12 +314,14 @@ export default function EmployeeManagement() {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:mt-8 2xl:px-16">
               <div>
-                <h4 className="text-2xl font-semibold">Change Request</h4>
-                <p>Manage employee change requests</p>
+                <h4 className="text-lg font-semibold text-gray-900 sm:text-xl xl:text-2xl">Employee Change Requests</h4>
+                <p className="text-xs text-gray-600 sm:text-sm">
+                  Manage and review employee information change requests
+                </p>
               </div>
 
               <motion.div
@@ -344,24 +332,27 @@ export default function EmployeeManagement() {
               >
                 <ButtonModule
                   variant="primary"
-                  size="md"
+                  size="sm"
                   onClick={handleRefreshData}
                   icon={<RefreshCircleIcon />}
                   iconPosition="start"
                 >
-                  Refresh Data
+                  <span className="max-sm:hidden">Refresh Data</span>
+                  <span className="sm:hidden">Refresh</span>
                 </ButtonModule>
               </motion.div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 2xl:px-16">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State
                   <>
-                    <SkeletonLoader />
-                    <LoadingState showDepartments={true} />
+                    <div className="mb-4">
+                      <SkeletonLoader />
+                    </div>
+                    <LoadingState showDepartments={false} />
                   </>
                 ) : (
                   // Loaded State
@@ -380,11 +371,6 @@ export default function EmployeeManagement() {
           </div>
         </div>
       </div>
-      <AddEmployeeModal
-        isOpen={isAddEmployeeModalOpen}
-        onRequestClose={() => setIsAddEmployeeModalOpen(false)}
-        onSuccess={handleAddEmployeeSuccess}
-      />
     </section>
   )
 }

@@ -16,15 +16,16 @@ import AllEmployees from "components/Tables/AllEmployees"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearEmployeeReport, fetchEmployeeReport } from "lib/redux/employeeSlice"
+import { useRouter } from "next/navigation"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
   return (
-    <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
+    <div className="grid w-full grid-cols-1 gap-3 max-md:px-3 sm:grid-cols-2 lg:mb-4 2xl:grid-cols-4">
       {[...Array(4)].map((_, index) => (
         <motion.div
           key={index}
-          className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+          className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
           initial={{ opacity: 0.6 }}
           animate={{
             opacity: [0.6, 1, 0.6],
@@ -36,14 +37,14 @@ const SkeletonLoader = () => {
           }}
         >
           <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="size-6 rounded-full bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
+            <div className="size-4 rounded-full bg-gray-200 sm:size-6"></div>
+            <div className="h-3 w-20 rounded bg-gray-200 sm:h-4 sm:w-32"></div>
           </div>
           <div className="flex flex-col gap-3 pt-4">
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex w-full justify-between">
-                <div className="h-4 w-24 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
+                <div className="h-3 w-16 rounded bg-gray-200 sm:h-4 sm:w-24"></div>
+                <div className="h-3 w-12 rounded bg-gray-200 sm:h-4 sm:w-16"></div>
               </div>
             ))}
           </div>
@@ -56,25 +57,25 @@ const SkeletonLoader = () => {
 // Enhanced Skeleton for Departments
 const DepartmentsSkeleton = () => {
   return (
-    <div className="w-80 rounded-md border bg-white p-5">
-      <div className="border-b pb-4">
-        <div className="h-6 w-40 rounded bg-gray-200"></div>
+    <div className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 2xl:w-80">
+      <div className="border-b pb-3 md:pb-4">
+        <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 2xl:grid-cols-1">
         {[...Array(6)].map((_, index) => (
           <div key={index} className="rounded-lg border bg-white p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-5 w-12 rounded bg-gray-200"></div>
-                <div className="h-5 w-20 rounded bg-gray-200"></div>
+                <div className="h-5 w-10 rounded bg-gray-200 md:w-12"></div>
+                <div className="h-5 w-16 rounded bg-gray-200 md:w-20"></div>
               </div>
-              <div className="h-4 w-16 rounded bg-gray-200"></div>
+              <div className="h-4 w-12 rounded bg-gray-200 md:w-16"></div>
             </div>
-            <div className="mt-3 space-y-1">
+            <div className="mt-2 space-y-1 md:mt-3">
               <div className="flex justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
+                <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
+                <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
               </div>
             </div>
           </div>
@@ -82,13 +83,13 @@ const DepartmentsSkeleton = () => {
       </div>
 
       {/* Summary Skeleton */}
-      <div className="mt-6 rounded-lg bg-gray-50 p-3">
-        <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
+      <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+        <div className="mb-2 h-5 w-16 rounded bg-gray-200 md:w-20"></div>
         <div className="space-y-1">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex justify-between">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="h-4 w-12 rounded bg-gray-200"></div>
+              <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
+              <div className="h-3 w-10 rounded bg-gray-200 md:h-4 md:w-12"></div>
             </div>
           ))}
         </div>
@@ -100,76 +101,76 @@ const DepartmentsSkeleton = () => {
 // Enhanced Skeleton for the table and grid view
 const TableSkeleton = () => {
   return (
-    <div className="flex-1 rounded-md border bg-white p-5">
+    <div className="flex-1 rounded-md border bg-white p-3 md:p-5">
       {/* Header Skeleton */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex gap-4">
-          <div className="h-10 w-80 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
+      <div className="flex flex-col gap-3 border-b pb-3 sm:flex-row sm:items-center sm:justify-between md:pb-4">
+        <div className="h-7 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="h-9 w-full rounded bg-gray-200 sm:h-10 md:w-60 lg:w-80"></div>
+          <div className="flex flex-wrap gap-1 md:gap-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+              <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 lg:w-24"></div>
             ))}
           </div>
         </div>
       </div>
 
       {/* Grid View Skeleton */}
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
         {[...Array(6)].map((_, index) => (
           <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-gray-200"></div>
-                <div>
-                  <div className="h-5 w-32 rounded bg-gray-200"></div>
-                  <div className="mt-1 flex gap-2">
-                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                <div className="size-10 rounded-full bg-gray-200 md:size-12"></div>
+                <div className="min-w-0 flex-1">
+                  <div className="h-5 w-24 rounded bg-gray-200 md:w-32"></div>
+                  <div className="mt-1 flex flex-wrap gap-1 md:gap-2">
+                    <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
+                    <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
                   </div>
                 </div>
               </div>
-              <div className="size-6 rounded bg-gray-200"></div>
+              <div className="size-5 rounded bg-gray-200 md:size-6"></div>
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div className="mt-3 space-y-2 md:mt-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 w-20 rounded bg-gray-200"></div>
-                  <div className="h-4 w-16 rounded bg-gray-200"></div>
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
+                  <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
+            <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
+              <div className="h-3 w-full rounded bg-gray-200 md:h-4"></div>
             </div>
 
-            <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
+            <div className="mt-2 flex gap-2 md:mt-3">
+              <div className="h-8 flex-1 rounded bg-gray-200 md:h-9"></div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
+      <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
+        <div className="order-2 flex items-center gap-2 md:order-1">
+          <div className="hidden h-4 w-12 rounded bg-gray-200 md:block md:w-16"></div>
+          <div className="h-7 w-12 rounded bg-gray-200 md:h-8 md:w-16"></div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
+        <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
+          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
+          <div className="flex gap-1 md:gap-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
+              <div key={i} className="size-6 rounded bg-gray-200 md:size-7"></div>
             ))}
           </div>
-          <div className="size-8 rounded bg-gray-200"></div>
+          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
         </div>
 
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
+        <div className="order-3 hidden h-4 w-20 rounded bg-gray-200 md:block md:w-24"></div>
       </div>
     </div>
   )
@@ -178,15 +179,15 @@ const TableSkeleton = () => {
 // List View Skeleton
 const ListSkeleton = () => {
   return (
-    <div className="flex-1 rounded-md border bg-white p-5">
+    <div className="flex-1 rounded-md border bg-white p-3 md:p-5">
       {/* Header Skeleton */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex gap-4">
-          <div className="h-10 w-80 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
+      <div className="flex flex-col gap-3 border-b pb-3 sm:flex-row sm:items-center sm:justify-between md:pb-4">
+        <div className="h-7 w-32 rounded bg-gray-200 sm:h-8 sm:w-40"></div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="h-9 w-full rounded bg-gray-200 sm:h-10 md:w-60 lg:w-80"></div>
+          <div className="flex flex-wrap gap-1 md:gap-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+              <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 lg:w-24"></div>
             ))}
           </div>
         </div>
@@ -195,35 +196,35 @@ const ListSkeleton = () => {
       {/* List View Skeleton */}
       <div className="divide-y">
         {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-gray-200"></div>
+          <div key={index} className="border-b bg-white p-3 md:p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
+              <div className="flex items-start gap-3 md:items-center md:gap-4">
+                <div className="size-8 flex-shrink-0 rounded-full bg-gray-200 md:size-10"></div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="h-5 w-40 rounded bg-gray-200"></div>
-                    <div className="flex gap-2">
-                      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+                    <div className="h-5 w-32 rounded bg-gray-200 md:w-40"></div>
+                    <div className="flex flex-wrap gap-1 md:gap-2">
+                      <div className="h-6 w-12 rounded-full bg-gray-200 md:w-16"></div>
+                      <div className="h-6 w-16 rounded-full bg-gray-200 md:w-20"></div>
                     </div>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-4">
+                  <div className="mt-2 flex flex-wrap gap-2 md:gap-4">
                     {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
+                      <div key={i} className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-24"></div>
                     ))}
                   </div>
-                  <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
+                  <div className="mt-2 hidden h-3 w-40 rounded bg-gray-200 md:block md:h-4 md:w-64"></div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
+              <div className="flex items-center justify-between gap-2 md:justify-end md:gap-3">
+                <div className="hidden text-right md:block">
+                  <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
+                  <div className="mt-1 h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-9 w-20 rounded bg-gray-200"></div>
-                  <div className="size-6 rounded bg-gray-200"></div>
+                  <div className="h-7 w-14 rounded bg-gray-200 md:h-9 md:w-20"></div>
+                  <div className="size-5 rounded bg-gray-200 md:size-6"></div>
                 </div>
               </div>
             </div>
@@ -232,23 +233,23 @@ const ListSkeleton = () => {
       </div>
 
       {/* Pagination Skeleton */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
+      <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
+        <div className="order-2 flex items-center gap-2 md:order-1">
+          <div className="hidden h-4 w-12 rounded bg-gray-200 md:block md:w-16"></div>
+          <div className="h-7 w-12 rounded bg-gray-200 md:h-8 md:w-16"></div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
+        <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
+          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
+          <div className="flex gap-1 md:gap-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
+              <div key={i} className="size-6 rounded bg-gray-200 md:size-7"></div>
             ))}
           </div>
-          <div className="size-8 rounded bg-gray-200"></div>
+          <div className="size-7 rounded bg-gray-200 md:size-8"></div>
         </div>
 
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
+        <div className="order-3 hidden h-4 w-20 rounded bg-gray-200 md:block md:w-24"></div>
       </div>
     </div>
   )
@@ -257,17 +258,12 @@ const ListSkeleton = () => {
 // Main Loading Component
 const LoadingState = ({ showDepartments = true }) => {
   return (
-    <div className="flex-3 relative mt-5 flex items-start gap-6">
-      {showDepartments ? (
-        <>
-          <TableSkeleton />
-          <DepartmentsSkeleton />
-        </>
-      ) : (
-        <div className="w-full">
-          <TableSkeleton />
-        </div>
-      )}
+    <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
+      <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showDepartments ? "lg:flex-1" : ""}`}>
+        <TableSkeleton />
+      </div>
+
+      {showDepartments && <DepartmentsSkeleton />}
     </div>
   )
 }
@@ -291,7 +287,7 @@ const EmployeeReportCard = ({
   if (isLoading) {
     return (
       <motion.div
-        className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+        className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
         initial={{ opacity: 0.6 }}
         animate={{
           opacity: [0.6, 1, 0.6],
@@ -303,14 +299,14 @@ const EmployeeReportCard = ({
         }}
       >
         <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-          <div className="size-6 rounded-full bg-gray-200"></div>
-          <div className="h-4 w-32 rounded bg-gray-200"></div>
+          <div className="size-4 rounded-full bg-gray-200 sm:size-6"></div>
+          <div className="h-3 w-20 rounded bg-gray-200 sm:h-4 sm:w-32"></div>
         </div>
         <div className="flex flex-col gap-3 pt-4">
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex w-full justify-between">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="h-4 w-16 rounded bg-gray-200"></div>
+              <div className="h-3 w-16 rounded bg-gray-200 sm:h-4 sm:w-24"></div>
+              <div className="h-3 w-12 rounded bg-gray-200 sm:h-4 sm:w-16"></div>
             </div>
           ))}
         </div>
@@ -320,24 +316,191 @@ const EmployeeReportCard = ({
 
   return (
     <motion.div
-      className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+      className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
       whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
     >
       <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
         {icon}
-        {title}
+        <span className="text-sm font-medium md:text-base">{title}</span>
       </div>
       <div className="flex flex-col gap-3 pt-4">
         <div className="flex w-full justify-between">
-          <p className="text-grey-200">{description || "Total"}:</p>
-          <p className="text-secondary font-medium">{value}</p>
+          <p className="text-xs text-gray-500 md:text-sm">{description || "Total"}:</p>
+          <p className="text-sm font-semibold text-gray-900 md:text-base">{value}</p>
         </div>
         {subItems.map((item, index) => (
           <div key={index} className="flex w-full justify-between">
-            <p className="text-grey-200 text-sm">{item.label}:</p>
-            <p className="text-secondary text-sm font-medium">{item.value}</p>
+            <p className="text-xs text-gray-500 md:text-sm">{item.label}:</p>
+            <p className="text-xs font-semibold text-gray-900 md:text-sm">{item.value}</p>
           </div>
         ))}
+      </div>
+    </motion.div>
+  )
+}
+
+// Employee Analytics Summary Cards Component
+const EmployeeAnalyticsCards = ({ employeeReport }: { employeeReport: any }) => {
+  const formatNumber = (num: number) => {
+    return num?.toLocaleString() || "0"
+  }
+
+  const calculatePercentage = (part: number, total: number) => {
+    return total > 0 ? Math.round((part / total) * 100) : 0
+  }
+
+  // Calculate additional metrics
+  const departmentCoverage =
+    employeeReport?.totalUsers > 0
+      ? calculatePercentage(employeeReport?.withDepartmentUsers || 0, employeeReport?.totalUsers)
+      : 0
+
+  const emailVerificationRate =
+    employeeReport?.totalUsers > 0
+      ? calculatePercentage(employeeReport?.emailVerifiedUsers || 0, employeeReport?.totalUsers)
+      : 0
+
+  const phoneVerificationRate =
+    employeeReport?.totalUsers > 0
+      ? calculatePercentage(employeeReport?.phoneVerifiedUsers || 0, employeeReport?.totalUsers)
+      : 0
+
+  const activeLast30DaysRate =
+    employeeReport?.totalUsers > 0
+      ? calculatePercentage(employeeReport?.loggedInLast30Days || 0, employeeReport?.totalUsers)
+      : 0
+
+  return (
+    <motion.div
+      className="w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="w-full">
+        <div className="grid w-full grid-cols-1 gap-3 max-md:px-3 sm:grid-cols-2 lg:mb-4 2xl:grid-cols-4">
+          {/* User Statistics Card */}
+          <motion.div
+            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+          >
+            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+              <EmployeeIcon />
+              <span className="text-sm font-medium md:text-base">User Statistics</span>
+            </div>
+            <div className="flex flex-col gap-3 pt-4">
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Total Users:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.totalUsers || 0)}
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Active:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.activeUsers || 0)}
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Inactive:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.inactiveUsers || 0)}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Security Status Card */}
+          <motion.div
+            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+          >
+            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+              <ContractIcon />
+              <span className="text-sm font-medium md:text-base">Security Status</span>
+            </div>
+            <div className="flex flex-col gap-3 pt-4">
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Password Reset Required:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.mustChangePasswordUsers || 0)}
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Email Verified:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.emailVerifiedUsers || 0)} ({emailVerificationRate}%)
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Phone Verified:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.phoneVerifiedUsers || 0)} ({phoneVerificationRate}%)
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Department Coverage Card */}
+          <motion.div
+            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+          >
+            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+              <DepartmentIcon />
+              <span className="text-sm font-medium md:text-base">Department Coverage</span>
+            </div>
+            <div className="flex flex-col gap-3 pt-4">
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">With Department:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.withDepartmentUsers || 0)}
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Without Department:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.withoutDepartmentUsers || 0)}
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Coverage Rate:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">{departmentCoverage}%</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Activity & Invitations Card */}
+          <motion.div
+            className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+            whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+          >
+            <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+              <PayrollIcon />
+              <span className="text-sm font-medium md:text-base">Activity & Invitations</span>
+            </div>
+            <div className="flex flex-col gap-3 pt-4">
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Active Last 30 Days:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.loggedInLast30Days || 0)} ({activeLast30DaysRate}%)
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Pending Invites:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.pendingInvitations || 0)}
+                </p>
+              </div>
+              <div className="flex w-full justify-between">
+                <p className="text-xs text-gray-500 md:text-sm">Expiring Invites:</p>
+                <p className="text-sm font-semibold text-gray-900 md:text-base">
+                  {formatNumber(employeeReport?.expiringInvitations || 0)}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   )
@@ -346,6 +509,7 @@ const EmployeeReportCard = ({
 export default function EmployeeManagement() {
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false)
   const dispatch = useAppDispatch()
+  const router = useRouter()
 
   // Get employee report data from Redux store
   const { employeeReport, employeeReportLoading, employeeReportError, employeeReportSuccess } = useAppSelector(
@@ -373,60 +537,27 @@ export default function EmployeeManagement() {
   }
 
   const handleRefreshData = () => {
+    dispatch(clearEmployeeReport())
     dispatch(fetchEmployeeReport())
   }
 
   const handleOpenAddEmployeeModal = () => {
-    setIsAddEmployeeModalOpen(true)
+    router.push("/employees/add-employees")
   }
-
-  // Format numbers with commas
-  const formatNumber = (num: number) => {
-    return num?.toLocaleString() || "0"
-  }
-
-  // Calculate additional metrics from the report data
-  const calculateAdditionalMetrics = () => {
-    if (!employeeReport) return null
-
-    const {
-      totalUsers,
-      activeUsers,
-      inactiveUsers,
-      withDepartmentUsers,
-      withoutDepartmentUsers,
-      withAreaOfficeUsers,
-      withoutAreaOfficeUsers,
-      emailVerifiedUsers,
-      phoneVerifiedUsers,
-    } = employeeReport
-
-    const departmentCoverage = totalUsers > 0 ? ((withDepartmentUsers / totalUsers) * 100).toFixed(1) : "0"
-    const areaOfficeCoverage = totalUsers > 0 ? ((withAreaOfficeUsers / totalUsers) * 100).toFixed(1) : "0"
-    const emailVerificationRate = totalUsers > 0 ? ((emailVerifiedUsers / totalUsers) * 100).toFixed(1) : "0"
-    const phoneVerificationRate = totalUsers > 0 ? ((phoneVerifiedUsers / totalUsers) * 100).toFixed(1) : "0"
-
-    return {
-      departmentCoverage: `${departmentCoverage}%`,
-      areaOfficeCoverage: `${areaOfficeCoverage}%`,
-      emailVerificationRate: `${emailVerificationRate}%`,
-      phoneVerificationRate: `${phoneVerificationRate}%`,
-    }
-  }
-
-  const additionalMetrics = calculateAdditionalMetrics()
 
   return (
     <section className="size-full">
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col xl:container">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
               <div>
-                <h4 className="text-2xl font-semibold">Employee Management</h4>
-                <p>Manage employee records, departments, and HR operations</p>
+                <h4 className="text-xl font-semibold sm:text-2xl">Employee Management</h4>
+                <p className="text-sm text-gray-600 sm:text-base">
+                  Manage employee records, departments, and HR operations
+                </p>
               </div>
 
               <motion.div
@@ -442,6 +573,7 @@ export default function EmployeeManagement() {
                     onClick={handleOpenAddEmployeeModal}
                     icon={<AddIcon />}
                     iconPosition="start"
+                    className="text-sm md:text-base"
                   >
                     Add Employee
                   </ButtonModule>
@@ -453,8 +585,9 @@ export default function EmployeeManagement() {
                   icon={<RefreshCircleIcon />}
                   iconPosition="start"
                   loading={employeeReportLoading}
+                  className="text-sm md:text-base"
                 >
-                  Refresh Data
+                  {employeeReportLoading ? "Refreshing..." : "Refresh Data"}
                 </ButtonModule>
               </motion.div>
             </div>
@@ -462,19 +595,19 @@ export default function EmployeeManagement() {
             {/* Error Message */}
             {employeeReportError && (
               <motion.div
-                className="mx-16 mb-4 rounded-md bg-red-50 p-4 text-red-700 max-md:mx-0 max-sm:mx-3"
+                className="mx-3 mb-4 rounded-md bg-red-50 p-3 text-red-700 md:p-4 xl:mx-16"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <p className="flex items-center gap-2">
-                  <span>⚠️</span>
+                <p className="text-sm md:text-base">
+                  <span className="mr-2">⚠️</span>
                   Error loading employee report: {employeeReportError}
                 </p>
               </motion.div>
             )}
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 xl:flex-row xl:px-16">
               <div className="w-full">
                 {employeeReportLoading ? (
                   // Loading State
@@ -485,75 +618,48 @@ export default function EmployeeManagement() {
                 ) : (
                   // Loaded State
                   <>
-                    <motion.div
-                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      {/* User Statistics Card */}
-                      <EmployeeReportCard
-                        title="User Statistics"
-                        value={formatNumber(employeeReport?.totalUsers || 0)}
-                        icon={<EmployeeIcon />}
-                        description="Total Users"
-                        subItems={[
-                          { label: "Active", value: formatNumber(employeeReport?.activeUsers || 0) },
-                          { label: "Inactive", value: formatNumber(employeeReport?.inactiveUsers || 0) },
-                        ]}
-                        isLoading={employeeReportLoading}
-                      />
+                    {employeeReport && (
+                      <>
+                        <EmployeeAnalyticsCards employeeReport={employeeReport} />
 
-                      {/* Security Status Card */}
-                      <EmployeeReportCard
-                        title="Security Status"
-                        value={formatNumber(employeeReport?.mustChangePasswordUsers || 0)}
-                        icon={<ContractIcon />}
-                        description="Password Reset Required"
-                        subItems={[
-                          { label: "Email Verified", value: formatNumber(employeeReport?.emailVerifiedUsers || 0) },
-                          { label: "Phone Verified", value: formatNumber(employeeReport?.phoneVerifiedUsers || 0) },
-                        ]}
-                        isLoading={employeeReportLoading}
-                      />
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                        >
+                          <AllEmployees />
+                        </motion.div>
+                      </>
+                    )}
 
-                      {/* Department Coverage Card */}
-                      <EmployeeReportCard
-                        title="Department Coverage"
-                        value={formatNumber(employeeReport?.withDepartmentUsers || 0)}
-                        icon={<DepartmentIcon />}
-                        description="With Department"
-                        subItems={[
-                          {
-                            label: "Without Department",
-                            value: formatNumber(employeeReport?.withoutDepartmentUsers || 0),
-                          },
-                          { label: "Coverage", value: additionalMetrics?.departmentCoverage || "0%" },
-                        ]}
-                        isLoading={employeeReportLoading}
-                      />
-
-                      {/* Activity & Invitations Card */}
-                      <EmployeeReportCard
-                        title="Activity & Invitations"
-                        value={formatNumber(employeeReport?.loggedInLast30Days || 0)}
-                        icon={<PayrollIcon />}
-                        description="Active Last 30 Days"
-                        subItems={[
-                          { label: "Pending Invites", value: formatNumber(employeeReport?.pendingInvitations || 0) },
-                          { label: "Expiring Invites", value: formatNumber(employeeReport?.expiringInvitations || 0) },
-                        ]}
-                        isLoading={employeeReportLoading}
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <AllEmployees />
-                    </motion.div>
+                    {/* Empty State */}
+                    {!employeeReport && !employeeReportLoading && !employeeReportError && (
+                      <motion.div
+                        className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-8 md:p-12"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <div className="text-center">
+                          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
+                            <EmployeeIcon />
+                          </div>
+                          <h3 className="mt-4 text-lg font-medium text-gray-900">No Employee Data</h3>
+                          <p className="mt-2 text-sm text-gray-500">
+                            No employee analytics data available. Try refreshing the data.
+                          </p>
+                          <ButtonModule
+                            variant="primary"
+                            size="md"
+                            onClick={handleRefreshData}
+                            className="mt-4"
+                            icon={<RefreshCircleIcon />}
+                            iconPosition="start"
+                          >
+                            Refresh Data
+                          </ButtonModule>
+                        </div>
+                      </motion.div>
+                    )}
                   </>
                 )}
               </div>

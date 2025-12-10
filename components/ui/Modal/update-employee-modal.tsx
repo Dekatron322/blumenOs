@@ -1,4 +1,3 @@
-// components/ui/Modal/update-employee-modal.tsx
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
@@ -306,7 +305,7 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 px-3 backdrop-blur-sm sm:px-4"
       onClick={handleClose}
     >
       <motion.div
@@ -314,21 +313,21 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[800px] max-w-4xl rounded-lg bg-white shadow-2xl"
+        className="relative w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:w-[800px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Update Employee</h2>
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] px-4 py-4 sm:px-6 sm:py-5">
+          <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Update Employee</h2>
           <button
             onClick={handleClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 sm:size-10"
           >
             <CloseIcon />
           </button>
         </div>
 
         <div className="max-h-[70vh] overflow-y-auto">
-          <div className="mt-6 grid grid-cols-2 gap-6 px-6 pb-6">
+          <div className="grid grid-cols-1 gap-4 px-4 pb-4 pt-4 sm:grid-cols-2 sm:gap-6 sm:px-6 sm:pb-6 sm:pt-6">
             <FormInputModule
               label="Employee ID"
               name="employeeId"
@@ -475,7 +474,7 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
 
             {/* Error Display */}
             {Object.keys(formErrors).length > 0 && (
-              <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 p-4">
+              <div className="col-span-1 rounded-md border border-amber-200 bg-amber-50 p-3 sm:col-span-2 sm:p-4">
                 <div className="flex">
                   <div className="shrink-0">
                     <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
@@ -491,7 +490,9 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
                     <div className="mt-2 text-sm text-amber-700">
                       <ul className="list-disc space-y-1 pl-5">
                         {Object.values(formErrors).map((error, index) => (
-                          <li key={index}>{error}</li>
+                          <li key={index} className="text-xs sm:text-sm">
+                            {error}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -502,11 +503,11 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
           </div>
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col gap-3 bg-white px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:gap-4 sm:px-6 sm:py-5">
           <ButtonModule
             variant="dangerSecondary"
-            className="flex-1"
-            size="lg"
+            className="flex w-full"
+            size="md"
             onClick={handleClose}
             disabled={updateLoading}
           >
@@ -514,8 +515,8 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
           </ButtonModule>
           <ButtonModule
             variant="primary"
-            className="flex-1"
-            size="lg"
+            className="flex w-full"
+            size="md"
             onClick={handleSubmit}
             disabled={!isFormValid() || updateLoading}
           >

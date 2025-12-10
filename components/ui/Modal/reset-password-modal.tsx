@@ -172,7 +172,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 px-3 backdrop-blur-sm sm:px-4"
       onClick={onRequestClose}
     >
       <motion.div
@@ -180,14 +180,14 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[500px] max-w-4xl overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl sm:max-w-lg md:max-w-xl lg:w-[500px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Reset Password</h2>
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] px-4 py-4 sm:px-6 sm:py-6">
+          <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Reset Password</h2>
           <button
             onClick={onRequestClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 sm:size-10"
             disabled={isLoading}
           >
             <CloseIcon />
@@ -195,11 +195,11 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
         </div>
 
         <div className="max-h-[70vh] overflow-y-auto">
-          <div className="flex flex-col px-6 pb-6 pt-6">
+          <div className="flex flex-col px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-6">
             {/* Icon */}
-            <div className="mb-6 flex items-center justify-center">
-              <div className="flex size-20 items-center justify-center rounded-full bg-blue-50">
-                <svg className="size-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="mb-4 flex items-center justify-center sm:mb-6">
+              <div className="flex size-16 items-center justify-center rounded-full bg-blue-50 sm:size-20">
+                <svg className="size-8 text-blue-500 sm:size-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -211,13 +211,13 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
             </div>
 
             {/* Message */}
-            <h3 className="mb-3 text-center text-lg font-semibold text-gray-900">Reset Password</h3>
-            <p className="mb-6 text-center text-gray-600">
+            <h3 className="mb-3 text-center text-base font-semibold text-gray-900 sm:text-lg">Reset Password</h3>
+            <p className="mb-4 text-center text-sm text-gray-600 sm:mb-6 sm:text-base">
               Set a new password for <span className="font-semibold">{employeeName}</span>
             </p>
 
             {/* Password Form */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* New Password Field */}
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
                 <PasswordInputModule
@@ -289,7 +289,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                   <button
                     type="button"
                     onClick={generateRandomPassword}
-                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline sm:text-sm"
                     disabled={isLoading}
                   >
                     Generate Strong Password
@@ -311,21 +311,27 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose} disabled={isLoading}>
+        <div className="flex flex-col gap-3 bg-white px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:gap-4 sm:px-6 sm:py-6">
+          <ButtonModule
+            variant="secondary"
+            className="flex w-full"
+            size="md"
+            onClick={onRequestClose}
+            disabled={isLoading}
+          >
             Cancel
           </ButtonModule>
           <ButtonModule
             variant="primary"
-            className="flex-1"
-            size="lg"
+            className="flex w-full"
+            size="md"
             onClick={handleConfirm}
             disabled={isButtonDisabled}
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <svg
-                  className="mr-2 size-5 animate-spin"
+                  className="mr-2 size-4 animate-spin sm:size-5"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -337,7 +343,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Resetting...
+                <span className="text-xs sm:text-sm">Resetting...</span>
               </div>
             ) : (
               "Reset Password"
