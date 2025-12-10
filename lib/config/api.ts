@@ -214,6 +214,8 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/billing/postpaid/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/decline",
+    MANUAL_BILLS: "/billing/postpaid/manual-bills",
+    METER_READINGS: "/billing/postpaid/meter-readings",
   },
 
   METER_READINGS: {

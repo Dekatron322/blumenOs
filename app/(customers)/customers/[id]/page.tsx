@@ -8,6 +8,9 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import SuspendCustomerModal from "components/ui/Modal/suspend-customer-modal"
 import ActivateCustomerModal from "components/ui/Modal/activate-customer-modal"
 import CustomerChangeRequestModal from "components/ui/Modal/customer-change-request-modal"
+import ManualBillModal from "components/ui/Modal/manual-bill-modal"
+import RecordPaymentModal from "components/ui/Modal/record-payment-modal"
+import MeterReadingModal from "components/ui/Modal/meter-reading-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   BasicInfoOutlineIcon,
@@ -267,7 +270,15 @@ const CustomerDetailsPage = () => {
 
   const [assets, setAssets] = useState<Asset[]>([])
   const [activeModal, setActiveModal] = useState<
-    "suspend" | "reminder" | "status" | "activate" | "changeRequest" | null
+    | "suspend"
+    | "reminder"
+    | "status"
+    | "activate"
+    | "changeRequest"
+    | "manualBill"
+    | "recordPayment"
+    | "meterReading"
+    | null
   >(null)
   const [activeTab, setActiveTab] = useState<TabType>("basic-info")
   const [isLoading, setIsLoading] = useState(true)
@@ -345,8 +356,17 @@ const CustomerDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "suspend" | "reminder" | "status" | "activate" | "changeRequest") =>
-    setActiveModal(modalType)
+  const openModal = (
+    modalType:
+      | "suspend"
+      | "reminder"
+      | "status"
+      | "activate"
+      | "changeRequest"
+      | "manualBill"
+      | "recordPayment"
+      | "meterReading"
+  ) => setActiveModal(modalType)
 
   const handleConfirmReminder = (message: string) => {
     console.log("Reminder sent:", message)
@@ -1034,7 +1054,7 @@ const CustomerDetailsPage = () => {
                         <ButtonModule
                           variant="primary"
                           className="w-full justify-start gap-3"
-                          onClick={() => openModal("reminder")}
+                          onClick={() => openModal("recordPayment")}
                         >
                           <PaymentDisputeOutlineIcon />
                           Record Payment
@@ -1042,7 +1062,7 @@ const CustomerDetailsPage = () => {
                         <ButtonModule
                           variant="outline"
                           className="w-full justify-start gap-3"
-                          onClick={() => openModal("reminder")}
+                          onClick={() => openModal("manualBill")}
                         >
                           <PostpaidBillOutlineIcon className="size-4" />
                           Generate Bill
@@ -1050,7 +1070,7 @@ const CustomerDetailsPage = () => {
                         <ButtonModule
                           variant="outline"
                           className="w-full justify-start gap-3"
-                          onClick={() => openModal("reminder")}
+                          onClick={() => openModal("meterReading")}
                         >
                           <MeterOutlineIcon className="size-4" />
                           Generate Meter Reading
@@ -1303,6 +1323,34 @@ const CustomerDetailsPage = () => {
         customerName={currentCustomer.fullName}
         accountNumber={currentCustomer.accountNumber}
         onSuccess={handleActivateSuccess}
+      />
+
+      <ManualBillModal
+        isOpen={activeModal === "manualBill"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
+        distributionSubstationId={currentCustomer.distributionSubstationId}
+        feederId={currentCustomer.distributionSubstation.feeder.id}
+        tariffPerKwh={currentCustomer.tariff}
+        vatRate={currentCustomer.vat}
+      />
+
+      <RecordPaymentModal
+        isOpen={activeModal === "recordPayment"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
+      />
+
+      <MeterReadingModal
+        isOpen={activeModal === "meterReading"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
       />
 
       <PaymentReceiptModal

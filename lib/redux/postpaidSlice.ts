@@ -394,6 +394,72 @@ export interface DeclineChangeRequestResponse {
   data: ChangeRequestResponseData
 }
 
+// Manual Bill Interfaces
+export interface CreateManualBillRequest {
+  customerId: number
+  period: string
+  category: number
+  feederId: number
+  distributionSubstationId: number
+  previousReadingKwh: number
+  presentReadingKwh: number
+  energyCapKwh: number
+  tariffPerKwh: number
+  vatRate: number
+  isEstimated: boolean
+  estimatedConsumptionKwh?: number
+}
+
+export interface CreateManualBillResponse {
+  isSuccess: boolean
+  message: string
+  data: PostpaidBill
+}
+
+// Meter Reading Interfaces
+export interface CreateMeterReadingRequest {
+  customerId: number
+  period: string
+  previousReadingKwh: number
+  presentReadingKwh: number
+  notes?: string
+}
+
+export interface MeterReadingData {
+  id: number
+  customerId: number
+  period: string
+  previousReadingKwh: number
+  presentReadingKwh: number
+  capturedAtUtc: string
+  capturedByUserId: number
+  capturedByName: string
+  customerName: string
+  customerAccountNumber: string
+  notes: string
+  validConsumptionKwh: number
+  invalidConsumptionKwh: number
+  averageConsumptionBaselineKwh: number
+  standardDeviationKwh: number
+  lowThresholdKwh: number
+  highThresholdKwh: number
+  anomalyScore: number
+  validationStatus: number
+  isFlaggedForReview: boolean
+  isRollover: boolean
+  rolloverCount: number
+  rolloverAdjustmentKwh: number
+  estimatedConsumptionKwh: number
+  validatedAtUtc: string | null
+  validationNotes: string | null
+}
+
+export interface CreateMeterReadingResponse {
+  isSuccess: boolean
+  message: string
+  data: MeterReadingData
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -513,6 +579,20 @@ interface PostpaidBillingState {
   declineChangeRequestSuccess: boolean
   declineChangeRequestResponse: ChangeRequestResponseData | null
 
+  // Create Manual Bill state
+  createManualBillLoading: boolean
+  createManualBillError: string | null
+  createManualBillSuccess: boolean
+  createManualBillMessage: string | null
+  createdManualBill: PostpaidBill | null
+
+  // Create Meter Reading state
+  createMeterReadingLoading: boolean
+  createMeterReadingError: string | null
+  createMeterReadingSuccess: boolean
+  createMeterReadingMessage: string | null
+  createdMeterReading: MeterReadingData | null
+
   // Search/filter state
   filters: {
     period?: string
@@ -623,6 +703,16 @@ const initialState: PostpaidBillingState = {
   declineChangeRequestError: null,
   declineChangeRequestSuccess: false,
   declineChangeRequestResponse: null,
+  createManualBillLoading: false,
+  createManualBillError: null,
+  createManualBillSuccess: false,
+  createManualBillMessage: null,
+  createdManualBill: null,
+  createMeterReadingLoading: false,
+  createMeterReadingError: null,
+  createMeterReadingSuccess: false,
+  createMeterReadingMessage: null,
+  createdMeterReading: null,
   filters: {},
   billingJobsFilters: {},
 }
@@ -1050,6 +1140,54 @@ export const declineChangeRequest = createAsyncThunk(
   }
 )
 
+// Create Manual Bill Async Thunk
+export const createManualBill = createAsyncThunk(
+  "postpaidBilling/createManualBill",
+  async (requestData: CreateManualBillRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CreateManualBillResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.MANUAL_BILLS),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create manual bill")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create manual bill")
+      }
+      return rejectWithValue(error.message || "Network error during manual bill creation")
+    }
+  }
+)
+
+// Create Meter Reading Async Thunk
+export const createMeterReading = createAsyncThunk(
+  "postpaidBilling/createMeterReading",
+  async (requestData: CreateMeterReadingRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CreateMeterReadingResponse>(
+        buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.METER_READINGS),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create meter reading")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to create meter reading")
+      }
+      return rejectWithValue(error.message || "Network error during meter reading creation")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -1117,6 +1255,8 @@ const postpaidSlice = createSlice({
       state.changeRequestDetailsError = null
       state.approveChangeRequestError = null
       state.declineChangeRequestError = null
+      state.createManualBillError = null
+      state.createMeterReadingError = null
     },
 
     // Clear current bill
@@ -1211,6 +1351,24 @@ const postpaidSlice = createSlice({
       state.declineChangeRequestResponse = null
     },
 
+    // Clear create manual bill status
+    clearCreateManualBillStatus: (state) => {
+      state.createManualBillLoading = false
+      state.createManualBillError = null
+      state.createManualBillSuccess = false
+      state.createManualBillMessage = null
+      state.createdManualBill = null
+    },
+
+    // Clear create meter reading status
+    clearCreateMeterReadingStatus: (state) => {
+      state.createMeterReadingLoading = false
+      state.createMeterReadingError = null
+      state.createMeterReadingSuccess = false
+      state.createMeterReadingMessage = null
+      state.createdMeterReading = null
+    },
+
     // Reset billing state
     resetBillingState: (state) => {
       state.bills = []
@@ -1300,6 +1458,16 @@ const postpaidSlice = createSlice({
       state.declineChangeRequestError = null
       state.declineChangeRequestSuccess = false
       state.declineChangeRequestResponse = null
+      state.createManualBillLoading = false
+      state.createManualBillError = null
+      state.createManualBillSuccess = false
+      state.createManualBillMessage = null
+      state.createdManualBill = null
+      state.createMeterReadingLoading = false
+      state.createMeterReadingError = null
+      state.createMeterReadingSuccess = false
+      state.createMeterReadingMessage = null
+      state.createdMeterReading = null
       state.filters = {}
       state.billingJobsFilters = {}
     },
@@ -1758,6 +1926,50 @@ const postpaidSlice = createSlice({
         state.declineChangeRequestSuccess = false
         state.declineChangeRequestResponse = null
       })
+      // Create manual bill cases
+      .addCase(createManualBill.pending, (state) => {
+        state.createManualBillLoading = true
+        state.createManualBillError = null
+        state.createManualBillSuccess = false
+        state.createManualBillMessage = null
+        state.createdManualBill = null
+      })
+      .addCase(createManualBill.fulfilled, (state, action: PayloadAction<CreateManualBillResponse>) => {
+        state.createManualBillLoading = false
+        state.createManualBillSuccess = true
+        state.createManualBillMessage = action.payload.message || "Manual bill created successfully"
+        state.createdManualBill = action.payload.data
+        state.createManualBillError = null
+      })
+      .addCase(createManualBill.rejected, (state, action) => {
+        state.createManualBillLoading = false
+        state.createManualBillError = (action.payload as string) || "Failed to create manual bill"
+        state.createManualBillSuccess = false
+        state.createManualBillMessage = null
+        state.createdManualBill = null
+      })
+      // Create meter reading cases
+      .addCase(createMeterReading.pending, (state) => {
+        state.createMeterReadingLoading = true
+        state.createMeterReadingError = null
+        state.createMeterReadingSuccess = false
+        state.createMeterReadingMessage = null
+        state.createdMeterReading = null
+      })
+      .addCase(createMeterReading.fulfilled, (state, action: PayloadAction<CreateMeterReadingResponse>) => {
+        state.createMeterReadingLoading = false
+        state.createMeterReadingSuccess = true
+        state.createMeterReadingMessage = action.payload.message || "Meter reading created successfully"
+        state.createdMeterReading = action.payload.data
+        state.createMeterReadingError = null
+      })
+      .addCase(createMeterReading.rejected, (state, action) => {
+        state.createMeterReadingLoading = false
+        state.createMeterReadingError = (action.payload as string) || "Failed to create meter reading"
+        state.createMeterReadingSuccess = false
+        state.createMeterReadingMessage = null
+        state.createdMeterReading = null
+      })
   },
 })
 
@@ -1777,6 +1989,8 @@ export const {
   clearChangeRequestDetails,
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
+  clearCreateManualBillStatus,
+  clearCreateMeterReadingStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
