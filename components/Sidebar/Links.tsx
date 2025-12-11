@@ -144,6 +144,7 @@ const allLinks: LinkItem[] = [
       { name: "All Payment", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Make Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Duning Mgt", href: "/payment/duning-mgt", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Add Duning Mgt", href: "/payment/add-duning-mgt", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Change Request", href: "/payment/change-request", privilegeKey: "payments", requiredActions: ["E"] },
     ],
   },

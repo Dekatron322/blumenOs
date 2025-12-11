@@ -8,6 +8,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { notify } from "components/ui/Notification/Notification"
 import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
@@ -18,6 +19,7 @@ import { fetchAgents } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { clearCurrentBillByReference, fetchPostpaidBillByReference } from "lib/redux/postpaidSlice"
 import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
+import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface PaymentFormData {
   postpaidBillId: number
@@ -85,6 +87,7 @@ const reverseChannelMap = {
 }
 
 const channelOptions = [
+  { value: "", label: "Select payment channel" },
   { value: 1, label: "Cash" },
   { value: 2, label: "Bank Transfer" },
   { value: 3, label: "POS" },
@@ -120,6 +123,9 @@ const AddPaymentPage = () => {
   const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null)
   const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
+  const [amountInput, setAmountInput] = useState("")
 
   const [formData, setFormData] = useState<PaymentFormData>({
     postpaidBillId: 0,
@@ -188,11 +194,17 @@ const AddPaymentPage = () => {
           postpaidBillId: result.id,
           amount: result.totalDue,
         }))
+        setAmountInput(result.totalDue.toLocaleString())
 
         notify("success", "Bill validated successfully", {
           description: `Bill found for ${result.customerName}`,
           duration: 3000,
         })
+
+        // Move to next step on mobile
+        if (window.innerWidth < 768) {
+          setCurrentStep(2)
+        }
       }
     } catch (error: any) {
       setFormErrors((prev) => ({
@@ -205,6 +217,7 @@ const AddPaymentPage = () => {
         postpaidBillId: 1,
         amount: 0,
       }))
+      setAmountInput("")
     } finally {
       setIsValidatingReference(false)
     }
@@ -262,6 +275,11 @@ const AddPaymentPage = () => {
           description: `Customer found: ${result.fullName}`,
           duration: 3000,
         })
+
+        // Move to next step on mobile
+        if (window.innerWidth < 768) {
+          setCurrentStep(2)
+        }
       }
     } catch (error: any) {
       setFormErrors((prev) => ({
@@ -287,6 +305,7 @@ const AddPaymentPage = () => {
         postpaidBillId: 0,
         amount: 0,
       }))
+      setAmountInput("")
       setFormErrors((prev) => ({ ...prev, paymentReference: "" }))
     }
   }, [paymentReference])
@@ -496,6 +515,7 @@ const AddPaymentPage = () => {
       vendorId: 0,
       collectorType: "Staff",
     })
+    setAmountInput("")
     setPaymentReference("")
     setCustomerReference("")
     setBillInfo(null)
@@ -505,6 +525,7 @@ const AddPaymentPage = () => {
     setIsSuccessModalOpen(false)
     setIdentifierType("postpaidBill")
     setFormErrors({})
+    setCurrentStep(1)
     dispatch(clearCreatePayment())
     dispatch(clearCurrentBillByReference())
     dispatch(clearCustomerLookup())
@@ -567,11 +588,8 @@ const AddPaymentPage = () => {
       formData.paidAtUtc !== ""
 
     if (identifierType === "postpaidBill") {
-      // For postpaid bills, payment type is auto-set to Energy Bill when available;
-      // do not block button click on its presence here.
       return baseValidation && paymentReference.trim() !== "" && isReferenceVerified
     } else {
-      // For customers, user must explicitly choose a payment type
       return baseValidation && formData.paymentTypeId > 0 && customerReference.trim() !== "" && isReferenceVerified
     }
   }
@@ -627,493 +645,805 @@ const AddPaymentPage = () => {
     return reverseChannelMap[channel] || 1
   }
 
+  // Mobile Step Navigation
+  const MobileStepNavigation = () => (
+    <div className="sticky top-0 z-40 mb-4 rounded-lg bg-white p-3 shadow-sm sm:hidden">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          className="flex items-center gap-2 text-sm font-medium text-gray-700"
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <Menu />
+          <span>Step {currentStep}/3</span>
+        </button>
+        <div className="text-sm font-medium text-gray-900">
+          {currentStep === 1 && "Reference"}
+          {currentStep === 2 && "Payment"}
+          {currentStep === 3 && "Collector"}
+        </div>
+      </div>
+    </div>
+  )
+
+  // Mobile Sidebar Component
+  const MobileStepSidebar = () => (
+    <AnimatePresence>
+      {isMobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/50 sm:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Sidebar */}
+          <motion.div
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            exit={{ x: -300 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="fixed left-0 top-0 z-50 h-full w-72 bg-white shadow-xl sm:hidden"
+          >
+            <div className="flex h-full flex-col">
+              {/* Header */}
+              <div className="border-b bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Navigation</h3>
+                  <button
+                    type="button"
+                    className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <X />
+                  </button>
+                </div>
+                <p className="mt-1 text-sm text-gray-600">Navigate through form sections</p>
+              </div>
+
+              {/* Steps List */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <nav className="space-y-2">
+                  {[
+                    { step: 1, title: "Reference Validation", description: "Validate bill or customer" },
+                    { step: 2, title: "Payment Details", description: "Amount, channel, and date" },
+                    { step: 3, title: "Collector Information", description: "Who collected payment" },
+                  ].map((item) => (
+                    <button
+                      key={item.step}
+                      type="button"
+                      onClick={() => {
+                        setCurrentStep(item.step)
+                        setIsMobileMenuOpen(false)
+                      }}
+                      className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                        item.step === currentStep ? "bg-[#004B23] text-white" : "bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div
+                        className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                          item.step === currentStep
+                            ? "bg-white text-[#004B23]"
+                            : item.step < currentStep
+                            ? "bg-[#004B23] text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {item.step < currentStep ? (
+                          <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        ) : (
+                          item.step
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div
+                          className={`text-sm font-medium ${
+                            item.step === currentStep ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {item.title}
+                        </div>
+                        <div
+                          className={`mt-1 text-xs ${item.step === currentStep ? "text-gray-200" : "text-gray-600"}`}
+                        >
+                          {item.description}
+                        </div>
+                      </div>
+                      {item.step === currentStep && <ChevronRight className="size-4 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="border-t bg-gray-50 p-4">
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    disabled={createPaymentLoading}
+                    className="w-full rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Reset Form
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+                  >
+                    Close Menu
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+
+  // Mobile Bottom Navigation Bar
+  const MobileBottomNavigation = () => (
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-2">
+          {currentStep > 1 && (
+            <button
+              type="button"
+              onClick={() => setCurrentStep((prev) => prev - 1)}
+              disabled={createPaymentLoading}
+              className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ChevronLeft className="size-4" />
+              <span>Previous</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={createPaymentLoading}
+            className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Reset
+          </button>
+        </div>
+
+        <div className="flex gap-2">
+          {currentStep < 3 ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (currentStep === 1 && !isReferenceVerified) {
+                  notify("error", "Please validate reference first", {
+                    description: "You must validate the bill or customer before proceeding",
+                    duration: 4000,
+                  })
+                  return
+                }
+                setCurrentStep((prev) => prev + 1)
+              }}
+              disabled={createPaymentLoading}
+              className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span>Next</span>
+              <ChevronRight className="size-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={submitPayment}
+              disabled={!isFormValid() || createPaymentLoading}
+              className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {createPaymentLoading ? "Processing..." : "Record Payment"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <section className="size-full">
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="container mx-auto flex flex-col">
-            {/* Page Header */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
-              <div>
-                <h4 className="text-2xl font-semibold">Record New Payment</h4>
-                <p className="text-gray-600">Record a new payment transaction in the system</p>
-              </div>
+          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+            {/* Page Header - Mobile Optimized */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft />
+                  </button>
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Record New Payment</h1>
+                    <p className="text-sm text-gray-600">Record a new payment transaction in the system</p>
+                  </div>
+                </div>
 
-              <motion.div
-                className="flex items-center justify-end gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <ButtonModule variant="outline" size="md" onClick={handleReset} disabled={createPaymentLoading}>
-                  Reset Form
-                </ButtonModule>
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  onClick={submitPayment}
-                  disabled={!isFormValid() || createPaymentLoading}
-                  icon={<AddIcon />}
-                  iconPosition="start"
-                >
-                  {createPaymentLoading ? "Recording Payment..." : "Record Payment"}
-                </ButtonModule>
-              </motion.div>
+                <div className="hidden items-center gap-3 sm:flex">
+                  <ButtonModule variant="outline" size="sm" onClick={handleReset} disabled={createPaymentLoading}>
+                    Reset Form
+                  </ButtonModule>
+                  <ButtonModule
+                    variant="primary"
+                    size="sm"
+                    onClick={submitPayment}
+                    disabled={!isFormValid() || createPaymentLoading}
+                    icon={<AddIcon />}
+                    iconPosition="start"
+                  >
+                    {createPaymentLoading ? "Processing..." : "Record Payment"}
+                  </ButtonModule>
+                </div>
+              </div>
             </div>
 
+            {/* Mobile Step Navigation */}
+            <MobileStepNavigation />
+
+            {/* Mobile Step Sidebar */}
+            <MobileStepSidebar />
+
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
-              <div className="w-full">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="rounded-lg bg-white p-6 shadow-sm"
-                >
-                  {/* Form Header */}
-                  <div className="mb-6 border-b pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
-                    <p className="text-sm text-gray-600">Fill in all required fields to record a new payment</p>
-                  </div>
+            <div className="w-full">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="rounded-lg bg-white p-4 shadow-sm sm:p-6"
+              >
+                {/* Form Header */}
+                <div className="mb-6 border-b pb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
+                  <p className="text-sm text-gray-600">Fill in all required fields to record a new payment</p>
+                </div>
 
-                  {/* Payment Form */}
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Section 1: Payment Details */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Payment Details</h4>
-                        <p className="text-sm text-gray-600">Enter the basic payment information and amount</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormSelectModule
-                          label="Record Payment By"
-                          name="identifierType"
-                          value={identifierType}
-                          onChange={({ target }) => {
-                            const value = target.value as "postpaidBill" | "customer"
-                            setIdentifierType(value)
-                            setFormErrors((prev) => ({ ...prev, paymentReference: "", customerReference: "" }))
-                            setPaymentReference("")
-                            setCustomerReference("")
-                            setBillInfo(null)
-                            setCustomerInfo(null)
-
-                            // Reset payment type appropriately when switching modes
-                            setFormData((prev) => ({
-                              ...prev,
-                              paymentTypeId:
-                                value === "customer" ? 0 : energyBillPaymentType ? energyBillPaymentType.id : 0,
-                            }))
-                          }}
-                          options={[
-                            { value: "postpaidBill", label: "Postpaid Bill" },
-                            { value: "customer", label: "Customer" },
-                          ]}
-                        />
-
-                        {identifierType === "postpaidBill" && (
-                          <div className="space-y-2">
-                            <FormInputModule
-                              label="Payment Bill"
-                              name="paymentReference"
-                              type="text"
-                              placeholder="Enter payment bill"
-                              value={paymentReference}
-                              onChange={(e) => setPaymentReference(e.target.value)}
-                              error={formErrors.paymentReference}
-                              required
-                            />
-                            <div className="flex gap-2">
-                              <ButtonModule
-                                variant="outline"
-                                size="sm"
-                                onClick={validatePaymentReference}
-                                disabled={
-                                  !paymentReference.trim() || isValidatingReference || currentBillByReferenceLoading
-                                }
-                                type="button"
-                              >
-                                {isValidatingReference || currentBillByReferenceLoading
-                                  ? "Validating..."
-                                  : "Validate Reference"}
-                              </ButtonModule>
-                              {billInfo && (
-                                <ButtonModule
-                                  variant="dangerSecondary"
-                                  size="sm"
-                                  onClick={() => {
-                                    setPaymentReference("")
-                                    setBillInfo(null)
-                                    setFormData((prev) => ({ ...prev, postpaidBillId: 0, amount: 0 }))
-                                  }}
-                                  type="button"
-                                >
-                                  Clear
-                                </ButtonModule>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {identifierType === "customer" && (
-                          <div className="space-y-2">
-                            <FormInputModule
-                              label="Customer Reference"
-                              name="customerReference"
-                              type="text"
-                              placeholder="Enter customer reference (account number)"
-                              value={customerReference}
-                              onChange={(e) => setCustomerReference(e.target.value)}
-                              error={formErrors.customerReference}
-                              required
-                            />
-                            <div className="flex gap-2">
-                              <ButtonModule
-                                variant="outline"
-                                size="sm"
-                                onClick={validateCustomerReference}
-                                disabled={!customerReference.trim() || isValidatingCustomer || customerLookupLoading}
-                                type="button"
-                              >
-                                {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Validate Customer"}
-                              </ButtonModule>
-                              {customerInfo && (
-                                <ButtonModule
-                                  variant="dangerSecondary"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCustomerReference("")
-                                    setCustomerInfo(null)
-                                    setFormData((prev) => ({ ...prev, customerId: 0 }))
-                                  }}
-                                  type="button"
-                                >
-                                  Clear
-                                </ButtonModule>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Bill Information Display */}
-                        {billInfo && (
-                          <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 md:grid-cols-2">
-                            <div>
-                              <h5 className="font-medium text-blue-800">Bill Information</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Customer:</strong> {billInfo.customerName}
-                                </p>
-                                <p>
-                                  <strong>Account No:</strong> {billInfo.customerAccountNumber}
-                                </p>
-                                <p>
-                                  <strong>Billing Period:</strong> {billInfo.period}
-                                </p>
-                              </div>
-                            </div>
-                            <div>
-                              <h5 className="font-medium text-blue-800">Payment Details</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Total Due:</strong> ₦{billInfo.totalDue.toLocaleString()}
-                                </p>
-                                <p>
-                                  <strong>Status:</strong> {getStatusText(billInfo.status)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Customer Information Display */}
-                        {customerInfo && (
-                          <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 md:grid-cols-2">
-                            <div>
-                              <h5 className="font-medium text-blue-800">Customer Information</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Name:</strong> {customerInfo.fullName}
-                                </p>
-                                <p>
-                                  <strong>Account No:</strong> {customerInfo.accountNumber}
-                                </p>
-                                <p>
-                                  <strong>Phone:</strong> {customerInfo.phoneNumber}
-                                </p>
-                                <p>
-                                  <strong>Email:</strong> {customerInfo.email}
-                                </p>
-                              </div>
-                            </div>
-                            <div>
-                              <h5 className="font-medium text-blue-800">Account Details</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Status:</strong>{" "}
-                                  {getCustomerStatusText(customerInfo.status, customerInfo.isSuspended)}
-                                </p>
-                                <p>
-                                  <strong>Area Office:</strong> {customerInfo.areaOfficeName}
-                                </p>
-                                <p>
-                                  <strong>Feeder:</strong> {customerInfo.feederName}
-                                </p>
-                                <p>
-                                  <strong>Outstanding Balance:</strong> ₦
-                                  {customerInfo.customerOutstandingDebtBalance != null
-                                    ? customerInfo.customerOutstandingDebtBalance.toLocaleString()
-                                    : "0"}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {isReferenceVerified && (
-                          <>
-                            {identifierType === "customer" && (
-                              <FormSelectModule
-                                label="Payment Type"
-                                name="paymentTypeId"
-                                value={formData.paymentTypeId}
-                                onChange={handleInputChange}
-                                options={[
-                                  {
-                                    value: 0,
-                                    label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
-                                  },
-                                  ...paymentTypeOptions,
-                                ]}
-                                error={formErrors.paymentTypeId}
-                                required
-                              />
-                            )}
-
-                            <FormInputModule
-                              label="Amount"
-                              name="amount"
-                              type="number"
-                              placeholder="Enter payment amount"
-                              value={formData.amount}
-                              onChange={handleInputChange}
-                              error={formErrors.amount}
-                              required
-                              min="0.01"
-                              step="0.01"
-                              disabled={billInfo !== null}
-                            />
-
-                            <FormSelectModule
-                              label="Payment Channel"
-                              name="channel"
-                              value={getChannelNumericValue(formData.channel)}
-                              onChange={handleInputChange}
-                              options={[{ value: "", label: "Select payment channel" }, ...channelOptions]}
-                              error={formErrors.channel}
-                              required
-                            />
-
-                            {/* <FormSelectModule
-                              label="Currency"
-                              name="currency"
-                              value={formData.currency}
-                              onChange={handleInputChange}
-                              options={[{ value: "", label: "Select currency" }, ...currencyOptions]}
-                              error={formErrors.currency}
-                              required
-                            /> */}
-
-                            <FormInputModule
-                              label="Payment Date & Time"
-                              name="paidAtUtc"
-                              type="datetime-local"
-                              value={formData.paidAtUtc}
-                              onChange={handleInputChange}
-                              error={formErrors.paidAtUtc}
-                              required
-                              placeholder={""}
-                            />
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {isReferenceVerified && (
-                      <>
-                        {/* Section 2: Collector Information */}
-                        <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                          <div className="border-b pb-4">
-                            <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
-                            <p className="text-sm text-gray-600">Specify who collected this payment</p>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <FormSelectModule
-                              label="Collector Type"
-                              name="collectorType"
-                              value={formData.collectorType}
-                              onChange={handleInputChange}
-                              options={collectorTypeOptions}
-                              error={formErrors.collectorType}
-                              required
-                            />
-
-                            {formData.collectorType === "Agent" && (
-                              <FormSelectModule
-                                label="Agent"
-                                name="agentId"
-                                value={formData.agentId}
-                                onChange={handleInputChange}
-                                options={[
-                                  { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
-                                  ...agentOptions,
-                                ]}
-                                error={formErrors.agentId}
-                                required
-                                disabled={agentsLoading}
-                              />
-                            )}
-
-                            {formData.collectorType === "Vendor" && (
-                              <FormSelectModule
-                                label="Vendor"
-                                name="vendorId"
-                                value={formData.vendorId}
-                                onChange={handleInputChange}
-                                options={[
-                                  { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
-                                  ...vendorOptions,
-                                ]}
-                                error={formErrors.vendorId}
-                                required
-                                disabled={vendorsLoading}
-                              />
-                            )}
-                          </div>
+                {/* Payment Form */}
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  {/* Section 1: Payment Details */}
+                  <AnimatePresence mode="wait">
+                    {/* Step 1: Reference Validation */}
+                    {(currentStep === 1 || window.innerWidth >= 768) && (
+                      <motion.div
+                        key="reference"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Payment Details</h4>
+                          <p className="text-sm text-gray-600">Enter the basic payment information and amount</p>
                         </div>
 
-                        {/* Section 3: Additional Information */}
-                        <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                          <div className="border-b pb-4">
-                            <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                            <p className="text-sm text-gray-600">
-                              Provide any additional payment details or references
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          <FormSelectModule
+                            label="Record Payment By"
+                            name="identifierType"
+                            value={identifierType}
+                            onChange={({ target }) => {
+                              const value = target.value as "postpaidBill" | "customer"
+                              setIdentifierType(value)
+                              setFormErrors((prev) => ({ ...prev, paymentReference: "", customerReference: "" }))
+                              setPaymentReference("")
+                              setCustomerReference("")
+                              setBillInfo(null)
+                              setCustomerInfo(null)
+
+                              // Reset payment type appropriately when switching modes
+                              setFormData((prev) => ({
+                                ...prev,
+                                paymentTypeId:
+                                  value === "customer" ? 0 : energyBillPaymentType ? energyBillPaymentType.id : 0,
+                              }))
+                            }}
+                            options={[
+                              { value: "postpaidBill", label: "Postpaid Bill" },
+                              { value: "customer", label: "Customer" },
+                            ]}
+                          />
+
+                          {identifierType === "postpaidBill" && (
+                            <div className="space-y-2">
+                              <FormInputModule
+                                label="Payment Bill"
+                                name="paymentReference"
+                                type="text"
+                                placeholder="Enter payment bill"
+                                value={paymentReference}
+                                onChange={(e) => setPaymentReference(e.target.value)}
+                                error={formErrors.paymentReference}
+                                required
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <ButtonModule
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={validatePaymentReference}
+                                  disabled={
+                                    !paymentReference.trim() || isValidatingReference || currentBillByReferenceLoading
+                                  }
+                                  type="button"
+                                  className="flex-1"
+                                >
+                                  {isValidatingReference || currentBillByReferenceLoading
+                                    ? "Validating..."
+                                    : "Validate Reference"}
+                                </ButtonModule>
+                                {billInfo && (
+                                  <ButtonModule
+                                    variant="dangerSecondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setPaymentReference("")
+                                      setBillInfo(null)
+                                      setFormData((prev) => ({ ...prev, postpaidBillId: 0, amount: 0 }))
+                                    }}
+                                    type="button"
+                                    className="flex-1"
+                                  >
+                                    Clear
+                                  </ButtonModule>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {identifierType === "customer" && (
+                            <div className="space-y-2">
+                              <FormInputModule
+                                label="Customer Reference"
+                                name="customerReference"
+                                type="text"
+                                placeholder="Enter customer reference (account number)"
+                                value={customerReference}
+                                onChange={(e) => setCustomerReference(e.target.value)}
+                                error={formErrors.customerReference}
+                                required
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <ButtonModule
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={validateCustomerReference}
+                                  disabled={!customerReference.trim() || isValidatingCustomer || customerLookupLoading}
+                                  type="button"
+                                  className="flex-1"
+                                >
+                                  {isValidatingCustomer || customerLookupLoading
+                                    ? "Validating..."
+                                    : "Validate Customer"}
+                                </ButtonModule>
+                                {customerInfo && (
+                                  <ButtonModule
+                                    variant="dangerSecondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setCustomerReference("")
+                                      setCustomerInfo(null)
+                                      setFormData((prev) => ({ ...prev, customerId: 0 }))
+                                    }}
+                                    type="button"
+                                    className="flex-1"
+                                  >
+                                    Clear
+                                  </ButtonModule>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Bill Information Display */}
+                          {billInfo && (
+                            <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4">
+                              <div>
+                                <h5 className="text-sm font-medium text-blue-800 sm:text-base">Bill Information</h5>
+                                <div className="mt-2 space-y-1 text-xs text-blue-700 sm:text-sm">
+                                  <p>
+                                    <strong>Customer:</strong> {billInfo.customerName}
+                                  </p>
+                                  <p>
+                                    <strong>Account No:</strong> {billInfo.customerAccountNumber}
+                                  </p>
+                                  <p>
+                                    <strong>Billing Period:</strong> {billInfo.period}
+                                  </p>
+                                </div>
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-medium text-blue-800 sm:text-base">Payment Details</h5>
+                                <div className="mt-2 space-y-1 text-xs text-blue-700 sm:text-sm">
+                                  <p>
+                                    <strong>Total Due:</strong> ₦{billInfo.totalDue.toLocaleString()}
+                                  </p>
+                                  <p>
+                                    <strong>Status:</strong> {getStatusText(billInfo.status)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Customer Information Display */}
+                          {customerInfo && (
+                            <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4">
+                              <div>
+                                <h5 className="text-sm font-medium text-blue-800 sm:text-base">Customer Information</h5>
+                                <div className="mt-2 space-y-1 text-xs text-blue-700 sm:text-sm">
+                                  <p>
+                                    <strong>Name:</strong> {customerInfo.fullName}
+                                  </p>
+                                  <p>
+                                    <strong>Account No:</strong> {customerInfo.accountNumber}
+                                  </p>
+                                  <p>
+                                    <strong>Phone:</strong> {customerInfo.phoneNumber}
+                                  </p>
+                                  <p>
+                                    <strong>Email:</strong> {customerInfo.email}
+                                  </p>
+                                </div>
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-medium text-blue-800 sm:text-base">Account Details</h5>
+                                <div className="mt-2 space-y-1 text-xs text-blue-700 sm:text-sm">
+                                  <p>
+                                    <strong>Status:</strong>{" "}
+                                    {getCustomerStatusText(customerInfo.status, customerInfo.isSuspended)}
+                                  </p>
+                                  <p>
+                                    <strong>Area Office:</strong> {customerInfo.areaOfficeName}
+                                  </p>
+                                  <p>
+                                    <strong>Feeder:</strong> {customerInfo.feederName}
+                                  </p>
+                                  <p>
+                                    <strong>Outstanding Balance:</strong> ₦
+                                    {customerInfo.customerOutstandingDebtBalance != null
+                                      ? customerInfo.customerOutstandingDebtBalance.toLocaleString()
+                                      : "0"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 2: Payment Details */}
+                    {(currentStep === 2 || window.innerWidth >= 768) && isReferenceVerified && (
+                      <motion.div
+                        key="payment"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Payment Amount & Channel</h4>
+                          <p className="text-sm text-gray-600">Specify payment amount, channel, and date</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          {identifierType === "customer" && (
+                            <FormSelectModule
+                              label="Payment Type"
+                              name="paymentTypeId"
+                              value={formData.paymentTypeId}
+                              onChange={handleInputChange}
+                              options={[
+                                {
+                                  value: 0,
+                                  label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
+                                },
+                                ...paymentTypeOptions,
+                              ]}
+                              error={formErrors.paymentTypeId}
+                              required
+                            />
+                          )}
+
+                          <FormInputModule
+                            label="Amount"
+                            name="amount"
+                            type="text"
+                            placeholder="Enter payment amount"
+                            value={amountInput}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "").trim()
+
+                              if (raw === "") {
+                                setAmountInput("")
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  amount: 0,
+                                }))
+                                return
+                              }
+
+                              // Allow only digits and optional decimal point
+                              if (!/^\d*(\.\d*)?$/.test(raw)) {
+                                return
+                              }
+
+                              const numeric = Number(raw)
+                              setFormData((prev) => ({
+                                ...prev,
+                                amount: Number.isNaN(numeric) ? 0 : numeric,
+                              }))
+
+                              const [intPart, decimalPart] = raw.split(".")
+                              const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
+                              const formatted =
+                                decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
+                              setAmountInput(formatted)
+                            }}
+                            error={formErrors.amount}
+                            required
+                            min="0.01"
+                            step="0.01"
+                            prefix="₦"
+                          />
+
+                          <FormSelectModule
+                            label="Payment Channel"
+                            name="channel"
+                            value={getChannelNumericValue(formData.channel)}
+                            onChange={handleInputChange}
+                            options={channelOptions}
+                            error={formErrors.channel}
+                            required
+                          />
+
+                          <FormInputModule
+                            label="Payment Date & Time"
+                            name="paidAtUtc"
+                            type="datetime-local"
+                            value={formData.paidAtUtc}
+                            onChange={handleInputChange}
+                            error={formErrors.paidAtUtc}
+                            required
+                            placeholder={""}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 3: Collector Information */}
+                    {(currentStep === 3 || window.innerWidth >= 768) && isReferenceVerified && (
+                      <motion.div
+                        key="collector"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
+                          <p className="text-sm text-gray-600">Specify who collected this payment</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          <FormSelectModule
+                            label="Collector Type"
+                            name="collectorType"
+                            value={formData.collectorType}
+                            onChange={handleInputChange}
+                            options={collectorTypeOptions}
+                            error={formErrors.collectorType}
+                            required
+                          />
+
+                          {formData.collectorType === "Agent" && (
+                            <FormSelectModule
+                              label="Agent"
+                              name="agentId"
+                              value={formData.agentId}
+                              onChange={handleInputChange}
+                              options={[
+                                { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
+                                ...agentOptions,
+                              ]}
+                              error={formErrors.agentId}
+                              required
+                              disabled={agentsLoading}
+                            />
+                          )}
+
+                          {formData.collectorType === "Vendor" && (
+                            <FormSelectModule
+                              label="Vendor"
+                              name="vendorId"
+                              value={formData.vendorId}
+                              onChange={handleInputChange}
+                              options={[
+                                { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
+                                ...vendorOptions,
+                              ]}
+                              error={formErrors.vendorId}
+                              required
+                              disabled={vendorsLoading}
+                            />
+                          )}
+
+                          {/* Additional Information (Desktop only) */}
+                          <div className="col-span-2 hidden sm:block">
+                            <div className="space-y-4">
+                              <h5 className="text-sm font-medium text-gray-700">Additional Information</h5>
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
+                                <FormInputModule
+                                  label="External Reference (Optional)"
+                                  name="externalReference"
+                                  type="text"
+                                  placeholder="Enter external reference number"
+                                  value={formData.externalReference}
+                                  onChange={handleInputChange}
+                                />
+
+                                <FormTextAreaModule
+                                  label="Narrative (Optional)"
+                                  name="narrative"
+                                  placeholder="Enter payment description or notes"
+                                  value={formData.narrative}
+                                  onChange={(e) =>
+                                    handleInputChange({
+                                      target: { name: "narrative", value: e.target.value },
+                                    })
+                                  }
+                                  rows={3}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Additional Information (Mobile only) */}
+                    {currentStep === 3 && isReferenceVerified && (
+                      <motion.div
+                        key="additional-mobile"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:hidden"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
+                          <p className="text-sm text-gray-600">Provide any additional payment details or references</p>
+                        </div>
+
+                        <div className="space-y-4">
+                          <FormInputModule
+                            label="External Reference (Optional)"
+                            name="externalReference"
+                            type="text"
+                            placeholder="Enter external reference number"
+                            value={formData.externalReference}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="Narrative (Optional)"
+                            name="narrative"
+                            type="text"
+                            placeholder="Enter payment description or notes"
+                            value={formData.narrative}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Error Summary */}
+                  {Object.values(formErrors).some((error) => !!error) && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
+                          <div className="mt-2 text-sm text-amber-700">
+                            <ul className="list-disc space-y-1 pl-5">
+                              {Object.values(formErrors).map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Success Message */}
+                  {createPaymentSuccess && createdPayment && (
+                    <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <svg className="size-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-emerald-800">Payment recorded successfully!</h3>
+                          <div className="mt-2 text-sm text-emerald-700">
+                            <p>
+                              Reference: <strong>{createdPayment.reference}</strong>
                             </p>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-6">
-                            <FormInputModule
-                              label="External Reference (Optional)"
-                              name="externalReference"
-                              type="text"
-                              placeholder="Enter external reference number"
-                              value={formData.externalReference}
-                              onChange={handleInputChange}
-                            />
-
-                            <FormInputModule
-                              label="Narrative (Optional)"
-                              name="narrative"
-                              type="text"
-                              placeholder="Enter payment description or notes"
-                              value={formData.narrative}
-                              onChange={handleInputChange}
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Error Summary */}
-                    {Object.values(formErrors).some((error) => !!error) && (
-                      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
-                            <div className="mt-2 text-sm text-amber-700">
-                              <ul className="list-disc space-y-1 pl-5">
-                                {Object.values(formErrors).map((error, index) => (
-                                  <li key={index}>{error}</li>
-                                ))}
-                              </ul>
-                            </div>
+                            <p>
+                              Amount:{" "}
+                              <strong>
+                                {createdPayment.amount} {createdPayment.currency}
+                              </strong>
+                            </p>
+                            <p className="mt-1">Redirecting to payment details...</p>
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Success Message */}
-                    {createPaymentSuccess && createdPayment && (
-                      <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-emerald-800">Payment recorded successfully!</h3>
-                            <div className="mt-2 text-sm text-emerald-700">
-                              <p>
-                                Reference: <strong>{createdPayment.reference}</strong>
-                              </p>
-                              <p>
-                                Amount:{" "}
-                                <strong>
-                                  {createdPayment.amount} {createdPayment.currency}
-                                </strong>
-                              </p>
-                              <p className="mt-1">Redirecting to payment details...</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-4 border-t pt-6">
-                      <ButtonModule
-                        variant="dangerSecondary"
-                        size="lg"
-                        onClick={handleReset}
-                        disabled={createPaymentLoading}
-                        type="button"
-                      >
-                        Reset
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="primary"
-                        size="lg"
-                        type="submit"
-                        disabled={!isFormValid() || createPaymentLoading}
-                      >
-                        {createPaymentLoading ? "Recording Payment..." : "Record Payment"}
-                      </ButtonModule>
                     </div>
-                  </form>
-                </motion.div>
-              </div>
+                  )}
+
+                  {/* Desktop Form Actions */}
+                  <div className="hidden justify-end gap-4 border-t pt-6 sm:flex">
+                    <ButtonModule
+                      variant="dangerSecondary"
+                      size="lg"
+                      onClick={handleReset}
+                      disabled={createPaymentLoading}
+                      type="button"
+                    >
+                      Reset
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="primary"
+                      size="lg"
+                      type="submit"
+                      disabled={!isFormValid() || createPaymentLoading}
+                    >
+                      {createPaymentLoading ? "Recording Payment..." : "Record Payment"}
+                    </ButtonModule>
+                  </div>
+                </form>
+              </motion.div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavigation />
+
       <BankTransferDetailsModal
         isOpen={isVirtualAccountModalOpen}
         onRequestClose={() => setIsVirtualAccountModalOpen(false)}
@@ -1151,12 +1481,6 @@ const AddPaymentPage = () => {
                     <span className="text-gray-600">Channel:</span>
                     <span className="font-semibold">{formData.channel}</span>
                   </div>
-                  {/* {identifierType === "postpaidBill" && billInfo && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Bill ID:</span>
-                      <span className="font-semibold">{billInfo.id}</span>
-                    </div>
-                  )} */}
                   {identifierType === "customer" && customerInfo && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Customer:</span>

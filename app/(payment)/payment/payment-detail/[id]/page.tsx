@@ -24,16 +24,17 @@ import type {
   ChangeRequestsRequestParams,
 } from "lib/redux/paymentSlice"
 import ViewPaymentChangeRequestModal from "components/ui/Modal/view-payment-change-request-modal"
+import Image from "next/image"
 
 // LoadingSkeleton component for payment details
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 md:p-6">
       {/* Header Skeleton */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="size-9 overflow-hidden rounded-md bg-gray-200">
+      <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="size-8 overflow-hidden rounded-md bg-gray-200 md:size-9">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
@@ -46,8 +47,8 @@ const LoadingSkeleton = () => (
               }}
             />
           </div>
-          <div>
-            <div className="mb-2 h-8 w-48 overflow-hidden rounded bg-gray-200">
+          <div className="flex-1">
+            <div className="mb-2 h-6 w-32 overflow-hidden rounded bg-gray-200 md:h-8 md:w-48">
               <motion.div
                 className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
@@ -61,7 +62,7 @@ const LoadingSkeleton = () => (
                 }}
               />
             </div>
-            <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+            <div className="h-3 w-24 overflow-hidden rounded bg-gray-200 md:h-4 md:w-32">
               <motion.div
                 className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
@@ -77,8 +78,8 @@ const LoadingSkeleton = () => (
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+        <div className="flex gap-2 md:gap-3">
+          <div className="h-9 w-20 overflow-hidden rounded bg-gray-200 md:h-10 md:w-24">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
@@ -92,7 +93,7 @@ const LoadingSkeleton = () => (
               }}
             />
           </div>
-          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+          <div className="h-9 w-20 overflow-hidden rounded bg-gray-200 md:h-10 md:w-24">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{
@@ -109,14 +110,14 @@ const LoadingSkeleton = () => (
         </div>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
         {/* Left Column Skeleton */}
-        <div className="w-[30%] space-y-6">
+        <div className="w-full space-y-4 lg:w-[30%] lg:space-y-6">
           {/* Profile Card Skeleton */}
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 md:p-6">
             <div className="text-center">
               <div className="relative mx-auto mb-4">
-                <div className="mx-auto size-20 overflow-hidden rounded-full bg-gray-200">
+                <div className="mx-auto size-16 overflow-hidden rounded-full bg-gray-200 md:size-20">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -130,7 +131,7 @@ const LoadingSkeleton = () => (
                   />
                 </div>
               </div>
-              <div className="mx-auto mb-2 h-6 w-32 overflow-hidden rounded bg-gray-200">
+              <div className="mx-auto mb-2 h-5 w-24 overflow-hidden rounded bg-gray-200 md:h-6 md:w-32">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{
@@ -144,7 +145,7 @@ const LoadingSkeleton = () => (
                   }}
                 />
               </div>
-              <div className="mx-auto mb-4 h-4 w-24 overflow-hidden rounded bg-gray-200">
+              <div className="mx-auto mb-4 h-3 w-16 overflow-hidden rounded bg-gray-200 md:h-4 md:w-24">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{
@@ -158,8 +159,8 @@ const LoadingSkeleton = () => (
                   }}
                 />
               </div>
-              <div className="mb-6 flex justify-center gap-2">
-                <div className="h-6 w-20 overflow-hidden rounded-full bg-gray-200">
+              <div className="mb-4 flex justify-center gap-2 md:mb-6">
+                <div className="h-5 w-14 overflow-hidden rounded-full bg-gray-200 md:h-6 md:w-20">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -173,7 +174,7 @@ const LoadingSkeleton = () => (
                     }}
                   />
                 </div>
-                <div className="h-6 w-20 overflow-hidden rounded-full bg-gray-200">
+                <div className="h-5 w-14 overflow-hidden rounded-full bg-gray-200 md:h-6 md:w-20">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -188,8 +189,8 @@ const LoadingSkeleton = () => (
                   />
                 </div>
               </div>
-              <div className="space-y-3">
-                <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+              <div className="space-y-2">
+                <div className="h-3 w-full overflow-hidden rounded bg-gray-200 md:h-4">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -203,7 +204,7 @@ const LoadingSkeleton = () => (
                     }}
                   />
                 </div>
-                <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+                <div className="h-3 w-full overflow-hidden rounded bg-gray-200 md:h-4">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -217,7 +218,7 @@ const LoadingSkeleton = () => (
                     }}
                   />
                 </div>
-                <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+                <div className="h-3 w-full overflow-hidden rounded bg-gray-200 md:h-4">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -236,8 +237,8 @@ const LoadingSkeleton = () => (
           </div>
 
           {/* Quick Stats Skeleton */}
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-32 overflow-hidden rounded bg-gray-200">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 md:p-6">
+            <div className="mb-3 h-5 w-24 overflow-hidden rounded bg-gray-200 md:mb-4 md:h-6 md:w-32">
               <motion.div
                 className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
@@ -250,8 +251,8 @@ const LoadingSkeleton = () => (
                 }}
               />
             </div>
-            <div className="space-y-4">
-              <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+            <div className="space-y-3">
+              <div className="h-3 w-full overflow-hidden rounded bg-gray-200 md:h-4">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{
@@ -265,7 +266,7 @@ const LoadingSkeleton = () => (
                   }}
                 />
               </div>
-              <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+              <div className="h-3 w-full overflow-hidden rounded bg-gray-200 md:h-4">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{
@@ -279,7 +280,7 @@ const LoadingSkeleton = () => (
                   }}
                 />
               </div>
-              <div className="h-4 w-full overflow-hidden rounded bg-gray-200">
+              <div className="h-3 w-full overflow-hidden rounded bg-gray-200 md:h-4">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{
@@ -298,10 +299,10 @@ const LoadingSkeleton = () => (
         </div>
 
         {/* Right Column Skeleton */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-4 md:space-y-6">
           {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
-              <div className="mb-6 h-6 w-48 overflow-hidden rounded bg-gray-200">
+            <div key={item} className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 md:p-6">
+              <div className="mb-4 h-5 w-32 overflow-hidden rounded bg-gray-200 md:mb-6 md:h-6 md:w-48">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                   animate={{
@@ -315,11 +316,11 @@ const LoadingSkeleton = () => (
                   }}
                 />
               </div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-3">
                   {[1, 2, 3].map((subItem) => (
                     <div key={subItem} className="space-y-2">
-                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                      <div className="h-3 w-20 overflow-hidden rounded bg-gray-200 md:h-4 md:w-32">
                         <motion.div
                           className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                           animate={{
@@ -333,7 +334,7 @@ const LoadingSkeleton = () => (
                           }}
                         />
                       </div>
-                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
+                      <div className="h-5 w-28 overflow-hidden rounded bg-gray-200 md:h-6 md:w-40">
                         <motion.div
                           className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                           animate={{
@@ -350,10 +351,10 @@ const LoadingSkeleton = () => (
                     </div>
                   ))}
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {[1, 2, 3].map((subItem) => (
                     <div key={subItem} className="space-y-2">
-                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                      <div className="h-3 w-20 overflow-hidden rounded bg-gray-200 md:h-4 md:w-32">
                         <motion.div
                           className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                           animate={{
@@ -367,7 +368,7 @@ const LoadingSkeleton = () => (
                           }}
                         />
                       </div>
-                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
+                      <div className="h-5 w-28 overflow-hidden rounded bg-gray-200 md:h-6 md:w-40">
                         <motion.div
                           className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                           animate={{
@@ -409,7 +410,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color} md:px-3 md:py-1`}
     >
       <span className={`size-2 rounded-full ${statusConfig.border}`}></span>
       {statusConfig.label}
@@ -434,7 +435,7 @@ const PaymentMethodBadge = ({ method }: { method: string }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${methodConfig.bg} ${methodConfig.color}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${methodConfig.bg} ${methodConfig.color} md:px-3 md:py-1`}
     >
       {methodConfig.label}
     </div>
@@ -457,7 +458,7 @@ const CollectorTypeBadge = ({ type }: { type: string }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${typeConfig.bg} ${typeConfig.color}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${typeConfig.bg} ${typeConfig.color} md:px-3 md:py-1`}
     >
       {typeConfig.label}
     </div>
@@ -526,11 +527,11 @@ const ChangeRequestCard = ({
   const sourceConfig = getSourceConfig(changeRequest.source || 1)
 
   return (
-    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
+    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-3 shadow-sm transition-all hover:shadow-md md:p-4">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
-            <span className="font-semibold text-blue-600">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 md:size-12">
+            <span className="text-sm font-semibold text-blue-600 md:text-base">
               {changeRequest.requestedBy
                 .split(" ")
                 .map((n) => n[0])
@@ -538,8 +539,8 @@ const ChangeRequestCard = ({
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{changeRequest.entityLabel}</h3>
-            <div className="mt-1 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 md:text-base">{changeRequest.entityLabel}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-1 md:gap-2">
               <div
                 className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
               >
@@ -552,7 +553,7 @@ const ChangeRequestCard = ({
         </div>
       </div>
 
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
+      <div className="mt-3 space-y-2 text-xs text-gray-600 md:mt-4 md:text-sm">
         <div className="flex justify-between">
           <span>Reference:</span>
           <span className="font-medium">{changeRequest.reference}</span>
@@ -573,16 +574,16 @@ const ChangeRequestCard = ({
         </div>
       </div>
 
-      <div className="mt-3 border-t pt-3">
+      <div className="mt-2 border-t pt-2 md:mt-3 md:pt-3">
         <p className="text-xs text-gray-500">Entity ID: {changeRequest.entityId}</p>
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2 flex gap-2 md:mt-3">
         <button
           onClick={() => onViewDetails(changeRequest)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9]"
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-xs transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#0a0a0a] focus-within:ring-offset-2 hover:border-[#0a0a0a] hover:bg-[#f9f9f9] md:text-sm"
         >
-          <VscEye className="size-4" />
+          <VscEye className="size-3 md:size-4" />
           View Details
         </button>
       </div>
@@ -633,11 +634,11 @@ const ChangeRequestListItem = ({
   const sourceConfig = getSourceConfig(changeRequest.source || 1)
 
   return (
-    <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
-            <span className="text-sm font-semibold text-blue-600">
+    <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 md:p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
+        <div className="flex items-start gap-3 md:items-center md:gap-4">
+          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden md:size-10">
+            <span className="text-xs font-semibold text-blue-600 md:text-sm">
               {changeRequest.requestedBy
                 .split(" ")
                 .map((n) => n[0])
@@ -645,22 +646,25 @@ const ChangeRequestListItem = ({
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{changeRequest.entityLabel}</h3>
-              <div
-                className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
-              >
-                <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
-                {statusConfig.label}
-              </div>
-              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
-              <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                Ref: {changeRequest.reference}
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+              <h3 className="text-sm font-semibold text-gray-900 md:text-base">{changeRequest.entityLabel}</h3>
+              <div className="flex flex-wrap gap-1 md:gap-2">
+                <div
+                  className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
+                >
+                  <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
+                  {statusConfig.label}
+                </div>
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
+                <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                  Ref: {changeRequest.reference}
+                </div>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 md:gap-4 md:text-sm">
               <span>
-                <strong>Requested By:</strong> {changeRequest.requestedBy}
+                <strong className="md:hidden">By:</strong>
+                <strong className="hidden md:inline">Requested By:</strong> {changeRequest.requestedBy}
               </span>
               <span>
                 <strong>Requested:</strong> {formatDate(changeRequest.requestedAtUtc)}
@@ -669,15 +673,15 @@ const ChangeRequestListItem = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
-            <div className="font-medium text-gray-900">Status: {statusConfig.label}</div>
-            <div className="mt-1 text-xs text-gray-500">{sourceConfig.label}</div>
+        <div className="flex items-start justify-between md:items-center md:gap-3">
+          <div className="text-right text-xs md:text-sm">
+            <div className="hidden font-medium text-gray-900 md:block">Status: {statusConfig.label}</div>
+            <div className="hidden text-xs text-gray-500 md:block md:text-sm">{sourceConfig.label}</div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => onViewDetails(changeRequest)} className="button-oulined flex items-center gap-2">
-              <VscEye className="size-4" />
-              View
+              <VscEye className="size-3 md:size-4" />
+              <span className="hidden md:inline">View</span>
             </button>
           </div>
         </div>
@@ -710,23 +714,23 @@ const FilterDropdown = ({
     <div className="relative" data-dropdown-root={dropdownId}>
       <button
         type="button"
-        className="button-oulined flex items-center gap-2"
+        className="button-oulined flex items-center gap-2 text-sm md:text-base"
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <IoMdFunnel />
+        <IoMdFunnel className="size-4 md:size-5" />
         <span>{selectedOption?.label || label}</span>
-        <ChevronDown className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`size-3 text-gray-500 transition-transform md:size-4 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
           <div className="py-1">
             {options.map((option) => (
               <button
                 key={option.value}
-                className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
                   selectedValue === option.value ? "bg-gray-50" : ""
                 }`}
                 onClick={() => {
@@ -763,6 +767,7 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
   const [isSourceOpen, setIsSourceOpen] = useState(false)
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // Fetch change requests for this payment
   useEffect(() => {
@@ -796,6 +801,20 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
       dispatch(clearChangeRequestsByPayment())
     }
   }, [dispatch])
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-dropdown-root="status-filter"]')) {
+        setIsStatusOpen(false)
+      }
+      if (!target.closest('[data-dropdown-root="source-filter"]')) {
+        setIsSourceOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onDocClick)
+    return () => document.removeEventListener("mousedown", onDocClick)
+  }, [])
 
   const handleViewDetails = (changeRequest: ChangeRequestListItemType) => {
     setSelectedChangeRequestId(changeRequest.publicId)
@@ -839,30 +858,96 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
     }
   }
 
+  const getPageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Always show first page
+    items.push(1)
+
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      // Close to the start: show first few pages
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      // Close to the end: show ellipsis then last few pages
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      // In the middle: show ellipsis, surrounding pages, then ellipsis
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    // Always show last page
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Example for early pages on mobile: 1,2,3,...,last
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    // Middle pages: 1, ..., current, ..., last
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    // Near the end: 1, ..., last-2, last-1, last
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
+
   if (changeRequestsByPaymentLoading) {
     return (
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
       >
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
           <CreditCard className="size-5" />
           Change Requests
         </h3>
         <div className="animate-pulse">
-          <div className="mb-4 flex gap-4">
-            <div className="h-10 w-80 rounded bg-gray-200"></div>
-            <div className="flex gap-2">
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:gap-4">
+            <div className="h-9 w-full rounded bg-gray-200 md:h-10 md:w-60"></div>
+            <div className="flex flex-wrap gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+                <div key={i} className="h-9 w-20 rounded bg-gray-200 md:h-10 md:w-24"></div>
               ))}
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-20 rounded bg-gray-200"></div>
+              <div key={i} className="h-16 rounded bg-gray-200 md:h-20"></div>
             ))}
           </div>
         </div>
@@ -876,49 +961,77 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
             <CreditCard className="size-5" />
             Change Requests
           </h3>
-          <button
-            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
-            onClick={() => {
-              /* TODO: Implement CSV export for payment change requests */
-            }}
-            disabled={!changeRequestsByPayment || changeRequestsByPayment.length === 0}
-          >
-            <ExportOutlineIcon className="size-4 text-[#2563EB]" />
-            <p className="text-sm text-[#2563EB]">Export CSV</p>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Mobile search icon button */}
+            <button
+              type="button"
+              className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 md:hidden"
+              onClick={() => setShowMobileSearch((prev) => !prev)}
+              aria-label="Toggle search"
+            >
+              <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
+            </button>
+
+            {/* Desktop/Tablet search input */}
+            <div className="hidden md:block">
+              <SearchModule
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search by reference or requester"
+                className="max-w-[300px]"
+              />
+            </div>
+
+            <button
+              className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+              onClick={() => {
+                /* TODO: Implement CSV export for payment change requests */
+              }}
+              disabled={!changeRequestsByPayment || changeRequestsByPayment.length === 0}
+            >
+              <ExportOutlineIcon className="size-4 text-[#2563EB]" />
+              <p className="hidden text-sm text-[#2563EB] md:block">Export CSV</p>
+            </button>
+          </div>
         </div>
 
-        {/* Filters and Controls */}
-        <div className="mb-6 flex gap-4">
-          <SearchModule
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onCancel={handleCancelSearch}
-            placeholder="Search by reference or requester"
-            className="max-w-[300px]"
-          />
+        {/* Mobile search input revealed when icon is tapped */}
+        {showMobileSearch && (
+          <div className="mb-4 md:hidden">
+            <SearchModule
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onCancel={handleCancelSearch}
+              placeholder="Search by reference or requester"
+              className="w-full"
+            />
+          </div>
+        )}
 
+        {/* Filters and Controls */}
+        <div className="mb-4 flex flex-wrap gap-2 md:mb-6 md:gap-4">
           <div className="flex gap-2">
             <button
               className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
               onClick={() => setViewMode("grid")}
             >
-              <MdGridView />
-              <p>Grid</p>
+              <MdGridView className="size-4 md:size-5" />
+              <p className="text-sm md:text-base">Grid</p>
             </button>
             <button
               className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
               onClick={() => setViewMode("list")}
             >
-              <MdFormatListBulleted />
-              <p>List</p>
+              <MdFormatListBulleted className="size-4 md:size-5" />
+              <p className="text-sm md:text-base">List</p>
             </button>
           </div>
 
@@ -947,16 +1060,22 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
 
         {/* Change Requests Display */}
         {changeRequestsByPaymentError ? (
-          <div className="py-8 text-center">
-            <AlertCircle className="mx-auto mb-4 size-12 text-gray-400" />
+          <div className="py-6 text-center md:py-8">
+            <AlertCircle className="mx-auto mb-4 size-10 text-gray-400 md:size-12" />
             <p className="text-gray-500">Error loading change requests: {changeRequestsByPaymentError}</p>
           </div>
         ) : changeRequestsByPayment.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-gray-500">No change requests found for this payment</p>
+          <div className="flex flex-col items-center justify-center py-6 md:py-8">
+            <div className="text-center">
+              <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
+                <VscEye className="size-5 text-gray-400 md:size-6" />
+              </div>
+              <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No change requests found</h3>
+              <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">No change requests found for this payment</p>
+            </div>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {changeRequestsByPayment.map((changeRequest: ChangeRequestListItemType) => (
               <ChangeRequestCard
                 key={changeRequest.publicId}
@@ -979,13 +1098,13 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
 
         {/* Pagination */}
         {changeRequestsByPayment.length > 0 && (
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <p>Show rows</p>
+          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
+            <div className="flex items-center gap-1 max-sm:hidden">
+              <p className="text-sm md:text-base">Show rows</p>
               <select
                 value={changeRequestsByPaymentPagination.pageSize}
                 onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1"
+                className="bg-[#F2F2F2] p-1 text-sm md:text-base"
               >
                 <option value={6}>6</option>
                 <option value={12}>12</option>
@@ -995,40 +1114,70 @@ const PaymentChangeRequestsSection = ({ paymentId }: { paymentId: number }) => {
               </select>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
               <button
-                className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
+                className={`px-2 py-1 md:px-3 md:py-2 ${
+                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                }`}
                 onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                <BiSolidLeftArrow />
+                <BiSolidLeftArrow className="size-4 md:size-5" />
               </button>
 
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                      currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                    }`}
-                    onClick={() => changePage(index + 1)}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1 md:gap-2">
+                <div className="hidden items-center gap-1 md:flex md:gap-2">
+                  {getPageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
+                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 md:hidden">
+                  {getMobilePageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:w-8 ${
+                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
               </div>
 
               <button
-                className={`px-3 py-2 ${
+                className={`px-2 py-1 md:px-3 md:py-2 ${
                   currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
                 }`}
                 onClick={() => changePage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                <BiSolidRightArrow />
+                <BiSolidRightArrow className="size-4 md:size-5" />
               </button>
             </div>
-            <p>
+            <p className="text-sm max-sm:hidden md:text-base">
               Page {currentPage} of {totalPages} ({totalRecords} total records)
             </p>
           </div>
@@ -1309,14 +1458,16 @@ const PaymentDetailsPage = () => {
 
   if (currentPaymentError || !currentPayment) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-4 md:p-6">
         <div className="flex flex-col justify-center text-center">
-          <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+          <AlertCircle className="mx-auto mb-4 size-12 text-gray-400 md:size-16" />
+          <h1 className="mb-2 text-xl font-bold text-gray-900 md:text-2xl">
             {currentPaymentError ? "Error Loading Payment" : "Payment Not Found"}
           </h1>
-          <p className="mb-6 text-gray-600">{currentPaymentError || "The payment you're looking for doesn't exist."}</p>
-          <ButtonModule variant="primary" onClick={() => router.back()}>
+          <p className="mb-4 text-gray-600 md:mb-6">
+            {currentPaymentError || "The payment you're looking for doesn't exist."}
+          </p>
+          <ButtonModule variant="primary" onClick={() => router.back()} className="w-full md:w-auto">
             Back to Payments
           </ButtonModule>
         </div>
@@ -1329,15 +1480,15 @@ const PaymentDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="mx-auto w-full px-3 py-4 xl:px-16">
+                <div className="flex w-full flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
+                  <div className="flex items-center gap-3 md:gap-4">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-[#f9f9f9]"
+                      className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-[#f9f9f9] md:size-9"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
@@ -1359,21 +1510,21 @@ const PaymentDetailsPage = () => {
                       </svg>
                     </motion.button>
 
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Payment Details</h1>
-                      <p className="text-gray-600">Complete payment overview and information</p>
+                    <div className="flex-1">
+                      <h1 className="text-lg font-bold text-gray-900 md:text-xl lg:text-2xl">Payment Details</h1>
+                      <p className="text-sm text-gray-600 md:text-base">Complete payment overview and information</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <ButtonModule
                       variant="secondary"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-xs md:text-sm"
                       onClick={exportToPDF}
                       disabled={isExporting}
                     >
-                      <ExportOutlineIcon className="size-4" />
+                      <ExportOutlineIcon className="size-3 md:size-4" />
                       {isExporting ? "Exporting..." : "Export PDF"}
                     </ButtonModule>
 
@@ -1383,10 +1534,10 @@ const PaymentDetailsPage = () => {
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 text-xs md:text-sm"
                         onClick={() => openModal("changeRequest")}
                       >
-                        <Edit3 className="size-4" />
+                        <Edit3 className="size-3 md:size-4" />
                         Change Request
                       </ButtonModule>
                     )}
@@ -1395,45 +1546,45 @@ const PaymentDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-6 lg:py-8 xl:px-16">
+              <div className="flex w-full flex-col gap-4 lg:flex-row lg:gap-6">
                 {/* Left Column - Profile & Quick Stats */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                <div className="flex w-full flex-col space-y-4 lg:w-[30%] lg:space-y-6">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-blue-100 text-3xl font-bold text-blue-600">
-                          <CreditCard className="size-8" />
+                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 md:size-20 md:text-3xl">
+                          <CreditCard className="size-6 md:size-8" />
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{currentPayment.reference}</h2>
-                      <p className="mb-4 text-gray-600">Payment #{currentPayment.id}</p>
+                      <h2 className="mb-2 text-lg font-bold text-gray-900 md:text-xl">{currentPayment.reference}</h2>
+                      <p className="mb-4 text-sm text-gray-600 md:text-base">Payment #{currentPayment.id}</p>
 
-                      <div className="mb-6 flex flex-wrap justify-center gap-2">
+                      <div className="mb-4 flex flex-wrap justify-center gap-2 md:mb-6">
                         <StatusBadge status={currentPayment.status} />
                         <PaymentMethodBadge method={currentPayment.channel} />
                       </div>
 
-                      <div className="space-y-3 text-sm">
-                        <div className="flex items-center justify-between text-gray-600">
+                      <div className="space-y-2 text-xs md:space-y-3 md:text-sm">
+                        <div className="flex flex-col items-center justify-between gap-1 text-gray-600 sm:flex-row">
                           <span className="font-medium">Amount:</span>
                           <span className="font-semibold text-gray-900">
                             {formatCurrency(currentPayment.amount, currentPayment.currency)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-gray-600">
+                        <div className="flex flex-col items-center justify-between gap-1 text-gray-600 sm:flex-row">
                           <span className="font-medium">Collector:</span>
                           <CollectorTypeBadge type={currentPayment.collectorType} />
                         </div>
-                        <div className="flex items-center justify-between text-gray-600">
+                        <div className="flex flex-col items-center justify-between gap-1 text-gray-600 sm:flex-row">
                           <span className="font-medium">Paid:</span>
-                          <span className="font-medium">{formatDate(currentPayment.paidAtUtc)}</span>
+                          <span className="font-medium text-gray-900">{formatDate(currentPayment.paidAtUtc)}</span>
                         </div>
                       </div>
                     </div>
@@ -1444,33 +1595,33 @@ const PaymentDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <Zap className="size-5" />
+                    <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-gray-900 md:text-lg">
+                      <Zap className="size-4 md:size-5" />
                       Payment Summary
                     </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Amount Applied</span>
+                    <div className="space-y-3 md:space-y-4">
+                      <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+                        <span className="text-xs text-gray-600 md:text-sm">Amount Applied</span>
                         <span className="font-semibold text-gray-900">
                           {formatCurrency(currentPayment.amountApplied, currentPayment.currency)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Overpayment</span>
+                      <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+                        <span className="text-xs text-gray-600 md:text-sm">Overpayment</span>
                         <span className="font-semibold text-gray-900">
                           {formatCurrency(currentPayment.overPaymentAmount, currentPayment.currency)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Outstanding Before</span>
+                      <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+                        <span className="text-xs text-gray-600 md:text-sm">Outstanding Before</span>
                         <span className="font-semibold text-gray-900">
                           {formatCurrency(currentPayment.outstandingBeforePayment, currentPayment.currency)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Outstanding After</span>
+                      <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+                        <span className="text-xs text-gray-600 md:text-sm">Outstanding After</span>
                         <span className="font-semibold text-gray-900">
                           {formatCurrency(currentPayment.outstandingAfterPayment, currentPayment.currency)}
                         </span>
@@ -1483,61 +1634,63 @@ const PaymentDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <User className="size-5" />
+                    <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-gray-900 md:text-lg">
+                      <User className="size-4 md:size-5" />
                       Customer
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
                         <div className="font-medium text-gray-900">{currentPayment.customerName}</div>
-                        <div className="text-sm text-gray-600">Account: {currentPayment.customerAccountNumber}</div>
+                        <div className="text-xs text-gray-600 md:text-sm">
+                          Account: {currentPayment.customerAccountNumber}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 </div>
 
                 {/* Right Column - Detailed Information */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
+                <div className="flex w-full flex-col space-y-4 lg:w-[70%] lg:space-y-6">
                   {/* Basic Payment Information */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
                       <CreditCard className="size-5" />
                       Payment Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Reference</label>
-                        <p className="font-semibold text-gray-900">{currentPayment.reference}</p>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Reference</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.reference}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Payment Method</label>
-                        <div className="mt-1">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Payment Method</label>
+                        <div className="mt-1 md:mt-2">
                           <PaymentMethodBadge method={currentPayment.channel} />
                         </div>
                       </div>
                     </div>
-                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Status</label>
-                        <div className="mt-1">
+                    <div className="mt-3 grid grid-cols-1 gap-3 md:mt-4 md:grid-cols-3 md:gap-4">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Status</label>
+                        <div className="mt-1 md:mt-2">
                           <StatusBadge status={currentPayment.status} />
                         </div>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Collector Type</label>
-                        <div className="mt-1">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Collector Type</label>
+                        <div className="mt-1 md:mt-2">
                           <CollectorTypeBadge type={currentPayment.collectorType} />
                         </div>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Currency</label>
-                        <p className="font-semibold text-gray-900">{currentPayment.currency}</p>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Currency</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.currency}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -1547,55 +1700,55 @@ const PaymentDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
                       <Zap className="size-5" />
                       Financial Details
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100">
-                            <CreditCard className="size-5 text-blue-600" />
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 md:size-10">
+                            <CreditCard className="size-4 text-blue-600 md:size-5" />
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Total Amount</label>
+                          <div className="flex-1">
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Total Amount</label>
                             <p className="font-semibold text-gray-900">
                               {formatCurrency(currentPayment.amount, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-green-100">
-                            <Zap className="size-5 text-green-600" />
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 md:size-10">
+                            <Zap className="size-4 text-green-600 md:size-5" />
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Amount Applied</label>
+                          <div className="flex-1">
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Amount Applied</label>
                             <p className="font-semibold text-gray-900">
                               {formatCurrency(currentPayment.amountApplied, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-orange-100">
-                            <AlertCircle className="size-5 text-orange-600" />
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-orange-100 md:size-10">
+                            <AlertCircle className="size-4 text-orange-600 md:size-5" />
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Overpayment</label>
+                          <div className="flex-1">
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Overpayment</label>
                             <p className="font-semibold text-gray-900">
                               {formatCurrency(currentPayment.overPaymentAmount, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100">
-                            <Building className="size-5 text-purple-600" />
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 md:size-10">
+                            <Building className="size-4 text-purple-600 md:size-5" />
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Bill Total Due</label>
+                          <div className="flex-1">
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Bill Total Due</label>
                             <p className="font-semibold text-gray-900">
                               {formatCurrency(currentPayment.billTotalDue, currentPayment.currency)}
                             </p>
@@ -1610,20 +1763,22 @@ const PaymentDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
                       <Calendar className="size-5" />
                       Timeline
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Paid At</label>
-                        <p className="font-semibold text-gray-900">{formatDate(currentPayment.paidAtUtc)}</p>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Paid At</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">
+                          {formatDate(currentPayment.paidAtUtc)}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Confirmed At</label>
-                        <p className="font-semibold text-gray-900">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Confirmed At</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">
                           {currentPayment.confirmedAtUtc ? formatDate(currentPayment.confirmedAtUtc) : "Not confirmed"}
                         </p>
                       </div>
@@ -1635,47 +1790,49 @@ const PaymentDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
                       <Building className="size-5" />
                       Additional Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {currentPayment.vendorName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Vendor</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.vendorName}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Vendor</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.vendorName}</p>
                         </div>
                       )}
                       {currentPayment.agentName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Agent</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.agentName}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Agent</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.agentName}</p>
                         </div>
                       )}
                       {currentPayment.areaOfficeName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Area Office</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.areaOfficeName}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Area Office</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.areaOfficeName}</p>
                         </div>
                       )}
                       {currentPayment.feederName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Feeder</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.feederName}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Feeder</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.feederName}</p>
                         </div>
                       )}
                       {currentPayment.postpaidBillPeriod && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Bill Period</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.postpaidBillPeriod}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Bill Period</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.postpaidBillPeriod}
+                          </p>
                         </div>
                       )}
                       {currentPayment.narrative && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Narrative</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.narrative}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Narrative</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.narrative}</p>
                         </div>
                       )}
                     </div>
@@ -1687,28 +1844,34 @@ const PaymentDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                     >
-                      <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
                         <CreditCard className="size-5" />
                         Virtual Account Information
                       </h3>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Account Number</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.virtualAccount.accountNumber}</p>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Account Number</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.virtualAccount.accountNumber}
+                          </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Bank Name</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.virtualAccount.bankName}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Bank Name</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.virtualAccount.bankName}
+                          </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Reference</label>
-                          <p className="font-semibold text-gray-900">{currentPayment.virtualAccount.reference}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Reference</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.virtualAccount.reference}
+                          </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Expires At</label>
-                          <p className="font-semibold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Expires At</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
                             {formatDate(currentPayment.virtualAccount.expiresAtUtc)}
                           </p>
                         </div>

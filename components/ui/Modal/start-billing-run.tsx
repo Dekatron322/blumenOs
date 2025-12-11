@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { finalizeBillingPeriod, finalizeBillingPeriodByAreaOffice } from "lib/redux/postpaidSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { notify } from "components/ui/Notification/Notification"
-import { X, AlertTriangle, AlertCircle, Calendar, Building, Loader2, CheckCircle } from "lucide-react"
+import { AlertCircle, AlertTriangle, Building, Calendar, CheckCircle, Loader2, X } from "lucide-react"
 
 interface StartBillingRunProps {
   isOpen: boolean

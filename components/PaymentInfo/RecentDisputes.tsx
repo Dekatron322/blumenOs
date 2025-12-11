@@ -1,11 +1,16 @@
-import React, { useState } from "react"
-import { motion } from "framer-motion"
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
+import { HiChevronDown, HiChevronUp } from "react-icons/hi"
 
 const RecentDisputes = () => {
   const [searchText, setSearchText] = useState("")
   const [selectedDispute, setSelectedDispute] = useState<any>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(true)
+  const [showMobileActions, setShowMobileActions] = useState(false)
 
   const handleCancelSearch = () => {
     setSearchText("")
@@ -135,19 +140,14 @@ const RecentDisputes = () => {
     setIsDropdownOpen(false)
     setSelectedDispute(null)
 
-    // Handle different actions
     switch (action) {
       case "view":
-        // Navigate to dispute details
         break
       case "update":
-        // Open update modal
         break
       case "assign":
-        // Open assignment modal
         break
       case "resolve":
-        // Open resolution modal
         break
       default:
         break
@@ -162,45 +162,60 @@ const RecentDisputes = () => {
             setSelectedDispute(dispute)
             setIsDropdownOpen(!isDropdownOpen)
           }}
-          className="rounded-lg bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-lg bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 md:px-3 md:py-1 md:text-sm"
+          aria-label="Open actions menu"
         >
-          Actions
+          <span className="hidden md:inline">Actions</span>
+          <span className="md:hidden">...</span>
         </button>
 
         {isDropdownOpen && selectedDispute?.id === dispute.id && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 top-full z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg"
-          >
-            <div className="py-1">
-              <button
-                onClick={() => handleDisputeAction(dispute, "view")}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                View Details
-              </button>
-              <button
-                onClick={() => handleDisputeAction(dispute, "update")}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Update Status
-              </button>
-              <button
-                onClick={() => handleDisputeAction(dispute, "assign")}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Assign to Agent
-              </button>
-              <button
-                onClick={() => handleDisputeAction(dispute, "resolve")}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Mark Resolved
-              </button>
-            </div>
-          </motion.div>
+          <>
+            <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsDropdownOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-lg border border-gray-200 bg-white shadow-lg md:absolute md:right-0 md:top-full md:mt-1 md:w-48 md:rounded-md md:rounded-t-none"
+            >
+              <div className="p-2 md:p-0 md:py-1">
+                <div className="mb-2 flex items-center justify-between border-b pb-2 md:hidden">
+                  <h3 className="text-sm font-medium text-gray-900">Dispute Actions</h3>
+                  <button
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="rounded-full p-1 hover:bg-gray-100"
+                    aria-label="Close menu"
+                  >
+                    <HiChevronDown className="size-4 text-gray-600" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => handleDisputeAction(dispute, "view")}
+                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
+                >
+                  View Details
+                </button>
+                <button
+                  onClick={() => handleDisputeAction(dispute, "update")}
+                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
+                >
+                  Update Status
+                </button>
+                <button
+                  onClick={() => handleDisputeAction(dispute, "assign")}
+                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
+                >
+                  Assign to Agent
+                </button>
+                <button
+                  onClick={() => handleDisputeAction(dispute, "resolve")}
+                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
+                >
+                  Mark Resolved
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
       </div>
     )
@@ -219,257 +234,335 @@ const RecentDisputes = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Auto-hide sidebar on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setShowSidebar(false)
+      } else {
+        setShowSidebar(true)
+      }
+    }
+
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  const DisputeCard = ({ dispute, index }: { dispute: any; index: number }) => (
+    <motion.div
+      key={dispute.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.1 }}
+      className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 transition-all hover:shadow-sm md:p-4"
+    >
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex-1">
+          <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:gap-3">
+            <h4 className="text-sm font-semibold text-gray-900 md:text-base">{dispute.customerName}</h4>
+            <span className="text-xs text-gray-500 md:text-sm">{dispute.accountNumber}</span>
+          </div>
+
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <p className="text-lg font-bold text-gray-900 md:text-xl">{dispute.disputeAmount}</p>
+            <div className="flex flex-wrap gap-1.5">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(dispute.status)}`}>
+                {dispute.status.replace("-", " ")}
+              </span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getPriorityColor(dispute.priority)}`}>
+                {dispute.priority}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2 md:gap-3 lg:grid-cols-3">
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Dispute Type:</p>
+              <span
+                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getDisputeTypeColor(
+                  dispute.disputeType
+                )}`}
+              >
+                {dispute.disputeType.replace("-", " ")}
+              </span>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Payment Method:</p>
+              <span
+                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getPaymentMethodColor(
+                  dispute.paymentMethod
+                )}`}
+              >
+                {dispute.paymentMethod}
+              </span>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Reference:</p>
+              <p className="truncate text-xs font-medium text-gray-900 md:text-sm">{dispute.reference}</p>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Submitted:</p>
+              <p className="text-xs font-medium text-gray-900 md:text-sm">{dispute.submittedDate}</p>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Due Date:</p>
+              <p className="text-xs font-medium text-gray-900 md:text-sm">{dispute.dueDate}</p>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Assigned To:</p>
+              <p className="text-xs font-medium text-blue-600 md:text-sm">{dispute.assignedTo}</p>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <p className="mb-1 text-xs text-gray-500 md:text-sm">Description:</p>
+            <p className="text-xs text-gray-700 md:text-sm">{dispute.description}</p>
+          </div>
+
+          {dispute.resolution && (
+            <div className="mt-2">
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Resolution:</p>
+              <p className="text-xs text-green-600 md:text-sm">{dispute.resolution}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="action-dropdown flex justify-end md:block">
+          <ActionDropdown dispute={dispute} />
+        </div>
+      </div>
+    </motion.div>
+  )
+
+  const StatCard = ({
+    title,
+    items,
+  }: {
+    title: string
+    items: Array<{ label: string; value: string; color: string; count: number }>
+  }) => (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
+      <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">{title}</h3>
+      <div className="space-y-2 md:space-y-3 lg:space-y-4">
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`size-2 rounded-full ${item.color} md:size-3`}></div>
+              <span className="text-xs text-gray-700 md:text-sm">{item.label}</span>
+            </div>
+            <span className={`text-xs font-semibold md:text-sm ${item.color.replace("bg-", "text-")}`}>
+              {item.count} {item.count === 1 ? "dispute" : "disputes"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  const QuickActionsCard = () => (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
+      <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Quick Actions</h3>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2 md:gap-3">
+        <button className="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
+          New Dispute
+        </button>
+        <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
+          Export Reports
+        </button>
+        <button className="col-span-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:col-span-1 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
+          View Analytics
+        </button>
+      </div>
+    </div>
+  )
+
+  const MobileQuickActions = () => (
+    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white shadow-lg ring-1 ring-gray-200 md:hidden">
+      <div className="flex items-center gap-1 p-1">
+        <button
+          onClick={() => setShowMobileActions(!showMobileActions)}
+          className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          aria-label="Quick actions"
+        >
+          <span>Actions</span>
+          {showMobileActions ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
+        </button>
+      </div>
+
+      {showMobileActions && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
+        >
+          <button className="mb-1 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            New Dispute
+          </button>
+          <button className="mb-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Export Reports
+          </button>
+          <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            View Analytics
+          </button>
+        </motion.div>
+      )}
+    </div>
+  )
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-6"
+      className="flex flex-col gap-4 lg:flex-row lg:gap-6"
     >
       {/* Left Column - Disputes List */}
       <div className="flex-1">
-        <div className="rounded-lg border bg-white p-6">
-          <div className="mb-6">
-            <h3 className="mb-2 text-lg font-semibold">Recent Disputes</h3>
-            <SearchModule
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onCancel={handleCancelSearch}
-              placeholder="Search disputes..."
-            />
+        <div className="rounded-lg border bg-white p-3 md:p-4 lg:p-6">
+          <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center justify-between md:block">
+              <h3 className="text-base font-semibold md:text-lg">Recent Disputes</h3>
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
+                aria-label="Toggle sidebar"
+              >
+                <span>Stats</span>
+                {showSidebar ? <HiChevronUp className="size-3" /> : <HiChevronDown className="size-3" />}
+              </button>
+            </div>
+            <div className="flex-1 md:max-w-md">
+              <SearchModule
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search disputes..."
+                className="w-full"
+              />
+            </div>
           </div>
 
           {/* Disputes List */}
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {disputes.map((dispute, index) => (
-              <div key={dispute.id} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 hover:shadow-sm">
-                <div className="flex w-full items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
-                      <h4 className="font-semibold text-gray-900">{dispute.customerName}</h4>
-                      <span className="text-sm text-gray-500">{dispute.accountNumber}</span>
-                    </div>
-
-                    <div className="mb-3 flex items-center gap-3">
-                      <p className="text-xl font-bold text-gray-900">{dispute.disputeAmount}</p>
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(dispute.status)}`}>
-                        {dispute.status.replace("-", " ")}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-medium ${getPriorityColor(dispute.priority)}`}
-                      >
-                        {dispute.priority}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2 lg:grid-cols-3">
-                      <div>
-                        <p className="mb-1 text-gray-500">Dispute Type:</p>
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${getDisputeTypeColor(
-                            dispute.disputeType
-                          )}`}
-                        >
-                          {dispute.disputeType.replace("-", " ")}
-                        </span>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-gray-500">Payment Method:</p>
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${getPaymentMethodColor(
-                            dispute.paymentMethod
-                          )}`}
-                        >
-                          {dispute.paymentMethod}
-                        </span>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-gray-500">Reference:</p>
-                        <p className="font-medium text-gray-900">{dispute.reference}</p>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-gray-500">Submitted:</p>
-                        <p className="font-medium text-gray-900">{dispute.submittedDate}</p>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-gray-500">Due Date:</p>
-                        <p className="font-medium text-gray-900">{dispute.dueDate}</p>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-gray-500">Assigned To:</p>
-                        <p className="font-medium text-blue-600">{dispute.assignedTo}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3">
-                      <p className="mb-1 text-sm text-gray-500">Description:</p>
-                      <p className="text-sm text-gray-700">{dispute.description}</p>
-                    </div>
-
-                    {dispute.resolution && (
-                      <div className="mt-2">
-                        <p className="mb-1 text-sm text-gray-500">Resolution:</p>
-                        <p className="text-sm text-green-600">{dispute.resolution}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="action-dropdown">
-                    <ActionDropdown dispute={dispute} />
-                  </div>
-                </div>
-              </div>
+              <DisputeCard key={dispute.id} dispute={dispute} index={index} />
             ))}
           </div>
         </div>
       </div>
 
       {/* Right Column - Dispute Statistics */}
-      <div className="w-80">
-        <div className="space-y-6">
-          {/* Dispute Summary */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Dispute Summary</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-yellow-500"></div>
-                  <span className="text-sm font-medium text-gray-700">Pending</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">1 dispute</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-blue-500"></div>
-                  <span className="text-sm font-medium text-gray-700">Under Review</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">1 dispute</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm font-medium text-gray-700">Resolved</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">1 dispute</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-red-500"></div>
-                  <span className="text-sm font-medium text-gray-700">Rejected</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">0 disputes</span>
-              </div>
-            </div>
-          </div>
+      <AnimatePresence>
+        {showSidebar && (
+          <motion.div
+            key="sidebar"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="w-full lg:w-80"
+          >
+            <div className="space-y-4 md:space-y-6">
+              {/* Dispute Summary */}
+              <StatCard
+                title="Dispute Summary"
+                items={[
+                  { label: "Pending", value: "pending", color: "bg-yellow-500", count: 1 },
+                  { label: "Under Review", value: "under-review", color: "bg-blue-500", count: 1 },
+                  { label: "Resolved", value: "resolved", color: "bg-green-500", count: 1 },
+                  { label: "Rejected", value: "rejected", color: "bg-red-500", count: 0 },
+                ]}
+              />
 
-          {/* Priority Distribution */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Priority Levels</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-green-500"></div>
-                  <span className="text-gray-600">Low</span>
-                </div>
-                <span className="font-semibold text-green-600">1</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-yellow-500"></div>
-                  <span className="text-gray-600">Medium</span>
-                </div>
-                <span className="font-semibold text-yellow-600">1</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-orange-500"></div>
-                  <span className="text-gray-600">High</span>
-                </div>
-                <span className="font-semibold text-orange-600">1</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-red-500"></div>
-                  <span className="text-gray-600">Critical</span>
-                </div>
-                <span className="font-semibold text-red-600">0</span>
-              </div>
-            </div>
-          </div>
+              {/* Priority Distribution */}
+              <StatCard
+                title="Priority Levels"
+                items={[
+                  { label: "Low", value: "low", color: "bg-green-500", count: 1 },
+                  { label: "Medium", value: "medium", color: "bg-yellow-500", count: 1 },
+                  { label: "High", value: "high", color: "bg-orange-500", count: 1 },
+                  { label: "Critical", value: "critical", color: "bg-red-500", count: 0 },
+                ]}
+              />
 
-          {/* Dispute Types */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Dispute Types</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Double Charge</span>
-                <span className="font-semibold text-red-600">1</span>
+              {/* Dispute Types */}
+              <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
+                <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Dispute Types</h3>
+                <div className="space-y-2 md:space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-600 md:text-sm">Double Charge</span>
+                    <span className="text-xs font-semibold text-red-600 md:text-sm">1</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-600 md:text-sm">Service Not Rendered</span>
+                    <span className="text-xs font-semibold text-orange-600 md:text-sm">1</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-600 md:text-sm">Incorrect Amount</span>
+                    <span className="text-xs font-semibold text-blue-600 md:text-sm">1</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-600 md:text-sm">Unauthorized</span>
+                    <span className="text-xs font-semibold text-purple-600 md:text-sm">0</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Service Not Rendered</span>
-                <span className="font-semibold text-orange-600">1</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Incorrect Amount</span>
-                <span className="font-semibold text-blue-600">1</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Unauthorized</span>
-                <span className="font-semibold text-purple-600">0</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Recent Activity */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Last Submitted</span>
-                  <span className="font-semibold text-blue-600">16:45</span>
+              {/* Recent Activity */}
+              <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
+                <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Recent Activity</h3>
+                <div className="space-y-2 md:space-y-3">
+                  <div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-gray-600 md:text-sm">Last Submitted</span>
+                      <span className="text-xs font-semibold text-blue-600 md:text-sm">16:45</span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-gray-500">Fatima Hassan - ₦425</p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-gray-600 md:text-sm">Last Resolved</span>
+                      <span className="text-xs font-semibold text-green-600 md:text-sm">15:30</span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-gray-500">Michael Johnson - ₦320</p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-gray-600 md:text-sm">Total Today</span>
+                      <span className="text-xs font-semibold text-gray-600 md:text-sm">3</span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-gray-500">dispute submissions</p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500">Fatima Hassan - ₦425</p>
               </div>
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Last Resolved</span>
-                  <span className="font-semibold text-green-600">15:30</span>
-                </div>
-                <p className="text-xs text-gray-500">Michael Johnson - ₦320</p>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total Today</span>
-                  <span className="font-semibold text-gray-600">3</span>
-                </div>
-                <p className="text-xs text-gray-500">dispute submissions</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
-            <div className="space-y-2">
-              <button className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                New Dispute
-              </button>
-              <button className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Export Reports
-              </button>
-              <button className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                View Analytics
-              </button>
+              {/* Quick Actions - Desktop */}
+              <div className="hidden md:block">
+                <QuickActionsCard />
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Quick Actions Button */}
+      <MobileQuickActions />
+
+      {/* Mobile Toggle Sidebar Button */}
+      <button
+        onClick={() => setShowSidebar(!showSidebar)}
+        className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:bg-blue-700 lg:hidden"
+        aria-label="Toggle sidebar"
+      >
+        <span>{showSidebar ? "Hide" : "Show"} Stats</span>
+        {showSidebar ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
+      </button>
     </motion.div>
   )
 }

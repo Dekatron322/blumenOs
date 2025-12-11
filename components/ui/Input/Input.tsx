@@ -17,6 +17,7 @@ interface FormInputProps {
   min?: string | number
   max?: string | number
   step?: string | number
+  prefix?: React.ReactNode
 }
 
 export const FormInputModule: React.FC<FormInputProps> = ({
@@ -34,6 +35,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
   min,
   max,
   step,
+  prefix,
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
@@ -52,6 +54,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
         transition-all duration-200
       `}
       >
+        {prefix && <span className="mr-2 text-sm text-gray-500">{prefix}</span>}
         <input
           type={type}
           placeholder={placeholder}

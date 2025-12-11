@@ -1,4 +1,3 @@
-// components/ui/Modal/view-customer-change-request-modal.tsx
 "use client"
 
 import React, { useState } from "react"
@@ -7,6 +6,7 @@ import { ButtonModule } from "../Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { approveChangeRequest, declineChangeRequest, fetchChangeRequestDetails } from "lib/redux/paymentSlice"
+import CloseIcon from "public/close-icon"
 
 interface ViewCustomerChangeRequestModalProps {
   isOpen: boolean
@@ -223,6 +223,13 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
     if (React.isValidElement(val)) return val
     if (typeof val === "boolean") return val ? "Yes" : "No"
     if (typeof val === "object") return JSON.stringify(val)
+    if (typeof val === "number") {
+      // Format currency values
+      if (val >= 1000) {
+        return `₦${val.toLocaleString()}`
+      }
+      return val.toString()
+    }
     return String(val)
   }
 
@@ -233,7 +240,7 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-3 backdrop-blur-sm sm:p-4"
       onClick={onRequestClose}
     >
       <motion.div
@@ -241,18 +248,17 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative flex h-[90vh] w-[70vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-4 sm:p-6">
           <h2 className="text-xl font-bold text-gray-900">Payment Change Request Details</h2>
           <button
             onClick={onRequestClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            aria-label="Close modal"
           >
-            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon />
           </button>
         </div>
 
@@ -265,6 +271,7 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
+                  aria-label="Loading"
                 >
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path
@@ -277,37 +284,41 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
               </div>
             </div>
           ) : changeRequestDetails ? (
-            <div className="p-6">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
                 <div className="space-y-4">
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
                     <h3 className="mb-3 text-lg font-semibold text-gray-900">Basic Information</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Reference:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.reference}</span>
+                        <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                          {changeRequestDetails.reference}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Status:</span>
                         <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${
+                          className={`inline-flex w-fit rounded-full px-2 py-1 text-xs font-medium ${
                             getStatusConfig(changeRequestDetails.status).bg
                           } ${getStatusConfig(changeRequestDetails.status).color}`}
                         >
                           {getStatusConfig(changeRequestDetails.status).label}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Source:</span>
                         <span className={`text-sm font-semibold ${getSourceConfig(changeRequestDetails.source).color}`}>
                           {getSourceConfig(changeRequestDetails.source).label}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Entity:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.entityLabel}</span>
+                        <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                          {changeRequestDetails.entityLabel}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Entity Type:</span>
                         <span className="text-sm font-semibold text-gray-900">
                           {changeRequestDetails.entityType === 1 ? "Customer" : "Other"}
@@ -319,20 +330,24 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
                     <h3 className="mb-3 text-lg font-semibold text-gray-900">Request Information</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Requested By:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.requestedBy}</span>
+                        <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                          {changeRequestDetails.requestedBy}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Requested At:</span>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
                           {formatDate(changeRequestDetails.requestedAtUtc)}
                         </span>
                       </div>
                       {changeRequestDetails.requesterComment && (
                         <div>
                           <span className="text-sm font-medium text-gray-600">Requester Comment:</span>
-                          <p className="mt-1 text-sm text-gray-700">{changeRequestDetails.requesterComment}</p>
+                          <p className="mt-1 break-words text-sm text-gray-700">
+                            {changeRequestDetails.requesterComment}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -343,22 +358,24 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
                     <h3 className="mb-3 text-lg font-semibold text-gray-900">Approval Information</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Auto Approved:</span>
                         <span className="text-sm font-semibold text-gray-900">
                           {changeRequestDetails.autoApproved ? "Yes" : "No"}
                         </span>
                       </div>
                       {changeRequestDetails.approvedBy && (
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <span className="text-sm font-medium text-gray-600">Approved By:</span>
-                          <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.approvedBy}</span>
+                          <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                            {changeRequestDetails.approvedBy}
+                          </span>
                         </div>
                       )}
                       {changeRequestDetails.approvedAtUtc && (
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <span className="text-sm font-medium text-gray-600">Approved At:</span>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
                             {formatDate(changeRequestDetails.approvedAtUtc)}
                           </span>
                         </div>
@@ -366,13 +383,13 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                       {changeRequestDetails.approvalNotes && (
                         <div>
                           <span className="text-sm font-medium text-gray-600">Approval Notes:</span>
-                          <p className="mt-1 text-sm text-gray-700">{changeRequestDetails.approvalNotes}</p>
+                          <p className="mt-1 break-words text-sm text-gray-700">{changeRequestDetails.approvalNotes}</p>
                         </div>
                       )}
                       {changeRequestDetails.declinedReason && (
                         <div>
                           <span className="text-sm font-medium text-gray-600">Declined Reason:</span>
-                          <p className="mt-1 text-sm text-red-600">{changeRequestDetails.declinedReason}</p>
+                          <p className="mt-1 break-words text-sm text-red-600">{changeRequestDetails.declinedReason}</p>
                         </div>
                       )}
                     </div>
@@ -381,18 +398,22 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
                     <h3 className="mb-3 text-lg font-semibold text-gray-900">System Information</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Public ID:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.publicId}</span>
+                        <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                          {changeRequestDetails.publicId}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-medium text-gray-600">Entity ID:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.entityId}</span>
+                        <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                          {changeRequestDetails.entityId}
+                        </span>
                       </div>
                       {changeRequestDetails.appliedAtUtc && (
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <span className="text-sm font-medium text-gray-600">Applied At:</span>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
                             {formatDate(changeRequestDetails.appliedAtUtc)}
                           </span>
                         </div>
@@ -400,21 +421,23 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                       {changeRequestDetails.failureReason && (
                         <div>
                           <span className="text-sm font-medium text-gray-600">Failure Reason:</span>
-                          <p className="mt-1 text-sm text-red-600">{changeRequestDetails.failureReason}</p>
+                          <p className="mt-1 break-words text-sm text-red-600">{changeRequestDetails.failureReason}</p>
                         </div>
                       )}
                       {changeRequestDetails.disputeType !== null && (
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <span className="text-sm font-medium text-gray-600">Dispute Type:</span>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
                             {changeRequestDetails.disputeType}
                           </span>
                         </div>
                       )}
                       {changeRequestDetails.disputeId !== null && (
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <span className="text-sm font-medium text-gray-600">Dispute ID:</span>
-                          <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.disputeId}</span>
+                          <span className="break-all text-sm font-semibold text-gray-900 sm:text-right">
+                            {changeRequestDetails.disputeId}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -431,8 +454,9 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                     placeholder="Enter any notes or comments about this approval..."
                     className="w-full rounded-lg border border-blue-300 bg-white p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     rows={4}
+                    aria-label="Approval notes"
                   />
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <ButtonModule
                       variant="secondary"
                       className="flex-1"
@@ -469,8 +493,9 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                     placeholder="Enter the reason for declining this change request..."
                     className="w-full rounded-lg border border-red-300 bg-white p-3 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200"
                     rows={4}
+                    aria-label="Decline reason"
                   />
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <ButtonModule
                       variant="secondary"
                       className="flex-1"
@@ -515,13 +540,13 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                               <span className="text-sm font-medium text-gray-600">Current Value:</span>
-                              <p className="mt-1 rounded border bg-white p-2 text-sm text-gray-700">
+                              <p className="mt-1 break-words rounded border bg-white p-2 text-sm text-gray-700">
                                 {renderValue(changes.from)}
                               </p>
                             </div>
                             <div>
                               <span className="text-sm font-medium text-gray-600">New Value:</span>
-                              <p className="mt-1 rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
+                              <p className="mt-1 break-words rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
                                 {renderValue(changes.to)}
                               </p>
                             </div>
@@ -537,13 +562,13 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
                           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                               <span className="text-sm font-medium text-gray-600">Current Value:</span>
-                              <p className="mt-1 rounded border bg-white p-2 text-sm text-gray-700">
+                              <p className="mt-1 break-words rounded border bg-white p-2 text-sm text-gray-700">
                                 {renderValue(change.from)}
                               </p>
                             </div>
                             <div>
                               <span className="text-sm font-medium text-gray-600">New Value:</span>
-                              <p className="mt-1 rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
+                              <p className="mt-1 break-words rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
                                 {renderValue(change.value)}
                               </p>
                             </div>
@@ -567,8 +592,8 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
           )}
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
+        <div className="flex flex-col gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:p-6">
+          <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={onRequestClose}>
             Close
           </ButtonModule>
           {changeRequestDetails?.status === 0 && (
@@ -576,8 +601,8 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
               <ButtonModule
                 type="button"
                 variant="primary"
-                className="flex-1"
-                size="lg"
+                className="flex w-full"
+                size="md"
                 onClick={handleApproveClick}
                 disabled={approveChangeRequestLoading}
               >
@@ -585,8 +610,8 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
               </ButtonModule>
               <ButtonModule
                 variant="danger"
-                className="flex-1"
-                size="lg"
+                className="flex w-full"
+                size="md"
                 onClick={handleDeclineClick}
                 disabled={declineChangeRequestLoading}
               >

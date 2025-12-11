@@ -188,7 +188,7 @@ const LoadingSkeleton = () => {
       <div className="flex min-h-screen w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto px-4 py-8 max-sm:px-2 lg:px-16">
+          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Payment Management</h4>
@@ -458,7 +458,7 @@ const AllPayments: React.FC = () => {
       <div className="flex min-h-screen w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto px-4 py-8 max-sm:px-2 lg:px-16">
+          <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-3 xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Payment Management</h4>
@@ -475,7 +475,7 @@ const AllPayments: React.FC = () => {
                   variant="primary"
                   size="md"
                   icon={<PlusIcon />}
-                  onClick={() => setIsAddPaymentModalOpen(true)}
+                  onClick={() => router.push("/payment/record-payment")}
                 >
                   Process Payment
                 </ButtonModule>
@@ -681,12 +681,12 @@ const AllPayments: React.FC = () => {
                                       </div>
                                     </td>
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ActionDropdown
-                                        payment={payment}
-                                        onViewDetails={(payment) =>
-                                          router.push(`/payment/payment-detail/${payment.id}`)
-                                        }
-                                      />
+                                      <ButtonModule
+                                        size="sm"
+                                        onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
+                                      >
+                                        View Details
+                                      </ButtonModule>
                                     </td>
                                   </motion.tr>
                                 ))}

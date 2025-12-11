@@ -1,4 +1,3 @@
-// src/app/dashboard/dunning/add/page.tsx
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -586,16 +585,18 @@ const AddDunningCasePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container xl:px-16">
             {/* Page Header */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
-              <div>
-                <h4 className="text-2xl font-semibold">Create New Dunning Case</h4>
-                <p className="text-gray-600">Create a new payment dunning case for overdue payments</p>
+            <div className="flex w-full flex-col justify-between gap-4  sm:flex-row sm:items-center  md:my-8 ">
+              <div className="flex flex-col">
+                <h4 className="text-xl font-semibold sm:text-2xl">Create New Dunning Case</h4>
+                <p className="text-sm text-gray-600 sm:text-base">
+                  Create a new payment dunning case for overdue payments
+                </p>
               </div>
 
               <motion.div
-                className="flex items-center justify-end gap-3"
+                className="flex flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
@@ -611,55 +612,57 @@ const AddDunningCasePage = () => {
                   icon={<AddIcon />}
                   iconPosition="start"
                 >
-                  {creating ? "Creating Case..." : "Create Dunning Case"}
+                  {creating ? "Creating..." : "Create Case"}
                 </ButtonModule>
               </motion.div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
-              <div className="w-full">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="rounded-lg bg-white p-6 shadow-sm"
-                >
-                  {/* Form Header */}
-                  <div className="mb-6 border-b pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Dunning Case Information</h3>
-                    <p className="text-sm text-gray-600">Fill in all required fields to create a new dunning case</p>
-                  </div>
+            <div className="w-full   ">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-lg bg-white p-4 shadow-sm sm:p-6"
+              >
+                {/* Form Header */}
+                <div className="mb-6 border-b pb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Dunning Case Information</h3>
+                  <p className="text-sm text-gray-600">Fill in all required fields to create a new dunning case</p>
+                </div>
 
-                  {/* Dunning Case Form */}
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Section 1: Reference Selection */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                      <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Reference Selection</h4>
-                        <p className="text-sm text-gray-600">Select how you want to identify the overdue payment</p>
-                      </div>
+                {/* Dunning Case Form */}
+                <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                  {/* Section 1: Reference Selection */}
+                  <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-4">
+                      <h4 className="text-lg font-medium text-gray-900">Reference Selection</h4>
+                      <p className="text-sm text-gray-600">Select how you want to identify the overdue payment</p>
+                    </div>
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormSelectModule
-                          label="Create Dunning Case By"
-                          name="identifierType"
-                          value={identifierType}
-                          onChange={({ target }) => {
-                            const value = target.value as "postpaidBill" | "customer"
-                            setIdentifierType(value)
-                            setFormErrors((prev) => ({ ...prev, paymentReference: "", customerReference: "" }))
-                            setPaymentReference("")
-                            setCustomerReference("")
-                            setBillInfo(null)
-                            setCustomerInfo(null)
-                            setSelectedBill(null)
-                          }}
-                          options={[
-                            { value: "postpaidBill", label: "Postpaid Bill Reference" },
-                            { value: "customer", label: "Customer Reference" },
-                          ]}
-                        />
+                    <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <FormSelectModule
+                            label="Create Dunning Case By"
+                            name="identifierType"
+                            value={identifierType}
+                            onChange={({ target }) => {
+                              const value = target.value as "postpaidBill" | "customer"
+                              setIdentifierType(value)
+                              setFormErrors((prev) => ({ ...prev, paymentReference: "", customerReference: "" }))
+                              setPaymentReference("")
+                              setCustomerReference("")
+                              setBillInfo(null)
+                              setCustomerInfo(null)
+                              setSelectedBill(null)
+                            }}
+                            options={[
+                              { value: "postpaidBill", label: "Postpaid Bill Reference" },
+                              { value: "customer", label: "Customer Reference" },
+                            ]}
+                          />
+                        </div>
 
                         {identifierType === "postpaidBill" && (
                           <div className="space-y-2">
@@ -673,10 +676,11 @@ const AddDunningCasePage = () => {
                               error={formErrors.paymentReference}
                               required
                             />
-                            <div className="flex gap-2">
+                            <div className="flex flex-col gap-2 sm:flex-row">
                               <ButtonModule
                                 variant="outline"
                                 size="sm"
+                                className="w-full sm:w-auto"
                                 onClick={validatePaymentReference}
                                 disabled={
                                   !paymentReference.trim() || isValidatingReference || currentBillByReferenceLoading
@@ -691,6 +695,7 @@ const AddDunningCasePage = () => {
                                 <ButtonModule
                                   variant="dangerSecondary"
                                   size="sm"
+                                  className="w-full sm:w-auto"
                                   onClick={() => {
                                     setPaymentReference("")
                                     setBillInfo(null)
@@ -709,274 +714,158 @@ const AddDunningCasePage = () => {
                             </div>
                           </div>
                         )}
+                      </div>
 
-                        {identifierType === "customer" && (
-                          <div className="space-y-2">
-                            <FormInputModule
-                              label="Customer Reference"
-                              name="customerReference"
-                              type="text"
-                              placeholder="Enter customer reference (account number)"
-                              value={customerReference}
-                              onChange={(e) => setCustomerReference(e.target.value)}
-                              error={formErrors.customerReference}
-                              required
-                            />
-                            <div className="flex gap-2">
+                      {identifierType === "customer" && (
+                        <div className="space-y-2">
+                          <FormInputModule
+                            label="Customer Reference"
+                            name="customerReference"
+                            type="text"
+                            placeholder="Enter customer reference (account number)"
+                            value={customerReference}
+                            onChange={(e) => setCustomerReference(e.target.value)}
+                            error={formErrors.customerReference}
+                            required
+                          />
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={validateCustomerReference}
+                              disabled={!customerReference.trim() || isValidatingCustomer || customerLookupLoading}
+                              type="button"
+                            >
+                              {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Validate Customer"}
+                            </ButtonModule>
+                            {customerInfo && (
                               <ButtonModule
-                                variant="outline"
+                                variant="dangerSecondary"
                                 size="sm"
-                                onClick={validateCustomerReference}
-                                disabled={!customerReference.trim() || isValidatingCustomer || customerLookupLoading}
+                                className="w-full sm:w-auto"
+                                onClick={() => {
+                                  setCustomerReference("")
+                                  setCustomerInfo(null)
+                                  setSelectedBill(null)
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    customerId: 0,
+                                    postpaidBillId: 0,
+                                    outstandingAmount: 0,
+                                  }))
+                                }}
                                 type="button"
                               >
-                                {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Validate Customer"}
+                                Clear
                               </ButtonModule>
-                              {customerInfo && (
-                                <ButtonModule
-                                  variant="dangerSecondary"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCustomerReference("")
-                                    setCustomerInfo(null)
-                                    setSelectedBill(null)
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      customerId: 0,
-                                      postpaidBillId: 0,
-                                      outstandingAmount: 0,
-                                    }))
-                                  }}
-                                  type="button"
-                                >
-                                  Clear
-                                </ButtonModule>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {/* Bill Information Display */}
-                        {billInfo && identifierType === "postpaidBill" && (
-                          <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 md:grid-cols-2">
-                            <div>
-                              <h5 className="font-medium text-blue-800">Bill Information</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Customer:</strong> {billInfo.customerName}
-                                </p>
-                                <p>
-                                  <strong>Account No:</strong> {billInfo.customerAccountNumber}
-                                </p>
-                                <p>
-                                  <strong>Billing Period:</strong> {billInfo.period}
-                                </p>
-                              </div>
-                            </div>
-                            <div>
-                              <h5 className="font-medium text-blue-800">Payment Details</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Total Due:</strong> ₦{billInfo.totalDue.toLocaleString()}
-                                </p>
-                                <p>
-                                  <strong>Outstanding:</strong> ₦{billInfo.outstandingAmount.toLocaleString()}
-                                </p>
-                                <p>
-                                  <strong>Status:</strong> {getStatusText(billInfo.status)}
-                                </p>
-                                <p>
-                                  <strong>Bill ID:</strong> {billInfo.id}
-                                </p>
-                              </div>
+                      {/* Bill Information Display */}
+                      {billInfo && identifierType === "postpaidBill" && (
+                        <div className="grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 sm:grid-cols-2">
+                          <div>
+                            <h5 className="font-medium text-blue-800">Bill Information</h5>
+                            <div className="mt-2 space-y-1 text-sm text-blue-700">
+                              <p>
+                                <strong>Customer:</strong> {billInfo.customerName}
+                              </p>
+                              <p>
+                                <strong>Account No:</strong> {billInfo.customerAccountNumber}
+                              </p>
+                              <p>
+                                <strong>Billing Period:</strong> {billInfo.period}
+                              </p>
                             </div>
                           </div>
-                        )}
+                          <div>
+                            <h5 className="font-medium text-blue-800">Payment Details</h5>
+                            <div className="mt-2 space-y-1 text-sm text-blue-700">
+                              <p>
+                                <strong>Total Due:</strong> ₦{billInfo.totalDue.toLocaleString()}
+                              </p>
+                              <p>
+                                <strong>Outstanding:</strong> ₦{billInfo.outstandingAmount.toLocaleString()}
+                              </p>
+                              <p>
+                                <strong>Status:</strong> {getStatusText(billInfo.status)}
+                              </p>
+                              <p>
+                                <strong>Bill ID:</strong> {billInfo.id}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
-                        {/* Customer Information Display */}
-                        {customerInfo && identifierType === "customer" && (
-                          <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 md:grid-cols-2">
-                            <div>
-                              <h5 className="font-medium text-blue-800">Customer Information</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Name:</strong> {customerInfo.fullName}
-                                </p>
-                                <p>
-                                  <strong>Account No:</strong> {customerInfo.accountNumber}
-                                </p>
-                                <p>
-                                  <strong>Phone:</strong> {customerInfo.phoneNumber}
-                                </p>
-                                <p>
-                                  <strong>Email:</strong> {customerInfo.email}
-                                </p>
-                              </div>
-                            </div>
-                            <div>
-                              <h5 className="font-medium text-blue-800">Account Details</h5>
-                              <div className="mt-2 space-y-1 text-sm text-blue-700">
-                                <p>
-                                  <strong>Status:</strong>{" "}
-                                  {getCustomerStatusText(customerInfo.status, customerInfo.isSuspended)}
-                                </p>
-                                <p>
-                                  <strong>Area Office:</strong> {customerInfo.areaOfficeName}
-                                </p>
-                                <p>
-                                  <strong>Feeder:</strong> {customerInfo.feederName}
-                                </p>
-                                <p>
-                                  <strong>Outstanding Balance:</strong> ₦
-                                  {customerInfo.customerOutstandingDebtBalance.toLocaleString()}
-                                </p>
-                              </div>
+                      {/* Customer Information Display */}
+                      {customerInfo && identifierType === "customer" && (
+                        <div className="grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 sm:grid-cols-2">
+                          <div>
+                            <h5 className="font-medium text-blue-800">Customer Information</h5>
+                            <div className="mt-2 space-y-1 text-sm text-blue-700">
+                              <p>
+                                <strong>Name:</strong> {customerInfo.fullName}
+                              </p>
+                              <p>
+                                <strong>Account No:</strong> {customerInfo.accountNumber}
+                              </p>
+                              <p>
+                                <strong>Phone:</strong> {customerInfo.phoneNumber}
+                              </p>
+                              <p>
+                                <strong>Email:</strong> {customerInfo.email}
+                              </p>
                             </div>
                           </div>
-                        )}
-                      </div>
+                          <div>
+                            <h5 className="font-medium text-blue-800">Account Details</h5>
+                            <div className="mt-2 space-y-1 text-sm text-blue-700">
+                              <p>
+                                <strong>Status:</strong>{" "}
+                                {getCustomerStatusText(customerInfo.status, customerInfo.isSuspended)}
+                              </p>
+                              <p>
+                                <strong>Area Office:</strong> {customerInfo.areaOfficeName}
+                              </p>
+                              <p>
+                                <strong>Feeder:</strong> {customerInfo.feederName}
+                              </p>
+                              <p>
+                                <strong>Outstanding Balance:</strong> ₦
+                                {customerInfo.customerOutstandingDebtBalance?.toLocaleString() ?? "0"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  </div>
 
-                    {/* Section 2: Bill Selection (for customer type) */}
-                    {identifierType === "customer" && customerInfo && (
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Bill Selection</h4>
-                          <p className="text-sm text-gray-600">Select the overdue bill for this dunning case</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormSelectModule
-                            label="Select Postpaid Bill"
-                            name="postpaidBillId"
-                            value={formData.postpaidBillId}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: 0, label: billsLoading ? "Loading bills..." : "Select a bill" },
-                              ...billOptions,
-                            ]}
-                            error={formErrors.postpaidBillId}
-                            required
-                            disabled={billsLoading || billOptions.length === 0}
-                          />
-
-                          <FormInputModule
-                            label="Outstanding Amount"
-                            name="outstandingAmount"
-                            type="number"
-                            placeholder="Outstanding amount"
-                            value={formData.outstandingAmount}
-                            onChange={handleInputChange}
-                            error={formErrors.outstandingAmount}
-                            required
-                            min="0.01"
-                            step="0.01"
-                            disabled={true} // Auto-populated from selected bill
-                          />
-
-                          {/* Selected Bill Information */}
-                          {selectedBill && (
-                            <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-green-200 bg-green-50 p-4 md:grid-cols-2">
-                              <div>
-                                <h5 className="font-medium text-green-800">Selected Bill Details</h5>
-                                <div className="mt-2 space-y-1 text-sm text-green-700">
-                                  <p>
-                                    <strong>Reference:</strong> {selectedBill.reference}
-                                  </p>
-                                  <p>
-                                    <strong>Billing Period:</strong> {selectedBill.period}
-                                  </p>
-                                  <p>
-                                    <strong>Due Date:</strong> {new Date(selectedBill.dueDate).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div>
-                                <h5 className="font-medium text-green-800">Payment Status</h5>
-                                <div className="mt-2 space-y-1 text-sm text-green-700">
-                                  <p>
-                                    <strong>Total Due:</strong> ₦{selectedBill.totalDue.toLocaleString()}
-                                  </p>
-                                  <p>
-                                    <strong>Total Paid:</strong> ₦{selectedBill.totalPaid.toLocaleString()}
-                                  </p>
-                                  <p>
-                                    <strong>Outstanding:</strong> ₦{selectedBill.outstandingAmount.toLocaleString()}
-                                  </p>
-                                  <p>
-                                    <strong>Status:</strong> {getStatusText(selectedBill.status)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {billOptions.length === 0 && customerInfo && !billsLoading && (
-                            <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 p-4">
-                              <div className="flex">
-                                <div className="shrink-0">
-                                  <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                </div>
-                                <div className="ml-3">
-                                  <h3 className="text-sm font-medium text-amber-800">No overdue bills found</h3>
-                                  <div className="mt-2 text-sm text-amber-700">
-                                    <p>This customer doesn&apos;t have any bills with outstanding amounts.</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Section 3: Dunning Case Details */}
-                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
+                  {/* Section 2: Bill Selection (for customer type) */}
+                  {identifierType === "customer" && customerInfo && (
+                    <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
                       <div className="border-b pb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Dunning Case Details</h4>
-                        <p className="text-sm text-gray-600">Configure the dunning case parameters</p>
+                        <h4 className="text-lg font-medium text-gray-900">Bill Selection</h4>
+                        <p className="text-sm text-gray-600">Select the overdue bill for this dunning case</p>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-4 sm:gap-6 ">
                         <FormSelectModule
-                          label="Dunning Stage"
-                          name="stage"
-                          value={getStageNumericValue(formData.stage)}
-                          onChange={handleInputChange}
-                          options={[{ value: "", label: "Select dunning stage" }, ...stageOptions]}
-                          error={formErrors.stage}
-                          required
-                        />
-
-                        <FormSelectModule
-                          label="Assigned To"
-                          name="assignedToUserId"
-                          value={formData.assignedToUserId}
+                          label="Select Postpaid Bill"
+                          name="postpaidBillId"
+                          value={formData.postpaidBillId}
                           onChange={handleInputChange}
                           options={[
-                            { value: 0, label: agentsLoading ? "Loading agents..." : "Select assigned user" },
-                            ...agentOptions,
+                            { value: 0, label: billsLoading ? "Loading bills..." : "Select a bill" },
+                            ...billOptions,
                           ]}
-                          error={formErrors.assignedToUserId}
+                          error={formErrors.postpaidBillId}
                           required
-                          disabled={agentsLoading}
-                        />
-
-                        <FormInputModule
-                          label="Next Action Due Date & Time"
-                          name="nextActionDueAtUtc"
-                          type="datetime-local"
-                          value={formData.nextActionDueAtUtc}
-                          onChange={handleInputChange}
-                          error={formErrors.nextActionDueAtUtc}
-                          required
-                          placeholder={""}
+                          disabled={billsLoading || billOptions.length === 0}
                         />
 
                         <FormInputModule
@@ -990,121 +879,245 @@ const AddDunningCasePage = () => {
                           required
                           min="0.01"
                           step="0.01"
-                          disabled={
-                            identifierType === "postpaidBill" ||
-                            (identifierType === "customer" && selectedBill !== null)
-                          }
+                          disabled={true} // Auto-populated from selected bill
                         />
 
-                        <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm text-[#2a2f4b]">
-                            Case Notes
-                            <span className="text-red-500"> *</span>
-                          </label>
-                          <div
-                            className={`
-      rounded-md border px-3 py-2
-      ${formErrors.notes ? "border-[#D14343]" : "border-[#E0E0E0]"}
-      bg-[#F9F9F9]
-    `}
-                          >
-                            <textarea
-                              name="notes"
-                              placeholder="Enter detailed notes about this dunning case (minimum 10 characters)"
-                              value={formData.notes}
-                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                                handleInputChange({
-                                  target: { name: "notes", value: e.target.value },
-                                })
-                              }
-                              rows={4}
-                              required
-                              className="w-full resize-y bg-transparent text-base outline-none"
-                              aria-invalid={!!formErrors.notes}
-                              aria-describedby={formErrors.notes ? "notes-error" : undefined}
-                            />
-                          </div>
-                          {formErrors.notes && (
-                            <p id="notes-error" className="mt-1 text-xs text-[#D14343]">
-                              {formErrors.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Error Summary */}
-                    {Object.values(formErrors).some((e) => e) && (
-                      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          {Object.values(formErrors).some((e) => e) && (
-                            <div className="ml-3">
-                              <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
-                              <div className="mt-2 text-sm text-amber-700">
-                                <ul className="list-disc space-y-1 pl-5">
-                                  {Object.values(formErrors)
-                                    .filter(Boolean)
-                                    .map((error, index) => (
-                                      <li key={index}>{error}</li>
-                                    ))}
-                                </ul>
+                        {/* Selected Bill Information */}
+                        {selectedBill && (
+                          <div className="grid grid-cols-1 gap-4 rounded-lg border border-green-200 bg-green-50 p-4 sm:grid-cols-2">
+                            <div>
+                              <h5 className="font-medium text-green-800">Selected Bill Details</h5>
+                              <div className="mt-2 space-y-1 text-sm text-green-700">
+                                <p>
+                                  <strong>Reference:</strong> {selectedBill.reference}
+                                </p>
+                                <p>
+                                  <strong>Billing Period:</strong> {selectedBill.period}
+                                </p>
+                                <p>
+                                  <strong>Due Date:</strong> {new Date(selectedBill.dueDate).toLocaleDateString()}
+                                </p>
                               </div>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Success Message */}
-                    {createSuccess && (
-                      <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
-                        <div className="flex">
-                          <div className="shrink-0">
-                            <svg className="size-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-emerald-800">Dunning case created successfully!</h3>
-                            <div className="mt-2 text-sm text-emerald-700">
-                              <p>Redirecting to dunning cases list...</p>
+                            <div>
+                              <h5 className="font-medium text-green-800">Payment Status</h5>
+                              <div className="mt-2 space-y-1 text-sm text-green-700">
+                                <p>
+                                  <strong>Total Due:</strong> ₦{selectedBill.totalDue.toLocaleString()}
+                                </p>
+                                <p>
+                                  <strong>Total Paid:</strong> ₦{selectedBill.totalPaid.toLocaleString()}
+                                </p>
+                                <p>
+                                  <strong>Outstanding:</strong> ₦{selectedBill.outstandingAmount.toLocaleString()}
+                                </p>
+                                <p>
+                                  <strong>Status:</strong> {getStatusText(selectedBill.status)}
+                                </p>
+                              </div>
                             </div>
                           </div>
+                        )}
+
+                        {billOptions.length === 0 && customerInfo && !billsLoading && (
+                          <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                            <div className="flex">
+                              <div className="shrink-0">
+                                <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <h3 className="text-sm font-medium text-amber-800">No overdue bills found</h3>
+                                <div className="mt-2 text-sm text-amber-700">
+                                  <p>This customer doesn&apos;t have any bills with outstanding amounts.</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 3: Dunning Case Details */}
+                  <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+                    <div className="border-b pb-4">
+                      <h4 className="text-lg font-medium text-gray-900">Dunning Case Details</h4>
+                      <p className="text-sm text-gray-600">Configure the dunning case parameters</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                      <FormSelectModule
+                        label="Dunning Stage"
+                        name="stage"
+                        value={getStageNumericValue(formData.stage)}
+                        onChange={handleInputChange}
+                        options={[{ value: "", label: "Select dunning stage" }, ...stageOptions]}
+                        error={formErrors.stage}
+                        required
+                      />
+
+                      <FormSelectModule
+                        label="Assigned To"
+                        name="assignedToUserId"
+                        value={formData.assignedToUserId}
+                        onChange={handleInputChange}
+                        options={[
+                          { value: 0, label: agentsLoading ? "Loading agents..." : "Select assigned user" },
+                          ...agentOptions,
+                        ]}
+                        error={formErrors.assignedToUserId}
+                        required
+                        disabled={agentsLoading}
+                      />
+
+                      <FormInputModule
+                        label="Next Action Due Date & Time"
+                        name="nextActionDueAtUtc"
+                        type="datetime-local"
+                        value={formData.nextActionDueAtUtc}
+                        onChange={handleInputChange}
+                        error={formErrors.nextActionDueAtUtc}
+                        required
+                        placeholder={""}
+                      />
+
+                      <FormInputModule
+                        label="Outstanding Amount"
+                        name="outstandingAmount"
+                        type="number"
+                        placeholder="Outstanding amount"
+                        value={formData.outstandingAmount}
+                        onChange={handleInputChange}
+                        error={formErrors.outstandingAmount}
+                        required
+                        min="0.01"
+                        step="0.01"
+                        disabled={
+                          identifierType === "postpaidBill" || (identifierType === "customer" && selectedBill !== null)
+                        }
+                      />
+
+                      <div className="sm:col-span-2">
+                        <label className="mb-1 block text-sm text-[#2a2f4b]">
+                          Case Notes
+                          <span className="text-red-500"> *</span>
+                        </label>
+                        <div
+                          className={`
+                            rounded-md border px-3 py-2
+                            ${formErrors.notes ? "border-[#D14343]" : "border-[#E0E0E0]"}
+                            bg-[#F9F9F9]
+                          `}
+                        >
+                          <textarea
+                            name="notes"
+                            placeholder="Enter detailed notes about this dunning case (minimum 10 characters)"
+                            value={formData.notes}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                              handleInputChange({
+                                target: { name: "notes", value: e.target.value },
+                              })
+                            }
+                            rows={4}
+                            required
+                            className="w-full resize-y bg-transparent text-base outline-none"
+                            aria-invalid={!!formErrors.notes}
+                            aria-describedby={formErrors.notes ? "notes-error" : undefined}
+                          />
+                        </div>
+                        {formErrors.notes && (
+                          <p id="notes-error" className="mt-1 text-xs text-[#D14343]">
+                            {formErrors.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Error Summary */}
+                  {Object.values(formErrors).some((e) => e) && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        {Object.values(formErrors).some((e) => e) && (
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                              <ul className="list-disc space-y-1 pl-5">
+                                {Object.values(formErrors)
+                                  .filter(Boolean)
+                                  .map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                  ))}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Success Message */}
+                  {createSuccess && (
+                    <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <svg className="size-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-emerald-800">Dunning case created successfully!</h3>
+                          <div className="mt-2 text-sm text-emerald-700">
+                            <p>Redirecting to dunning cases list...</p>
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Form Actions */}
-                    <div className="flex justify-end gap-4 border-t pt-6">
-                      <ButtonModule
-                        variant="dangerSecondary"
-                        size="lg"
-                        onClick={handleReset}
-                        disabled={creating}
-                        type="button"
-                      >
-                        Reset
-                      </ButtonModule>
-                      <ButtonModule variant="primary" size="lg" type="submit" disabled={!isFormValid() || creating}>
-                        {creating ? "Creating Case..." : "Create Dunning Case"}
-                      </ButtonModule>
                     </div>
-                  </form>
-                </motion.div>
-              </div>
+                  )}
+
+                  {/* Form Actions */}
+                  <div className="flex flex-col justify-end gap-3 border-t pt-6 sm:flex-row sm:gap-4">
+                    <ButtonModule
+                      variant="dangerSecondary"
+                      size="lg"
+                      className="w-full sm:w-auto sm:min-w-[120px]"
+                      onClick={handleReset}
+                      disabled={creating}
+                      type="button"
+                    >
+                      Reset
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="primary"
+                      size="lg"
+                      className="w-full sm:w-auto sm:min-w-[180px]"
+                      type="submit"
+                      disabled={!isFormValid() || creating}
+                    >
+                      {creating ? "Creating..." : "Create Case"}
+                    </ButtonModule>
+                  </div>
+                </form>
+              </motion.div>
             </div>
           </div>
         </div>
