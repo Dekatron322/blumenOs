@@ -306,9 +306,9 @@ export default function CustomerChangeRequestManagement() {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:mt-8">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-sm:my-4 max-sm:px-3 md:mt-8 xl:px-16">
               <div>
                 <h4 className="text-2xl font-semibold">Customer Change Requests</h4>
                 <p>Manage and review customer information change requests</p>
@@ -333,7 +333,7 @@ export default function CustomerChangeRequestManagement() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 max-xl:mt-4  max-md:flex-col max-sm:my-4 md:px-3  xl:px-16 ">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State

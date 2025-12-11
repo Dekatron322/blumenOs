@@ -490,8 +490,8 @@ const AllAgents: React.FC = () => {
       <div className="flex min-h-screen w-full ">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto px-16 py-8 max-sm:px-3">
-            <div className="mb-4 flex w-full justify-between max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+          <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
+            <div className="mb-4 flex w-full justify-between max-md:flex-col max-sm:my-4 ">
               <div>
                 <h4 className="text-2xl font-semibold">Agent Management</h4>
                 <p>Field agent onboarding, commissions, and performance tracking</p>
@@ -518,25 +518,38 @@ const AllAgents: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex gap-6"
+              className="flex flex-col gap-6 xl:flex-row"
             >
               {/* Left Column - Agent Table */}
-              <div className="flex-1">
+              <div className="w-full xl:flex-[2]">
                 <motion.div
                   className="rounded-lg border bg-white p-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <div className="mb-6">
-                    <h3 className="mb-2 text-lg font-semibold">Agent Directory</h3>
-                    <SearchModule
-                      placeholder="Search agents..."
-                      value={searchText}
-                      onChange={handleSearch}
-                      onCancel={handleCancelSearch}
-                    />
-                  </div>
+                  {/* Table Header - align with AllPaymentsTable */}
+                  <motion.div
+                    className="items-center justify-between border-b py-2 md:flex md:py-4"
+                    initial={{ y: -10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div>
+                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Agent Directory</h3>
+                      <p className="text-sm text-gray-600">View and manage all field agents</p>
+                    </div>
+                    <div className="mt-3 flex gap-3 md:mt-0">
+                      <SearchModule
+                        placeholder="Search agents..."
+                        value={searchText}
+                        onChange={handleSearch}
+                        onCancel={handleCancelSearch}
+                        className="w-[260px] md:w-[320px]"
+                        bgClassName="bg-white"
+                      />
+                    </div>
+                  </motion.div>
 
                   {agents.length === 0 ? (
                     <motion.div
@@ -556,13 +569,14 @@ const AllAgents: React.FC = () => {
                     </motion.div>
                   ) : (
                     <>
+                      {/* Table Wrapper - responsive with horizontal scroll on small screens */}
                       <motion.div
                         className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+                        <table className="w-full border-separate border-spacing-0 text-left md:min-w-[900px] 2xl:min-w-[1200px]">
                           <thead>
                             <tr>
                               <th className="whitespace-nowrap border-y p-4 text-sm">
@@ -737,15 +751,16 @@ const AllAgents: React.FC = () => {
                         </table>
                       </motion.div>
 
+                      {/* Pagination - align container with AllPaymentsTable */}
                       <motion.div
-                        className="flex items-center justify-between pt-3"
+                        className="flex items-center justify-between border-t py-3"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
                       >
                         <div className="text-sm text-gray-700">
                           Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)}{" "}
-                          of {totalRecords} entries
+                          of {totalRecords} agents
                         </div>
                         <div className="flex items-center gap-2">
                           <motion.button

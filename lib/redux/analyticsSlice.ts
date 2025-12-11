@@ -232,6 +232,55 @@ export interface VendorSummaryParams {
   status?: "active" | "suspended"
 }
 
+// Interfaces for Sales Rep Analytics
+export interface SalesRepOverview {
+  totalAgents: number
+  activeAgents: number
+  inactiveAgents: number
+  totalCashAtHand: number
+}
+
+export interface SalesRepTransactions {
+  totalAmount: number
+  totalCount: number
+  confirmedAmount: number
+  confirmedCount: number
+  pendingAmount: number
+  pendingCount: number
+}
+
+export interface SalesRepPerformanceAgent {
+  id: number
+  name: string
+  amount: number
+  count: number
+}
+
+export interface SalesRepPerformance {
+  topAgents: SalesRepPerformanceAgent[]
+}
+
+export interface SalesRepCashClearance {
+  currentCashAtHand: number
+  clearedAmount: number
+  clearanceCount: number
+  rangeStartUtc: string
+  rangeEndUtc: string
+}
+
+export interface SalesRepAnalyticsData {
+  overview: SalesRepOverview
+  transactions: SalesRepTransactions
+  performance: SalesRepPerformance
+  cashClearance: SalesRepCashClearance
+}
+
+export interface SalesRepAnalyticsParams {
+  startDateUtc?: string
+  endDateUtc?: string
+  topCount?: number
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -272,6 +321,12 @@ export interface VendorSummaryResponse {
   isSuccess: boolean
   message: string
   data: VendorSummaryData
+}
+
+export interface SalesRepAnalyticsResponse {
+  isSuccess: boolean
+  message: string
+  data: SalesRepAnalyticsData
 }
 
 // Analytics State
@@ -323,6 +378,13 @@ interface AnalyticsState {
   vendorSummarySuccess: boolean
   vendorSummaryParams: VendorSummaryParams | null
 
+  // Sales Rep Analytics state
+  salesRepAnalyticsData: SalesRepAnalyticsData | null
+  salesRepAnalyticsLoading: boolean
+  salesRepAnalyticsError: string | null
+  salesRepAnalyticsSuccess: boolean
+  salesRepAnalyticsParams: SalesRepAnalyticsParams | null
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -369,6 +431,12 @@ const initialState: AnalyticsState = {
   vendorSummaryError: null,
   vendorSummarySuccess: false,
   vendorSummaryParams: null,
+
+  salesRepAnalyticsData: null,
+  salesRepAnalyticsLoading: false,
+  salesRepAnalyticsError: null,
+  salesRepAnalyticsSuccess: false,
+  salesRepAnalyticsParams: null,
 
   loading: false,
   error: null,
@@ -580,6 +648,37 @@ export const fetchVendorSummaryAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchSalesRepAnalytics = createAsyncThunk(
+  "analytics/fetchSalesRepAnalytics",
+  async (params: SalesRepAnalyticsParams, { rejectWithValue }) => {
+    try {
+      const response = await api.post<SalesRepAnalyticsResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.SALES_REP),
+        params // Send as request body for POST
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch sales rep analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Sales rep analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch sales rep analytics")
+      }
+      return rejectWithValue(error.message || "Network error during sales rep analytics fetch")
+    }
+  }
+)
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -646,6 +745,15 @@ const analyticsSlice = createSlice({
       state.vendorSummaryParams = null
     },
 
+    // Clear sales rep analytics state
+    clearSalesRepAnalytics: (state) => {
+      state.salesRepAnalyticsData = null
+      state.salesRepAnalyticsError = null
+      state.salesRepAnalyticsSuccess = false
+      state.salesRepAnalyticsLoading = false
+      state.salesRepAnalyticsParams = null
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
@@ -671,6 +779,11 @@ const analyticsSlice = createSlice({
       state.vendorSummaryParams = action.payload
     },
 
+    // Set sales rep analytics parameters
+    setSalesRepAnalyticsParams: (state, action: PayloadAction<SalesRepAnalyticsParams>) => {
+      state.salesRepAnalyticsParams = action.payload
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -681,6 +794,7 @@ const analyticsSlice = createSlice({
       state.outageSummaryError = null
       state.maintenanceSummaryError = null
       state.vendorSummaryError = null
+      state.salesRepAnalyticsError = null
     },
 
     // Reset analytics state
@@ -724,6 +838,12 @@ const analyticsSlice = createSlice({
       state.vendorSummaryError = null
       state.vendorSummarySuccess = false
       state.vendorSummaryParams = null
+
+      state.salesRepAnalyticsData = null
+      state.salesRepAnalyticsLoading = false
+      state.salesRepAnalyticsError = null
+      state.salesRepAnalyticsSuccess = false
+      state.salesRepAnalyticsParams = null
 
       state.loading = false
       state.error = null
@@ -913,6 +1033,35 @@ const analyticsSlice = createSlice({
         state.vendorSummarySuccess = false
         state.vendorSummaryData = null
       })
+
+      // Fetch sales rep analytics cases
+      .addCase(fetchSalesRepAnalytics.pending, (state) => {
+        state.salesRepAnalyticsLoading = true
+        state.salesRepAnalyticsError = null
+        state.salesRepAnalyticsSuccess = false
+      })
+      .addCase(
+        fetchSalesRepAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: SalesRepAnalyticsData
+            params: SalesRepAnalyticsParams
+          }>
+        ) => {
+          state.salesRepAnalyticsLoading = false
+          state.salesRepAnalyticsSuccess = true
+          state.salesRepAnalyticsData = action.payload.data
+          state.salesRepAnalyticsParams = action.payload.params
+          state.salesRepAnalyticsError = null
+        }
+      )
+      .addCase(fetchSalesRepAnalytics.rejected, (state, action) => {
+        state.salesRepAnalyticsLoading = false
+        state.salesRepAnalyticsError = (action.payload as string) || "Failed to fetch sales rep analytics"
+        state.salesRepAnalyticsSuccess = false
+        state.salesRepAnalyticsData = null
+      })
   },
 })
 
@@ -924,11 +1073,13 @@ export const {
   clearOutageSummaryAnalytics,
   clearMaintenanceSummaryAnalytics,
   clearVendorSummaryAnalytics,
+  clearSalesRepAnalytics,
   setPostpaidBillingAnalyticsParams,
   setPaymentSummaryAnalyticsParams,
   setOutageSummaryAnalyticsParams,
   setMaintenanceSummaryAnalyticsParams,
   setVendorSummaryAnalyticsParams,
+  setSalesRepAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions

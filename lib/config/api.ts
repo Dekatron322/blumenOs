@@ -238,6 +238,7 @@ export const API_ENDPOINTS = {
     OUTAGE_SUMMARY: "/outages/report/summary",
     MAINTENANCE_SUMMARY: "/maintenance/report/summary",
     VENDOR_SUMMARY: "/vendors/reports/summary",
+    SALES_REP: "/agents/reports/summary",
   },
 
   OUTAGE_MANAGEMENT: {

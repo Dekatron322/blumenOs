@@ -50,26 +50,26 @@ import autoTable from "jspdf-autotable"
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
     <DashboardNav />
-    <div className="container mx-auto p-6">
+    <div className="mx-auto flex w-full flex-col p-6 2xl:container">
       {/* Header Skeleton */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-8 flex w-full justify-between max-sm:flex-col lg:items-center">
+        <div className="flex gap-4 lg:items-center">
           <div className="size-9 rounded-md bg-gray-200"></div>
           <div>
             <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
             <div className="h-4 w-32 rounded bg-gray-200"></div>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="mt-3 flex gap-3 max-sm:mt-4 lg:mt-0">
           <div className="h-10 w-24 rounded bg-gray-200"></div>
           <div className="h-10 w-24 rounded bg-gray-200"></div>
           <div className="h-10 w-24 rounded bg-gray-200"></div>
         </div>
       </div>
 
-      <div className="flex gap-6">
+      <div className="w-full gap-6 2xl:flex">
         {/* Left Column Skeleton */}
-        <div className="w-[30%] space-y-6">
+        <div className="flex w-full flex-col space-y-6 2xl:max-w-[30%]">
           {/* Profile Card Skeleton */}
           <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
             <div className="text-center">
@@ -103,7 +103,7 @@ const LoadingSkeleton = () => (
         </div>
 
         {/* Right Column Skeleton */}
-        <div className="flex-1 space-y-6">
+        <div className="flex w-full flex-col space-y-6 max-xl:mt-4 2xl:w-[70%]">
           {[1, 2, 3, 4].map((item) => (
             <div key={item} className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
               <div className="mb-6 h-6 w-48 rounded bg-gray-200"></div>
@@ -160,6 +160,7 @@ const AgentDetailsPage = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<AgentTabType>("basic-info")
+  const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
   const [paymentsPage, setPaymentsPage] = useState(1)
   const [paymentsPageSize, setPaymentsPageSize] = useState(10)
   const [changeRequestsPage, setChangeRequestsPage] = useState(1)
@@ -544,11 +545,11 @@ const AgentDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+                <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
+                  <div className="flex gap-4 lg:items-center">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
@@ -579,12 +580,11 @@ const AgentDetailsPage = () => {
                       <p className="text-gray-600">Complete agent profile and management</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3">
+                  <div className="mt-3 flex items-center gap-3 max-sm:mt-4 lg:mt-0">
                     <ButtonModule
                       variant="secondary"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 max-sm:hidden"
                       onClick={exportToPDF}
                       disabled={isExporting}
                     >
@@ -639,10 +639,10 @@ const AgentDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-8 2xl:px-16">
+              <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Profile & Quick Actions */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -720,7 +720,7 @@ const AgentDetailsPage = () => {
                       <RefreshCw className="size-4" />
                       Quick Actions
                     </h3>
-                    <div className="space-y-3">
+                    <div className="flex flex-col gap-4 lg:flex-row xl:flex-col">
                       <ButtonModule
                         variant="primary"
                         className="w-full justify-start gap-3"
@@ -815,11 +815,86 @@ const AgentDetailsPage = () => {
                 </div>
 
                 {/* Right Column - Tabbed Content */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
+                <div className="flex w-full flex-col space-y-6 max-xl:mt-4 2xl:w-[70%]">
                   {/* Tabs */}
                   <div className="mb-2">
-                    <div className="w-fit rounded-md bg-white p-2">
-                      <nav className="-mb-px flex space-x-2">
+                    <div className="w-full rounded-md bg-white p-2 sm:inline-flex sm:w-auto">
+                      {/* Mobile: dropdown trigger */}
+                      <div className="relative w-full sm:hidden">
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-800"
+                          onClick={() => setIsMobileTabMenuOpen((prev) => !prev)}
+                        >
+                          <span className="flex items-center gap-2">
+                            {activeTab === "basic-info" && <User className="size-5" />}
+                            {activeTab === "payments" && <PaymentDisputeOutlineIcon className="size-5" />}
+                            {activeTab === "change-requests" && <ChangeRequestOutlineIcon className="size-5" />}
+                            <span>
+                              {activeTab === "basic-info" && "Basic Information"}
+                              {activeTab === "payments" && "Payments"}
+                              {activeTab === "change-requests" && "Change Requests"}
+                            </span>
+                          </span>
+                          <span
+                            className={`inline-block transform text-xs text-gray-500 transition-transform duration-200 ${
+                              isMobileTabMenuOpen ? "rotate-180" : "rotate-0"
+                            }`}
+                          >
+                            <ChevronDown className="size-4" />
+                          </span>
+                        </button>
+
+                        {isMobileTabMenuOpen && (
+                          <div className="absolute z-20 mt-1 w-full rounded-md border bg-white p-1 shadow-md">
+                            <button
+                              onClick={() => {
+                                setActiveTab("basic-info")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "basic-info"
+                                  ? "bg-[#004B23] text-white"
+                                  : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <User className="size-5" />
+                              <span>Basic Information</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab("payments")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "payments"
+                                  ? "bg-[#004B23] text-white"
+                                  : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <PaymentDisputeOutlineIcon className="size-5" />
+                              <span>Payments</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab("change-requests")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "change-requests"
+                                  ? "bg-[#004B23] text-white"
+                                  : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <ChangeRequestOutlineIcon className="size-5" />
+                              <span>Change Requests</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Desktop: horizontal tab list */}
+                      <nav className="-mb-px hidden space-x-2 sm:flex">
                         <button
                           onClick={() => setActiveTab("basic-info")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
@@ -1315,7 +1390,7 @@ const AgentDetailsPage = () => {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-lg bg-blue-50 p-4">
                               <div className="text-sm font-medium text-blue-600">Cash at Hand</div>
                               <div className="text-2xl font-bold text-blue-900">
@@ -1331,7 +1406,7 @@ const AgentDetailsPage = () => {
                           </div>
 
                           <div className="rounded-lg bg-gray-50 p-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex gap-3 max-sm:flex-col md:items-center md:justify-between">
                               <div>
                                 <div className="text-sm font-medium text-gray-600">Cash Collection Status</div>
                                 <div
