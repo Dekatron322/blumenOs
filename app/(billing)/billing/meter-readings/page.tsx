@@ -1,17 +1,9 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { MetersProgrammedIcon, PlayIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import BillingInfo from "components/BillingInfo/BillingInfo"
-import { ButtonModule } from "components/ui/Button/Button"
-import SubstationsTab from "components/AssetManagementInfo/SubstationsTab"
-import FeedersTab from "components/AssetManagementInfo/FeedersTab"
-import AreaOfficesTab from "components/AssetManagementInfo/AreaOfficesTab"
-import FeederEnergyCaps from "components/Tables/FeederEnergyCaps"
 import MeterReadings from "components/Tables/MeterReadings"
 
 // Enhanced Skeleton Loader Component for Cards
