@@ -1,22 +1,12 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
 import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
 import { motion } from "framer-motion"
-import {
-  AddIcon,
-  ContractIcon,
-  DepartmentIcon,
-  EmployeeIcon,
-  PayrollIcon,
-  RefreshCircleIcon,
-} from "components/Icons/Icons"
-import AllEmployees from "components/Tables/AllEmployees"
+import { RefreshCircleIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppSelector } from "lib/hooks/useRedux"
-import AllChangeRequest from "components/Tables/AllChangeRequest"
 import BillingChangeRequestsTable from "components/Tables/AllBillChangeRequest"
 
 // Enhanced Skeleton Loader Component for Cards
@@ -329,9 +319,9 @@ export default function EmployeeManagement() {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container 2xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full justify-between gap-6  max-md:flex-col max-md:px-0 max-sm:my-4  md:my-8">
               <div>
                 <h4 className="text-2xl font-semibold">Change Request</h4>
                 <p>Manage employee change requests</p>
@@ -356,7 +346,7 @@ export default function EmployeeManagement() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 max-md:flex-col max-md:px-0 max-sm:my-4 ">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State

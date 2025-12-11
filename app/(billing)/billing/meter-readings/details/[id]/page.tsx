@@ -11,6 +11,95 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearCurrentMeterReading, fetchMeterReadingById, MeterReading } from "lib/redux/meterReadingSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import Image from "next/image"
+
+// LoadingSkeleton component
+const LoadingSkeleton = () => (
+  <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
+    <DashboardNav />
+    <div className="container mx-auto p-4 sm:p-6">
+      {/* Header Skeleton */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="size-8 rounded-md bg-gray-200 sm:size-9"></div>
+          <div>
+            <div className="mb-2 h-7 w-40 rounded bg-gray-200 sm:h-8 sm:w-48"></div>
+            <div className="h-4 w-32 rounded bg-gray-200 sm:w-40"></div>
+          </div>
+        </div>
+        <div className="flex gap-2 sm:gap-3">
+          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 xl:flex-row">
+        {/* Left Column Skeleton */}
+        <div className="w-full space-y-6 xl:w-[30%]">
+          {/* Overview Card Skeleton */}
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="text-center">
+              <div className="relative mx-auto mb-4">
+                <div className="mx-auto size-16 rounded-full bg-gray-200 sm:size-20"></div>
+                <div className="absolute -right-1 bottom-1 size-5 rounded-full bg-gray-200 sm:size-6"></div>
+              </div>
+              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200 sm:h-7"></div>
+              <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
+              <div className="mb-6 flex flex-wrap justify-center gap-2">
+                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
+                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats Skeleton */}
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
+            <div className="space-y-4">
+              <div className="h-16 w-full rounded bg-gray-200 sm:h-20"></div>
+              <div className="h-16 w-full rounded bg-gray-200 sm:h-20"></div>
+              <div className="h-16 w-full rounded bg-gray-200 sm:h-20"></div>
+            </div>
+          </div>
+
+          {/* Capture Info Skeleton */}
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
+            <div className="space-y-3">
+              <div className="h-4 w-full rounded bg-gray-200"></div>
+              <div className="h-4 w-full rounded bg-gray-200"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column Skeleton */}
+        <div className="flex-1 space-y-6">
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+              <div className="mb-6 h-6 w-40 rounded bg-gray-200 sm:w-48"></div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-6">
+                  <div className="h-16 w-full rounded bg-gray-200"></div>
+                  <div className="h-16 w-full rounded bg-gray-200"></div>
+                  <div className="h-16 w-full rounded bg-gray-200"></div>
+                </div>
+                <div className="space-y-6">
+                  <div className="h-16 w-full rounded bg-gray-200"></div>
+                  <div className="h-16 w-full rounded bg-gray-200"></div>
+                  <div className="h-16 w-full rounded bg-gray-200"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)
 
 const MeterReadingDetailsPage = () => {
   const params = useParams()
@@ -308,16 +397,16 @@ const MeterReadingDetailsPage = () => {
 
   if (currentMeterReadingError || !currentMeterReading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
-        <div className="flex flex-col justify-center text-center">
-          <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-4 sm:p-6">
+        <div className="flex w-full max-w-md flex-col justify-center text-center">
+          <AlertCircle className="mx-auto mb-4 size-12 text-gray-400 sm:size-16" />
+          <h1 className="mb-2 text-xl font-bold text-gray-900 sm:text-2xl">
             {currentMeterReadingError ? "Error Loading Meter Reading" : "Meter Reading Not Found"}
           </h1>
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-sm text-gray-600 sm:text-base">
             {currentMeterReadingError || "The meter reading you're looking for doesn't exist."}
           </p>
-          <ButtonModule variant="primary" onClick={() => router.back()}>
+          <ButtonModule variant="primary" onClick={() => router.back()} className="w-full sm:w-auto">
             Back to Meter Readings
           </ButtonModule>
         </div>
@@ -335,15 +424,15 @@ const MeterReadingDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
-            <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-4">
+          <div className="mx-auto flex flex-col 2xl:container">
+            <div className="sticky top-16 z-40 w-full border-b border-gray-200 bg-white">
+              <div className="mx-auto w-full px-3 py-4  xl:px-16 ">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 sm:gap-4">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-[#f9f9f9]"
+                      className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-gray-50 sm:size-9"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
@@ -366,87 +455,90 @@ const MeterReadingDetailsPage = () => {
                     </motion.button>
 
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Meter Reading Details</h1>
-                      <p className="text-gray-600">Complete overview and analysis</p>
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl xl:text-2xl">Meter Reading Details</h1>
+                      <p className="text-xs text-gray-600 sm:text-sm">Complete overview and analysis</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <ButtonModule
                       variant="secondary"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm"
                       onClick={exportToPDF}
                       disabled={isExporting}
                     >
-                      <ExportOutlineIcon className="size-4" />
-                      {isExporting ? "Exporting..." : "Export"}
+                      <ExportOutlineIcon className="size-3 sm:size-4" />
+                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export"}</span>
+                      <span className="sm:hidden">Export</span>
                     </ButtonModule>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-6  sm:py-8 xl:px-16">
+              <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Overview & Quick Stats */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
                   {/* Overview Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-blue-100 text-3xl font-bold text-blue-600">
-                          <Zap className="size-8" />
+                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 sm:size-20 sm:text-3xl">
+                          <Zap className="size-5 sm:size-7" />
                         </div>
                         <div
-                          className={`absolute -right-1 bottom-1 ${validationStatusConfig.bg} ${validationStatusConfig.border} rounded-full border-2 p-1.5`}
+                          className={`absolute -right-1 bottom-1 ${validationStatusConfig.bg} ${validationStatusConfig.border} rounded-full border-2 p-1 sm:p-1.5`}
                         >
-                          <StatusIcon className={`size-4 ${validationStatusConfig.color}`} />
+                          <StatusIcon className={`size-3 ${validationStatusConfig.color} sm:size-4`} />
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">Reading #{currentMeterReading.id}</h2>
-                      <p className="mb-4 text-gray-600">{currentMeterReading.period}</p>
+                      <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">
+                        Reading #{currentMeterReading.id}
+                      </h2>
+                      <p className="mb-4 text-sm text-gray-600 sm:text-base">{currentMeterReading.period}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${validationStatusConfig.bg} ${validationStatusConfig.color}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${validationStatusConfig.bg} ${validationStatusConfig.color} sm:text-sm`}
                         >
                           {validationStatusConfig.label}
                         </div>
                         <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${anomalyConfig.bg} ${anomalyConfig.color}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${anomalyConfig.bg} ${anomalyConfig.color} sm:text-sm`}
                         >
                           Anomaly: {anomalyConfig.label}
                         </div>
                         {currentMeterReading.isFlaggedForReview && (
-                          <div className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600">
+                          <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 sm:text-sm">
                             Flagged for Review
                           </div>
                         )}
                         {currentMeterReading.isRollover && (
-                          <div className="rounded-full bg-purple-50 px-3 py-1.5 text-sm font-medium text-purple-600">
+                          <div className="rounded-full bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-600 sm:text-sm">
                             Rollover
                           </div>
                         )}
                       </div>
 
-                      <div className="space-y-3 text-sm">
+                      <div className="space-y-3 text-xs sm:text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
-                          <User className="size-4" />
-                          {currentMeterReading.customerName}
+                          <User className="size-3 sm:size-4" />
+                          <span className="truncate">{currentMeterReading.customerName}</span>
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
-                          <FileText className="size-4" />
-                          {currentMeterReading.customerAccountNumber}
+                          <FileText className="size-3 sm:size-4" />
+                          <span className="truncate">{currentMeterReading.customerAccountNumber}</span>
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
-                          <Calendar className="size-4" />
-                          {formatDate(currentMeterReading.capturedAtUtc)}
+                          <Calendar className="size-3 sm:size-4" />
+                          <span className="truncate">{formatDate(currentMeterReading.capturedAtUtc)}</span>
                         </div>
                       </div>
                     </div>
@@ -457,26 +549,28 @@ const MeterReadingDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <BarChart3 className="size-5" />
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      <BarChart3 className="size-4 sm:size-5" />
                       Quick Stats
                     </h3>
                     <div className="space-y-4">
-                      <div className="rounded-lg bg-green-50 p-4">
-                        <div className="text-sm font-medium text-green-600">Total Consumption</div>
-                        <div className="text-2xl font-bold text-green-700">{formatNumber(consumption)} kWh</div>
+                      <div className="rounded-lg bg-green-50 p-3 sm:p-4">
+                        <div className="text-xs font-medium text-green-600 sm:text-sm">Total Consumption</div>
+                        <div className="text-xl font-bold text-green-700 sm:text-2xl">
+                          {formatNumber(consumption)} kWh
+                        </div>
                       </div>
-                      <div className="rounded-lg bg-blue-50 p-4">
-                        <div className="text-sm font-medium text-blue-600">Valid Consumption</div>
-                        <div className="text-2xl font-bold text-blue-700">
+                      <div className="rounded-lg bg-blue-50 p-3 sm:p-4">
+                        <div className="text-xs font-medium text-blue-600 sm:text-sm">Valid Consumption</div>
+                        <div className="text-xl font-bold text-blue-700 sm:text-2xl">
                           {formatNumber(currentMeterReading.validConsumptionKwh)} kWh
                         </div>
                       </div>
-                      <div className="rounded-lg bg-amber-50 p-4">
-                        <div className="text-sm font-medium text-amber-600">Anomaly Score</div>
-                        <div className="text-2xl font-bold text-amber-700">
+                      <div className="rounded-lg bg-amber-50 p-3 sm:p-4">
+                        <div className="text-xs font-medium text-amber-600 sm:text-sm">Anomaly Score</div>
+                        <div className="text-xl font-bold text-amber-700 sm:text-2xl">
                           {(currentMeterReading.anomalyScore * 100).toFixed(1)}%
                         </div>
                       </div>
@@ -488,78 +582,80 @@ const MeterReadingDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <User className="size-5" />
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      <User className="size-4 sm:size-5" />
                       Capture Info
                     </h3>
                     <div className="space-y-3">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">Captured By</div>
-                        <div className="font-semibold text-gray-900">{currentMeterReading.capturedByName}</div>
+                        <div className="text-xs font-medium text-gray-600 sm:text-sm">Captured By</div>
+                        <div className="truncate text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentMeterReading.capturedByName}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-600">Capture Time</div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="text-xs font-medium text-gray-600 sm:text-sm">Capture Time</div>
+                        <div className="text-sm font-semibold text-gray-900 sm:text-base">
                           {formatDate(currentMeterReading.capturedAtUtc)}
                         </div>
                       </div>
-                      {/* <div>
-                        <div className="text-sm font-medium text-gray-600">Customer ID</div>
-                        <div className="font-semibold text-gray-900">{currentMeterReading.customerId}</div>
-                      </div> */}
                     </div>
                   </motion.div>
                 </div>
 
                 {/* Right Column - Detailed Information */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
+                <div className="flex w-full flex-col space-y-6 xl:w-[70%]">
                   {/* Reading Details */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <Zap className="size-5" />
+                      <Zap className="size-4 sm:size-5" />
                       Reading Details
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <div className="space-y-6">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Previous Reading</label>
-                          <p className="text-2xl font-bold text-gray-900">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-4">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Previous Reading</label>
+                          <p className="text-lg font-bold text-gray-900  sm:text-xl">
                             {formatNumber(currentMeterReading.previousReadingKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Present Reading</label>
-                          <p className="text-2xl font-bold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Present Reading</label>
+                          <p className="text-lg font-bold text-gray-900  sm:text-xl">
                             {formatNumber(currentMeterReading.presentReadingKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-green-50 p-4">
-                          <label className="text-sm font-medium text-green-600">Total Consumption</label>
-                          <p className="text-2xl font-bold text-green-700">{formatNumber(consumption)} kWh</p>
+                        <div className="rounded-lg border border-gray-100 bg-green-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-green-600 sm:text-sm">Total Consumption</label>
+                          <p className="text-lg font-bold text-green-700  sm:text-xl">
+                            {formatNumber(consumption)} kWh
+                          </p>
                         </div>
                       </div>
-                      <div className="space-y-6">
-                        <div className="rounded-lg border border-gray-100 bg-blue-50 p-4">
-                          <label className="text-sm font-medium text-blue-600">Valid Consumption</label>
-                          <p className="text-2xl font-bold text-blue-700">
+                      <div className="space-y-4">
+                        <div className="rounded-lg border border-gray-100 bg-blue-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-blue-600 sm:text-sm">Valid Consumption</label>
+                          <p className="text-lg font-bold text-blue-700  sm:text-xl">
                             {formatNumber(currentMeterReading.validConsumptionKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-red-50 p-4">
-                          <label className="text-sm font-medium text-red-600">Invalid Consumption</label>
-                          <p className="text-2xl font-bold text-red-700">
+                        <div className="rounded-lg border border-gray-100 bg-red-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-red-600 sm:text-sm">Invalid Consumption</label>
+                          <p className="text-lg font-bold text-red-700  sm:text-xl">
                             {formatNumber(currentMeterReading.invalidConsumptionKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-4">
-                          <label className="text-sm font-medium text-purple-600">Estimated Consumption</label>
-                          <p className="text-2xl font-bold text-purple-700">
+                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-purple-600 sm:text-sm">
+                            Estimated Consumption
+                          </label>
+                          <p className="text-lg font-bold text-purple-700  sm:text-xl">
                             {formatNumber(currentMeterReading.estimatedConsumptionKwh)} kWh
                           </p>
                         </div>
@@ -572,55 +668,55 @@ const MeterReadingDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <TrendingUp className="size-5" />
+                      <TrendingUp className="size-4 sm:size-5" />
                       Validation & Analysis
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Validation Status</label>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Validation Status</label>
                           <div className="flex items-center gap-2">
-                            <StatusIcon className={`size-4 ${validationStatusConfig.color}`} />
-                            <span className={`font-semibold ${validationStatusConfig.color}`}>
+                            <StatusIcon className={`size-3 ${validationStatusConfig.color} sm:size-4`} />
+                            <span className={`text-sm font-semibold ${validationStatusConfig.color} sm:text-base`}>
                               {validationStatusConfig.label}
                             </span>
                           </div>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Anomaly Score</label>
-                          <div className="flex items-center justify-between">
-                            <span className={`font-semibold ${anomalyConfig.color}`}>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Anomaly Score</label>
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <span className={`text-sm font-semibold ${anomalyConfig.color} sm:text-base`}>
                               {(currentMeterReading.anomalyScore * 100).toFixed(1)}%
                             </span>
-                            <span className={`text-sm ${anomalyConfig.color}`}>{anomalyConfig.label}</span>
+                            <span className={`text-xs ${anomalyConfig.color} sm:text-sm`}>{anomalyConfig.label}</span>
                           </div>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Average Baseline</label>
-                          <p className="font-semibold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Average Baseline</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {formatNumber(currentMeterReading.averageConsumptionBaselineKwh)} kWh
                           </p>
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Standard Deviation</label>
-                          <p className="font-semibold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Standard Deviation</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {formatNumber(currentMeterReading.standardDeviationKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Low Threshold</label>
-                          <p className="font-semibold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Low Threshold</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {formatNumber(currentMeterReading.lowThresholdKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">High Threshold</label>
-                          <p className="font-semibold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">High Threshold</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {formatNumber(currentMeterReading.highThresholdKwh)} kWh
                           </p>
                         </div>
@@ -634,26 +730,28 @@ const MeterReadingDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
                       <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <BarChart3 className="size-5" />
+                        <BarChart3 className="size-4 sm:size-5" />
                         Rollover Information
                       </h3>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-4">
-                          <label className="text-sm font-medium text-purple-600">Rollover Count</label>
-                          <p className="text-2xl font-bold text-purple-700">{currentMeterReading.rolloverCount}</p>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-purple-600 sm:text-sm">Rollover Count</label>
+                          <p className="text-lg font-bold text-purple-700  sm:text-xl">
+                            {currentMeterReading.rolloverCount}
+                          </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-4">
-                          <label className="text-sm font-medium text-purple-600">Rollover Adjustment</label>
-                          <p className="text-2xl font-bold text-purple-700">
+                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-purple-600 sm:text-sm">Rollover Adjustment</label>
+                          <p className="text-lg font-bold text-purple-700  sm:text-xl">
                             {formatNumber(currentMeterReading.rolloverAdjustmentKwh)} kWh
                           </p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-4">
-                          <label className="text-sm font-medium text-purple-600">Is Rollover</label>
-                          <p className="text-2xl font-bold text-purple-700">
+                        <div className="rounded-lg border border-gray-100 bg-purple-50 p-3 sm:p-4">
+                          <label className="text-xs font-medium text-purple-600 sm:text-sm">Is Rollover</label>
+                          <p className="text-lg font-bold text-purple-700  sm:text-xl">
                             {currentMeterReading.isRollover ? "Yes" : "No"}
                           </p>
                         </div>
@@ -666,35 +764,39 @@ const MeterReadingDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <CalendarOutlineIcon />
+                      <CalendarOutlineIcon className="size-4 sm:size-5" />
                       Timeline Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Capture Time</label>
-                          <p className="font-semibold text-gray-900">{formatDate(currentMeterReading.capturedAtUtc)}</p>
-                          <p className="text-sm text-gray-600">By: {currentMeterReading.capturedByName}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Capture Time</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {formatDate(currentMeterReading.capturedAtUtc)}
+                          </p>
+                          <p className="text-xs text-gray-600 sm:text-sm">By: {currentMeterReading.capturedByName}</p>
                         </div>
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Billing Period</label>
-                          <p className="font-semibold text-gray-900">{currentMeterReading.period}</p>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Billing Period</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                            {currentMeterReading.period}
+                          </p>
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Validation Time</label>
-                          <p className="font-semibold text-gray-900">
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                          <label className="text-xs font-medium text-gray-600 sm:text-sm">Validation Time</label>
+                          <p className="text-sm font-semibold text-gray-900 sm:text-base">
                             {formatDate(currentMeterReading.validatedAtUtc)}
                           </p>
                         </div>
                         {currentMeterReading.isFlaggedForReview && (
-                          <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
-                            <label className="text-sm font-medium text-amber-600">Review Status</label>
-                            <p className="font-semibold text-amber-700">Flagged for Review</p>
+                          <div className="rounded-lg border border-amber-100 bg-amber-50 p-3 sm:p-4">
+                            <label className="text-xs font-medium text-amber-600 sm:text-sm">Review Status</label>
+                            <p className="text-sm font-semibold text-amber-700 sm:text-base">Flagged for Review</p>
                           </div>
                         )}
                       </div>
@@ -707,23 +809,25 @@ const MeterReadingDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
                       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <FileText className="size-5" />
+                        <FileText className="size-4 sm:size-5" />
                         Notes
                       </h3>
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {currentMeterReading.notes && (
-                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Capture Notes</label>
-                            <p className="mt-2 text-gray-900">{currentMeterReading.notes}</p>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Capture Notes</label>
+                            <p className="mt-2 text-sm text-gray-900 sm:text-base">{currentMeterReading.notes}</p>
                           </div>
                         )}
                         {currentMeterReading.validationNotes && (
-                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Validation Notes</label>
-                            <p className="mt-2 text-gray-900">{currentMeterReading.validationNotes}</p>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                            <label className="text-xs font-medium text-gray-600 sm:text-sm">Validation Notes</label>
+                            <p className="mt-2 text-sm text-gray-900 sm:text-base">
+                              {currentMeterReading.validationNotes}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -738,92 +842,5 @@ const MeterReadingDetailsPage = () => {
     </section>
   )
 }
-
-// LoadingSkeleton component
-const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
-    <DashboardNav />
-    <div className="container mx-auto p-6">
-      {/* Header Skeleton */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="size-9 rounded-md bg-gray-200"></div>
-          <div>
-            <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <div className="h-10 w-24 rounded bg-gray-200"></div>
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Left Column Skeleton */}
-        <div className="w-[30%] space-y-6">
-          {/* Overview Card Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
-            <div className="text-center">
-              <div className="relative mx-auto mb-4">
-                <div className="mx-auto size-20 rounded-full bg-gray-200"></div>
-                <div className="absolute -right-1 bottom-1 size-6 rounded-full bg-gray-200"></div>
-              </div>
-              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200"></div>
-              <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
-              <div className="mb-6 flex justify-center gap-2">
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-              </div>
-              <div className="space-y-3">
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-32 rounded bg-gray-200"></div>
-            <div className="space-y-4">
-              <div className="h-20 w-full rounded bg-gray-200"></div>
-              <div className="h-20 w-full rounded bg-gray-200"></div>
-              <div className="h-20 w-full rounded bg-gray-200"></div>
-            </div>
-          </div>
-
-          {/* Capture Info Skeleton */}
-          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-32 rounded bg-gray-200"></div>
-            <div className="space-y-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column Skeleton */}
-        <div className="flex-1 space-y-6">
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6">
-              <div className="mb-6 h-6 w-48 rounded bg-gray-200"></div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                  <div className="h-4 w-32 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-)
 
 export default MeterReadingDetailsPage

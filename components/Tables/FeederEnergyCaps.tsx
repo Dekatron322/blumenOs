@@ -3,7 +3,8 @@
 import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -13,6 +14,9 @@ import {
   fetchFeederEnergyCaps,
   setPagination,
 } from "lib/redux/feederEnergyCapSlice"
+import { ButtonModule } from "components/ui/Button/Button"
+import { AddCustomerIcon } from "components/Icons/Icons"
+import { PlusCircle } from "lucide-react"
 
 interface ActionDropdownProps {
   energyCap: FeederEnergyCap
@@ -220,7 +224,7 @@ const FeederEnergyCaps: React.FC = () => {
   const currentPage = pagination.currentPage
   const pageSize = pagination.pageSize
   const totalRecords = pagination.totalCount
-  const totalPages = pagination.totalPages
+  const totalPages = pagination.totalPages || 1
 
   // Fetch feeder energy caps on component mount and when search/pagination changes
   useEffect(() => {
@@ -287,8 +291,25 @@ const FeederEnergyCaps: React.FC = () => {
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const paginate = (pageNumber: number) => {
-    dispatch(setPagination({ page: pageNumber, pageSize }))
+  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = Number(event.target.value)
+    dispatch(
+      setPagination({
+        page: 1,
+        pageSize: newPageSize,
+      })
+    )
+  }
+
+  const changePage = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      dispatch(
+        setPagination({
+          page,
+          pageSize: pagination.pageSize,
+        })
+      )
+    }
   }
 
   const handleViewEnergyCapDetails = (energyCap: FeederEnergyCap) => {
@@ -314,6 +335,64 @@ const FeederEnergyCaps: React.FC = () => {
       currency: "NGN",
       minimumFractionDigits: 2,
     }).format(amount)
+  }
+
+  const getPageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    items.push(1)
+
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
   }
 
   if (feederEnergyCapsLoading) return <LoadingSkeleton />
@@ -346,7 +425,8 @@ const FeederEnergyCaps: React.FC = () => {
             onClick={() => router.push("/billing/feeder-energy-caps/add")}
             className="rounded-md bg-[#004B23] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
           >
-            Add Feeder Cap
+            <PlusCircle className="size-4 md:hidden" />
+            <p className="max-md:hidden"> Add Feeder Cap </p>
           </button>
         </div>
       </motion.div>
@@ -378,12 +458,6 @@ const FeederEnergyCaps: React.FC = () => {
             <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                      ID
-                    </div>
-                  </th>
                   <th
                     className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
                     onClick={() => toggleSort("feederId")}
@@ -455,7 +529,6 @@ const FeederEnergyCaps: React.FC = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">FEC-{energyCap.id}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">FEEDER-{energyCap.feederId}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{energyCap.period}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
@@ -485,11 +558,9 @@ const FeederEnergyCaps: React.FC = () => {
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown
-                          energyCap={energyCap}
-                          onViewDetails={handleViewEnergyCapDetails}
-                          onUpdateEnergyCap={handleUpdateEnergyCap}
-                        />
+                        <ButtonModule size="sm" onClick={() => handleViewEnergyCapDetails(energyCap)} variant="primary">
+                          View Details
+                        </ButtonModule>
                       </td>
                     </motion.tr>
                   ))}
@@ -498,91 +569,92 @@ const FeederEnergyCaps: React.FC = () => {
             </table>
           </motion.div>
 
-          <motion.div
-            className="flex items-center justify-between border-t py-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-              {totalRecords} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+            <div className="flex items-center gap-1 max-sm:hidden">
+              <p className="text-xs sm:text-sm">Show rows</p>
+              <select
+                value={pagination.pageSize}
+                onChange={handleRowsChange}
+                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
               >
-                <MdOutlineArrowBackIosNew />
-              </motion.button>
-
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = index + 1
-                } else if (currentPage <= 3) {
-                  pageNum = index + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + index
-                } else {
-                  pageNum = currentPage - 2 + index
-                }
-
-                return (
-                  <motion.button
-                    key={index}
-                    onClick={() => paginate(pageNum)}
-                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === pageNum
-                        ? "bg-[#004B23] text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                  >
-                    {pageNum}
-                  </motion.button>
-                )
-              })}
-
-              {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-              {totalPages > 5 && currentPage < totalPages - 1 && (
-                <motion.button
-                  onClick={() => paginate(totalPages)}
-                  className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                    currentPage === totalPages
-                      ? "bg-[#004B23] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {totalPages}
-                </motion.button>
-              )}
-
-              <motion.button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowForwardIos />
-              </motion.button>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
             </div>
-          </motion.div>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+              <button
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                }`}
+                onClick={() => changePage(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+              >
+                <BiSolidLeftArrow className="size-4 sm:size-5" />
+              </button>
+
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                  {getPageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 sm:hidden">
+                  {getMobilePageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs ${
+                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <button
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                  pagination.currentPage === totalPages || totalPages === 0
+                    ? "cursor-not-allowed text-gray-400"
+                    : "text-[#000000]"
+                }`}
+                onClick={() => changePage(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === totalPages || totalPages === 0}
+              >
+                <BiSolidRightArrow className="size-4 sm:size-5" />
+              </button>
+            </div>
+
+            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+              Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
+              {searchText.trim() && " - filtered"}
+            </p>
+          </div>
         </>
       )}
     </motion.div>

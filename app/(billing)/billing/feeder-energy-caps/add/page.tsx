@@ -16,6 +16,7 @@ import {
   clearApplyFeederEnergyCaps,
 } from "lib/redux/feederEnergyCapSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { Upload, X, FileText, Download, CheckCircle, AlertCircle, ChevronLeft, Menu, ChevronRight } from "lucide-react"
 
 interface FeederEnergyCapFormData {
   period: string
@@ -52,6 +53,7 @@ const AddFeederEnergyCapPage = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVFeederEnergyCap[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<FeederEnergyCapFormData>({
@@ -510,81 +512,213 @@ const AddFeederEnergyCapPage = () => {
     }
   }, [areaOfficesError])
 
+  // Mobile Tab Navigation
+  const MobileTabNavigation = () => (
+    <div className="sticky top-0 z-40 mb-4 rounded-lg bg-white p-3 shadow-sm sm:hidden">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          className="flex items-center gap-2 text-sm font-medium text-gray-700"
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <Menu className="size-4" />
+          <span>{activeTab === "single" ? "Single Entry" : "Bulk Upload"}</span>
+        </button>
+        <div className="text-sm font-medium text-gray-900">
+          {activeTab === "single" ? "Single Application" : "Bulk CSV Upload"}
+        </div>
+      </div>
+    </div>
+  )
+
+  // Mobile Menu Sidebar
+  const MobileMenuSidebar = () => (
+    <>
+      {/* Backdrop */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 sm:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`fixed left-0 top-0 z-50 h-full w-72 transform bg-white shadow-xl transition-transform duration-200 ease-in-out sm:hidden ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          {/* Header */}
+          <div className="border-b bg-white p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Navigation</h3>
+              <button
+                type="button"
+                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-1 text-sm text-gray-600">Choose application method</p>
+          </div>
+
+          {/* Menu Items */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <nav className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("single")
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                  activeTab === "single" ? "bg-blue-50 text-blue-600" : "bg-gray-50 hover:bg-gray-100"
+                }`}
+              >
+                <div
+                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                    activeTab === "single" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  <FileText className="size-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Single Application</div>
+                  <div className="mt-1 text-xs text-gray-600">Apply caps to individual feeders</div>
+                </div>
+                {activeTab === "single" && <ChevronRight className="size-4 flex-shrink-0" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("bulk")
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                  activeTab === "bulk" ? "bg-blue-50 text-blue-600" : "bg-gray-50 hover:bg-gray-100"
+                }`}
+              >
+                <div
+                  className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                    activeTab === "bulk" ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  <Upload className="size-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Bulk Upload (CSV)</div>
+                  <div className="mt-1 text-xs text-gray-600">Upload CSV file for multiple feeders</div>
+                </div>
+                {activeTab === "bulk" && <ChevronRight className="size-4 flex-shrink-0" />}
+              </button>
+            </nav>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="border-t bg-gray-50 p-4">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+            >
+              Close Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+
   return (
     <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="container mx-auto flex flex-col">
-            {/* Page Header */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
-              <div>
-                <h4 className="text-2xl font-semibold">Apply Feeder Energy Caps</h4>
-                <p className="text-gray-600">Set energy caps and tariff overrides for feeders</p>
-              </div>
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-3 xl:px-16">
+            {/* Page Header - Mobile Optimized */}
+            <div className="mb-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => window.history.back()}
+                    className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                    aria-label="Go back"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Apply Feeder Energy Caps</h1>
+                    <p className="text-sm text-gray-600">Set energy caps and tariff overrides for feeders</p>
+                  </div>
+                </div>
 
-              <motion.div
-                className="flex items-center justify-end gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <ButtonModule
-                  variant="outline"
-                  size="md"
-                  onClick={
-                    activeTab === "single"
-                      ? handleReset
-                      : () => {
-                          setCsvFile(null)
-                          setCsvData([])
-                          setCsvErrors([])
-                          if (fileInputRef.current) fileInputRef.current.value = ""
-                        }
-                  }
-                  disabled={applyFeederEnergyCapsLoading}
-                >
-                  {activeTab === "single" ? "Reset Form" : "Clear CSV"}
-                </ButtonModule>
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  onClick={
-                    activeTab === "single"
-                      ? () => {
-                          void submitSingleFeederEnergyCap()
-                        }
-                      : () => {
-                          void handleBulkSubmit()
-                        }
-                  }
-                  disabled={
-                    activeTab === "single"
-                      ? !isFormValid() || applyFeederEnergyCapsLoading
-                      : csvData.length === 0 || csvErrors.length > 0 || applyFeederEnergyCapsLoading
-                  }
-                  icon={<AddIcon />}
-                  iconPosition="start"
-                >
-                  {activeTab === "single"
-                    ? applyFeederEnergyCapsLoading
-                      ? "Applying Caps..."
-                      : "Apply Caps"
-                    : applyFeederEnergyCapsLoading
-                    ? "Processing..."
-                    : `Apply ${csvData.length} Caps`}
-                </ButtonModule>
-              </motion.div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    onClick={
+                      activeTab === "single"
+                        ? handleReset
+                        : () => {
+                            setCsvFile(null)
+                            setCsvData([])
+                            setCsvErrors([])
+                            if (fileInputRef.current) fileInputRef.current.value = ""
+                          }
+                    }
+                    disabled={applyFeederEnergyCapsLoading}
+                    className="flex-1 sm:flex-none"
+                  >
+                    {activeTab === "single" ? "Reset Form" : "Clear CSV"}
+                  </ButtonModule>
+                  <ButtonModule
+                    variant="primary"
+                    size="sm"
+                    onClick={
+                      activeTab === "single"
+                        ? () => {
+                            void submitSingleFeederEnergyCap()
+                          }
+                        : () => {
+                            void handleBulkSubmit()
+                          }
+                    }
+                    disabled={
+                      activeTab === "single"
+                        ? !isFormValid() || applyFeederEnergyCapsLoading
+                        : csvData.length === 0 || csvErrors.length > 0 || applyFeederEnergyCapsLoading
+                    }
+                    icon={<AddIcon />}
+                    iconPosition="start"
+                    className="flex-1 sm:flex-none"
+                  >
+                    {activeTab === "single"
+                      ? applyFeederEnergyCapsLoading
+                        ? "Applying..."
+                        : "Apply Caps"
+                      : applyFeederEnergyCapsLoading
+                      ? "Processing..."
+                      : `Apply ${csvData.length} Caps`}
+                  </ButtonModule>
+                </div>
+              </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="px-16 max-md:px-0 max-sm:px-3">
+            {/* Mobile Tab Navigation */}
+            <MobileTabNavigation />
+
+            {/* Mobile Menu Sidebar */}
+            <MobileMenuSidebar />
+
+            {/* Desktop Tab Navigation */}
+            <div className="hidden sm:block">
               <div className="rounded-t-lg border-b border-gray-200 bg-white">
                 <div className="flex">
                   <button
                     onClick={() => setActiveTab("single")}
-                    className={`flex-1 rounded-tl-lg px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-tl-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 ${
                       activeTab === "single"
                         ? "border-b-2 border-blue-500 text-blue-600"
                         : "text-gray-500 hover:text-gray-700"
@@ -594,7 +728,7 @@ const AddFeederEnergyCapPage = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-tr-lg px-4 py-3 text-sm font-medium transition-colors sm:px-6 ${
                       activeTab === "bulk"
                         ? "border-b-2 border-blue-500 text-blue-600"
                         : "text-gray-500 hover:text-gray-700"
@@ -607,295 +741,130 @@ const AddFeederEnergyCapPage = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
-              <div className="w-full">
-                {activeTab === "single" ? (
-                  /* Single Entry Form */
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="rounded-b-lg  bg-white p-6 shadow-sm"
-                  >
-                    {/* Form Header */}
-                    <div className="mb-6 border-b pb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Feeder Energy Cap Information</h3>
-                      <p className="text-sm text-gray-600">
-                        Fill in all required fields to apply energy caps to feeders
-                      </p>
-                    </div>
+            <div className="w-full">
+              {activeTab === "single" ? (
+                /* Single Entry Form */
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="rounded-b-lg rounded-tl-lg bg-white p-4 shadow-sm sm:rounded-t-lg sm:p-6"
+                >
+                  {/* Form Header */}
+                  <div className="mb-6 border-b pb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Feeder Energy Cap Information</h3>
+                    <p className="text-sm text-gray-600">Fill in all required fields to apply energy caps to feeders</p>
+                  </div>
 
-                    {/* Feeder Energy Cap Form */}
-                    <form onSubmit={handleSingleSubmit} className="space-y-8">
-                      {/* Section 1: Area Office & Period Information */}
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Area Office & Period</h4>
-                          <p className="text-sm text-gray-600">Select the area office and billing period</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormSelectModule
-                            label="Area Office"
-                            name="areaOfficeId"
-                            value={formData.areaOfficeId}
-                            onChange={handleInputChange}
-                            options={[
-                              {
-                                value: "",
-                                label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
-                              },
-                              ...areaOfficeOptions.filter((option) => option.value !== 0),
-                            ]}
-                            error={formErrors.areaOfficeId}
-                            required
-                            disabled={areaOfficesLoading}
-                          />
-
-                          <FormSelectModule
-                            label="Billing Period"
-                            name="period"
-                            value={formData.period}
-                            onChange={handleInputChange}
-                            options={periodOptions}
-                            error={formErrors.period}
-                            required
-                          />
-                        </div>
+                  {/* Feeder Energy Cap Form */}
+                  <form onSubmit={handleSingleSubmit} className="space-y-8">
+                    {/* Section 1: Area Office & Period Information */}
+                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-4 sm:p-6">
+                      <div className="border-b pb-4">
+                        <h4 className="text-lg font-medium text-gray-900">Area Office & Period</h4>
+                        <p className="text-sm text-gray-600">Select the area office and billing period</p>
                       </div>
 
-                      {/* Section 2: Energy Cap Details */}
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Energy Cap Details</h4>
-                          <p className="text-sm text-gray-600">Set the energy cap and tariff override values</p>
-                        </div>
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormSelectModule
+                          label="Area Office"
+                          name="areaOfficeId"
+                          value={formData.areaOfficeId}
+                          onChange={handleInputChange}
+                          options={[
+                            {
+                              value: "",
+                              label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
+                            },
+                            ...areaOfficeOptions.filter((option) => option.value !== 0),
+                          ]}
+                          error={formErrors.areaOfficeId}
+                          required
+                          disabled={areaOfficesLoading}
+                        />
 
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                          <FormInputModule
-                            label="Energy Cap (kWh)"
-                            name="energyCapKwh"
-                            type="number"
-                            placeholder="0.00"
-                            value={formData.energyCapKwh}
-                            onChange={handleInputChange}
-                            error={formErrors.energyCapKwh}
-                            required
-                            step="0.01"
-                            min="0.01"
-                          />
-
-                          <FormInputModule
-                            label="Tariff Override (per kWh)"
-                            name="tariffOverridePerKwh"
-                            type="number"
-                            placeholder="0.00"
-                            value={formData.tariffOverridePerKwh}
-                            onChange={handleInputChange}
-                            error={formErrors.tariffOverridePerKwh}
-                            required
-                            step="0.01"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Section 3: Additional Information */}
-                      <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-6">
-                        <div className="border-b pb-4">
-                          <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                          <p className="text-sm text-gray-600">Provide any additional notes or comments</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-6">
-                          <FormInputModule
-                            label="Notes"
-                            name="notes"
-                            type="text"
-                            placeholder="Enter any notes about these energy caps (e.g., special conditions, seasonal adjustments, etc.)"
-                            value={formData.notes}
-                            onChange={handleInputChange}
-                            error={formErrors.notes}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      {/* Error Summary */}
-                      {Object.keys(formErrors).length > 0 && (
-                        <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                          <div className="flex">
-                            <div className="shrink-0">
-                              <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path
-                                  fillRule="evenodd"
-                                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <div className="ml-3">
-                              <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
-                              <div className="mt-2 text-sm text-amber-700">
-                                <ul className="list-disc space-y-1 pl-5">
-                                  {Object.values(formErrors).map((error, index) => (
-                                    <li key={index}>{error}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Form Actions */}
-                      <div className="flex justify-end gap-4 border-t pt-6">
-                        <ButtonModule
-                          variant="dangerSecondary"
-                          size="lg"
-                          onClick={handleReset}
-                          disabled={applyFeederEnergyCapsLoading}
-                          type="button"
-                        >
-                          Reset
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="primary"
-                          size="lg"
-                          type="submit"
-                          disabled={!isFormValid() || applyFeederEnergyCapsLoading}
-                        >
-                          {applyFeederEnergyCapsLoading ? "Applying Caps..." : "Apply Energy Caps"}
-                        </ButtonModule>
-                      </div>
-                    </form>
-                  </motion.div>
-                ) : (
-                  /* Bulk Upload Section */
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="rounded-b-lg rounded-tl-lg bg-white p-6 shadow-sm"
-                  >
-                    {/* Template Download */}
-                    <div className="mb-6 rounded-lg bg-blue-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
-                          <p className="text-sm text-blue-600">Download our CSV template to ensure proper formatting</p>
-                        </div>
-                        <ButtonModule variant="primary" size="sm" onClick={downloadTemplate}>
-                          Download Template
-                        </ButtonModule>
+                        <FormSelectModule
+                          label="Billing Period"
+                          name="period"
+                          value={formData.period}
+                          onChange={handleInputChange}
+                          options={periodOptions}
+                          error={formErrors.period}
+                          required
+                        />
                       </div>
                     </div>
 
-                    {/* File Upload Area */}
-                    <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-8 text-center">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept=".csv"
-                        className="hidden"
-                      />
+                    {/* Section 2: Energy Cap Details */}
+                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-4 sm:p-6">
+                      <div className="border-b pb-4">
+                        <h4 className="text-lg font-medium text-gray-900">Energy Cap Details</h4>
+                        <p className="text-sm text-gray-600">Set the energy cap and tariff override values</p>
+                      </div>
 
-                      {!csvFile ? (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                          </svg>
-                          <div className="mt-4 flex w-full flex-col items-center justify-center">
-                            <ButtonModule variant="primary" onClick={() => fileInputRef.current?.click()}>
-                              Choose CSV File
-                            </ButtonModule>
-                            <p className="mt-2 text-sm text-gray-600">or drag and drop your file here</p>
-                          </div>
-                          <p className="mt-1 text-xs text-gray-500">CSV files only (max 10MB)</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-green-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <p className="mt-2 text-sm font-medium text-gray-900">{csvFile.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {csvData.length} valid records found
-                            {csvErrors.length > 0 && `, ${csvErrors.length} errors`}
-                          </p>
-                          <div className="mt-4 flex justify-center gap-3">
-                            <ButtonModule
-                              variant="secondary"
-                              onClick={() => {
-                                setCsvFile(null)
-                                setCsvData([])
-                                setCsvErrors([])
-                                if (fileInputRef.current) {
-                                  fileInputRef.current.value = ""
-                                }
-                              }}
-                            >
-                              Choose Different File
-                            </ButtonModule>
-                            {csvErrors.length === 0 && csvData.length > 0 && (
-                              <ButtonModule
-                                variant="primary"
-                                onClick={handleBulkSubmit}
-                                disabled={applyFeederEnergyCapsLoading}
-                              >
-                                {applyFeederEnergyCapsLoading ? "Processing..." : `Apply ${csvData.length} Caps`}
-                              </ButtonModule>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormInputModule
+                          label="Energy Cap (kWh)"
+                          name="energyCapKwh"
+                          type="number"
+                          placeholder="0.00"
+                          value={formData.energyCapKwh}
+                          onChange={handleInputChange}
+                          error={formErrors.energyCapKwh}
+                          required
+                          step="0.01"
+                          min="0.01"
+                        />
+
+                        <FormInputModule
+                          label="Tariff Override (per kWh)"
+                          name="tariffOverridePerKwh"
+                          type="number"
+                          placeholder="0.00"
+                          value={formData.tariffOverridePerKwh}
+                          onChange={handleInputChange}
+                          error={formErrors.tariffOverridePerKwh}
+                          required
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
                     </div>
 
-                    {/* CSV Errors Display */}
-                    {csvErrors.length > 0 && (
-                      <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
+                    {/* Section 3: Additional Information */}
+                    <div className="space-y-6 rounded-lg bg-[#f9f9f9] p-4 sm:p-6">
+                      <div className="border-b pb-4">
+                        <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
+                        <p className="text-sm text-gray-600">Provide any additional notes or comments</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-6">
+                        <FormInputModule
+                          label="Notes"
+                          name="notes"
+                          type="text"
+                          placeholder="Enter any notes about these energy caps (e.g., special conditions, seasonal adjustments, etc.)"
+                          value={formData.notes}
+                          onChange={handleInputChange}
+                          error={formErrors.notes}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Error Summary */}
+                    {Object.keys(formErrors).length > 0 && (
+                      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
                         <div className="flex">
                           <div className="shrink-0">
-                            <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
+                            <AlertCircle className="size-5 text-amber-400" />
                           </div>
-                          <div className="ml-3 flex-1">
-                            <h3 className="text-sm font-medium text-red-800">
-                              CSV Validation Errors ({csvErrors.length})
-                            </h3>
-                            <div className="mt-2 text-sm text-red-700">
-                              <ul className="max-h-32 space-y-1 overflow-y-auto">
-                                {csvErrors.map((error, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="mr-2">•</span>
-                                    <span>{error}</span>
-                                  </li>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                              <ul className="list-disc space-y-1 pl-5">
+                                {Object.values(formErrors).map((error, index) => (
+                                  <li key={index}>{error}</li>
                                 ))}
                               </ul>
                             </div>
@@ -904,68 +873,209 @@ const AddFeederEnergyCapPage = () => {
                       </div>
                     )}
 
-                    {/* Preview of Valid Data */}
-                    {csvData.length > 0 && (
-                      <div className="rounded-md border border-gray-200">
-                        <div className="bg-gray-50 px-4 py-3">
-                          <h3 className="text-sm font-medium text-gray-900">
-                            Preview ({csvData.length} valid records)
-                          </h3>
+                    {/* Form Actions */}
+                    <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end sm:gap-4">
+                      <ButtonModule
+                        variant="dangerSecondary"
+                        size="lg"
+                        onClick={handleReset}
+                        disabled={applyFeederEnergyCapsLoading}
+                        type="button"
+                        className="w-full sm:w-auto"
+                      >
+                        Reset
+                      </ButtonModule>
+                      <ButtonModule
+                        variant="primary"
+                        size="lg"
+                        type="submit"
+                        disabled={!isFormValid() || applyFeederEnergyCapsLoading}
+                        className="w-full sm:w-auto"
+                      >
+                        {applyFeederEnergyCapsLoading ? "Applying Caps..." : "Apply Energy Caps"}
+                      </ButtonModule>
+                    </div>
+                  </form>
+                </motion.div>
+              ) : (
+                /* Bulk Upload Section */
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="rounded-b-lg rounded-tl-lg bg-white p-4 shadow-sm sm:rounded-t-lg sm:p-6"
+                >
+                  {/* Template Download */}
+                  <div className="mb-6 rounded-lg bg-blue-50 p-4">
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
+                        <p className="text-sm text-blue-600">Download our CSV template to ensure proper formatting</p>
+                      </div>
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        onClick={downloadTemplate}
+                        icon={<Download className="size-4" />}
+                        iconPosition="start"
+                        className="w-full sm:w-auto"
+                      >
+                        Download Template
+                      </ButtonModule>
+                    </div>
+                  </div>
+
+                  {/* File Upload Area */}
+                  <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-6 text-center">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept=".csv"
+                      className="hidden"
+                    />
+
+                    {!csvFile ? (
+                      <div>
+                        <Upload className="mx-auto size-12 text-gray-400" />
+                        <div className="mt-4 flex w-full flex-col items-center justify-center">
+                          <ButtonModule
+                            variant="primary"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full sm:w-auto"
+                          >
+                            Choose CSV File
+                          </ButtonModule>
+                          <p className="mt-2 text-sm text-gray-600">or drag and drop your file here</p>
                         </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Period
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Energy Cap (kWh)
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Tariff Override
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Area Office ID
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Notes
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                              {csvData.slice(0, 5).map((energyCap, index) => (
-                                <tr key={index}>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {energyCap.period}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {energyCap.energyCapKwh.toFixed(2)}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {energyCap.tariffOverridePerKwh.toFixed(2)}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {energyCap.areaOfficeId}
-                                  </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    <div className="max-w-[200px] truncate">{energyCap.notes}</div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          {csvData.length > 5 && (
-                            <div className="bg-gray-50 px-4 py-2 text-center text-sm text-gray-500">
-                              ... and {csvData.length - 5} more records
-                            </div>
+                        <p className="mt-1 text-xs text-gray-500">CSV files only (max 10MB)</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <CheckCircle className="mx-auto size-12 text-green-500" />
+                        <p className="mt-2 text-sm font-medium text-gray-900">{csvFile.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {csvData.length} valid records found
+                          {csvErrors.length > 0 && `, ${csvErrors.length} errors`}
+                        </p>
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                          <ButtonModule
+                            variant="secondary"
+                            onClick={() => {
+                              setCsvFile(null)
+                              setCsvData([])
+                              setCsvErrors([])
+                              if (fileInputRef.current) {
+                                fileInputRef.current.value = ""
+                              }
+                            }}
+                            className="w-full sm:w-auto"
+                          >
+                            Choose Different File
+                          </ButtonModule>
+                          {csvErrors.length === 0 && csvData.length > 0 && (
+                            <ButtonModule
+                              variant="primary"
+                              onClick={handleBulkSubmit}
+                              disabled={applyFeederEnergyCapsLoading}
+                              className="w-full sm:w-auto"
+                            >
+                              {applyFeederEnergyCapsLoading ? "Processing..." : `Apply ${csvData.length} Caps`}
+                            </ButtonModule>
                           )}
                         </div>
                       </div>
                     )}
-                  </motion.div>
-                )}
-              </div>
+                  </div>
+
+                  {/* CSV Errors Display */}
+                  {csvErrors.length > 0 && (
+                    <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <AlertCircle className="size-5 text-red-400" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-sm font-medium text-red-800">
+                            CSV Validation Errors ({csvErrors.length})
+                          </h3>
+                          <div className="mt-2 text-sm text-red-700">
+                            <ul className="max-h-32 space-y-1 overflow-y-auto">
+                              {csvErrors.slice(0, 5).map((error, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="mr-2">•</span>
+                                  <span className="break-all">{error}</span>
+                                </li>
+                              ))}
+                              {csvErrors.length > 5 && (
+                                <li className="text-gray-600">... and {csvErrors.length - 5} more errors</li>
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Preview of Valid Data */}
+                  {csvData.length > 0 && (
+                    <div className="rounded-md border border-gray-200">
+                      <div className="bg-gray-50 px-4 py-3">
+                        <h3 className="text-sm font-medium text-gray-900">Preview ({csvData.length} valid records)</h3>
+                      </div>
+                      <div className="max-h-48 overflow-x-auto overflow-y-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                Period
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                Energy Cap
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                Tariff
+                              </th>
+                              <th className="hidden px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:table-cell sm:px-4">
+                                Area Office
+                              </th>
+                              <th className="hidden px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 md:table-cell md:px-4">
+                                Notes
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 bg-white">
+                            {csvData.slice(0, 5).map((energyCap, index) => (
+                              <tr key={index}>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {energyCap.period}
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {energyCap.energyCapKwh.toFixed(2)}
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {energyCap.tariffOverridePerKwh.toFixed(2)}
+                                </td>
+                                <td className="hidden whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:table-cell sm:px-4">
+                                  {energyCap.areaOfficeId}
+                                </td>
+                                <td className="hidden px-3 py-2 text-sm text-gray-900 md:table-cell md:px-4">
+                                  <div className="max-w-[200px] truncate">{energyCap.notes}</div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {csvData.length > 5 && (
+                          <div className="bg-gray-50 px-4 py-2 text-center text-sm text-gray-500">
+                            ... and {csvData.length - 5} more records
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </div>
           </div>
         </div>

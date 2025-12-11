@@ -23,274 +23,7 @@ import type {
   ChangeRequestListItem as ChangeRequestListItemType,
   ChangeRequestsRequestParams,
 } from "lib/redux/postpaidSlice"
-
-// LoadingSkeleton component
-const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
-    <DashboardNav />
-    <div className="container mx-auto p-6">
-      {/* Header Skeleton */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-200">
-            <motion.div
-              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          </div>
-          <div>
-            <div className="mb-2 h-8 w-48 overflow-hidden rounded bg-gray-200">
-              <motion.div
-                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                animate={{
-                  x: ["-100%", "100%"],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                }}
-              />
-            </div>
-            <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
-              <motion.div
-                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                animate={{
-                  x: ["-100%", "100%"],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
-            <motion.div
-              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.6,
-              }}
-            />
-          </div>
-          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
-            <motion.div
-              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.8,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Left Column Skeleton */}
-        <div className="w-[30%] space-y-6">
-          {/* Profile Card Skeleton */}
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
-            <div className="text-center">
-              <div className="relative mx-auto mb-4">
-                <div className="mx-auto h-20 w-20 overflow-hidden rounded-full bg-gray-200">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                    animate={{
-                      x: ["-100%", "100%"],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="mx-auto mb-2 h-6 w-32 overflow-hidden rounded bg-gray-200">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.2,
-                  }}
-                />
-              </div>
-              <div className="mx-auto mb-4 h-4 w-24 overflow-hidden rounded bg-gray-200">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.4,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats Skeleton */}
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
-            <div className="mb-4 h-6 w-32 overflow-hidden rounded bg-gray-200">
-              <motion.div
-                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                animate={{
-                  x: ["-100%", "100%"],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </div>
-            <div className="space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-4 w-full overflow-hidden rounded bg-gray-200">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                    animate={{
-                      x: ["-100%", "100%"],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 0.2,
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column Skeleton */}
-        <div className="flex-1 space-y-6">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
-              <div className="mb-6 h-6 w-48 overflow-hidden rounded bg-gray-200">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: item * 0.1,
-                  }}
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  {[1, 2, 3].map((subItem) => (
-                    <div key={subItem} className="space-y-2">
-                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                          animate={{
-                            x: ["-100%", "100%"],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: item * 0.1 + subItem * 0.1,
-                          }}
-                        />
-                      </div>
-                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                          animate={{
-                            x: ["-100%", "100%"],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: item * 0.1 + subItem * 0.1 + 0.05,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((subItem) => (
-                    <div key={subItem} className="space-y-2">
-                      <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                          animate={{
-                            x: ["-100%", "100%"],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: item * 0.1 + subItem * 0.1 + 0.15,
-                          }}
-                        />
-                      </div>
-                      <div className="h-6 w-40 overflow-hidden rounded bg-gray-200">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                          animate={{
-                            x: ["-100%", "100%"],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: item * 0.1 + subItem * 0.1 + 0.2,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-)
+import Image from "next/image"
 
 // Helper functions
 const formatCurrency = (amount: number) => {
@@ -357,6 +90,100 @@ const sourceOptions = [
   { value: "2", label: "Import" },
 ]
 
+// LoadingSkeleton component
+const LoadingSkeleton = () => (
+  <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
+    <DashboardNav />
+    <div className="container mx-auto p-4 sm:p-6">
+      {/* Header Skeleton */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="size-8 rounded-md bg-gray-200 sm:size-9"></div>
+          <div>
+            <div className="mb-2 h-7 w-40 rounded bg-gray-200 sm:h-8 sm:w-48"></div>
+            <div className="h-4 w-32 rounded bg-gray-200 sm:w-40"></div>
+          </div>
+        </div>
+        <div className="flex gap-2 sm:gap-3">
+          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
+          <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 xl:flex-row">
+        {/* Left Column Skeleton */}
+        <div className="w-full space-y-6 xl:w-[30%]">
+          {/* Profile Card Skeleton */}
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="text-center">
+              <div className="relative mx-auto mb-4">
+                <div className="mx-auto size-16 rounded-full bg-gray-200 sm:size-20"></div>
+              </div>
+              <div className="mx-auto mb-2 h-6 w-32 rounded bg-gray-200 sm:h-7"></div>
+              <div className="mx-auto mb-4 h-4 w-24 rounded bg-gray-200"></div>
+              <div className="mb-6 flex flex-wrap justify-center gap-2">
+                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
+                <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats Skeleton */}
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-3 w-16 rounded bg-gray-200 sm:h-4"></div>
+                  <div className="h-4 w-20 rounded bg-gray-200 sm:h-5"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Location Info Skeleton */}
+          <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-4 h-5 w-32 rounded bg-gray-200 sm:h-6"></div>
+            <div className="space-y-3">
+              <div className="h-14 rounded bg-gray-200"></div>
+              <div className="h-14 rounded bg-gray-200"></div>
+              <div className="h-14 rounded bg-gray-200"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column Skeleton */}
+        <div className="flex-1 space-y-6">
+          {[1, 2, 3, 4, 5].map((item) => (
+            <div key={item} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+              <div className="mb-6 h-6 w-40 rounded bg-gray-200 sm:w-48"></div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-4">
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                  <div className="h-4 w-32 rounded bg-gray-200"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
 // Change Request Card Component
 const ChangeRequestCard = ({
   changeRequest,
@@ -379,9 +206,9 @@ const ChangeRequestCard = ({
 
   const getSourceConfig = (source: number) => {
     const configs = {
-      0: { label: "System" },
-      1: { label: "Manual" },
-      2: { label: "Import" },
+      0: { label: "System", color: "text-blue-600", bg: "bg-blue-50" },
+      1: { label: "Manual", color: "text-green-600", bg: "bg-green-50" },
+      2: { label: "Import", color: "text-purple-600", bg: "bg-purple-50" },
     }
     return configs[source as keyof typeof configs] || configs[1]
   }
@@ -400,11 +227,11 @@ const ChangeRequestCard = ({
   const sourceConfig = getSourceConfig(changeRequest.source || 1)
 
   return (
-    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
+    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-3 shadow-sm transition-all hover:shadow-md sm:p-4">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
-            <span className="font-semibold text-blue-600">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 sm:size-12">
+            <span className="text-sm font-semibold text-blue-600 sm:text-base">
               {changeRequest.requestedBy
                 .split(" ")
                 .map((n) => n[0])
@@ -412,21 +239,23 @@ const ChangeRequestCard = ({
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{changeRequest.entityLabel}</h3>
-            <div className="mt-1 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{changeRequest.entityLabel}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-1 sm:gap-2">
               <div
                 className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
               >
                 <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
                 {statusConfig.label}
               </div>
-              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
+              <div className={`rounded-full px-2 py-1 text-xs ${sourceConfig.bg} ${sourceConfig.color}`}>
+                {sourceConfig.label}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
+      <div className="mt-3 space-y-2 text-xs text-gray-600 sm:mt-4 sm:text-sm">
         <div className="flex justify-between">
           <span>Reference:</span>
           <span className="font-medium">{changeRequest.reference}</span>
@@ -447,16 +276,16 @@ const ChangeRequestCard = ({
         </div>
       </div>
 
-      <div className="mt-3 border-t pt-3">
+      <div className="mt-2 border-t pt-2 sm:mt-3 sm:pt-3">
         <p className="text-xs text-gray-500">Entity ID: {changeRequest.entityId}</p>
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2 flex gap-2 sm:mt-3">
         <button
           onClick={() => onViewDetails(changeRequest)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9]"
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-xs transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] sm:text-sm"
         >
-          <VscEye className="size-4" />
+          <VscEye className="size-3 sm:size-4" />
           View Details
         </button>
       </div>
@@ -486,9 +315,9 @@ const ChangeRequestListItem = ({
 
   const getSourceConfig = (source: number) => {
     const configs = {
-      0: { label: "System" },
-      1: { label: "Manual" },
-      2: { label: "Import" },
+      0: { label: "System", color: "text-blue-600", bg: "bg-blue-50" },
+      1: { label: "Manual", color: "text-green-600", bg: "bg-green-50" },
+      2: { label: "Import", color: "text-purple-600", bg: "bg-purple-50" },
     }
     return configs[source as keyof typeof configs] || configs[1]
   }
@@ -507,11 +336,11 @@ const ChangeRequestListItem = ({
   const sourceConfig = getSourceConfig(changeRequest.source || 1)
 
   return (
-    <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
-            <span className="text-sm font-semibold text-blue-600">
+    <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 sm:p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden sm:size-10">
+            <span className="text-xs font-semibold text-blue-600 sm:text-sm">
               {changeRequest.requestedBy
                 .split(" ")
                 .map((n) => n[0])
@@ -519,22 +348,27 @@ const ChangeRequestListItem = ({
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{changeRequest.entityLabel}</h3>
-              <div
-                className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
-              >
-                <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
-                {statusConfig.label}
-              </div>
-              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
-              <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                Ref: {changeRequest.reference}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{changeRequest.entityLabel}</h3>
+              <div className="flex flex-wrap gap-1 sm:gap-2">
+                <div
+                  className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}
+                >
+                  <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
+                  {statusConfig.label}
+                </div>
+                <div className={`rounded-full px-2 py-1 text-xs ${sourceConfig.bg} ${sourceConfig.color}`}>
+                  {sourceConfig.label}
+                </div>
+                <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                  Ref: {changeRequest.reference}
+                </div>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
               <span>
-                <strong>Requested By:</strong> {changeRequest.requestedBy}
+                <strong className="sm:hidden">By:</strong>
+                <strong className="hidden sm:inline">Requested By:</strong> {changeRequest.requestedBy}
               </span>
               <span>
                 <strong>Requested:</strong> {formatDate(changeRequest.requestedAtUtc)}
@@ -543,15 +377,19 @@ const ChangeRequestListItem = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
+        <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
+          <div className="hidden text-right text-sm sm:block">
             <div className="font-medium text-gray-900">Status: {statusConfig.label}</div>
             <div className="mt-1 text-xs text-gray-500">{sourceConfig.label}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => onViewDetails(changeRequest)} className="button-oulined flex items-center gap-2">
-              <VscEye className="size-4" />
-              View
+            <button
+              onClick={() => onViewDetails(changeRequest)}
+              className="button-oulined flex items-center gap-2 text-xs sm:text-sm"
+            >
+              <VscEye className="size-3 sm:size-4" />
+              <span className="hidden sm:inline">View</span>
+              <span className="sm:hidden">Details</span>
             </button>
           </div>
         </div>
@@ -584,23 +422,24 @@ const FilterDropdown = ({
     <div className="relative" data-dropdown-root={dropdownId}>
       <button
         type="button"
-        className="button-oulined flex items-center gap-2"
+        className="button-oulined flex items-center gap-2 text-sm sm:text-base"
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <IoMdFunnel />
-        <span>{selectedOption?.label || label}</span>
-        <ChevronDown className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <IoMdFunnel className="size-4 sm:size-5" />
+        <span className="max-sm:hidden">{selectedOption?.label || label}</span>
+        <span className="sm:hidden">{label.split(" ")[0]}</span>
+        <ChevronDown className={`size-3 text-gray-500 transition-transform sm:size-4 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-56">
           <div className="py-1">
             {options.map((option) => (
               <button
                 key={option.value}
-                className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 sm:px-4 sm:text-sm ${
                   selectedValue === option.value ? "bg-gray-50" : ""
                 }`}
                 onClick={() => {
@@ -713,30 +552,96 @@ const BillingJobChangeRequestsSection = ({ billingJobId }: { billingJobId: numbe
     }
   }
 
+  const getPageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Always show first page
+    items.push(1)
+
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      // Close to the start: show first few pages
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      // Close to the end: show ellipsis then last few pages
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      // In the middle: show ellipsis, surrounding pages, then ellipsis
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    // Always show last page
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    // Example for early pages on mobile: 1,2,3,...,last
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    // Middle pages: 1, ..., current, ..., last
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    // Near the end: 1, ..., last-2, last-1, last
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
+
   if (changeRequestsByBillingJobLoading) {
     return (
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
       >
         <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <FileText className="size-5" />
+          <FileText className="size-4 sm:size-5" />
           Change Requests
         </h3>
         <div className="animate-pulse">
-          <div className="mb-4 flex gap-4">
-            <div className="h-10 w-80 rounded bg-gray-200"></div>
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:gap-4">
+            <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
             <div className="flex gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+                <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
               ))}
             </div>
           </div>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-20 rounded bg-gray-200"></div>
+              <div key={i} className="h-16 rounded bg-gray-200 sm:h-20"></div>
             ))}
           </div>
         </div>
@@ -750,87 +655,93 @@ const BillingJobChangeRequestsSection = ({ billingJobId }: { billingJobId: numbe
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <FileText className="size-5" />
+            <FileText className="size-4 sm:size-5" />
             Change Requests
           </h3>
           <button
-            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+            className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:text-base"
             onClick={() => {
               /* TODO: Implement CSV export for billing job change requests */
             }}
             disabled={!changeRequestsByBillingJob || changeRequestsByBillingJob.length === 0}
           >
             <FileText className="size-4 text-[#2563EB]" />
-            <p className="text-sm text-[#2563EB]">Export CSV</p>
+            <p className="text-xs text-[#2563EB] sm:text-sm">Export CSV</p>
           </button>
         </div>
 
         {/* Filters and Controls */}
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <SearchModule
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onCancel={handleCancelSearch}
             placeholder="Search by reference or requester"
-            className="max-w-[300px]"
+            className="w-full sm:max-w-[300px]"
           />
 
-          <div className="flex gap-2">
-            <button
-              className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-              onClick={() => setViewMode("grid")}
-            >
-              <MdGridView />
-              <p>Grid</p>
-            </button>
-            <button
-              className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-              onClick={() => setViewMode("list")}
-            >
-              <MdFormatListBulleted />
-              <p>List</p>
-            </button>
+          <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
+              <button
+                className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                onClick={() => setViewMode("grid")}
+              >
+                <MdGridView className="size-4" />
+                <p className="max-sm:hidden">Grid</p>
+                <p className="sm:hidden">Grid</p>
+              </button>
+              <button
+                className={`button-oulined text-sm ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                <MdFormatListBulleted className="size-4" />
+                <p className="max-sm:hidden">List</p>
+                <p className="sm:hidden">List</p>
+              </button>
+            </div>
+
+            {/* Status Filter */}
+            <FilterDropdown
+              isOpen={isStatusOpen}
+              setIsOpen={setIsStatusOpen}
+              selectedValue={selectedStatus}
+              options={statusOptions}
+              onSelect={setSelectedStatus}
+              dropdownId="status-filter"
+              label="All Status"
+            />
+
+            {/* Source Filter */}
+            <FilterDropdown
+              isOpen={isSourceOpen}
+              setIsOpen={setIsSourceOpen}
+              selectedValue={selectedSource}
+              options={sourceOptions}
+              onSelect={setSelectedSource}
+              dropdownId="source-filter"
+              label="All Sources"
+            />
           </div>
-
-          {/* Status Filter */}
-          <FilterDropdown
-            isOpen={isStatusOpen}
-            setIsOpen={setIsStatusOpen}
-            selectedValue={selectedStatus}
-            options={statusOptions}
-            onSelect={setSelectedStatus}
-            dropdownId="status-filter"
-            label="All Status"
-          />
-
-          {/* Source Filter */}
-          <FilterDropdown
-            isOpen={isSourceOpen}
-            setIsOpen={setIsSourceOpen}
-            selectedValue={selectedSource}
-            options={sourceOptions}
-            onSelect={setSelectedSource}
-            dropdownId="source-filter"
-            label="All Sources"
-          />
         </div>
 
         {/* Change Requests Display */}
         {changeRequestsByBillingJobError ? (
           <div className="py-8 text-center">
-            <AlertCircle className="mx-auto mb-4 size-12 text-gray-400" />
-            <p className="text-gray-500">Error loading change requests: {changeRequestsByBillingJobError}</p>
+            <AlertCircle className="mx-auto mb-4 size-10 w-full text-gray-400 sm:size-12" />
+            <p className="text-sm text-gray-500 sm:text-base">
+              Error loading change requests: {changeRequestsByBillingJobError}
+            </p>
           </div>
         ) : changeRequestsByBillingJob.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-gray-500">No change requests found for this billing job</p>
+            <p className="text-sm text-gray-500 sm:text-base">No change requests found for this billing job</p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {changeRequestsByBillingJob.map((changeRequest: ChangeRequestListItemType) => (
               <ChangeRequestCard
                 key={changeRequest.publicId}
@@ -853,13 +764,14 @@ const BillingJobChangeRequestsSection = ({ billingJobId }: { billingJobId: numbe
 
         {/* Pagination */}
         {changeRequestsByBillingJob.length > 0 && (
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <p>Show rows</p>
+          <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row sm:gap-0">
+            <div className="order-2 flex items-center gap-1 sm:order-1">
+              <p className="text-sm max-sm:hidden sm:text-base">Show rows</p>
+              <p className="text-sm sm:hidden">Rows</p>
               <select
                 value={changeRequestsByBillingJobPagination.pageSize}
                 onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1"
+                className="bg-[#F2F2F2] p-1 text-sm sm:text-base"
               >
                 <option value={6}>6</option>
                 <option value={12}>12</option>
@@ -869,40 +781,73 @@ const BillingJobChangeRequestsSection = ({ billingJobId }: { billingJobId: numbe
               </select>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="order-1 flex items-center justify-center gap-2 sm:order-2 sm:gap-3">
               <button
-                className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                }`}
                 onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                <BiSolidLeftArrow />
+                <BiSolidLeftArrow className="size-4 sm:size-5" />
               </button>
 
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                      currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                    }`}
-                    onClick={() => changePage(index + 1)}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1 sm:gap-2">
+                {/* Desktop Pagination */}
+                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                  {getPageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
+
+                {/* Mobile Pagination */}
+                <div className="flex items-center gap-1 sm:hidden">
+                  {getMobilePageItems().map((item, index) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={item}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs ${
+                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        }`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                        {item}
+                      </span>
+                    )
+                  )}
+                </div>
               </div>
 
               <button
-                className={`px-3 py-2 ${
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
                   currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
                 }`}
                 onClick={() => changePage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                <BiSolidRightArrow />
+                <BiSolidRightArrow className="size-4 sm:size-5" />
               </button>
             </div>
-            <p>
+
+            <p className="order-3 text-sm max-sm:hidden sm:text-base">
               Page {currentPage} of {totalPages} ({totalRecords} total records)
             </p>
           </div>
@@ -965,137 +910,145 @@ const BillDetailsPage = () => {
   const exportToPDF = () => {
     if (!currentBill) return
 
-    const doc = new jsPDF()
-    const pageWidth = doc.internal.pageSize.getWidth()
+    setIsExporting(true)
+    try {
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
 
-    // Add header
-    doc.setFillColor(249, 249, 249)
-    doc.rect(0, 0, pageWidth, 60, "F")
+      // Add header
+      doc.setFillColor(249, 249, 249)
+      doc.rect(0, 0, pageWidth, 60, "F")
 
-    // Company name
-    doc.setFontSize(20)
-    doc.setFont("helvetica", "bold")
-    doc.setTextColor(10, 10, 10)
-    doc.text("BILLING STATEMENT", pageWidth / 2, 20, { align: "center" })
+      // Company name
+      doc.setFontSize(20)
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(10, 10, 10)
+      doc.text("BILLING STATEMENT", pageWidth / 2, 20, { align: "center" })
 
-    // Report title
-    doc.setFontSize(16)
-    doc.setTextColor(100, 100, 100)
-    doc.text("Postpaid Bill Details", pageWidth / 2, 30, { align: "center" })
+      // Report title
+      doc.setFontSize(16)
+      doc.setTextColor(100, 100, 100)
+      doc.text("Postpaid Bill Details", pageWidth / 2, 30, { align: "center" })
 
-    // Date generated
-    doc.setFontSize(10)
-    doc.setTextColor(150, 150, 150)
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 38, { align: "center" })
-
-    let yPosition = 70
-
-    // Customer Information Section
-    doc.setFontSize(14)
-    doc.setFont("helvetica", "bold")
-    doc.setTextColor(10, 10, 10)
-    doc.text("CUSTOMER INFORMATION", 14, yPosition)
-    yPosition += 10
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [["Field", "Details"]],
-      body: [
-        ["Customer Name", currentBill.customerName],
-        ["Account Number", currentBill.customerAccountNumber],
-        ["Customer ID", currentBill.customerId.toString()],
-        ["Category", getCategoryConfig(currentBill.category).label],
-      ],
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246], textColor: 255 },
-      styles: { fontSize: 10 },
-      margin: { left: 14, right: 14 },
-    })
-
-    yPosition = (doc as any).lastAutoTable.finalY + 15
-
-    // Bill Information Section
-    doc.setFontSize(14)
-    doc.setFont("helvetica", "bold")
-    doc.text("BILL INFORMATION", 14, yPosition)
-    yPosition += 10
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [["Field", "Details"]],
-      body: [
-        ["Bill Period", currentBill.period],
-        ["Bill Name", currentBill.name],
-        ["Status", getStatusConfig(currentBill.status).label],
-        ["Due Date", formatDate(currentBill.dueDate)],
-        ["Issue Date", formatDate(currentBill.createdAt)],
-      ],
-      theme: "grid",
-      headStyles: { fillColor: [16, 185, 129], textColor: 255 },
-      styles: { fontSize: 10 },
-      margin: { left: 14, right: 14 },
-    })
-
-    yPosition = (doc as any).lastAutoTable.finalY + 15
-
-    // Consumption & Charges Section
-    doc.setFontSize(14)
-    doc.setFont("helvetica", "bold")
-    doc.text("CONSUMPTION & CHARGES", 14, yPosition)
-    yPosition += 10
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [["Description", "Amount (₦)"]],
-      body: [
-        ["Consumption (kWh)", currentBill.consumptionKwh.toFixed(2)],
-        ["Tariff per kWh", formatCurrency(currentBill.tariffPerKwh)],
-        ["Charge Before VAT", formatCurrency(currentBill.chargeBeforeVat)],
-        ["VAT Amount", formatCurrency(currentBill.vatAmount)],
-        ["Current Bill Amount", formatCurrency(currentBill.currentBillAmount)],
-        ["Opening Balance", formatCurrency(currentBill.openingBalance)],
-        ["Payments Previous Month", formatCurrency(currentBill.paymentsPrevMonth)],
-        ["TOTAL DUE", formatCurrency(currentBill.totalDue)],
-      ],
-      theme: "grid",
-      headStyles: { fillColor: [139, 92, 246], textColor: 255 },
-      styles: { fontSize: 10 },
-      margin: { left: 14, right: 14 },
-    })
-
-    yPosition = (doc as any).lastAutoTable.finalY + 15
-
-    // Location Information Section
-    doc.setFontSize(14)
-    doc.setFont("helvetica", "bold")
-    doc.text("LOCATION INFORMATION", 14, yPosition)
-    yPosition += 10
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [["Field", "Details"]],
-      body: [
-        ["Area Office", currentBill.areaOfficeName],
-        ["Feeder", currentBill.feederName],
-        ["Distribution Substation", currentBill.distributionSubstationCode],
-      ],
-      theme: "grid",
-      headStyles: { fillColor: [245, 158, 11], textColor: 255 },
-      styles: { fontSize: 10 },
-      margin: { left: 14, right: 14 },
-    })
-
-    // Add page numbers
-    const totalPages = doc.getNumberOfPages()
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
+      // Date generated
+      doc.setFontSize(10)
       doc.setTextColor(150, 150, 150)
-      doc.text(`Page ${i} of ${totalPages}`, pageWidth - 20, doc.internal.pageSize.getHeight() - 10)
-    }
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 38, { align: "center" })
 
-    // Save the PDF
-    doc.save(`bill-${currentBill.customerAccountNumber}-${currentBill.period}.pdf`)
+      let yPosition = 70
+
+      // Customer Information Section
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(10, 10, 10)
+      doc.text("CUSTOMER INFORMATION", 14, yPosition)
+      yPosition += 10
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Field", "Details"]],
+        body: [
+          ["Customer Name", currentBill.customerName],
+          ["Account Number", currentBill.customerAccountNumber],
+          ["Customer ID", currentBill.customerId.toString()],
+          ["Category", getCategoryConfig(currentBill.category).label],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15
+
+      // Bill Information Section
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("BILL INFORMATION", 14, yPosition)
+      yPosition += 10
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Field", "Details"]],
+        body: [
+          ["Bill Period", currentBill.period],
+          ["Bill Name", currentBill.name],
+          ["Status", getStatusConfig(currentBill.status).label],
+          ["Due Date", formatDate(currentBill.dueDate)],
+          ["Issue Date", formatDate(currentBill.createdAt)],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [16, 185, 129], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15
+
+      // Consumption & Charges Section
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("CONSUMPTION & CHARGES", 14, yPosition)
+      yPosition += 10
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Description", "Amount (₦)"]],
+        body: [
+          ["Consumption (kWh)", currentBill.consumptionKwh.toFixed(2)],
+          ["Tariff per kWh", formatCurrency(currentBill.tariffPerKwh)],
+          ["Charge Before VAT", formatCurrency(currentBill.chargeBeforeVat)],
+          ["VAT Amount", formatCurrency(currentBill.vatAmount)],
+          ["Current Bill Amount", formatCurrency(currentBill.currentBillAmount)],
+          ["Opening Balance", formatCurrency(currentBill.openingBalance)],
+          ["Payments Previous Month", formatCurrency(currentBill.paymentsPrevMonth)],
+          ["TOTAL DUE", formatCurrency(currentBill.totalDue)],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [139, 92, 246], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15
+
+      // Location Information Section
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("LOCATION INFORMATION", 14, yPosition)
+      yPosition += 10
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Field", "Details"]],
+        body: [
+          ["Area Office", currentBill.areaOfficeName],
+          ["Feeder", currentBill.feederName],
+          ["Distribution Substation", currentBill.distributionSubstationCode],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [245, 158, 11], textColor: 255 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      })
+
+      // Add page numbers
+      const totalPages = doc.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        doc.setFontSize(8)
+        doc.setTextColor(150, 150, 150)
+        doc.text(`Page ${i} of ${totalPages}`, pageWidth - 20, doc.internal.pageSize.getHeight() - 10)
+      }
+
+      // Save the PDF
+      doc.save(`bill-${currentBill.customerAccountNumber}-${currentBill.period}.pdf`)
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      alert("Error generating PDF. Please try again.")
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   if (currentBillLoading) {
@@ -1104,14 +1057,16 @@ const BillDetailsPage = () => {
 
   if (currentBillError || !currentBill) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
-        <div className="flex flex-col justify-center text-center">
-          <AlertCircle className="mx-auto mb-4 size-16 text-gray-400" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-4 sm:p-6">
+        <div className="flex w-full max-w-md flex-col justify-center text-center">
+          <AlertCircle className="mx-auto mb-4 size-12 text-gray-400 sm:size-16" />
+          <h1 className="mb-2 text-xl font-bold text-gray-900 sm:text-2xl">
             {currentBillError ? "Error Loading Bill" : "Bill Not Found"}
           </h1>
-          <p className="mb-6 text-gray-600">{currentBillError || "The bill you're looking for doesn't exist."}</p>
-          <ButtonModule variant="primary" onClick={() => router.back()}>
+          <p className="mb-6 text-sm text-gray-600 sm:text-base">
+            {currentBillError || "The bill you're looking for doesn't exist."}
+          </p>
+          <ButtonModule variant="primary" onClick={() => router.back()} className="w-full sm:w-auto">
             Back to Bills
           </ButtonModule>
         </div>
@@ -1127,15 +1082,15 @@ const BillDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="mx-auto w-full px-3 py-4 xl:px-16">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 sm:gap-4">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-[#f9f9f9]"
+                      className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-[#f9f9f9] text-gray-700 hover:bg-gray-50 sm:size-9"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
@@ -1158,40 +1113,44 @@ const BillDetailsPage = () => {
                     </motion.button>
 
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Bill Details</h1>
-                      <p className="text-gray-600">Complete billing information and breakdown</p>
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl xl:text-2xl">Bill Details</h1>
+                      <p className="text-xs text-gray-600 sm:text-sm">Complete billing information and breakdown</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <ButtonModule
                       variant="secondary"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm"
                       onClick={exportToPDF}
+                      disabled={isExporting}
                     >
-                      <FileText className="size-4" />
-                      Export PDF
+                      <FileText className="size-3 sm:size-4" />
+                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export PDF"}</span>
+                      <span className="sm:hidden">Export</span>
                     </ButtonModule>
                     {canUpdate ? (
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 text-sm"
                         onClick={() => openModal("edit")}
                       >
-                        <Edit3 className="size-4" />
-                        Edit
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="max-sm:hidden">Edit</span>
+                        <span className="sm:hidden">Edit</span>
                       </ButtonModule>
                     ) : (
                       <ButtonModule
                         variant="primary"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 text-sm"
                         onClick={() => openModal("changeRequest")}
                       >
-                        <Edit3 className="size-4" />
-                        Change Request
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="max-sm:hidden">Change Request</span>
+                        <span className="sm:hidden">Request</span>
                       </ButtonModule>
                     )}
                   </div>
@@ -1199,40 +1158,42 @@ const BillDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-6  sm:py-8 xl:px-16">
+              <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Customer & Quick Info */}
-                <div className="flex w-[30%] flex-col space-y-6">
+                <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
                   {/* Customer Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <div className="text-center">
                       <div className="relative inline-block">
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-3xl font-bold text-blue-600">
-                          <User className="size-8" />
+                        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 sm:size-20 sm:text-3xl">
+                          <User className="size-5 sm:size-7" />
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{currentBill.customerName}</h2>
-                      <p className="mb-4 text-gray-600">Account: {currentBill.customerAccountNumber}</p>
+                      <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{currentBill.customerName}</h2>
+                      <p className="mb-4 text-sm text-gray-600 sm:text-base">
+                        Account: {currentBill.customerAccountNumber}
+                      </p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${categoryConfig.bg} ${categoryConfig.color}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${categoryConfig.bg} ${categoryConfig.color} sm:text-sm`}
                         >
                           {categoryConfig.label}
                         </div>
                         <div
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium ${statusConfig.bg} ${statusConfig.color} sm:text-sm`}
                         >
                           {statusConfig.label}
                         </div>
                       </div>
 
-                      <div className="space-y-3 text-sm">
+                      <div className="space-y-3 text-xs sm:text-sm">
                         <div className="flex items-center gap-3 text-gray-600">
                           <span className="font-medium">Customer ID:</span> {currentBill.customerId}
                         </div>
@@ -1251,30 +1212,34 @@ const BillDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <DollarSign className="size-5" />
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      <DollarSign className="size-4 sm:size-5" />
                       Quick Summary
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Total Due</span>
-                        <span className="font-semibold text-gray-900">{formatCurrency(currentBill.totalDue)}</span>
+                        <span className="text-xs text-gray-600 sm:text-sm">Total Due</span>
+                        <span className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {formatCurrency(currentBill.totalDue)}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Consumption</span>
-                        <span className="font-semibold text-gray-900">{currentBill.consumptionKwh} kWh</span>
+                        <span className="text-xs text-gray-600 sm:text-sm">Consumption</span>
+                        <span className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentBill.consumptionKwh} kWh
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Current Bill</span>
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-xs text-gray-600 sm:text-sm">Current Bill</span>
+                        <span className="text-sm font-semibold text-gray-900 sm:text-base">
                           {formatCurrency(currentBill.currentBillAmount)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Opening Balance</span>
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-xs text-gray-600 sm:text-sm">Opening Balance</span>
+                        <span className="text-sm font-semibold text-gray-900 sm:text-base">
                           {formatCurrency(currentBill.openingBalance)}
                         </span>
                       </div>
@@ -1286,67 +1251,77 @@ const BillDetailsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <Building className="size-5" />
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      <Building className="size-4 sm:size-5" />
                       Location
                     </h3>
                     <div className="space-y-3">
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
-                        <div className="font-medium text-gray-900">{currentBill.areaOfficeName}</div>
-                        <div className="text-sm text-gray-600">Area Office</div>
+                        <div className="text-sm font-medium text-gray-900 sm:text-base">
+                          {currentBill.areaOfficeName}
+                        </div>
+                        <div className="text-xs text-gray-600 sm:text-sm">Area Office</div>
                       </div>
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
-                        <div className="font-medium text-gray-900">{currentBill.feederName}</div>
-                        <div className="text-sm text-gray-600">Feeder</div>
+                        <div className="text-sm font-medium text-gray-900 sm:text-base">{currentBill.feederName}</div>
+                        <div className="text-xs text-gray-600 sm:text-sm">Feeder</div>
                       </div>
                       <div className="rounded-lg bg-[#f9f9f9] p-3">
-                        <div className="font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 sm:text-base">
                           {currentDistributionSubstation?.dssCode || currentBill.distributionSubstationCode}
                         </div>
-                        <div className="text-sm text-gray-600">Distribution Station</div>
+                        <div className="text-xs text-gray-600 sm:text-sm">Distribution Station</div>
                       </div>
                     </div>
                   </motion.div>
                 </div>
 
                 {/* Right Column - Detailed Information */}
-                <div className="flex w-full flex-col space-y-6">
+                <div className="flex w-full flex-col space-y-6 xl:w-[70%]">
                   {/* Bill Information */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <FileText className="size-5" />
+                      <FileText className="size-4 sm:size-5" />
                       Bill Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Bill Name</label>
-                        <p className="font-semibold text-gray-900">{currentBill.name}</p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Bill Name</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentBill.name}</p>
                       </div>
-                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Billing Period</label>
-                        <p className="font-semibold text-gray-900">{currentBill.period}</p>
+                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Billing Period</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentBill.period}</p>
                       </div>
-                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Status</label>
-                        <p className={`font-semibold ${statusConfig.color}`}>{statusConfig.label}</p>
+                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Status</label>
+                        <p className={`text-sm font-semibold ${statusConfig.color} sm:text-base`}>
+                          {statusConfig.label}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Due Date</label>
-                        <p className="font-semibold text-gray-900">{formatDate(currentBill.dueDate)}</p>
+                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Due Date</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {formatDate(currentBill.dueDate)}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Issue Date</label>
-                        <p className="font-semibold text-gray-900">{formatDate(currentBill.createdAt)}</p>
+                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Issue Date</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {formatDate(currentBill.createdAt)}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9]  p-4">
-                        <label className="text-sm font-medium text-gray-600">Last Updated</label>
-                        <p className="font-semibold text-gray-900">{formatDateTime(currentBill.lastUpdated)}</p>
+                      <div className="rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Last Updated</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {formatDateTime(currentBill.lastUpdated)}
+                        </p>
                       </div>
                     </div>
                   </motion.div>
@@ -1356,52 +1331,66 @@ const BillDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <Zap className="size-5" />
+                      <Zap className="size-4 sm:size-5" />
                       Consumption & Billing Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-6 ">
-                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4 md:grid-cols-2">
-                        <h4 className="font-semibold text-gray-900">Consumption Information</h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 sm:text-base">Consumption Information</h4>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Actual Consumption</span>
-                            <span className="font-semibold">{currentBill.consumptionKwh} kWh</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Actual Consumption</span>
+                            <span className="text-sm font-semibold sm:text-base">{currentBill.consumptionKwh} kWh</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Estimated Consumption</span>
-                            <span className="font-semibold">{currentBill.estimatedConsumptionKwh || 0} kWh</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Estimated Consumption</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {currentBill.estimatedConsumptionKwh || 0} kWh
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Forecast Consumption</span>
-                            <span className="font-semibold">{currentBill.forecastConsumptionKwh} kWh</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Forecast Consumption</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {currentBill.forecastConsumptionKwh} kWh
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Tariff Rate</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.tariffPerKwh)}/kWh</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Tariff Rate</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.tariffPerKwh)}/kWh
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4 md:grid-cols-2">
-                        <h4 className="font-semibold text-gray-900">Billing Breakdown</h4>
+                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 sm:text-base">Billing Breakdown</h4>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Charge Before VAT</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.chargeBeforeVat)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Charge Before VAT</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.chargeBeforeVat)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">VAT Amount ({currentBill.vatRate}%)</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.vatAmount)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">
+                              VAT Amount ({currentBill.vatRate}%)
+                            </span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.vatAmount)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Current Bill Amount</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.currentBillAmount)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Current Bill Amount</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.currentBillAmount)}
+                            </span>
                           </div>
                           <div className="flex justify-between border-t pt-2">
-                            <span className="font-semibold text-gray-900">Total Due</span>
-                            <span className="text-lg font-bold text-gray-900">
+                            <span className="text-sm font-semibold text-gray-900 sm:text-base">Total Due</span>
+                            <span className="text-lg font-bold text-gray-900 sm:text-xl">
                               {formatCurrency(currentBill.totalDue)}
                             </span>
                           </div>
@@ -1415,45 +1404,55 @@ const BillDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <DollarSign className="size-5" />
+                      <DollarSign className="size-4 sm:size-5" />
                       Balance & Forecast
                     </h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <h4 className="font-semibold text-gray-900">Balance Information</h4>
-                        <div className="space-y-3 ">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 sm:text-base">Balance Information</h4>
+                        <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Opening Balance</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.openingBalance)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Opening Balance</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.openingBalance)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Payments Previous Month</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.paymentsPrevMonth)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Payments Previous Month</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.paymentsPrevMonth)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Adjusted Opening Balance</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.adjustedOpeningBalance)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Adjusted Opening Balance</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.adjustedOpeningBalance)}
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-4">
-                        <h4 className="font-semibold text-gray-900">Forecast Information</h4>
+                      <div className="space-y-4 rounded-lg border border-dashed border-gray-200 bg-[#f9f9f9] p-3 sm:p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 sm:text-base">Forecast Information</h4>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Forecast Bill Amount</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.forecastBillAmount)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Forecast Bill Amount</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.forecastBillAmount)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Forecast Total Due</span>
-                            <span className="font-semibold">{formatCurrency(currentBill.forecastTotalDue)}</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Forecast Total Due</span>
+                            <span className="text-sm font-semibold sm:text-base">
+                              {formatCurrency(currentBill.forecastTotalDue)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Billing Variance</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">Billing Variance</span>
                             <span
-                              className={`font-semibold ${
+                              className={`text-sm font-semibold sm:text-base ${
                                 currentBill.billingVarianceAmount >= 0 ? "text-green-600" : "text-red-600"
                               }`}
                             >
@@ -1470,38 +1469,48 @@ const BillDetailsPage = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                   >
                     <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                      <Calendar className="size-5" />
+                      <Calendar className="size-4 sm:size-5" />
                       Additional Information
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Meter Reading ID</label>
-                        <p className="font-semibold text-gray-900">{currentBill.meterReadingId || "N/A"}</p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Reading ID</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentBill.meterReadingId || "N/A"}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Feeder Energy Cap ID</label>
-                        <p className="font-semibold text-gray-900">{currentBill.feederEnergyCapId || "N/A"}</p>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Feeder Energy Cap ID</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentBill.feederEnergyCapId || "N/A"}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Open Disputes</label>
-                        <p className="font-semibold text-gray-900">{currentBill.openDisputeCount}</p>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Open Disputes</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentBill.openDisputeCount}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Estimated Bill</label>
-                        <p className="font-semibold text-gray-900">{currentBill.isEstimated ? "Yes" : "No"}</p>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Estimated Bill</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentBill.isEstimated ? "Yes" : "No"}
+                        </p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Meter Reading Flagged</label>
-                        <p className="font-semibold text-gray-900">
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Reading Flagged</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
                           {currentBill.isMeterReadingFlagged ? "Yes" : "No"}
                         </p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                        <label className="text-sm font-medium text-gray-600">Adjustment Status</label>
-                        <p className="font-semibold text-gray-900">{currentBill.adjustmentStatus}</p>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
+                        <label className="text-xs font-medium text-gray-600 sm:text-sm">Adjustment Status</label>
+                        <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                          {currentBill.adjustmentStatus}
+                        </p>
                       </div>
                     </div>
                   </motion.div>
@@ -1512,29 +1521,29 @@ const BillDetailsPage = () => {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6"
                     >
                       <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <FileText className="size-5" />
+                        <FileText className="size-4 sm:size-5" />
                         Ledger Entries ({currentBill.ledgerEntries.length})
                       </h3>
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[600px] border-separate border-spacing-0 text-left">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                              <th className="whitespace-nowrap border-b p-3 text-xs font-semibold text-gray-900 sm:p-4 sm:text-sm">
                                 Type
                               </th>
-                              <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                              <th className="whitespace-nowrap border-b p-3 text-xs font-semibold text-gray-900 sm:p-4 sm:text-sm">
                                 Amount
                               </th>
-                              <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                              <th className="whitespace-nowrap border-b p-3 text-xs font-semibold text-gray-900 sm:p-4 sm:text-sm">
                                 Code
                               </th>
-                              <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                              <th className="whitespace-nowrap border-b p-3 text-xs font-semibold text-gray-900 sm:p-4 sm:text-sm">
                                 Memo
                               </th>
-                              <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
+                              <th className="whitespace-nowrap border-b p-3 text-xs font-semibold text-gray-900 sm:p-4 sm:text-sm">
                                 Date
                               </th>
                             </tr>
@@ -1542,17 +1551,17 @@ const BillDetailsPage = () => {
                           <tbody className="bg-white">
                             {currentBill.ledgerEntries.map((entry, index) => (
                               <tr key={entry.id} className="hover:bg-gray-50">
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                <td className="whitespace-nowrap border-b p-3 text-xs text-gray-600 sm:p-4 sm:text-sm">
                                   {entry.type}
                                 </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                                <td className="whitespace-nowrap border-b p-3 text-xs font-semibold text-gray-900 sm:p-4 sm:text-sm">
                                   {formatCurrency(entry.amount)}
                                 </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                <td className="whitespace-nowrap border-b p-3 text-xs text-gray-600 sm:p-4 sm:text-sm">
                                   {entry.code}
                                 </td>
-                                <td className="border-b px-4 py-3 text-sm text-gray-600">{entry.memo}</td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                <td className="border-b p-3 text-xs text-gray-600 sm:p-4 sm:text-sm">{entry.memo}</td>
+                                <td className="whitespace-nowrap border-b p-3 text-xs text-gray-600 sm:p-4 sm:text-sm">
                                   {formatDateTime(entry.effectiveAtUtc)}
                                 </td>
                               </tr>

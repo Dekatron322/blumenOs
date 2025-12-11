@@ -1,62 +1,56 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearError, clearFilters, fetchPostpaidBills, setFilters, setPagination } from "lib/redux/postpaidSlice"
+import { clearError, fetchMeterReadings, setPagination } from "lib/redux/meterReadingSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { AddCustomerIcon, MapIcon, UserIcon } from "components/Icons/Icons"
+import { AddCustomerIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
 import { PlusCircle } from "lucide-react"
+import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface ActionDropdownProps {
-  bill: Bill
-  onViewDetails: (bill: Bill) => void
-  onUpdateBill: (billId: number) => void
+  reading: MeterReading
+  onViewDetails: (reading: MeterReading) => void
+  onValidateReading: (readingId: number) => void
 }
 
-// Use the PostpaidBill interface from your slice and transform to our Bill interface
-interface PostpaidBill {
+interface MeterReading {
   id: number
+  customerId: number
+  period: string
+  previousReadingKwh: number
+  presentReadingKwh: number
+  capturedAtUtc: string
+  capturedByUserId: number
+  capturedByName: string
   customerName: string
   customerAccountNumber: string
-  period: string
-  name?: string
-  totalDue: number
-  status: number
-  dueDate?: string
-  createdAt?: string
-  category: number
-  feederName?: string
-  areaOfficeName?: string
-  consumptionKwh?: number
-  tariffPerKwh?: number
+  notes: string
+  validConsumptionKwh: number
+  invalidConsumptionKwh: number
+  averageConsumptionBaselineKwh: number
+  standardDeviationKwh: number
+  lowThresholdKwh: number
+  highThresholdKwh: number
+  anomalyScore: number
+  validationStatus: number
+  isFlaggedForReview: boolean
+  isRollover: boolean
+  rolloverCount: number
+  rolloverAdjustmentKwh: number
+  estimatedConsumptionKwh: number
+  validatedAtUtc: string | null
+  validationNotes: string | null
 }
 
-interface Bill {
-  id: number
-  customerName: string
-  accountNumber: string
-  billingCycle: string
-  name: string
-  amount: string
-  status: "Paid" | "Pending" | "Overdue" | "Cancelled"
-  dueDate: string
-  issueDate: string
-  customerType: "Residential" | "Commercial" | "Industrial"
-  location: string
-  consumption: string
-  tariff: string
-}
-
-interface AllBillsProps {
-  onViewBillDetails?: (bill: Bill) => void
-}
-
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, onUpdateBill }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ reading, onViewDetails, onValidateReading }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -96,14 +90,13 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, on
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
-    onViewDetails(bill)
+    onViewDetails(reading)
     setIsOpen(false)
   }
 
-  const handleUpdateBill = (e: React.MouseEvent) => {
+  const handleValidateReading = (e: React.MouseEvent) => {
     e.preventDefault()
-    console.log("Update bill:", bill.id)
-    onUpdateBill(bill.id)
+    onValidateReading(reading.id)
     setIsOpen(false)
   }
 
@@ -154,23 +147,35 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, on
               >
                 View Details
               </motion.button>
-
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleUpdateBill}
+                onClick={handleValidateReading}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Update Bill
+                Validate Reading
               </motion.button>
-
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {}}
+                onClick={() => {
+                  console.log("Flag for review:", reading.id)
+                  setIsOpen(false)
+                }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Download PDF
+                Flag for Review
+              </motion.button>
+              <motion.button
+                className="block w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-gray-100"
+                onClick={() => {
+                  console.log("Adjust reading:", reading.id)
+                  setIsOpen(false)
+                }}
+                whileHover={{ backgroundColor: "#eff6ff" }}
+                transition={{ duration: 0.1 }}
+              >
+                Adjust Reading
               </motion.button>
             </div>
           </motion.div>
@@ -186,8 +191,8 @@ const LoadingSkeleton = () => {
       {/* Header Section Skeleton */}
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
         <div className="mb-3 md:mb-0">
-          <div className="mb-2 h-8 w-40 rounded bg-gray-200 sm:w-48"></div>
-          <div className="h-4 w-56 rounded bg-gray-200 sm:w-64"></div>
+          <div className="mb-2 h-8 w-48 rounded bg-gray-200 sm:w-56"></div>
+          <div className="h-4 w-64 rounded bg-gray-200 sm:w-72"></div>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <div className="h-10 w-full rounded bg-gray-200 sm:w-48"></div>
@@ -195,12 +200,19 @@ const LoadingSkeleton = () => {
         </div>
       </div>
 
+      {/* Filters Skeleton */}
+      <div className="mt-4 flex flex-wrap gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-10 w-40 rounded bg-gray-200 sm:w-52"></div>
+        ))}
+      </div>
+
       {/* Table Skeleton */}
-      <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
-        <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+      <div className="mt-4 w-full overflow-x-auto border-x bg-[#f9f9f9]">
+        <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
-              {[...Array(9)].map((_, i) => (
+              {[...Array(11)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-3 sm:p-4">
                   <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
@@ -210,7 +222,7 @@ const LoadingSkeleton = () => {
           <tbody>
             {[...Array(5)].map((_, rowIndex) => (
               <tr key={rowIndex}>
-                {[...Array(9)].map((_, cellIndex) => (
+                {[...Array(11)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-3 py-2 sm:px-4 sm:py-3">
                     <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
@@ -222,7 +234,7 @@ const LoadingSkeleton = () => {
       </div>
 
       {/* Pagination Section Skeleton */}
-      <div className="flex flex-col items-center justify-between gap-3 border-t py-3 sm:flex-row">
+      <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t py-3 sm:flex-row">
         <div className="h-6 w-48 rounded bg-gray-200"></div>
         <div className="flex items-center gap-2">
           <div className="size-8 rounded bg-gray-200"></div>
@@ -237,15 +249,19 @@ const LoadingSkeleton = () => {
   )
 }
 
-const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
-  const dispatch = useAppDispatch()
+const MeterReadings: React.FC = () => {
   const router = useRouter()
-  const { bills, loading, error, pagination, filters } = useAppSelector((state) => state.postpaidBilling)
+  const dispatch = useAppDispatch()
+  const { meterReadings, meterReadingsLoading, meterReadingsError, pagination } = useAppSelector(
+    (state) => state.meterReadings
+  )
+  const { customers } = useAppSelector((state) => state.customers)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
+  const [selectedReading, setSelectedReading] = useState<MeterReading | null>(null)
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -253,19 +269,35 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages || 1
 
-  // Fetch bills on component mount and when search/pagination changes
+  // Load initial data
   useEffect(() => {
-    console.log("AllBills useEffect triggered - fetching bills...")
+    // Load customers for the customer filter dropdown
+    dispatch(
+      fetchCustomers({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
 
+    // Load area offices for the area office filter dropdown
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
+  }, [dispatch])
+
+  // Fetch meter readings on component mount and when search/pagination changes
+  useEffect(() => {
     const fetchParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(searchText && { accountNumber: searchText }),
-      ...filters,
+      ...(searchText && { search: searchText }),
     }
 
-    dispatch(fetchPostpaidBills(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, filters])
+    dispatch(fetchMeterReadings(fetchParams))
+  }, [dispatch, currentPage, pageSize, searchText])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -274,27 +306,79 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     }
   }, [dispatch])
 
-  const getStatusStyle = (status: Bill["status"]) => {
+  // Filter state
+  const [filters, setFilters] = useState({
+    period: "",
+    customerId: "",
+    areaOfficeId: "",
+    feederId: "",
+    distributionSubstationId: "",
+  })
+
+  // Generate period options
+  const generatePeriodOptions = () => {
+    const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
+
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    })
+
+    // Include current month + next 5 months
+    for (let i = 0; i <= 5; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      const value = `${year}-${month}`
+      const label = formatter.format(date)
+
+      options.push({ value, label })
+    }
+
+    // Add existing periods from data
+    const existingPeriods = Array.from(new Set(meterReadings.map((reading) => reading.period)))
+    existingPeriods.forEach((period) => {
+      const alreadyExists = options.some((opt) => opt.value === period)
+      if (!alreadyExists) {
+        let label = period
+        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
+        if (match && match[1] && match[2]) {
+          const year = parseInt(match[1], 10)
+          const monthIndex = parseInt(match[2], 10) - 1
+          const date = new Date(year, monthIndex, 1)
+          label = formatter.format(date)
+        }
+        options.push({ value: period, label })
+      }
+    })
+
+    return options
+  }
+
+  const periodOptions = generatePeriodOptions()
+
+  const getValidationStatusStyle = (status: number) => {
     switch (status) {
-      case "Paid":
+      case 1: // Validated
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
         }
-      case "Pending":
+      case 2: // Pending
         return {
-          backgroundColor: "#EDF2FE",
-          color: "#4976F4",
+          backgroundColor: "#FEF6E6",
+          color: "#D97706",
         }
-      case "Overdue":
+      case 3: // Flagged
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
         }
-      case "Cancelled":
+      case 4: // Adjusted
         return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
+          backgroundColor: "#EFF6FF",
+          color: "#2563EB",
         }
       default:
         return {
@@ -304,28 +388,69 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     }
   }
 
-  const getCustomerTypeStyle = (type: Bill["customerType"]) => {
-    switch (type) {
-      case "Residential":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "Commercial":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "Industrial":
-        return {
-          backgroundColor: "#F4EDF7",
-          color: "#954BAF",
-        }
+  const getValidationStatusText = (status: number) => {
+    switch (status) {
+      case 1:
+        return "Validated"
+      case 2:
+        return "Pending"
+      case 3:
+        return "Flagged"
+      case 4:
+        return "Adjusted"
       default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
+        return "Unknown"
+    }
+  }
+
+  const getAnomalyScoreStyle = (score: number) => {
+    if (score >= 80) {
+      return {
+        backgroundColor: "#F7EDED",
+        color: "#AF4B4B",
+      }
+    } else if (score >= 60) {
+      return {
+        backgroundColor: "#FEF6E6",
+        color: "#D97706",
+      }
+    } else if (score >= 40) {
+      return {
+        backgroundColor: "#EFF6FF",
+        color: "#2563EB",
+      }
+    } else {
+      return {
+        backgroundColor: "#EEF5F0",
+        color: "#589E67",
+      }
+    }
+  }
+
+  const getConsumptionStyle = (consumption: number, baseline: number) => {
+    if (baseline === 0) return { backgroundColor: "#F3F4F6", color: "#6B7280" }
+
+    const ratio = consumption / baseline
+    if (ratio > 1.5) {
+      return {
+        backgroundColor: "#F7EDED",
+        color: "#AF4B4B",
+      }
+    } else if (ratio > 1.2) {
+      return {
+        backgroundColor: "#FEF6E6",
+        color: "#D97706",
+      }
+    } else if (ratio < 0.8) {
+      return {
+        backgroundColor: "#EFF6FF",
+        color: "#2563EB",
+      }
+    } else {
+      return {
+        backgroundColor: "#EEF5F0",
+        color: "#589E67",
+      }
     }
   }
 
@@ -336,21 +461,12 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setSearchText(value)
-    if (value.trim()) {
-      dispatch(setFilters({ accountNumber: value.trim() }))
-    } else {
-      dispatch(clearFilters())
-    }
-    // Reset to first page when searching
+    setSearchText(e.target.value)
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    dispatch(clearFilters())
-    // Reset to first page when clearing search
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
@@ -375,205 +491,46 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     }
   }
 
-  const handleViewBillDetails = (bill: Bill) => {
-    router.push(`/billing/bills/${bill.id}`)
-    onViewBillDetails?.(bill)
+  const handleViewReadingDetails = (reading: MeterReading) => {
+    router.push(`/billing/meter-readings/details/${reading.id}`)
   }
 
-  const handleUpdateBill = (billId: number) => {
-    router.push(`/billing/bills/update/${billId}`)
+  const handleValidateReading = (readingId: number) => {
+    console.log("Validating reading:", readingId)
+    // Implement validation logic here
+  }
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+    dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  const handleFilterSelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
+  ) => {
+    const { name, value } = e.target
+    handleFilterChange(name, String(value))
   }
 
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    } catch {
-      return "Invalid Date"
-    }
-  }
-
-  const formatCurrency = (amount: string) => {
-    // If amount already has ₦ symbol, return as is
-    if (amount.includes("₦")) return amount
-
-    // Otherwise try to parse as number
-    const num = parseFloat(amount.replace(/[^0-9.-]+/g, ""))
-    if (isNaN(num)) return amount
-
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-    }).format(num)
-  }
-
-  // Transform API PostpaidBill data to component Bill format
-  const transformApiBillsToTableBills = (): Bill[] => {
-    if (!bills || bills.length === 0) {
-      console.log("No API bills to transform")
-      return []
-    }
-
-    console.log("Transforming API bills to table format, count:", bills.length)
-
-    return bills.map((apiBill) => {
-      // Determine status based on bill data
-      let status: "Paid" | "Pending" | "Overdue" | "Cancelled" = "Pending"
-
-      // Map your API status to component status
-      if (apiBill.status === 1) status = "Paid"
-      else if (apiBill.status === 2) status = "Pending"
-      else if (apiBill.status === 3) status = "Overdue"
-      else if (apiBill.status === 4) status = "Cancelled"
-
-      // Determine customer type based on category
-      let customerType: "Residential" | "Commercial" | "Industrial" = "Residential"
-      if (apiBill.category === 1) customerType = "Residential"
-      else if (apiBill.category === 2) customerType = "Commercial"
-      else if (apiBill.category === 3) customerType = "Industrial"
-
-      // Format amount
-      const amount = `₦${(apiBill.totalDue || 0).toLocaleString()}`
-
-      // Format consumption
-      const consumption = `${apiBill.consumptionKwh || 0} kWh`
-
-      // Use feeder name or area office as location
-      const location = apiBill.feederName || apiBill.areaOfficeName || "Unknown"
-
-      // Format dates - ensure we always return a string, never undefined
-      const formatApiDate = (dateString?: string) => {
-        try {
-          const date = new Date(dateString ?? new Date())
-          return date.toISOString().split("T")[0]
-        } catch {
-          return new Date().toISOString().split("T")[0]
-        }
-      }
-
-      return {
-        id: apiBill.id,
-        customerName: apiBill.customerName || "Unknown Customer",
-        accountNumber: apiBill.customerAccountNumber || "N/A",
-        billingCycle: apiBill.period || "Unknown Period",
-        name: apiBill.name || "Unnamed Bill",
-        amount,
-        status,
-        dueDate: formatApiDate(apiBill.dueDate),
-        issueDate: formatApiDate(apiBill.createdAt),
-        customerType,
-        location,
-        consumption,
-        tariff: `₦${apiBill.tariffPerKwh || 0}/kWh`,
-      } as Bill
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     })
   }
 
-  const tableBills = transformApiBillsToTableBills()
-  console.log("Transformed table bills:", tableBills)
-
-  // Fallback data if no API data
-  const fallbackBills: Bill[] = [
-    {
-      id: 1,
-      customerName: "Fatima Hassan",
-      accountNumber: "2301567890",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦425",
-      status: "Paid",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Residential",
-      location: "Lagos Island",
-      consumption: "35 kWh",
-      tariff: "₦12/kWh",
-    },
-    {
-      id: 2,
-      customerName: "John Adebayo",
-      accountNumber: "2301456789",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦250",
-      status: "Pending",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Residential",
-      location: "Ikeja",
-      consumption: "25 kWh",
-      tariff: "₦10/kWh",
-    },
-    {
-      id: 3,
-      customerName: "Grace Okonkwo",
-      accountNumber: "2301678901",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦187",
-      status: "Overdue",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Commercial",
-      location: "Surulere",
-      consumption: "55 kWh",
-      tariff: "₦3.4/kWh",
-    },
-    {
-      id: 4,
-      customerName: "Tech Solutions Ltd",
-      accountNumber: "2301789012",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦1,250",
-      status: "Paid",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Commercial",
-      location: "Victoria Island",
-      consumption: "230 kWh",
-      tariff: "₦5.4/kWh",
-    },
-    {
-      id: 5,
-      customerName: "Michael Johnson",
-      accountNumber: "2301890123",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦320",
-      status: "Cancelled",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Residential",
-      location: "Lekki",
-      consumption: "30 kWh",
-      tariff: "₦10.7/kWh",
-    },
-    {
-      id: 6,
-      customerName: "Sarah Blumenthal",
-      accountNumber: "2301901234",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦550",
-      status: "Paid",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Industrial",
-      location: "Ilupeju",
-      consumption: "580 kWh",
-      tariff: "₦0.95/kWh",
-    },
-  ]
-
-  // Only show fallback if no data and not loading
-  const shouldShowFallback = !loading && tableBills.length === 0
-  const displayBills = shouldShowFallback ? fallbackBills : tableBills
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   const getPageItems = (): (number | string)[] => {
     const total = totalPages
@@ -633,8 +590,9 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     return items
   }
 
-  if (loading) return <LoadingSkeleton />
-  if (error) return <div className="p-4 text-red-500">Error loading bills data: {error}</div>
+  if (meterReadingsLoading) return <LoadingSkeleton />
+  if (meterReadingsError)
+    return <div className="p-4 text-red-500">Error loading meter readings data: {meterReadingsError}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -645,8 +603,8 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Bills</p>
-          <p className="text-sm text-gray-600">Manage and monitor all customer bills and payments</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Meter Readings</p>
+          <p className="text-sm text-gray-600">Manage and validate customer meter readings</p>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-full sm:w-64 md:w-[380px]">
@@ -659,20 +617,62 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
               bgClassName="bg-white"
             />
           </div>
-          {/* <button
+          <button
             type="button"
-            onClick={() => router.push("/billing/bills/add")}
+            onClick={() => router.push("/billing/meter-readings/add")}
             className="rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
           >
             <PlusCircle className="size-4 sm:hidden" />
-            <p className="max-sm:hidden"> Add Bill </p>
-          </button> */}
+            <p className="max-sm:hidden"> Add Reading </p>
+          </button>
         </div>
       </motion.div>
 
-      {displayBills.length === 0 ? (
+      {/* Filters Section */}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <FormSelectModule
+          label="Period"
+          name="period"
+          value={filters.period}
+          onChange={handleFilterSelectChange}
+          options={periodOptions}
+          className="w-full sm:w-52"
+        />
+
+        <FormSelectModule
+          label="Customer"
+          name="customerId"
+          value={filters.customerId}
+          onChange={handleFilterSelectChange}
+          options={[
+            { value: "", label: "All Customers" },
+            ...customers.slice(0, 10).map((customer) => ({
+              value: String(customer.id),
+              label: `${customer.fullName}`,
+            })),
+          ]}
+          className="w-full sm:w-56"
+        />
+
+        <FormSelectModule
+          label="Area Office"
+          name="areaOfficeId"
+          value={filters.areaOfficeId}
+          onChange={handleFilterSelectChange}
+          options={[
+            { value: "", label: "All Area Offices" },
+            ...areaOffices.slice(0, 10).map((office) => ({
+              value: String(office.id),
+              label: office.nameOfNewOAreaffice,
+            })),
+          ]}
+          className="w-full sm:w-56"
+        />
+      </div>
+
+      {meterReadings.length === 0 ? (
         <motion.div
-          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+          className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
@@ -683,18 +683,18 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText ? "No matching bills found" : "No bills available"}
+            {searchText ? "No matching readings found" : "No meter readings available"}
           </motion.p>
         </motion.div>
       ) : (
         <>
           <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+            className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+            <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
                   <th
@@ -707,23 +707,39 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("billingCycle")}
+                    onClick={() => toggleSort("period")}
                   >
                     <div className="flex items-center gap-2">
-                      Billing Cycle <RxCaretSort />
+                      Period <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("amount")}
+                    onClick={() => toggleSort("previousReadingKwh")}
                   >
                     <div className="flex items-center gap-2">
-                      Amount <RxCaretSort />
+                      Previous Reading <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("status")}
+                    onClick={() => toggleSort("presentReadingKwh")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Present Reading <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("validConsumptionKwh")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Consumption <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("validationStatus")}
                   >
                     <div className="flex items-center gap-2">
                       Status <RxCaretSort />
@@ -731,34 +747,34 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("dueDate")}
+                    onClick={() => toggleSort("anomalyScore")}
                   >
                     <div className="flex items-center gap-2">
-                      Due Date <RxCaretSort />
+                      Anomaly Score <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customerType")}
+                    onClick={() => toggleSort("isFlaggedForReview")}
                   >
                     <div className="flex items-center gap-2">
-                      Customer Type <RxCaretSort />
+                      Review Flag <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("location")}
+                    onClick={() => toggleSort("capturedAtUtc")}
                   >
                     <div className="flex items-center gap-2">
-                      Location <RxCaretSort />
+                      Captured Date <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("consumption")}
+                    onClick={() => toggleSort("capturedByName")}
                   >
                     <div className="flex items-center gap-2">
-                      Consumption <RxCaretSort />
+                      Captured By <RxCaretSort />
                     </div>
                   </th>
                   <th className="whitespace-nowrap border-b p-4 text-sm">
@@ -768,9 +784,9 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {displayBills.map((bill: Bill, index: number) => (
+                  {meterReadings.map((reading: MeterReading, index: number) => (
                     <motion.tr
-                      key={bill.id}
+                      key={reading.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -782,66 +798,100 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             <UserIcon />
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{bill.customerName}</div>
-                            <div className="text-xs text-gray-500">{bill.accountNumber}</div>
+                            <div className="text-sm font-medium text-gray-900">{reading.customerName}</div>
+                            <div className="text-xs text-gray-500">{reading.customerAccountNumber}</div>
+                            <div className="text-xs text-blue-600">ID: {reading.customerId}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{bill.name}</div>
-                          <div className="text-xs text-gray-500">{bill.billingCycle}</div>
-                        </div>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{reading.period}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        {reading.previousReadingKwh.toLocaleString()} kWh
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                        {formatCurrency(bill.amount)}
+                        {reading.presentReadingKwh.toLocaleString()} kWh
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                         <motion.div
-                          style={getStatusStyle(bill.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium"
+                          style={getConsumptionStyle(
+                            reading.validConsumptionKwh,
+                            reading.averageConsumptionBaselineKwh
+                          )}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.1 }}
+                        >
+                          {reading.validConsumptionKwh.toLocaleString()} kWh
+                        </motion.div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Baseline:{" "}
+                          {reading.averageConsumptionBaselineKwh != null
+                            ? `${reading.averageConsumptionBaselineKwh.toLocaleString()} kWh`
+                            : "N/A"}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        <motion.div
+                          style={getValidationStatusStyle(reading.validationStatus)}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
                           <span
                             className="size-2 rounded-full"
                             style={{
-                              backgroundColor: getStatusStyle(bill.status).color,
+                              backgroundColor:
+                                reading.validationStatus === 1
+                                  ? "#589E67"
+                                  : reading.validationStatus === 2
+                                  ? "#D97706"
+                                  : reading.validationStatus === 3
+                                  ? "#AF4B4B"
+                                  : "#2563EB",
                             }}
                           ></span>
-                          {bill.status}
+                          {getValidationStatusText(reading.validationStatus)}
                         </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        {formatDate(bill.dueDate)}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                         <motion.div
-                          style={getCustomerTypeStyle(bill.customerType)}
-                          className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium"
+                          style={getAnomalyScoreStyle(reading.anomalyScore)}
+                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
-                          {bill.customerType}
+                          {reading.anomalyScore}%
+                        </motion.div>
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                        <motion.div
+                          className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+                            reading.isFlaggedForReview ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.1 }}
+                        >
+                          <span
+                            className="size-2 rounded-full"
+                            style={{
+                              backgroundColor: reading.isFlaggedForReview ? "#AF4B4B" : "#589E67",
+                            }}
+                          ></span>
+                          {reading.isFlaggedForReview ? "Flagged" : "Clear"}
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <MapIcon />
-                          {bill.location}
-                        </div>
+                        <div>{formatDate(reading.capturedAtUtc)}</div>
+                        <div className="text-xs text-gray-500">{formatDateTime(reading.capturedAtUtc)}</div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        <div>
-                          <div className="font-medium">{bill.consumption}</div>
-                          <div className="text-xs text-gray-500">{bill.tariff}</div>
-                        </div>
+                        {reading.capturedByName}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <div className="flex items-center gap-2">
                           <ButtonModule
                             size="sm"
-                            onClick={() => handleViewBillDetails(bill)}
+                            onClick={() => handleViewReadingDetails(reading)}
                             variant="primary"
                             className="text-xs sm:text-sm"
                           >
@@ -949,4 +999,4 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   )
 }
 
-export default AllBills
+export default MeterReadings

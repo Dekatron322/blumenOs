@@ -271,7 +271,7 @@ const ViewChangeRequestModal: React.FC<ViewChangeRequestModalProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-3 backdrop-blur-sm sm:p-4"
       onClick={onRequestClose}
     >
       <motion.div
@@ -279,10 +279,10 @@ const ViewChangeRequestModal: React.FC<ViewChangeRequestModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative flex h-[90vh] w-[70vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-4 sm:p-6">
           <h2 className="text-xl font-bold text-gray-900">Billing Change Request Details</h2>
           <button
             onClick={onRequestClose}
@@ -313,7 +313,7 @@ const ViewChangeRequestModal: React.FC<ViewChangeRequestModalProps> = ({
               </div>
             </div>
           ) : changeRequestDetails ? (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Header Information */}
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Basic Information */}
@@ -616,7 +616,7 @@ const ViewChangeRequestModal: React.FC<ViewChangeRequestModalProps> = ({
           )}
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="flex gap-4 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:p-6">
           <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
             Close
           </ButtonModule>
