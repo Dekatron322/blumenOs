@@ -201,8 +201,8 @@ const AddPaymentPage = () => {
           duration: 3000,
         })
 
-        // Move to next step on mobile
-        if (window.innerWidth < 768) {
+        // Move to next step on mobile (client-only)
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
           setCurrentStep(2)
         }
       }
@@ -921,7 +921,7 @@ const AddPaymentPage = () => {
                   {/* Section 1: Payment Details */}
                   <AnimatePresence mode="wait">
                     {/* Step 1: Reference Validation */}
-                    {(currentStep === 1 || window.innerWidth >= 768) && (
+                    {(currentStep === 1 || (typeof window !== "undefined" && window.innerWidth >= 768)) && (
                       <motion.div
                         key="reference"
                         initial={{ opacity: 0, x: 20 }}
@@ -1130,193 +1130,195 @@ const AddPaymentPage = () => {
                     )}
 
                     {/* Step 2: Payment Details */}
-                    {(currentStep === 2 || window.innerWidth >= 768) && isReferenceVerified && (
-                      <motion.div
-                        key="payment"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Payment Amount & Channel</h4>
-                          <p className="text-sm text-gray-600">Specify payment amount, channel, and date</p>
-                        </div>
+                    {(currentStep === 2 || (typeof window !== "undefined" && window.innerWidth >= 768)) &&
+                      isReferenceVerified && (
+                        <motion.div
+                          key="payment"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
+                        >
+                          <div className="border-b pb-3">
+                            <h4 className="text-lg font-medium text-gray-900">Payment Amount & Channel</h4>
+                            <p className="text-sm text-gray-600">Specify payment amount, channel, and date</p>
+                          </div>
 
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                          {identifierType === "customer" && (
-                            <FormSelectModule
-                              label="Payment Type"
-                              name="paymentTypeId"
-                              value={formData.paymentTypeId}
-                              onChange={handleInputChange}
-                              options={[
-                                {
-                                  value: 0,
-                                  label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
-                                },
-                                ...paymentTypeOptions,
-                              ]}
-                              error={formErrors.paymentTypeId}
-                              required
-                            />
-                          )}
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            {identifierType === "customer" && (
+                              <FormSelectModule
+                                label="Payment Type"
+                                name="paymentTypeId"
+                                value={formData.paymentTypeId}
+                                onChange={handleInputChange}
+                                options={[
+                                  {
+                                    value: 0,
+                                    label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
+                                  },
+                                  ...paymentTypeOptions,
+                                ]}
+                                error={formErrors.paymentTypeId}
+                                required
+                              />
+                            )}
 
-                          <FormInputModule
-                            label="Amount"
-                            name="amount"
-                            type="text"
-                            placeholder="Enter payment amount"
-                            value={amountInput}
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/,/g, "").trim()
+                            <FormInputModule
+                              label="Amount"
+                              name="amount"
+                              type="text"
+                              placeholder="Enter payment amount"
+                              value={amountInput}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/,/g, "").trim()
 
-                              if (raw === "") {
-                                setAmountInput("")
+                                if (raw === "") {
+                                  setAmountInput("")
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    amount: 0,
+                                  }))
+                                  return
+                                }
+
+                                // Allow only digits and optional decimal point
+                                if (!/^\d*(\.\d*)?$/.test(raw)) {
+                                  return
+                                }
+
+                                const numeric = Number(raw)
                                 setFormData((prev) => ({
                                   ...prev,
-                                  amount: 0,
+                                  amount: Number.isNaN(numeric) ? 0 : numeric,
                                 }))
-                                return
-                              }
 
-                              // Allow only digits and optional decimal point
-                              if (!/^\d*(\.\d*)?$/.test(raw)) {
-                                return
-                              }
+                                const [intPart, decimalPart] = raw.split(".")
+                                const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
+                                const formatted =
+                                  decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
+                                setAmountInput(formatted)
+                              }}
+                              error={formErrors.amount}
+                              required
+                              min="0.01"
+                              step="0.01"
+                              prefix="₦"
+                            />
 
-                              const numeric = Number(raw)
-                              setFormData((prev) => ({
-                                ...prev,
-                                amount: Number.isNaN(numeric) ? 0 : numeric,
-                              }))
+                            <FormSelectModule
+                              label="Payment Channel"
+                              name="channel"
+                              value={getChannelNumericValue(formData.channel)}
+                              onChange={handleInputChange}
+                              options={channelOptions}
+                              error={formErrors.channel}
+                              required
+                            />
 
-                              const [intPart, decimalPart] = raw.split(".")
-                              const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
-                              const formatted =
-                                decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
-                              setAmountInput(formatted)
-                            }}
-                            error={formErrors.amount}
-                            required
-                            min="0.01"
-                            step="0.01"
-                            prefix="₦"
-                          />
-
-                          <FormSelectModule
-                            label="Payment Channel"
-                            name="channel"
-                            value={getChannelNumericValue(formData.channel)}
-                            onChange={handleInputChange}
-                            options={channelOptions}
-                            error={formErrors.channel}
-                            required
-                          />
-
-                          <FormInputModule
-                            label="Payment Date & Time"
-                            name="paidAtUtc"
-                            type="datetime-local"
-                            value={formData.paidAtUtc}
-                            onChange={handleInputChange}
-                            error={formErrors.paidAtUtc}
-                            required
-                            placeholder={""}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
+                            <FormInputModule
+                              label="Payment Date & Time"
+                              name="paidAtUtc"
+                              type="datetime-local"
+                              value={formData.paidAtUtc}
+                              onChange={handleInputChange}
+                              error={formErrors.paidAtUtc}
+                              required
+                              placeholder={""}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
 
                     {/* Step 3: Collector Information */}
-                    {(currentStep === 3 || window.innerWidth >= 768) && isReferenceVerified && (
-                      <motion.div
-                        key="collector"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
-                          <p className="text-sm text-gray-600">Specify who collected this payment</p>
-                        </div>
+                    {(currentStep === 3 || (typeof window !== "undefined" && window.innerWidth >= 768)) &&
+                      isReferenceVerified && (
+                        <motion.div
+                          key="collector"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
+                        >
+                          <div className="border-b pb-3">
+                            <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
+                            <p className="text-sm text-gray-600">Specify who collected this payment</p>
+                          </div>
 
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                          <FormSelectModule
-                            label="Collector Type"
-                            name="collectorType"
-                            value={formData.collectorType}
-                            onChange={handleInputChange}
-                            options={collectorTypeOptions}
-                            error={formErrors.collectorType}
-                            required
-                          />
-
-                          {formData.collectorType === "Agent" && (
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                             <FormSelectModule
-                              label="Agent"
-                              name="agentId"
-                              value={formData.agentId}
+                              label="Collector Type"
+                              name="collectorType"
+                              value={formData.collectorType}
                               onChange={handleInputChange}
-                              options={[
-                                { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
-                                ...agentOptions,
-                              ]}
-                              error={formErrors.agentId}
+                              options={collectorTypeOptions}
+                              error={formErrors.collectorType}
                               required
-                              disabled={agentsLoading}
                             />
-                          )}
 
-                          {formData.collectorType === "Vendor" && (
-                            <FormSelectModule
-                              label="Vendor"
-                              name="vendorId"
-                              value={formData.vendorId}
-                              onChange={handleInputChange}
-                              options={[
-                                { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
-                                ...vendorOptions,
-                              ]}
-                              error={formErrors.vendorId}
-                              required
-                              disabled={vendorsLoading}
-                            />
-                          )}
+                            {formData.collectorType === "Agent" && (
+                              <FormSelectModule
+                                label="Agent"
+                                name="agentId"
+                                value={formData.agentId}
+                                onChange={handleInputChange}
+                                options={[
+                                  { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
+                                  ...agentOptions,
+                                ]}
+                                error={formErrors.agentId}
+                                required
+                                disabled={agentsLoading}
+                              />
+                            )}
 
-                          {/* Additional Information (Desktop only) */}
-                          <div className="col-span-2 hidden sm:block">
-                            <div className="space-y-4">
-                              <h5 className="text-sm font-medium text-gray-700">Additional Information</h5>
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
-                                <FormInputModule
-                                  label="External Reference (Optional)"
-                                  name="externalReference"
-                                  type="text"
-                                  placeholder="Enter external reference number"
-                                  value={formData.externalReference}
-                                  onChange={handleInputChange}
-                                />
+                            {formData.collectorType === "Vendor" && (
+                              <FormSelectModule
+                                label="Vendor"
+                                name="vendorId"
+                                value={formData.vendorId}
+                                onChange={handleInputChange}
+                                options={[
+                                  { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
+                                  ...vendorOptions,
+                                ]}
+                                error={formErrors.vendorId}
+                                required
+                                disabled={vendorsLoading}
+                              />
+                            )}
 
-                                <FormTextAreaModule
-                                  label="Narrative (Optional)"
-                                  name="narrative"
-                                  placeholder="Enter payment description or notes"
-                                  value={formData.narrative}
-                                  onChange={(e) =>
-                                    handleInputChange({
-                                      target: { name: "narrative", value: e.target.value },
-                                    })
-                                  }
-                                  rows={3}
-                                />
+                            {/* Additional Information (Desktop only) */}
+                            <div className="col-span-2 hidden sm:block">
+                              <div className="space-y-4">
+                                <h5 className="text-sm font-medium text-gray-700">Additional Information</h5>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
+                                  <FormInputModule
+                                    label="External Reference (Optional)"
+                                    name="externalReference"
+                                    type="text"
+                                    placeholder="Enter external reference number"
+                                    value={formData.externalReference}
+                                    onChange={handleInputChange}
+                                  />
+
+                                  <FormTextAreaModule
+                                    label="Narrative (Optional)"
+                                    name="narrative"
+                                    placeholder="Enter payment description or notes"
+                                    value={formData.narrative}
+                                    onChange={(e) =>
+                                      handleInputChange({
+                                        target: { name: "narrative", value: e.target.value },
+                                      })
+                                    }
+                                    rows={3}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
+                        </motion.div>
+                      )}
 
                     {/* Additional Information (Mobile only) */}
                     {currentStep === 3 && isReferenceVerified && (
