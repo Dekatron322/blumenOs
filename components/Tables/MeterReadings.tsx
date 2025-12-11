@@ -939,7 +939,7 @@ const MeterReadings: React.FC = () => {
                     typeof item === "number" ? (
                       <button
                         key={item}
-                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
                           pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                         }`}
                         onClick={() => changePage(item)}
@@ -959,7 +959,7 @@ const MeterReadings: React.FC = () => {
                     typeof item === "number" ? (
                       <button
                         key={item}
-                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs ${
+                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
                           pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                         }`}
                         onClick={() => changePage(item)}

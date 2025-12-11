@@ -840,7 +840,7 @@ const CustomerDetailsPage = () => {
                           typeof item === "number" ? (
                             <button
                               key={item}
-                              className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
+                              className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
                                 paymentsPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                               }`}
                               onClick={() => handlePaymentsPageChange(item)}
@@ -860,7 +860,7 @@ const CustomerDetailsPage = () => {
                           typeof item === "number" ? (
                             <button
                               key={item}
-                              className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:w-8 ${
+                              className={`flex size-6 items-center justify-center rounded-md text-xs md:w-8 ${
                                 paymentsPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                               }`}
                               onClick={() => handlePaymentsPageChange(item)}

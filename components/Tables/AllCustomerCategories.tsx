@@ -299,7 +299,7 @@ const CardsLoadingSkeleton = () => {
         <div key={index} className="rounded-lg border border-gray-200 bg-white p-5">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-gray-200" />
+              <div className="size-12 rounded-lg bg-gray-200" />
               <div className="flex-1">
                 <div className="mb-2 h-4 w-32 rounded bg-gray-200" />
                 <div className="flex gap-2">

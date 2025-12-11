@@ -578,7 +578,7 @@ const UpdateCustomerPage = () => {
             <div className="container mx-auto flex flex-1 items-center justify-center p-4">
               <div className="text-center">
                 <div className="mb-4 text-red-500">
-                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="mx-auto size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -1152,7 +1152,7 @@ const LoadingSkeleton = () => (
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         {/* Form Header Skeleton */}
         <div className="mb-6 border-b pb-4">
-          <div className="h-6 w-64 overflow-hidden rounded bg-gray-200">
+          <div className="size-64 overflow-hidden rounded bg-gray-200">
             <motion.div
               className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
               animate={{

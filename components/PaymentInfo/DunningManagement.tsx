@@ -4,8 +4,8 @@ import { ButtonModule } from "components/ui/Button/Button"
 import React, { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { fetchPaymentDunningCases, PaymentDunningCase } from "lib/redux/paymentDunningSlice"
-import { motion, AnimatePresence } from "framer-motion"
+import { fetchPaymentDunningCases } from "lib/redux/paymentDunningSlice"
+import { AnimatePresence, motion } from "framer-motion"
 import { HiOutlineChevronDown, HiOutlineChevronUp } from "react-icons/hi"
 
 const DunningIcon = () => (

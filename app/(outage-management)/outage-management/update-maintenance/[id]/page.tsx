@@ -295,7 +295,7 @@ const UpdateMaintenance = () => {
         <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
           <div className="text-center">
             <div className="mb-4 text-red-500">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="mx-auto size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

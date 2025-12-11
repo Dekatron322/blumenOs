@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { HiOutlineChevronDown, HiOutlineChevronUp } from "react-icons/hi"
 

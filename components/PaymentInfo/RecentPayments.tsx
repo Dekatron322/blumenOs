@@ -804,7 +804,7 @@ const RecentPayments = () => {
                     typeof item === "number" ? (
                       <button
                         key={item}
-                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs md:h-7 md:w-7 md:text-sm lg:h-[27px] lg:w-[30px] ${
+                        className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-7 md:text-sm lg:h-[27px] lg:w-[30px] ${
                           currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                         }`}
                         onClick={() => changePage(item)}
@@ -825,7 +825,7 @@ const RecentPayments = () => {
                     typeof item === "number" ? (
                       <button
                         key={item}
-                        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs ${
+                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
                           currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                         }`}
                         onClick={() => changePage(item)}
