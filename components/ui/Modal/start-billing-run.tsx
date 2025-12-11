@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { finalizeBillingPeriod, finalizeBillingPeriodByAreaOffice } from "lib/redux/postpaidSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { notify } from "components/ui/Notification/Notification"
+import { X, AlertTriangle, AlertCircle, Calendar, Building, Loader2, CheckCircle } from "lucide-react"
 
 interface StartBillingRunProps {
   isOpen: boolean
@@ -27,10 +28,24 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isConfirmed, setIsConfirmed] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   // Get area offices from Redux store
   const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
   const { finalizeByAreaOfficeLoading } = useAppSelector((state) => state.postpaidBilling)
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   // Fetch area offices when component mounts or modal opens
   useEffect(() => {
@@ -123,6 +138,10 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
       return false
     }
 
+    if (!isConfirmed) {
+      return false
+    }
+
     return true
   }
 
@@ -187,176 +206,297 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-2 backdrop-blur-sm sm:p-4"
       onClick={onRequestClose}
     >
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 20, opacity: 0 }}
-        transition={{ type: "spring", damping: 25 }}
-        className="relative w-[500px] max-w-4xl  rounded-lg bg-white shadow-2xl"
+        initial={{ y: 20, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 20, opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl sm:max-w-xl md:max-w-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F3F4F6] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Start Billing Run</h2>
+        {/* Modal Header */}
+        <div className="flex w-full items-start justify-between rounded-t-xl bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Start Billing Run</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Finalize bills for {activeTab === "period" ? "entire period" : "specific area office"}
+            </p>
+          </div>
           <button
             onClick={onRequestClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="ml-3 flex size-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            aria-label="Close modal"
           >
-            <CloseIcon />
+            <X className="size-4" />
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 bg-white">
-          <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab("period")}
-              className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === "period"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              Publish by Period
-            </button>
-            <button
-              onClick={() => setActiveTab("areaOffice")}
-              className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === "areaOffice"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              Publish by Area Office
-            </button>
-          </nav>
-        </div>
+        {/* Mobile Tab Navigation */}
+        {isMobile && (
+          <div className=" bg-white px-4 pt-3 sm:hidden">
+            <div className="flex gap-4 rounded-lg border border-gray-200 p-1">
+              <button
+                onClick={() => setActiveTab("period")}
+                className={`flex w-full items-center justify-center gap-4 rounded-md p-4 py-2 text-center text-sm font-medium transition-colors ${
+                  activeTab === "period" ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex  items-center gap-4">
+                  <Calendar className="size-4" />
+                  <span className="mt-1">By Period</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab("areaOffice")}
+                className={`flex w-full items-center justify-center rounded-md py-2 text-center text-sm font-medium transition-colors ${
+                  activeTab === "areaOffice" ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <Building className="size-4" />
+                  <span className="mt-1">By Area</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
-        <div className="mt-6 px-6 pb-6">
+        {/* Desktop Tab Navigation */}
+        {!isMobile && (
+          <div className="border-gray-200 bg-white sm:border-b">
+            <nav className="flex gap-4 px-4 py-2 sm:px-6" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab("period")}
+                className={`flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors ${
+                  activeTab === "period" ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-4">
+                  <Calendar className="size-4" />
+                  <span className="mt-1">Publish By Billing Period</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab("areaOffice")}
+                className={`flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors ${
+                  activeTab === "areaOffice" ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-4">
+                  <Building className="size-4" />
+                  <span className="mt-1">Publish By Area Office</span>
+                </div>
+              </button>
+            </nav>
+          </div>
+        )}
+
+        <div className="mt-4 px-4 pb-4  sm:mt-6 sm:px-6 sm:pb-6">
           {/* Warning Message */}
-          <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 max-sm:hidden sm:mb-6 sm:p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="size-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M8.485 3.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 3.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <AlertTriangle className="size-5 text-amber-400" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Important</h3>
-                <div className="mt-2 text-sm text-yellow-700">
-                  <p>
+                <h3 className="text-sm font-medium text-amber-800">Important Notice</h3>
+                <div className="mt-2 text-sm text-amber-700">
+                  <p className="mb-2">
                     Starting a billing run will finalize bills for the selected{" "}
-                    {activeTab === "period" ? "period" : "area office"}. This action cannot be undone and will:
+                    <span className="font-semibold">{activeTab === "period" ? "period" : "area office"}</span>. This
+                    action cannot be undone.
                   </p>
-                  <ul className="mt-1 list-inside list-disc space-y-1">
-                    <li>
-                      Generate final bills for{" "}
-                      {activeTab === "period" ? "all customers" : "customers in the selected area office"}
+                  <ul className="mt-1 space-y-1">
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>
+                        Generate final bills for{" "}
+                        {activeTab === "period" ? "all customers" : "customers in the selected area office"}
+                      </span>
                     </li>
-                    <li>Calculate final consumption and charges</li>
-                    <li>Close the billing period for adjustments</li>
-                    <li>Make bills available for customer viewing</li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Calculate final consumption and charges</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Close the billing period for adjustments</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Make bills available for customer viewing</span>
+                    </li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Period Selection - Always Required */}
-          <FormSelectModule
-            label="Billing Period"
-            name="period"
-            value={formData.period}
-            onChange={handleInputChange}
-            options={periodOptions}
-            required
-          />
-
-          {/* Area Office Selection - Only for Area Office Tab */}
-          {activeTab === "areaOffice" && (
-            <div className="mt-4">
+          {/* Form Fields */}
+          <div className="space-y-4 sm:space-y-6">
+            {/* Period Selection */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                <Calendar className="size-4 text-blue-500" />
+                Billing Period
+              </label>
               <FormSelectModule
-                label="Area Office"
-                name="areaOfficeId"
-                value={formData.areaOfficeId}
+                name="period"
+                value={formData.period}
                 onChange={handleInputChange}
-                options={areaOfficeOptions}
+                options={periodOptions}
                 required
-                disabled={areaOfficesLoading}
+                className="w-full"
+                label={""}
               />
-              {areaOfficesLoading && <p className="mt-1 text-sm text-gray-500">Loading area offices...</p>}
             </div>
-          )}
 
-          {/* Error Message */}
-          {error && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
-              <div className="flex items-center">
-                <svg className="mr-2 size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-sm text-red-700">{error}</span>
+            {/* Area Office Selection - Only for Area Office Tab */}
+            {activeTab === "areaOffice" && (
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <Building className="size-4 text-green-500" />
+                  Area Office
+                </label>
+                <FormSelectModule
+                  label="Area Office"
+                  name="areaOfficeId"
+                  value={formData.areaOfficeId}
+                  onChange={handleInputChange}
+                  options={areaOfficeOptions}
+                  required
+                  disabled={areaOfficesLoading}
+                  className="w-full"
+                />
+                {areaOfficesLoading && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Loader2 className="size-3 animate-spin" />
+                    <span>Loading area offices...</span>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Confirmation Checkbox */}
-          <div className="mt-6 flex items-start space-x-3">
-            <input
-              type="checkbox"
-              id="confirmation"
-              className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              required
-            />
-            <label htmlFor="confirmation" className="text-sm text-gray-700">
-              {activeTab === "period" ? (
-                <>
-                  I understand that this action will finalize the billing period for all area offices and cannot be
-                  undone. I have verified that all meter readings and adjustments are complete for{" "}
-                  {formData.period || "the selected period"}.
-                </>
-              ) : (
-                <>
-                  I understand that this action will finalize the billing period for the selected area office and cannot
-                  be undone. I have verified that all meter readings and adjustments are complete for{" "}
-                  {formData.period || "the selected period"} in this area office.
-                </>
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg border border-red-200 bg-red-50 p-3 sm:p-4"
+              >
+                <div className="flex items-start">
+                  <AlertCircle className="mr-2 mt-0.5 size-5 flex-shrink-0 text-red-400" />
+                  <span className="text-sm text-red-700">{error}</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Confirmation Checkbox */}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="confirmation"
+                  checked={isConfirmed}
+                  onChange={(e) => setIsConfirmed(e.target.checked)}
+                  className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  required
+                />
+                <label htmlFor="confirmation" className="text-sm text-gray-700">
+                  {activeTab === "period" ? (
+                    <>
+                      I understand that this action will finalize the billing period for{" "}
+                      <span className="font-semibold">all area offices</span> and cannot be undone. I have verified that
+                      all meter readings and adjustments are complete for{" "}
+                      <span className="font-semibold">{formData.period || "the selected period"}</span>.
+                    </>
+                  ) : (
+                    <>
+                      I understand that this action will finalize the billing period for the{" "}
+                      <span className="font-semibold">selected area office</span> and cannot be undone. I have verified
+                      that all meter readings and adjustments are complete for{" "}
+                      <span className="font-semibold">{formData.period || "the selected period"}</span> in this area
+                      office.
+                    </>
+                  )}
+                </label>
+              </div>
+
+              {!isConfirmed && (formData.period || formData.areaOfficeId) && (
+                <div className="mt-3 flex items-start gap-2 text-sm text-amber-600">
+                  <AlertTriangle className="size-4 flex-shrink-0" />
+                  <span>You must confirm this action to proceed</span>
+                </div>
               )}
-            </label>
+            </div>
+
+            {/* Summary Preview */}
+            {(formData.period || formData.areaOfficeId) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4"
+              >
+                <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-900">
+                  <CheckCircle className="size-4" />
+                  Action Summary
+                </h4>
+                <div className="space-y-2 text-sm text-blue-700">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span>Billing Period:</span>
+                    <span className="font-semibold">{formData.period || "Not selected"}</span>
+                  </div>
+                  {activeTab === "areaOffice" && (
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <span>Area Office:</span>
+                      <span className="font-semibold">
+                        {formData.areaOfficeId
+                          ? areaOfficeOptions.find((opt) => opt.value === formData.areaOfficeId)?.label
+                          : "Not selected"}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span>Scope:</span>
+                    <span className="font-semibold">
+                      {activeTab === "period" ? "All Area Offices" : "Single Area Office"}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        {/* Modal Footer */}
+        <div className="flex flex-col gap-3 rounded-b-xl bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:gap-4 sm:p-6">
           <ButtonModule
             variant="dangerSecondary"
-            className="flex"
             size="lg"
             onClick={onRequestClose}
             disabled={loading || finalizeByAreaOfficeLoading}
+            className="w-full sm:flex-1"
           >
             Cancel
           </ButtonModule>
           <ButtonModule
             variant="primary"
-            className="flex w-full"
             size="lg"
             onClick={handleSubmit}
             disabled={!isFormValid() || loading || finalizeByAreaOfficeLoading}
-            loading={loading || finalizeByAreaOfficeLoading}
+            className="w-full sm:flex-1"
           >
-            {loading || finalizeByAreaOfficeLoading
-              ? `Starting Billing Run...`
-              : `Start Billing Run${activeTab === "areaOffice" ? " for Area Office" : ""}`}
+            {loading || finalizeByAreaOfficeLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="size-4 animate-spin" />
+                Starting...
+              </span>
+            ) : (
+              `Start Billing Run${activeTab === "areaOffice" ? "" : ""}`
+            )}
           </ButtonModule>
         </div>
       </motion.div>
