@@ -56,7 +56,7 @@ const SelectUserType: React.FC = () => {
     try {
       if (selectedDepartment === "sales-rep") {
         // Send user to the Sales Rep dashboard
-        router.push("/sales-rep")
+        router.push("/sales-rep/overview")
         return
       }
 

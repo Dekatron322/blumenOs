@@ -2,6 +2,7 @@
 import clsx from "clsx"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { DashboardIcon, PaymentIcon } from "./Icons"
 import { CashClearanceIcon, CollectCash, MakeChangeRequestIcon, RaiseTicketIcon } from "components/Icons/Icons"
 
@@ -9,10 +10,11 @@ interface NavLink {
   name: string
   href: string
   icon: any
+  permission?: string
 }
 
 const allLinks: NavLink[] = [
-  { name: "Overiview", href: "/sales-rep", icon: DashboardIcon },
+  { name: "Overiview", href: "/sales-rep/overview", icon: DashboardIcon },
   {
     name: "Collect payment",
     href: "/sales-rep/collect-payment",
@@ -46,9 +48,63 @@ interface SalesRepLinksProps {
 
 export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   const pathname = usePathname()
+  const [permissions, setPermissions] = useState<string[]>([])
+  const [links, setLinks] = useState<NavLink[]>([])
+  const [isClient, setIsClient] = useState(false)
 
-  // Always show the full sales-rep link set for now
-  const links = allLinks
+  useEffect(() => {
+    setIsClient(true)
+
+    // Get auth data from localStorage
+    const getAuthData = () => {
+      if (typeof window !== "undefined") {
+        const authData = localStorage.getItem("authData")
+        if (authData) {
+          try {
+            const parsedAuth = JSON.parse(authData) as any
+            return parsedAuth.user?.permissions || []
+          } catch (e) {
+            console.error("Error parsing auth data", e)
+            return []
+          }
+        }
+      }
+      return []
+    }
+
+    // Set initial permissions
+    setPermissions(getAuthData())
+
+    // Listen for storage changes to update permissions in real-time
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "authData") {
+        setPermissions(getAuthData())
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [])
+
+  useEffect(() => {
+    // Filter links based on permissions
+    const filteredLinks = allLinks.filter((link) => {
+      // Always show Dashboard (no permission required)
+      if (!link.permission) return true
+
+      // Check if user has the required permission
+      return permissions.includes(link.permission)
+    })
+    setLinks(filteredLinks)
+  }, [permissions])
+
+  // If no permissions loaded yet, return null or loading state
+  if (
+    !isClient ||
+    (permissions.length === 0 && typeof window !== "undefined" && localStorage.getItem("authData") === null)
+  ) {
+    return null
+  }
 
   return (
     <div className="flex w-full flex-col space-y-1 overflow-y-auto p-2">

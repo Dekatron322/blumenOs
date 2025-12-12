@@ -458,6 +458,354 @@ export interface PaymentsRequestParams {
   search?: string
 }
 
+// ========== BILL LOOKUP INTERFACES ==========
+
+// Interfaces for Bill Lookup
+export enum BillCategory {
+  Postpaid = 1,
+  Prepaid = 2,
+  Mixed = 3,
+}
+
+export enum BillStatus {
+  Generated = 0,
+  Issued = 1,
+  Paid = 2,
+  PartiallyPaid = 3,
+  Overdue = 4,
+  Cancelled = 5,
+  Disputed = 6,
+}
+
+export enum AdjustmentStatus {
+  NotAdjusted = 0,
+  Adjusted = 1,
+  AdjustmentPending = 2,
+}
+
+export enum MeterReadingValidationStatus {
+  NotValidated = 0,
+  Validated = 1,
+  Flagged = 2,
+  RequiresReview = 3,
+}
+
+export interface ActiveDispute {
+  id: number
+  status: number
+  reason: string
+  raisedAtUtc: string
+}
+
+export interface CustomerCategorySubCategory {
+  id: number
+  name: string
+  description: string
+  customerCategoryId: number
+}
+
+export interface CustomerCategory {
+  id: number
+  name: string
+  description: string
+  subCategories: CustomerCategorySubCategory[]
+}
+
+export interface TechnicalEngineerUser {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+  isActive: boolean
+  mustChangePassword: boolean
+  employeeId: string
+  position: string
+  employmentType: string
+  employmentStartAt: string
+  employmentEndAt: string
+  departmentId: number
+  departmentName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  lastLoginAt: string
+  createdAt: string
+  lastUpdated: string
+}
+
+export interface Company {
+  id: number
+  name: string
+  nercCode: string
+  nercSupplyStructure: number
+}
+
+export interface AreaOffice {
+  id: number
+  nameOfNewOAreaffice: string
+  newKaedcoCode: string
+  newNercCode: string
+  oldNercCode: string
+  oldKaedcoCode: string
+  nameOfOldOAreaffice: string
+  latitude: number
+  longitude: number
+  company: Company
+}
+
+export interface HtPole {
+  id: number
+  htPoleNumber: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
+}
+
+export interface InjectionSubstation {
+  id: number
+  nercCode: string
+  injectionSubstationCode: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
+  areaOffice: AreaOffice
+}
+
+export interface Feeder {
+  id: number
+  name: string
+  nercCode: string
+  kaedcoFeederCode: string
+  feederVoltage: number
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
+  injectionSubstation: InjectionSubstation
+  htPole: HtPole
+}
+
+export interface DistributionSubstation {
+  id: number
+  oldDssCode: string
+  dssCode: string
+  nercCode: string
+  transformerCapacityInKva: number
+  latitude: number
+  longitude: number
+  status: string
+  technicalEngineerUserId: number
+  technicalEngineerUser: TechnicalEngineerUser
+  feeder: Feeder
+  numberOfUnit: number
+  unitOneCode: string
+  unitTwoCode: string
+  unitThreeCode: string
+  unitFourCode: string
+  publicOrDedicated: string
+  remarks: string
+}
+
+export interface ServiceCenter {
+  id: number
+  name: string
+  code: string
+  address: string
+  areaOfficeId: number
+  areaOffice: AreaOffice
+  latitude: number
+  longitude: number
+}
+
+export interface AccountNumberHistory {
+  oldAccountNumber: string
+  newAccountNumber: string
+  requestedByUserId: number
+  requestedAtUtc: string
+  reason: string
+  oldAddress: string
+  oldAddressTwo: string
+  oldCity: string
+  oldState: string
+  oldLatitude: number
+  oldLongitude: number
+  newAddress: string
+  newAddressTwo: string
+  newCity: string
+  newState: string
+  newLatitude: number
+  newLongitude: number
+}
+
+export interface MeterHistory {
+  oldMeterNumber: string
+  newMeterNumber: string
+  requestedByUserId: number
+  requestedAtUtc: string
+  reason: string
+  oldAddress: string
+  oldAddressTwo: string
+  oldCity: string
+  oldState: string
+  oldLatitude: number
+  oldLongitude: number
+  newAddress: string
+  newAddressTwo: string
+  newCity: string
+  newState: string
+  newLatitude: number
+  newLongitude: number
+}
+
+export interface SalesRepUser {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+}
+
+export interface Customer {
+  id: number
+  customerNumber: number
+  customerID: string
+  accountNumber: string
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
+  fullName: string
+  phoneNumber: string
+  phoneOffice: string
+  gender: string
+  email: string
+  status: string
+  isSuspended: boolean
+  distributionSubstationId: number
+  distributionSubstationCode: string
+  feederName: string
+  areaOfficeName: string
+  companyName: string
+  address: string
+  addressTwo: string
+  city: string
+  state: string
+  lga: string
+  serviceCenterId: number
+  serviceCenterName: string
+  latitude: number
+  longitude: number
+  tariff: number
+  tariffCode: string
+  tariffID: string
+  tariffInddex: string
+  tariffType: string
+  tariffClass: string
+  newRate: number
+  vat: number
+  isVATWaved: boolean
+  meterNumber: string
+  isPPM: boolean
+  isMD: boolean
+  isUrban: boolean
+  isHRB: boolean
+  isCustomerAccGovt: boolean
+  comment: string
+  band: string
+  storedAverage: number
+  totalMonthlyVend: number
+  totalMonthlyDebt: number
+  customerOutstandingDebtBalance: number
+  salesRepUserId: number
+  technicalEngineerUserId: number
+  category: CustomerCategory
+  subCategory: CustomerCategorySubCategory
+  salesRepUser: SalesRepUser
+  lastLoginAt: string
+  suspensionReason: string
+  suspendedAt: string
+  distributionSubstation: DistributionSubstation
+  technicalEngineerUser: SalesRepUser
+  serviceCenter: ServiceCenter
+  accountNumberHistory: AccountNumberHistory[]
+  meterHistory: MeterHistory[]
+}
+
+export enum LedgerEntryType {
+  Debit = 1,
+  Credit = 2,
+  Adjustment = 3,
+}
+
+export interface LedgerEntry {
+  id: number
+  type: LedgerEntryType
+  amount: number
+  code: string
+  memo: string
+  effectiveAtUtc: string
+  referenceId: number
+}
+
+export interface BillDetails {
+  id: number
+  name: string
+  period: string
+  category: BillCategory
+  status: BillStatus
+  adjustmentStatus: AdjustmentStatus
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  publicReference: string
+  distributionSubstationId: number
+  distributionSubstationCode: string
+  feederId: number
+  feederName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  meterReadingId: number
+  feederEnergyCapId: number
+  tariffPerKwh: number
+  vatRate: number
+  openingBalance: number
+  paymentsPrevMonth: number
+  consumptionKwh: number
+  chargeBeforeVat: number
+  vatAmount: number
+  currentBillAmount: number
+  adjustedOpeningBalance: number
+  totalDue: number
+  forecastConsumptionKwh: number
+  forecastChargeBeforeVat: number
+  forecastVatAmount: number
+  forecastBillAmount: number
+  forecastTotalDue: number
+  isEstimated: boolean
+  estimatedConsumptionKwh: number
+  estimatedBillAmount: number
+  actualConsumptionKwh: number
+  actualBillAmount: number
+  consumptionVarianceKwh: number
+  billingVarianceAmount: number
+  isMeterReadingFlagged: boolean
+  meterReadingValidationStatus: MeterReadingValidationStatus
+  openDisputeCount: number
+  activeDispute: ActiveDispute | null
+  customer: Customer
+  createdAt: string
+  lastUpdated: string
+  ledgerEntries: LedgerEntry[]
+}
+
+export interface BillLookupResponse {
+  isSuccess: boolean
+  message: string
+  data: BillDetails
+}
+
+export interface BillLookupRequestParams {
+  billNumber: string
+}
+
+// ========== END BILL LOOKUP INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Agents list state
@@ -578,6 +926,12 @@ interface AgentState {
     hasNext: boolean
     hasPrevious: boolean
   }
+
+  // Bill Lookup state
+  billLookup: BillDetails | null
+  billLookupLoading: boolean
+  billLookupError: string | null
+  billLookupSuccess: boolean
 }
 
 // Initial state
@@ -673,9 +1027,41 @@ const initialState: AgentState = {
     hasNext: false,
     hasPrevious: false,
   },
+  // Bill Lookup initial state
+  billLookup: null,
+  billLookupLoading: false,
+  billLookupError: null,
+  billLookupSuccess: false,
 }
 
 // Async thunks
+
+// ========== BILL LOOKUP ASYNC THUNK ==========
+export const lookupBill = createAsyncThunk("agents/lookupBill", async (billNumber: string, { rejectWithValue }) => {
+  try {
+    const response = await api.get<BillLookupResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.LOOKUP_BILL), {
+      params: {
+        billNumber,
+      },
+    })
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to lookup bill")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Bill data not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to lookup bill")
+    }
+    return rejectWithValue(error.message || "Network error during bill lookup")
+  }
+})
+
 export const fetchAgents = createAsyncThunk(
   "agents/fetchAgents",
   async (params: AgentsRequestParams, { rejectWithValue }) => {
@@ -1135,6 +1521,7 @@ const agentSlice = createSlice({
       state.declineChangeRequestError = null
       state.clearancesError = null
       state.paymentsError = null
+      state.billLookupError = null
     },
 
     // Clear current agent
@@ -1195,6 +1582,14 @@ const agentSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+    },
+
+    // Clear bill lookup state
+    clearBillLookup: (state) => {
+      state.billLookup = null
+      state.billLookupError = null
+      state.billLookupSuccess = false
+      state.billLookupLoading = false
     },
 
     // Reset agent state
@@ -1290,6 +1685,10 @@ const agentSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+      state.billLookup = null
+      state.billLookupLoading = false
+      state.billLookupError = null
+      state.billLookupSuccess = false
     },
 
     // Set pagination
@@ -1423,9 +1822,43 @@ const agentSlice = createSlice({
         }
       }
     },
+
+    // Set bill lookup data (for when we get bill data from other sources)
+    setBillLookup: (state, action: PayloadAction<BillDetails>) => {
+      state.billLookup = action.payload
+      state.billLookupSuccess = true
+      state.billLookupError = null
+    },
+
+    // Clear bill lookup data
+    clearBillLookupData: (state) => {
+      state.billLookup = null
+      state.billLookupSuccess = false
+      state.billLookupError = null
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Bill Lookup cases
+      .addCase(lookupBill.pending, (state) => {
+        state.billLookupLoading = true
+        state.billLookupError = null
+        state.billLookupSuccess = false
+        state.billLookup = null
+      })
+      .addCase(lookupBill.fulfilled, (state, action: PayloadAction<BillDetails>) => {
+        state.billLookupLoading = false
+        state.billLookupSuccess = true
+        state.billLookup = action.payload
+        state.billLookupError = null
+      })
+      .addCase(lookupBill.rejected, (state, action) => {
+        state.billLookupLoading = false
+        state.billLookupError = (action.payload as string) || "Failed to lookup bill"
+        state.billLookupSuccess = false
+        state.billLookup = null
+      })
+
       // Fetch agents cases
       .addCase(fetchAgents.pending, (state) => {
         state.loading = true
@@ -1907,6 +2340,7 @@ export const {
   clearCashStatus,
   clearClearances,
   clearPayments,
+  clearBillLookup,
   resetAgentState,
   setPagination,
   setChangeRequestsPagination,
@@ -1924,6 +2358,8 @@ export const {
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
   updateCurrentAgentCashAtHand,
+  setBillLookup,
+  clearBillLookupData,
 } = agentSlice.actions
 
 export default agentSlice.reducer
