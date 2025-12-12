@@ -17,6 +17,16 @@ interface Privilege {
   actions: string[]
 }
 
+// Minimal agent shape returned on auth responses
+interface AgentSummary {
+  id: number
+  agentCode: string
+  status: string
+  canCollectCash: boolean
+  cashCollectionLimit: number
+  cashAtHand: number
+}
+
 interface User {
   id: number
   fullName: string
@@ -46,7 +56,9 @@ interface LoginResponse {
     expiresAt: string
     refreshToken: string
     user: User
+    agent?: AgentSummary | null
     mustChangePassword: boolean
+    isAgentOnly: boolean
   }
 }
 
@@ -54,11 +66,13 @@ interface RefreshTokenResponse {
   isSuccess: boolean
   message: string
   data: {
+    agent: any
     accessToken: string
     expiresAt: string
     refreshToken: string
     user: User
     mustChangePassword: boolean
+    isAgentOnly: boolean
   }
 }
 
@@ -79,6 +93,7 @@ interface LoginCredentials {
 
 interface AuthState {
   user: User | null
+  agent: AgentSummary | null
   tokens: Tokens | null
   loading: boolean
   error: string | null
@@ -88,6 +103,7 @@ interface AuthState {
   isChangingPassword: boolean
   changePasswordError: string | null
   changePasswordSuccess: boolean
+  isAgentOnly: boolean
 }
 
 // Configure axios instance
@@ -116,9 +132,11 @@ const saveAuthState = (state: AuthState) => {
   try {
     const serializedState = JSON.stringify({
       user: state.user,
+      agent: state.agent,
       tokens: state.tokens,
       isAuthenticated: state.isAuthenticated,
       mustChangePassword: state.mustChangePassword,
+      isAgentOnly: state.isAgentOnly,
     })
     localStorage.setItem("authState", serializedState)
   } catch (err) {
@@ -273,6 +291,7 @@ api.interceptors.response.use(
 const persistedState = loadAuthState()
 const initialState: AuthState = {
   user: persistedState?.user || null,
+  agent: (persistedState as AuthState | undefined)?.agent || null,
   tokens: persistedState?.tokens || null,
   loading: false,
   error: null,
@@ -282,6 +301,7 @@ const initialState: AuthState = {
   isChangingPassword: false,
   changePasswordError: null,
   changePasswordSuccess: false,
+  isAgentOnly: persistedState?.isAgentOnly || false,
 }
 
 export const loginUser = createAsyncThunk("auth/", async (credentials: LoginCredentials, { rejectWithValue }) => {
@@ -316,6 +336,7 @@ const authSlice = createSlice({
       state.isChangingPassword = false
       state.changePasswordError = null
       state.changePasswordSuccess = false
+      state.isAgentOnly = false
       clearAuthState()
     },
     clearError: (state) => {
@@ -330,9 +351,12 @@ const authSlice = createSlice({
       const persistedState = loadAuthState()
       if (persistedState) {
         state.user = persistedState.user || null
+
+        state.agent = (persistedState as any).agent || null
         state.tokens = persistedState.tokens || null
         state.isAuthenticated = persistedState.isAuthenticated || false
         state.mustChangePassword = persistedState.mustChangePassword || false
+        state.isAgentOnly = persistedState.isAgentOnly || false
       }
     },
     updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
@@ -357,12 +381,14 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.data.user
+        state.agent = action.payload.data.agent ?? null
         state.tokens = {
           accessToken: action.payload.data.accessToken,
           refreshToken: action.payload.data.refreshToken,
           expiresAt: action.payload.data.expiresAt,
         }
         state.mustChangePassword = action.payload.data.mustChangePassword
+        state.isAgentOnly = action.payload.data.isAgentOnly
         state.error = null
         saveAuthState(state)
       })
@@ -373,6 +399,7 @@ const authSlice = createSlice({
         state.user = null
         state.tokens = null
         state.mustChangePassword = false
+        state.isAgentOnly = false
       })
       // Refresh token cases
       .addCase(refreshAccessToken.pending, (state) => {
@@ -386,6 +413,9 @@ const authSlice = createSlice({
           state.tokens.refreshToken = action.payload.data.refreshToken
           state.tokens.expiresAt = action.payload.data.expiresAt
           state.mustChangePassword = action.payload.data.mustChangePassword
+          state.isAgentOnly = action.payload.data.isAgentOnly
+          // Prefer refreshed agent if provided, otherwise keep existing
+          state.agent = action.payload.data.agent ?? state.agent
           state.error = null
           saveAuthState(state)
         }
@@ -398,6 +428,7 @@ const authSlice = createSlice({
         state.tokens = null
         state.isAuthenticated = false
         state.mustChangePassword = false
+        state.isAgentOnly = false
         clearAuthState()
       })
       // Change password cases

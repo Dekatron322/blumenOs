@@ -30,6 +30,8 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
     declineChangeRequestLoading,
     declineChangeRequestError,
   } = useAppSelector((state) => state.customers)
+  const { user } = useAppSelector((state) => state.auth)
+  const canExecute = !!user?.privileges?.some((p) => p.actions?.includes("A"))
   const [notes, setNotes] = useState("")
   const [showNotesInput, setShowNotesInput] = useState(false)
   const [error, setError] = useState("")
@@ -571,7 +573,7 @@ const ViewCustomerChangeRequestModal: React.FC<ViewCustomerChangeRequestModalPro
           <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
             Close
           </ButtonModule>
-          {changeRequestDetails?.status === 0 && (
+          {changeRequestDetails?.status === 0 && canExecute && (
             <>
               <ButtonModule
                 type="button"

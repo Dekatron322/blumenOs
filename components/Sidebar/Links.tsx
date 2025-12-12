@@ -1,7 +1,7 @@
 "use client"
 import clsx from "clsx"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
   AgentIcon,
@@ -459,6 +459,7 @@ interface LinksProps {
 
 export function Links({ isCollapsed }: LinksProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [userPermissions, setUserPermissions] = useState<UserPermission | null>(null)
   const [filteredLinks, setFilteredLinks] = useState<LinkItem[]>([])
@@ -489,6 +490,43 @@ export function Links({ isCollapsed }: LinksProps) {
       setFilteredLinks(allLinks)
     }
   }, [userPermissions])
+
+  // Guard: if user manually navigates to a path (e.g. /dashboard) they don't have
+  // permission for, redirect them to the first permitted path.
+  useEffect(() => {
+    if (!userPermissions || !pathname) return
+
+    let matched = false
+    let allowed = false
+
+    for (const link of allLinks) {
+      // Check parent route
+      if (link.href && pathname.startsWith(link.href)) {
+        matched = true
+        allowed = hasPermission(link, userPermissions)
+      }
+
+      // Check children routes
+      if (link.children && link.children.length > 0) {
+        const permittedChildren = filterChildLinks(link.children, userPermissions)
+        for (const child of link.children) {
+          if (pathname.startsWith(child.href)) {
+            matched = true
+            // If this child is in the permitted list, it's allowed
+            const isChildAllowed = permittedChildren.some((c) => c.href === child.href)
+            allowed = allowed || isChildAllowed
+          }
+        }
+      }
+    }
+
+    if (matched && !allowed) {
+      const firstPermitted = getFirstPermittedPath(userPermissions)
+      if (firstPermitted && firstPermitted !== pathname) {
+        router.replace(firstPermitted)
+      }
+    }
+  }, [pathname, userPermissions, router])
 
   const handleExpand = (linkName: string, next: boolean) => {
     setExpanded((prev) => ({ ...prev, [linkName]: next }))

@@ -26,6 +26,7 @@ const SignIn: React.FC = () => {
     loading: authLoading,
     error: authError,
     mustChangePassword,
+    isAgentOnly,
   } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
@@ -42,6 +43,22 @@ const SignIn: React.FC = () => {
       // If user must change password, always send to change-password first
       if (mustChangePassword) {
         setTimeout(() => router.push("/change-password"), 1000)
+        return
+      }
+
+      // Agent-only users go directly to sales-rep
+      if (isAgentOnly) {
+        setTimeout(() => router.push("/sales-rep"), 1000)
+        return
+      }
+
+      // If user has Sales Representative role, redirect to channel
+      const hasSalesRepRole = user?.roles?.some(
+        (role) => role.roleId === 6 || role.slug === "sales-representative" || role.name === "Sales Representative"
+      )
+
+      if (hasSalesRepRole) {
+        setTimeout(() => router.push("/channel"), 1000)
         return
       }
 
@@ -70,7 +87,7 @@ const SignIn: React.FC = () => {
 
       setTimeout(() => router.push(targetPath), 1000)
     }
-  }, [isAuthenticated, user, authLoading, mustChangePassword, router])
+  }, [isAuthenticated, user, authLoading, mustChangePassword, isAgentOnly, router])
 
   useEffect(() => {
     if (authError) {

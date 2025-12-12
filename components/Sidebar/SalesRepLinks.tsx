@@ -3,7 +3,8 @@ import clsx from "clsx"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { BusinessLogo, DashboardIcon, EmployeeLogo, Pricing, ServiceIcon } from "./Icons"
+import { AuditIcon, BusinessLogo, DashboardIcon, EmployeeLogo, PaymentIcon, Pricing, ServiceIcon } from "./Icons"
+import { CollectCash, RaiseTicketIcon, MakeChangeRequestIcon, CashClearanceIcon } from "components/Icons/Icons"
 
 interface NavLink {
   name: string
@@ -13,38 +14,39 @@ interface NavLink {
 }
 
 const allLinks: NavLink[] = [
-  { name: "Dashboard", href: "/otech-plus/dashboard", icon: DashboardIcon },
+  { name: "Overiview", href: "/sales-rep", icon: DashboardIcon },
   {
-    name: "Transactions",
-    href: "/otech-plus/transactions",
-    icon: Pricing,
-    permission: "ReportMgt",
+    name: "Collect payment",
+    href: "/sales-rep/collect-payment",
+    icon: CollectCash,
   },
   {
-    name: "Customers",
-    href: "/otech-plus/customers",
-    icon: ServiceIcon,
-    permission: "UserMgt",
+    name: "Raise Ticket",
+    href: "/sales-rep/raise-ticket",
+    icon: RaiseTicketIcon,
   },
   {
-    name: "Businesses",
-    href: "/otech-plus/businesses",
-    icon: BusinessLogo,
-    permission: "BusinessMgt",
+    name: "Make Change Request",
+    href: "/sales-rep/make-change-request",
+    icon: MakeChangeRequestIcon,
   },
   {
-    name: "Employees",
-    href: "/otech-plus/employee",
-    icon: EmployeeLogo,
-    permission: "AdminMgt",
+    name: "View Cash Clearance History",
+    href: "/sales-rep/view-cash-clearance-history",
+    icon: CashClearanceIcon,
+  },
+  {
+    name: "View Payment History",
+    href: "/sales-rep/view-payment-history",
+    icon: PaymentIcon,
   },
 ]
 
-interface LinksProps {
+interface SalesRepLinksProps {
   isCollapsed: boolean
 }
 
-export function PlusLinks({ isCollapsed }: LinksProps) {
+export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   const pathname = usePathname()
   const [permissions, setPermissions] = useState<string[]>([])
   const [links, setLinks] = useState<NavLink[]>([])
@@ -105,28 +107,42 @@ export function PlusLinks({ isCollapsed }: LinksProps) {
   }
 
   return (
-    <div className="flex flex-col border-black lg:h-auto">
+    <div className="flex w-full flex-col space-y-1 overflow-y-auto p-2">
       {links.map((link) => {
         const LinkIcon = link.icon
         const isActive = pathname.startsWith(link.href)
+
         return (
-          <Link
-            key={link.name}
-            href={link.href}
-            className={clsx("flex items-center gap-2 py-3 pl-5 text-gray-600 transition-colors hover:bg-gray-100", {
-              "bg-blue-50 text-blue-600": isActive,
-            })}
-          >
-            <LinkIcon isActive={isActive} />
-            <p
-              className={clsx("text-sm font-semibold transition-opacity duration-500", {
-                hidden: isCollapsed,
-                "font-extrabold": isActive,
-              })}
+          <div key={link.name} className="group">
+            <Link
+              href={link.href}
+              className={clsx(
+                "flex w-full items-center gap-3 rounded-lg p-2 text-[#004B23] transition-all duration-300 ease-out",
+                "hover:bg-[#004B23] hover:text-white",
+                {
+                  "bg-[#004B23] text-white shadow-sm": isActive,
+                }
+              )}
             >
-              {link.name}
-            </p>
-          </Link>
+              <div
+                className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
+                  "bg-white text-[#004B23] shadow-lg": isActive,
+                  "bg-gray-100 text-[#004B23] group-hover:bg-white group-hover:text-[#004B23]": !isActive,
+                })}
+              >
+                <LinkIcon isActive={isActive} />
+              </div>
+
+              <p
+                className={clsx("relative text-sm font-medium transition-all duration-300", {
+                  "w-0 scale-0 opacity-0": isCollapsed,
+                  "scale-100 opacity-100": !isCollapsed,
+                })}
+              >
+                {link.name}
+              </p>
+            </Link>
+          </div>
         )
       })}
     </div>
