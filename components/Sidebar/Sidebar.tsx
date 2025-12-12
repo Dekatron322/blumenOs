@@ -66,7 +66,7 @@ const SideBar = () => {
           <button
             type="button"
             onClick={toggleSystemSettings}
-            className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left  hover:bg-gray-100 "
+            className="flex w-full items-center justify-between gap-2 rounded-md p-2 text-left  hover:bg-gray-100 "
           >
             <div className="flex items-center gap-2">
               <img src="/Icons/setting-2.svg" />

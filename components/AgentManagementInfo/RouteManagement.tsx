@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import {
@@ -428,7 +428,7 @@ const RouteManagement: React.FC<RouteManagementProps> = ({ onStartNewCycle }) =>
                 </div>
                 <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Routes Found</h3>
                 <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  No routes match "{searchText}". Try a different search term.
+                  No routes match &quot;{searchText}&quot;. Try a different search term.
                 </p>
               </div>
             </div>

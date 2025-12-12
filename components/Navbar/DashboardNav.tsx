@@ -343,7 +343,7 @@ const DashboardNav = () => {
                 setIsLogoutModalOpen(true)
                 setIsNavOpen(false)
               }}
-              className="absolute bottom-0 left-0 right-0 z-50  mt-10 flex items-center gap-2  bg-red-100 px-3 py-3 text-red-600"
+              className="absolute bottom-0 left-0 right-0 z-50  mt-10 flex items-center gap-2  bg-red-100 p-3 text-red-600"
             >
               <LogoutIcon />
               <span className="text-sm font-medium">Sign Out</span>

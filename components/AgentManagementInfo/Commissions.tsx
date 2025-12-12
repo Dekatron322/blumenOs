@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { MapIcon, PostpaidIcon, RateIcon, UserIcon } from "components/Icons/Icons"
 import { MoreVertical } from "lucide-react"

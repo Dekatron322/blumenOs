@@ -823,7 +823,7 @@ const AgentDetailsPage = () => {
                       <div className="relative w-full sm:hidden">
                         <button
                           type="button"
-                          className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-800"
+                          className="flex w-full items-center justify-between gap-2 rounded-md p-2 text-sm font-medium text-gray-800"
                           onClick={() => setIsMobileTabMenuOpen((prev) => !prev)}
                         >
                           <span className="flex items-center gap-2">
@@ -852,7 +852,7 @@ const AgentDetailsPage = () => {
                                 setActiveTab("basic-info")
                                 setIsMobileTabMenuOpen(false)
                               }}
-                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md p-2 text-left text-sm font-medium transition-all duration-150 ${
                                 activeTab === "basic-info"
                                   ? "bg-[#004B23] text-white"
                                   : "text-gray-600 hover:bg-[#F6F6F9]"
@@ -866,7 +866,7 @@ const AgentDetailsPage = () => {
                                 setActiveTab("payments")
                                 setIsMobileTabMenuOpen(false)
                               }}
-                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md p-2 text-left text-sm font-medium transition-all duration-150 ${
                                 activeTab === "payments"
                                   ? "bg-[#004B23] text-white"
                                   : "text-gray-600 hover:bg-[#F6F6F9]"
@@ -880,7 +880,7 @@ const AgentDetailsPage = () => {
                                 setActiveTab("change-requests")
                                 setIsMobileTabMenuOpen(false)
                               }}
-                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md p-2 text-left text-sm font-medium transition-all duration-150 ${
                                 activeTab === "change-requests"
                                   ? "bg-[#004B23] text-white"
                                   : "text-gray-600 hover:bg-[#F6F6F9]"

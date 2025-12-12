@@ -7,7 +7,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { AddAgentIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { AddAgentIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
@@ -27,6 +27,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Briefcase,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   FileText,
   Home,
@@ -37,8 +39,6 @@ import {
   UserPlus,
   Users,
   X,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react"
 
 // === INTERFACES ===
@@ -1033,7 +1033,7 @@ const AddNewAgent = () => {
                       setActiveTab("new")
                       setCurrentStep(1)
                     }}
-                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
+                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap p-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
                       activeTab === "new"
                         ? "border-b-2 border-[#004B23] text-[#004B23]"
                         : "text-gray-500 hover:text-gray-700"
@@ -1044,7 +1044,7 @@ const AddNewAgent = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("existing")}
-                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
+                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap p-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
                       activeTab === "existing"
                         ? "border-b-2 border-[#004B23] text-[#004B23]"
                         : "text-gray-500 hover:text-gray-700"
@@ -1055,7 +1055,7 @@ const AddNewAgent = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
+                    className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap p-3 text-sm font-medium transition-colors sm:px-6 sm:py-4 ${
                       activeTab === "bulk"
                         ? "border-b-2 border-[#004B23] text-[#004B23]"
                         : "text-gray-500 hover:text-gray-700"
