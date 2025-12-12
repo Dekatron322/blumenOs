@@ -210,34 +210,34 @@ const MakeCustomerChangeRequestPage: React.FC = () => {
 
                   {customerLookup && (
                     <div className="space-y-4">
-                      <div className="rounded-md border bg-gray-50 p-4 text-sm">
+                      <div className="rounded-md border border-dashed border-[#004b23] bg-[#004b23]/5 p-4 text-sm">
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Name:</span>
-                          <span className="text-gray-900">{customerLookup.fullName}</span>
+                          <span className="font-medium text-[#004b23]">Name:</span>
+                          <span className="text-[#002e16]">{customerLookup.fullName}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Account Number:</span>
-                          <span className="text-gray-900">{customerLookup.accountNumber}</span>
+                          <span className="font-medium text-[#004b23]">Account Number:</span>
+                          <span className="text-[#002e16]">{customerLookup.accountNumber}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Status:</span>
-                          <span className="text-gray-900">{customerLookup.status}</span>
+                          <span className="font-medium text-[#004b23]">Status:</span>
+                          <span className="text-[#002e16]">{customerLookup.status}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Tariff:</span>
-                          <span className="text-gray-900">{customerLookup.tariffCode}</span>
+                          <span className="font-medium text-[#004b23]">Tariff:</span>
+                          <span className="text-[#002e16]">{customerLookup.tariffCode}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Feeder:</span>
-                          <span className="text-gray-900">{customerLookup.feederName}</span>
+                          <span className="font-medium text-[#004b23]">Feeder:</span>
+                          <span className="text-[#002e16]">{customerLookup.feederName}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Area Office:</span>
-                          <span className="text-gray-900">{customerLookup.areaOfficeName}</span>
+                          <span className="font-medium text-[#004b23]">Area Office:</span>
+                          <span className="text-[#002e16]">{customerLookup.areaOfficeName}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="font-medium text-gray-700">Service Centre:</span>
-                          <span className="text-gray-900">{customerLookup.serviceCenterName}</span>
+                          <span className="font-medium text-[#004b23]">Service Centre:</span>
+                          <span className="text-[#002e16]">{customerLookup.serviceCenterName}</span>
                         </div>
                       </div>
 

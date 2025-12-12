@@ -458,6 +458,25 @@ export interface PaymentsRequestParams {
   search?: string
 }
 
+export interface CreateAgentPaymentRequest {
+  postpaidBillId?: number
+  customerId?: number
+  paymentTypeId: number
+  amount: number
+  channel: PaymentChannel
+  currency: string
+  externalReference?: string
+  narrative?: string
+  paidAtUtc: string
+  collectorType: CollectorType
+}
+
+export interface AgentPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: Payment
+}
+
 // ========== BILL LOOKUP INTERFACES ==========
 
 // Interfaces for Bill Lookup
@@ -927,6 +946,12 @@ interface AgentState {
     hasPrevious: boolean
   }
 
+  // Create payment state
+  createPaymentLoading: boolean
+  createPaymentError: string | null
+  createPaymentSuccess: boolean
+  createdPayment: Payment | null
+
   // Bill Lookup state
   billLookup: BillDetails | null
   billLookupLoading: boolean
@@ -1027,6 +1052,10 @@ const initialState: AgentState = {
     hasNext: false,
     hasPrevious: false,
   },
+  createPaymentLoading: false,
+  createPaymentError: null,
+  createPaymentSuccess: false,
+  createdPayment: null,
   // Bill Lookup initial state
   billLookup: null,
   billLookupLoading: false,
@@ -1106,6 +1135,31 @@ export const fetchAgents = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to fetch agents")
       }
       return rejectWithValue(error.message || "Network error during agents fetch")
+    }
+  }
+)
+
+// Create Payment Async Thunk (for agents collecting payments)
+export const createAgentPayment = createAsyncThunk(
+  "agents/createPayment",
+  async (paymentData: CreateAgentPaymentRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<AgentPaymentResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENTS), paymentData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to record payment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Payment data not found")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to record payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment creation")
     }
   }
 )
@@ -1522,6 +1576,14 @@ const agentSlice = createSlice({
       state.clearancesError = null
       state.paymentsError = null
       state.billLookupError = null
+    },
+
+    // Clear create payment state
+    clearCreatePayment: (state) => {
+      state.createPaymentLoading = false
+      state.createPaymentError = null
+      state.createPaymentSuccess = false
+      state.createdPayment = null
     },
 
     // Clear current agent
@@ -2328,6 +2390,35 @@ const agentSlice = createSlice({
           hasPrevious: false,
         }
       })
+
+      // Create payment cases
+      .addCase(createAgentPayment.pending, (state) => {
+        state.createPaymentLoading = true
+        state.createPaymentError = null
+        state.createPaymentSuccess = false
+        state.createdPayment = null
+      })
+      .addCase(createAgentPayment.fulfilled, (state, action: PayloadAction<AgentPaymentResponse>) => {
+        state.createPaymentLoading = false
+        state.createPaymentSuccess = true
+        state.createdPayment = action.payload.data
+        state.createPaymentError = null
+
+        // Prepend the new payment to the list
+        state.payments = [action.payload.data, ...state.payments]
+
+        // Update pagination totals if already initialised
+        state.paymentsPagination.totalCount += 1
+        state.paymentsPagination.totalPages = Math.ceil(
+          state.paymentsPagination.totalCount / state.paymentsPagination.pageSize
+        )
+      })
+      .addCase(createAgentPayment.rejected, (state, action) => {
+        state.createPaymentLoading = false
+        state.createPaymentError = (action.payload as string) || "Failed to record payment"
+        state.createPaymentSuccess = false
+        state.createdPayment = null
+      })
   },
 })
 
@@ -2341,6 +2432,7 @@ export const {
   clearClearances,
   clearPayments,
   clearBillLookup,
+  clearCreatePayment,
   resetAgentState,
   setPagination,
   setChangeRequestsPagination,

@@ -242,34 +242,34 @@ const CollectPaymentBillingDisputePage: React.FC = () => {
 
                   {billLookup && (
                     <div className="space-y-4">
-                      <div className="rounded-md border bg-gray-50 p-4 text-sm">
+                      <div className="rounded-md border border-dashed border-[#004b23] bg-[#004b23]/5 p-4 text-sm">
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Customer:</span>
-                          <span className="text-gray-900">{billLookup.customerName}</span>
+                          <span className="font-medium text-[#004b23]">Customer:</span>
+                          <span className="text-[#002e16]">{billLookup.customerName}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Account Number:</span>
-                          <span className="text-gray-900">{billLookup.customerAccountNumber}</span>
+                          <span className="font-medium text-[#004b23]">Account Number:</span>
+                          <span className="text-[#002e16]">{billLookup.customerAccountNumber}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Bill Name:</span>
-                          <span className="text-gray-900">{billLookup.name}</span>
+                          <span className="font-medium text-[#004b23]">Bill Name:</span>
+                          <span className="text-[#002e16]">{billLookup.name}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Period:</span>
-                          <span className="text-gray-900">{billLookup.period}</span>
+                          <span className="font-medium text-[#004b23]">Period:</span>
+                          <span className="text-[#002e16]">{billLookup.period}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Total Due:</span>
-                          <span className="text-gray-900">{billLookup.totalDue}</span>
+                          <span className="font-medium text-[#004b23]">Total Due:</span>
+                          <span className="text-[#002e16]">{billLookup.totalDue}</span>
                         </div>
                         <div className="mb-2 flex justify-between">
-                          <span className="font-medium text-gray-700">Status:</span>
-                          <span className="text-gray-900">{renderBillStatus(billLookup)}</span>
+                          <span className="font-medium text-[#004b23]">Status:</span>
+                          <span className="text-[#002e16]">{renderBillStatus(billLookup)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="font-medium text-gray-700">Area Office:</span>
-                          <span className="text-gray-900">{billLookup.areaOfficeName}</span>
+                          <span className="font-medium text-[#004b23]">Area Office:</span>
+                          <span className="text-[#002e16]">{billLookup.areaOfficeName}</span>
                         </div>
                       </div>
 
