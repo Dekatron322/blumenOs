@@ -583,7 +583,7 @@ const AgentDetailsPage = () => {
                   <div className="mt-3 flex items-center gap-3 max-sm:mt-4 lg:mt-0">
                     <ButtonModule
                       variant="secondary"
-                      size="sm"
+                      size="md"
                       className="flex items-center gap-2 max-sm:hidden"
                       onClick={exportToPDF}
                       disabled={isExporting}
@@ -595,7 +595,7 @@ const AgentDetailsPage = () => {
                     {canUpdate ? (
                       <ButtonModule
                         variant="primary"
-                        size="sm"
+                        size="md"
                         className="flex items-center gap-2"
                         onClick={handleEditAgent}
                         disabled={activeAction === "edit"}
@@ -606,7 +606,7 @@ const AgentDetailsPage = () => {
                     ) : (
                       <ButtonModule
                         variant="primary"
-                        size="sm"
+                        size="md"
                         className="flex items-center gap-2"
                         onClick={() => setIsChangeRequestModalOpen(true)}
                       >
@@ -617,7 +617,7 @@ const AgentDetailsPage = () => {
 
                     <ButtonModule
                       variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}
-                      size="sm"
+                      size="md"
                       className="flex items-center gap-2"
                       onClick={handleToggleActivation}
                       disabled={activeAction === "deactivate" || activeAction === "activate"}

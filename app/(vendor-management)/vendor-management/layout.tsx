@@ -1,8 +1,8 @@
-import SideBar from "components/Sidebar/Sidebar"
 import { NotificationProvider } from "components/ui/Notification/Notification"
-import ProtectedRoute from "lib/protectedRoutes"
+import SideBar from "components/Sidebar/Sidebar"
 import { Metadata } from "next"
 import "styles/tailwind.css"
+import ProtectedRoute from "lib/protectedRoutes"
 
 export const metadata: Metadata = {
   title: "BlumenOS Admin Dashboard",
@@ -32,16 +32,16 @@ export const metadata: Metadata = {
   },
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="flex h-screen w-screen flex-col-reverse border-0 border-blue-700 bg-gradient-to-br from-gray-100 to-gray-200 lg:flex-row">
+      <div className="flex h-screen flex-col sm:flex-row">
         <div className="">
           <SideBar />
         </div>
         <div className="grow overflow-y-auto border-0 border-black ">{children}</div>
-        <NotificationProvider position="top-center" />
       </div>
+      <NotificationProvider position="top-center" />
     </ProtectedRoute>
   )
 }

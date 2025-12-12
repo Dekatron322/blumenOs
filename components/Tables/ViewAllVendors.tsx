@@ -13,6 +13,7 @@ import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import { ChevronDown } from "lucide-react"
+import Image from "next/image"
 
 interface VendorUI {
   id: number
@@ -30,7 +31,7 @@ interface VendorUI {
   totalRevenue: string
 }
 
-// Skeleton Components
+// Responsive Skeleton Components
 const VendorCardSkeleton = () => (
   <motion.div
     className="rounded-lg border bg-white p-4 shadow-sm"
@@ -46,12 +47,12 @@ const VendorCardSkeleton = () => (
   >
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
-        <div className="size-12 rounded-full bg-gray-200"></div>
+        <div className="size-10 rounded-full bg-gray-200 sm:size-12"></div>
         <div>
-          <div className="h-5 w-32 rounded bg-gray-200"></div>
+          <div className="h-5 w-28 rounded bg-gray-200 sm:w-32"></div>
           <div className="mt-1 flex gap-2">
-            <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-            <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+            <div className="h-6 w-14 rounded-full bg-gray-200 sm:w-16"></div>
+            <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
           </div>
         </div>
       </div>
@@ -61,8 +62,8 @@ const VendorCardSkeleton = () => (
     <div className="mt-4 space-y-2 text-sm">
       {[...Array(5)].map((_, i) => (
         <div key={i} className="flex justify-between">
-          <div className="h-4 w-20 rounded bg-gray-200"></div>
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
+          <div className="h-4 w-16 rounded bg-gray-200 sm:w-20"></div>
+          <div className="h-4 w-12 rounded bg-gray-200 sm:w-16"></div>
         </div>
       ))}
     </div>
@@ -90,33 +91,33 @@ const VendorListItemSkeleton = () => (
       },
     }}
   >
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
       <div className="flex items-center gap-4">
         <div className="size-10 rounded-full bg-gray-200"></div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <div className="h-5 w-40 rounded bg-gray-200"></div>
             <div className="flex gap-2">
-              <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-              <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+              <div className="h-6 w-14 rounded-full bg-gray-200 sm:w-16"></div>
+              <div className="h-6 w-16 rounded-full bg-gray-200 sm:w-20"></div>
             </div>
           </div>
           <div className="mt-2 flex flex-wrap gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
+              <div key={i} className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
             ))}
           </div>
-          <div className="mt-2 h-4 w-64 rounded bg-gray-200"></div>
+          <div className="mt-2 hidden h-4 w-64 rounded bg-gray-200 sm:block"></div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
         <div className="text-right">
-          <div className="h-4 w-24 rounded bg-gray-200"></div>
-          <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
+          <div className="h-4 w-20 rounded bg-gray-200 sm:w-24"></div>
+          <div className="mt-1 h-4 w-16 rounded bg-gray-200 sm:w-20"></div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-9 w-20 rounded bg-gray-200"></div>
+          <div className="h-9 w-16 rounded bg-gray-200 sm:w-20"></div>
           <div className="size-6 rounded bg-gray-200"></div>
         </div>
       </div>
@@ -126,7 +127,7 @@ const VendorListItemSkeleton = () => (
 
 const PaginationSkeleton = () => (
   <motion.div
-    className="mt-4 flex items-center justify-between"
+    className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row"
     initial={{ opacity: 0.6 }}
     animate={{
       opacity: [0.6, 1, 0.6],
@@ -170,11 +171,11 @@ const HeaderSkeleton = () => (
     }}
   >
     <div className="h-8 w-40 rounded bg-gray-200"></div>
-    <div className="mt-2 flex gap-4">
-      <div className="h-10 w-80 rounded bg-gray-200"></div>
+    <div className="mt-2 flex flex-col gap-4 sm:flex-row">
+      <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
       <div className="flex gap-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-10 w-24 rounded bg-gray-200"></div>
+          <div key={i} className="h-10 w-20 rounded bg-gray-200 sm:w-24"></div>
         ))}
       </div>
     </div>
@@ -215,12 +216,12 @@ const ActionDropdown: React.FC<{ vendor: VendorUI; onViewDetails: (vendor: Vendo
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
-        <RxDotsVertical />
+        <RxDotsVertical className="size-4 sm:size-5" />
       </motion.div>
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="absolute right-0 top-full z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+            className="absolute right-0 top-full z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:w-56"
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -273,6 +274,7 @@ const AllVendors: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedBusinessType, setSelectedBusinessType] = useState("")
   const [isBusinessTypeOpen, setIsBusinessTypeOpen] = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   const dispatch = useAppDispatch()
   const { vendors, loading: isLoading, error, pagination } = useAppSelector((state) => state.vendors)
@@ -437,15 +439,15 @@ const AllVendors: React.FC = () => {
   }
 
   const VendorCard = ({ vendor }: { vendor: VendorUI }) => (
-    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
+    <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-3 shadow-sm transition-all hover:shadow-md sm:p-4">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 sm:size-12">
             <UserIcon />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{vendor.name}</h3>
-            <div className="mt-1 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{vendor.name}</h3>
+            <div className="mt-1 flex items-center gap-1 sm:gap-2">
               <div
                 style={getStatusStyle(vendor.status)}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
@@ -461,7 +463,7 @@ const AllVendors: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
+      <div className="mt-3 space-y-2 text-xs text-gray-600 sm:mt-4 sm:text-sm">
         <div className="flex justify-between">
           <span>Contact:</span>
           <span className="font-medium">{vendor.contactPerson}</span>
@@ -484,20 +486,20 @@ const AllVendors: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-3 border-t pt-3">
-        <div className="flex justify-between text-sm">
+      <div className="mt-2 border-t pt-2 sm:mt-3 sm:pt-3">
+        <div className="flex justify-between text-xs sm:text-sm">
           <span className="text-gray-500">Daily Sales:</span>
           <span className="font-semibold">{vendor.dailySales}</span>
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2 flex gap-2 sm:mt-3">
         <button
           onClick={() => handleViewVendorDetails(vendor)}
-          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9]"
+          className="button-oulined flex flex-1 items-center justify-center gap-2 bg-white text-xs transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#f9f9f9] sm:text-sm"
         >
-          <VscEye className="size-4" />
-          View Details
+          <VscEye className="size-3 sm:size-4" />
+          <span className="sm:inline">View Details</span>
         </button>
         <ActionDropdown vendor={vendor} onViewDetails={handleViewVendorDetails} />
       </div>
@@ -505,33 +507,36 @@ const AllVendors: React.FC = () => {
   )
 
   const VendorListItem = ({ vendor }: { vendor: VendorUI }) => (
-    <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+    <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 sm:p-4">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden sm:size-10">
             <UserIcon />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="truncate font-semibold text-gray-900">{vendor.name}</h3>
-              <div
-                style={getStatusStyle(vendor.status)}
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
-              >
-                <span className="size-2 rounded-full" style={dotStyle(vendor.status)}></span>
-                {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
-              </div>
-              <div style={getPerformanceStyle(vendor.performance)} className="rounded-full px-2 py-1 text-xs">
-                {vendor.performance}
-              </div>
-              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
-                Commission: {vendor.commissionRate}
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <h3 className="text-sm font-semibold text-gray-900 sm:text-base">{vendor.name}</h3>
+              <div className="flex flex-wrap gap-1 sm:gap-2">
+                <div
+                  style={getStatusStyle(vendor.status)}
+                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+                >
+                  <span className="size-2 rounded-full" style={dotStyle(vendor.status)}></span>
+                  {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                </div>
+                <div style={getPerformanceStyle(vendor.performance)} className="rounded-full px-2 py-1 text-xs">
+                  {vendor.performance}
+                </div>
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
+                  Commission: {vendor.commissionRate}
+                </div>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
               <span className="flex items-center gap-1">
                 <PhoneIcon />
-                <strong>Phone:</strong> {vendor.phone}
+                <strong className="sm:hidden">Ph:</strong>
+                <strong className="hidden sm:inline">Phone:</strong> {vendor.phone}
               </span>
               <span className="flex items-center gap-1">
                 <MapIcon />
@@ -544,7 +549,7 @@ const AllVendors: React.FC = () => {
                 <strong>Business Type:</strong> {vendor.businessType}
               </span>
             </div>
-            <div className="mt-2 flex gap-4 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 sm:gap-4 sm:text-sm">
               <span>Daily Sales: {vendor.dailySales}</span>
               <span>Transactions: {vendor.transactionsToday}</span>
               <span>Stock: {vendor.stockBalance}</span>
@@ -552,15 +557,18 @@ const AllVendors: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
-            <div className="font-medium text-gray-900">Revenue: {vendor.totalRevenue}</div>
-            <div className="mt-1 text-xs text-gray-500">{vendor.businessType}</div>
+        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:gap-3">
+          <div className="text-right text-xs sm:text-sm">
+            <div className="hidden font-medium text-gray-900 sm:block">Revenue: {vendor.totalRevenue}</div>
+            <div className="mt-1 text-gray-600 sm:hidden">{vendor.businessType}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => handleViewVendorDetails(vendor)} className="button-oulined flex items-center gap-2">
-              <VscEye className="size-4" />
-              View
+            <button
+              onClick={() => handleViewVendorDetails(vendor)}
+              className="button-oulined flex items-center gap-2 text-xs sm:text-sm"
+            >
+              <VscEye className="size-3 sm:size-4" />
+              <span className="hidden sm:inline">View</span>
             </button>
             <ActionDropdown vendor={vendor} onViewDetails={handleViewVendorDetails} />
           </div>
@@ -571,15 +579,15 @@ const AllVendors: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-3 relative mt-5 flex items-start gap-6">
+      <div className="relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
         {/* Main Content Skeleton */}
-        <div className="w-full rounded-md border bg-white p-5">
+        <div className="w-full rounded-md border bg-white ">
           <HeaderSkeleton />
 
           {/* Vendor Display Area Skeleton */}
           <div className="w-full">
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, index) => (
                   <VendorCardSkeleton key={index} />
                 ))}
@@ -599,70 +607,159 @@ const AllVendors: React.FC = () => {
     )
   }
 
+  const getPageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    items.push(1)
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = totalPages
+    const current = currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
+
   return (
     <>
-      <div className="flex-3 relative mt-5 flex items-start gap-6">
+      <div className="m relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
         {/* Main Content - Vendors List/Grid */}
-        <div className="w-full rounded-md border bg-white p-5">
+        <div className="w-full rounded-md border bg-white p-4 sm:p-5">
           <div className="flex flex-col py-2">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-2xl font-medium">All Vendors</p>
-              <div className="flex items-center gap-3">
+            <div className="mb-3 flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
+              <p className="text-lg font-medium sm:text-xl md:text-2xl">All Vendors</p>
+
+              <div className="flex items-center gap-2">
+                {/* Mobile search icon button */}
                 <button
-                  className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
+                  type="button"
+                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden"
+                  onClick={() => setShowMobileSearch((prev) => !prev)}
+                  aria-label="Toggle search"
+                >
+                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
+                </button>
+
+                <button
+                  className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-xs hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:text-sm"
                   onClick={exportToCSV}
                   disabled={!uiVendors || uiVendors.length === 0}
                 >
-                  <ExportCsvIcon color="#2563EB" size={20} />
-                  <p className="text-sm text-[#2563EB]">Export CSV</p>
+                  <ExportCsvIcon color="#2563EB" size={16} className="sm:size-5" />
+                  <p className="text-[#2563EB]">Export CSV</p>
                 </button>
               </div>
             </div>
-            <div className="mt-2 flex gap-4">
-              <SearchModule
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onCancel={handleCancelSearch}
-                placeholder="Search by name, phone, or location"
-                className="max-w-[300px]"
-              />
+
+            {/* Mobile search input */}
+            {showMobileSearch && (
+              <div className="mb-3 sm:hidden">
+                <SearchModule
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  onCancel={handleCancelSearch}
+                  placeholder="Search by name, phone, or location"
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            <div className="mt-2 flex flex-wrap gap-2 sm:flex-nowrap sm:gap-4">
+              {/* Desktop search input */}
+              <div className="hidden sm:block">
+                <SearchModule
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  onCancel={handleCancelSearch}
+                  placeholder="Search by name, phone, or location"
+                  className="w-full sm:max-w-[300px]"
+                />
+              </div>
 
               <div className="flex gap-2">
                 <button
-                  className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                  className={`button-oulined text-xs sm:text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
                   onClick={() => setViewMode("grid")}
                 >
-                  <MdGridView />
-                  <p>Grid</p>
+                  <MdGridView className="size-4 sm:size-5" />
+                  <p className="hidden sm:block">Grid</p>
                 </button>
                 <button
-                  className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                  className={`button-oulined text-xs sm:text-sm ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
                   onClick={() => setViewMode("list")}
                 >
-                  <MdFormatListBulleted />
-                  <p>List</p>
+                  <MdFormatListBulleted className="size-4 sm:size-5" />
+                  <p className="hidden sm:block">List</p>
                 </button>
               </div>
 
               <div className="relative" data-dropdown-root="business-type-filter">
                 <button
                   type="button"
-                  className="button-oulined flex items-center gap-2"
+                  className="button-oulined flex items-center gap-2 text-xs sm:text-sm"
                   onClick={() => setIsBusinessTypeOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={isBusinessTypeOpen}
                 >
-                  <IoMdFunnel />
-                  <span>{selectedBusinessType || "All Business Types"}</span>
+                  <IoMdFunnel className="size-4 sm:size-5" />
+                  <span className="max-w-[100px] truncate sm:max-w-none">
+                    {selectedBusinessType || "All Business Types"}
+                  </span>
                   <ChevronDown
-                    className={`size-4 text-gray-500 transition-transform ${isBusinessTypeOpen ? "rotate-180" : ""}`}
+                    className={`size-3 text-gray-500 transition-transform sm:size-4 ${
+                      isBusinessTypeOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {isBusinessTypeOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 sm:w-56">
                     <div className="py-1">
                       <button
-                        className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                        className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 sm:px-4 sm:text-sm ${
                           selectedBusinessType === "" ? "bg-gray-50" : ""
                         }`}
                         onClick={() => {
@@ -675,7 +772,7 @@ const AllVendors: React.FC = () => {
                       {businessTypes.map((type) => (
                         <button
                           key={type}
-                          className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
+                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 sm:px-4 sm:text-sm ${
                             selectedBusinessType === type ? "bg-gray-50" : ""
                           }`}
                           onClick={() => {
@@ -693,14 +790,29 @@ const AllVendors: React.FC = () => {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 sm:p-4">
+              <p>Error loading vendors: {error}</p>
+            </div>
+          )}
+
           {/* Vendor Display Area */}
           <div className="w-full">
             {filteredVendors.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-gray-500">No vendors found</p>
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+                <div className="text-center">
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 sm:size-12">
+                    <VscEye className="size-5 text-gray-400 sm:size-6" />
+                  </div>
+                  <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No vendors found</h3>
+                  <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
+                    {searchText ? "Try adjusting your search criteria" : "No vendors available"}
+                  </p>
+                </div>
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredVendors.map((vendor: VendorUI) => (
                   <VendorCard key={vendor.id} vendor={vendor} />
                 ))}
@@ -715,55 +827,87 @@ const AllVendors: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <p>Show rows</p>
-              <select value={pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1">
-                <option value={6}>6</option>
-                <option value={12}>12</option>
-                <option value={18}>18</option>
-                <option value={24}>24</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                className={`px-3 py-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"}`}
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <BiSolidLeftArrow />
-              </button>
-
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                      currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                    }`}
-                    onClick={() => changePage(index + 1)}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+          {filteredVendors.length > 0 && (
+            <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+              <div className="flex items-center gap-1 max-sm:hidden">
+                <p className="text-sm">Show rows</p>
+                <select value={pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1 text-sm">
+                  <option value={6}>6</option>
+                  <option value={12}>12</option>
+                  <option value={18}>18</option>
+                  <option value={24}>24</option>
+                  <option value={50}>50</option>
+                </select>
               </div>
 
-              <button
-                className={`px-3 py-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                <BiSolidRightArrow />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <BiSolidLeftArrow className="size-4 sm:size-5" />
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <div className="hidden items-center gap-2 sm:flex">
+                    {getPageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex h-7 w-8 items-center justify-center rounded-md text-sm ${
+                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 sm:hidden">
+                    {getMobilePageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                    currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <BiSolidRightArrow className="size-4 sm:size-5" />
+                </button>
+              </div>
+              <p className="text-sm max-sm:hidden">
+                Page {currentPage} of {totalPages} ({totalRecords} total records)
+              </p>
             </div>
-            <p>
-              Page {currentPage} of {totalPages} ({totalRecords} total records)
-            </p>
-          </div>
+          )}
         </div>
       </div>
 

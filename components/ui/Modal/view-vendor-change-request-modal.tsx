@@ -2,7 +2,6 @@
 
 import React, { useState } from "react"
 import { motion } from "framer-motion"
-import CloseIcon from "public/close-icon"
 import { ButtonModule } from "../Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -235,7 +234,7 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-3 backdrop-blur-sm sm:p-4"
       onClick={onRequestClose}
     >
       <motion.div
@@ -243,22 +242,25 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative flex h-[90vh] w-[70vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+        className="relative flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl md:h-[85vh] lg:w-[70vw]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-6">
-          <h2 className="text-xl font-bold text-gray-900">Vendor Change Request Details</h2>
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-4 md:p-6">
+          <h2 className="text-lg font-bold text-gray-900 md:text-xl">Vendor Change Request Details</h2>
           <button
             onClick={onRequestClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            aria-label="Close modal"
           >
-            <CloseIcon />
+            <svg className="size-4 md:size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {changeRequestDetailsLoading ? (
-            <div className="flex items-center justify-center p-8">
+            <div className="flex items-center justify-center p-6 md:p-8">
               <div className="flex flex-col items-center gap-3">
                 <svg
                   className="size-8 animate-spin text-purple-600"
@@ -273,24 +275,26 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <p className="text-gray-600">Loading vendor change request details...</p>
+                <p className="text-sm text-gray-600 md:text-base">Loading vendor change request details...</p>
               </div>
             </div>
           ) : changeRequestDetails ? (
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               {/* Header Information */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
                 {/* Basic Information */}
                 <div className="space-y-4">
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 text-lg font-semibold text-gray-900">Basic Information</h3>
-                    <div className="space-y-3">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 md:text-lg">Basic Information</h3>
+                    <div className="space-y-2 md:space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Reference:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.reference}</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Reference:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
+                          {changeRequestDetails.reference}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Status:</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Status:</span>
                         <span
                           className={`rounded-full px-2 py-1 text-xs font-medium ${
                             getStatusConfig(changeRequestDetails.status).bg
@@ -300,19 +304,25 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Source:</span>
-                        <span className={`text-sm font-semibold ${getSourceConfig(changeRequestDetails.source).color}`}>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Source:</span>
+                        <span
+                          className={`text-xs font-semibold md:text-sm ${
+                            getSourceConfig(changeRequestDetails.source).color
+                          }`}
+                        >
                           {getSourceConfig(changeRequestDetails.source).label}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Entity:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.entityLabel}</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Entity:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
+                          {changeRequestDetails.entityLabel}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Entity Type:</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Entity Type:</span>
                         <span
-                          className={`text-sm font-semibold ${
+                          className={`text-xs font-semibold md:text-sm ${
                             getEntityTypeConfig(changeRequestDetails.entityType).color
                           }`}
                         >
@@ -324,22 +334,26 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
 
                   {/* Request Information */}
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 text-lg font-semibold text-gray-900">Request Information</h3>
-                    <div className="space-y-3">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 md:text-lg">Request Information</h3>
+                    <div className="space-y-2 md:space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Requested By:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.requestedBy}</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Requested By:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
+                          {changeRequestDetails.requestedBy}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Requested At:</span>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Requested At:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
                           {formatDate(changeRequestDetails.requestedAtUtc)}
                         </span>
                       </div>
                       {changeRequestDetails.requesterComment && (
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Requester Comment:</span>
-                          <p className="mt-1 text-sm text-gray-700">{changeRequestDetails.requesterComment}</p>
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Requester Comment:</span>
+                          <p className="mt-1 text-xs text-gray-700 md:text-sm">
+                            {changeRequestDetails.requesterComment}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -349,38 +363,40 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                 {/* Approval Information */}
                 <div className="space-y-4">
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 text-lg font-semibold text-gray-900">Approval Information</h3>
-                    <div className="space-y-3">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 md:text-lg">Approval Information</h3>
+                    <div className="space-y-2 md:space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Auto Approved:</span>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Auto Approved:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
                           {changeRequestDetails.autoApproved ? "Yes" : "No"}
                         </span>
                       </div>
                       {changeRequestDetails.approvedBy && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Approved By:</span>
-                          <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.approvedBy}</span>
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Approved By:</span>
+                          <span className="text-xs font-semibold text-gray-900 md:text-sm">
+                            {changeRequestDetails.approvedBy}
+                          </span>
                         </div>
                       )}
                       {changeRequestDetails.approvedAtUtc && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Approved At:</span>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Approved At:</span>
+                          <span className="text-xs font-semibold text-gray-900 md:text-sm">
                             {formatDate(changeRequestDetails.approvedAtUtc)}
                           </span>
                         </div>
                       )}
                       {changeRequestDetails.approvalNotes && (
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Approval Notes:</span>
-                          <p className="mt-1 text-sm text-gray-700">{changeRequestDetails.approvalNotes}</p>
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Approval Notes:</span>
+                          <p className="mt-1 text-xs text-gray-700 md:text-sm">{changeRequestDetails.approvalNotes}</p>
                         </div>
                       )}
                       {changeRequestDetails.declinedReason && (
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Declined Reason:</span>
-                          <p className="mt-1 text-sm text-red-600">{changeRequestDetails.declinedReason}</p>
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Declined Reason:</span>
+                          <p className="mt-1 text-xs text-red-600 md:text-sm">{changeRequestDetails.declinedReason}</p>
                         </div>
                       )}
                     </div>
@@ -388,28 +404,32 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
 
                   {/* System Information */}
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 text-lg font-semibold text-gray-900">System Information</h3>
-                    <div className="space-y-3">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 md:text-lg">System Information</h3>
+                    <div className="space-y-2 md:space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Public ID:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.publicId}</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Public ID:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
+                          {changeRequestDetails.publicId}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Entity ID:</span>
-                        <span className="text-sm font-semibold text-gray-900">{changeRequestDetails.entityId}</span>
+                        <span className="text-xs font-medium text-gray-600 md:text-sm">Entity ID:</span>
+                        <span className="text-xs font-semibold text-gray-900 md:text-sm">
+                          {changeRequestDetails.entityId}
+                        </span>
                       </div>
                       {changeRequestDetails.appliedAtUtc && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Applied At:</span>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Applied At:</span>
+                          <span className="text-xs font-semibold text-gray-900 md:text-sm">
                             {formatDate(changeRequestDetails.appliedAtUtc)}
                           </span>
                         </div>
                       )}
                       {changeRequestDetails.failureReason && (
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Failure Reason:</span>
-                          <p className="mt-1 text-sm text-red-600">{changeRequestDetails.failureReason}</p>
+                          <span className="text-xs font-medium text-gray-600 md:text-sm">Failure Reason:</span>
+                          <p className="mt-1 text-xs text-red-600 md:text-sm">{changeRequestDetails.failureReason}</p>
                         </div>
                       )}
                     </div>
@@ -417,18 +437,20 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                 </div>
               </div>
 
-              {/* Approval Notes Input under Changes Preview */}
+              {/* Approval Notes Input */}
               {showNotesInput && (
-                <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
-                  <h3 className="mb-3 text-lg font-semibold text-green-900">Add Approval Notes (Optional)</h3>
+                <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 md:mt-6">
+                  <h3 className="mb-3 text-base font-semibold text-green-900 md:text-lg">
+                    Add Approval Notes (Optional)
+                  </h3>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Enter any notes or comments about this approval..."
-                    className="w-full rounded-lg border border-green-300 bg-white p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
-                    rows={4}
+                    className="w-full rounded-lg border border-green-300 bg-white p-3 text-xs focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 md:text-sm"
+                    rows={3}
                   />
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <ButtonModule
                       variant="secondary"
                       className="flex-1"
@@ -449,24 +471,25 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                     </ButtonModule>
                   </div>
                   {(error || approveChangeRequestError) && (
-                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 md:text-sm">
                       {error || approveChangeRequestError}
                     </div>
                   )}
                 </div>
               )}
 
+              {/* Decline Reason Input */}
               {showDeclineInput && (
-                <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                  <h3 className="mb-3 text-lg font-semibold text-red-900">Reason for Decline</h3>
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 md:mt-6">
+                  <h3 className="mb-3 text-base font-semibold text-red-900 md:text-lg">Reason for Decline</h3>
                   <textarea
                     value={declineReason}
                     onChange={(e) => setDeclineReason(e.target.value)}
                     placeholder="Enter the reason for declining this change request..."
-                    className="w-full rounded-lg border border-red-300 bg-white p-3 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200"
-                    rows={4}
+                    className="w-full rounded-lg border border-red-300 bg-white p-3 text-xs focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 md:text-sm"
+                    rows={3}
                   />
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <ButtonModule
                       variant="secondary"
                       className="flex-1"
@@ -487,7 +510,7 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                     </ButtonModule>
                   </div>
                   {(declineError || declineChangeRequestError) && (
-                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 md:text-sm">
                       {declineError || declineChangeRequestError}
                     </div>
                   )}
@@ -495,9 +518,9 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
               )}
 
               {/* Changes Preview */}
-              <div className="mt-6">
+              <div className="mt-4 md:mt-6">
                 <div className="rounded-lg border border-gray-200 bg-white p-4">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Vendor Changes Preview</h3>
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 md:text-lg">Vendor Changes Preview</h3>
 
                   {changeRequestDetails.displayDiff ? (
                     <div className="space-y-4">
@@ -507,18 +530,20 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                           { from?: unknown; to?: unknown }
                         >
                       ).map(([field, changes]: [string, { from?: unknown; to?: unknown }]) => (
-                        <div key={field} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                          <h4 className="mb-3 font-medium text-gray-900">{getFieldLabel(field)}</h4>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div key={field} className="rounded-lg border border-gray-100 bg-gray-50 p-3 md:p-4">
+                          <h4 className="mb-2 text-sm font-medium text-gray-900 md:mb-3 md:text-base">
+                            {getFieldLabel(field)}
+                          </h4>
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                             <div>
-                              <span className="text-sm font-medium text-gray-600">Current Value:</span>
-                              <p className="mt-1 rounded border bg-white p-2 text-sm text-gray-700">
+                              <span className="text-xs font-medium text-gray-600 md:text-sm">Current Value:</span>
+                              <p className="mt-1 rounded border bg-white p-2 text-xs text-gray-700 md:text-sm">
                                 {renderValue(changes.from)}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-600">New Value:</span>
-                              <p className="mt-1 rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
+                              <span className="text-xs font-medium text-gray-600 md:text-sm">New Value:</span>
+                              <p className="mt-1 rounded border border-green-200 bg-green-50 p-2 text-xs text-green-700 md:text-sm">
                                 {renderValue(changes.to)}
                               </p>
                             </div>
@@ -527,23 +552,27 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
                       ))}
                     </div>
                   ) : (
-                    <div className="py-8 text-center text-gray-500">No changes preview available</div>
+                    <div className="py-6 text-center text-sm text-gray-500 md:py-8 md:text-base">
+                      No changes preview available
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center p-8">
+            <div className="flex items-center justify-center p-6 md:p-8">
               <div className="text-center">
-                <div className="mb-2 text-lg text-red-500">Failed to load vendor change request details</div>
-                <p className="text-gray-600">Please try again later</p>
+                <div className="mb-2 text-base text-red-500 md:text-lg">
+                  Failed to load vendor change request details
+                </div>
+                <p className="text-xs text-gray-600 md:text-sm">Please try again later</p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex gap-4 bg-white p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
+        <div className="flex flex-col gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:gap-4 md:p-6">
+          <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={onRequestClose}>
             Close
           </ButtonModule>
           {changeRequestDetails?.status === 0 && (
@@ -551,8 +580,8 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
               <ButtonModule
                 type="button"
                 variant="primary"
-                className="flex-1"
-                size="lg"
+                className="flex w-full"
+                size="md"
                 onClick={handleApproveClick}
                 disabled={approveChangeRequestLoading}
               >
@@ -560,8 +589,8 @@ const VendorViewChangeRequestModal: React.FC<VendorViewChangeRequestModalProps> 
               </ButtonModule>
               <ButtonModule
                 variant="danger"
-                className="flex-1"
-                size="lg"
+                className="flex w-full"
+                size="md"
                 onClick={handleDeclineClick}
                 disabled={declineChangeRequestLoading}
               >

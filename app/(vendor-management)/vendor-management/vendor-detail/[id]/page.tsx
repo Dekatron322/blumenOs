@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import {
   AlertCircle,
   CheckCircle,
+  ChevronDown,
   CreditCard,
   Edit3,
   Mail,
@@ -87,6 +88,7 @@ const VendorDetailsPage = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>("details")
+  const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
 
   useEffect(() => {
     if (vendorId) {
@@ -451,11 +453,11 @@ const VendorDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+                <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
+                  <div className="flex gap-4 lg:items-center">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
@@ -487,10 +489,10 @@ const VendorDetailsPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="mt-3 flex items-center gap-3 max-sm:mt-4 lg:mt-0">
                     <ButtonModule
                       variant="secondary"
-                      size="sm"
+                      size="md"
                       className="flex items-center gap-2"
                       onClick={exportToPDF}
                       disabled={isExporting}
@@ -502,7 +504,7 @@ const VendorDetailsPage = () => {
                     {canUpdate ? (
                       <ButtonModule
                         variant="primary"
-                        size="sm"
+                        size="md"
                         className="flex items-center gap-2"
                         onClick={() => openModal("edit")}
                       >
@@ -512,7 +514,7 @@ const VendorDetailsPage = () => {
                     ) : (
                       <ButtonModule
                         variant="primary"
-                        size="sm"
+                        size="md"
                         className="flex items-center gap-2"
                         onClick={() => openModal("changeRequest")}
                       >
@@ -525,10 +527,10 @@ const VendorDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-8 2xl:px-16">
+              <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Profile & Quick Actions */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">
                   {/* Profile Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -586,187 +588,239 @@ const VendorDetailsPage = () => {
                     </div>
                   </motion.div>
 
-                  {/* Vendor Wallet Card */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="flex items-center gap-2 font-semibold text-gray-900">
-                        <Wallet className="size-5" />
-                        Vendor Wallet
-                      </h3>
-                      <button
-                        onClick={refreshWallet}
-                        disabled={vendorWalletLoading}
-                        className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
-                        title="Refresh wallet"
-                      >
-                        <svg
-                          className={`size-4 ${vendorWalletLoading ? "animate-spin" : ""}`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {vendorWalletLoading ? (
-                      <div className="animate-pulse space-y-3">
-                        <div className="h-4 w-3/4 rounded bg-gray-200"></div>
-                        <div className="h-8 w-1/2 rounded bg-gray-200"></div>
-                        <div className="h-3 w-2/3 rounded bg-gray-200"></div>
-                      </div>
-                    ) : vendorWalletError ? (
-                      <div className="rounded-md bg-red-50 p-3">
-                        <div className="flex items-center gap-2 text-sm text-red-700">
-                          <AlertCircle className="size-4" />
-                          <span>Failed to load wallet</span>
-                        </div>
-                        <button onClick={refreshWallet} className="mt-2 text-xs text-red-600 hover:text-red-800">
-                          Try again
-                        </button>
-                      </div>
-                    ) : vendorWallet ? (
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <div className={`rounded-lg ${balanceConfig?.bg} p-4`}>
-                            <p className="text-sm font-medium text-gray-600">Current Balance</p>
-                            <p className="text-2xl font-bold text-gray-900">
-                              {formatCurrency(vendorWallet.balance, vendorWallet.currency)}
-                            </p>
-                            {balanceConfig && (
-                              <div
-                                className={`mt-1 inline-block rounded-full px-2 py-1 text-xs font-medium ${balanceConfig.color}`}
-                              >
-                                {balanceConfig.label} BALANCE
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Currency:</span>
-                            <span className="font-medium text-gray-900">{vendorWallet.currency}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Last Top-up:</span>
-                            <span className="font-medium text-gray-900">{formatDate(vendorWallet.lastTopUpAt)}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <ButtonModule
-                            variant="primary"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => setIsTopUpModalOpen(true)}
-                          >
-                            <CreditCard className="size-4" />
-                            Top Up
-                          </ButtonModule>
-                          <ButtonModule
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => {
-                              // TODO: Implement transaction history
-                              console.log("View transactions")
-                            }}
-                          >
-                            <TrendingUp className="size-4" />
-                            History
-                          </ButtonModule>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-500">
-                        <Wallet className="mx-auto mb-2 size-8" />
-                        <p className="text-sm">Wallet data not available</p>
-                      </div>
-                    )}
-                  </motion.div>
-
-                  {/* Quick Actions */}
-                  {canUpdate && (
+                  <div className="flex flex-col gap-6 lg:flex-row xl:flex-col">
+                    {/* Vendor Wallet Card */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      transition={{ delay: 0.05 }}
+                      className="flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                     >
-                      <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                        <SettingOutlineIcon />
-                        Quick Actions
-                      </h3>
-                      <div className="space-y-3">
-                        <ButtonModule
-                          variant="secondary"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("updateCommission")}
+                      <div className="mb-4 flex items-center justify-between">
+                        <h3 className="flex items-center gap-2 font-semibold text-gray-900">
+                          <Wallet className="size-5" />
+                          Vendor Wallet
+                        </h3>
+                        <button
+                          onClick={refreshWallet}
+                          disabled={vendorWalletLoading}
+                          className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                          title="Refresh wallet"
                         >
-                          <PostpaidBillOutlineIcon />
-                          Update Commission
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="primary"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("generateApiKey")}
-                        >
-                          <PasswordOutlineIcon size={20} />
-                          Generate API Key
-                        </ButtonModule>
-                        <ButtonModule
-                          variant={currentVendor.isSuspended ? "primary" : "danger"}
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal(currentVendor.isSuspended ? "activate" : "suspend")}
-                        >
-                          {currentVendor.isSuspended ? <Power className="size-4" /> : <PowerOff className="size-4" />}
-                          {currentVendor.isSuspended ? "Activate Vendor" : "Suspend Vendor"}
-                        </ButtonModule>
+                          <svg
+                            className={`size-4 ${vendorWalletLoading ? "animate-spin" : ""}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        </button>
                       </div>
-                    </motion.div>
-                  )}
 
-                  {/* Service Capabilities */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-                  >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <UserRoleIcon />
-                      Service Capabilities
-                    </h3>
-                    <div className="space-y-3">
-                      <div className={`rounded-lg p-3 ${postpaidConfig.bg}`}>
-                        <div className="font-medium text-gray-900">Postpaid Processing</div>
-                        <div className={`text-sm ${postpaidConfig.color}`}>{postpaidConfig.label}</div>
-                      </div>
-                      <div className={`rounded-lg p-3 ${prepaidConfig.bg}`}>
-                        <div className="font-medium text-gray-900">Prepaid Processing</div>
-                        <div className={`text-sm ${prepaidConfig.color}`}>{prepaidConfig.label}</div>
-                      </div>
-                    </div>
-                  </motion.div>
+                      {vendorWalletLoading ? (
+                        <div className="animate-pulse space-y-3">
+                          <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+                          <div className="h-8 w-1/2 rounded bg-gray-200"></div>
+                          <div className="h-3 w-2/3 rounded bg-gray-200"></div>
+                        </div>
+                      ) : vendorWalletError ? (
+                        <div className="rounded-md bg-red-50 p-3">
+                          <div className="flex items-center gap-2 text-sm text-red-700">
+                            <AlertCircle className="size-4" />
+                            <span>Failed to load wallet</span>
+                          </div>
+                          <button onClick={refreshWallet} className="mt-2 text-xs text-red-600 hover:text-red-800">
+                            Try again
+                          </button>
+                        </div>
+                      ) : vendorWallet ? (
+                        <div className="space-y-4">
+                          <div className="text-center">
+                            <div className={`rounded-lg ${balanceConfig?.bg} p-4`}>
+                              <p className="text-sm font-medium text-gray-600">Current Balance</p>
+                              <p className="text-2xl font-bold text-gray-900">
+                                {formatCurrency(vendorWallet.balance, vendorWallet.currency)}
+                              </p>
+                              {balanceConfig && (
+                                <div
+                                  className={`mt-1 inline-block rounded-full px-2 py-1 text-xs font-medium ${balanceConfig.color}`}
+                                >
+                                  {balanceConfig.label} BALANCE
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600">Currency:</span>
+                              <span className="font-medium text-gray-900">{vendorWallet.currency}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600">Last Top-up:</span>
+                              <span className="font-medium text-gray-900">{formatDate(vendorWallet.lastTopUpAt)}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <ButtonModule
+                              variant="primary"
+                              size="md"
+                              className="flex-1"
+                              onClick={() => setIsTopUpModalOpen(true)}
+                            >
+                              <CreditCard className="size-4" />
+                              Top Up
+                            </ButtonModule>
+                            <ButtonModule
+                              variant="secondary"
+                              size="md"
+                              className="flex-1"
+                              onClick={() => {
+                                // TODO: Implement transaction history
+                                console.log("View transactions")
+                              }}
+                            >
+                              <TrendingUp className="size-4" />
+                              History
+                            </ButtonModule>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-500">
+                          <Wallet className="mx-auto mb-2 size-8" />
+                          <p className="text-sm">Wallet data not available</p>
+                        </div>
+                      )}
+                    </motion.div>
+
+                    {/* Quick Actions */}
+                    {canUpdate && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      >
+                        <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+                          <SettingOutlineIcon />
+                          Quick Actions
+                        </h3>
+                        <div className="space-y-3">
+                          <ButtonModule
+                            variant="secondary"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("updateCommission")}
+                          >
+                            <PostpaidBillOutlineIcon />
+                            Update Commission
+                          </ButtonModule>
+                          <ButtonModule
+                            variant="primary"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("generateApiKey")}
+                          >
+                            <PasswordOutlineIcon size={20} />
+                            Generate API Key
+                          </ButtonModule>
+                          <ButtonModule
+                            variant={currentVendor.isSuspended ? "primary" : "danger"}
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal(currentVendor.isSuspended ? "activate" : "suspend")}
+                          >
+                            {currentVendor.isSuspended ? <Power className="size-4" /> : <PowerOff className="size-4" />}
+                            {currentVendor.isSuspended ? "Activate Vendor" : "Suspend Vendor"}
+                          </ButtonModule>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Main Content Area - Tabs */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
+                {/* Right Column - Tabs and Details */}
+                <div className="flex w-full flex-col space-y-6 max-xl:mt-4 2xl:w-[70%]">
                   <div className="mb-4">
-                    <div className="w-fit rounded-md bg-white p-2">
-                      <nav className="-mb-px flex space-x-2">
+                    <div className="w-full rounded-md bg-white p-2 sm:inline-flex sm:w-auto">
+                      {/* Mobile: dropdown trigger */}
+                      <div className="relative w-full sm:hidden">
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-800"
+                          onClick={() => setIsMobileTabMenuOpen((prev) => !prev)}
+                        >
+                          <span className="flex items-center gap-2">
+                            {activeTab === "details" && <BasicInfoOutlineIcon className="size-5" />}
+                            {activeTab === "payments" && <PaymentDisputeOutlineIcon className="size-5" />}
+                            {activeTab === "change-requests" && <ChangeRequestOutlineIcon className="size-5" />}
+                            <span>
+                              {activeTab === "details" && "Vendor Details"}
+                              {activeTab === "payments" && "Payments"}
+                              {activeTab === "change-requests" && "Change Requests"}
+                            </span>
+                          </span>
+                          <span
+                            className={`inline-block transform text-xs text-gray-500 transition-transform duration-200 ${
+                              isMobileTabMenuOpen ? "rotate-180" : "rotate-0"
+                            }`}
+                          >
+                            <ChevronDown className="size-4" />
+                          </span>
+                        </button>
+
+                        {isMobileTabMenuOpen && (
+                          <div className="absolute z-20 mt-1 w-full rounded-md border bg-white p-1 shadow-md">
+                            <button
+                              onClick={() => {
+                                setActiveTab("details")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "details" ? "bg-[#004B23] text-white" : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <BasicInfoOutlineIcon className="size-5" />
+                              <span>Vendor Details</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab("payments")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "payments"
+                                  ? "bg-[#004B23] text-white"
+                                  : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <PaymentDisputeOutlineIcon className="size-5" />
+                              <span>Payments</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab("change-requests")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "change-requests"
+                                  ? "bg-[#004B23] text-white"
+                                  : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <ChangeRequestOutlineIcon className="size-5" />
+                              <span>Change Requests</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Desktop: horizontal tab list */}
+                      <nav className="-mb-px hidden space-x-2 sm:flex">
                         <button
                           onClick={() => setActiveTab("details")}
                           className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${

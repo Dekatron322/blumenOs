@@ -10,7 +10,8 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { createBulkVendors } from "lib/redux/vendorSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
+import { ArrowLeftIcon, ArrowRightIcon, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface VendorFormData {
   blumenpayId: string
@@ -44,6 +45,7 @@ interface CSVVendor {
 
 const AddNewVendor = () => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const { bulkCreateLoading, bulkCreateError, bulkCreateSuccess, createdVendors } = useAppSelector(
     (state) => state.vendors
   )
@@ -55,6 +57,7 @@ const AddNewVendor = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<CSVVendor[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<VendorFormData>({
@@ -209,6 +212,7 @@ const AddNewVendor = () => {
   const nextStep = () => {
     if (validateCurrentStep()) {
       setCurrentStep((prev) => Math.min(prev + 1, 3))
+      setIsMobileSidebarOpen(false)
     } else {
       notify("error", "Please fix the form errors before continuing", {
         description: "Some required fields are missing or contain invalid data",
@@ -658,6 +662,157 @@ const AddNewVendor = () => {
     }))
   }
 
+  // Mobile Step Navigation
+  const MobileStepNavigation = () => (
+    <div className="sticky top-0 z-40 mb-4 rounded-lg bg-white p-3 shadow-sm sm:hidden">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          className="flex items-center gap-2 text-sm font-medium text-gray-700"
+          onClick={() => setIsMobileSidebarOpen(true)}
+        >
+          <Menu className="size-4" />
+          <span>Step {currentStep}/3</span>
+        </button>
+        <div className="text-sm font-medium text-gray-900">
+          {currentStep === 1 && "Basic Info"}
+          {currentStep === 2 && "Location"}
+          {currentStep === 3 && "Commission"}
+        </div>
+      </div>
+    </div>
+  )
+
+  // Mobile Sidebar Component
+  const MobileStepSidebar = () => (
+    <AnimatePresence>
+      {isMobileSidebarOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/50 sm:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+
+          {/* Sidebar */}
+          <motion.div
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            exit={{ x: -300 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="fixed left-0 top-0 z-50 h-full w-72 bg-white shadow-xl sm:hidden"
+          >
+            <div className="flex h-full flex-col">
+              {/* Header */}
+              <div className="border-b bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Steps</h3>
+                  <button
+                    type="button"
+                    className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+                <p className="mt-1 text-sm text-gray-600">Navigate through form steps</p>
+              </div>
+
+              {/* Steps List */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <nav className="space-y-2">
+                  {[
+                    { step: 1, title: "Basic Information", description: "Vendor contact and identification details" },
+                    { step: 2, title: "Location & Services", description: "Address and service capabilities" },
+                    {
+                      step: 3,
+                      title: "Commission & Assignment",
+                      description: "Commission rates and employee assignment",
+                    },
+                  ].map((item) => (
+                    <button
+                      key={item.step}
+                      type="button"
+                      onClick={() => {
+                        setCurrentStep(item.step)
+                        setIsMobileSidebarOpen(false)
+                      }}
+                      className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                        item.step === currentStep ? "bg-[#004B23] text-white" : "bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div
+                        className={`flex size-7 flex-shrink-0 items-center justify-center rounded-full ${
+                          item.step === currentStep
+                            ? "bg-white text-[#004B23]"
+                            : item.step < currentStep
+                            ? "bg-[#004B23] text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {item.step < currentStep ? (
+                          <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        ) : (
+                          item.step
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div
+                          className={`text-sm font-medium ${
+                            item.step === currentStep ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {item.title}
+                        </div>
+                        <div
+                          className={`mt-1 text-xs ${item.step === currentStep ? "text-gray-200" : "text-gray-600"}`}
+                        >
+                          {item.description}
+                        </div>
+                      </div>
+                      {item.step === currentStep && <ChevronRight className="size-4 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="border-t bg-gray-50 p-4">
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    disabled={isSubmitting || bulkCreateLoading}
+                    className="w-full rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Reset Form
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className="w-full rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+                  >
+                    Close Menu
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+
   // Step progress component
   const StepProgress = () => (
     <div className="mb-8">
@@ -686,7 +841,11 @@ const AddNewVendor = () => {
                   step
                 )}
               </div>
-              <span className={`mt-2 text-xs font-medium ${step === currentStep ? "text-[#004B23]" : "text-gray-500"}`}>
+              <span
+                className={`mt-2 hidden text-xs font-medium md:block ${
+                  step === currentStep ? "text-[#004B23]" : "text-gray-500"
+                }`}
+              >
                 {step === 1 && "Basic Info"}
                 {step === 2 && "Location"}
                 {step === 3 && "Commission"}
@@ -699,81 +858,142 @@ const AddNewVendor = () => {
     </div>
   )
 
+  // Mobile Bottom Navigation Bar
+  const MobileBottomNavigation = () => (
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-2">
+          {currentStep > 1 && (
+            <button
+              type="button"
+              onClick={prevStep}
+              disabled={isSubmitting || bulkCreateLoading}
+              className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ChevronLeft className="size-4" />
+              <span className="hidden sm:inline">Previous</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={isSubmitting || bulkCreateLoading}
+            className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Reset
+          </button>
+        </div>
+
+        <div className="flex gap-2">
+          {currentStep < 3 ? (
+            <button
+              type="button"
+              onClick={nextStep}
+              disabled={isSubmitting || bulkCreateLoading}
+              className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span>Next</span>
+              <ChevronRight className="size-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void submitSingleVendor()}
+              disabled={!isFormValid() || isSubmitting || bulkCreateLoading}
+              className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? "Adding..." : "Add Vendor"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <section className="size-full">
-      <DashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
-          {/* Page Header */}
-          <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
-            <div>
-              <h4 className="text-2xl font-semibold">Register New Vendor</h4>
-              <p className="text-gray-600">Add a new vendor to the system</p>
-            </div>
+          <DashboardNav />
 
-            <motion.div
-              className="flex items-center justify-end gap-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <ButtonModule
-                variant="outline"
-                size="md"
-                onClick={
-                  activeTab === "single"
-                    ? handleReset
-                    : () => {
-                        setCsvFile(null)
-                        setCsvData([])
-                        setCsvErrors([])
-                        if (fileInputRef.current) fileInputRef.current.value = ""
-                      }
-                }
-                disabled={isSubmitting || bulkCreateLoading}
-              >
-                {activeTab === "single" ? "Reset Form" : "Clear CSV"}
-              </ButtonModule>
-              <ButtonModule
-                variant="primary"
-                size="md"
-                onClick={
-                  activeTab === "single"
-                    ? () => {
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4  xl:px-16">
+            {/* Page Header - Mobile Optimized */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex size-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:hidden"
+                    aria-label="Go back"
+                  >
+                    <svg
+                      width="1em"
+                      height="1em"
+                      viewBox="0 0 17 17"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="new-arrow-right rotate-180 transform"
+                    >
+                      <path
+                        d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462L0.049716 9.43565L0.0504065 7.33631L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273L9.1497 0.80204Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Register New Vendor</h1>
+                    <p className="text-sm text-gray-600">Add a new vendor to the system</p>
+                  </div>
+                </div>
+
+                <div className="hidden items-center gap-3 sm:flex">
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    disabled={isSubmitting || bulkCreateLoading}
+                  >
+                    Reset Form
+                  </ButtonModule>
+                  <ButtonModule
+                    variant="primary"
+                    size="sm"
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === "single") {
                         void submitSingleVendor()
-                      }
-                    : () => {
+                      } else {
                         void handleBulkSubmit()
                       }
-                }
-                disabled={
-                  activeTab === "single"
-                    ? !isFormValid() || isSubmitting
-                    : csvData.length === 0 || csvErrors.length > 0 || bulkCreateLoading
-                }
-                icon={<AddAgentIcon />}
-                iconPosition="start"
-              >
-                {activeTab === "single"
-                  ? isSubmitting
-                    ? "Adding Vendor..."
-                    : "Add Vendor"
-                  : bulkCreateLoading
-                  ? "Processing..."
-                  : `Process ${csvData.length} Vendors`}
-              </ButtonModule>
-            </motion.div>
-          </div>
-          <div className="container mx-auto flex w-full flex-col">
-            {/* Tab Navigation */}
-            <div className="px-16 max-md:px-0 max-sm:px-3">
-              <div className="rounded-t-lg border-b border-gray-200 bg-white">
+                    }}
+                    disabled={
+                      activeTab === "single"
+                        ? !isFormValid() || isSubmitting || bulkCreateLoading
+                        : csvData.length === 0 || csvErrors.length > 0 || bulkCreateLoading
+                    }
+                  >
+                    {activeTab === "single"
+                      ? isSubmitting
+                        ? "Adding..."
+                        : "Add Vendor"
+                      : bulkCreateLoading
+                      ? "Processing..."
+                      : `Process ${csvData.length} Vendors`}
+                  </ButtonModule>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation - Mobile Optimized */}
+            <div className="mb-4">
+              <div className="rounded-lg border border-gray-200 bg-white sm:rounded-t-lg">
                 <div className="flex">
                   <button
                     onClick={() => setActiveTab("single")}
-                    className={`flex-1 rounded-tl-lg px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-l-lg px-4 py-3 text-sm font-medium transition-colors sm:rounded-tl-lg sm:px-6 sm:py-4 ${
                       activeTab === "single"
-                        ? "border-b-2 border-blue-500 text-blue-600"
+                        ? "border-b-2 border-blue-500 bg-blue-50 text-blue-600 sm:border-b-0 sm:bg-transparent"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -781,9 +1001,9 @@ const AddNewVendor = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("bulk")}
-                    className={`flex-1 rounded-tr-lg px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-r-lg px-4 py-3 text-sm font-medium transition-colors sm:rounded-tr-lg sm:px-6 sm:py-4 ${
                       activeTab === "bulk"
-                        ? "border-b-2 border-blue-500 text-blue-600"
+                        ? "border-b-2 border-blue-500 bg-blue-50 text-blue-600 sm:border-b-0 sm:bg-transparent"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -793,405 +1013,236 @@ const AddNewVendor = () => {
               </div>
             </div>
 
+            {/* Mobile Step Navigation */}
+            {activeTab === "single" && <MobileStepNavigation />}
+
+            {/* Mobile Step Sidebar */}
+            {activeTab === "single" && <MobileStepSidebar />}
+
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
-              <div className="w-full">
-                {activeTab === "single" ? (
-                  /* Single Entry Form */
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="rounded-b-lg rounded-tr-lg bg-white p-6 shadow-sm"
-                  >
-                    {/* Form Header */}
-                    <div className="mb-6 border-b pb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Vendor Information</h3>
-                      <p className="text-sm text-gray-600">Fill in all required fields to register a new vendor</p>
-                    </div>
+            <div className="w-full">
+              {activeTab === "single" ? (
+                /* Single Entry Form */
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="rounded-lg bg-white p-4 shadow-sm sm:rounded-b-lg sm:p-6"
+                >
+                  {/* Form Header */}
+                  <div className="mb-6 border-b pb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Vendor Information</h3>
+                    <p className="text-sm text-gray-600">Fill in all required fields to register a new vendor</p>
+                  </div>
 
+                  {/* Desktop Step Progress */}
+                  <div className="hidden sm:block">
                     <StepProgress />
+                  </div>
 
-                    {/* Vendor Form */}
-                    <form onSubmit={handleSingleSubmit} className="space-y-6">
-                      <AnimatePresence mode="wait">
-                        {/* Step 1: Basic Information */}
-                        {currentStep === 1 && (
-                          <motion.div
-                            key="step-1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                          >
-                            <div className="rounded-lg bg-[#F9F9F9] p-6">
-                              <h4 className="mb-4 font-medium text-gray-900">Basic Information</h4>
-                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <FormInputModule
-                                  label="BlumenPay ID"
-                                  name="blumenpayId"
-                                  type="text"
-                                  placeholder="Enter BlumenPay ID"
-                                  value={formData.blumenpayId}
-                                  onChange={handleInputChange}
-                                  error={formErrors.blumenpayId}
-                                  required
-                                />
-
-                                <FormInputModule
-                                  label="Vendor Name"
-                                  name="name"
-                                  type="text"
-                                  placeholder="Enter vendor name"
-                                  value={formData.name}
-                                  onChange={handleInputChange}
-                                  error={formErrors.name}
-                                  required
-                                />
-
-                                <FormInputModule
-                                  label="Phone Number"
-                                  name="phoneNumber"
-                                  type="tel"
-                                  placeholder="Enter phone number (e.g., 08012345678)"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  error={formErrors.phoneNumber}
-                                  required
-                                />
-
-                                <FormInputModule
-                                  label="Email Address"
-                                  name="email"
-                                  type="email"
-                                  placeholder="Enter email address"
-                                  value={formData.email}
-                                  onChange={handleInputChange}
-                                  error={formErrors.email}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Step 2: Location & Services */}
-                        {currentStep === 2 && (
-                          <motion.div
-                            key="step-2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                          >
-                            <div className="rounded-lg bg-[#F9F9F9] p-6">
-                              <h4 className="mb-4 font-medium text-gray-900">Location & Services</h4>
-                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <FormInputModule
-                                  label="Address"
-                                  name="address"
-                                  type="text"
-                                  placeholder="Enter complete address"
-                                  value={formData.address}
-                                  onChange={handleInputChange}
-                                  error={formErrors.address}
-                                  required
-                                />
-
-                                <FormInputModule
-                                  label="City"
-                                  name="city"
-                                  type="text"
-                                  placeholder="Enter city"
-                                  value={formData.city}
-                                  onChange={handleInputChange}
-                                  error={formErrors.city}
-                                  required
-                                />
-
-                                <FormSelectModule
-                                  label="State"
-                                  name="state"
-                                  value={formData.state}
-                                  onChange={handleInputChange}
-                                  options={stateOptions}
-                                  error={formErrors.state}
-                                  required
-                                />
-
-                                <FormSelectModule
-                                  label="Can Process Postpaid"
-                                  name="canProcessPostpaid"
-                                  value={formData.canProcessPostpaid.toString()}
-                                  onChange={handleInputChange}
-                                  options={booleanOptions}
-                                  required
-                                />
-
-                                <FormSelectModule
-                                  label="Can Process Prepaid"
-                                  name="canProcessPrepaid"
-                                  value={formData.canProcessPrepaid.toString()}
-                                  onChange={handleInputChange}
-                                  options={booleanOptions}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Step 3: Commission & Assignment */}
-                        {currentStep === 3 && (
-                          <motion.div
-                            key="step-3"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                          >
-                            <div className="rounded-lg bg-[#F9F9F9] p-6">
-                              <h4 className="mb-4 font-medium text-gray-900">Commission & Assignment</h4>
-                              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <FormSelectModule
-                                  label="Commission Rate (%)"
-                                  name="commission"
-                                  value={formData.commission}
-                                  onChange={handleInputChange}
-                                  options={commissionOptions}
-                                  error={formErrors.commission}
-                                  required
-                                />
-
-                                <FormSelectModule
-                                  label="Employee User ID"
-                                  name="employeeUserId"
-                                  value={formData.employeeUserId}
-                                  onChange={handleInputChange}
-                                  options={employeeOptions}
-                                  error={formErrors.employeeUserId}
-                                  required
-                                />
-
-                                <div className="md:col-span-2">
-                                  <FormInputModule
-                                    label="Document URLs (comma-separated)"
-                                    name="documentUrls"
-                                    type="text"
-                                    placeholder="https://example.com/doc1.pdf, https://example.com/doc2.pdf"
-                                    value={formData.documentUrls.join(", ")}
-                                    onChange={handleDocumentUrlsChange}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Error Summary */}
-                      {Object.keys(formErrors).length > 0 && (
-                        <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                          <div className="flex">
-                            <div className="shrink-0">
-                              <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path
-                                  fillRule="evenodd"
-                                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <div className="ml-3">
-                              <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
-                              <div className="mt-2 text-sm text-amber-700">
-                                <ul className="list-disc space-y-1 pl-5">
-                                  {Object.values(formErrors).map((error, index) => (
-                                    <li key={index}>{error}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
+                  {/* Vendor Form */}
+                  <form onSubmit={handleSingleSubmit} className="space-y-6">
+                    <AnimatePresence mode="wait">
+                      {/* Step 1: Basic Information */}
+                      {currentStep === 1 && (
+                        <motion.div
+                          key="step-1"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-4 rounded-lg bg-[#F9F9F9] p-4 sm:space-y-6 sm:p-6"
+                        >
+                          <div className="border-b pb-3">
+                            <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
+                            <p className="text-sm text-gray-600">
+                              Enter the vendor&apos;s contact and identification details
+                            </p>
                           </div>
-                        </div>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            <FormInputModule
+                              label="BlumenPay ID"
+                              name="blumenpayId"
+                              type="text"
+                              placeholder="Enter BlumenPay ID"
+                              value={formData.blumenpayId}
+                              onChange={handleInputChange}
+                              error={formErrors.blumenpayId}
+                              required
+                            />
+
+                            <FormInputModule
+                              label="Vendor Name"
+                              name="name"
+                              type="text"
+                              placeholder="Enter vendor name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              error={formErrors.name}
+                              required
+                            />
+
+                            <FormInputModule
+                              label="Phone Number"
+                              name="phoneNumber"
+                              type="tel"
+                              placeholder="Enter phone number (e.g., 08012345678)"
+                              value={formData.phoneNumber}
+                              onChange={handleInputChange}
+                              error={formErrors.phoneNumber}
+                              required
+                            />
+
+                            <FormInputModule
+                              label="Email Address"
+                              name="email"
+                              type="email"
+                              placeholder="Enter email address"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              error={formErrors.email}
+                              required
+                            />
+                          </div>
+                        </motion.div>
                       )}
 
-                      {/* Form Actions */}
-                      <div className="flex justify-between gap-4 border-t pt-6">
-                        <div className="flex gap-4">
-                          {currentStep > 1 && (
-                            <ButtonModule
-                              variant="outline"
-                              size="lg"
-                              onClick={prevStep}
-                              disabled={isSubmitting}
-                              type="button"
-                              icon={<ArrowLeftIcon />}
-                              iconPosition="start"
-                            >
-                              Previous
-                            </ButtonModule>
-                          )}
-                        </div>
-
-                        <div className="flex gap-4">
-                          <ButtonModule
-                            variant="dangerSecondary"
-                            size="lg"
-                            onClick={handleReset}
-                            disabled={isSubmitting}
-                            type="button"
-                          >
-                            Reset
-                          </ButtonModule>
-
-                          {currentStep < 3 ? (
-                            <ButtonModule
-                              variant="primary"
-                              size="lg"
-                              onClick={nextStep}
-                              type="button"
-                              icon={<ArrowRightIcon />}
-                              iconPosition="end"
-                            >
-                              Next
-                            </ButtonModule>
-                          ) : (
-                            <ButtonModule
-                              variant="primary"
-                              size="lg"
-                              type="submit"
-                              disabled={!isFormValid() || isSubmitting}
-                            >
-                              {isSubmitting ? "Adding Vendor..." : "Add Vendor"}
-                            </ButtonModule>
-                          )}
-                        </div>
-                      </div>
-                    </form>
-                  </motion.div>
-                ) : (
-                  /* Bulk Upload Section */
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="rounded-b-lg rounded-tl-lg bg-white p-6 shadow-sm"
-                  >
-                    {/* Template Download */}
-                    <div className="mb-6 rounded-lg bg-blue-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
-                          <p className="text-sm text-blue-600">Download our CSV template to ensure proper formatting</p>
-                        </div>
-                        <ButtonModule variant="primary" size="sm" onClick={downloadTemplate}>
-                          Download Template
-                        </ButtonModule>
-                      </div>
-                    </div>
-
-                    {/* File Upload Area */}
-                    <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-8 text-center">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept=".csv"
-                        className="hidden"
-                      />
-
-                      {!csvFile ? (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                          </svg>
-                          <div className="mt-4 flex w-full flex-col items-center justify-center">
-                            <ButtonModule variant="primary" onClick={() => fileInputRef.current?.click()}>
-                              Choose CSV File
-                            </ButtonModule>
-                            <p className="mt-2 text-sm text-gray-600">or drag and drop your file here</p>
+                      {/* Step 2: Location & Services */}
+                      {currentStep === 2 && (
+                        <motion.div
+                          key="step-2"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-4 rounded-lg bg-[#F9F9F9] p-4 sm:space-y-6 sm:p-6"
+                        >
+                          <div className="border-b pb-3">
+                            <h4 className="text-lg font-medium text-gray-900">Location & Services</h4>
+                            <p className="text-sm text-gray-600">
+                              Enter the vendor&apos;s address and service capabilities
+                            </p>
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">CSV files only (max 10MB)</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <svg
-                            className="mx-auto size-12 text-green-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            <FormInputModule
+                              label="Address"
+                              name="address"
+                              type="text"
+                              placeholder="Enter complete address"
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              error={formErrors.address}
+                              required
                             />
-                          </svg>
-                          <p className="mt-2 text-sm font-medium text-gray-900">{csvFile.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {csvData.length} valid records found
-                            {csvErrors.length > 0 && `, ${csvErrors.length} errors`}
-                          </p>
-                          <div className="mt-4 flex justify-center gap-3">
-                            <ButtonModule
-                              variant="secondary"
-                              onClick={() => {
-                                setCsvFile(null)
-                                setCsvData([])
-                                setCsvErrors([])
-                                if (fileInputRef.current) {
-                                  fileInputRef.current.value = ""
-                                }
-                              }}
-                            >
-                              Choose Different File
-                            </ButtonModule>
-                            {csvErrors.length === 0 && csvData.length > 0 && (
-                              <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={bulkCreateLoading}>
-                                {bulkCreateLoading ? "Processing..." : `Process ${csvData.length} Vendors`}
-                              </ButtonModule>
-                            )}
+
+                            <FormInputModule
+                              label="City"
+                              name="city"
+                              type="text"
+                              placeholder="Enter city"
+                              value={formData.city}
+                              onChange={handleInputChange}
+                              error={formErrors.city}
+                              required
+                            />
+
+                            <FormSelectModule
+                              label="State"
+                              name="state"
+                              value={formData.state}
+                              onChange={handleInputChange}
+                              options={stateOptions}
+                              error={formErrors.state}
+                              required
+                            />
+
+                            <FormSelectModule
+                              label="Can Process Postpaid"
+                              name="canProcessPostpaid"
+                              value={formData.canProcessPostpaid.toString()}
+                              onChange={handleInputChange}
+                              options={booleanOptions}
+                              required
+                            />
+
+                            <FormSelectModule
+                              label="Can Process Prepaid"
+                              name="canProcessPrepaid"
+                              value={formData.canProcessPrepaid.toString()}
+                              onChange={handleInputChange}
+                              options={booleanOptions}
+                              required
+                            />
                           </div>
-                        </div>
+                        </motion.div>
                       )}
-                    </div>
 
-                    {/* CSV Errors Display */}
-                    {csvErrors.length > 0 && (
-                      <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
+                      {/* Step 3: Commission & Assignment */}
+                      {currentStep === 3 && (
+                        <motion.div
+                          key="step-3"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-4 rounded-lg bg-[#F9F9F9] p-4 sm:space-y-6 sm:p-6"
+                        >
+                          <div className="border-b pb-3">
+                            <h4 className="text-lg font-medium text-gray-900">Commission & Assignment</h4>
+                            <p className="text-sm text-gray-600">Configure commission rates and assign employees</p>
+                          </div>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            <FormSelectModule
+                              label="Commission Rate (%)"
+                              name="commission"
+                              value={formData.commission}
+                              onChange={handleInputChange}
+                              options={commissionOptions}
+                              error={formErrors.commission}
+                              required
+                            />
+
+                            <FormSelectModule
+                              label="Employee User ID"
+                              name="employeeUserId"
+                              value={formData.employeeUserId}
+                              onChange={handleInputChange}
+                              options={employeeOptions}
+                              error={formErrors.employeeUserId}
+                              required
+                            />
+
+                            <div className="sm:col-span-2">
+                              <FormInputModule
+                                label="Document URLs (comma-separated)"
+                                name="documentUrls"
+                                type="text"
+                                placeholder="https://example.com/doc1.pdf, https://example.com/doc2.pdf"
+                                value={formData.documentUrls.join(", ")}
+                                onChange={handleDocumentUrlsChange}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Error Summary */}
+                    {Object.keys(formErrors).length > 0 && (
+                      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
                         <div className="flex">
                           <div className="shrink-0">
-                            <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
                               <path
                                 fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
                                 clipRule="evenodd"
                               />
                             </svg>
                           </div>
-                          <div className="ml-3 flex-1">
-                            <h3 className="text-sm font-medium text-red-800">
-                              CSV Validation Errors ({csvErrors.length})
-                            </h3>
-                            <div className="mt-2 text-sm text-red-700">
-                              <ul className="max-h-32 space-y-1 overflow-y-auto">
-                                {csvErrors.map((error, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="mr-2">•</span>
-                                    <span>{error}</span>
-                                  </li>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                              <ul className="list-disc space-y-1 pl-5">
+                                {Object.values(formErrors).map((error, index) => (
+                                  <li key={index}>{error}</li>
                                 ))}
                               </ul>
                             </div>
@@ -1200,64 +1251,281 @@ const AddNewVendor = () => {
                       </div>
                     )}
 
-                    {/* Preview of Valid Data */}
-                    {csvData.length > 0 && (
-                      <div className="rounded-md border border-gray-200">
-                        <div className="bg-gray-50 px-4 py-3">
-                          <h3 className="text-sm font-medium text-gray-900">
-                            Preview ({csvData.length} valid records)
-                          </h3>
+                    {/* Desktop Form Actions */}
+                    <div className="hidden justify-between gap-4 border-t pt-6 sm:flex">
+                      <div className="flex gap-4">
+                        {currentStep > 1 && (
+                          <ButtonModule
+                            variant="outline"
+                            size="lg"
+                            onClick={prevStep}
+                            disabled={isSubmitting || bulkCreateLoading}
+                            type="button"
+                            icon={<ArrowLeftIcon />}
+                            iconPosition="start"
+                          >
+                            Previous
+                          </ButtonModule>
+                        )}
+                      </div>
+
+                      <div className="flex gap-4">
+                        <ButtonModule
+                          variant="dangerSecondary"
+                          size="lg"
+                          onClick={handleReset}
+                          disabled={isSubmitting || bulkCreateLoading}
+                          type="button"
+                        >
+                          Reset
+                        </ButtonModule>
+
+                        {currentStep < 3 ? (
+                          <ButtonModule
+                            variant="primary"
+                            size="lg"
+                            onClick={nextStep}
+                            type="button"
+                            icon={<ArrowRightIcon />}
+                            iconPosition="end"
+                          >
+                            Next
+                          </ButtonModule>
+                        ) : (
+                          <ButtonModule
+                            variant="primary"
+                            size="lg"
+                            type="submit"
+                            disabled={!isFormValid() || isSubmitting || bulkCreateLoading}
+                          >
+                            {isSubmitting ? "Adding Vendor..." : "Add Vendor"}
+                          </ButtonModule>
+                        )}
+                      </div>
+                    </div>
+                  </form>
+                </motion.div>
+              ) : (
+                /* Bulk Upload Section */
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="rounded-lg bg-white p-4 shadow-sm sm:rounded-b-lg sm:p-6"
+                >
+                  {/* Template Download */}
+                  <div className="mb-6 rounded-lg bg-blue-50 p-4">
+                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                      <div>
+                        <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
+                        <p className="text-sm text-blue-600">Download our CSV template to ensure proper formatting</p>
+                      </div>
+                      <ButtonModule variant="primary" size="sm" onClick={downloadTemplate} className="w-full sm:w-auto">
+                        Download Template
+                      </ButtonModule>
+                    </div>
+                  </div>
+
+                  {/* File Upload Area */}
+                  <div className="mb-6 rounded-lg border-2 border-dashed border-gray-300 bg-[#f9f9f9] p-6 text-center sm:p-8">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept=".csv"
+                      className="hidden"
+                    />
+
+                    {!csvFile ? (
+                      <div>
+                        <svg
+                          className="mx-auto size-12 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        <div className="mt-4 flex w-full flex-col items-center justify-center">
+                          <ButtonModule
+                            variant="primary"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full sm:w-auto"
+                          >
+                            Choose CSV File
+                          </ButtonModule>
+                          <p className="mt-2 text-sm text-gray-600">or drag and drop your file here</p>
                         </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  BlumenPay ID
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Name
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Phone
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">
-                                  Commission
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                              {csvData.slice(0, 5).map((vendor, index) => (
-                                <tr key={index}>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.blumenpayId}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">{vendor.name}</td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.phoneNumber}
-                                  </td>
-                                  <td className="whitespace-nowrap px-4 py-2 text-sm text-gray-900">
-                                    {vendor.commission}%
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          {csvData.length > 5 && (
-                            <div className="bg-gray-50 px-4 py-2 text-center text-sm text-gray-500">
-                              ... and {csvData.length - 5} more records
-                            </div>
+                        <p className="mt-1 text-xs text-gray-500">CSV files only (max 10MB)</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <svg
+                          className="mx-auto size-12 text-green-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <p className="mt-2 text-sm font-medium text-gray-900">{csvFile.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {csvData.length} valid records found
+                          {csvErrors.length > 0 && `, ${csvErrors.length} errors`}
+                        </p>
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                          <ButtonModule
+                            variant="secondary"
+                            onClick={() => {
+                              setCsvFile(null)
+                              setCsvData([])
+                              setCsvErrors([])
+                              if (fileInputRef.current) {
+                                fileInputRef.current.value = ""
+                              }
+                            }}
+                            className="w-full sm:w-auto"
+                          >
+                            Choose Different File
+                          </ButtonModule>
+                          {csvErrors.length === 0 && csvData.length > 0 && (
+                            <ButtonModule
+                              variant="primary"
+                              onClick={handleBulkSubmit}
+                              disabled={bulkCreateLoading}
+                              className="w-full sm:w-auto"
+                            >
+                              {bulkCreateLoading ? "Processing..." : `Process ${csvData.length} Vendors`}
+                            </ButtonModule>
                           )}
                         </div>
                       </div>
                     )}
-                  </motion.div>
-                )}
-              </div>
+                  </div>
+
+                  {/* CSV Errors Display */}
+                  {csvErrors.length > 0 && (
+                    <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <svg className="size-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-sm font-medium text-red-800">
+                            CSV Validation Errors ({csvErrors.length})
+                          </h3>
+                          <div className="mt-2 text-sm text-red-700">
+                            <ul className="max-h-32 space-y-1 overflow-y-auto">
+                              {csvErrors.map((error, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="mr-2">•</span>
+                                  <span>{error}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Preview of Valid Data */}
+                  {csvData.length > 0 && (
+                    <div className="rounded-md border border-gray-200">
+                      <div className="bg-gray-50 px-4 py-3">
+                        <h3 className="text-sm font-medium text-gray-900">Preview ({csvData.length} valid records)</h3>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                BlumenPay ID
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                Name
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                Phone
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
+                                Commission
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 bg-white">
+                            {csvData.slice(0, 5).map((vendor, index) => (
+                              <tr key={index}>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {vendor.blumenpayId}
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {vendor.name}
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {vendor.phoneNumber}
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
+                                  {vendor.commission}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {csvData.length > 5 && (
+                          <div className="bg-gray-50 px-4 py-2 text-center text-sm text-gray-500">
+                            ... and {csvData.length - 5} more records
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bulk Upload Actions */}
+                  <div className="mt-6 flex flex-col gap-4 sm:hidden">
+                    <ButtonModule
+                      variant="outline"
+                      onClick={() => {
+                        setCsvFile(null)
+                        setCsvData([])
+                        setCsvErrors([])
+                        if (fileInputRef.current) fileInputRef.current.value = ""
+                      }}
+                      disabled={bulkCreateLoading}
+                    >
+                      Clear CSV
+                    </ButtonModule>
+                    {csvErrors.length === 0 && csvData.length > 0 && (
+                      <ButtonModule variant="primary" onClick={handleBulkSubmit} disabled={bulkCreateLoading}>
+                        {bulkCreateLoading ? "Processing..." : `Process ${csvData.length} Vendors`}
+                      </ButtonModule>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation for Single Entry Form */}
+      {activeTab === "single" && <MobileBottomNavigation />}
     </section>
   )
 }
