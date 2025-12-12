@@ -3,8 +3,8 @@ import clsx from "clsx"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { AuditIcon, BusinessLogo, DashboardIcon, EmployeeLogo, PaymentIcon, Pricing, ServiceIcon } from "./Icons"
-import { CollectCash, RaiseTicketIcon, MakeChangeRequestIcon, CashClearanceIcon } from "components/Icons/Icons"
+import { DashboardIcon, PaymentIcon } from "./Icons"
+import { CashClearanceIcon, CollectCash, MakeChangeRequestIcon, RaiseTicketIcon } from "components/Icons/Icons"
 
 interface NavLink {
   name: string
