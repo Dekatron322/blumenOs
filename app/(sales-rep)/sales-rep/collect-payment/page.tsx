@@ -9,12 +9,12 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  CollectorType,
-  PaymentChannel,
   clearBillLookup,
   clearCreatePayment,
+  CollectorType,
   createAgentPayment,
   lookupBill,
+  PaymentChannel,
 } from "lib/redux/agentSlice"
 import { lookupCustomer } from "lib/redux/customerSlice"
 
@@ -387,7 +387,7 @@ const CollectPaymentPage: React.FC = () => {
                     />
 
                     <p className="text-xs text-gray-500">
-                      Use the customer's account number or other reference to find the customer record.
+                      Use the customer&apos;s account number or other reference to find the customer record.
                     </p>
 
                     <div className="mt-4 flex gap-3">

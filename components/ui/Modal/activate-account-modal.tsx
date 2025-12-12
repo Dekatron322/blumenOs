@@ -75,7 +75,7 @@ const ActivateAccountModal: React.FC<ActivateAccountModalProps> = ({
         className="relative w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl sm:max-w-lg md:max-w-xl lg:w-[500px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] px-4 py-4 sm:px-6 sm:py-6">
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-4 sm:px-6 sm:py-6">
           <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Activate Account</h2>
           <button
             onClick={onRequestClose}
@@ -115,7 +115,7 @@ const ActivateAccountModal: React.FC<ActivateAccountModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 bg-white px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:gap-4 sm:px-6 sm:py-6">
+        <div className="flex flex-col gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:flex-row sm:gap-4 sm:px-6 sm:py-6">
           <ButtonModule
             variant="secondary"
             className="flex w-full"

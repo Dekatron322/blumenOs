@@ -1098,7 +1098,7 @@ const PoleDetailsPage = () => {
           <DashboardNav />
           <div className="container mx-auto flex flex-col">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-4 py-4 sm:px-6 lg:px-16">
+              <div className="mx-auto w-full p-4 sm:px-6 lg:px-16">
                 <div className="flex w-full flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-0">
                   <div className="flex items-center gap-4">
                     <motion.button

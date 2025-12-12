@@ -101,7 +101,7 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
         className="relative w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl sm:max-w-lg md:max-w-xl 2xl:max-w-4xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex w-full items-center justify-between bg-[#F9F9F9] px-4 py-4 sm:px-6 sm:py-5">
+        <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-4 sm:px-6 sm:py-5">
           <h2 className="text-base font-bold text-gray-900 sm:text-lg md:text-xl">Suspend Customer Account</h2>
           <button
             onClick={onRequestClose}
@@ -172,7 +172,7 @@ const SuspendCustomerModal: React.FC<SuspendCustomerModalProps> = ({
           </div>
         </div>
 
-        <div className="flex  gap-3 bg-white px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]  sm:gap-4 sm:px-6 sm:py-5">
+        <div className="flex  gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]  sm:gap-4 sm:px-6 sm:py-5">
           <ButtonModule
             variant="secondary"
             className="flex-1 text-sm sm:text-base"

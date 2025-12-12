@@ -9,10 +9,10 @@ import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { BillDetails, BillStatus, clearBillLookup, lookupBill } from "lib/redux/agentSlice"
 import {
-  CreateBillingDisputeRequest,
   clearBillingDisputeError,
   clearBillingDisputeState,
   createBillingDispute,
+  CreateBillingDisputeRequest,
 } from "lib/redux/billingDisputeSlice"
 
 const CollectPaymentBillingDisputePage: React.FC = () => {
@@ -322,7 +322,7 @@ const CollectPaymentBillingDisputePage: React.FC = () => {
                               Attach Files (optional)
                             </label>
 
-                            <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-center transition hover:border-[#004b23]/60 hover:bg-[#004b23]/5">
+                            <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-4 text-center transition hover:border-[#004b23]/60 hover:bg-[#004b23]/5">
                               <input
                                 id="disputeFiles"
                                 type="file"

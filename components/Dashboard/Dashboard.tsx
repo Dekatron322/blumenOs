@@ -137,9 +137,7 @@ const DashboardMain: React.FC = () => {
                 <div className="my-5 h-[1px] w-full bg-black opacity-5 max-sm:my-2"></div>
                 <div className="flex items-center gap-4">
                   <div
-                    className={`flex w-[72px] items-center justify-center rounded-md px-1 py-1 ${getBgColor(
-                      account.status
-                    )}`}
+                    className={`flex w-[72px] items-center justify-center rounded-md p-1 ${getBgColor(account.status)}`}
                   >
                     {account.status === "income" ? (
                       <ArrowDropUpIcon className="text-white" />
@@ -196,9 +194,7 @@ const DashboardMain: React.FC = () => {
                 <div className="my-5 h-[1px] w-full bg-black opacity-5 max-sm:my-2"></div>
                 <div className="flex items-center gap-4">
                   <div
-                    className={`flex w-[72px] items-center justify-center rounded-md px-1 py-1 ${getBgColor(
-                      account.status
-                    )}`}
+                    className={`flex w-[72px] items-center justify-center rounded-md p-1 ${getBgColor(account.status)}`}
                   >
                     {account.status === "income" ? (
                       <ArrowDropUpIcon className="text-white" />
@@ -255,9 +251,7 @@ const DashboardMain: React.FC = () => {
                 <div className="my-5 h-[1px] w-full bg-black opacity-5 max-sm:my-2"></div>
                 <div className="flex items-center gap-4">
                   <div
-                    className={`flex w-[72px] items-center justify-center rounded-md px-1 py-1 ${getBgColor(
-                      account.status
-                    )}`}
+                    className={`flex w-[72px] items-center justify-center rounded-md p-1 ${getBgColor(account.status)}`}
                   >
                     {account.status === "income" ? (
                       <ArrowDropUpIcon className="text-white" />
