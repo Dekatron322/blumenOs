@@ -21,6 +21,8 @@ const MapViewTab = () => {
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
   const [selectedCustomerDetails, setSelectedCustomerDetails] = useState<StatusMapCustomer | null>(null)
   const [selectedAssetDetails, setSelectedAssetDetails] = useState<StatusMapAsset | null>(null)
+  const [showFiltersMobile, setShowFiltersMobile] = useState(true)
+  const [showLayersMobile, setShowLayersMobile] = useState(true)
 
   const paymentStatusOptions = ["All Status", "Paid", "Unpaid", "Partial"]
 
@@ -333,19 +335,28 @@ const MapViewTab = () => {
   }
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col gap-6 lg:flex-row">
       {/* Left Control Panel */}
-      <div className="w-80 shrink-0 space-y-6">
+      <div className="w-full shrink-0 space-y-6 lg:w-80">
         {/* Filters Section */}
         <div className="rounded-md border bg-white p-4">
-          <div className="mb-4 flex items-center justify-between">
+          <div
+            className="mb-4 flex cursor-pointer items-center justify-between lg:cursor-default"
+            onClick={() => setShowFiltersMobile((prev) => !prev)}
+          >
             <h3 className="text-lg font-semibold">Filters</h3>
-            <button onClick={handleReset} className="text-sm text-blue-600 hover:text-blue-800">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleReset()
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
               Reset
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className={`space-y-4 ${showFiltersMobile ? "block" : "hidden"} lg:block`}>
             <div>
               <FormSelectModule
                 label="State"
@@ -380,9 +391,14 @@ const MapViewTab = () => {
 
         {/* Map Layers Section */}
         <div className="rounded-md border bg-white p-4">
-          <h3 className="mb-4 text-lg font-semibold">Map Layers</h3>
+          <div
+            className="mb-4 flex cursor-pointer items-center justify-between lg:cursor-default"
+            onClick={() => setShowLayersMobile((prev) => !prev)}
+          >
+            <h3 className="text-lg font-semibold">Map Layers</h3>
+          </div>
 
-          <div className="space-y-4">
+          <div className={`space-y-4 ${showLayersMobile ? "block" : "hidden"} lg:block`}>
             {/* Customers Toggle */}
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">Customers</label>
@@ -421,11 +437,11 @@ const MapViewTab = () => {
       </div>
 
       {/* Right Map Area */}
-      <div className="relative flex-1 rounded-md border bg-white">
+      <div className="relative w-full rounded-md border bg-white lg:flex-1">
         {/* Map Display */}
-        <div className="relative h-[600px] w-full overflow-hidden rounded-md bg-gray-100">
+        <div className="relative h-[400px] w-full overflow-hidden rounded-md bg-gray-100 lg:h-[600px]">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <div ref={mapDivRef} className="h-[600px] w-full rounded-md" />
+          <div ref={mapDivRef} className="h-[400px] w-full rounded-md lg:h-[600px]" />
 
           {/* Map Controls */}
 

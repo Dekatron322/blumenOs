@@ -32,12 +32,12 @@ export default function StatusMapDashboard() {
 
   return (
     <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-50 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container xl:px-16">
             {/* Page Header */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full justify-between gap-6  max-md:flex-col max-sm:my-4  md:my-8">
               <div>
                 <h4 className="text-2xl font-semibold">Status Map</h4>
                 <p>Visualize customer and asset status across the network</p>
@@ -45,7 +45,7 @@ export default function StatusMapDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6  max-md:flex-col  max-sm:my-4 ">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State
