@@ -11,6 +11,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { initializeAuth, loginUser } from "lib/redux/authSlice"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { allLinks, getFirstPermittedPath, hasPermission, UserPermission } from "components/Sidebar/Links"
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("")
@@ -34,16 +35,40 @@ const SignIn: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
       notify("success", "Login successful!", {
-        description: "Redirecting to dashboard...",
+        description: "Redirecting...",
         duration: 3000,
       })
 
-      // Check if user needs to change password
+      // If user must change password, always send to change-password first
       if (mustChangePassword) {
         setTimeout(() => router.push("/change-password"), 1000)
-      } else {
-        setTimeout(() => router.push("/dashboard"), 1000)
+        return
       }
+
+      // Build permissions object from authenticated user
+      const permissions: UserPermission | null =
+        user?.roles && user?.privileges
+          ? {
+              roles: user.roles,
+              privileges: user.privileges,
+            }
+          : null
+
+      let targetPath = "/dashboard"
+
+      if (permissions) {
+        const dashboardLink = allLinks.find((link) => link.href === "/dashboard")
+        const canAccessDashboard = dashboardLink ? hasPermission(dashboardLink, permissions) : false
+
+        if (!canAccessDashboard) {
+          const firstPermitted = getFirstPermittedPath(permissions)
+          if (firstPermitted) {
+            targetPath = firstPermitted
+          }
+        }
+      }
+
+      setTimeout(() => router.push(targetPath), 1000)
     }
   }, [isAuthenticated, user, authLoading, mustChangePassword, router])
 

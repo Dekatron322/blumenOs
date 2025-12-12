@@ -16,8 +16,8 @@ import {
   TokenIcon,
 } from "./Icons"
 
-type LinkChild = { name: string; href: string; privilegeKey?: string; requiredActions?: string[] }
-type LinkItem = {
+export type LinkChild = { name: string; href: string; privilegeKey?: string; requiredActions?: string[] }
+export type LinkItem = {
   name: string
   href?: string
   icon: (props: { isActive: boolean }) => JSX.Element
@@ -28,7 +28,7 @@ type LinkItem = {
 }
 
 // Define all possible links with their privilege requirements
-const allLinks: LinkItem[] = [
+export const allLinks: LinkItem[] = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -375,7 +375,7 @@ const allLinks: LinkItem[] = [
   },
 ]
 
-interface UserPermission {
+export interface UserPermission {
   roles: Array<{
     roleId: number
     name: string
@@ -391,10 +391,66 @@ interface UserPermission {
 }
 
 // Runtime type guard to validate parsed permissions
-const isUserPermission = (value: unknown): value is UserPermission => {
+export const isUserPermission = (value: unknown): value is UserPermission => {
   if (!value || typeof value !== "object") return false
   const v = value as any
   return Array.isArray(v?.roles) && Array.isArray(v?.privileges)
+}
+
+// Export link and permission helpers
+export const hasPermission = (link: LinkItem, permissions: UserPermission): boolean => {
+  // Check if user has super admin role
+  const isSuperAdmin = permissions.roles.some((role) => role.slug === "superadmin")
+  if (isSuperAdmin) return true
+
+  // Check privilege requirements
+  if (link.privilegeKey && link.requiredActions) {
+    const privilege = permissions.privileges.find((p) => p.key === link.privilegeKey)
+    if (!privilege) return false
+
+    // Check if user has all required actions for this privilege
+    return link.requiredActions.every((action) => privilege.actions.includes(action))
+  }
+
+  // If no specific privilege required, check if user has any privileges in the category
+  if (link.privilegeKey) {
+    return permissions.privileges.some((p) => p.key === link.privilegeKey)
+  }
+
+  return true
+}
+
+export const filterChildLinks = (children: LinkChild[], permissions: UserPermission): LinkChild[] => {
+  return children.filter((child) => {
+    if (child.privilegeKey && child.requiredActions) {
+      const privilege = permissions.privileges.find((p) => p.key === child.privilegeKey)
+      if (!privilege) return false
+      return child.requiredActions.every((action) => privilege.actions.includes(action))
+    }
+    return true
+  })
+}
+
+// Helper to get the first permitted navigation path for a user
+export const getFirstPermittedPath = (permissions: UserPermission): string | null => {
+  const permittedParents = allLinks.filter((link) => hasPermission(link, permissions))
+
+  for (const link of permittedParents) {
+    // Prefer first permitted child when available
+    if (link.children && link.children.length > 0) {
+      const children = filterChildLinks(link.children, permissions)
+      if (children.length > 0) {
+        return children[0]?.href ?? null
+      }
+    }
+
+    // Fall back to parent href
+    if (link.href) {
+      return link.href
+    }
+  }
+
+  return null
 }
 
 interface LinksProps {
@@ -433,39 +489,6 @@ export function Links({ isCollapsed }: LinksProps) {
       setFilteredLinks(allLinks)
     }
   }, [userPermissions])
-
-  const hasPermission = (link: LinkItem, permissions: UserPermission): boolean => {
-    // Check if user has super admin role
-    const isSuperAdmin = permissions.roles.some((role) => role.slug === "superadmin")
-    if (isSuperAdmin) return true
-
-    // Check privilege requirements
-    if (link.privilegeKey && link.requiredActions) {
-      const privilege = permissions.privileges.find((p) => p.key === link.privilegeKey)
-      if (!privilege) return false
-
-      // Check if user has all required actions for this privilege
-      return link.requiredActions.every((action) => privilege.actions.includes(action))
-    }
-
-    // If no specific privilege required, check if user has any privileges in the category
-    if (link.privilegeKey) {
-      return permissions.privileges.some((p) => p.key === link.privilegeKey)
-    }
-
-    return true
-  }
-
-  const filterChildLinks = (children: LinkChild[], permissions: UserPermission): LinkChild[] => {
-    return children.filter((child) => {
-      if (child.privilegeKey && child.requiredActions) {
-        const privilege = permissions.privileges.find((p) => p.key === child.privilegeKey)
-        if (!privilege) return false
-        return child.requiredActions.every((action) => privilege.actions.includes(action))
-      }
-      return true
-    })
-  }
 
   const handleExpand = (linkName: string, next: boolean) => {
     setExpanded((prev) => ({ ...prev, [linkName]: next }))
