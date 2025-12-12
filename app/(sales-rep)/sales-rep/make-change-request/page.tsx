@@ -8,8 +8,8 @@ import { FormInputModule } from "components/ui/Input/Input"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  clearCustomerLookup,
   clearChangeRequestsByCustomer,
+  clearCustomerLookup,
   fetchChangeRequestsByCustomerId,
   lookupCustomer,
 } from "lib/redux/customerSlice"

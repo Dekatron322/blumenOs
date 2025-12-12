@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { ButtonModule } from "components/ui/Button/Button"
 import { motion } from "framer-motion"
-import { HousesOutlineIcon, SettingIconOutline, UserOutlineIcon } from "components/Icons/Icons"
+import { HousesOutlineIcon, UserOutlineIcon } from "components/Icons/Icons"
 import Image from "next/image"
 import { RootState } from "lib/redux/store"
-import { UserPermission, allLinks, getFirstPermittedPath, hasPermission } from "components/Sidebar/Links"
+import { allLinks, getFirstPermittedPath, hasPermission, UserPermission } from "components/Sidebar/Links"
 
 const SelectUserType: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("")
