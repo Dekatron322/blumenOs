@@ -10,6 +10,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { Outage as ApiOutage, fetchOutages, OutageRequestParams } from "lib/redux/outageSlice"
 import SearchInput from "components/Search/SearchInput"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { ButtonModule } from "components/ui/Button/Button"
 
 // Types
 interface Outage {
@@ -350,6 +351,7 @@ const OutagesTab: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOutage, setSelectedOutage] = useState<Outage | null>(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [filters, setFilters] = useState<Partial<OutageRequestParams>>({
     Status: undefined,
     Priority: undefined,
@@ -545,7 +547,7 @@ const OutagesTab: React.FC = () => {
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -554,10 +556,15 @@ const OutagesTab: React.FC = () => {
           <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
           <p className="text-sm text-gray-500">Track and manage power outages</p>
         </div>
-        <div className="flex gap-4">
-          <SearchInput placeholder="Search outages..." value={searchText} onChange={handleSearch} className="w-80" />
+        <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
+          <SearchInput
+            placeholder="Search outages..."
+            value={searchText}
+            onChange={handleSearch}
+            className="w-full sm:w-64 md:w-80"
+          />
           <button
-            className="rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000]"
+            className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
             onClick={() => router.push("/outage-management/report-outage")}
           >
             Report Outage
@@ -565,14 +572,26 @@ const OutagesTab: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Mobile Filters Toggle */}
+      <div className="mt-3 md:hidden">
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          onClick={() => setShowMobileFilters((prev) => !prev)}
+        >
+          <span>Filters</span>
+          <span className="text-xs text-gray-500">(Status, Priority, Source)</span>
+        </button>
+      </div>
+
       {/* Filter Controls */}
       <motion.div
-        className="flex flex-wrap gap-4 py-4"
+        className={`flex flex-wrap gap-4 py-4 ${showMobileFilters ? "" : "hidden"} md:flex`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <div className="min-w-[220px]">
+        <div className="md:min-w-[220px]">
           <FormSelectModule
             label="Status"
             name="Status"
@@ -589,7 +608,7 @@ const OutagesTab: React.FC = () => {
           />
         </div>
 
-        <div className="min-w-[220px]">
+        <div className="lg:min-w-[220px]">
           <FormSelectModule
             label="Priority"
             name="Priority"
@@ -605,7 +624,7 @@ const OutagesTab: React.FC = () => {
           />
         </div>
 
-        <div className="min-w-[220px]">
+        <div className="md:min-w-[220px]">
           <FormSelectModule
             label="Source"
             name="CustomerGenerated"
@@ -660,7 +679,7 @@ const OutagesTab: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
+            <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
                   <th className="whitespace-nowrap border-b p-4 text-sm">
@@ -678,7 +697,7 @@ const OutagesTab: React.FC = () => {
                     </div>
                   </th>
                   <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    className="hidden cursor-pointer whitespace-nowrap border-b p-4 text-sm md:table-cell"
                     onClick={() => toggleSort("status")}
                   >
                     <div className="flex items-center gap-2">
@@ -725,7 +744,7 @@ const OutagesTab: React.FC = () => {
                         <div className="text-sm text-gray-900">{outage.location}</div>
                         <div className="text-sm text-gray-500">{outage.affectedCustomers} customers affected</div>
                       </td>
-                      <td className="whitespace-nowrap border-b p-4">
+                      <td className="hidden whitespace-nowrap border-b p-4 sm:table-cell">
                         <div className="flex flex-col gap-1">
                           <motion.div
                             style={getStatusStyle(outage.status)}
@@ -789,10 +808,17 @@ const OutagesTab: React.FC = () => {
                       <td className="whitespace-nowrap border-b p-4">
                         <div className="text-sm text-gray-900">{outage.cause}</div>
                         <div className="text-sm text-gray-500">Team: {outage.assignedTeam}</div>
-                        <div className="text-sm text-gray-500">Reported by: {outage.reportedBy}</div>
+                        <div className="hidden text-sm text-gray-500 sm:block">Reported by: {outage.reportedBy}</div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown outage={outage} onViewDetails={handleViewOutageDetails} />
+                        <ButtonModule
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 md:mt-0 md:w-auto"
+                          onClick={() => handleViewOutageDetails(outage)}
+                        >
+                          View Details
+                        </ButtonModule>
                       </td>
                     </motion.tr>
                   ))}
@@ -802,7 +828,7 @@ const OutagesTab: React.FC = () => {
           </motion.div>
 
           <motion.div
-            className="flex items-center justify-between border-t py-3"
+            className="flex flex-col gap-3 border-t py-3 md:flex-row md:items-center md:justify-between"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}

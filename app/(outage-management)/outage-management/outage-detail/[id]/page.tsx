@@ -17,7 +17,7 @@ import autoTable from "jspdf-autotable"
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-gradient-to-br from-[#f9f9f9] to-gray-100">
     <DashboardNav />
-    <div className="container mx-auto p-6">
+    <div className="mx-auto flex w-full flex-col px-3 py-6 2xl:container">
       {/* Header Skeleton */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -97,9 +97,9 @@ const LoadingSkeleton = () => (
         </div>
       </div>
 
-      <div className="flex gap-6">
+      <div className="w-full gap-6 xl:flex">
         {/* Left Column Skeleton */}
-        <div className="w-[30%] space-y-6">
+        <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">
           {/* Status Card Skeleton */}
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
             <div className="mb-4 h-6 w-32 overflow-hidden rounded bg-gray-200">
@@ -153,7 +153,7 @@ const LoadingSkeleton = () => (
         </div>
 
         {/* Right Column Skeleton */}
-        <div className="flex-1 space-y-6">
+        <div className="flex w-full flex-col space-y-6 max-xl:mt-4 2xl:w-[70%]">
           {[1, 2, 3].map((item) => (
             <div key={item} className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
               <div className="mb-6 h-6 w-48 overflow-hidden rounded bg-gray-200">
@@ -627,10 +627,10 @@ const OutageDetailsPage = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
+              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+                <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
                   <div className="flex items-center gap-4">
                     <motion.button
                       type="button"
@@ -663,7 +663,7 @@ const OutageDetailsPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="mt-3 flex items-center gap-3 max-sm:mt-4 lg:mt-0">
                     <ButtonModule
                       variant="secondary"
                       size="sm"
@@ -679,20 +679,20 @@ const OutageDetailsPage = () => {
                       variant="primary"
                       size="sm"
                       className="flex items-center gap-2"
-                      onClick={() => router.push(`/outages/update-outage/${currentOutage.id}`)}
+                      onClick={() => router.push(`/outage-management/update/${currentOutage.id}`)}
                     >
                       <AlertCircle className="size-4" />
-                      Update Status
+                      Update Outage
                     </ButtonModule>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
-              <div className="flex w-full gap-6">
+            <div className="flex w-full px-3 py-8 2xl:px-16">
+              <div className="w-full gap-6 xl:flex">
                 {/* Left Column - Status & Quick Info */}
-                <div className="flex w-[30%] flex-col space-y-6 xl:col-span-1">
+                <div className="flex w-full flex-col space-y-6 xl:max-w-[30%]">
                   {/* Status Card */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -805,7 +805,7 @@ const OutageDetailsPage = () => {
                 </div>
 
                 {/* Right Column - Detailed Information */}
-                <div className="flex w-full flex-col space-y-6 xl:col-span-2">
+                <div className="flex w-full flex-col space-y-6 max-xl:mt-4 2xl:w-[70%]">
                   {/* Basic Information */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}

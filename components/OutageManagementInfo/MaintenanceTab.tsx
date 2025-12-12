@@ -307,22 +307,15 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-6"
+      className="w-full"
     >
       {/* Debug info - remove in production */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed bottom-4 left-4 z-50 rounded-lg bg-black bg-opacity-80 p-4 text-xs text-white">
-          <div>API Maintenances: {maintenances?.length || 0}</div>
-          <div>Loading: {loading ? "Yes" : "No"}</div>
-          <div>Error: {error || "None"}</div>
-        </div>
-      )}
 
       {/* Main Content - Maintenance Table */}
-      <div className="container mx-auto">
-        <div className="rounded-lg border bg-white p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
+      <div className=" mx-auto">
+        <div className="rounded-lg border bg-white p-4 sm:p-6">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="w-full md:w-auto">
               <h3 className="mb-2 text-lg font-semibold">Maintenance Management</h3>
               <SearchModule
                 value={searchText}
@@ -331,14 +324,16 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
                 placeholder="Search maintenance by title, reference code, or location..."
               />
             </div>
-            <ButtonModule
-              onClick={() => router.push("/outage-management/schedule-maintenance")}
-              variant="primary"
-              size="sm"
-              className="mt-2"
-            >
-              Schedule Maintenance
-            </ButtonModule>
+            <div className="w-full md:w-auto md:pl-4">
+              <ButtonModule
+                onClick={() => router.push("/outage-management/schedule-maintenance")}
+                variant="primary"
+                size="md"
+                className="mt-2  md:mt-0 md:w-auto"
+              >
+                Schedule Maintenance
+              </ButtonModule>
+            </div>
           </div>
 
           {error && (
@@ -355,7 +350,7 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
           {/* Maintenance Table */}
           <div className="overflow-hidden rounded-lg border border-gray-200">
             <div className="overflow-x-auto">
-              <table className="w-full border-separate border-spacing-0 text-left">
+              <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="whitespace-nowrap border-b p-4 text-sm font-semibold text-gray-900">
@@ -476,7 +471,7 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
           </div>
 
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="text-sm text-gray-700">
               Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
               {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}{" "}

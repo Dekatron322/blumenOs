@@ -336,11 +336,11 @@ const UpdateMaintenance = () => {
     <section className="size-full">
       <DashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
-        <div className="flex w-full flex-col">
+        <div className="flex w-full flex-col px-3 2xl:container max-sm:px-3 xl:px-16">
           {/* Page Header */}
           <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-            <div className="mx-auto w-full px-16 py-4">
-              <div className="flex w-full items-center justify-between">
+            <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+              <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
                 <div className="flex items-center gap-4">
                   <motion.button
                     type="button"
@@ -376,9 +376,9 @@ const UpdateMaintenance = () => {
             </div>
           </div>
 
-          <div className="container mx-auto mt-10 flex w-full flex-col">
+          <div className="mt-10 flex w-full flex-col">
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 max-md:flex-col max-sm:my-4">
               <div className="w-full">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -389,7 +389,7 @@ const UpdateMaintenance = () => {
                   {/* Maintenance Summary */}
                   <div className="mb-6 rounded-lg bg-blue-50 p-4">
                     <h3 className="mb-2 text-sm font-medium text-blue-800">Maintenance Summary</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                       <div>
                         <span className="font-medium text-blue-700">Reference:</span> {currentMaintenance.referenceCode}
                       </div>
@@ -428,7 +428,7 @@ const UpdateMaintenance = () => {
                     {/* Status, Priority and Type */}
                     <div className="rounded-lg bg-[#f9f9f9] p-4">
                       <h4 className="mb-4 font-medium text-gray-900">Status, Priority & Type</h4>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <FormSelectModule
                           label="Status"
                           name="status"

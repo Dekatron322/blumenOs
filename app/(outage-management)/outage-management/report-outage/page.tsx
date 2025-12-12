@@ -106,7 +106,9 @@ const ReportOutage = () => {
     { value: "", label: "Select feeder" },
     ...feeders.map((feeder) => ({
       value: feeder.id,
-      label: `${feeder.name} (${feeder.nercCode}) - ${feeder.injectionSubstation.injectionSubstationCode}`,
+      label: feeder.injectionSubstation?.injectionSubstationCode
+        ? `${feeder.name} (${feeder.nercCode}) - ${feeder.injectionSubstation.injectionSubstationCode}`
+        : `${feeder.name} (${feeder.nercCode})`,
     })),
   ]
 
@@ -524,9 +526,9 @@ const ReportOutage = () => {
     <section className="size-full">
       <DashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
-        <div className="flex w-full flex-col">
+        <div className="flex w-full flex-col px-3 2xl:container max-sm:px-3 xl:px-16">
           {/* Page Header */}
-          <div className="flex w-full  justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+          <div className="flex w-full justify-between gap-6 max-md:flex-col max-md:items-start max-sm:my-4 md:my-8">
             <div>
               <h4 className="text-2xl font-semibold">Report Outage</h4>
               <p className="text-gray-600">Report new power outages for investigation and resolution</p>
@@ -572,8 +574,6 @@ const ReportOutage = () => {
                     ? !isFormValid() || isSubmitting
                     : csvData.length === 0 || csvErrors.length > 0 || isBulkLoading
                 }
-                icon={<AddAgentIcon />}
-                iconPosition="start"
               >
                 {activeTab === "single"
                   ? isSubmitting
@@ -585,9 +585,9 @@ const ReportOutage = () => {
               </ButtonModule>
             </motion.div>
           </div>
-          <div className="container mx-auto flex max-w-4xl flex-col">
+          <div className="mx-auto flex w-full  flex-col   ">
             {/* Tab Navigation */}
-            <div className="px-16  max-md:px-0 max-sm:px-3">
+            <div className=" ">
               <div className="rounded-t-lg border-b border-gray-200 bg-white">
                 <div className="flex">
                   <button
@@ -615,7 +615,7 @@ const ReportOutage = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 max-md:flex-col max-sm:my-4">
               <div className="w-full">
                 {activeTab === "single" ? (
                   /* Single Entry Form */
@@ -637,7 +637,7 @@ const ReportOutage = () => {
                         {/* Basic Information */}
                         <div className="rounded-lg bg-[#f9f9f9] p-4">
                           <h4 className="mb-4 font-medium text-gray-900">Basic Information</h4>
-                          <div className="flex w-full justify-between gap-4 ">
+                          <div className="flex w-full flex-col gap-4 md:flex-row">
                             <FormInputModule
                               label="Outage Title"
                               name="title"
@@ -665,10 +665,10 @@ const ReportOutage = () => {
                         </div>
 
                         {/* Location and Classification */}
-                        <div className=" space-y-4 rounded-lg bg-[#f9f9f9] p-4">
+                        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4">
                           <h4 className="font-medium text-gray-900">Location & Classification</h4>
 
-                          <div className="grid w-full grid-cols-2 justify-between gap-4 ">
+                          <div className="grid w-full gap-4 md:grid-cols-2">
                             <FormSelectModule
                               label="Distribution Substation"
                               name="distributionSubstationId"

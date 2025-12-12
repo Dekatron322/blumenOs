@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import SearchInput from "components/Search/SearchInput"
+import { ButtonModule } from "components/ui/Button/Button"
 
 // Types
 interface Report {
@@ -754,7 +755,9 @@ const ReportsTab: React.FC = () => {
                         <div className="text-sm text-gray-500">By: {report.generatedBy}</div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown report={report} onViewDetails={setSelectedReport} />
+                        <ButtonModule variant="outline" size="sm" className="mt-2 md:mt-0 md:w-auto">
+                          View Details
+                        </ButtonModule>
                       </td>
                     </motion.tr>
                   ))}
