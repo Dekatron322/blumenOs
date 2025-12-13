@@ -78,6 +78,59 @@ export interface BillingDisputeData {
   fileUrls: string[]
 }
 
+// Change request data in update response
+export interface ChangeRequestData {
+  id: number
+  publicId: string
+  reference: string
+  status: number
+  entityType: number
+  entityId: number
+  entityLabel: string
+  requestedBy: string
+  requestedAtUtc: string
+  patchDocument: string
+  displayDiff: string
+  requesterComment: string
+  canonicalPaths: string
+  source: number
+  autoApproved: boolean
+  approvalNotes: string
+  declinedReason: string
+  approvedAtUtc: string
+  approvedBy: string
+  appliedAtUtc: string
+  failureReason: string
+  disputeType: number
+  disputeId: number
+}
+
+// Request body for updating dispute status
+export interface UpdateDisputeStatusRequest {
+  status: number
+  resolutionNotes: string
+}
+
+// Parameters for updating dispute status
+export interface UpdateDisputeStatusParams {
+  id: number
+  request: UpdateDisputeStatusRequest
+}
+
+// Response data for update dispute status
+export interface UpdateDisputeStatusResponseData {
+  dispute: BillingDisputeData
+  changeRequest: ChangeRequestData
+  isApplied: boolean
+}
+
+// API response wrapper for update dispute status
+export interface UpdateDisputeStatusResponse {
+  isSuccess: boolean
+  message: string
+  data: UpdateDisputeStatusResponseData
+}
+
 // Paginated response for getting all disputes
 export interface GetAllDisputesResponse {
   isSuccess: boolean
@@ -125,6 +178,12 @@ interface BillingDisputeState {
   loadingDisputeById: boolean
   disputeById: BillingDisputeData | null
   disputeByIdError: string | null
+
+  // For update dispute status
+  updatingDisputeStatus: boolean
+  updateDisputeStatusResponse: UpdateDisputeStatusResponseData | null
+  updateDisputeStatusError: string | null
+  updateDisputeStatusSuccess: boolean
 }
 
 const initialState: BillingDisputeState = {
@@ -148,6 +207,12 @@ const initialState: BillingDisputeState = {
   loadingDisputeById: false,
   disputeById: null,
   disputeByIdError: null,
+
+  // For update dispute status
+  updatingDisputeStatus: false,
+  updateDisputeStatusResponse: null,
+  updateDisputeStatusError: null,
+  updateDisputeStatusSuccess: false,
 }
 
 // Thunk for creating a billing dispute
@@ -256,6 +321,34 @@ export const getDisputeById = createAsyncThunk(
   }
 )
 
+// Thunk for updating dispute status
+export const updateDisputeStatus = createAsyncThunk(
+  "billingDispute/updateDisputeStatus",
+  async (params: UpdateDisputeStatusParams, { rejectWithValue }) => {
+    try {
+      // Build the endpoint by replacing the {id} path parameter
+      const endpoint = API_ENDPOINTS.BILLING_DISPUTE.UPDATE_DISPUTE.replace("{id}", params.id.toString())
+
+      const response = await api.patch<UpdateDisputeStatusResponse>(buildApiUrl(endpoint), params.request)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update dispute status")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Update dispute status data not found")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update dispute status")
+      }
+      return rejectWithValue(error.message || "Network error while updating dispute status")
+    }
+  }
+)
+
 const billingDisputeSlice = createSlice({
   name: "billingDispute",
   initialState,
@@ -281,6 +374,12 @@ const billingDisputeSlice = createSlice({
       state.loadingDisputeById = false
       state.disputeById = null
       state.disputeByIdError = null
+
+      // Clear update dispute status state
+      state.updatingDisputeStatus = false
+      state.updateDisputeStatusResponse = null
+      state.updateDisputeStatusError = null
+      state.updateDisputeStatusSuccess = false
     },
     clearBillingDisputeError: (state) => {
       state.createError = null
@@ -306,6 +405,15 @@ const billingDisputeSlice = createSlice({
     },
     clearDisputeByIdError: (state) => {
       state.disputeByIdError = null
+    },
+    clearUpdateDisputeStatus: (state) => {
+      state.updatingDisputeStatus = false
+      state.updateDisputeStatusResponse = null
+      state.updateDisputeStatusError = null
+      state.updateDisputeStatusSuccess = false
+    },
+    clearUpdateDisputeStatusError: (state) => {
+      state.updateDisputeStatusError = null
     },
   },
   extraReducers: (builder) => {
@@ -374,6 +482,37 @@ const billingDisputeSlice = createSlice({
         state.disputeById = null
         state.disputeByIdError = (action.payload as string) || "Failed to fetch dispute details"
       })
+
+      // Update dispute status cases
+      .addCase(updateDisputeStatus.pending, (state) => {
+        state.updatingDisputeStatus = true
+        state.updateDisputeStatusError = null
+        state.updateDisputeStatusSuccess = false
+        state.updateDisputeStatusResponse = null
+      })
+      .addCase(updateDisputeStatus.fulfilled, (state, action: PayloadAction<UpdateDisputeStatusResponse>) => {
+        state.updatingDisputeStatus = false
+        state.updateDisputeStatusSuccess = true
+        state.updateDisputeStatusResponse = action.payload.data
+        state.updateDisputeStatusError = null
+
+        // Update the disputeById if it exists and matches the updated dispute
+        if (state.disputeById && state.disputeById.id === action.payload.data.dispute.id) {
+          state.disputeById = action.payload.data.dispute
+        }
+
+        // Update the dispute in the disputes list if it exists
+        const disputeIndex = state.disputes.findIndex((d) => d.id === action.payload.data.dispute.id)
+        if (disputeIndex !== -1) {
+          state.disputes[disputeIndex] = action.payload.data.dispute
+        }
+      })
+      .addCase(updateDisputeStatus.rejected, (state, action) => {
+        state.updatingDisputeStatus = false
+        state.updateDisputeStatusSuccess = false
+        state.updateDisputeStatusResponse = null
+        state.updateDisputeStatusError = (action.payload as string) || "Failed to update dispute status"
+      })
   },
 })
 
@@ -384,6 +523,8 @@ export const {
   clearDisputesData,
   clearDisputeById,
   clearDisputeByIdError,
+  clearUpdateDisputeStatus,
+  clearUpdateDisputeStatusError,
 } = billingDisputeSlice.actions
 
 export default billingDisputeSlice.reducer

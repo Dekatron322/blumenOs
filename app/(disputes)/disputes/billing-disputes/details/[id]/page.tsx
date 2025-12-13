@@ -28,6 +28,7 @@ import {
   XCircle,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
+import UpdateDisputeStatusModal from "components/ui/Modal/update-billing-status-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ExportCsvIcon, UserIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -158,6 +159,7 @@ const BillingDisputeDetailsPage = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [activeTab, setActiveTab] = useState<"details" | "payments" | "timeline">("details")
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
+  const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false)
 
   useEffect(() => {
     if (disputeId) {
@@ -416,8 +418,7 @@ const BillingDisputeDetailsPage = () => {
   }
 
   const handleUpdateStatus = () => {
-    // TODO: Implement update status functionality
-    console.log("Update status clicked")
+    setIsUpdateStatusModalOpen(true)
   }
 
   const handleAdjustBill = () => {
@@ -1089,8 +1090,11 @@ const BillingDisputeDetailsPage = () => {
                             <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                               <div className="font-medium text-gray-900">Current Status</div>
                               <div className="mt-2 flex items-center gap-2">
-                                <div className={`size-3 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></div>
-                                <p className="text-sm font-medium text-gray-700">{statusConfig.label}</p>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusConfig.bg} ${statusConfig.color} ${statusConfig.border}`}
+                                >
+                                  {statusConfig.label}
+                                </span>
                               </div>
                               <p className="mt-2 text-sm text-gray-600">
                                 Last updated: {formatDate(disputeById.resolvedAtUtc || disputeById.raisedAtUtc)}
@@ -1107,6 +1111,16 @@ const BillingDisputeDetailsPage = () => {
           </div>
         </div>
       </div>
+      <UpdateDisputeStatusModal
+        isOpen={isUpdateStatusModalOpen}
+        onRequestClose={() => setIsUpdateStatusModalOpen(false)}
+        onSuccess={() => {
+          if (disputeById?.id) {
+            dispatch(getDisputeById({ id: disputeById.id }))
+          }
+        }}
+        dispute={disputeById}
+      />
     </section>
   )
 }

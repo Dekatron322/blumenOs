@@ -48,6 +48,7 @@ export const API_ENDPOINTS = {
     CREATE_DISPUTE: "/billing/disputes",
     GET_ALL_DISPUTES: "/billing/disputes",
     GET_DISPUTE_BY_ID: "/billing/disputes/{id}",
+    UPDATE_DISPUTE: "/billing/disputes/{id}/status",
   },
 
   EMPLOYEE: {
