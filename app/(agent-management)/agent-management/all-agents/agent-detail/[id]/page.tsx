@@ -548,12 +548,12 @@ const AgentDetailsPage = () => {
           <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
               <div className="mx-auto w-full px-3 py-4 2xl:px-16">
-                <div className="flex w-full items-center justify-between max-sm:flex-col lg:items-center">
-                  <div className="flex gap-4 lg:items-center">
+                <div className="flex w-full items-start justify-between gap-4 max-sm:flex-col sm:items-center lg:items-center">
+                  <div className="flex items-start gap-3 sm:gap-4 lg:items-center">
                     <motion.button
                       type="button"
                       onClick={() => router.back()}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                      className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 sm:mt-0"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
@@ -575,12 +575,12 @@ const AgentDetailsPage = () => {
                       </svg>
                     </motion.button>
 
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Agent Details</h1>
-                      <p className="text-gray-600">Complete agent profile and management</p>
+                    <div className="flex flex-col">
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl">Agent Details</h1>
+                      <p className="text-sm text-gray-600 sm:text-base">Complete agent profile and management</p>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-3 max-sm:mt-4 lg:mt-0">
+                  <div className="mt-3 flex w-full flex-wrap items-center justify-start gap-2 max-sm:mt-4 sm:w-auto sm:justify-end lg:mt-0">
                     <ButtonModule
                       variant="secondary"
                       size="md"
@@ -593,44 +593,48 @@ const AgentDetailsPage = () => {
                     </ButtonModule>
 
                     {canUpdate ? (
-                      <ButtonModule
-                        variant="primary"
-                        size="md"
-                        className="flex items-center gap-2"
-                        onClick={handleEditAgent}
-                        disabled={activeAction === "edit"}
-                      >
-                        <Edit3 className="size-4" />
-                        {activeAction === "edit" ? "Editing..." : "Edit Agent"}
-                      </ButtonModule>
+                    <ButtonModule
+                      variant="primary"
+                      size="md"
+                      className="flex items-center gap-2 text-xs sm:text-sm"
+                      onClick={handleEditAgent}
+                      disabled={activeAction === "edit"}
+                    >
+                      <Edit3 className="size-3 sm:size-4" />
+                      <span className="whitespace-nowrap">{activeAction === "edit" ? "Editing..." : "Edit Agent"}</span>
+                    </ButtonModule>
                     ) : (
                       <ButtonModule
                         variant="primary"
                         size="md"
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 text-xs sm:text-sm"
                         onClick={() => setIsChangeRequestModalOpen(true)}
                       >
-                        <Edit3 className="size-4" />
-                        Change Request
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="whitespace-nowrap">Change Request</span>
                       </ButtonModule>
                     )}
 
                     <ButtonModule
                       variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}
                       size="md"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-xs sm:text-sm"
                       onClick={handleToggleActivation}
                       disabled={activeAction === "deactivate" || activeAction === "activate"}
                     >
                       {currentAgent.status === "ACTIVE" ? (
                         <>
-                          <StopCircle className="size-4" />
-                          {activeAction === "deactivate" ? "Deactivating..." : "Deactivate"}
+                          <StopCircle className="size-3 sm:size-4" />
+                          <span className="whitespace-nowrap">
+                            {activeAction === "deactivate" ? "Deactivating..." : "Deactivate"}
+                          </span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle className="size-4" />
-                          {activeAction === "activate" ? "Activating..." : "Activate"}
+                          <CheckCircle className="size-3 sm:size-4" />
+                          <span className="whitespace-nowrap">
+                            {activeAction === "activate" ? "Activating..." : "Activate"}
+                          </span>
                         </>
                       )}
                     </ButtonModule>
@@ -669,8 +673,8 @@ const AgentDetailsPage = () => {
                         </div>
                       </div>
 
-                      <h2 className="mb-2 text-xl font-bold text-gray-900">{currentAgent.user.fullName}</h2>
-                      <p className="mb-4 text-gray-600">{currentAgent.user.position}</p>
+                      <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{currentAgent.user.fullName}</h2>
+                      <p className="mb-4 text-sm text-gray-600 sm:text-base">{currentAgent.user.position}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
@@ -716,8 +720,8 @@ const AgentDetailsPage = () => {
                     transition={{ delay: 0.1 }}
                     className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <RefreshCw className="size-4" />
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      <RefreshCw className="size-3 sm:size-4" />
                       Quick Actions
                     </h3>
                     <div className="flex flex-col gap-4 lg:flex-row xl:flex-col">
@@ -779,8 +783,8 @@ const AgentDetailsPage = () => {
                     transition={{ delay: 0.15 }}
                     className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                   >
-                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-                      <Wallet className="size-4" />
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      <Wallet className="size-3 sm:size-4" />
                       Cash Statistics
                     </h3>
                     <div className="space-y-3">
@@ -941,8 +945,8 @@ const AgentDetailsPage = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                       >
-                        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                          <User className="size-5" />
+                        <h3 className="mb-6 flex items-center gap-2 text-base font-semibold text-gray-900 sm:text-lg">
+                          <User className="size-4 sm:size-5" />
                           Agent Information
                         </h3>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -994,8 +998,8 @@ const AgentDetailsPage = () => {
                         className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                       >
                         <div className="mb-6 flex items-center justify-between">
-                          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                            <User className="size-5" />
+                          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900 sm:text-lg">
+                            <User className="size-4 sm:size-5" />
                             Personal Information
                           </h3>
                           <button
@@ -1135,8 +1139,8 @@ const AgentDetailsPage = () => {
                         transition={{ delay: 0.2 }}
                         className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                       >
-                        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                          <Calendar className="size-5" />
+                        <h3 className="mb-6 flex items-center gap-2 text-base font-semibold text-gray-900 sm:text-lg">
+                          <Calendar className="size-4 sm:size-5" />
                           Employment Timeline
                         </h3>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -1194,8 +1198,8 @@ const AgentDetailsPage = () => {
                           className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
                         >
                           <div className="mb-6 flex items-center justify-between">
-                            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                              <Shield className="size-5" />
+                            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900 sm:text-lg">
+                              <Shield className="size-4 sm:size-5" />
                               Roles and Privileges
                             </h3>
                             <button
