@@ -20,12 +20,12 @@ const StatusMapInfo = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="relative z-0 w-full xl:z-auto">
       {/* Tab Navigation */}
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Tab Content */}
-      <div className="mt-4">{renderTabContent()}</div>
+      <div className="relative z-0 mt-4 xl:z-auto">{renderTabContent()}</div>
     </div>
   )
 }

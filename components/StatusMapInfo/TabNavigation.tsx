@@ -39,7 +39,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }
   ]
 
   return (
-    <div className="w-fit rounded-md bg-white p-2">
+    <div className="relative z-0 w-fit rounded-md bg-white p-2 xl:z-auto">
       <nav className="-mb-px flex space-x-2">
         {tabs.map((tab) => (
           <button

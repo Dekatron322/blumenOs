@@ -335,11 +335,11 @@ const MapViewTab = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    <div className="relative z-0 flex flex-col gap-6 lg:flex-row xl:z-auto">
       {/* Left Control Panel */}
-      <div className="w-full shrink-0 space-y-6 lg:w-80">
+      <div className="relative z-0 w-full shrink-0 space-y-6 lg:w-80 xl:z-auto">
         {/* Filters Section */}
-        <div className="rounded-md border bg-white p-4">
+        <div className="relative z-0 rounded-md border bg-white p-4 xl:z-auto">
           <div
             className="mb-4 flex cursor-pointer items-center justify-between lg:cursor-default"
             onClick={() => setShowFiltersMobile((prev) => !prev)}
@@ -390,7 +390,7 @@ const MapViewTab = () => {
         </div>
 
         {/* Map Layers Section */}
-        <div className="rounded-md border bg-white p-4">
+        <div className="relative z-0 rounded-md border bg-white p-4 xl:z-auto">
           <div
             className="mb-4 flex cursor-pointer items-center justify-between lg:cursor-default"
             onClick={() => setShowLayersMobile((prev) => !prev)}

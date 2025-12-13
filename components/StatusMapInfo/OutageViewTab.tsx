@@ -333,11 +333,11 @@ const OutageViewTabe = () => {
   }
 
   return (
-    <div className="flex gap-6">
+    <div className="relative z-0 flex gap-6 xl:z-auto">
       {/* Left Control Panel */}
-      <div className="w-80 shrink-0 space-y-6">
+      <div className="relative z-0 w-80 shrink-0 space-y-6 xl:z-auto">
         {/* Filters Section */}
-        <div className="rounded-md border bg-white p-4">
+        <div className="relative z-0 rounded-md border bg-white p-4 xl:z-auto">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold">Filters</h3>
             <button onClick={handleReset} className="text-sm text-blue-600 hover:text-blue-800">
@@ -379,7 +379,7 @@ const OutageViewTabe = () => {
         </div>
 
         {/* Map Layers Section */}
-        <div className="rounded-md border bg-white p-4">
+        <div className="relative z-0 rounded-md border bg-white p-4 xl:z-auto">
           <h3 className="mb-4 text-lg font-semibold">Map Layers</h3>
 
           <div className="space-y-4">
