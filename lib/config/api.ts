@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
     LOOKUP_BILL: "/agents/lookup/bill",
     AGENT_INFO: "/agents/me",
     AGENT_SUMMARY: "/agents/reports/self/summary",
+    PERFORMANCE: "/agents/performance/daily",
   },
 
   BILLING_DISPUTE: {

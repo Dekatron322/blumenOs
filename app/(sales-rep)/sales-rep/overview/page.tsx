@@ -12,7 +12,62 @@ import { ButtonModule } from "components/ui/Button/Button"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
 import { useAppDispatch } from "lib/hooks/useRedux"
-import { fetchAgentInfo, fetchAgentSummary, TimeRange } from "lib/redux/agentSlice"
+import {
+  fetchAgentInfo,
+  fetchAgentSummary,
+  fetchAgentPerformanceDaily,
+  TimeRange,
+  AgentDailyPerformance,
+} from "lib/redux/agentSlice"
+
+// Chart Component for Agent Performance
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell,
+  Area,
+  AreaChart,
+} from "recharts"
+
+// Date utilities
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("en-NG", { month: "short", day: "numeric" })
+}
+
+const formatMonth = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("en-NG", { month: "short" })
+}
+
+const getLast365Days = () => {
+  const dates = []
+  for (let i = 364; i >= 0; i--) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    dates.push(date.toISOString().split("T")[0])
+  }
+  return dates
+}
+
+const getStartAndEndOfYear = () => {
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+  const endOfYear = new Date(now.getFullYear(), 11, 31)
+
+  return {
+    startUtc: startOfYear.toISOString(),
+    endUtc: endOfYear.toISOString(),
+  }
+}
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -46,6 +101,27 @@ const SkeletonLoader = () => {
           </div>
         </motion.div>
       ))}
+    </div>
+  )
+}
+
+// Skeleton for Performance Chart
+const ChartSkeleton = () => {
+  return (
+    <div className="w-full rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="h-6 w-40 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+        <div className="h-10 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+      </div>
+      <div className="h-64 w-full animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] sm:h-80"></div>
+      <div className="mt-4 flex justify-center gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"
+          ></div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -209,19 +285,364 @@ const LoadingState = ({ showCategories = true }: { showCategories?: boolean }) =
   )
 }
 
+// Performance Chart Component
+interface PerformanceChartProps {
+  data: AgentDailyPerformance[]
+  chartType: "score" | "collections" | "clearances"
+  timeRange: "year" | "month" | "week"
+}
+
+const PerformanceChart: React.FC<PerformanceChartProps> = ({ data, chartType, timeRange }) => {
+  // Process data for chart display
+  const processedData = data
+    .map((item) => ({
+      ...item,
+      formattedDate: timeRange === "year" ? formatMonth(item.date) : formatDate(item.date),
+      dateObj: new Date(item.date),
+    }))
+    .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+
+  // Get color based on score
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "#10B981" // Green for excellent
+    if (score >= 60) return "#3B82F6" // Blue for good
+    if (score >= 40) return "#F59E0B" // Amber for average
+    if (score >= 20) return "#EF4444" // Red for poor
+    return "#6B7280" // Gray for very poor
+  }
+
+  // Custom tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload
+      return (
+        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
+          <p className="font-semibold text-gray-900">{label}</p>
+          <p className="text-sm text-gray-600">
+            Date: {new Date(data.date).toLocaleDateString("en-NG", { dateStyle: "medium" })}
+          </p>
+          {chartType === "score" && (
+            <>
+              <p className="mt-2">
+                Score: <span className="font-semibold">{data.score}</span>
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <div
+                  className="h-2 w-full rounded-full bg-gray-200"
+                  style={{
+                    background: `linear-gradient(to right, #EF4444 0%, #F59E0B 40%, #3B82F6 70%, #10B981 100%)`,
+                  }}
+                >
+                  <div
+                    className="h-2 rounded-full bg-gray-900"
+                    style={{ width: `${Math.min(Math.max(data.score, 0), 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </>
+          )}
+          {chartType === "collections" && (
+            <p className="mt-2">
+              Amount Collected:{" "}
+              <span className="font-semibold text-green-600">
+                {new Intl.NumberFormat("en-NG", {
+                  style: "currency",
+                  currency: "NGN",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(data.collectedAmount)}
+              </span>
+            </p>
+          )}
+          {chartType === "clearances" && (
+            <>
+              <p className="mt-2">
+                Conditional Clearances:{" "}
+                <span className="font-semibold text-amber-600">{data.conditionalClearances}</span>
+              </p>
+              <p>
+                Declined Clearances: <span className="font-semibold text-red-600">{data.declinedClearances}</span>
+              </p>
+            </>
+          )}
+          <p className="mt-2">
+            Issues: <span className="font-semibold text-red-600">{data.issueCount}</span>
+          </p>
+        </div>
+      )
+    }
+    return null
+  }
+
+  // Define what data to show based on chartType
+  const chartConfig = {
+    score: {
+      dataKey: "score",
+      name: "Performance Score",
+      color: "#3B82F6",
+      strokeColor: "#2563EB",
+      gradientId: "scoreGradient",
+      yAxisLabel: "Score (0-100)",
+    },
+    collections: {
+      dataKey: "collectedAmount",
+      name: "Collections (₦)",
+      color: "#10B981",
+      strokeColor: "#059669",
+      gradientId: "collectionsGradient",
+      yAxisLabel: "Amount (₦)",
+    },
+    clearances: {
+      dataKey: (data: any) => data.conditionalClearances + data.declinedClearances,
+      name: "Clearance Issues",
+      color: "#EF4444",
+      strokeColor: "#DC2626",
+      gradientId: "clearancesGradient",
+      yAxisLabel: "Count",
+    },
+  }
+
+  const config = chartConfig[chartType]
+
+  return (
+    <div className="h-80 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={processedData}
+          margin={{
+            top: 10,
+            right: 24,
+            left: 0,
+            bottom: 0,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+          <XAxis
+            dataKey="formattedDate"
+            stroke="#9CA3AF"
+            fontSize={12}
+            tickLine={false}
+            axisLine={{ stroke: "#E5E7EB" }}
+          />
+          <YAxis
+            stroke="#9CA3AF"
+            fontSize={12}
+            tickLine={false}
+            axisLine={{ stroke: "#E5E7EB" }}
+            label={{
+              value: config.yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              offset: -10,
+              style: { textAnchor: "middle", fontSize: 11, fill: "#6B7280" },
+            }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+
+          <Area
+            type="monotone"
+            dataKey={config.dataKey as any}
+            name={config.name}
+            stroke={config.strokeColor}
+            fill={config.strokeColor}
+            fillOpacity={0.3}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// Performance Summary Cards Component
+interface PerformanceSummaryProps {
+  data: AgentDailyPerformance[]
+}
+
+const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
+        <p className="text-gray-500">No performance data available</p>
+      </div>
+    )
+  }
+
+  // Calculate statistics
+  const totalScore = data.reduce((sum, item) => sum + item.score, 0)
+  const averageScore = totalScore / data.length
+  const totalCollections = data.reduce((sum, item) => sum + item.collectedAmount, 0)
+  const totalIssues = data.reduce((sum, item) => sum + item.conditionalClearances + item.declinedClearances, 0)
+  const totalDays = data.length
+  const daysWithIssues = data.filter((item) => item.issueCount > 0).length
+
+  // Find best and worst days
+  const bestDay = [...data].sort((a, b) => b.score - a.score)[0]
+  const worstDay = [...data].sort((a, b) => a.score - b.score)[0]
+  const highestCollectionDay = [...data].sort((a, b) => b.collectedAmount - a.collectedAmount)[0]
+
+  // Get performance trend (last 7 days vs previous 7 days)
+  const last7Days = data.slice(-7)
+  const previous7Days = data.slice(-14, -7)
+  const last7DaysAvg = last7Days.reduce((sum, item) => sum + item.score, 0) / (last7Days.length || 1)
+  const previous7DaysAvg = previous7Days.reduce((sum, item) => sum + item.score, 0) / (previous7Days.length || 1)
+  const trend = last7DaysAvg - previous7DaysAvg
+
+  function getScoreColor(averageScore: number): import("csstype").Property.BackgroundColor | undefined {
+    if (averageScore >= 80) return "#10B981" // Green for excellent
+    if (averageScore >= 60) return "#3B82F6" // Blue for good
+    if (averageScore >= 40) return "#F59E0B" // Amber for average
+    if (averageScore >= 20) return "#EF4444" // Red for poor
+    return "#6B7280" // Gray for very poor / no data
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Average Score Card */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-600">Average Score</h3>
+          <div
+            className={`rounded-full px-2 py-1 text-xs font-medium ${
+              averageScore >= 80
+                ? "bg-green-100 text-green-800"
+                : averageScore >= 60
+                ? "bg-blue-100 text-blue-800"
+                : averageScore >= 40
+                ? "bg-amber-100 text-amber-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {averageScore >= 80
+              ? "Excellent"
+              : averageScore >= 60
+              ? "Good"
+              : averageScore >= 40
+              ? "Average"
+              : "Needs Improvement"}
+          </div>
+        </div>
+        <div className="mt-2 flex items-baseline">
+          <p className="text-2xl font-bold text-gray-900">{averageScore.toFixed(1)}</p>
+          <p className="ml-2 text-sm text-gray-500">/100</p>
+        </div>
+        <div className="mt-2">
+          <div className="h-2 w-full rounded-full bg-gray-200">
+            <div
+              className="h-2 rounded-full"
+              style={{
+                width: `${Math.min(Math.max(averageScore, 0), 100)}%`,
+                backgroundColor: getScoreColor(averageScore),
+              }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Total Collections Card */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-600">Total Collections</h3>
+          <div className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">{totalDays} days</div>
+        </div>
+        <p className="mt-2 text-2xl font-bold text-gray-900">
+          {new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: "NGN",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          }).format(totalCollections)}
+        </p>
+        <p className="mt-1 text-sm text-gray-500">
+          Avg:{" "}
+          {new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: "NGN",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          }).format(totalCollections / (totalDays || 1))}
+          /day
+        </p>
+      </div>
+
+      {/* Issues Summary Card */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-600">Issues Summary</h3>
+          <div className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+            {daysWithIssues} days
+          </div>
+        </div>
+        <p className="mt-2 text-2xl font-bold text-gray-900">{totalIssues}</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {totalIssues} total issues • {daysWithIssues} days with issues
+        </p>
+        <div className="mt-2 flex space-x-2">
+          <span className="text-xs text-amber-600">
+            {data.reduce((sum, item) => sum + item.conditionalClearances, 0)} conditional
+          </span>
+          <span className="text-xs text-red-600">
+            {data.reduce((sum, item) => sum + item.declinedClearances, 0)} declined
+          </span>
+        </div>
+      </div>
+
+      {/* Performance Trend Card */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-600">7-Day Trend</h3>
+          <div
+            className={`rounded-full px-2 py-1 text-xs font-medium ${
+              trend > 0
+                ? "bg-green-100 text-green-800"
+                : trend < 0
+                ? "bg-red-100 text-red-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {trend > 0 ? `+${trend.toFixed(1)}` : trend.toFixed(1)}
+          </div>
+        </div>
+        <p className="mt-2 text-2xl font-bold text-gray-900">{last7DaysAvg.toFixed(1)}</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {trend > 0 ? "Improving" : trend < 0 ? "Declining" : "Stable"} vs previous week
+        </p>
+        <div className="mt-2 text-xs text-gray-500">
+          Best: {bestDay ? formatDate(bestDay.date) : "N/A"} ({bestDay?.score || 0})
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AgentManagementDashboard() {
   const router = useRouter()
   const dispatch = useAppDispatch()
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [activeTimeRange, setActiveTimeRange] = useState<TimeRange>(TimeRange.Today)
+  const [chartType, setChartType] = useState<"score" | "collections" | "clearances">("score")
+  const [performanceChartType, setPerformanceChartType] = useState<"year" | "month" | "week">("year")
+
   const { user } = useSelector((state: RootState) => state.auth)
-  const { agentInfo, agentInfoLoading, agentInfoError, agentSummary, agentSummaryLoading, agentSummaryError } =
-    useSelector((state: RootState) => state.agents)
+  const {
+    agentInfo,
+    agentInfoLoading,
+    agentInfoError,
+    agentSummary,
+    agentSummaryLoading,
+    agentSummaryError,
+    agentPerformanceDaily,
+    agentPerformanceDailyLoading,
+    agentPerformanceDailyError,
+  } = useSelector((state: RootState) => state.agents)
 
   useEffect(() => {
     dispatch(fetchAgentInfo())
     dispatch(fetchAgentSummary())
+
+    // Fetch performance data for the current year
+    const { startUtc, endUtc } = getStartAndEndOfYear()
+    dispatch(fetchAgentPerformanceDaily({ startUtc, endUtc }))
   }, [dispatch])
 
   // Get the active period from agent summary based on the selected time range
@@ -283,9 +704,44 @@ export default function AgentManagementDashboard() {
 
   const handleRefreshData = () => {
     setIsLoading(true)
-    Promise.all([dispatch(fetchAgentInfo()), dispatch(fetchAgentSummary())]).finally(() => {
+    Promise.all([
+      dispatch(fetchAgentInfo()),
+      dispatch(fetchAgentSummary()),
+      // Refresh performance data too
+      (() => {
+        const { startUtc, endUtc } = getStartAndEndOfYear()
+        return dispatch(fetchAgentPerformanceDaily({ startUtc, endUtc }))
+      })(),
+    ]).finally(() => {
       setIsLoading(false)
     })
+  }
+
+  const handlePerformanceTimeRangeChange = (range: "year" | "month" | "week") => {
+    setPerformanceChartType(range)
+
+    let startDate = new Date()
+    let endDate = new Date()
+
+    switch (range) {
+      case "year":
+        startDate = new Date(endDate.getFullYear(), 0, 1)
+        break
+      case "month":
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
+        break
+      case "week":
+        startDate = new Date(endDate)
+        startDate.setDate(startDate.getDate() - 7)
+        break
+    }
+
+    dispatch(
+      fetchAgentPerformanceDaily({
+        startUtc: startDate.toISOString(),
+        endUtc: endDate.toISOString(),
+      })
+    )
   }
 
   const agentLastName = user?.fullName
@@ -472,51 +928,98 @@ export default function AgentManagementDashboard() {
             {/* Main Content Area */}
             <div className="mt-6">
               {/* Time Range Filters for Performance Summary */}
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                {/* Desktop: inline buttons */}
-                <div className="hidden rounded-lg bg-white p-2 shadow-sm sm:block">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500">Performance Range:</span>
-                    <div className="flex items-center gap-2">
-                      {timeRanges.map((range) => (
-                        <button
-                          key={range.value}
-                          onClick={() => setActiveTimeRange(range.value)}
-                          className={`shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
-                            activeTimeRange === range.value
-                              ? "bg-[#004B23] text-white"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          }`}
-                        >
-                          {range.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
 
-                {/* Mobile: dropdown selector */}
-                <div className="w-full sm:hidden">
-                  <div className="rounded-lg bg-white p-3 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-gray-500">Performance Range:</span>
-                      <div className="relative">
-                        <select
-                          value={activeTimeRange}
-                          onChange={(e) => setActiveTimeRange(e.target.value as TimeRange)}
-                          className="block w-40 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          {timeRanges.map((range) => (
-                            <option key={range.value} value={range.value}>
-                              {range.label}
-                            </option>
-                          ))}
-                        </select>
+              {/* Performance Charts Section */}
+              <motion.div
+                className="mb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+                  <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Performance Overview</h3>
+                      <p className="text-sm text-gray-600">Daily performance metrics and trends</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                        {["year", "month", "week"].map((range) => (
+                          <button
+                            key={range}
+                            onClick={() => handlePerformanceTimeRangeChange(range as "year" | "month" | "week")}
+                            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                              performanceChartType === range
+                                ? "bg-white text-gray-900 shadow-sm"
+                                : "text-gray-600 hover:bg-gray-100"
+                            }`}
+                          >
+                            {range.charAt(0).toUpperCase() + range.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                        {[
+                          { key: "score", label: "Score" },
+                          { key: "collections", label: "Collections" },
+                          { key: "clearances", label: "Clearances" },
+                        ].map((type) => (
+                          <button
+                            key={type.key}
+                            onClick={() => setChartType(type.key as "score" | "collections" | "clearances")}
+                            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                              chartType === type.key
+                                ? "bg-white text-gray-900 shadow-sm"
+                                : "text-gray-600 hover:bg-gray-100"
+                            }`}
+                          >
+                            {type.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
+
+                  {agentPerformanceDailyLoading ? (
+                    <ChartSkeleton />
+                  ) : agentPerformanceDailyError ? (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+                      <p className="text-red-600">Error loading performance data: {agentPerformanceDailyError}</p>
+                      <button
+                        onClick={handleRefreshData}
+                        className="mt-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : agentPerformanceDaily && agentPerformanceDaily.length > 0 ? (
+                    <>
+                      <PerformanceSummary data={agentPerformanceDaily} />
+                      <div className="mt-6">
+                        <PerformanceChart
+                          data={agentPerformanceDaily}
+                          chartType={chartType}
+                          timeRange={performanceChartType}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
+                      <p className="text-gray-500">No performance data available for the selected period</p>
+                      <button
+                        onClick={handleRefreshData}
+                        className="mt-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                      >
+                        Refresh Data
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </motion.div>
+
+              {/* Main KPI Cards */}
               {agentInfoLoading || agentSummaryLoading ? (
                 <>
                   <SkeletonLoader />
@@ -531,6 +1034,51 @@ export default function AgentManagementDashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                   >
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      {/* Desktop: inline buttons */}
+                      <div className="hidden rounded-lg bg-white p-2 shadow-sm sm:block">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-500">Performance Range:</span>
+                          <div className="flex items-center gap-2">
+                            {timeRanges.map((range) => (
+                              <button
+                                key={range.value}
+                                onClick={() => setActiveTimeRange(range.value)}
+                                className={`shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                                  activeTimeRange === range.value
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                                }`}
+                              >
+                                {range.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mobile: dropdown selector */}
+                      <div className="w-full sm:hidden">
+                        <div className="rounded-lg bg-white p-3 shadow-sm">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium text-gray-500">Performance Range:</span>
+                            <div className="relative">
+                              <select
+                                value={activeTimeRange}
+                                onChange={(e) => setActiveTimeRange(e.target.value as TimeRange)}
+                                className="block w-40 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              >
+                                {timeRanges.map((range) => (
+                                  <option key={range.value} value={range.value}>
+                                    {range.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div className="w-full">
                       <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {/* Collections Summary Card */}

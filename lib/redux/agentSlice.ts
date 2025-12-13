@@ -908,6 +908,30 @@ export interface AgentSummaryResponse {
 
 // ========== END AGENT SUMMARY INTERFACES ==========
 
+// ========== AGENT PERFORMANCE DAILY INTERFACES ==========
+
+export interface AgentDailyPerformance {
+  date: string
+  score: number
+  collectedAmount: number
+  conditionalClearances: number
+  declinedClearances: number
+  issueCount: number
+}
+
+export interface AgentPerformanceDailyResponse {
+  isSuccess: boolean
+  message: string
+  data: AgentDailyPerformance[]
+}
+
+export interface AgentPerformanceDailyRequestParams {
+  startUtc: string
+  endUtc: string
+}
+
+// ========== END AGENT PERFORMANCE DAILY INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -921,6 +945,12 @@ interface AgentState {
   agentSummaryLoading: boolean
   agentSummaryError: string | null
   agentSummarySuccess: boolean
+
+  // Agent daily performance state
+  agentPerformanceDaily: AgentDailyPerformance[]
+  agentPerformanceDailyLoading: boolean
+  agentPerformanceDailyError: string | null
+  agentPerformanceDailySuccess: boolean
 
   // Agents list state
   agents: Agent[]
@@ -1067,6 +1097,12 @@ const initialState: AgentState = {
   agentSummaryLoading: false,
   agentSummaryError: null,
   agentSummarySuccess: false,
+
+  // Agent Daily Performance initial state
+  agentPerformanceDaily: [],
+  agentPerformanceDailyLoading: false,
+  agentPerformanceDailyError: null,
+  agentPerformanceDailySuccess: false,
 
   // Rest of the initial state
   agents: [],
@@ -1216,6 +1252,38 @@ export const fetchAgentSummary = createAsyncThunk("agents/fetchAgentSummary", as
     return rejectWithValue(error.message || "Network error during agent summary fetch")
   }
 })
+
+// ========== AGENT PERFORMANCE DAILY ASYNC THUNK ==========
+export const fetchAgentPerformanceDaily = createAsyncThunk(
+  "agents/fetchAgentPerformanceDaily",
+  async (params: AgentPerformanceDailyRequestParams, { rejectWithValue }) => {
+    try {
+      const { startUtc, endUtc } = params
+
+      const response = await api.get<AgentPerformanceDailyResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.PERFORMANCE), {
+        params: {
+          startUtc,
+          endUtc,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch agent daily performance")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Agent daily performance data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch agent daily performance")
+      }
+      return rejectWithValue(error.message || "Network error during agent daily performance fetch")
+    }
+  }
+)
 
 // ========== BILL LOOKUP ASYNC THUNK ==========
 export const lookupBill = createAsyncThunk("agents/lookupBill", async (billNumber: string, { rejectWithValue }) => {
@@ -1713,6 +1781,14 @@ const agentSlice = createSlice({
       state.agentSummaryLoading = false
     },
 
+    // Clear agent performance daily state
+    clearAgentPerformanceDaily: (state) => {
+      state.agentPerformanceDaily = []
+      state.agentPerformanceDailyError = null
+      state.agentPerformanceDailySuccess = false
+      state.agentPerformanceDailyLoading = false
+    },
+
     // Set agent info (for when we get agent info from other sources)
     setAgentInfo: (state, action: PayloadAction<AgentInfo>) => {
       state.agentInfo = action.payload
@@ -1727,6 +1803,14 @@ const agentSlice = createSlice({
       state.agentSummarySuccess = true
       state.agentSummaryError = null
       state.agentSummaryLoading = false
+    },
+
+    // Set agent performance daily (for when we get agent performance daily from other sources)
+    setAgentPerformanceDaily: (state, action: PayloadAction<AgentDailyPerformance[]>) => {
+      state.agentPerformanceDaily = action.payload
+      state.agentPerformanceDailySuccess = true
+      state.agentPerformanceDailyError = null
+      state.agentPerformanceDailyLoading = false
     },
 
     // Clear agents state
@@ -1748,6 +1832,7 @@ const agentSlice = createSlice({
     clearError: (state) => {
       state.agentInfoError = null
       state.agentSummaryError = null
+      state.agentPerformanceDailyError = null
       state.error = null
       state.currentAgentError = null
       state.addAgentError = null
@@ -1850,6 +1935,10 @@ const agentSlice = createSlice({
       state.agentSummaryLoading = false
       state.agentSummaryError = null
       state.agentSummarySuccess = false
+      state.agentPerformanceDaily = []
+      state.agentPerformanceDailyLoading = false
+      state.agentPerformanceDailyError = null
+      state.agentPerformanceDailySuccess = false
       state.agents = []
       state.loading = false
       state.error = null
@@ -2191,6 +2280,103 @@ const agentSlice = createSlice({
         })
       }
     },
+
+    // Update agent performance daily after payment
+    updateAgentPerformanceDailyAfterPayment: (state, action: PayloadAction<{ date: string; amount: number }>) => {
+      const { date, amount } = action.payload
+      const dateString = date.split("T")[0] // Get just the date part
+
+      // Find or create entry for this date
+      let entry = state.agentPerformanceDaily.find((item) => item.date.split("T")[0] === dateString)
+
+      if (entry) {
+        // Update existing entry
+        entry.collectedAmount += amount
+        entry.score = Math.max(0, Math.min(100, entry.score + 1)) // Increment score by 1, capped at 100
+      } else {
+        // Create new entry
+        const newEntry: AgentDailyPerformance = {
+          date,
+          score: 1,
+          collectedAmount: amount,
+          conditionalClearances: 0,
+          declinedClearances: 0,
+          issueCount: 0,
+        }
+        state.agentPerformanceDaily.push(newEntry)
+      }
+
+      // Sort by date descending
+      state.agentPerformanceDaily.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    },
+
+    // Update agent performance daily after clearance
+    updateAgentPerformanceDailyAfterClearance: (
+      state,
+      action: PayloadAction<{ date: string; isConditional: boolean; isDeclined: boolean }>
+    ) => {
+      const { date, isConditional, isDeclined } = action.payload
+      const dateString = date.split("T")[0] // Get just the date part
+
+      // Find or create entry for this date
+      let entry = state.agentPerformanceDaily.find((item) => item.date.split("T")[0] === dateString)
+
+      if (entry) {
+        // Update existing entry
+        if (isConditional) {
+          entry.conditionalClearances += 1
+          entry.score = Math.max(0, entry.score - 1) // Decrement score by 1 for conditional clearance
+        } else if (isDeclined) {
+          entry.declinedClearances += 1
+          entry.score = Math.max(0, entry.score - 2) // Decrement score by 2 for declined clearance
+        } else {
+          entry.score = Math.max(0, Math.min(100, entry.score + 1)) // Increment score by 1 for successful clearance
+        }
+      } else {
+        // Create new entry
+        const newEntry: AgentDailyPerformance = {
+          date,
+          score: isConditional ? -1 : isDeclined ? -2 : 1,
+          collectedAmount: 0,
+          conditionalClearances: isConditional ? 1 : 0,
+          declinedClearances: isDeclined ? 1 : 0,
+          issueCount: 0,
+        }
+        state.agentPerformanceDaily.push(newEntry)
+      }
+
+      // Sort by date descending
+      state.agentPerformanceDaily.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    },
+
+    // Update agent performance daily after issue
+    updateAgentPerformanceDailyAfterIssue: (state, action: PayloadAction<{ date: string }>) => {
+      const { date } = action.payload
+      const dateString = date.split("T")[0] // Get just the date part
+
+      // Find or create entry for this date
+      let entry = state.agentPerformanceDaily.find((item) => item.date.split("T")[0] === dateString)
+
+      if (entry) {
+        // Update existing entry
+        entry.issueCount += 1
+        entry.score = Math.max(0, entry.score - 1) // Decrement score by 1 for issue
+      } else {
+        // Create new entry
+        const newEntry: AgentDailyPerformance = {
+          date,
+          score: -1,
+          collectedAmount: 0,
+          conditionalClearances: 0,
+          declinedClearances: 0,
+          issueCount: 1,
+        }
+        state.agentPerformanceDaily.push(newEntry)
+      }
+
+      // Sort by date descending
+      state.agentPerformanceDaily.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -2232,6 +2418,26 @@ const agentSlice = createSlice({
         state.agentSummaryError = (action.payload as string) || "Failed to fetch agent summary"
         state.agentSummarySuccess = false
         state.agentSummary = null
+      })
+
+      // Agent Performance Daily cases
+      .addCase(fetchAgentPerformanceDaily.pending, (state) => {
+        state.agentPerformanceDailyLoading = true
+        state.agentPerformanceDailyError = null
+        state.agentPerformanceDailySuccess = false
+        state.agentPerformanceDaily = []
+      })
+      .addCase(fetchAgentPerformanceDaily.fulfilled, (state, action: PayloadAction<AgentDailyPerformance[]>) => {
+        state.agentPerformanceDailyLoading = false
+        state.agentPerformanceDailySuccess = true
+        state.agentPerformanceDaily = action.payload
+        state.agentPerformanceDailyError = null
+      })
+      .addCase(fetchAgentPerformanceDaily.rejected, (state, action) => {
+        state.agentPerformanceDailyLoading = false
+        state.agentPerformanceDailyError = (action.payload as string) || "Failed to fetch agent daily performance"
+        state.agentPerformanceDailySuccess = false
+        state.agentPerformanceDaily = []
       })
 
       // Bill Lookup cases
@@ -2434,6 +2640,21 @@ const agentSlice = createSlice({
               }
             })
           }
+
+          // Update agent performance daily
+          const isConditional = false // Assuming successful clearance, not conditional
+          const isDeclined = false // Assuming successful clearance, not declined
+          state.agentPerformanceDaily = state.agentPerformanceDaily.map((entry) => {
+            const entryDate = entry.date.split("T")[0]
+            const clearanceDate = action.payload.data.clearedAt.split("T")[0]
+            if (entryDate === clearanceDate) {
+              return {
+                ...entry,
+                score: Math.max(0, Math.min(100, entry.score + 1)), // Increment score by 1
+              }
+            }
+            return entry
+          })
         }
       )
       .addCase(clearCash.rejected, (state, action) => {
@@ -2830,6 +3051,29 @@ const agentSlice = createSlice({
             }
           })
         }
+
+        // Update agent performance daily
+        const paymentDate = action.payload.data.paidAtUtc.split("T")[0]
+        const existingEntry = state.agentPerformanceDaily.find((entry) => entry.date.split("T")[0] === paymentDate)
+
+        if (existingEntry) {
+          // Update existing entry
+          existingEntry.collectedAmount += action.payload.data.amount
+          existingEntry.score = Math.max(0, Math.min(100, existingEntry.score + 1)) // Increment score by 1
+        } else {
+          // Create new entry
+          const newEntry: AgentDailyPerformance = {
+            date: action.payload.data.paidAtUtc,
+            score: 1,
+            collectedAmount: action.payload.data.amount,
+            conditionalClearances: 0,
+            declinedClearances: 0,
+            issueCount: 0,
+          }
+          state.agentPerformanceDaily.push(newEntry)
+          // Sort by date descending
+          state.agentPerformanceDaily.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        }
       })
       .addCase(createAgentPayment.rejected, (state, action) => {
         state.createPaymentLoading = false
@@ -2843,8 +3087,10 @@ const agentSlice = createSlice({
 export const {
   clearAgentInfo,
   clearAgentSummary,
+  clearAgentPerformanceDaily,
   setAgentInfo,
   setAgentSummary,
+  setAgentPerformanceDaily,
   clearAgents,
   clearError,
   clearCurrentAgent,
@@ -2879,6 +3125,9 @@ export const {
   updateAgentSummaryAfterPayment,
   updateAgentSummaryAfterClearance,
   updateAgentSummaryAfterChangeRequest,
+  updateAgentPerformanceDailyAfterPayment,
+  updateAgentPerformanceDailyAfterClearance,
+  updateAgentPerformanceDailyAfterIssue,
 } = agentSlice.actions
 
 export default agentSlice.reducer
