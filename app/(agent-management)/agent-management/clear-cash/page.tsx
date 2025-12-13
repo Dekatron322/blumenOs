@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { ClearCashRequest, clearCash, clearCashStatus, fetchAgents } from "lib/redux/agentSlice"
+import { clearCash, ClearCashRequest, clearCashStatus, fetchAgents } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
