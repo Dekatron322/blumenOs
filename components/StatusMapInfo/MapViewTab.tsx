@@ -335,11 +335,11 @@ const MapViewTab = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    <div className="relative z-0 flex flex-col gap-6 lg:flex-row xl:z-auto">
       {/* Left Control Panel */}
-      <div className="w-full shrink-0 space-y-6 lg:w-80">
+      <div className="relative z-0 w-full shrink-0 space-y-6 lg:w-80 xl:z-auto">
         {/* Filters Section */}
-        <div className="rounded-md border bg-white p-4">
+        <div className="relative z-0 rounded-md border bg-white p-4 xl:z-auto">
           <div
             className="mb-4 flex cursor-pointer items-center justify-between lg:cursor-default"
             onClick={() => setShowFiltersMobile((prev) => !prev)}
@@ -390,7 +390,7 @@ const MapViewTab = () => {
         </div>
 
         {/* Map Layers Section */}
-        <div className="rounded-md border bg-white p-4">
+        <div className="relative z-0 rounded-md border bg-white p-4 xl:z-auto">
           <div
             className="mb-4 flex cursor-pointer items-center justify-between lg:cursor-default"
             onClick={() => setShowLayersMobile((prev) => !prev)}
@@ -437,16 +437,16 @@ const MapViewTab = () => {
       </div>
 
       {/* Right Map Area */}
-      <div className="relative w-full rounded-md border bg-white lg:flex-1">
+      <div className="relative z-0 w-full rounded-md border bg-white lg:flex-1 xl:z-auto">
         {/* Map Display */}
-        <div className="relative h-[400px] w-full overflow-hidden rounded-md bg-gray-100 lg:h-[600px]">
+        <div className="relative z-0 h-[400px] w-full overflow-hidden rounded-md bg-gray-100 lg:h-[600px] xl:z-auto">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <div ref={mapDivRef} className="h-[400px] w-full rounded-md lg:h-[600px]" />
+          <div ref={mapDivRef} className="relative z-0 h-[400px] w-full rounded-md lg:h-[600px] xl:z-auto" />
 
           {/* Map Controls */}
 
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 z-[1000] rounded-md border bg-white p-4 shadow-lg">
+          <div className="absolute bottom-4 left-4 z-10 rounded-md border bg-white p-4 shadow-lg xl:z-[1000]">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">Legend</h3>
               <div>
@@ -501,7 +501,7 @@ const MapViewTab = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1100] flex justify-end bg-black/30 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex justify-end bg-black/30 backdrop-blur-sm xl:z-[1100]"
           onClick={() => setSelectedCustomerDetails(null)}
         >
           <motion.div
@@ -593,7 +593,7 @@ const MapViewTab = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1100] flex justify-end bg-black/30 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex justify-end bg-black/30 backdrop-blur-sm xl:z-[1100]"
           onClick={() => setSelectedAssetDetails(null)}
         >
           <motion.div

@@ -31,13 +31,13 @@ export default function StatusMapDashboard() {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-50 pb-20">
-        <div className="flex w-full flex-col">
+    <section className="relative z-0 size-full xl:z-auto">
+      <div className="relative z-0 flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-50 pb-20 xl:z-auto">
+        <div className="relative z-0 flex w-full flex-col xl:z-auto">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container xl:px-16">
+          <div className="relative z-0 mx-auto flex w-full flex-col px-3 2xl:container xl:px-16 xl:z-auto">
             {/* Page Header */}
-            <div className="flex w-full justify-between gap-6  max-md:flex-col max-sm:my-4  md:my-8">
+            <div className="relative z-0 flex w-full justify-between gap-6 max-md:flex-col max-sm:my-4 md:my-8 xl:z-auto">
               <div>
                 <h4 className="text-2xl font-semibold">Status Map</h4>
                 <p>Visualize customer and asset status across the network</p>
@@ -45,8 +45,8 @@ export default function StatusMapDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6  max-md:flex-col  max-sm:my-4 ">
-              <div className="w-full">
+            <div className="relative z-0 flex w-full gap-6 max-md:flex-col max-sm:my-4 xl:z-auto">
+              <div className="relative z-0 w-full xl:z-auto">
                 {isLoading ? (
                   // Loading State
                   <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
@@ -68,7 +68,7 @@ export default function StatusMapDashboard() {
                   <>
                     {/* Top Metrics Cards */}
                     <motion.div
-                      className="mb-6 flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
+                      className="relative z-0 mb-6 flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1 xl:z-auto"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5 }}
@@ -175,6 +175,7 @@ export default function StatusMapDashboard() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.3 }}
+                      className="relative z-0 xl:z-auto"
                     >
                       <StatusMapInfo />
                     </motion.div>
