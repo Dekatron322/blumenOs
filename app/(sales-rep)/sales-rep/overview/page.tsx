@@ -13,29 +13,15 @@ import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
 import { useAppDispatch } from "lib/hooks/useRedux"
 import {
-  fetchAgentInfo,
-  fetchAgentSummary,
-  fetchAgentPerformanceDaily,
-  TimeRange,
   AgentDailyPerformance,
+  fetchAgentInfo,
+  fetchAgentPerformanceDaily,
+  fetchAgentSummary,
+  TimeRange,
 } from "lib/redux/agentSlice"
 
 // Chart Component for Agent Performance
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-  Area,
-  AreaChart,
-} from "recharts"
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 // Date utilities
 const formatDate = (dateString: string) => {
