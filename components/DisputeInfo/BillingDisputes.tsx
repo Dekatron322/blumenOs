@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { BillingDisputeData, GetAllDisputesParams, getAllBillingDisputes } from "lib/redux/billingDisputeSlice"
+import { formatCurrency } from "utils/formatCurrency"
 
 const BillingDisputes = () => {
+  const dispatch = useAppDispatch()
+
   const [searchText, setSearchText] = useState("")
   const [selectedDispute, setSelectedDispute] = useState<any>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  const pageSize = 10
+
+  const { loadingDisputes, disputes: apiDisputes, disputesError } = useAppSelector((state) => state.billingDispute)
 
   // Check for mobile view
   useEffect(() => {
@@ -23,60 +32,116 @@ const BillingDisputes = () => {
     setSearchText("")
   }
 
-  const disputes = [
-    {
-      id: 1,
-      customerName: "Fatima Hassan",
-      accountNumber: "2301567890",
-      disputeAmount: "₦425",
-      originalAmount: "₦425",
-      status: "pending",
-      disputeType: "double-charge",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN789456123",
-      timestamp: "2024-01-15 16:45",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-23",
-      priority: "medium",
-      assignedTo: "John Adebayo",
-      description: "Customer claims they were charged twice for the same service",
-    },
-    {
-      id: 2,
-      customerName: "Tech Solutions Ltd",
-      accountNumber: "2301789012",
-      disputeAmount: "₦1,250",
-      originalAmount: "₦1,250",
-      status: "under-review",
-      disputeType: "service-not-rendered",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN321654987",
-      timestamp: "2024-01-15 15:45",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-25",
-      priority: "high",
-      assignedTo: "Sarah Johnson",
-      description: "Commercial customer claims service was not provided after payment",
-    },
-    {
-      id: 3,
-      customerName: "Michael Johnson",
-      accountNumber: "2301890123",
-      disputeAmount: "₦320",
-      originalAmount: "₦320",
-      status: "resolved",
-      disputeType: "incorrect-amount",
-      paymentMethod: "Card Payment",
-      reference: "CARD123456789",
-      timestamp: "2024-01-15 15:30",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      priority: "low",
-      assignedTo: "James Okafor",
-      description: "Customer claims incorrect amount was charged",
-      resolution: "Refund processed - system error confirmed",
-    },
-  ]
+  const formatDate = (value: string | null | undefined): string => {
+    if (!value) return "-"
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return value
+    return date.toLocaleDateString("en-NG", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    })
+  }
+
+  const mapStatus = (status: number): string => {
+    switch (status) {
+      case 0:
+        return "pending"
+      case 1:
+        return "under-review"
+      case 2:
+        return "resolved"
+      case 3:
+        return "rejected"
+      default:
+        return "pending"
+    }
+  }
+
+  const mapPriorityFromStatus = (status: number): string => {
+    switch (status) {
+      case 0:
+        return "medium"
+      case 1:
+        return "high"
+      case 2:
+        return "low"
+      case 3:
+        return "critical"
+      default:
+        return "medium"
+    }
+  }
+
+  const mapDisputeType = (_dispute: BillingDisputeData): string => {
+    return "other"
+  }
+
+  const mapPaymentMethod = (payment?: { paymentTypeName: string }): string => {
+    if (!payment) return "Bank Transfer"
+    return payment.paymentTypeName || "Bank Transfer"
+  }
+
+  const mapBillingDisputeToCard = (dispute: BillingDisputeData) => {
+    const firstPayment = dispute.payments && dispute.payments.length > 0 ? dispute.payments[0] : undefined
+
+    const disputeAmountNumber = firstPayment?.overPaymentAmount ?? 0
+    const originalAmountNumber = firstPayment?.billTotalDue ?? 0
+
+    return {
+      id: dispute.id,
+      customerName: dispute.customerName,
+      accountNumber: dispute.customerAccountNumber,
+      disputeAmount: formatCurrency(disputeAmountNumber, "₦"),
+      originalAmount: formatCurrency(originalAmountNumber, "₦"),
+      status: mapStatus(dispute.status),
+      disputeType: mapDisputeType(dispute),
+      paymentMethod: mapPaymentMethod(firstPayment),
+      reference: firstPayment?.reference || "-",
+      timestamp: formatDate(firstPayment?.paidAtUtc || dispute.raisedAtUtc),
+      submittedDate: formatDate(dispute.raisedAtUtc),
+      dueDate: formatDate(dispute.resolvedAtUtc || dispute.raisedAtUtc),
+      priority: mapPriorityFromStatus(dispute.status),
+      assignedTo: dispute.raisedByName || "-",
+      description: dispute.reason || dispute.details,
+      resolution: dispute.resolutionNotes || undefined,
+    }
+  }
+
+  const mappedDisputes = (apiDisputes || []).map(mapBillingDisputeToCard)
+
+  const filteredDisputes = mappedDisputes.filter((d) => {
+    if (!searchText) return true
+    const q = searchText.toLowerCase()
+    return (
+      d.customerName.toLowerCase().includes(q) ||
+      d.accountNumber.toLowerCase().includes(q) ||
+      d.reference.toLowerCase().includes(q) ||
+      d.description?.toLowerCase().includes(q)
+    )
+  })
+
+  const statusSummary = {
+    pending: mappedDisputes.filter((d) => d.status === "pending").length,
+    underReview: mappedDisputes.filter((d) => d.status === "under-review").length,
+    resolved: mappedDisputes.filter((d) => d.status === "resolved").length,
+    rejected: mappedDisputes.filter((d) => d.status === "rejected").length,
+  }
+
+  const prioritySummary = {
+    low: mappedDisputes.filter((d) => d.priority === "low").length,
+    medium: mappedDisputes.filter((d) => d.priority === "medium").length,
+    high: mappedDisputes.filter((d) => d.priority === "high").length,
+    critical: mappedDisputes.filter((d) => d.priority === "critical").length,
+  }
+
+  const typeSummary = {
+    doubleCharge: mappedDisputes.filter((d) => d.disputeType === "double-charge").length,
+    serviceNotRendered: mappedDisputes.filter((d) => d.disputeType === "service-not-rendered").length,
+    incorrectAmount: mappedDisputes.filter((d) => d.disputeType === "incorrect-amount").length,
+    unauthorized: mappedDisputes.filter((d) => d.disputeType === "unauthorized-transaction").length,
+    other: mappedDisputes.filter((d) => d.disputeType === "other").length,
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -94,6 +159,15 @@ const BillingDisputes = () => {
         return "bg-gray-100 text-gray-800"
     }
   }
+
+  useEffect(() => {
+    const params: GetAllDisputesParams = {
+      PageNumber: 1,
+      PageSize: pageSize,
+    }
+
+    dispatch(getAllBillingDisputes(params))
+  }, [dispatch, pageSize])
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -402,17 +476,43 @@ const BillingDisputes = () => {
   }
 
   // Mobile Statistics Component
-  const MobileStatistics = () => (
+  const MobileStatistics = ({
+    statusSummary,
+    prioritySummary,
+  }: {
+    statusSummary: { pending: number; underReview: number; resolved: number; rejected: number }
+    prioritySummary: { low: number; medium: number; high: number; critical: number }
+  }) => (
     <div className="mt-6 space-y-4">
       {/* Dispute Summary Card */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="mb-3 text-base font-semibold">Dispute Summary</h3>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Pending", count: "1", color: "bg-yellow-500", textColor: "text-yellow-600" },
-            { label: "Under Review", count: "1", color: "bg-blue-500", textColor: "text-blue-600" },
-            { label: "Resolved", count: "1", color: "bg-green-500", textColor: "text-green-600" },
-            { label: "Rejected", count: "0", color: "bg-red-500", textColor: "text-red-600" },
+            {
+              label: "Pending",
+              count: statusSummary.pending,
+              color: "bg-yellow-500",
+              textColor: "text-yellow-600",
+            },
+            {
+              label: "Under Review",
+              count: statusSummary.underReview,
+              color: "bg-blue-500",
+              textColor: "text-blue-600",
+            },
+            {
+              label: "Resolved",
+              count: statusSummary.resolved,
+              color: "bg-green-500",
+              textColor: "text-green-600",
+            },
+            {
+              label: "Rejected",
+              count: statusSummary.rejected,
+              color: "bg-red-500",
+              textColor: "text-red-600",
+            },
           ].map((item, index) => (
             <div key={index} className="rounded-lg bg-gray-50 p-3">
               <div className="flex items-center gap-2">
@@ -430,10 +530,30 @@ const BillingDisputes = () => {
         <h3 className="mb-3 text-base font-semibold">Priority Levels</h3>
         <div className="space-y-2">
           {[
-            { label: "Low", count: "1", color: "bg-green-500", textColor: "text-green-600" },
-            { label: "Medium", count: "1", color: "bg-yellow-500", textColor: "text-yellow-600" },
-            { label: "High", count: "1", color: "bg-orange-500", textColor: "text-orange-600" },
-            { label: "Critical", count: "0", color: "bg-red-500", textColor: "text-red-600" },
+            {
+              label: "Low",
+              count: prioritySummary.low,
+              color: "bg-green-500",
+              textColor: "text-green-600",
+            },
+            {
+              label: "Medium",
+              count: prioritySummary.medium,
+              color: "bg-yellow-500",
+              textColor: "text-yellow-600",
+            },
+            {
+              label: "High",
+              count: prioritySummary.high,
+              color: "bg-orange-500",
+              textColor: "text-orange-600",
+            },
+            {
+              label: "Critical",
+              count: prioritySummary.critical,
+              color: "bg-red-500",
+              textColor: "text-red-600",
+            },
           ].map((item, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -465,24 +585,56 @@ const BillingDisputes = () => {
   )
 
   // Desktop Statistics Component
-  const DesktopStatistics = () => (
+  const DesktopStatistics = ({
+    statusSummary,
+    prioritySummary,
+    typeSummary,
+  }: {
+    statusSummary: { pending: number; underReview: number; resolved: number; rejected: number }
+    prioritySummary: { low: number; medium: number; high: number; critical: number }
+    typeSummary: {
+      doubleCharge: number
+      serviceNotRendered: number
+      incorrectAmount: number
+      unauthorized: number
+      other: number
+    }
+  }) => (
     <div className="space-y-6">
       {/* Dispute Summary */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
         <h3 className="mb-4 text-base font-semibold sm:text-lg">Dispute Summary</h3>
         <div className="space-y-3 sm:space-y-4">
           {[
-            { label: "Pending", count: "1 dispute", color: "bg-yellow-500" },
-            { label: "Under Review", count: "1 dispute", color: "bg-blue-500" },
-            { label: "Resolved", count: "1 dispute", color: "bg-green-500" },
-            { label: "Rejected", count: "0 disputes", color: "bg-red-500" },
+            {
+              label: "Pending",
+              count: statusSummary.pending,
+              color: "bg-yellow-500",
+            },
+            {
+              label: "Under Review",
+              count: statusSummary.underReview,
+              color: "bg-blue-500",
+            },
+            {
+              label: "Resolved",
+              count: statusSummary.resolved,
+              color: "bg-green-500",
+            },
+            {
+              label: "Rejected",
+              count: statusSummary.rejected,
+              color: "bg-red-500",
+            },
           ].map((item, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className={`size-2 rounded-full sm:size-3 ${item.color}`}></div>
                 <span className="text-sm font-medium text-gray-700">{item.label}</span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">{item.count}</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {item.count} dispute{item.count === 1 ? "" : "s"}
+              </span>
             </div>
           ))}
         </div>
@@ -493,10 +645,10 @@ const BillingDisputes = () => {
         <h3 className="mb-4 text-base font-semibold sm:text-lg">Priority Levels</h3>
         <div className="space-y-2 sm:space-y-3">
           {[
-            { label: "Low", count: "1", color: "bg-green-500" },
-            { label: "Medium", count: "1", color: "bg-yellow-500" },
-            { label: "High", count: "1", color: "bg-orange-500" },
-            { label: "Critical", count: "0", color: "bg-red-500" },
+            { label: "Low", count: prioritySummary.low, color: "bg-green-500" },
+            { label: "Medium", count: prioritySummary.medium, color: "bg-yellow-500" },
+            { label: "High", count: prioritySummary.high, color: "bg-orange-500" },
+            { label: "Critical", count: prioritySummary.critical, color: "bg-red-500" },
           ].map((item, index) => (
             <div key={index} className="flex justify-between text-sm">
               <div className="flex items-center gap-2">
@@ -526,10 +678,10 @@ const BillingDisputes = () => {
         <h3 className="mb-4 text-base font-semibold sm:text-lg">Dispute Types</h3>
         <div className="space-y-2 sm:space-y-3">
           {[
-            { label: "Double Charge", count: "1", color: "text-red-600" },
-            { label: "Service Not Rendered", count: "1", color: "text-orange-600" },
-            { label: "Incorrect Amount", count: "1", color: "text-blue-600" },
-            { label: "Unauthorized", count: "0", color: "text-purple-600" },
+            { label: "Double Charge", count: typeSummary.doubleCharge, color: "text-red-600" },
+            { label: "Service Not Rendered", count: typeSummary.serviceNotRendered, color: "text-orange-600" },
+            { label: "Incorrect Amount", count: typeSummary.incorrectAmount, color: "text-blue-600" },
+            { label: "Unauthorized", count: typeSummary.unauthorized, color: "text-purple-600" },
           ].map((item, index) => (
             <div key={index} className="flex justify-between text-sm">
               <span className="text-gray-600">{item.label}</span>
@@ -587,6 +739,14 @@ const BillingDisputes = () => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      {loadingDisputes && (
+        <div className="mb-4 rounded-lg border bg-white p-4 text-sm text-gray-600">Loading billing disputes...</div>
+      )}
+      {!loadingDisputes && disputesError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          Error loading billing disputes: {disputesError}
+        </div>
+      )}
       {/* Mobile Layout */}
       {isMobile ? (
         <div className="space-y-6">
@@ -604,14 +764,17 @@ const BillingDisputes = () => {
 
             {/* Disputes List - Mobile Cards */}
             <div className="space-y-4">
-              {disputes.map((dispute) => (
+              {filteredDisputes.map((dispute) => (
                 <MobileDisputeCard key={dispute.id} dispute={dispute} />
               ))}
+              {!loadingDisputes && filteredDisputes.length === 0 && (
+                <p className="py-4 text-center text-sm text-gray-500">No disputes found</p>
+              )}
             </div>
           </div>
 
           {/* Mobile Statistics */}
-          <MobileStatistics />
+          <MobileStatistics statusSummary={statusSummary} prioritySummary={prioritySummary} />
         </div>
       ) : (
         /* Desktop Layout */
@@ -633,16 +796,23 @@ const BillingDisputes = () => {
 
               {/* Disputes List */}
               <div className="space-y-4">
-                {disputes.map((dispute) => (
+                {filteredDisputes.map((dispute) => (
                   <DesktopDisputeRow key={dispute.id} dispute={dispute} />
                 ))}
+                {!loadingDisputes && filteredDisputes.length === 0 && (
+                  <p className="py-4 text-center text-sm text-gray-500">No disputes found</p>
+                )}
               </div>
             </div>
           </div>
 
           {/* Right Column - Dispute Statistics */}
           <div className="w-full lg:w-80">
-            <DesktopStatistics />
+            <DesktopStatistics
+              statusSummary={statusSummary}
+              prioritySummary={prioritySummary}
+              typeSummary={typeSummary}
+            />
           </div>
         </div>
       )}
