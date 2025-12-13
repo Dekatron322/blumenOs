@@ -13,7 +13,7 @@ const ViewCashClearanceHistoryPage: React.FC = () => {
     return (
       <section className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md rounded-md border bg-white p-6 text-center text-sm text-gray-700">
-          <p className="font-medium">We couldn't find your agent profile.</p>
+          <p className="font-medium">We couldn&apos;t find your agent profile.</p>
           <p className="mt-2 text-xs text-gray-500">
             Please sign in as a sales representative again or contact support if this problem continues.
           </p>
