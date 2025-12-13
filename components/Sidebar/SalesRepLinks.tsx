@@ -98,11 +98,8 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
     setLinks(filteredLinks)
   }, [permissions])
 
-  // If no permissions loaded yet, return null or loading state
-  if (
-    !isClient ||
-    (permissions.length === 0 && typeof window !== "undefined" && localStorage.getItem("authData") === null)
-  ) {
+  // Only guard against server-side render; on client, fall back to showing links even without authData
+  if (!isClient) {
     return null
   }
 
