@@ -317,10 +317,10 @@ export default function AllTransactions() {
           <DashboardNav />
           <div className="container mx-auto flex flex-col">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full items-start justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-2xl font-semibold">Prepaid & Token Vending</h4>
-                <p>STS token generation and prepaid meter management</p>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Prepaid & Token Vending</h4>
+                <p className="text-sm sm:text-base">STS token generation and prepaid meter management</p>
               </div>
             </div>
 

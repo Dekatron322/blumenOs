@@ -252,10 +252,10 @@ export default function Dashboard() {
 
           <div className="mx-auto w-full px-3 py-8 xl:container xl:px-16">
             <div className="mb-6 flex w-full flex-col gap-4">
-              <div className="flex w-full items-center justify-between">
+              <div className="flex w-full items-start justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Utility Dashboard Overview</h1>
-                  <p className="text-sm font-medium text-gray-500">
+                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">Utility Dashboard Overview</h1>
+                  <p className="text-sm font-medium text-gray-500 sm:text-base">
                     Real-time overview of customer accounts, revenue, and operational metrics
                   </p>
                 </div>
