@@ -48,7 +48,7 @@ const SignIn: React.FC = () => {
 
       // Agent-only users go directly to sales-rep
       if (isAgentOnly) {
-        setTimeout(() => router.push("/sales-rep"), 1000)
+        setTimeout(() => router.push("/sales-rep/overview"), 1000)
         return
       }
 
