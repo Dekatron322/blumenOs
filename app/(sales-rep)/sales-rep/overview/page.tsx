@@ -8,19 +8,24 @@ import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
 import {
+  CollectCash,
   CustomeraIcon,
+  MakeChangeRequestIcon,
   MetersProgrammedIcon,
   PlayIcon,
   PlusIcon,
+  RaiseTicketIcon,
   TamperIcon,
   TokenGeneratedIcon,
   VendingIcon,
+  VendingIconOutline,
 } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
 import CashCollectionsTable from "components/Tables/CashCollections"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
+import { formatCurrency } from "utils/formatCurrency"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -298,7 +303,7 @@ export default function AgentManagementDashboard() {
   const { activeAgents, collectionsToday, targetAchievement, lowFloatAlerts } = agentData
 
   // Format currency
-  const formatCurrency = (amount: number) => {
+  const formatSummaryCurrency = (amount: number) => {
     return (
       new Intl.NumberFormat("en-NG", {
         style: "currency",
@@ -358,13 +363,133 @@ export default function AgentManagementDashboard() {
                   variant="primary"
                   size="md"
                   className="w-full sm:w-auto"
-                  icon={<PlusIcon />}
-                  onClick={() => router.push("/agent-management/add-new-agent")}
+                  icon={<VendingIconOutline color="white" />}
+                  onClick={() => router.push("/sales-rep/vend")}
                 >
-                  <span className="hidden sm:inline">Collect Cash</span>
+                  <span className="hidden sm:inline">Vend</span>
                 </ButtonModule>
+                {(!agent || agent.cashAtHand < agent.cashCollectionLimit) && (
+                  <ButtonModule
+                    variant="outline"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    icon={<CollectCash />}
+                    onClick={() => router.push("/sales-rep/collect-payment")}
+                  >
+                    <span className="hidden sm:inline">Collect Payment</span>
+                  </ButtonModule>
+                )}
+
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  icon={<RaiseTicketIcon />}
+                  onClick={() => router.push("/sales-rep/raise-ticket")}
+                >
+                  <span className="hidden sm:inline">Raise Ticket</span>
+                </ButtonModule>
+                {/* <ButtonModule
+                  variant="outline"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  icon={<MakeChangeRequestIcon />}
+                  onClick={() => router.push("/sales-rep/make-change-request")}
+                >
+                  <span className="hidden sm:inline">Make Change Request</span>
+                </ButtonModule> */}
               </motion.div>
             </div>
+
+            {/* Sales Rep Details - Cash at hand vs Collection limit */}
+            {agent && (
+              <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+                <div className="mb-3 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Sales Rep Details</h3>
+                    <p className="text-xs text-gray-500 sm:text-sm">
+                      Cash at hand and collection limit for your profile
+                    </p>
+                    {user && (
+                      <div className="mt-2 space-y-0.5 text-xs text-gray-600 sm:text-sm">
+                        <p className="truncate">
+                          <span className="font-medium text-gray-700">Name:</span> {user.fullName}
+                        </p>
+                        <p className="truncate">
+                          <span className="font-medium text-gray-700">Phone:</span> {user.phoneNumber}
+                        </p>
+                        <p className="truncate">
+                          <span className="font-medium text-gray-700">Email:</span> {user.email}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-xs sm:text-sm">
+                    <div className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
+                      Code: {agent.agentCode}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        agent.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      Status: {agent.status}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        agent.canCollectCash ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      Can Collect Cash: {agent.canCollectCash ? "Yes" : "No"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs text-gray-600 sm:text-sm">
+                    <span>Cash at Hand vs Collection Limit</span>
+                    <span className="font-medium text-gray-900">
+                      {formatCurrency(agent.cashAtHand)} / {formatCurrency(agent.cashCollectionLimit)}
+                    </span>
+                  </div>
+                  <div className="h-3 w-full rounded-full bg-gray-200 sm:h-4">
+                    {agent.cashCollectionLimit > 0 && (
+                      <div
+                        className={`h-3 rounded-full transition-all duration-700 sm:h-4 ${
+                          agent.cashAtHand / agent.cashCollectionLimit > 0.8
+                            ? "bg-red-500"
+                            : agent.cashAtHand / agent.cashCollectionLimit > 0.5
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                        }`}
+                        style={{
+                          width: `${Math.min((agent.cashAtHand / agent.cashCollectionLimit) * 100, 100).toFixed(1)}%`,
+                        }}
+                      />
+                    )}
+                  </div>
+                  {agent.cashCollectionLimit > 0 && (
+                    <div className="text-xs text-gray-500 sm:text-xs">
+                      {((agent.cashAtHand / agent.cashCollectionLimit) * 100).toFixed(1)}% of limit used
+                    </div>
+                  )}
+                  <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                    <div className="rounded-lg bg-blue-50 p-3 sm:p-4">
+                      <div className="text-xs font-medium text-blue-600 sm:text-sm">Cash at Hand</div>
+                      <div className="text-base font-bold text-blue-900 sm:text-lg">
+                        {formatCurrency(agent.cashAtHand)}
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-emerald-50 p-3 sm:p-4">
+                      <div className="text-xs font-medium text-emerald-600 sm:text-sm">Collection Limit</div>
+                      <div className="text-base font-bold text-emerald-900 sm:text-lg">
+                        {formatCurrency(agent.cashCollectionLimit)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Main Content Area */}
             <div className="flex w-full flex-col gap-6 lg:flex-row">
@@ -429,7 +554,7 @@ export default function AgentManagementDashboard() {
                               <div className="flex w-full justify-between">
                                 <p className="text-sm text-gray-600 sm:text-base">Amount:</p>
                                 <p className="text-secondary text-lg font-bold sm:text-xl">
-                                  {formatCurrency(collectionsToday)}
+                                  {formatSummaryCurrency(collectionsToday)}
                                 </p>
                               </div>
                               <div className="flex w-full justify-between">

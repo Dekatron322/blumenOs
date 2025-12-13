@@ -3,8 +3,17 @@ import clsx from "clsx"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useSelector } from "react-redux"
+import { RootState } from "lib/redux/store"
 import { DashboardIcon, PaymentIcon } from "./Icons"
-import { CashClearanceIcon, CollectCash, MakeChangeRequestIcon, RaiseTicketIcon } from "components/Icons/Icons"
+import {
+  CashClearanceIcon,
+  CollectCash,
+  MakeChangeRequestIcon,
+  RaiseTicketIcon,
+  VendingIcon,
+  VendingIconOutline,
+} from "components/Icons/Icons"
 
 interface NavLink {
   name: string
@@ -19,6 +28,11 @@ const allLinks: NavLink[] = [
     name: "Collect payment",
     href: "/sales-rep/collect-payment",
     icon: CollectCash,
+  },
+  {
+    name: "Vend",
+    href: "/sales-rep/vend",
+    icon: VendingIconOutline,
   },
   {
     name: "Raise Ticket",
@@ -51,6 +65,7 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   const [permissions, setPermissions] = useState<string[]>([])
   const [links, setLinks] = useState<NavLink[]>([])
   const [isClient, setIsClient] = useState(false)
+  const { agent } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
     setIsClient(true)
@@ -89,6 +104,11 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   useEffect(() => {
     // Filter links based on permissions
     const filteredLinks = allLinks.filter((link) => {
+      // Hide Collect payment when agent has reached collection limit
+      if (link.href === "/sales-rep/collect-payment" && agent && agent.cashAtHand >= agent.cashCollectionLimit) {
+        return false
+      }
+
       // Always show Dashboard (no permission required)
       if (!link.permission) return true
 
@@ -96,7 +116,7 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
       return permissions.includes(link.permission)
     })
     setLinks(filteredLinks)
-  }, [permissions])
+  }, [permissions, agent])
 
   // Only guard against server-side render; on client, fall back to showing links even without authData
   if (!isClient) {
