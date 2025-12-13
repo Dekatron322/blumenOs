@@ -10,10 +10,10 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
+  BillingDisputeData,
   clearUpdateDisputeStatus,
   clearUpdateDisputeStatusError,
   updateDisputeStatus,
-  BillingDisputeData,
 } from "lib/redux/billingDisputeSlice"
 import { FormTextAreaModule } from "../Input/FormTextAreaModule"
 
