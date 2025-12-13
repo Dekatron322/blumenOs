@@ -565,10 +565,6 @@ const BillingDisputeDetailsPage = () => {
 
                         <div className="space-y-2 text-xs sm:text-sm">
                           <div className="flex items-center justify-between text-gray-600">
-                            <span>Bill ID:</span>
-                            <span className="font-medium">#{disputeById.billId}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-gray-600">
                             <span>Raised By:</span>
                             <span className="font-medium">{disputeById.raisedByName}</span>
                           </div>
@@ -600,24 +596,6 @@ const BillingDisputeDetailsPage = () => {
                       >
                         <Edit3 className="size-4" />
                         Update Status
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="primary"
-                        size="md"
-                        className="w-full justify-start gap-3 text-sm"
-                        onClick={handleAssignToAgent}
-                      >
-                        <UserIcon />
-                        Assign to Agent
-                      </ButtonModule>
-                      <ButtonModule
-                        variant="primary"
-                        size="md"
-                        className="w-full justify-start gap-3 text-sm"
-                        onClick={handleAdjustBill}
-                      >
-                        <DollarSign className="size-4" />
-                        Adjust Bill
                       </ButtonModule>
                     </div>
                   </motion.div>
@@ -781,53 +759,27 @@ const BillingDisputeDetailsPage = () => {
                           <User className="size-5" />
                           Customer Information
                         </h3>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 sm:size-10">
-                                <User className="size-4 text-blue-600 sm:size-5" />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer Name</label>
-                                <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                                  {disputeById.customerName}
-                                </p>
-                              </div>
+                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                          <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 sm:size-10">
+                              <User className="size-4 text-blue-600 sm:size-5" />
                             </div>
-                            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                              <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 sm:size-10">
-                                <CreditCard className="size-4 text-green-600 sm:size-5" />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-gray-600 sm:text-sm">Account Number</label>
-                                <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                                  {disputeById.customerAccountNumber}
-                                </p>
-                              </div>
+                            <div>
+                              <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer Name</label>
+                              <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                                {disputeById.customerName}
+                              </p>
                             </div>
                           </div>
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                              <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 sm:size-10">
-                                <Building className="size-4 text-purple-600 sm:size-5" />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer ID</label>
-                                <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                                  {disputeById.customerId}
-                                </p>
-                              </div>
+                          <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 sm:size-10">
+                              <CreditCard className="size-4 text-green-600 sm:size-5" />
                             </div>
-                            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                              <div className="flex size-8 items-center justify-center rounded-lg bg-red-100 sm:size-10">
-                                <FileSignature className="size-4 text-red-600 sm:size-5" />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-gray-600 sm:text-sm">Bill ID</label>
-                                <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                                  #{disputeById.billId}
-                                </p>
-                              </div>
+                            <div>
+                              <label className="text-xs font-medium text-gray-600 sm:text-sm">Account Number</label>
+                              <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                                {disputeById.customerAccountNumber}
+                              </p>
                             </div>
                           </div>
                         </div>
