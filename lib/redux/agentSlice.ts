@@ -80,6 +80,8 @@ export interface CashClearance {
   cashAtHandAfter: number
   clearedAt: string
   notes: string
+  // Optional sales rep associated with this clearance (if provided by the API)
+  salesRep?: CollectionOfficer
   collectionOfficer: CollectionOfficer
   clearedBy: CollectionOfficer
 }

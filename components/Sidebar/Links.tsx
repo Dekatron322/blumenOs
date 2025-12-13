@@ -175,6 +175,12 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["W"],
       },
       {
+        name: "Clear Cash",
+        href: "/agent-management/clear-cash",
+        privilegeKey: "agents",
+        requiredActions: ["W"],
+      },
+      {
         name: "Payments",
         href: "/agent-management/payments",
         privilegeKey: "agents",

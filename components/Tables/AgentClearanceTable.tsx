@@ -207,6 +207,7 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
   const [searchText, setSearchText] = useState("")
   const [selectedClearance, setSelectedClearance] = useState<CashClearance | null>(null)
   const [isClearCashPanelOpen, setIsClearCashPanelOpen] = useState(false)
+  const [expandedClearanceId, setExpandedClearanceId] = useState<number | null>(null)
   const [clearCashForm, setClearCashForm] = useState<ClearCashRequest>({
     collectionOfficerUserId: 0,
     amount: 0,
@@ -413,7 +414,7 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
             <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Cash Clearances</p>
             <p className="text-sm text-gray-600">Track and manage agent cash clearance history</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
             <SearchModule
               value={searchText}
               onChange={handleSearch}
@@ -422,6 +423,9 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
               className="w-[380px]"
               bgClassName="bg-white"
             />
+            {/* <ButtonModule variant="primary" size="sm" disabled={clearCashLoading}>
+              Clear Cash
+            </ButtonModule> */}
           </div>
         </motion.div>
 
@@ -530,70 +534,136 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
                 <tbody>
                   <AnimatePresence>
                     {filteredClearances.map((clearance, index) => (
-                      <motion.tr
-                        key={clearance.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        exit={{ opacity: 0, y: -10 }}
-                      >
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                          CL-{clearance.id.toString().padStart(5, "0")}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                          {formatCurrency(clearance.amountCleared)}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          {formatCurrency(clearance.cashAtHandBefore)}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          {formatCurrency(clearance.cashAtHandAfter)}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          {formatDate(clearance.clearedAt)}
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{clearance.collectionOfficer.fullName}</span>
-                            <span className="text-xs text-gray-500">{clearance.collectionOfficer.employeeId}</span>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{clearance.clearedBy.fullName}</span>
-                            <span className="text-xs text-gray-500">{clearance.clearedBy.employeeId}</span>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          <motion.div
-                            className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
-                            style={{
-                              backgroundColor: "#EEF5F0",
-                              color: "#589E67",
-                            }}
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            <span
-                              className="size-2 rounded-full"
+                      <React.Fragment key={clearance.id}>
+                        <motion.tr
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
+                            CL-{clearance.id.toString().padStart(5, "0")}
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
+                            {formatCurrency(clearance.amountCleared)}
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                            {formatCurrency(clearance.cashAtHandBefore)}
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                            {formatCurrency(clearance.cashAtHandAfter)}
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                            {formatDate(clearance.clearedAt)}
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{clearance.collectionOfficer.fullName}</span>
+                              <span className="text-xs text-gray-500">{clearance.collectionOfficer.employeeId}</span>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{clearance.clearedBy.fullName}</span>
+                              <span className="text-xs text-gray-500">{clearance.clearedBy.employeeId}</span>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                            <motion.div
+                              className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
                               style={{
-                                backgroundColor: "#589E67",
+                                backgroundColor: "#EEF5F0",
+                                color: "#589E67",
                               }}
-                            ></span>
-                            Completed
-                          </motion.div>
-                        </td>
-                        <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                          <ButtonModule
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openClearCashPanel(clearance)}
-                            disabled={clearCashLoading}
-                          >
-                            Clear Cash
-                          </ButtonModule>
-                        </td>
-                      </motion.tr>
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.1 }}
+                            >
+                              <span
+                                className="size-2 rounded-full"
+                                style={{
+                                  backgroundColor: "#589E67",
+                                }}
+                              ></span>
+                              Completed
+                            </motion.div>
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
+                              }
+                            >
+                              {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
+                            </ButtonModule>
+                          </td>
+                        </motion.tr>
+
+                        {expandedClearanceId === clearance.id && (
+                          <tr>
+                            <td colSpan={9} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
+                              <div className="grid gap-4 md:grid-cols-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500">Notes</p>
+                                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
+                                    {clearance.notes || "No notes provided"}
+                                  </p>
+                                </div>
+
+                                {clearance.salesRep && (
+                                  <div>
+                                    <p className="text-xs font-semibold text-gray-500">Sales Rep</p>
+                                    <p className="mt-1 text-sm font-medium text-gray-800">
+                                      {clearance.salesRep.fullName}
+                                    </p>
+                                    <p className="text-xs text-gray-500">{clearance.salesRep.email}</p>
+                                    <p className="text-xs text-gray-500">{clearance.salesRep.phoneNumber}</p>
+                                    <p className="text-xs text-gray-500">Acct ID: {clearance.salesRep.accountId}</p>
+                                  </div>
+                                )}
+
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500">Collection Officer</p>
+                                  <p className="mt-1 text-sm font-medium text-gray-800">
+                                    {clearance.collectionOfficer.fullName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">{clearance.collectionOfficer.email}</p>
+                                  <p className="text-xs text-gray-500">{clearance.collectionOfficer.phoneNumber}</p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500">Cleared By</p>
+                                  <p className="mt-1 text-sm font-medium text-gray-800">
+                                    {clearance.clearedBy.fullName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">{clearance.clearedBy.email}</p>
+                                  <p className="text-xs text-gray-500">{clearance.clearedBy.phoneNumber}</p>
+                                </div>
+                              </div>
+
+                              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500">Cleared At</p>
+                                  <p className="mt-1 text-sm text-gray-800">{formatDate(clearance.clearedAt)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500">Cash Before</p>
+                                  <p className="mt-1 text-sm text-gray-800">
+                                    {formatCurrency(clearance.cashAtHandBefore)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500">Cash After</p>
+                                  <p className="mt-1 text-sm text-gray-800">
+                                    {formatCurrency(clearance.cashAtHandAfter)}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
                   </AnimatePresence>
                 </tbody>
@@ -690,147 +760,6 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
       </div>
 
       {/* Clear Cash Panel */}
-      <AnimatePresence>
-        {isClearCashPanelOpen && selectedClearance && (
-          <motion.div
-            className="w-full max-w-sm border-l bg-white shadow-lg"
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b px-6 py-4">
-                <div>
-                  <p className="text-lg font-semibold text-gray-900">Clear Cash</p>
-                  <p className="text-xs text-gray-500">
-                    Clearance ID: CL-{selectedClearance.id.toString().padStart(5, "0")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeClearCashPanel}
-                  className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                >
-                  <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="border-b bg-gray-50 px-6 py-4 text-sm">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Amount Cleared</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatCurrency(selectedClearance.amountCleared)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Cleared At</span>
-                    <span className="text-gray-900">{formatDate(selectedClearance.clearedAt)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Collection Officer</span>
-                    <span className="text-gray-900">{selectedClearance.collectionOfficer.fullName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Cash After</span>
-                    <span className="font-semibold text-green-600">
-                      {formatCurrency(selectedClearance.cashAtHandAfter)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <form onSubmit={handleClearCashSubmit} className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  <p className="font-semibold">Before you clear cash:</p>
-                  <ul className="mt-1 list-disc space-y-0.5 pl-4">
-                    <li>Count and confirm the physical cash matches the amount you are clearing.</li>
-                    <li>Verify the clearance amount does not exceed the agents cash at hand.</li>
-                    <li>Ensure your notes clearly describe how the cash was counted and received.</li>
-                  </ul>
-                </div>
-
-                {clearCashError && (
-                  <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                    {clearCashError}
-                  </div>
-                )}
-
-                {/* <div>
-                  <FormInputModule
-                    label="Collection Officer User ID"
-                    type="number"
-                    name="collectionOfficerUserId"
-                    placeholder="Enter collection officer user ID"
-                    value={clearCashForm.collectionOfficerUserId}
-                    onChange={(e) => handleClearCashInputChange("collectionOfficerUserId", Number(e.target.value))}
-                    error={clearCashFormErrors.collectionOfficerUserId}
-                    min={1}
-                    required
-                  />
-                </div> */}
-
-                <div>
-                  <FormInputModule
-                    label="Amount to Clear (NGN)"
-                    type="number"
-                    name="amount"
-                    placeholder="Enter amount to clear"
-                    value={clearCashForm.amount}
-                    onChange={(e) => handleClearCashInputChange("amount", Number(e.target.value))}
-                    error={clearCashFormErrors.amount}
-                    min={0}
-                    step={0.01}
-                    required
-                  />
-                  <div className="mt-1 flex justify-between text-xs text-gray-500">
-                    <span>Max: {formatCurrency(selectedClearance.amountCleared)}</span>
-                    {clearCashForm.amount > 0 && (
-                      <span className="font-medium text-gray-700">{formatCurrency(clearCashForm.amount)}</span>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Notes *</label>
-                  <textarea
-                    value={clearCashForm.notes}
-                    onChange={(e) => handleClearCashInputChange("notes", e.target.value)}
-                    placeholder="Enter notes for this cash clearance"
-                    rows={3}
-                    className={`w-full rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
-                      clearCashFormErrors.notes
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-[#004b23] focus:ring-[#004b23]"
-                    }`}
-                    required
-                  />
-                  {clearCashFormErrors.notes && (
-                    <p className="mt-1 text-xs text-red-600">{clearCashFormErrors.notes}</p>
-                  )}
-                </div>
-
-                <div className="mt-auto flex justify-end gap-3 border-t pt-4">
-                  <ButtonModule
-                    type="button"
-                    variant="outline"
-                    onClick={closeClearCashPanel}
-                    disabled={clearCashLoading}
-                  >
-                    Cancel
-                  </ButtonModule>
-                  <ButtonModule type="submit" variant="primary" loading={clearCashLoading} disabled={clearCashLoading}>
-                    Clear Cash
-                  </ButtonModule>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 }
