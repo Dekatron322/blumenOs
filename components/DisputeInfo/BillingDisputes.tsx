@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { BillingDisputeData, GetAllDisputesParams, getAllBillingDisputes } from "lib/redux/billingDisputeSlice"
+import { BillingDisputeData, getAllBillingDisputes, GetAllDisputesParams } from "lib/redux/billingDisputeSlice"
 import { formatCurrency } from "utils/formatCurrency"
 
 const BillingDisputes = () => {

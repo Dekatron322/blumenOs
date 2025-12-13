@@ -11,7 +11,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { BillingDisputeData, GetAllDisputesParams, getAllBillingDisputes } from "lib/redux/billingDisputeSlice"
+import { BillingDisputeData, getAllBillingDisputes, GetAllDisputesParams } from "lib/redux/billingDisputeSlice"
 import { formatCurrency } from "utils/formatCurrency"
 
 const CyclesIcon = () => (

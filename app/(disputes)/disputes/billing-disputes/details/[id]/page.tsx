@@ -5,41 +5,34 @@ import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   AlertCircle,
-  CheckCircle,
-  ChevronDown,
-  Edit3,
-  FileText,
-  Calendar,
-  DollarSign,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  CreditCard,
-  FileSignature,
-  Clock,
   AlertTriangle,
-  CheckSquare,
-  XCircle,
-  RefreshCw,
-  Download,
   ArrowLeft,
+  Building,
+  Calendar,
+  CheckCircle,
+  CheckSquare,
+  ChevronDown,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  Edit3,
   File,
+  FileSignature,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw,
+  User,
+  XCircle,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
-import {
-  UserIcon,
-  CalendarOutlineIcon,
-  EmailOutlineIcon,
-  PhoneOutlineIcon,
-  MapOutlineIcon,
-  ExportCsvIcon,
-} from "components/Icons/Icons"
+import { ExportCsvIcon, UserIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearDisputeById, getDisputeById } from "lib/redux/billingDisputeSlice"
-import { fetchPostpaidBillById, clearCurrentBill } from "lib/redux/postpaidSlice"
+import { clearCurrentBill, fetchPostpaidBillById } from "lib/redux/postpaidSlice"
 import { formatCurrency } from "utils/formatCurrency"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -58,7 +51,9 @@ const priorityOptions = [
   { value: "medium", label: "Medium", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
   { value: "high", label: "High", color: "text-red-600", bg: "bg-red-50", border: "border-red-200" },
   { value: "critical", label: "Critical", color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200" },
-]
+] as const
+
+type PriorityOption = (typeof priorityOptions)[number]
 
 // Loading Skeleton Component
 const LoadingSkeleton = () => (
@@ -197,9 +192,10 @@ const BillingDisputeDetailsPage = () => {
     }
   }
 
-  const getPriorityConfig = (priorityValue: string) => {
-    const config = priorityOptions.find((opt) => opt.value === priorityValue) || priorityOptions[1]
-    return config
+  const getPriorityConfig = (priorityValue: PriorityOption["value"]): PriorityOption => {
+    const config =
+      priorityOptions.find((opt) => opt.value === priorityValue) || priorityOptions[1] || priorityOptions[0]
+    return config as PriorityOption
   }
 
   const formatDate = (dateString?: string | null) => {

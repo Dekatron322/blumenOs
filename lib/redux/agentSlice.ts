@@ -72,6 +72,15 @@ export interface CollectionOfficer {
   lastUpdated: string
 }
 
+// Interface for Sales Rep used in cash clearances
+export interface ClearanceSalesRep {
+  id: number
+  fullName: string
+  email: string
+  phoneNumber: string
+  accountId: string
+}
+
 // Interface for Cash Clearance
 export interface CashClearance {
   id: number
@@ -82,6 +91,7 @@ export interface CashClearance {
   notes: string
   collectionOfficer: CollectionOfficer
   clearedBy: CollectionOfficer
+  salesRep?: ClearanceSalesRep
 }
 
 // Interface for Clear Cash Response
