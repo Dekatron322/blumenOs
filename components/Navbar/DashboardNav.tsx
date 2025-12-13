@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft"
 import { RxCross2 } from "react-icons/rx"
 import { Links } from "components/Sidebar/Links"
+import { SalesRepLinks } from "components/Sidebar/SalesRepLinks"
 import UltraIcon from "public/ultra-icon"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
@@ -316,7 +317,7 @@ const DashboardNav = () => {
           </div>
 
           <div className="mt-2 flex flex-col items-start space-y-2 ">
-            <Links isCollapsed={false} />
+            {pathname.startsWith("/sales-rep") ? <SalesRepLinks isCollapsed={false} /> : <Links isCollapsed={false} />}
 
             {/* Mobile Menu Items */}
             {/* <div className="mt-4 w-full space-y-2">

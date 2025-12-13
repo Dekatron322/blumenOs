@@ -42,6 +42,8 @@ export const API_ENDPOINTS = {
     CLEAR_CASH: "/agents/{id}/clear-cash",
     PAYMENTS: "/agents/payments",
     LOOKUP_BILL: "/agents/lookup/bill",
+    AGENT_INFO: "/agents/me",
+    AGENT_SUMMARY: "/agents/reports/self/summary",
   },
 
   BILLING_DISPUTE: {

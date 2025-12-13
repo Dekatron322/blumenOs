@@ -138,6 +138,30 @@ export interface Agent {
   tempPassword: string
 }
 
+// Interface for Agent Info (Summary for current logged-in agent)
+export interface AgentInfo {
+  agentId: number
+  agentCode: string
+  fullName: string
+  email: string
+  phoneNumber: string
+  status: string
+  canCollectCash: boolean
+  cashCollectionLimit: number
+  maxSingleAllowedCashAmount: number
+  cashAtHand: number
+  monthlyPerformanceScore: number
+  lastCashCollectionDate: string
+  areaOfficeName: string
+  serviceCenterName: string
+}
+
+export interface AgentInfoResponse {
+  isSuccess: boolean
+  message: string
+  data: AgentInfo
+}
+
 // Interface for Agent Details Response
 export interface AgentDetailsResponse {
   isSuccess: boolean
@@ -835,8 +859,69 @@ export interface BillLookupRequestParams {
 
 // ========== END BILL LOOKUP INTERFACES ==========
 
+// ========== AGENT SUMMARY INTERFACES ==========
+
+export enum TimeRange {
+  Today = "today",
+  Yesterday = "yesterday",
+  ThisWeek = "thisWeek",
+  ThisMonth = "thisMonth",
+  LastMonth = "lastMonth",
+  ThisYear = "thisYear",
+  LastYear = "lastYear",
+  AllTime = "allTime",
+}
+
+export interface CollectionByChannel {
+  channel: PaymentChannel
+  amount: number
+  count: number
+  percentage: number
+}
+
+export interface AgentSummaryPeriod {
+  range: TimeRange
+  collectedAmount: number
+  collectedCount: number
+  pendingAmount: number
+  pendingCount: number
+  cashClearedAmount: number
+  cashClearanceCount: number
+  billingDisputesRaised: number
+  billingDisputesResolved: number
+  changeRequestsRaised: number
+  changeRequestsResolved: number
+  outstandingCashEstimate: number
+  collectionsByChannel: CollectionByChannel[]
+}
+
+export interface AgentSummaryData {
+  generatedAtUtc: string
+  periods: AgentSummaryPeriod[]
+}
+
+export interface AgentSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: AgentSummaryData
+}
+
+// ========== END AGENT SUMMARY INTERFACES ==========
+
 // Agent State
 interface AgentState {
+  // Current logged-in agent info state
+  agentInfo: AgentInfo | null
+  agentInfoLoading: boolean
+  agentInfoError: string | null
+  agentInfoSuccess: boolean
+
+  // Agent summary state
+  agentSummary: AgentSummaryData | null
+  agentSummaryLoading: boolean
+  agentSummaryError: string | null
+  agentSummarySuccess: boolean
+
   // Agents list state
   agents: Agent[]
   loading: boolean
@@ -971,6 +1056,19 @@ interface AgentState {
 
 // Initial state
 const initialState: AgentState = {
+  // Agent Info initial state
+  agentInfo: null,
+  agentInfoLoading: false,
+  agentInfoError: null,
+  agentInfoSuccess: false,
+
+  // Agent Summary initial state
+  agentSummary: null,
+  agentSummaryLoading: false,
+  agentSummaryError: null,
+  agentSummarySuccess: false,
+
+  // Rest of the initial state
   agents: [],
   loading: false,
   error: null,
@@ -1074,6 +1172,50 @@ const initialState: AgentState = {
 }
 
 // Async thunks
+
+// ========== AGENT INFO ASYNC THUNK ==========
+export const fetchAgentInfo = createAsyncThunk("agents/fetchAgentInfo", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<AgentInfoResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.AGENT_INFO))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch agent info")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Agent info not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch agent info")
+    }
+    return rejectWithValue(error.message || "Network error during agent info fetch")
+  }
+})
+
+// ========== AGENT SUMMARY ASYNC THUNK ==========
+export const fetchAgentSummary = createAsyncThunk("agents/fetchAgentSummary", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<AgentSummaryResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.AGENT_SUMMARY))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch agent summary")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Agent summary not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch agent summary")
+    }
+    return rejectWithValue(error.message || "Network error during agent summary fetch")
+  }
+})
 
 // ========== BILL LOOKUP ASYNC THUNK ==========
 export const lookupBill = createAsyncThunk("agents/lookupBill", async (billNumber: string, { rejectWithValue }) => {
@@ -1555,6 +1697,38 @@ const agentSlice = createSlice({
   name: "agents",
   initialState,
   reducers: {
+    // Clear agent info state
+    clearAgentInfo: (state) => {
+      state.agentInfo = null
+      state.agentInfoError = null
+      state.agentInfoSuccess = false
+      state.agentInfoLoading = false
+    },
+
+    // Clear agent summary state
+    clearAgentSummary: (state) => {
+      state.agentSummary = null
+      state.agentSummaryError = null
+      state.agentSummarySuccess = false
+      state.agentSummaryLoading = false
+    },
+
+    // Set agent info (for when we get agent info from other sources)
+    setAgentInfo: (state, action: PayloadAction<AgentInfo>) => {
+      state.agentInfo = action.payload
+      state.agentInfoSuccess = true
+      state.agentInfoError = null
+      state.agentInfoLoading = false
+    },
+
+    // Set agent summary (for when we get agent summary from other sources)
+    setAgentSummary: (state, action: PayloadAction<AgentSummaryData>) => {
+      state.agentSummary = action.payload
+      state.agentSummarySuccess = true
+      state.agentSummaryError = null
+      state.agentSummaryLoading = false
+    },
+
     // Clear agents state
     clearAgents: (state) => {
       state.agents = []
@@ -1572,6 +1746,8 @@ const agentSlice = createSlice({
 
     // Clear errors
     clearError: (state) => {
+      state.agentInfoError = null
+      state.agentSummaryError = null
       state.error = null
       state.currentAgentError = null
       state.addAgentError = null
@@ -1666,6 +1842,14 @@ const agentSlice = createSlice({
 
     // Reset agent state
     resetAgentState: (state) => {
+      state.agentInfo = null
+      state.agentInfoLoading = false
+      state.agentInfoError = null
+      state.agentInfoSuccess = false
+      state.agentSummary = null
+      state.agentSummaryLoading = false
+      state.agentSummaryError = null
+      state.agentSummarySuccess = false
       state.agents = []
       state.loading = false
       state.error = null
@@ -1895,6 +2079,20 @@ const agentSlice = createSlice({
       }
     },
 
+    // Update agent info cash at hand (after clearance)
+    updateAgentInfoCashAtHand: (state, action: PayloadAction<number>) => {
+      if (state.agentInfo) {
+        state.agentInfo.cashAtHand = action.payload
+      }
+    },
+
+    // Update agent info performance score
+    updateAgentInfoPerformanceScore: (state, action: PayloadAction<number>) => {
+      if (state.agentInfo) {
+        state.agentInfo.monthlyPerformanceScore = action.payload
+      }
+    },
+
     // Set bill lookup data (for when we get bill data from other sources)
     setBillLookup: (state, action: PayloadAction<BillDetails>) => {
       state.billLookup = action.payload
@@ -1908,9 +2106,134 @@ const agentSlice = createSlice({
       state.billLookupSuccess = false
       state.billLookupError = null
     },
+
+    // Update agent summary after payment
+    updateAgentSummaryAfterPayment: (state, action: PayloadAction<{ amount: number; channel: PaymentChannel }>) => {
+      if (state.agentSummary) {
+        const { amount, channel } = action.payload
+
+        // Update all time periods that include current time
+        const now = new Date()
+        const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+        state.agentSummary.periods.forEach((period) => {
+          if (currentPeriods.includes(period.range)) {
+            // Update collected amount and count
+            period.collectedAmount += amount
+            period.collectedCount += 1
+
+            // Update collections by channel
+            const channelIndex = period.collectionsByChannel.findIndex((c) => c.channel === channel)
+            if (channelIndex !== -1) {
+              const channelEntry = period.collectionsByChannel[channelIndex]
+              if (channelEntry) {
+                channelEntry.amount += amount
+                channelEntry.count += 1
+              }
+            } else {
+              period.collectionsByChannel.push({
+                channel,
+                amount,
+                count: 1,
+                percentage: 0, // Will need to recalculate percentages
+              })
+            }
+
+            // Recalculate percentages for all channels
+            const total = period.collectionsByChannel.reduce((sum, c) => sum + c.amount, 0)
+            period.collectionsByChannel.forEach((c) => {
+              c.percentage = total > 0 ? (c.amount / total) * 100 : 0
+            })
+          }
+        })
+      }
+    },
+
+    // Update agent summary after cash clearance
+    updateAgentSummaryAfterClearance: (state, action: PayloadAction<{ amount: number }>) => {
+      if (state.agentSummary) {
+        const { amount } = action.payload
+
+        // Update all time periods that include current time
+        const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+        state.agentSummary.periods.forEach((period) => {
+          if (currentPeriods.includes(period.range)) {
+            // Update cash cleared amount and count
+            period.cashClearedAmount += amount
+            period.cashClearanceCount += 1
+
+            // Update outstanding cash estimate
+            if (period.outstandingCashEstimate >= amount) {
+              period.outstandingCashEstimate -= amount
+            }
+          }
+        })
+      }
+    },
+
+    // Update agent summary after change request
+    updateAgentSummaryAfterChangeRequest: (state, action: PayloadAction<{ isResolved: boolean }>) => {
+      if (state.agentSummary) {
+        const { isResolved } = action.payload
+
+        // Update all time periods that include current time
+        const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+        state.agentSummary.periods.forEach((period) => {
+          if (currentPeriods.includes(period.range)) {
+            if (isResolved) {
+              period.changeRequestsResolved += 1
+            } else {
+              period.changeRequestsRaised += 1
+            }
+          }
+        })
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Agent Info cases
+      .addCase(fetchAgentInfo.pending, (state) => {
+        state.agentInfoLoading = true
+        state.agentInfoError = null
+        state.agentInfoSuccess = false
+        state.agentInfo = null
+      })
+      .addCase(fetchAgentInfo.fulfilled, (state, action: PayloadAction<AgentInfo>) => {
+        state.agentInfoLoading = false
+        state.agentInfoSuccess = true
+        state.agentInfo = action.payload
+        state.agentInfoError = null
+      })
+      .addCase(fetchAgentInfo.rejected, (state, action) => {
+        state.agentInfoLoading = false
+        state.agentInfoError = (action.payload as string) || "Failed to fetch agent info"
+        state.agentInfoSuccess = false
+        state.agentInfo = null
+      })
+
+      // Agent Summary cases
+      .addCase(fetchAgentSummary.pending, (state) => {
+        state.agentSummaryLoading = true
+        state.agentSummaryError = null
+        state.agentSummarySuccess = false
+        state.agentSummary = null
+      })
+      .addCase(fetchAgentSummary.fulfilled, (state, action: PayloadAction<AgentSummaryData>) => {
+        state.agentSummaryLoading = false
+        state.agentSummarySuccess = true
+        state.agentSummary = action.payload
+        state.agentSummaryError = null
+      })
+      .addCase(fetchAgentSummary.rejected, (state, action) => {
+        state.agentSummaryLoading = false
+        state.agentSummaryError = (action.payload as string) || "Failed to fetch agent summary"
+        state.agentSummarySuccess = false
+        state.agentSummary = null
+      })
+
       // Bill Lookup cases
       .addCase(lookupBill.pending, (state) => {
         state.billLookupLoading = true
@@ -2069,6 +2392,11 @@ const agentSlice = createSlice({
             state.currentAgent.cashAtHand = action.payload.data.cashAtHandAfter
           }
 
+          // Update agent info's cash at hand if it's the same agent
+          if (state.agentInfo && state.agentInfo.agentId === action.payload.agentId) {
+            state.agentInfo.cashAtHand = action.payload.data.cashAtHandAfter
+          }
+
           // Update agent in list if exists
           const index = state.agents.findIndex((agent) => agent.id === action.payload.agentId)
           if (index !== -1) {
@@ -2093,6 +2421,19 @@ const agentSlice = createSlice({
           // Add to beginning of clearances list and update pagination
           state.clearances.unshift(newClearance)
           state.clearancesPagination.totalCount += 1
+
+          // Update agent summary
+          if (state.agentSummary) {
+            const amount = action.payload.data.amountCleared
+            const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+            state.agentSummary.periods.forEach((period) => {
+              if (currentPeriods.includes(period.range)) {
+                period.cashClearedAmount += amount
+                period.cashClearanceCount += 1
+              }
+            })
+          }
         }
       )
       .addCase(clearCash.rejected, (state, action) => {
@@ -2158,6 +2499,17 @@ const agentSlice = createSlice({
           state.changeRequestSuccess = true
           state.changeRequestError = null
           state.changeRequestResponse = action.payload.data
+
+          // Update agent summary
+          if (state.agentSummary) {
+            const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+            state.agentSummary.periods.forEach((period) => {
+              if (currentPeriods.includes(period.range)) {
+                period.changeRequestsRaised += 1
+              }
+            })
+          }
         }
       )
       .addCase(submitChangeRequest.rejected, (state, action) => {
@@ -2303,6 +2655,17 @@ const agentSlice = createSlice({
             state.changeRequestDetails.approvedAtUtc = action.payload.data.approvedAtUtc
             state.changeRequestDetails.approvedBy = action.payload.data.approvedBy
           }
+
+          // Update agent summary
+          if (state.agentSummary) {
+            const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+            state.agentSummary.periods.forEach((period) => {
+              if (currentPeriods.includes(period.range)) {
+                period.changeRequestsResolved += 1
+              }
+            })
+          }
         }
       )
       .addCase(approveChangeRequest.rejected, (state, action) => {
@@ -2356,6 +2719,17 @@ const agentSlice = createSlice({
           if (state.changeRequestDetails && state.changeRequestDetails.publicId === action.payload.publicId) {
             state.changeRequestDetails.status = 2 // Set status to DECLINED
             state.changeRequestDetails.declinedReason = action.payload.data.declinedReason
+          }
+
+          // Update agent summary (declined requests are also considered resolved)
+          if (state.agentSummary) {
+            const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+            state.agentSummary.periods.forEach((period) => {
+              if (currentPeriods.includes(period.range)) {
+                period.changeRequestsResolved += 1
+              }
+            })
           }
         }
       )
@@ -2422,6 +2796,40 @@ const agentSlice = createSlice({
         state.paymentsPagination.totalPages = Math.ceil(
           state.paymentsPagination.totalCount / state.paymentsPagination.pageSize
         )
+
+        // Update agent summary
+        if (state.agentSummary) {
+          const { amount, channel } = action.payload.data
+          const currentPeriods = ["today", "thisWeek", "thisMonth", "thisYear", "allTime"]
+
+          state.agentSummary.periods.forEach((period) => {
+            if (currentPeriods.includes(period.range)) {
+              // Update collected amount and count
+              period.collectedAmount += amount
+              period.collectedCount += 1
+
+              // Update collections by channel
+              const existingChannel = period.collectionsByChannel.find((c) => c.channel === channel)
+              if (existingChannel) {
+                existingChannel.amount += amount
+                existingChannel.count += 1
+              } else {
+                period.collectionsByChannel.push({
+                  channel,
+                  amount,
+                  count: 1,
+                  percentage: 0, // Will need to recalculate percentages
+                })
+              }
+
+              // Recalculate percentages for all channels
+              const total = period.collectionsByChannel.reduce((sum, c) => sum + c.amount, 0)
+              period.collectionsByChannel.forEach((c) => {
+                c.percentage = total > 0 ? (c.amount / total) * 100 : 0
+              })
+            }
+          })
+        }
       })
       .addCase(createAgentPayment.rejected, (state, action) => {
         state.createPaymentLoading = false
@@ -2433,6 +2841,10 @@ const agentSlice = createSlice({
 })
 
 export const {
+  clearAgentInfo,
+  clearAgentSummary,
+  setAgentInfo,
+  setAgentSummary,
   clearAgents,
   clearError,
   clearCurrentAgent,
@@ -2460,8 +2872,13 @@ export const {
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
   updateCurrentAgentCashAtHand,
+  updateAgentInfoCashAtHand,
+  updateAgentInfoPerformanceScore,
   setBillLookup,
   clearBillLookupData,
+  updateAgentSummaryAfterPayment,
+  updateAgentSummaryAfterClearance,
+  updateAgentSummaryAfterChangeRequest,
 } = agentSlice.actions
 
 export default agentSlice.reducer
