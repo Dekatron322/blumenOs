@@ -2,12 +2,13 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
 import {
+  CashClearanceIcon,
   CollectCash,
   CustomeraIcon,
   MakeChangeRequestIcon,
@@ -26,6 +27,8 @@ import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementI
 import CashCollectionsTable from "components/Tables/CashCollections"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
+import { useAppDispatch } from "lib/hooks/useRedux"
+import { TimeRange, fetchAgentInfo, fetchAgentSummary } from "lib/redux/agentSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -35,25 +38,25 @@ const SkeletonLoader = () => {
         <motion.div
           key={index}
           className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-          initial={{ opacity: 0.6 }}
+          initial={{ opacity: 0.8 }}
           animate={{
-            opacity: [0.6, 1, 0.6],
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
+            opacity: [0.8, 1, 0.8],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
           }}
         >
           <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="size-6 rounded-full bg-gray-200"></div>
-            <div className="h-4 w-32 rounded bg-gray-200"></div>
+            <div className="h-6 w-6 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+            <div className="h-4 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
           </div>
           <div className="flex flex-col gap-3 pt-4">
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex w-full justify-between">
-                <div className="h-4 w-24 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
+                <div className="h-4 w-24 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                <div className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
               </div>
             ))}
           </div>
@@ -68,7 +71,7 @@ const CategoriesSkeleton = () => {
   return (
     <div className="w-full rounded-md border bg-white p-5 lg:w-80">
       <div className="border-b pb-4">
-        <div className="h-6 w-40 rounded bg-gray-200"></div>
+        <div className="h-6 w-40 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
       </div>
 
       <div className="mt-4 space-y-3">
@@ -76,15 +79,15 @@ const CategoriesSkeleton = () => {
           <div key={index} className="rounded-lg border bg-white p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-5 w-12 rounded bg-gray-200"></div>
-                <div className="h-5 w-20 rounded bg-gray-200"></div>
+                <div className="h-5 w-12 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                <div className="h-5 w-20 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
               </div>
-              <div className="h-4 w-16 rounded bg-gray-200"></div>
+              <div className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             </div>
             <div className="mt-3 space-y-1">
               <div className="flex justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
+                <div className="h-4 w-20 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                <div className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
               </div>
             </div>
           </div>
@@ -93,12 +96,12 @@ const CategoriesSkeleton = () => {
 
       {/* Summary Skeleton */}
       <div className="mt-6 rounded-lg bg-gray-50 p-3">
-        <div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
+        <div className="mb-2 h-5 w-20 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
         <div className="space-y-1">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex justify-between">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="h-4 w-12 rounded bg-gray-200"></div>
+              <div className="h-4 w-24 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+              <div className="h-4 w-12 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             </div>
           ))}
         </div>
@@ -113,12 +116,15 @@ const TableSkeleton = () => {
     <div className="flex-1 rounded-md border bg-white p-5">
       {/* Header Skeleton */}
       <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
+        <div className="h-8 w-40 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
         <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-          <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
+          <div className="h-10 w-full animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] sm:w-80"></div>
           <div className="flex gap-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200 max-sm:w-20"></div>
+              <div
+                key={i}
+                className="h-10 w-24 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] max-sm:w-20"
+              ></div>
             ))}
           </div>
         </div>
@@ -127,145 +133,82 @@ const TableSkeleton = () => {
       {/* Grid View Skeleton */}
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, index) => (
-          <div key={index} className="rounded-lg border bg-white p-4 shadow-sm">
+          <motion.div
+            key={index}
+            className="rounded-lg border bg-white p-4 shadow-sm"
+            initial={{ opacity: 0.8 }}
+            animate={{
+              opacity: [0.8, 1, 0.8],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: index * 0.1,
+            }}
+          >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-gray-200"></div>
+                <div className="h-12 w-12 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                 <div>
-                  <div className="h-5 w-32 rounded bg-gray-200"></div>
+                  <div className="h-5 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                   <div className="mt-1 flex gap-2">
-                    <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                    <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                    <div className="h-6 w-20 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                   </div>
                 </div>
               </div>
-              <div className="size-6 rounded bg-gray-200"></div>
+              <div className="h-6 w-6 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             </div>
 
             <div className="mt-4 space-y-2">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex justify-between">
-                  <div className="h-4 w-20 rounded bg-gray-200"></div>
-                  <div className="h-4 w-16 rounded bg-gray-200"></div>
+                  <div className="h-4 w-20 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+                  <div className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
                 </div>
               ))}
             </div>
 
             <div className="mt-3 border-t pt-3">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
+              <div className="h-4 w-full animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             </div>
 
             <div className="mt-3 flex gap-2">
-              <div className="h-9 flex-1 rounded bg-gray-200"></div>
+              <div className="h-9 flex-1 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Pagination Skeleton */}
       <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
+          <div className="h-4 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+          <div className="h-8 w-16 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
+          <div className="h-8 w-8 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
           <div className="flex gap-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
+              <div
+                key={i}
+                className="h-7 w-7 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"
+              ></div>
             ))}
           </div>
-          <div className="size-8 rounded bg-gray-200"></div>
+          <div className="h-8 w-8 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
         </div>
 
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
-// List View Skeleton
-const ListSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-          <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200 max-sm:w-20"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* List View Skeleton */}
-      <div className="divide-y">
-        {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-4">
-            <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-gray-200"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-center">
-                    <div className="h-5 w-40 rounded bg-gray-200"></div>
-                    <div className="flex gap-2">
-                      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
-                    ))}
-                  </div>
-                  <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
-                </div>
-              </div>
-
-              <div className="flex w-full items-center justify-between gap-3 lg:w-auto">
-                <div className="text-right">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-20 rounded bg-gray-200"></div>
-                  <div className="size-6 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
+        <div className="h-4 w-24 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
       </div>
     </div>
   )
 }
 
 // Main Loading Component
-const LoadingState = ({ showCategories = true }) => {
+const LoadingState = ({ showCategories = true }: { showCategories?: boolean }) => {
   return (
     <div className="relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
       {showCategories ? (
@@ -282,25 +225,42 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock agent data
-const generateAgentData = () => {
-  return {
-    activeAgents: 48,
-    collectionsToday: 7200000, // ₦7.2M in kobo
-    targetAchievement: 85.2,
-    lowFloatAlerts: 3,
-  }
-}
-
 export default function AgentManagementDashboard() {
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [agentData, setAgentData] = useState(generateAgentData())
-  const { user, agent } = useSelector((state: RootState) => state.auth)
+  const [activeTimeRange, setActiveTimeRange] = useState<TimeRange>(TimeRange.Today)
+  const { user } = useSelector((state: RootState) => state.auth)
+  const { agentInfo, agentInfoLoading, agentInfoError, agentSummary, agentSummaryLoading, agentSummaryError } =
+    useSelector((state: RootState) => state.agents)
 
-  // Use mock data
-  const { activeAgents, collectionsToday, targetAchievement, lowFloatAlerts } = agentData
+  useEffect(() => {
+    dispatch(fetchAgentInfo())
+    dispatch(fetchAgentSummary())
+  }, [dispatch])
+
+  // Get the active period from agent summary based on the selected time range
+  const activePeriod = agentSummary?.periods?.find((period) => period.range === activeTimeRange)
+
+  // Fallback to the first available period if the selected one isn't present
+  const kpiSource = activePeriod || agentSummary?.periods?.[0]
+
+  // Derive KPI metrics for the summary cards from the summary data (AGENT_SUMMARY response)
+  const summary = kpiSource ?? {
+    collectedAmount: 0,
+    collectedCount: 0,
+    pendingAmount: 0,
+    pendingCount: 0,
+    cashClearedAmount: 0,
+    cashClearanceCount: 0,
+    billingDisputesRaised: 0,
+    billingDisputesResolved: 0,
+    changeRequestsRaised: 0,
+    changeRequestsResolved: 0,
+    outstandingCashEstimate: 0,
+    collectionsByChannel: [],
+  }
 
   // Format currency
   const formatSummaryCurrency = (amount: number) => {
@@ -314,6 +274,19 @@ export default function AgentManagementDashboard() {
     ) // Convert from kobo to millions
   }
 
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return "N/A"
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+    return date.toLocaleString("en-NG", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
@@ -321,15 +294,14 @@ export default function AgentManagementDashboard() {
   const handleAddAgentSuccess = async () => {
     setIsAddAgentModalOpen(false)
     // Refresh data after adding agent
-    setAgentData(generateAgentData())
+    handleRefreshData()
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
-    setTimeout(() => {
-      setAgentData(generateAgentData())
+    Promise.all([dispatch(fetchAgentInfo()), dispatch(fetchAgentSummary())]).finally(() => {
       setIsLoading(false)
-    }, 1000)
+    })
   }
 
   const agentLastName = user?.fullName
@@ -340,6 +312,21 @@ export default function AgentManagementDashboard() {
         .slice(-1)[0]
     : "Agent"
 
+  const timeRanges = [
+    { value: TimeRange.Today, label: "Today" },
+    { value: TimeRange.Yesterday, label: "Yesterday" },
+    { value: TimeRange.ThisWeek, label: "This Week" },
+    { value: TimeRange.ThisMonth, label: "This Month" },
+    { value: TimeRange.LastMonth, label: "Last Month" },
+    { value: TimeRange.ThisYear, label: "This Year" },
+    { value: TimeRange.AllTime, label: "All Time" },
+  ]
+
+  const getTimeRangeLabel = (range: TimeRange) => {
+    const found = timeRanges.find((r) => r.value === range)
+    return found ? found.label : range
+  }
+
   return (
     <section className="size-full">
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
@@ -347,7 +334,7 @@ export default function AgentManagementDashboard() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col px-3 lg:container sm:px-4 xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 ">
+            <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
                 <h4 className="text-xl font-semibold sm:text-2xl">Welcome {agentLastName}</h4>
                 <p className="text-sm text-gray-600 sm:text-base">Overview of your monthly collections</p>
@@ -368,7 +355,7 @@ export default function AgentManagementDashboard() {
                 >
                   <span className="hidden sm:inline">Vend</span>
                 </ButtonModule>
-                {(!agent || agent.cashAtHand < agent.cashCollectionLimit) && (
+                {(!agentInfo || agentInfo.cashAtHand < agentInfo.cashCollectionLimit) && (
                   <ButtonModule
                     variant="outline"
                     size="md"
@@ -381,28 +368,18 @@ export default function AgentManagementDashboard() {
                 )}
 
                 <ButtonModule
-                  variant="outline"
+                  variant="danger"
                   size="md"
                   className="w-full sm:w-auto"
-                  icon={<RaiseTicketIcon />}
-                  onClick={() => router.push("/sales-rep/raise-ticket")}
+                  onClick={() => router.push("/sales-rep/clear-cash")}
                 >
-                  <span className="hidden sm:inline">Raise Ticket</span>
+                  <span className="hidden sm:inline">Clear Cash</span>
                 </ButtonModule>
-                {/* <ButtonModule
-                  variant="outline"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  icon={<MakeChangeRequestIcon />}
-                  onClick={() => router.push("/sales-rep/make-change-request")}
-                >
-                  <span className="hidden sm:inline">Make Change Request</span>
-                </ButtonModule> */}
               </motion.div>
             </div>
 
             {/* Sales Rep Details - Cash at hand vs Collection limit */}
-            {agent && (
+            {agentInfo && (
               <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="mb-3 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                   <div>
@@ -410,37 +387,24 @@ export default function AgentManagementDashboard() {
                     <p className="text-xs text-gray-500 sm:text-sm">
                       Cash at hand and collection limit for your profile
                     </p>
-                    {user && (
-                      <div className="mt-2 space-y-0.5 text-xs text-gray-600 sm:text-sm">
-                        <p className="truncate">
-                          <span className="font-medium text-gray-700">Name:</span> {user.fullName}
-                        </p>
-                        <p className="truncate">
-                          <span className="font-medium text-gray-700">Phone:</span> {user.phoneNumber}
-                        </p>
-                        <p className="truncate">
-                          <span className="font-medium text-gray-700">Email:</span> {user.email}
-                        </p>
-                      </div>
-                    )}
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs sm:text-sm">
                     <div className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
-                      Code: {agent.agentCode}
+                      Code: {agentInfo.agentCode}
                     </div>
                     <div
                       className={`rounded-full px-3 py-1 font-medium ${
-                        agent.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                        agentInfo.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                       }`}
                     >
-                      Status: {agent.status}
+                      Status: {agentInfo.status}
                     </div>
                     <div
                       className={`rounded-full px-3 py-1 font-medium ${
-                        agent.canCollectCash ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                        agentInfo.canCollectCash ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
                       }`}
                     >
-                      Can Collect Cash: {agent.canCollectCash ? "Yes" : "No"}
+                      Can Collect Cash: {agentInfo.canCollectCash ? "Yes" : "No"}
                     </div>
                   </div>
                 </div>
@@ -449,42 +413,72 @@ export default function AgentManagementDashboard() {
                   <div className="flex items-center justify-between text-xs text-gray-600 sm:text-sm">
                     <span>Cash at Hand vs Collection Limit</span>
                     <span className="font-medium text-gray-900">
-                      {formatCurrency(agent.cashAtHand)} / {formatCurrency(agent.cashCollectionLimit)}
+                      {formatCurrency(agentInfo.cashAtHand)} / {formatCurrency(agentInfo.cashCollectionLimit)}
                     </span>
                   </div>
                   <div className="h-3 w-full rounded-full bg-gray-200 sm:h-4">
-                    {agent.cashCollectionLimit > 0 && (
+                    {agentInfo.cashCollectionLimit > 0 && (
                       <div
                         className={`h-3 rounded-full transition-all duration-700 sm:h-4 ${
-                          agent.cashAtHand / agent.cashCollectionLimit > 0.8
+                          agentInfo.cashAtHand / agentInfo.cashCollectionLimit > 0.8
                             ? "bg-red-500"
-                            : agent.cashAtHand / agent.cashCollectionLimit > 0.5
+                            : agentInfo.cashAtHand / agentInfo.cashCollectionLimit > 0.5
                             ? "bg-amber-500"
                             : "bg-emerald-500"
                         }`}
                         style={{
-                          width: `${Math.min((agent.cashAtHand / agent.cashCollectionLimit) * 100, 100).toFixed(1)}%`,
+                          width: `${Math.min((agentInfo.cashAtHand / agentInfo.cashCollectionLimit) * 100, 100).toFixed(
+                            1
+                          )}%`,
                         }}
                       />
                     )}
                   </div>
-                  {agent.cashCollectionLimit > 0 && (
+                  {agentInfo.cashCollectionLimit > 0 && (
                     <div className="text-xs text-gray-500 sm:text-xs">
-                      {((agent.cashAtHand / agent.cashCollectionLimit) * 100).toFixed(1)}% of limit used
+                      {((agentInfo.cashAtHand / agentInfo.cashCollectionLimit) * 100).toFixed(1)}% of limit used
                     </div>
                   )}
                   <div className="grid gap-3 pt-2 sm:grid-cols-2">
                     <div className="rounded-lg bg-blue-50 p-3 sm:p-4">
                       <div className="text-xs font-medium text-blue-600 sm:text-sm">Cash at Hand</div>
                       <div className="text-base font-bold text-blue-900 sm:text-lg">
-                        {formatCurrency(agent.cashAtHand)}
+                        {formatCurrency(agentInfo.cashAtHand)}
                       </div>
                     </div>
                     <div className="rounded-lg bg-emerald-50 p-3 sm:p-4">
                       <div className="text-xs font-medium text-emerald-600 sm:text-sm">Collection Limit</div>
                       <div className="text-base font-bold text-emerald-900 sm:text-lg">
-                        {formatCurrency(agent.cashCollectionLimit)}
+                        {formatCurrency(agentInfo.cashCollectionLimit)}
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional agent details from AGENT_INFO */}
+                <div className="mt-5">
+                  <div className="grid gap-4 text-xs text-gray-600 sm:grid-cols-2 sm:text-sm">
+                    <div className="space-y-1 rounded-lg bg-gray-50 p-3 sm:p-4">
+                      <p className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <span className="text-gray-500">Name</span>
+                        <span className="truncate font-medium text-gray-800">{agentInfo.fullName}</span>
+                      </p>
+                      <p className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <span className="text-gray-500">Phone</span>
+                        <span className="truncate font-medium text-gray-800">{agentInfo.phoneNumber}</span>
+                      </p>
+                    </div>
+                    <div className="space-y-1 rounded-lg bg-gray-50 p-3 sm:p-4">
+                      <p className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <span className="text-gray-500">Email</span>
+                        <span className="truncate font-medium text-gray-800">{agentInfo.email}</span>
+                      </p>
+                      <p className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <span className="text-gray-500">Last Updated</span>
+                        <span className="truncate font-medium text-gray-800">
+                          {formatDateTime(agentInfo.lastCashCollectionDate)}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -492,166 +486,213 @@ export default function AgentManagementDashboard() {
             )}
 
             {/* Main Content Area */}
-            <div className="flex w-full flex-col gap-6 lg:flex-row">
-              <div className="w-full">
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State - Updated Agent Management Dashboard
-                  <>
-                    <motion.div
-                      className="w-full"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="w-full">
-                        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                          {/* Active Agents Card */}
-                          <motion.div
-                            className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                          >
-                            <div className="flex items-center gap-2 border-b pb-4">
+            <div className="mt-6">
+              {/* Time Range Filters for Performance Summary */}
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {/* Desktop: inline buttons */}
+                <div className="hidden rounded-lg bg-white p-2 shadow-sm sm:block">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">Performance Range:</span>
+                    <div className="flex items-center gap-2">
+                      {timeRanges.map((range) => (
+                        <button
+                          key={range.value}
+                          onClick={() => setActiveTimeRange(range.value)}
+                          className={`shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                            activeTimeRange === range.value
+                              ? "bg-[#004B23] text-white"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          }`}
+                        >
+                          {range.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile: dropdown selector */}
+                <div className="w-full sm:hidden">
+                  <div className="rounded-lg bg-white p-3 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-gray-500">Performance Range:</span>
+                      <div className="relative">
+                        <select
+                          value={activeTimeRange}
+                          onChange={(e) => setActiveTimeRange(e.target.value as TimeRange)}
+                          className="block w-40 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          {timeRanges.map((range) => (
+                            <option key={range.value} value={range.value}>
+                              {range.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {agentInfoLoading || agentSummaryLoading ? (
+                <>
+                  <SkeletonLoader />
+                  <LoadingState showCategories={true} />
+                </>
+              ) : (
+                // Loaded State - Updated Agent Management Dashboard
+                <>
+                  <motion.div
+                    className="w-full"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="w-full">
+                      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {/* Collections Summary Card */}
+                        <motion.div
+                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
+                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                        >
+                          <div className="flex items-center justify-between gap-2 border-b pb-4">
+                            <div className="flex items-center gap-2">
                               <div className="text-blue-600">
                                 <MetersProgrammedIcon />
                               </div>
-                              <span className="text-sm font-medium sm:text-base">Total Collections</span>
+                              <span className="text-sm font-medium sm:text-base">Collections Summary</span>
                             </div>
-                            <div className="flex flex-col gap-3 pt-4">
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Total Active:</p>
-                                <p className="text-secondary text-lg font-bold sm:text-xl">
-                                  {formatNumber(activeAgents)}
-                                </p>
-                              </div>
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Status:</p>
-                                <div className="flex items-center gap-1">
-                                  <div className="size-2 rounded-full bg-green-500"></div>
-                                  <p className="text-secondary text-sm font-medium sm:text-base">All Active</p>
-                                </div>
-                              </div>
+                            <div className="text-right">
+                              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 sm:text-xs">
+                                {getTimeRangeLabel(activeTimeRange)}
+                              </p>
                             </div>
-                          </motion.div>
+                          </div>
+                          <div className="flex flex-col gap-3 pt-4">
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Amount Collected:</p>
+                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                                {formatSummaryCurrency(summary.collectedAmount)}
+                              </p>
+                            </div>
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Collections Count:</p>
+                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                                {formatNumber(summary.collectedCount)}
+                              </p>
+                            </div>
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Channels Used:</p>
+                              <p className="text-secondary text-sm font-medium sm:text-base">
+                                {formatNumber(summary.collectionsByChannel?.length ?? 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
 
-                          {/* Collections Today Card */}
-                          <motion.div
-                            className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                          >
-                            <div className="flex items-center gap-2 border-b pb-4">
-                              <div className="text-green-600">
-                                <MetersProgrammedIcon />
-                              </div>
-                              <span className="text-sm font-medium sm:text-base">Collections Today</span>
+                        {/* Pending Collections Card */}
+                        <motion.div
+                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
+                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                        >
+                          <div className="flex items-center gap-2 border-b pb-4">
+                            <div className="text-amber-600">
+                              <MetersProgrammedIcon />
                             </div>
-                            <div className="flex flex-col gap-3 pt-4">
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Amount:</p>
-                                <p className="text-secondary text-lg font-bold sm:text-xl">
-                                  {formatSummaryCurrency(collectionsToday)}
-                                </p>
-                              </div>
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Trend:</p>
-                                <p className="text-secondary text-sm font-medium sm:text-base">
-                                  <span className="text-green-500">↑ 8%</span>{" "}
-                                  <span className="hidden sm:inline">from yesterday</span>
-                                </p>
-                              </div>
+                            <span className="text-sm font-medium sm:text-base">Pending Collections</span>
+                          </div>
+                          <div className="flex flex-col gap-3 pt-4">
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Pending Amount:</p>
+                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                                {formatSummaryCurrency(summary.pendingAmount)}
+                              </p>
                             </div>
-                          </motion.div>
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Pending Count:</p>
+                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                                {formatNumber(summary.pendingCount)}
+                              </p>
+                            </div>
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Outstanding Cash Est.:</p>
+                              <p className="text-secondary text-sm font-medium sm:text-base">
+                                {formatSummaryCurrency(summary.outstandingCashEstimate)}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
 
-                          {/* Target Achievement Card */}
-                          <motion.div
-                            className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                          >
-                            <div className="flex items-center gap-2 border-b pb-4">
-                              <div className="text-green-600">
-                                <VendingIcon />
-                              </div>
-                              <span className="text-sm font-medium sm:text-base">Target Achievement</span>
+                        {/* Cash Clearance Card */}
+                        <motion.div
+                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
+                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                        >
+                          <div className="flex items-center gap-2 border-b pb-4">
+                            <div className="text-green-600">
+                              <VendingIcon />
                             </div>
-                            <div className="flex flex-col gap-3 pt-4">
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Achievement Rate:</p>
-                                <p className="text-secondary text-lg font-bold sm:text-xl">{targetAchievement}%</p>
-                              </div>
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Status:</p>
-                                <div className="flex items-center gap-1">
-                                  <div
-                                    className={`size-2 rounded-full ${
-                                      targetAchievement >= 90
-                                        ? "bg-green-500"
-                                        : targetAchievement >= 80
-                                        ? "bg-yellow-500"
-                                        : "bg-red-500"
-                                    }`}
-                                  ></div>
-                                  <p className="text-secondary text-sm font-medium sm:text-base">
-                                    {targetAchievement >= 90
-                                      ? "Excellent"
-                                      : targetAchievement >= 80
-                                      ? "Good"
-                                      : "Needs Attention"}
-                                  </p>
-                                </div>
-                              </div>
+                            <span className="text-sm font-medium sm:text-base">Cash Clearance</span>
+                          </div>
+                          <div className="flex flex-col gap-3 pt-4">
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Cash Cleared Amount:</p>
+                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                                {formatSummaryCurrency(summary.cashClearedAmount)}
+                              </p>
                             </div>
-                          </motion.div>
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Clearance Count:</p>
+                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                                {formatNumber(summary.cashClearanceCount)}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
 
-                          {/* Low Float Alerts Card */}
-                          <motion.div
-                            className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                          >
-                            <div className="flex items-center gap-2 border-b pb-4">
-                              <div className="text-red-600">
-                                <TamperIcon />
-                              </div>
-                              <span className="text-sm font-medium sm:text-base">Failed Collections</span>
+                        {/* Billing & Change Requests Card */}
+                        <motion.div
+                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
+                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                        >
+                          <div className="flex items-center gap-2 border-b pb-4">
+                            <div className="text-red-600">
+                              <TamperIcon />
                             </div>
-                            <div className="flex flex-col gap-3 pt-4">
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Active Alerts:</p>
-                                <div className="flex items-center gap-1">
-                                  <p className="text-secondary text-lg font-bold sm:text-xl">
-                                    {formatNumber(lowFloatAlerts)}
-                                  </p>
-                                  <ArrowIcon className="size-4" />
-                                </div>
-                              </div>
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Priority:</p>
-                                <p className="text-secondary text-sm font-medium sm:text-base">
-                                  <span className="text-red-500">High</span>{" "}
-                                  <span className="hidden sm:inline">- Requires Action</span>
-                                </p>
-                              </div>
+                            <span className="text-sm font-medium sm:text-base">Disputes & Changes</span>
+                          </div>
+                          <div className="flex flex-col gap-3 pt-4">
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Billing Disputes:</p>
+                              <p className="text-secondary text-right text-sm font-medium sm:text-base">
+                                {`${formatNumber(summary.billingDisputesRaised)} raised / ${formatNumber(
+                                  summary.billingDisputesResolved
+                                )} resolved`}
+                              </p>
                             </div>
-                          </motion.div>
-                        </div>
+                            <div className="flex w-full justify-between">
+                              <p className="text-sm text-gray-600 sm:text-base">Change Requests:</p>
+                              <p className="text-secondary text-right text-sm font-medium sm:text-base">
+                                {`${formatNumber(summary.changeRequestsRaised)} raised / ${formatNumber(
+                                  summary.changeRequestsResolved
+                                )} resolved`}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
                       </div>
-                    </motion.div>
+                    </div>
+                  </motion.div>
 
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
-                    >
-                      <AllPaymentsTable agentId={agent?.id} />
-                    </motion.div>
-                  </>
-                )}
-              </div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="mt-6"
+                  >
+                    <AllPaymentsTable agentId={agentInfo?.agentId} />
+                  </motion.div>
+                </>
+              )}
             </div>
           </div>
         </div>
