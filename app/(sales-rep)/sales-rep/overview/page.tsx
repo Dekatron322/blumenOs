@@ -1,34 +1,18 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
-import {
-  CashClearanceIcon,
-  CollectCash,
-  CustomeraIcon,
-  MakeChangeRequestIcon,
-  MetersProgrammedIcon,
-  PlayIcon,
-  PlusIcon,
-  RaiseTicketIcon,
-  TamperIcon,
-  TokenGeneratedIcon,
-  VendingIcon,
-  VendingIconOutline,
-} from "components/Icons/Icons"
+import { CollectCash, MetersProgrammedIcon, TamperIcon, VendingIcon, VendingIconOutline } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
-import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
-import CashCollectionsTable from "components/Tables/CashCollections"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
 import { useAppDispatch } from "lib/hooks/useRedux"
-import { TimeRange, fetchAgentInfo, fetchAgentSummary } from "lib/redux/agentSlice"
+import { fetchAgentInfo, fetchAgentSummary, TimeRange } from "lib/redux/agentSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
