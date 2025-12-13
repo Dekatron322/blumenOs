@@ -421,16 +421,16 @@ const OutageViewTabe = () => {
       </div>
 
       {/* Right Map Area */}
-      <div className="relative flex-1 rounded-md border bg-white">
+      <div className="relative z-0 flex-1 rounded-md border bg-white xl:z-auto">
         {/* Map Display */}
-        <div className="relative h-[600px] w-full overflow-hidden rounded-md bg-gray-100">
+        <div className="relative z-0 h-[600px] w-full overflow-hidden rounded-md bg-gray-100 xl:z-auto">
           {/* Map Placeholder - In a real app, this would be a map component */}
-          <div ref={mapDivRef} className="h-[600px] w-full rounded-md" />
+          <div ref={mapDivRef} className="relative z-0 h-[600px] w-full rounded-md xl:z-auto" />
 
           {/* Map Controls */}
 
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 z-[1000] rounded-md border bg-white p-4 shadow-lg">
+          <div className="absolute bottom-4 left-4 z-10 rounded-md border bg-white p-4 shadow-lg xl:z-[1000]">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">Legend</h3>
               <div>
@@ -485,7 +485,7 @@ const OutageViewTabe = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1100] flex justify-end bg-black/30 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex justify-end bg-black/30 backdrop-blur-sm xl:z-[1100]"
           onClick={() => setSelectedCustomerDetails(null)}
         >
           <motion.div
@@ -577,7 +577,7 @@ const OutageViewTabe = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1100] flex justify-end bg-black/30 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex justify-end bg-black/30 backdrop-blur-sm xl:z-[1100]"
           onClick={() => setSelectedAssetDetails(null)}
         >
           <motion.div

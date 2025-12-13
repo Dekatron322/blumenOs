@@ -572,3 +572,27 @@ body {
 .text-grey-300 {
   @apply text-[#94A3B8];
 }
+
+/* Fix Leaflet map z-index on mobile to prevent overlapping sidebar */
+@media (max-width: 1279px) {
+  .leaflet-container,
+  .leaflet-pane,
+  .leaflet-map-pane,
+  .leaflet-tile-pane,
+  .leaflet-overlay-pane,
+  .leaflet-shadow-pane,
+  .leaflet-marker-pane,
+  .leaflet-tooltip-pane,
+  .leaflet-popup-pane {
+    z-index: 0 !important;
+  }
+
+  .leaflet-control-container {
+    z-index: 10 !important;
+  }
+
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 10 !important;
+  }
+}
