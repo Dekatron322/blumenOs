@@ -6,6 +6,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
@@ -16,6 +17,7 @@ import {
   lookupBill,
   PaymentChannel,
 } from "lib/redux/agentSlice"
+import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { lookupCustomer } from "lib/redux/customerSlice"
 
 const channelOptions = [
@@ -34,6 +36,7 @@ const CollectPaymentPage: React.FC = () => {
     (state) => state.agents
   )
   const { customerLookupLoading } = useAppSelector((state) => state.customers)
+  const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
 
   const [lookupMode, setLookupMode] = useState<"bill" | "customer">("bill")
   const [billNumber, setBillNumber] = useState("")
@@ -55,10 +58,13 @@ const CollectPaymentPage: React.FC = () => {
   const [channel, setChannel] = useState<PaymentChannel | "">(PaymentChannel.Cash)
   const [paidAt, setPaidAt] = useState<string>(new Date().toISOString().slice(0, 16))
   const [narrative, setNarrative] = useState("")
+  const [paymentTypeId, setPaymentTypeId] = useState<number | "">("")
 
   useEffect(() => {
     dispatch(clearBillLookup())
     dispatch(clearCreatePayment())
+    // Load payment types for payment type selection
+    dispatch(fetchPaymentTypes())
   }, [dispatch])
 
   useEffect(() => {
@@ -234,15 +240,16 @@ const CollectPaymentPage: React.FC = () => {
       return
     }
 
-    if (!paidAt) {
-      notify("error", "Please select the payment date and time")
+    if (!paymentTypeId || typeof paymentTypeId !== "number") {
+      notify("error", "Please select a payment type")
       return
     }
 
-    const paidAtUtc = new Date(paidAt).toISOString()
+    // Set payment timestamp in the background using the current time
+    const paidAtUtc = new Date().toISOString()
 
     const payload = {
-      paymentTypeId: 1,
+      paymentTypeId,
       amount,
       channel: channel as PaymentChannel,
       currency: "NGN",
@@ -446,26 +453,38 @@ const CollectPaymentPage: React.FC = () => {
 
                 {lookupMode === "bill" && billLookup && (
                   <form onSubmit={handleSubmitPayment} className="mt-4 space-y-5">
-                    <div className="rounded-md border border-dashed border-[#004b23] bg-[#004b23]/5 p-4 text-sm">
+                    <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-[#004b23]">Customer:</span>
-                        <span className="text-[#002e16]">{billLookup.customerName}</span>
+                        <span className="font-medium text-[#004B23]">Customer:</span>
+                        <span className="font-medium text-[#004B23]">{billLookup.customerName}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-[#004b23]">Account Number:</span>
-                        <span className="text-[#002e16]">{billLookup.customerAccountNumber}</span>
+                        <span className="font-medium text-[#004B23]">Account Number:</span>
+                        <span className="font-medium text-[#004B23]">{billLookup.customerAccountNumber}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-[#004b23]">Bill Period:</span>
-                        <span className="text-[#002e16]">{billLookup.period}</span>
+                        <span className="font-medium text-[#004B23]">Bill Period:</span>
+                        <span className="font-medium text-[#004B23]">{billLookup.period}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium text-[#004b23]">Total Due:</span>
-                        <span className="text-[#002e16]">₦{billLookup.totalDue.toLocaleString()}</span>
+                        <span className="font-medium text-[#004B23]">Total Due:</span>
+                        <span className="font-semibold text-[#004B23]">₦{billLookup.totalDue.toLocaleString()}</span>
                       </div>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
+                      <FormSelectModule
+                        label="Payment Type"
+                        name="paymentTypeId"
+                        value={paymentTypeId}
+                        onChange={({ target }) => setPaymentTypeId(Number(target.value))}
+                        options={[
+                          { value: "", label: "Select payment type" },
+                          ...paymentTypes.filter((pt) => pt.isActive).map((pt) => ({ value: pt.id, label: pt.name })),
+                        ]}
+                        required
+                      />
+
                       <FormInputModule
                         label="Amount"
                         name="amount"
@@ -505,16 +524,6 @@ const CollectPaymentPage: React.FC = () => {
                       />
 
                       <FormInputModule
-                        label="Payment Date & Time"
-                        name="paidAtUtc"
-                        type="datetime-local"
-                        value={paidAt}
-                        onChange={(e) => setPaidAt(e.target.value)}
-                        required
-                        placeholder={""}
-                      />
-
-                      <FormInputModule
                         label="Narrative (optional)"
                         name="narrative"
                         type="text"
@@ -532,7 +541,6 @@ const CollectPaymentPage: React.FC = () => {
                         onClick={() => {
                           setAmountInput("")
                           setChannel(PaymentChannel.Cash)
-                          setPaidAt(new Date().toISOString().slice(0, 16))
                           setNarrative("")
                         }}
                         disabled={createPaymentLoading}
@@ -617,16 +625,6 @@ const CollectPaymentPage: React.FC = () => {
                       />
 
                       <FormInputModule
-                        label="Payment Date & Time"
-                        name="paidAtUtc"
-                        type="datetime-local"
-                        value={paidAt}
-                        onChange={(e) => setPaidAt(e.target.value)}
-                        required
-                        placeholder={""}
-                      />
-
-                      <FormInputModule
                         label="Narrative (optional)"
                         name="narrative"
                         type="text"
@@ -644,7 +642,6 @@ const CollectPaymentPage: React.FC = () => {
                         onClick={() => {
                           setAmountInput("")
                           setChannel(PaymentChannel.Cash)
-                          setPaidAt(new Date().toISOString().slice(0, 16))
                           setNarrative("")
                         }}
                         disabled={createPaymentLoading}
@@ -664,6 +661,24 @@ const CollectPaymentPage: React.FC = () => {
                   </form>
                 )}
               </motion.div>
+            </div>
+
+            {/* Customer Transaction History */}
+            <div className="mt-8">
+              {(() => {
+                const historyCustomerId =
+                  lookupMode === "customer" ? customerInfo?.id : billLookup?.customerId ?? undefined
+
+                if (!historyCustomerId) return null
+
+                return (
+                  <div className="rounded-md border bg-white p-5 shadow-sm">
+                    <h2 className="mb-3 text-base font-semibold text-gray-800">Customer Transaction History</h2>
+                    <p className="mb-4 text-sm text-gray-600">Recent payments recorded for this customer.</p>
+                    <AllPaymentsTable customerId={historyCustomerId} />
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </div>

@@ -195,9 +195,10 @@ const LoadingSkeleton = () => {
 
 interface AllPaymentsTableProps {
   agentId?: number
+  customerId?: number
 }
 
-const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
+const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
@@ -253,6 +254,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
       pageNumber: currentPage,
       pageSize: pageSize,
       ...(agentId !== undefined && { agentId }),
+      ...(customerId !== undefined && { customerId }),
       ...(searchText && { search: searchText }),
       ...(filters.status && { status: filters.status as PaymentStatus }),
       ...(filters.channel && { channel: filters.channel as PaymentChannel }),
@@ -260,7 +262,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
     }
 
     dispatch(fetchPayments(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, filters, agentId])
+  }, [dispatch, currentPage, pageSize, searchText, filters, agentId, customerId])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -444,10 +446,43 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
   }
 
   if (paymentsLoading) return <LoadingSkeleton />
-  if (paymentsError) return <div className="p-4 text-red-500">Error loading payments data: {paymentsError}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+      {/* Summary Statistics (Payment Breakdown) */}
+      {payments.length > 0 && (
+        <motion.div
+          className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <div className="rounded-lg border border-[#004B23]/20 bg-[#004B23]/5 p-4 shadow-sm">
+            <div className="text-xs font-medium uppercase tracking-wide text-[#004B23]/80">Total Amount</div>
+            <div className="mt-1 text-xl font-semibold text-[#004B23]">
+              {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
+            </div>
+          </div>
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
+            <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">Confirmed</div>
+            <div className="mt-1 text-xl font-semibold text-emerald-900">
+              {payments.filter((p) => p.status === PaymentStatus.Confirmed).length}
+            </div>
+          </div>
+          <div className="rounded-lg border border-amber-100 bg-amber-50 p-4 shadow-sm">
+            <div className="text-xs font-medium uppercase tracking-wide text-amber-700">Pending</div>
+            <div className="mt-1 text-xl font-semibold text-amber-900">
+              {payments.filter((p) => p.status === PaymentStatus.Pending).length}
+            </div>
+          </div>
+          <div className="rounded-lg border border-red-100 bg-red-50 p-4 shadow-sm">
+            <div className="text-xs font-medium uppercase tracking-wide text-red-700">Failed</div>
+            <div className="mt-1 text-xl font-semibold text-red-900">
+              {payments.filter((p) => p.status === PaymentStatus.Failed).length}
+            </div>
+          </div>
+        </motion.div>
+      )}
       <motion.div
         className="items-center justify-between border-b py-2 md:flex md:py-4"
         initial={{ y: -10, opacity: 0 }}
@@ -457,16 +492,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
         <div>
           <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payments</p>
           <p className="text-sm text-gray-600">View and manage all payment transactions</p>
-        </div>
-        <div className="flex gap-4">
-          <SearchModule
-            value={searchText}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            placeholder="Search payments..."
-            className="w-[380px]"
-            bgClassName="bg-white"
-          />
         </div>
       </motion.div>
 
@@ -518,6 +543,13 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
           </motion.button>
         )}
       </motion.div>
+
+      {/* Error Message */}
+      {paymentsError && (
+        <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
+          <p>Error loading payments: {paymentsError}</p>
+        </div>
+      )}
 
       {payments.length === 0 ? (
         <motion.div
@@ -808,41 +840,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId }) => {
             </div>
           </motion.div>
         </>
-      )}
-
-      {/* Summary Statistics */}
-      {payments.length > 0 && (
-        <motion.div
-          className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="text-sm text-gray-600">Total Amount</div>
-            <div className="text-xl font-semibold">
-              {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="text-sm text-gray-600">Confirmed Payments</div>
-            <div className="text-xl font-semibold text-green-600">
-              {payments.filter((p) => p.status === PaymentStatus.Confirmed).length}
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="text-sm text-gray-600">Pending Payments</div>
-            <div className="text-xl font-semibold text-yellow-600">
-              {payments.filter((p) => p.status === PaymentStatus.Pending).length}
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="text-sm text-gray-600">Failed Payments</div>
-            <div className="text-xl font-semibold text-red-600">
-              {payments.filter((p) => p.status === PaymentStatus.Failed).length}
-            </div>
-          </div>
-        </motion.div>
       )}
     </motion.div>
   )
