@@ -140,11 +140,6 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
           <ButtonModule variant="primary" className="flex-1" size="md" onClick={handleCopy}>
             {isCopying ? "Copied" : "Copy payment info"}
           </ButtonModule>
-          {onConfirm && (
-            <ButtonModule variant="success" className="flex-1" size="md" onClick={onConfirm} disabled={isCopying}>
-              Confirm payment
-            </ButtonModule>
-          )}
         </div>
       </motion.div>
     </motion.div>
