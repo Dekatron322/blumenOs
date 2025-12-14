@@ -1,10 +1,9 @@
 <img align="right" width="360px" height="410px" src="./.github/assets/project-logo-vertical.png">
 
-# Next.js Enterprise Boilerplate </br> [![GitHub Actions Workflow Status][check-workflow-badge]][check-workflow-badge-link] [![GitHub License][github-license-badge]][github-license-badge-link] [![GitHub contributors][github-contributors-badge]][github-contributors-badge-link] [![Discord][discord-badge]][discord-badge-link] [![Blazity][made-by-blazity-badge]][made-by-blazity-badge-link]
+# blumenOs – Energy Management & Customer Portal </br> [![GitHub Actions Workflow Status][check-workflow-badge]][check-workflow-badge-link] [![GitHub License][github-license-badge]][github-license-badge-link] [![GitHub contributors][github-contributors-badge]][github-contributors-badge-link] [![Discord][discord-badge]][discord-badge-link] [![Blazity][made-by-blazity-badge]][made-by-blazity-badge-link]
 
-Ultra Dashboard
-This is the admin dashboard for Ultra App, a system built for seamless, lightning-fast transactions .
-Instant transfer of money, swaping crypto to naira in seconds, make Ultra-to-Ultra transfers, pay bills, use virtual debit cards, and so much more.
+blumenOs is a multi-tenant web platform for electricity distribution and revenue management.
+It provides customer self‑service portals, internal dashboards for staff and sales reps, billing and payment flows, and rich analytics – all built on top of a production‑ready Next.js enterprise setup.
 
 ## Features
 
@@ -36,7 +35,7 @@ With this template, you get all the awesomeness you need:
 
 ## Table of Contents
 
-- [Ultra Dashboard]
+- [blumenOs – Energy Management & Customer Portal]
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#-getting-started)
@@ -60,15 +59,27 @@ With this template, you get all the awesomeness you need:
   - [License](#-license)
   - [Contributors](#contributors)
 
+## 🧩 Project Overview
+
+This repository contains multiple apps and dashboards served from a single Next.js codebase, including:
+
+- Customer portal (postpaid and prepaid views, overview dashboard, make payment, buy units, etc.)
+- Internal payment and billing tools
+- Sales‑rep and agent collection flows
+- Asset and agent management areas
+- Analytics views for consumption, billing, and performance
+
+The project is built on top of the **Next.js Enterprise Boilerplate**, but the structure, routes, and components are tailored specifically for the blumenOs domain.
+
 ## 🎯 Getting Started
 
-To get started with this App, follow these steps:
+To get started with this project locally, follow these steps:
 
-1. Fork & clone repository:
+1. Clone the repository:
 
 ```bash
-## Don't forget to ⭐ star and fork it first :)
-git clone https://github.com/<your_username)/next-enterprise.git
+git clone https://github.com/Dekatron322/blumenOs.git
+cd blumenOs
 ```
 
 2. Install the dependencies:
