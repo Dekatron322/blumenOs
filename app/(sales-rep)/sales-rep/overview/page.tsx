@@ -792,7 +792,7 @@ export default function AgentManagementDashboard() {
                 </ButtonModule>
                 {(!agentInfo || agentInfo.cashAtHand < agentInfo.cashCollectionLimit) && (
                   <ButtonModule
-                    variant="danger"
+                    variant="blue"
                     size="md"
                     className="w-full sm:w-auto"
                     icon={<CollectCash />}

@@ -10,6 +10,9 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import { useRouter } from "next/navigation"
 import { Customer, fetchCustomers, setFilters, setPagination } from "lib/redux/customerSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
 
 type SortOrder = "asc" | "desc" | null
@@ -313,6 +316,7 @@ const MobileFilterSkeleton = () => (
 )
 
 const AllCustomers = () => {
+  const [searchInput, setSearchInput] = useState("")
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
@@ -332,6 +336,8 @@ const AllCustomers = () => {
   // Redux hooks
   const dispatch = useAppDispatch()
   const { customers, loading, error, pagination, filters } = useAppSelector((state) => state.customers)
+  const { serviceStations } = useAppSelector((state) => state.serviceStations)
+  const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
 
   // Fetch customers on component mount and when filters/pagination change
   useEffect(() => {
@@ -342,15 +348,61 @@ const AllCustomers = () => {
           pageSize: pagination.pageSize,
           search: filters.search,
           status: filters.status,
-          isSuspended: filters.isSuspended || undefined,
-          distributionSubstationId: filters.distributionSubstationId || undefined,
-          serviceCenterId: filters.serviceCenterId || undefined,
+          // Only send optional params when they are explicitly set, so the API
+          // receives the exact filter state the user selected.
+          isSuspended: filters.isSuspended !== null ? filters.isSuspended : undefined,
+          distributionSubstationId:
+            filters.distributionSubstationId !== null ? filters.distributionSubstationId : undefined,
+          serviceCenterId: filters.serviceCenterId !== null ? filters.serviceCenterId : undefined,
         })
       )
     }
 
     fetchData()
   }, [dispatch, pagination.currentPage, pagination.pageSize, filters])
+
+  // Sync local search input with Redux filters on mount/filters change
+  useEffect(() => {
+    setSearchInput(filters.search)
+  }, [filters.search])
+
+  // Debounce search input before updating Redux filters
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      // Only trigger backend search when input is cleared or has
+      // a meaningful length (e.g. 3+ chars) to avoid noisy calls
+      const trimmed = searchInput.trim()
+      const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+      if (shouldUpdate && trimmed !== filters.search) {
+        dispatch(setFilters({ search: trimmed }))
+        dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+      }
+    }, 500)
+
+    return () => clearTimeout(handler)
+  }, [searchInput, filters.search, dispatch, pagination.pageSize])
+
+  // Fetch service centers and distribution substations for filters
+  useEffect(() => {
+    if (!serviceStations.length) {
+      dispatch(
+        fetchServiceStations({
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      )
+    }
+
+    if (!distributionSubstations.length) {
+      dispatch(
+        fetchDistributionSubstations({
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      )
+    }
+  }, [dispatch, serviceStations.length, distributionSubstations.length])
 
   // Generate assets when customer is selected
   useEffect(() => {
@@ -432,12 +484,13 @@ const AllCustomers = () => {
 
   // Search and filter handlers
   const handleSearchChange = (value: string) => {
-    dispatch(setFilters({ search: value }))
-    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setSearchInput(value)
   }
 
   const handleCancelSearch = () => {
+    setSearchInput("")
     dispatch(setFilters({ search: "" }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -449,6 +502,20 @@ const AllCustomers = () => {
     dispatch(setFilters({ status }))
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
     setIsStatusFilterOpen(false)
+  }
+
+  const handleServiceCenterFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
+    const id = value ? Number(value) : null
+    dispatch(setFilters({ serviceCenterId: id }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  const handleDistributionSubstationFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
+    const id = value ? Number(value) : null
+    dispatch(setFilters({ distributionSubstationId: id }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
   const changePage = (page: number) => {
@@ -942,13 +1009,42 @@ const AllCustomers = () => {
                 </button>
 
                 {/* Desktop/Tablet search input */}
-                <div className="hidden sm:block">
+                <div className="hidden lg:block">
                   <SearchModule
-                    value={filters.search}
+                    value={searchInput}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onCancel={handleCancelSearch}
                     placeholder="Search by name, account number, or meter number"
                     className="w-full max-w-full md:max-w-[300px]"
+                  />
+                </div>
+                <div className="hidden lg:block">
+                  <FormSelectModule
+                    label=""
+                    name="distributionSubstationId"
+                    value={filters.distributionSubstationId ?? ""}
+                    onChange={handleDistributionSubstationFilterChange}
+                    options={[
+                      { value: "", label: "All DSS" },
+                      ...distributionSubstations.map((dss) => ({ value: dss.id, label: dss.dssCode })),
+                    ]}
+                    className="w-full md:w-48"
+                    controlClassName="h-9"
+                  />
+                </div>
+                {/* Service Center filter */}
+                <div className="hidden md:block">
+                  <FormSelectModule
+                    label=""
+                    name="serviceCenterId"
+                    value={filters.serviceCenterId ?? ""}
+                    onChange={handleServiceCenterFilterChange}
+                    options={[
+                      { value: "", label: "All Service Centers" },
+                      ...serviceStations.map((sc) => ({ value: sc.id, label: sc.name })),
+                    ]}
+                    className="w-full md:w-48"
+                    controlClassName="h-9"
                   />
                 </div>
               </div>
@@ -958,7 +1054,7 @@ const AllCustomers = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={filters.search}
+                  value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
                   placeholder="Search by name, account number, or meter number"

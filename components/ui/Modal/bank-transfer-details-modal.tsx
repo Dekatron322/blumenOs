@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -10,14 +10,50 @@ interface BankTransferDetailsModalProps {
   isOpen: boolean
   onRequestClose: () => void
   virtualAccount: VirtualAccount | null
+  onConfirm?: () => void
 }
 
 const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
   isOpen,
   onRequestClose,
   virtualAccount,
+  onConfirm,
 }) => {
   const [isCopying, setIsCopying] = useState(false)
+  const [timeLeft, setTimeLeft] = useState<string>("")
+  useEffect(() => {
+    if (!virtualAccount || !virtualAccount.expiresAtUtc) return
+
+    const calculateTimeLeft = () => {
+      const expiresAt = new Date(virtualAccount.expiresAtUtc).getTime()
+      const now = Date.now()
+      const diff = expiresAt - now
+
+      if (diff <= 0) {
+        setTimeLeft("Expired")
+        return
+      }
+
+      const totalSeconds = Math.floor(diff / 1000)
+      const hours = Math.floor(totalSeconds / 3600)
+      const minutes = Math.floor((totalSeconds % 3600) / 60)
+      const seconds = totalSeconds % 60
+
+      const parts = [] as string[]
+      if (hours > 0) parts.push(`${hours}h`)
+      if (minutes > 0 || hours > 0) parts.push(`${minutes}m`)
+      parts.push(`${seconds}s`)
+
+      setTimeLeft(parts.join(" "))
+    }
+
+    // Initial calculation
+    calculateTimeLeft()
+
+    const intervalId = setInterval(calculateTimeLeft, 1000)
+
+    return () => clearInterval(intervalId)
+  }, [virtualAccount])
 
   if (!isOpen || !virtualAccount) return null
 
@@ -49,7 +85,7 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[90vw] max-w-lg rounded-lg bg-white shadow-2xl"
+        className="relative w-[90vw] max-w-2xl rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4">
@@ -69,9 +105,11 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
           </p>
 
           <div className="mt-4 space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-            <div className="flex justify-between gap-4">
-              <span className="font-medium">Account Number:</span>
-              <span className="font-semibold">{virtualAccount.accountNumber}</span>
+            <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
+              <span className="text-xs font-semibold uppercase tracking-wide text-green-700">Account Number</span>
+              <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 sm:text-5xl">
+                {virtualAccount.accountNumber}
+              </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="font-medium">Bank Name:</span>
@@ -83,12 +121,19 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
             </div>
             <div className="flex justify-between gap-4">
               <span className="font-medium">Expires At:</span>
-              <span className="font-semibold">{new Date(virtualAccount.expiresAtUtc).toLocaleString()}</span>
+              <span className="flex flex-col items-end text-right">
+                <span className="font-semibold">{new Date(virtualAccount.expiresAtUtc).toLocaleString()}</span>
+                {timeLeft && (
+                  <span className="text-xs font-medium text-red-600">
+                    {timeLeft === "Expired" ? "Expired" : `Time remaining: ${timeLeft}`}
+                  </span>
+                )}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-4 border-t bg-white px-6 py-4">
+        <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 sm:flex-row sm:gap-4">
           <ButtonModule variant="secondary" className="flex-1" size="md" onClick={onRequestClose}>
             Close
           </ButtonModule>

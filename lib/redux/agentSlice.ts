@@ -461,6 +461,12 @@ export interface Payment {
   feederName: string
   paymentTypeId: number
   paymentTypeName: string
+  virtualAccount?: {
+    accountNumber: string
+    bankName: string
+    reference: string
+    expiresAtUtc: string
+  }
 }
 
 export interface PaymentsResponse {
