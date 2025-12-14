@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
 
 FROM node:20-bullseye-slim AS base
-ENV NODE_ENV=production
 WORKDIR /app
 
 FROM base AS deps
+ENV NODE_ENV=development
 RUN set -eux; \
   export DEBIAN_FRONTEND=noninteractive; \
   for i in 1 2 3; do \
@@ -27,6 +27,7 @@ COPY . .
 RUN yarn build
 
 FROM base AS prod-deps
+ENV NODE_ENV=production
 RUN set -eux; \
   export DEBIAN_FRONTEND=noninteractive; \
   for i in 1 2 3; do \
