@@ -10,12 +10,12 @@ import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  fetchPaymentChannels,
   clearBillLookup,
   clearCreatePayment,
   clearPaymentChannels,
   CollectorType,
   createAgentPayment,
+  fetchPaymentChannels,
   lookupBill,
   PaymentChannel,
 } from "lib/redux/agentSlice"
@@ -616,19 +616,21 @@ const CollectPaymentPage: React.FC = () => {
                     <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
                         <span className="font-medium text-[#004B23]">Customer:</span>
-                        <span className="font-medium text-[#004B23]">{billLookup.customerName}</span>
+                        <span className="text-base font-bold text-[#004B23]">{billLookup.customerName}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-[#004B23]">Account Number:</span>
-                        <span className="font-medium text-[#004B23]">{billLookup.customerAccountNumber}</span>
+                        <span className=" text-[#004B23]">Account Number:</span>
+                        <span className="text-base font-bold text-[#004B23]">{billLookup.customerAccountNumber}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
                         <span className="font-medium text-[#004B23]">Bill Period:</span>
-                        <span className="font-medium text-[#004B23]">{billLookup.period}</span>
+                        <span className="text-base font-bold text-[#004B23]">{billLookup.period}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="font-medium text-[#004B23]">Total Due:</span>
-                        <span className="font-semibold text-[#004B23]">₦{billLookup.totalDue.toLocaleString()}</span>
+                        <span className="text-base font-bold text-[#004B23]">
+                          ₦{billLookup.totalDue.toLocaleString()}
+                        </span>
                       </div>
                     </div>
 
@@ -777,24 +779,24 @@ const CollectPaymentPage: React.FC = () => {
 
                 {lookupMode === "customer" && customerInfo && (
                   <form onSubmit={handleSubmitPayment} className="mt-4 space-y-5">
-                    <div className="rounded-md border bg-gray-50 p-4 text-sm">
+                    <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-gray-700">Customer:</span>
-                        <span className="text-gray-900">{customerInfo.fullName}</span>
+                        <span className="font-medium text-[#004B23]">Customer:</span>
+                        <span className="text-base font-bold text-[#004B23]">{customerInfo.fullName}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-gray-700">Account Number:</span>
-                        <span className="text-gray-900">{customerInfo.accountNumber}</span>
+                        <span className="font-medium text-[#004B23]">Account Number:</span>
+                        <span className="text-base font-bold text-[#004B23]">{customerInfo.accountNumber}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-gray-700">Status:</span>
-                        <span className="text-gray-900">
+                        <span className="font-medium text-[#004B23]">Status:</span>
+                        <span className="text-base font-bold text-[#004B23]">
                           {customerInfo.isSuspended ? "Suspended" : customerInfo.status || "Active"}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium text-gray-700">Outstanding Balance:</span>
-                        <span className="text-gray-900">
+                        <span className="font-medium text-[#004B23]">Outstanding Balance:</span>
+                        <span className="text-base font-bold text-[#004B23]">
                           ₦{Number(customerInfo.customerOutstandingDebtBalance ?? 0).toLocaleString()}
                         </span>
                       </div>
