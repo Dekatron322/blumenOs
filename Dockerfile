@@ -5,21 +5,35 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 FROM base AS deps
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential python3 ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+  export DEBIAN_FRONTEND=noninteractive; \
+  for i in 1 2 3; do \
+    apt-get update && \
+    apt-get install -y --no-install-recommends build-essential python3 ca-certificates && \
+    break; \
+    echo "apt-get failed, retrying ($i/3)..." >&2; \
+    sleep 5; \
+  done; \
+  rm -rf /var/lib/apt/lists/*
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 FROM deps AS builder
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 COPY . .
 RUN yarn build
 
 FROM base AS prod-deps
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential python3 ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+  export DEBIAN_FRONTEND=noninteractive; \
+  for i in 1 2 3; do \
+    apt-get update && \
+    apt-get install -y --no-install-recommends build-essential python3 ca-certificates && \
+    break; \
+    echo "apt-get failed, retrying ($i/3)..." >&2; \
+    sleep 5; \
+  done; \
+  rm -rf /var/lib/apt/lists/*
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile --production --ignore-scripts
 
