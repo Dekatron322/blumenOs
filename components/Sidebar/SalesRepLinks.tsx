@@ -63,13 +63,10 @@ interface SalesRepLinksProps {
 export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   const pathname = usePathname()
   const [permissions, setPermissions] = useState<string[]>([])
-  const [links, setLinks] = useState<NavLink[]>([])
-  const [isClient, setIsClient] = useState(false)
+  const [links, setLinks] = useState<NavLink[]>(allLinks)
   const { agent } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
-    setIsClient(true)
-
     // Get auth data from localStorage
     const getAuthData = () => {
       if (typeof window !== "undefined") {
@@ -117,11 +114,6 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
     })
     setLinks(filteredLinks)
   }, [permissions, agent])
-
-  // Only guard against server-side render; on client, fall back to showing links even without authData
-  if (!isClient) {
-    return null
-  }
 
   return (
     <div className="flex w-full flex-col space-y-1 overflow-y-auto p-2">

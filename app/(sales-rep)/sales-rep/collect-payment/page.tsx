@@ -12,27 +12,24 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearBillLookup,
   clearCreatePayment,
+  clearPaymentChannels,
   CollectorType,
   createAgentPayment,
+  fetchPaymentChannels,
   lookupBill,
   PaymentChannel,
 } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { lookupCustomer } from "lib/redux/customerSlice"
 
-const channelOptions = [
-  { value: "", label: "Select payment channel" },
-  { value: PaymentChannel.Cash, label: "Cash" },
-  { value: PaymentChannel.BankTransfer, label: "Bank Transfer" },
-  { value: PaymentChannel.Pos, label: "POS" },
-  { value: PaymentChannel.Card, label: "Card" },
-]
-
 const CollectPaymentPage: React.FC = () => {
   const dispatch = useAppDispatch()
 
   const { billLookup, billLookupLoading, billLookupError } = useAppSelector((state) => state.agents)
   const { createPaymentLoading, createPaymentError, createPaymentSuccess, createdPayment } = useAppSelector(
+    (state) => state.agents
+  )
+  const { paymentChannels, paymentChannelsLoading, paymentChannelsError, paymentChannelsSuccess } = useAppSelector(
     (state) => state.agents
   )
   const { customerLookupLoading } = useAppSelector((state) => state.customers)
@@ -59,10 +56,34 @@ const CollectPaymentPage: React.FC = () => {
   const [paidAt, setPaidAt] = useState<string>(new Date().toISOString().slice(0, 16))
   const [narrative, setNarrative] = useState("")
   const [paymentTypeId, setPaymentTypeId] = useState<number | "">("")
+  const [availableChannels, setAvailableChannels] = useState<PaymentChannel[]>([])
+  const [isFetchingChannels, setIsFetchingChannels] = useState(false)
+  const [lastFetchedAmount, setLastFetchedAmount] = useState<number | null>(null)
+
+  // Generate channel options based on available channels
+  const channelOptions = [
+    { value: "", label: "Select payment channel" },
+    ...availableChannels.map((channel) => ({
+      value: channel,
+      label: channel.replace(/([A-Z])/g, " $1").trim(),
+    })),
+  ]
+
+  // If no channels are available yet, show a loading state
+  const defaultChannelOptions = [
+    { value: "", label: "Select payment channel" },
+    { value: PaymentChannel.Cash, label: "Cash" },
+    { value: PaymentChannel.BankTransfer, label: "Bank Transfer" },
+    { value: PaymentChannel.Pos, label: "POS" },
+    { value: PaymentChannel.Card, label: "Card" },
+    { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
+    { value: PaymentChannel.Chaque, label: "Cheque" },
+  ]
 
   useEffect(() => {
     dispatch(clearBillLookup())
     dispatch(clearCreatePayment())
+    dispatch(clearPaymentChannels())
     // Load payment types for payment type selection
     dispatch(fetchPaymentTypes())
   }, [dispatch])
@@ -103,6 +124,89 @@ const CollectPaymentPage: React.FC = () => {
     }
   }, [createPaymentError])
 
+  // Fetch payment channels when amount changes
+  useEffect(() => {
+    const fetchChannelsForAmount = async () => {
+      const rawAmount = amountInput.replace(/,/g, "").trim()
+      const amount = Number(rawAmount)
+
+      // Only fetch if we have a valid amount and it's different from the last fetched amount
+      if (rawAmount && !Number.isNaN(amount) && amount > 0 && amount !== lastFetchedAmount) {
+        setIsFetchingChannels(true)
+        try {
+          const result = await dispatch(fetchPaymentChannels({ amount })).unwrap()
+
+          if (result && result.channels && Array.isArray(result.channels)) {
+            setAvailableChannels(result.channels)
+            setLastFetchedAmount(amount)
+
+            // If current selected channel is not in available channels, reset it
+            if (channel && !result.channels.includes(channel as PaymentChannel)) {
+              setChannel(result.channels[0] || "")
+            }
+
+            // Show message if there are limitations
+            if (result.message) {
+              console.log("Channel restrictions:", result.message)
+            }
+          }
+        } catch (error: any) {
+          console.error("Failed to fetch payment channels:", error)
+          // Fallback to all channels if API fails
+          setAvailableChannels([
+            PaymentChannel.Cash,
+            PaymentChannel.BankTransfer,
+            PaymentChannel.Pos,
+            PaymentChannel.Card,
+            PaymentChannel.VendorWallet,
+            PaymentChannel.Chaque,
+          ])
+        } finally {
+          setIsFetchingChannels(false)
+        }
+      } else if (!rawAmount || amount <= 0) {
+        // Reset available channels when amount is cleared or invalid
+        setAvailableChannels([])
+        setLastFetchedAmount(null)
+      }
+    }
+
+    // Debounce the API call
+    const timeoutId = setTimeout(() => {
+      fetchChannelsForAmount()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [amountInput, dispatch, channel, lastFetchedAmount])
+
+  // When payment channels are fetched via Redux, update local state
+  useEffect(() => {
+    if (paymentChannels && paymentChannels.channels && Array.isArray(paymentChannels.channels)) {
+      setAvailableChannels(paymentChannels.channels)
+
+      // If current selected channel is not in available channels, reset it
+      if (channel && !paymentChannels.channels.includes(channel as PaymentChannel)) {
+        setChannel(paymentChannels.channels[0] || "")
+      }
+    }
+  }, [paymentChannels, channel])
+
+  // Show error if payment channels fetch fails
+  useEffect(() => {
+    if (paymentChannelsError) {
+      console.error("Payment channels error:", paymentChannelsError)
+      // Fallback to all channels on error
+      setAvailableChannels([
+        PaymentChannel.Cash,
+        PaymentChannel.BankTransfer,
+        PaymentChannel.Pos,
+        PaymentChannel.Card,
+        PaymentChannel.VendorWallet,
+        PaymentChannel.Chaque,
+      ])
+    }
+  }, [paymentChannelsError])
+
   const handleLookupBill = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -112,6 +216,7 @@ const CollectPaymentPage: React.FC = () => {
     }
 
     dispatch(clearBillLookup())
+    dispatch(clearPaymentChannels())
 
     try {
       const result = await dispatch(lookupBill(billNumber.trim()))
@@ -174,6 +279,7 @@ const CollectPaymentPage: React.FC = () => {
     }
 
     setCustomerInfo(null)
+    dispatch(clearPaymentChannels())
 
     try {
       setIsValidatingCustomer(true)
@@ -240,16 +346,29 @@ const CollectPaymentPage: React.FC = () => {
       return
     }
 
-    if (!paymentTypeId || typeof paymentTypeId !== "number") {
-      notify("error", "Please select a payment type")
+    if (lookupMode === "customer") {
+      if (!paymentTypeId || typeof paymentTypeId !== "number") {
+        notify("error", "Please select a payment type")
+        return
+      }
+    }
+
+    // Validate if selected channel is available for this amount
+    if (availableChannels.length > 0 && !availableChannels.includes(channel as PaymentChannel)) {
+      notify("error", "Selected payment channel is not available for this amount", {
+        description: "Please select one of the available channels listed above",
+        duration: 6000,
+      })
       return
     }
 
     // Set payment timestamp in the background using the current time
     const paidAtUtc = new Date().toISOString()
 
+    const finalPaymentTypeId = lookupMode === "bill" ? 1 : (paymentTypeId as number)
+
     const payload = {
-      paymentTypeId,
+      paymentTypeId: finalPaymentTypeId,
       amount,
       channel: channel as PaymentChannel,
       currency: "NGN",
@@ -272,6 +391,41 @@ const CollectPaymentPage: React.FC = () => {
     } catch (error: any) {
       notify("error", error.message || "Failed to record payment")
     }
+  }
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/,/g, "").trim()
+
+    if (raw === "") {
+      setAmountInput("")
+      return
+    }
+
+    if (!/^\d*(\.\d*)?$/.test(raw)) {
+      return
+    }
+
+    const [intPart, decimalPart] = raw.split(".")
+    const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
+    const formatted = decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
+    setAmountInput(formatted)
+  }
+
+  const handleChannelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as PaymentChannel | ""
+    setChannel(value)
+  }
+
+  const handlePaymentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPaymentTypeId(Number(e.target.value))
+  }
+
+  const resetForm = () => {
+    setAmountInput("")
+    setChannel(availableChannels[0] || PaymentChannel.Cash)
+    setNarrative("")
+    setPaymentTypeId("")
+    dispatch(clearPaymentChannels())
   }
 
   return (
@@ -308,6 +462,9 @@ const CollectPaymentPage: React.FC = () => {
                       setLookupMode("bill")
                       setCustomerReference("")
                       setCustomerInfo(null)
+                      resetForm()
+                      dispatch(clearBillLookup())
+                      dispatch(clearPaymentChannels())
                     }}
                     className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
                       lookupMode === "bill"
@@ -322,7 +479,9 @@ const CollectPaymentPage: React.FC = () => {
                     onClick={() => {
                       setLookupMode("customer")
                       setBillNumber("")
+                      resetForm()
                       dispatch(clearBillLookup())
+                      dispatch(clearPaymentChannels())
                     }}
                     className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
                       lookupMode === "customer"
@@ -370,7 +529,7 @@ const CollectPaymentPage: React.FC = () => {
                           onClick={() => {
                             dispatch(clearBillLookup())
                             setBillNumber("")
-                            setAmountInput("")
+                            resetForm()
                           }}
                           disabled={billLookupLoading}
                         >
@@ -415,6 +574,7 @@ const CollectPaymentPage: React.FC = () => {
                           onClick={() => {
                             setCustomerReference("")
                             setCustomerInfo(null)
+                            resetForm()
                           }}
                           disabled={isValidatingCustomer || customerLookupLoading}
                         >
@@ -456,72 +616,104 @@ const CollectPaymentPage: React.FC = () => {
                     <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
                         <span className="font-medium text-[#004B23]">Customer:</span>
-                        <span className="font-medium text-[#004B23]">{billLookup.customerName}</span>
+                        <span className="text-base font-bold text-[#004B23]">{billLookup.customerName}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-[#004B23]">Account Number:</span>
-                        <span className="font-medium text-[#004B23]">{billLookup.customerAccountNumber}</span>
+                        <span className=" text-[#004B23]">Account Number:</span>
+                        <span className="text-base font-bold text-[#004B23]">{billLookup.customerAccountNumber}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
                         <span className="font-medium text-[#004B23]">Bill Period:</span>
-                        <span className="font-medium text-[#004B23]">{billLookup.period}</span>
+                        <span className="text-base font-bold text-[#004B23]">{billLookup.period}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="font-medium text-[#004B23]">Total Due:</span>
-                        <span className="font-semibold text-[#004B23]">₦{billLookup.totalDue.toLocaleString()}</span>
+                        <span className="text-base font-bold text-[#004B23]">
+                          ₦{billLookup.totalDue.toLocaleString()}
+                        </span>
                       </div>
                     </div>
 
+                    {/* Payment Channels Info */}
+                    {paymentChannels && (
+                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-medium text-blue-800">Payment Limits & Info</span>
+                          {isFetchingChannels && (
+                            <span className="text-xs text-blue-600">Checking availability...</span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                          <div>
+                            <span className="font-medium">Cash at Hand:</span>{" "}
+                            <span>₦{(paymentChannels.cashAtHand || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Collection Limit:</span>{" "}
+                            <span>₦{(paymentChannels.cashCollectionLimit || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Max Single Cash Amount:</span>{" "}
+                            <span>₦{(paymentChannels.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Available Channels:</span>{" "}
+                            <span>{availableChannels.length}</span>
+                          </div>
+                        </div>
+                        {paymentChannels.message && (
+                          <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <FormSelectModule
-                        label="Payment Type"
-                        name="paymentTypeId"
-                        value={paymentTypeId}
-                        onChange={({ target }) => setPaymentTypeId(Number(target.value))}
-                        options={[
-                          { value: "", label: "Select payment type" },
-                          ...paymentTypes.filter((pt) => pt.isActive).map((pt) => ({ value: pt.id, label: pt.name })),
-                        ]}
-                        required
-                      />
+                      <div className="flex flex-col gap-1 text-sm">
+                        <span className="font-medium text-gray-700">Payment Type</span>
+                        <span className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-800">
+                          Bills payment (fixed)
+                        </span>
+                      </div>
 
-                      <FormInputModule
-                        label="Amount"
-                        name="amount"
-                        type="text"
-                        placeholder="Enter payment amount"
-                        value={amountInput}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/,/g, "").trim()
+                      <div>
+                        <FormInputModule
+                          label="Amount"
+                          name="amount"
+                          type="text"
+                          placeholder="Enter payment amount"
+                          value={amountInput}
+                          onChange={handleAmountChange}
+                          required
+                          min="0.01"
+                          step="0.01"
+                          prefix="₦"
+                        />
+                        {isFetchingChannels && (
+                          <p className="mt-1 text-xs text-blue-600">Checking available payment channels...</p>
+                        )}
+                      </div>
 
-                          if (raw === "") {
-                            setAmountInput("")
-                            return
-                          }
-
-                          if (!/^\d*(\.\d*)?$/.test(raw)) {
-                            return
-                          }
-
-                          const [intPart, decimalPart] = raw.split(".")
-                          const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
-                          const formatted = decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
-                          setAmountInput(formatted)
-                        }}
-                        required
-                        min="0.01"
-                        step="0.01"
-                        prefix="₦"
-                      />
-
-                      <FormSelectModule
-                        label="Payment Channel"
-                        name="channel"
-                        value={channel}
-                        onChange={({ target }) => setChannel(target.value as PaymentChannel | "")}
-                        options={channelOptions}
-                        required
-                      />
+                      <div>
+                        <FormSelectModule
+                          label="Payment Channel"
+                          name="channel"
+                          value={channel}
+                          onChange={handleChannelChange}
+                          options={availableChannels.length > 0 ? channelOptions : defaultChannelOptions}
+                          required
+                          disabled={isFetchingChannels || availableChannels.length === 0}
+                        />
+                        {availableChannels.length === 0 && amountInput && !isFetchingChannels && (
+                          <p className="mt-1 text-xs text-amber-600">
+                            Enter an amount to see available payment channels
+                          </p>
+                        )}
+                        {availableChannels.length > 0 && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            {availableChannels.length} channel{availableChannels.length !== 1 ? "s" : ""} available
+                          </p>
+                        )}
+                      </div>
 
                       <FormInputModule
                         label="Narrative (optional)"
@@ -533,16 +725,41 @@ const CollectPaymentPage: React.FC = () => {
                       />
                     </div>
 
+                    {/* Available Channels Display */}
+                    {availableChannels.length > 0 && (
+                      <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+                        <p className="mb-2 text-sm font-medium text-gray-700">Available Payment Channels:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {availableChannels.map((availableChannel) => (
+                            <span
+                              key={availableChannel}
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                                channel === availableChannel
+                                  ? "bg-[#004B23] text-white"
+                                  : "border border-gray-300 bg-white text-gray-700"
+                              }`}
+                            >
+                              {availableChannel.replace(/([A-Z])/g, " $1").trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentChannelsError && (
+                      <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                        <p className="text-sm text-red-600">
+                          Unable to fetch payment channel restrictions. All channels available.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                       <ButtonModule
                         type="button"
                         variant="secondary"
                         className="w-full sm:w-auto"
-                        onClick={() => {
-                          setAmountInput("")
-                          setChannel(PaymentChannel.Cash)
-                          setNarrative("")
-                        }}
+                        onClick={resetForm}
                         disabled={createPaymentLoading}
                       >
                         Reset
@@ -552,7 +769,7 @@ const CollectPaymentPage: React.FC = () => {
                         type="submit"
                         variant="primary"
                         className="w-full sm:w-auto"
-                        disabled={createPaymentLoading}
+                        disabled={createPaymentLoading || isFetchingChannels}
                       >
                         {createPaymentLoading ? "Recording..." : "Record Payment"}
                       </ButtonModule>
@@ -562,67 +779,114 @@ const CollectPaymentPage: React.FC = () => {
 
                 {lookupMode === "customer" && customerInfo && (
                   <form onSubmit={handleSubmitPayment} className="mt-4 space-y-5">
-                    <div className="rounded-md border bg-gray-50 p-4 text-sm">
+                    <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-gray-700">Customer:</span>
-                        <span className="text-gray-900">{customerInfo.fullName}</span>
+                        <span className="font-medium text-[#004B23]">Customer:</span>
+                        <span className="text-base font-bold text-[#004B23]">{customerInfo.fullName}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-gray-700">Account Number:</span>
-                        <span className="text-gray-900">{customerInfo.accountNumber}</span>
+                        <span className="font-medium text-[#004B23]">Account Number:</span>
+                        <span className="text-base font-bold text-[#004B23]">{customerInfo.accountNumber}</span>
                       </div>
                       <div className="mb-2 flex justify-between">
-                        <span className="font-medium text-gray-700">Status:</span>
-                        <span className="text-gray-900">
+                        <span className="font-medium text-[#004B23]">Status:</span>
+                        <span className="text-base font-bold text-[#004B23]">
                           {customerInfo.isSuspended ? "Suspended" : customerInfo.status || "Active"}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium text-gray-700">Outstanding Balance:</span>
-                        <span className="text-gray-900">
+                        <span className="font-medium text-[#004B23]">Outstanding Balance:</span>
+                        <span className="text-base font-bold text-[#004B23]">
                           ₦{Number(customerInfo.customerOutstandingDebtBalance ?? 0).toLocaleString()}
                         </span>
                       </div>
                     </div>
 
+                    {/* Payment Channels Info */}
+                    {paymentChannels && (
+                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-medium text-blue-800">Payment Limits & Info</span>
+                          {isFetchingChannels && (
+                            <span className="text-xs text-blue-600">Checking availability...</span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                          <div>
+                            <span className="font-medium">Cash at Hand:</span>{" "}
+                            <span>₦{(paymentChannels.cashAtHand || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Collection Limit:</span>{" "}
+                            <span>₦{(paymentChannels.cashCollectionLimit || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Max Single Cash Amount:</span>{" "}
+                            <span>₦{(paymentChannels.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Available Channels:</span>{" "}
+                            <span>{availableChannels.length}</span>
+                          </div>
+                        </div>
+                        {paymentChannels.message && (
+                          <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <FormInputModule
-                        label="Amount"
-                        name="amount"
-                        type="text"
-                        placeholder="Enter payment amount"
-                        value={amountInput}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/,/g, "").trim()
-
-                          if (raw === "") {
-                            setAmountInput("")
-                            return
-                          }
-
-                          if (!/^\d*(\.\d*)?$/.test(raw)) {
-                            return
-                          }
-
-                          const [intPart, decimalPart] = raw.split(".")
-                          const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
-                          const formatted = decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
-                          setAmountInput(formatted)
-                        }}
-                        required
-                        min="0.01"
-                        step="0.01"
-                        prefix="₦"
-                      />
-
                       <FormSelectModule
-                        label="Payment Channel"
-                        name="channel"
-                        value={channel}
-                        onChange={({ target }) => setChannel(target.value as PaymentChannel | "")}
-                        options={channelOptions}
+                        label="Payment Type"
+                        name="paymentTypeId"
+                        value={paymentTypeId}
+                        onChange={handlePaymentTypeChange}
+                        options={[
+                          { value: "", label: "Select payment type" },
+                          ...paymentTypes.filter((pt) => pt.isActive).map((pt) => ({ value: pt.id, label: pt.name })),
+                        ]}
                         required
                       />
+
+                      <div>
+                        <FormInputModule
+                          label="Amount"
+                          name="amount"
+                          type="text"
+                          placeholder="Enter payment amount"
+                          value={amountInput}
+                          onChange={handleAmountChange}
+                          required
+                          min="0.01"
+                          step="0.01"
+                          prefix="₦"
+                        />
+                        {isFetchingChannels && (
+                          <p className="mt-1 text-xs text-blue-600">Checking available payment channels...</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <FormSelectModule
+                          label="Payment Channel"
+                          name="channel"
+                          value={channel}
+                          onChange={handleChannelChange}
+                          options={availableChannels.length > 0 ? channelOptions : defaultChannelOptions}
+                          required
+                          disabled={isFetchingChannels || availableChannels.length === 0}
+                        />
+                        {availableChannels.length === 0 && amountInput && !isFetchingChannels && (
+                          <p className="mt-1 text-xs text-amber-600">
+                            Enter an amount to see available payment channels
+                          </p>
+                        )}
+                        {availableChannels.length > 0 && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            {availableChannels.length} channel{availableChannels.length !== 1 ? "s" : ""} available
+                          </p>
+                        )}
+                      </div>
 
                       <FormInputModule
                         label="Narrative (optional)"
@@ -634,16 +898,41 @@ const CollectPaymentPage: React.FC = () => {
                       />
                     </div>
 
+                    {/* Available Channels Display */}
+                    {availableChannels.length > 0 && (
+                      <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+                        <p className="mb-2 text-sm font-medium text-gray-700">Available Payment Channels:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {availableChannels.map((availableChannel) => (
+                            <span
+                              key={availableChannel}
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                                channel === availableChannel
+                                  ? "bg-[#004B23] text-white"
+                                  : "border border-gray-300 bg-white text-gray-700"
+                              }`}
+                            >
+                              {availableChannel.replace(/([A-Z])/g, " $1").trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentChannelsError && (
+                      <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                        <p className="text-sm text-red-600">
+                          Unable to fetch payment channel restrictions. All channels available.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                       <ButtonModule
                         type="button"
                         variant="secondary"
                         className="w-full sm:w-auto"
-                        onClick={() => {
-                          setAmountInput("")
-                          setChannel(PaymentChannel.Cash)
-                          setNarrative("")
-                        }}
+                        onClick={resetForm}
                         disabled={createPaymentLoading}
                       >
                         Reset
@@ -653,7 +942,7 @@ const CollectPaymentPage: React.FC = () => {
                         type="submit"
                         variant="primary"
                         className="w-full sm:w-auto"
-                        disabled={createPaymentLoading}
+                        disabled={createPaymentLoading || isFetchingChannels}
                       >
                         {createPaymentLoading ? "Recording..." : "Record Payment"}
                       </ButtonModule>
