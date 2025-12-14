@@ -7,8 +7,10 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
+import BankTransferDetailsModal from "components/ui/Modal/bank-transfer-details-modal"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import type { VirtualAccount } from "lib/redux/paymentSlice"
 import {
   clearBillLookup,
   clearCreatePayment,
@@ -59,6 +61,8 @@ const CollectPaymentPage: React.FC = () => {
   const [availableChannels, setAvailableChannels] = useState<PaymentChannel[]>([])
   const [isFetchingChannels, setIsFetchingChannels] = useState(false)
   const [lastFetchedAmount, setLastFetchedAmount] = useState<number | null>(null)
+  const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null)
+  const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
 
   // Generate channel options based on available channels
   const channelOptions = [
@@ -83,7 +87,6 @@ const CollectPaymentPage: React.FC = () => {
   useEffect(() => {
     dispatch(clearBillLookup())
     dispatch(clearCreatePayment())
-    dispatch(clearPaymentChannels())
     // Load payment types for payment type selection
     dispatch(fetchPaymentTypes())
   }, [dispatch])
@@ -216,7 +219,6 @@ const CollectPaymentPage: React.FC = () => {
     }
 
     dispatch(clearBillLookup())
-    dispatch(clearPaymentChannels())
 
     try {
       const result = await dispatch(lookupBill(billNumber.trim()))
@@ -279,7 +281,6 @@ const CollectPaymentPage: React.FC = () => {
     }
 
     setCustomerInfo(null)
-    dispatch(clearPaymentChannels())
 
     try {
       setIsValidatingCustomer(true)
@@ -382,11 +383,26 @@ const CollectPaymentPage: React.FC = () => {
     }
 
     try {
-      const result = await dispatch(createAgentPayment(payload))
+      const result = await dispatch(createAgentPayment(payload)).unwrap()
 
-      if (createAgentPayment.rejected.match(result)) {
-        const message = (result.payload as string) || "Failed to record payment"
+      if (!result.isSuccess) {
+        const message = result.message || "Failed to record payment"
         notify("error", message)
+        return
+      }
+
+      notify("success", "Payment recorded successfully", {
+        description: `Payment of ₦${amount.toLocaleString()} has been recorded`,
+        duration: 5000,
+      })
+
+      // If this is a bank transfer and a virtual account is returned, show the modal
+      if (result.data.channel === PaymentChannel.BankTransfer && result.data.virtualAccount) {
+        setVirtualAccount(result.data.virtualAccount)
+        setIsVirtualAccountModalOpen(true)
+      } else {
+        setVirtualAccount(null)
+        setIsVirtualAccountModalOpen(false)
       }
     } catch (error: any) {
       notify("error", error.message || "Failed to record payment")
@@ -425,7 +441,6 @@ const CollectPaymentPage: React.FC = () => {
     setChannel(availableChannels[0] || PaymentChannel.Cash)
     setNarrative("")
     setPaymentTypeId("")
-    dispatch(clearPaymentChannels())
   }
 
   return (
@@ -634,38 +649,34 @@ const CollectPaymentPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Payment Channels Info */}
-                    {paymentChannels && (
-                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="font-medium text-blue-800">Payment Limits & Info</span>
-                          {isFetchingChannels && (
-                            <span className="text-xs text-blue-600">Checking availability...</span>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
-                          <div>
-                            <span className="font-medium">Cash at Hand:</span>{" "}
-                            <span>₦{(paymentChannels.cashAtHand || 0).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Collection Limit:</span>{" "}
-                            <span>₦{(paymentChannels.cashCollectionLimit || 0).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Max Single Cash Amount:</span>{" "}
-                            <span>₦{(paymentChannels.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Available Channels:</span>{" "}
-                            <span>{availableChannels.length}</span>
-                          </div>
-                        </div>
-                        {paymentChannels.message && (
-                          <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
-                        )}
+                    {/* Payment Channels Info - always visible with safe fallbacks */}
+                    <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="font-medium text-blue-800">Payment Limits & Info</span>
+                        {isFetchingChannels && <span className="text-xs text-blue-600">Checking availability...</span>}
                       </div>
-                    )}
+                      <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                        <div>
+                          <span className="font-medium">Cash at Hand:</span>{" "}
+                          <span>₦{(paymentChannels?.cashAtHand || 0).toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Collection Limit:</span>{" "}
+                          <span>₦{(paymentChannels?.cashCollectionLimit || 0).toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Max Single Cash Amount:</span>{" "}
+                          <span>₦{(paymentChannels?.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Available Channels:</span>{" "}
+                          <span>{availableChannels.length}</span>
+                        </div>
+                      </div>
+                      {paymentChannels?.message && (
+                        <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
+                      )}
+                    </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="flex flex-col gap-1 text-sm">
@@ -802,38 +813,34 @@ const CollectPaymentPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Payment Channels Info */}
-                    {paymentChannels && (
-                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="font-medium text-blue-800">Payment Limits & Info</span>
-                          {isFetchingChannels && (
-                            <span className="text-xs text-blue-600">Checking availability...</span>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
-                          <div>
-                            <span className="font-medium">Cash at Hand:</span>{" "}
-                            <span>₦{(paymentChannels.cashAtHand || 0).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Collection Limit:</span>{" "}
-                            <span>₦{(paymentChannels.cashCollectionLimit || 0).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Max Single Cash Amount:</span>{" "}
-                            <span>₦{(paymentChannels.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Available Channels:</span>{" "}
-                            <span>{availableChannels.length}</span>
-                          </div>
-                        </div>
-                        {paymentChannels.message && (
-                          <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
-                        )}
+                    {/* Payment Channels Info - always visible with safe fallbacks */}
+                    <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="font-medium text-blue-800">Payment Limits & Info</span>
+                        {isFetchingChannels && <span className="text-xs text-blue-600">Checking availability...</span>}
                       </div>
-                    )}
+                      <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                        <div>
+                          <span className="font-medium">Cash at Hand:</span>{" "}
+                          <span>₦{(paymentChannels?.cashAtHand || 0).toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Collection Limit:</span>{" "}
+                          <span>₦{(paymentChannels?.cashCollectionLimit || 0).toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Max Single Cash Amount:</span>{" "}
+                          <span>₦{(paymentChannels?.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Available Channels:</span>{" "}
+                          <span>{availableChannels.length}</span>
+                        </div>
+                      </div>
+                      {paymentChannels?.message && (
+                        <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
+                      )}
+                    </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <FormSelectModule
@@ -972,6 +979,13 @@ const CollectPaymentPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <BankTransferDetailsModal
+        isOpen={isVirtualAccountModalOpen}
+        onRequestClose={() => setIsVirtualAccountModalOpen(false)}
+        virtualAccount={virtualAccount}
+        onConfirm={() => setIsVirtualAccountModalOpen(false)}
+      />
     </section>
   )
 }
