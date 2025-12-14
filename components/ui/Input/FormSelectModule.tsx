@@ -6,7 +6,7 @@ interface FormSelectModuleProps {
   label: string
   name: string
   value: string | number
-  onChange: (e: ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }) => void
+  onChange: (e: ChangeEvent<HTMLSelectElement>) => void
   options: Array<{ value: string | number; label: string }>
   required?: boolean
   disabled?: boolean
@@ -34,18 +34,15 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
 
   const handleSelect = (value: string | number) => {
-    // Create a synthetic event that matches both possible types
     const syntheticEvent = {
       target: {
         name,
         value,
-        // Include type to help TypeScript narrow the type
         type: "select-one",
       },
-    }
+    } as unknown as ChangeEvent<HTMLSelectElement>
 
-    // Cast to the expected type
-    onChange(syntheticEvent as ChangeEvent<HTMLSelectElement>)
+    onChange(syntheticEvent)
     setIsOpen(false)
     setSearchTerm("")
   }
