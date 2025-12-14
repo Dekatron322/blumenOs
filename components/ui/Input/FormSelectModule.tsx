@@ -12,6 +12,8 @@ interface FormSelectModuleProps {
   disabled?: boolean
   className?: string
   error?: string | boolean
+  // Optional extra classes for the clickable control (height, padding, etc.)
+  controlClassName?: string
 }
 
 export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
@@ -24,6 +26,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   disabled = false,
   className = "",
   error,
+  controlClassName,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -63,17 +66,19 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <label className="mb-1 block text-sm text-[#2a2f4b]">
-        {label}
-        {required && <span className="text-red-500">*</span>}
-      </label>
+      {label && (
+        <label className="mb-1 block text-sm text-[#2a2f4b]">
+          {label}
+          {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       <div
         className={`
-          flex h-[46px] cursor-pointer items-center justify-between rounded-md border px-3
+          flex cursor-pointer items-center justify-between rounded-md border px-3
           py-2 ${error ? "border-[#D14343]" : "border-[#E0E0E0]"}
           ${isFocused ? "bg-[#F0fdf4] ring-2 ring-[#f58634]" : "bg-[#F9F9F9]"}
           ${disabled ? "cursor-not-allowed bg-[#a0a0a0]" : ""}
-          transition-all duration-200
+          transition-all duration-200 ${controlClassName ?? "h-[46px]"}
         `}
         onClick={() => {
           if (disabled) return
