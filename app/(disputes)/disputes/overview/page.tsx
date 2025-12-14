@@ -389,9 +389,9 @@ export default function BillingDashboard() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col xl:container">
             {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full flex-col justify-between gap-4 px-3 sm:flex-row sm:items-center sm:gap-6 md:my-8 xl:px-16">
+            <div className="my-4 flex w-full flex-col items-start justify-between gap-4 px-3 sm:flex-row sm:gap-6 md:my-8 xl:px-16">
               <div>
-                <h4 className="text-xl font-semibold sm:text-2xl">Collections & Payments</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Collections & Payments</h4>
                 <p className="text-sm sm:text-base">Payment processing, reconciliation, and receivables management</p>
               </div>
 

@@ -470,9 +470,9 @@ export default function BillingDashboard() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-center ">
+            <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-start">
               <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Billing Engine</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Billing Engine</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   Tariff management, bill generation, and billing cycles
                 </p>
