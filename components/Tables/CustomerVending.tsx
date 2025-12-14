@@ -9,7 +9,6 @@ import {
   MdOutlineArrowForwardIos,
   MdOutlineCheckBoxOutlineBlank,
   MdOutlineReceipt,
-  MdOutlineHistory,
 } from "react-icons/md"
 import { FiSmartphone } from "react-icons/fi"
 import { HiOutlineCash } from "react-icons/hi"

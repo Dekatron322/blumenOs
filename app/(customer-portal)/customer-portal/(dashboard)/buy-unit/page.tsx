@@ -275,7 +275,7 @@ const BuyUnit: React.FC = () => {
         >
           <BsPersonPlus className="mb-3 size-12 text-[#004B23]" />
           <h3 className="mb-2 text-lg font-semibold text-gray-800">For Someone Else</h3>
-          <p className="text-center text-sm text-gray-600">Purchase electricity units for another person's meter</p>
+          <p className="text-center text-sm text-gray-600">Purchase electricity units for another person&#39;s meter</p>
           <div className="mt-4 rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white">Third Party</div>
         </button>
       </div>
@@ -284,7 +284,7 @@ const BuyUnit: React.FC = () => {
         <h4 className="mb-2 font-medium text-blue-800">Important Note:</h4>
         <ul className="ml-5 list-disc space-y-1 text-blue-700">
           <li>For self purchase, your meter number will be automatically retrieved</li>
-          <li>For third party purchase, you'll need to enter the recipient's meter number</li>
+          <li>For third party purchase, you&#39;ll need to enter the recipient&#39;s meter number</li>
           <li>All payments are processed via bank transfer</li>
           <li>Units are delivered immediately after successful payment</li>
         </ul>
@@ -312,7 +312,7 @@ const BuyUnit: React.FC = () => {
         <div className="space-y-4">
           <div className="rounded-md border border-green-200 bg-green-50 p-4">
             <p className="text-sm text-green-800">
-              Your meter number has been automatically retrieved. Click "Validate Meter" to continue.
+              Your meter number has been automatically retrieved. Click &quot;Validate Meter&quot; to continue.
             </p>
           </div>
 
@@ -492,7 +492,7 @@ const BuyUnit: React.FC = () => {
             </div>
             <div className="text-xs text-blue-700">
               <p>Enter the amount you want to pay to purchase electricity units.</p>
-              <p className="mt-1">Units will be calculated based on the customer's tariff rate.</p>
+              <p className="mt-1">Units will be calculated based on the customer&apos;s tariff rate.</p>
             </div>
           </div>
 
@@ -631,10 +631,10 @@ const BuyUnit: React.FC = () => {
                   <strong>Purchase Process:</strong>
                 </p>
                 <ol className="ml-5 list-decimal space-y-2">
-                  <li>Select whether you're buying for yourself or for someone else</li>
+                  <li>Select whether you&apos;re buying for yourself or for someone else</li>
                   <li>Validate the meter number (auto-filled for self purchase)</li>
                   <li>Enter the amount you want to pay (minimum ₦500)</li>
-                  <li>Click "Buy Units" to generate bank transfer details</li>
+                  <li>Click &quot;Buy Units&quot; to generate bank transfer details</li>
                   <li>Make payment to the provided account number</li>
                   <li>Units are delivered immediately after payment confirmation</li>
                 </ol>
