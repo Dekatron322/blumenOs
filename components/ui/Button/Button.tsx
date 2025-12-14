@@ -59,7 +59,7 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     danger: "bg-[#D82E2E] text-white hover:bg-[#F14848] focus:ring-[#F14848]",
     dangerSecondary: "bg-[#FDF3F3] text-[#D82E2E] hover:bg-[#F14848] focus:ring-[#F14848] hover:text-[#FFFFFF]",
     orange: "bg-orange-700 text-white hover:bg-[#F14848] focus:ring-[#F14848] hover:text-[#FFFFFF]",
-    blue: "bg-[#003F9F] text-[#ffffff] hover:bg-[#004B23] focus:ring-[#004B23] focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23]",
+    blue: "bg-[#003F9F] text-[#ffffff] hover:bg-[#0056CC] focus:ring-[#003F9F] focus-within:ring-2 focus-within:ring-[#003F9F] focus-within:ring-offset-2 hover:border-[#003F9F]",
   }
 
   const sizeClasses = {
