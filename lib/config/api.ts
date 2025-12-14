@@ -45,6 +45,7 @@ export const API_ENDPOINTS = {
     AGENT_INFO: "/agents/me",
     AGENT_SUMMARY: "/agents/reports/self/summary",
     PERFORMANCE: "/agents/performance/daily",
+    PAYMENT_CHANNEL: "/agents/payment-channels",
   },
 
   BILLING_DISPUTE: {

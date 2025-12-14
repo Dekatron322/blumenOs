@@ -932,6 +932,28 @@ export interface AgentPerformanceDailyRequestParams {
 
 // ========== END AGENT PERFORMANCE DAILY INTERFACES ==========
 
+// ========== PAYMENT CHANNELS INTERFACES ==========
+
+export interface PaymentChannelsData {
+  channels: PaymentChannel[]
+  message: string
+  cashAtHand: number
+  cashCollectionLimit: number
+  maxSingleAllowedCashAmount: number
+}
+
+export interface PaymentChannelsResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentChannelsData
+}
+
+export interface PaymentChannelsRequestParams {
+  amount: number
+}
+
+// ========== END PAYMENT CHANNELS INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -951,6 +973,12 @@ interface AgentState {
   agentPerformanceDailyLoading: boolean
   agentPerformanceDailyError: string | null
   agentPerformanceDailySuccess: boolean
+
+  // Payment channels state
+  paymentChannels: PaymentChannelsData | null
+  paymentChannelsLoading: boolean
+  paymentChannelsError: string | null
+  paymentChannelsSuccess: boolean
 
   // Agents list state
   agents: Agent[]
@@ -1103,6 +1131,12 @@ const initialState: AgentState = {
   agentPerformanceDailyLoading: false,
   agentPerformanceDailyError: null,
   agentPerformanceDailySuccess: false,
+
+  // Payment Channels initial state
+  paymentChannels: null,
+  paymentChannelsLoading: false,
+  paymentChannelsError: null,
+  paymentChannelsSuccess: false,
 
   // Rest of the initial state
   agents: [],
@@ -1281,6 +1315,37 @@ export const fetchAgentPerformanceDaily = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to fetch agent daily performance")
       }
       return rejectWithValue(error.message || "Network error during agent daily performance fetch")
+    }
+  }
+)
+
+// ========== PAYMENT CHANNELS ASYNC THUNK ==========
+export const fetchPaymentChannels = createAsyncThunk(
+  "agents/fetchPaymentChannels",
+  async (params: PaymentChannelsRequestParams, { rejectWithValue }) => {
+    try {
+      const { amount } = params
+
+      const response = await api.get<PaymentChannelsResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENT_CHANNEL), {
+        params: {
+          amount,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment channels")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Payment channels data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment channels")
+      }
+      return rejectWithValue(error.message || "Network error during payment channels fetch")
     }
   }
 )
@@ -1789,6 +1854,14 @@ const agentSlice = createSlice({
       state.agentPerformanceDailyLoading = false
     },
 
+    // Clear payment channels state
+    clearPaymentChannels: (state) => {
+      state.paymentChannels = null
+      state.paymentChannelsError = null
+      state.paymentChannelsSuccess = false
+      state.paymentChannelsLoading = false
+    },
+
     // Set agent info (for when we get agent info from other sources)
     setAgentInfo: (state, action: PayloadAction<AgentInfo>) => {
       state.agentInfo = action.payload
@@ -1813,6 +1886,14 @@ const agentSlice = createSlice({
       state.agentPerformanceDailyLoading = false
     },
 
+    // Set payment channels (for when we get payment channels from other sources)
+    setPaymentChannels: (state, action: PayloadAction<PaymentChannelsData>) => {
+      state.paymentChannels = action.payload
+      state.paymentChannelsSuccess = true
+      state.paymentChannelsError = null
+      state.paymentChannelsLoading = false
+    },
+
     // Clear agents state
     clearAgents: (state) => {
       state.agents = []
@@ -1833,6 +1914,7 @@ const agentSlice = createSlice({
       state.agentInfoError = null
       state.agentSummaryError = null
       state.agentPerformanceDailyError = null
+      state.paymentChannelsError = null
       state.error = null
       state.currentAgentError = null
       state.addAgentError = null
@@ -1939,6 +2021,10 @@ const agentSlice = createSlice({
       state.agentPerformanceDailyLoading = false
       state.agentPerformanceDailyError = null
       state.agentPerformanceDailySuccess = false
+      state.paymentChannels = null
+      state.paymentChannelsLoading = false
+      state.paymentChannelsError = null
+      state.paymentChannelsSuccess = false
       state.agents = []
       state.loading = false
       state.error = null
@@ -2377,6 +2463,29 @@ const agentSlice = createSlice({
       // Sort by date descending
       state.agentPerformanceDaily.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     },
+
+    // Update payment channels state (for manual updates)
+    updatePaymentChannels: (state, action: PayloadAction<PaymentChannel[]>) => {
+      if (state.paymentChannels) {
+        state.paymentChannels.channels = action.payload
+      }
+    },
+
+    // Update payment channels with cash info
+    updatePaymentChannelsWithCashInfo: (
+      state,
+      action: PayloadAction<{
+        cashAtHand: number
+        cashCollectionLimit: number
+        maxSingleAllowedCashAmount: number
+      }>
+    ) => {
+      if (state.paymentChannels) {
+        state.paymentChannels.cashAtHand = action.payload.cashAtHand
+        state.paymentChannels.cashCollectionLimit = action.payload.cashCollectionLimit
+        state.paymentChannels.maxSingleAllowedCashAmount = action.payload.maxSingleAllowedCashAmount
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -2438,6 +2547,26 @@ const agentSlice = createSlice({
         state.agentPerformanceDailyError = (action.payload as string) || "Failed to fetch agent daily performance"
         state.agentPerformanceDailySuccess = false
         state.agentPerformanceDaily = []
+      })
+
+      // Payment Channels cases
+      .addCase(fetchPaymentChannels.pending, (state) => {
+        state.paymentChannelsLoading = true
+        state.paymentChannelsError = null
+        state.paymentChannelsSuccess = false
+        state.paymentChannels = null
+      })
+      .addCase(fetchPaymentChannels.fulfilled, (state, action: PayloadAction<PaymentChannelsData>) => {
+        state.paymentChannelsLoading = false
+        state.paymentChannelsSuccess = true
+        state.paymentChannels = action.payload
+        state.paymentChannelsError = null
+      })
+      .addCase(fetchPaymentChannels.rejected, (state, action) => {
+        state.paymentChannelsLoading = false
+        state.paymentChannelsError = (action.payload as string) || "Failed to fetch payment channels"
+        state.paymentChannelsSuccess = false
+        state.paymentChannels = null
       })
 
       // Bill Lookup cases
@@ -2610,6 +2739,11 @@ const agentSlice = createSlice({
             if (agent) {
               agent.cashAtHand = action.payload.data.cashAtHandAfter
             }
+          }
+
+          // Update payment channels cash info
+          if (state.paymentChannels) {
+            state.paymentChannels.cashAtHand = action.payload.data.cashAtHandAfter
           }
 
           // Add the new clearance to the clearances list
@@ -3074,6 +3208,21 @@ const agentSlice = createSlice({
           // Sort by date descending
           state.agentPerformanceDaily.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         }
+
+        // Update payment channels cash info if available
+        if (state.paymentChannels) {
+          state.paymentChannels.cashAtHand += action.payload.data.amount
+        }
+
+        // Update agent info cash at hand if available
+        if (state.agentInfo) {
+          state.agentInfo.cashAtHand += action.payload.data.amount
+        }
+
+        // Update current agent cash at hand if available
+        if (state.currentAgent) {
+          state.currentAgent.cashAtHand += action.payload.data.amount
+        }
       })
       .addCase(createAgentPayment.rejected, (state, action) => {
         state.createPaymentLoading = false
@@ -3088,9 +3237,11 @@ export const {
   clearAgentInfo,
   clearAgentSummary,
   clearAgentPerformanceDaily,
+  clearPaymentChannels,
   setAgentInfo,
   setAgentSummary,
   setAgentPerformanceDaily,
+  setPaymentChannels,
   clearAgents,
   clearError,
   clearCurrentAgent,
@@ -3128,6 +3279,8 @@ export const {
   updateAgentPerformanceDailyAfterPayment,
   updateAgentPerformanceDailyAfterClearance,
   updateAgentPerformanceDailyAfterIssue,
+  updatePaymentChannels,
+  updatePaymentChannelsWithCashInfo,
 } = agentSlice.actions
 
 export default agentSlice.reducer

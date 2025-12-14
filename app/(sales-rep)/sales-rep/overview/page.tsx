@@ -781,9 +781,18 @@ export default function AgentManagementDashboard() {
                 >
                   <span className="hidden sm:inline">Vend</span>
                 </ButtonModule>
+                <ButtonModule
+                  variant="orange"
+                  size="md"
+                  icon={<CollectCash />}
+                  className="w-full sm:w-auto"
+                  onClick={() => router.push("/sales-rep/clear-cash")}
+                >
+                  <span className="hidden sm:inline">Clear Cash</span>
+                </ButtonModule>
                 {(!agentInfo || agentInfo.cashAtHand < agentInfo.cashCollectionLimit) && (
                   <ButtonModule
-                    variant="outline"
+                    variant="danger"
                     size="md"
                     className="w-full sm:w-auto"
                     icon={<CollectCash />}
@@ -792,15 +801,6 @@ export default function AgentManagementDashboard() {
                     <span className="hidden sm:inline">Collect Payment</span>
                   </ButtonModule>
                 )}
-
-                <ButtonModule
-                  variant="danger"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  onClick={() => router.push("/sales-rep/clear-cash")}
-                >
-                  <span className="hidden sm:inline">Clear Cash</span>
-                </ButtonModule>
               </motion.div>
             </div>
 
@@ -914,96 +914,6 @@ export default function AgentManagementDashboard() {
             {/* Main Content Area */}
             <div className="mt-6">
               {/* Time Range Filters for Performance Summary */}
-
-              {/* Performance Charts Section */}
-              <motion.div
-                className="mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-                  <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Performance Overview</h3>
-                      <p className="text-sm text-gray-600">Daily performance metrics and trends</p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                        {["year", "month", "week"].map((range) => (
-                          <button
-                            key={range}
-                            onClick={() => handlePerformanceTimeRangeChange(range as "year" | "month" | "week")}
-                            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
-                              performanceChartType === range
-                                ? "bg-white text-gray-900 shadow-sm"
-                                : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                          >
-                            {range.charAt(0).toUpperCase() + range.slice(1)}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                        {[
-                          { key: "score", label: "Score" },
-                          { key: "collections", label: "Collections" },
-                          { key: "clearances", label: "Clearances" },
-                        ].map((type) => (
-                          <button
-                            key={type.key}
-                            onClick={() => setChartType(type.key as "score" | "collections" | "clearances")}
-                            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
-                              chartType === type.key
-                                ? "bg-white text-gray-900 shadow-sm"
-                                : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                          >
-                            {type.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {agentPerformanceDailyLoading ? (
-                    <ChartSkeleton />
-                  ) : agentPerformanceDailyError ? (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-                      <p className="text-red-600">Error loading performance data: {agentPerformanceDailyError}</p>
-                      <button
-                        onClick={handleRefreshData}
-                        className="mt-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  ) : agentPerformanceDaily && agentPerformanceDaily.length > 0 ? (
-                    <>
-                      <PerformanceSummary data={agentPerformanceDaily} />
-                      <div className="mt-6">
-                        <PerformanceChart
-                          data={agentPerformanceDaily}
-                          chartType={chartType}
-                          timeRange={performanceChartType}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
-                      <p className="text-gray-500">No performance data available for the selected period</p>
-                      <button
-                        onClick={handleRefreshData}
-                        className="mt-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-                      >
-                        Refresh Data
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
 
               {/* Main KPI Cards */}
               {agentInfoLoading || agentSummaryLoading ? (
@@ -1198,6 +1108,96 @@ export default function AgentManagementDashboard() {
                           </div>
                         </motion.div>
                       </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Performance Charts Section */}
+                  <motion.div
+                    className="my-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+                      <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Performance Overview</h3>
+                          <p className="text-sm text-gray-600">Daily performance metrics and trends</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                            {["year", "month", "week"].map((range) => (
+                              <button
+                                key={range}
+                                onClick={() => handlePerformanceTimeRangeChange(range as "year" | "month" | "week")}
+                                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                                  performanceChartType === range
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                {range.charAt(0).toUpperCase() + range.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                            {[
+                              { key: "score", label: "Score" },
+                              { key: "collections", label: "Collections" },
+                              { key: "clearances", label: "Clearances" },
+                            ].map((type) => (
+                              <button
+                                key={type.key}
+                                onClick={() => setChartType(type.key as "score" | "collections" | "clearances")}
+                                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                                  chartType === type.key
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                {type.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {agentPerformanceDailyLoading ? (
+                        <ChartSkeleton />
+                      ) : agentPerformanceDailyError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+                          <p className="text-red-600">Error loading performance data: {agentPerformanceDailyError}</p>
+                          <button
+                            onClick={handleRefreshData}
+                            className="mt-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      ) : agentPerformanceDaily && agentPerformanceDaily.length > 0 ? (
+                        <>
+                          <PerformanceSummary data={agentPerformanceDaily} />
+                          <div className="mt-6">
+                            <PerformanceChart
+                              data={agentPerformanceDaily}
+                              chartType={chartType}
+                              timeRange={performanceChartType}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
+                          <p className="text-gray-500">No performance data available for the selected period</p>
+                          <button
+                            onClick={handleRefreshData}
+                            className="mt-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                          >
+                            Refresh Data
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
 
