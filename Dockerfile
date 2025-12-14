@@ -20,6 +20,9 @@ RUN yarn install --frozen-lockfile
 
 FROM deps AS builder
 ENV NODE_ENV=production
+# COPY the node_modules from deps stage FIRST
+COPY --from=deps /app/node_modules ./node_modules
+# Then copy the rest of the application
 COPY . .
 RUN yarn build
 
