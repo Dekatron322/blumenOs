@@ -433,10 +433,10 @@ export default function AllTransactions() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col xl:container">
             {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
+            <div className="my-4 flex w-full items-start justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
               <div>
-                <h4 className="text-2xl font-semibold">Customer Management</h4>
-                <p>Manage customer accounts, KYC, and service connections</p>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Customer Management</h4>
+                <p className="text-sm sm:text-base">Manage customer accounts, KYC, and service connections</p>
               </div>
 
               <motion.div

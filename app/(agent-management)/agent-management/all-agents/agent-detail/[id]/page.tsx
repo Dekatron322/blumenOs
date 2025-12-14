@@ -445,8 +445,8 @@ const AgentDetailsPage = () => {
         const clearancesData = currentAgent.cashClearances.map((clearance) => [
           formatDate(clearance.clearedAt),
           formatCurrency(clearance.amountCleared),
-          clearance.collectionOfficer.fullName,
-          clearance.clearedBy.fullName,
+          clearance.collectionOfficer?.fullName || "N/A",
+          clearance.clearedBy?.fullName || "N/A",
         ])
 
         autoTable(doc, {
@@ -593,16 +593,18 @@ const AgentDetailsPage = () => {
                     </ButtonModule>
 
                     {canUpdate ? (
-                    <ButtonModule
-                      variant="primary"
-                      size="md"
-                      className="flex items-center gap-2 text-xs sm:text-sm"
-                      onClick={handleEditAgent}
-                      disabled={activeAction === "edit"}
-                    >
-                      <Edit3 className="size-3 sm:size-4" />
-                      <span className="whitespace-nowrap">{activeAction === "edit" ? "Editing..." : "Edit Agent"}</span>
-                    </ButtonModule>
+                      <ButtonModule
+                        variant="primary"
+                        size="md"
+                        className="flex items-center gap-2 text-xs sm:text-sm"
+                        onClick={handleEditAgent}
+                        disabled={activeAction === "edit"}
+                      >
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="whitespace-nowrap">
+                          {activeAction === "edit" ? "Editing..." : "Edit Agent"}
+                        </span>
+                      </ButtonModule>
                     ) : (
                       <ButtonModule
                         variant="primary"
@@ -1325,10 +1327,10 @@ const AgentDetailsPage = () => {
                                         {formatCurrency(clearance.amountCleared)}
                                       </td>
                                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                                        {clearance.collectionOfficer.fullName}
+                                        {clearance.collectionOfficer?.fullName || "N/A"}
                                       </td>
                                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                                        {clearance.clearedBy.fullName}
+                                        {clearance.clearedBy?.fullName || "N/A"}
                                       </td>
                                       <td className="px-4 py-3 text-sm text-gray-900">{clearance.notes || "—"}</td>
                                     </tr>

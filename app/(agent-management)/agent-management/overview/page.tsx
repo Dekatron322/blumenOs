@@ -329,9 +329,9 @@ export default function AgentManagementDashboard() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col px-3 lg:container sm:px-4 xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 lg:my-8">
+            <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 lg:my-8">
               <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Agent Management</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Agent Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   Field agent onboarding, commissions, and performance tracking
                 </p>

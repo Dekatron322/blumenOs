@@ -224,6 +224,9 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
   }
 
   const openClearCashPanel = (clearance: CashClearance) => {
+    if (!clearance.collectionOfficer) {
+      return
+    }
     setSelectedClearance(clearance)
     setClearCashForm({
       collectionOfficerUserId: clearance.collectionOfficer.id,
@@ -386,8 +389,8 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
       formatCurrency(clearance.cashAtHandBefore).toLowerCase().includes(searchLower) ||
       formatCurrency(clearance.cashAtHandAfter).toLowerCase().includes(searchLower) ||
       clearance.notes.toLowerCase().includes(searchLower) ||
-      clearance.collectionOfficer.fullName.toLowerCase().includes(searchLower) ||
-      clearance.clearedBy.fullName.toLowerCase().includes(searchLower) ||
+      (clearance.collectionOfficer?.fullName || "").toLowerCase().includes(searchLower) ||
+      (clearance.clearedBy?.fullName || "").toLowerCase().includes(searchLower) ||
       formatDate(clearance.clearedAt).toLowerCase().includes(searchLower)
     )
   })
@@ -558,14 +561,16 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
                           </td>
                           <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                             <div className="flex flex-col">
-                              <span className="font-medium">{clearance.collectionOfficer.fullName}</span>
-                              <span className="text-xs text-gray-500">{clearance.collectionOfficer.employeeId}</span>
+                              <span className="font-medium">{clearance.collectionOfficer?.fullName || "N/A"}</span>
+                              <span className="text-xs text-gray-500">
+                                {clearance.collectionOfficer?.employeeId || ""}
+                              </span>
                             </div>
                           </td>
                           <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                             <div className="flex flex-col">
-                              <span className="font-medium">{clearance.clearedBy.fullName}</span>
-                              <span className="text-xs text-gray-500">{clearance.clearedBy.employeeId}</span>
+                              <span className="font-medium">{clearance.clearedBy?.fullName || "N/A"}</span>
+                              <span className="text-xs text-gray-500">{clearance.clearedBy?.employeeId || ""}</span>
                             </div>
                           </td>
                           <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
@@ -626,19 +631,21 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500">Collection Officer</p>
                                   <p className="mt-1 text-sm font-medium text-gray-800">
-                                    {clearance.collectionOfficer.fullName}
+                                    {clearance.collectionOfficer?.fullName || "N/A"}
                                   </p>
-                                  <p className="text-xs text-gray-500">{clearance.collectionOfficer.email}</p>
-                                  <p className="text-xs text-gray-500">{clearance.collectionOfficer.phoneNumber}</p>
+                                  <p className="text-xs text-gray-500">{clearance.collectionOfficer?.email || ""}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {clearance.collectionOfficer?.phoneNumber || ""}
+                                  </p>
                                 </div>
 
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500">Cleared By</p>
                                   <p className="mt-1 text-sm font-medium text-gray-800">
-                                    {clearance.clearedBy.fullName}
+                                    {clearance.clearedBy?.fullName || "N/A"}
                                   </p>
-                                  <p className="text-xs text-gray-500">{clearance.clearedBy.email}</p>
-                                  <p className="text-xs text-gray-500">{clearance.clearedBy.phoneNumber}</p>
+                                  <p className="text-xs text-gray-500">{clearance.clearedBy?.email || ""}</p>
+                                  <p className="text-xs text-gray-500">{clearance.clearedBy?.phoneNumber || ""}</p>
                                 </div>
                               </div>
 
