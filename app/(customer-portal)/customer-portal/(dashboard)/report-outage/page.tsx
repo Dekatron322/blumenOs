@@ -6,9 +6,9 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
-import { BsExclamationTriangle, BsLightning, BsClock, BsCalendar, BsPhone, BsGeoAlt } from "react-icons/bs"
-import { FaCheckCircle, FaRegClock, FaMapMarkerAlt, FaWifi, FaTools } from "react-icons/fa"
-import { MdReport, MdElectricalServices, MdOutlineSupportAgent } from "react-icons/md"
+import { BsCalendar, BsClock, BsExclamationTriangle, BsLightning, BsPhone } from "react-icons/bs"
+import { FaCheckCircle, FaRegClock, FaTools, FaWifi } from "react-icons/fa"
+import { MdElectricalServices, MdOutlineSupportAgent, MdReport } from "react-icons/md"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 
 // Mock data for outage types and areas
@@ -432,7 +432,7 @@ const OutageReport: React.FC = () => {
 
       <div className="mt-6 space-y-3">
         <p className="text-sm text-gray-600">
-          Keep your report number for tracking. You'll receive updates via SMS and email.
+          Keep your report number for tracking. You&apos;ll receive updates via SMS and email.
         </p>
         <div className="flex gap-3">
           <ButtonModule type="button" variant="secondary" className="w-full" onClick={resetForm}>
@@ -496,7 +496,7 @@ const OutageReport: React.FC = () => {
               {outage.status === "restored" && (
                 <div className="mt-2 rounded-md bg-green-50 p-2">
                   <p className="text-xs text-green-700">
-                    ✓ Power restored in this area. If you're still experiencing issues, please report.
+                    ✓ Power restored in this area. If you&apos;re still experiencing issues, please report.
                   </p>
                 </div>
               )}
@@ -653,10 +653,10 @@ const OutageReport: React.FC = () => {
               <div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
                 <p className="text-sm font-medium text-gray-800">What Happens After You Report:</p>
                 <ul className="ml-5 mt-2 list-disc space-y-1 text-sm text-gray-600">
-                  <li>You'll receive an SMS confirmation with your report number</li>
+                  <li>You&apos;ll receive an SMS confirmation with your report number</li>
                   <li>Our team will investigate within 30 minutes of receiving your report</li>
-                  <li>You'll receive updates via SMS at key stages of the restoration process</li>
-                  <li>Once resolved, you'll get a confirmation message when power is restored</li>
+                  <li>You&apos;ll receive updates via SMS at key stages of the restoration process</li>
+                  <li>Once resolved, you&apos;ll get a confirmation message when power is restored</li>
                   <li>You can track your report status using the report number</li>
                 </ul>
               </div>
