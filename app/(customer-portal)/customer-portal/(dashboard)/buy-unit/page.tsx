@@ -1,12 +1,14 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import BankTransferDetailsModal from "components/ui/Modal/generated-bank-transfer-modal"
 import { BsLightningCharge, BsPerson, BsPersonPlus } from "react-icons/bs"
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa"
+import { FaCheckCircle } from "react-icons/fa"
+import { notify } from "components/ui/Notification/Notification"
+import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 
 // Mock data for meter validation
 interface MeterInfo {
@@ -58,36 +60,6 @@ const mockMeterData: MeterInfo[] = [
   },
 ]
 
-const notify = (
-  type: "success" | "error" | "info",
-  title: string,
-  options?: { description?: string; duration?: number }
-) => {
-  console.log(`${type.toUpperCase()}: ${title}`, options?.description || "")
-
-  // Create a simple notification UI
-  const notification = document.createElement("div")
-  notification.className = `fixed top-4 right-4 z-50 rounded-md p-4 shadow-lg ${
-    type === "success"
-      ? "bg-green-500 text-white"
-      : type === "error"
-      ? "bg-red-500 text-white"
-      : "bg-blue-500 text-white"
-  }`
-  notification.innerHTML = `
-    <div class="font-bold">${title}</div>
-    ${options?.description ? `<div class="text-sm opacity-90">${options.description}</div>` : ""}
-  `
-  document.body.appendChild(notification)
-
-  setTimeout(
-    () => {
-      document.body.removeChild(notification)
-    },
-    options?.duration || 3000
-  )
-}
-
 const BuyUnit: React.FC = () => {
   // Step 1: Choose vend type
   const [vendType, setVendType] = useState<"self" | "third-party" | null>(null)
@@ -100,7 +72,6 @@ const BuyUnit: React.FC = () => {
 
   // Step 3: Payment details
   const [amountInput, setAmountInput] = useState("")
-  const [isFetching, setIsFetching] = useState(false)
   const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false)
 
@@ -115,11 +86,39 @@ const BuyUnit: React.FC = () => {
     setAmountInput("")
 
     if (type === "self") {
-      setMeterNumber(loggedInCustomerMeter)
+      // Auto-validate the user's meter
+      setIsValidatingMeter(true)
+
+      // Simulate API delay for auto-validation
+      setTimeout(() => {
+        try {
+          const foundMeter = mockMeterData.find((meter) => meter.meterNumber === loggedInCustomerMeter)
+
+          if (foundMeter) {
+            if (foundMeter.isActive) {
+              setMeterInfo(foundMeter)
+              setMeterNumber(loggedInCustomerMeter)
+              notify("success", "Your meter has been validated", {
+                description: `Welcome back, ${foundMeter.customerName}!`,
+                duration: 3000,
+              })
+            } else {
+              setMeterValidationError("Your meter account is inactive. Please contact customer service.")
+            }
+          } else {
+            setMeterValidationError("Unable to retrieve your meter information. Please try again.")
+          }
+        } catch (error: any) {
+          setMeterValidationError("Failed to validate your meter. Please try again.")
+        } finally {
+          setIsValidatingMeter(false)
+        }
+      }, 800)
     }
   }
 
-  const validateMeterNumber = async (e: React.FormEvent) => {
+  // Handle third-party meter validation
+  const validateThirdPartyMeter = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!meterNumber.trim()) {
@@ -236,6 +235,52 @@ const BuyUnit: React.FC = () => {
     setAmountInput("")
   }
 
+  const currentStep = !vendType ? 1 : !meterInfo ? 2 : 3
+
+  const StepProgress = () => (
+    <div className="mb-6">
+      <div className="flex items-center justify-between">
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex size-8 items-center justify-center rounded-full border-2 text-sm font-medium ${
+                  step === currentStep
+                    ? "border-[#004B23] bg-[#004B23] text-white"
+                    : step < currentStep
+                    ? "border-[#004B23] bg-[#004B23] text-white"
+                    : "border-gray-300 bg-white text-gray-500"
+                }`}
+              >
+                {step < currentStep ? (
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  step
+                )}
+              </div>
+              <span
+                className={`mt-2 hidden text-xs font-medium sm:block ${
+                  step === currentStep ? "text-[#004B23]" : "text-gray-500"
+                }`}
+              >
+                {step === 1 && "Select Type"}
+                {step === 2 && "Meter Info"}
+                {step === 3 && "Purchase Units"}
+              </span>
+            </div>
+            {step < 3 && <div className={`mx-2 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
+
   const renderStep1 = () => (
     <motion.div
       className="rounded-md border bg-white p-5 shadow-sm"
@@ -257,6 +302,7 @@ const BuyUnit: React.FC = () => {
               ? "border-[#004B23] bg-[#004B23]/5"
               : "border-gray-200 bg-gray-50 hover:border-[#004B23] hover:bg-[#004B23]/5"
           }`}
+          disabled={isValidatingMeter}
         >
           <BsPerson className="mb-3 size-12 text-[#004B23]" />
           <h3 className="mb-2 text-lg font-semibold text-gray-800">For Myself</h3>
@@ -275,7 +321,7 @@ const BuyUnit: React.FC = () => {
         >
           <BsPersonPlus className="mb-3 size-12 text-[#004B23]" />
           <h3 className="mb-2 text-lg font-semibold text-gray-800">For Someone Else</h3>
-          <p className="text-center text-sm text-gray-600">Purchase electricity units for another person&#39;s meter</p>
+          <p className="text-center text-sm text-gray-600">Purchase electricity units for another person's meter</p>
           <div className="mt-4 rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white">Third Party</div>
         </button>
       </div>
@@ -283,8 +329,8 @@ const BuyUnit: React.FC = () => {
       <div className="mt-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
         <h4 className="mb-2 font-medium text-blue-800">Important Note:</h4>
         <ul className="ml-5 list-disc space-y-1 text-blue-700">
-          <li>For self purchase, your meter number will be automatically retrieved</li>
-          <li>For third party purchase, you&#39;ll need to enter the recipient&#39;s meter number</li>
+          <li>For self purchase, your meter number will be automatically validated</li>
+          <li>For third party purchase, you'll need to enter and validate the recipient's meter number</li>
           <li>All payments are processed via bank transfer</li>
           <li>Units are delivered immediately after successful payment</li>
         </ul>
@@ -292,7 +338,7 @@ const BuyUnit: React.FC = () => {
     </motion.div>
   )
 
-  const renderStep2 = () => (
+  const renderStep2ThirdParty = () => (
     <motion.div
       className="rounded-md border bg-white p-5 shadow-sm"
       initial={{ opacity: 0, y: 10 }}
@@ -300,102 +346,48 @@ const BuyUnit: React.FC = () => {
       transition={{ duration: 0.3 }}
     >
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-gray-800">
-          {vendType === "self" ? "Your Meter Details" : "Enter Meter Number"}
-        </h2>
-        {vendType === "self" && (
-          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">Self Purchase</span>
-        )}
+        <h2 className="text-base font-semibold text-gray-800">Enter Meter Number</h2>
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
+          Third Party Purchase
+        </span>
       </div>
 
-      {vendType === "self" ? (
-        <div className="space-y-4">
-          <div className="rounded-md border border-green-200 bg-green-50 p-4">
-            <p className="text-sm text-green-800">
-              Your meter number has been automatically retrieved. Click &quot;Validate Meter&quot; to continue.
-            </p>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          Enter the 11-digit meter number of the customer you want to purchase units for.
+        </p>
+
+        <form onSubmit={validateThirdPartyMeter} className="space-y-4">
+          <FormInputModule
+            label="Customer Meter Number"
+            type="text"
+            name="meterNumber"
+            id="meterNumber"
+            placeholder="Enter 11-digit meter number"
+            value={meterNumber}
+            onChange={(e) => setMeterNumber(e.target.value)}
+            required
+            error={meterValidationError || undefined}
+          />
+          <p className="text-xs text-gray-500">Format: 11 digits (e.g., 04123456789)</p>
+
+          <div className="flex gap-3">
+            <ButtonModule type="submit" variant="primary" className="w-full" disabled={isValidatingMeter}>
+              {isValidatingMeter ? "Validating..." : "Validate Meter"}
+            </ButtonModule>
+
+            <ButtonModule
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={() => setVendType(null)}
+              disabled={isValidatingMeter}
+            >
+              Back
+            </ButtonModule>
           </div>
-
-          <form onSubmit={validateMeterNumber} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="meterNumber" className="block text-sm font-medium text-gray-700">
-                Meter Number
-              </label>
-              <input
-                type="text"
-                id="meterNumber"
-                value={meterNumber}
-                readOnly
-                className="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-700 focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <ButtonModule type="submit" variant="primary" className="w-full" disabled={isValidatingMeter}>
-                {isValidatingMeter ? "Validating..." : "Validate Meter"}
-              </ButtonModule>
-
-              <ButtonModule
-                type="button"
-                variant="secondary"
-                className="w-full"
-                onClick={() => setVendType(null)}
-                disabled={isValidatingMeter}
-              >
-                Back
-              </ButtonModule>
-            </div>
-          </form>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Enter the 11-digit meter number of the customer you want to purchase units for.
-          </p>
-
-          <form onSubmit={validateMeterNumber} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="meterNumber" className="block text-sm font-medium text-gray-700">
-                Customer Meter Number
-              </label>
-              <input
-                type="text"
-                id="meterNumber"
-                placeholder="Enter 11-digit meter number"
-                value={meterNumber}
-                onChange={(e) => setMeterNumber(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                required
-                maxLength={11}
-                pattern="[0-9]{11}"
-              />
-              <p className="text-xs text-gray-500">Format: 11 digits (e.g., 04123456789)</p>
-            </div>
-
-            {meterValidationError && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3">
-                <p className="text-sm text-red-600">{meterValidationError}</p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <ButtonModule type="submit" variant="primary" className="w-full" disabled={isValidatingMeter}>
-                {isValidatingMeter ? "Validating..." : "Validate Meter"}
-              </ButtonModule>
-
-              <ButtonModule
-                type="button"
-                variant="secondary"
-                className="w-full"
-                onClick={() => setVendType(null)}
-                disabled={isValidatingMeter}
-              >
-                Back
-              </ButtonModule>
-            </div>
-          </form>
-        </div>
-      )}
+        </form>
+      </div>
 
       {isValidatingMeter && (
         <div className="mt-4 text-center">
@@ -406,7 +398,20 @@ const BuyUnit: React.FC = () => {
     </motion.div>
   )
 
-  const renderStep3 = () => (
+  const renderLoadingState = () => (
+    <motion.div
+      className="rounded-md border bg-white p-8 text-center shadow-sm"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="mb-4 inline-block size-16 animate-spin rounded-full border-4 border-[#004B23] border-t-transparent"></div>
+      <h3 className="mb-2 text-lg font-semibold text-gray-800">Validating Your Meter</h3>
+      <p className="text-sm text-gray-600">Please wait while we retrieve and validate your meter information...</p>
+    </motion.div>
+  )
+
+  const renderPurchaseForm = () => (
     <>
       <motion.div
         className="rounded-md border bg-white p-5 shadow-sm"
@@ -416,15 +421,21 @@ const BuyUnit: React.FC = () => {
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-gray-800">Meter Information</h2>
-          {meterInfo?.isActive ? (
-            <span className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
-              <FaCheckCircle className="size-3" /> Active
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">
-              <FaTimesCircle className="size-3" /> Inactive
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {vendType === "self" && (
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                Self Purchase
+              </span>
+            )}
+            {vendType === "third-party" && (
+              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">Third Party</span>
+            )}
+            {meterInfo?.isActive && (
+              <span className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                <FaCheckCircle className="size-3" /> Active
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
@@ -492,7 +503,7 @@ const BuyUnit: React.FC = () => {
             </div>
             <div className="text-xs text-blue-700">
               <p>Enter the amount you want to pay to purchase electricity units.</p>
-              <p className="mt-1">Units will be calculated based on the customer&apos;s tariff rate.</p>
+              <p className="mt-1">Units will be calculated based on the customer's tariff rate.</p>
             </div>
           </div>
 
@@ -529,15 +540,6 @@ const BuyUnit: React.FC = () => {
             </div>
           </div>
 
-          {meterInfo && meterInfo.outstandingBalance > 0 && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm font-medium text-amber-800">
-                ⚠️ This account has an outstanding balance of ₦{meterInfo.outstandingBalance.toLocaleString()}.
-                Purchased units may be applied towards the outstanding balance first.
-              </p>
-            </div>
-          )}
-
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
             <p className="mb-2 text-sm font-medium text-gray-700">Payment Method:</p>
             <div className="flex flex-wrap items-center gap-2">
@@ -573,6 +575,7 @@ const BuyUnit: React.FC = () => {
 
   return (
     <section className="size-full">
+      <CustomerDashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
@@ -584,43 +587,16 @@ const BuyUnit: React.FC = () => {
             </div>
 
             {/* Progress Indicator */}
-            <div className="mb-6">
-              <div className="flex items-center">
-                <div
-                  className={`flex size-10 items-center justify-center rounded-full ${
-                    vendType ? "bg-[#004B23] text-white" : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  1
-                </div>
-                <div className={`h-1 flex-1 ${meterInfo ? "bg-[#004B23]" : "bg-gray-200"}`}></div>
-                <div
-                  className={`flex size-10 items-center justify-center rounded-full ${
-                    meterInfo ? "bg-[#004B23] text-white" : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  2
-                </div>
-                <div className={`h-1 flex-1 ${amountInput ? "bg-[#004B23]" : "bg-gray-200"}`}></div>
-                <div
-                  className={`flex size-10 items-center justify-center rounded-full ${
-                    amountInput ? "bg-[#004B23] text-white" : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  3
-                </div>
-              </div>
-              <div className="mt-2 flex justify-between text-sm">
-                <span className={vendType ? "font-medium text-[#004B23]" : "text-gray-500"}>Select Type</span>
-                <span className={meterInfo ? "font-medium text-[#004B23]" : "text-gray-500"}>Validate Meter</span>
-                <span className={amountInput ? "font-medium text-[#004B23]" : "text-gray-500"}>Purchase Units</span>
-              </div>
-            </div>
+            <StepProgress />
 
             <div className="grid items-start gap-6">
               {!vendType && renderStep1()}
-              {vendType && !meterInfo && renderStep2()}
-              {vendType && meterInfo && <div className="grid gap-6 lg:grid-cols-2">{renderStep3()}</div>}
+
+              {vendType === "self" && isValidatingMeter && renderLoadingState()}
+
+              {vendType === "third-party" && !meterInfo && renderStep2ThirdParty()}
+
+              {vendType && meterInfo && <div className="grid gap-6 lg:grid-cols-2">{renderPurchaseForm()}</div>}
             </div>
 
             {/* Information Section */}
@@ -631,10 +607,10 @@ const BuyUnit: React.FC = () => {
                   <strong>Purchase Process:</strong>
                 </p>
                 <ol className="ml-5 list-decimal space-y-2">
-                  <li>Select whether you&apos;re buying for yourself or for someone else</li>
-                  <li>Validate the meter number (auto-filled for self purchase)</li>
+                  <li>Select whether you're buying for yourself or for someone else</li>
+                  <li>Your meter is automatically validated for self purchase</li>
                   <li>Enter the amount you want to pay (minimum ₦500)</li>
-                  <li>Click &quot;Buy Units&quot; to generate bank transfer details</li>
+                  <li>Click "Buy Units" to generate bank transfer details</li>
                   <li>Make payment to the provided account number</li>
                   <li>Units are delivered immediately after payment confirmation</li>
                 </ol>
