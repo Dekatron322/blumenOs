@@ -3,8 +3,8 @@ type Environment = "STAGING" | "PRODUCTION"
 
 export const API_CONFIG = {
   // Environment-based base URLs
-  STAGING: "https://blumenos-e0fba1f74776.herokuapp.com",
-  PRODUCTION: "https://blumenos-e0fba1f74776.herokuapp.com",
+  STAGING: process.env.NEXT_PUBLIC_API_BASE_URL_STAGING || "https://blumenos-e0fba1f74776.herokuapp.com",
+  PRODUCTION: process.env.NEXT_PUBLIC_API_BASE_URL_PRODUCTION || "https://blumenos-e0fba1f74776.herokuapp.com",
 
   // Current environment (change this to switch between staging/production)
   CURRENT_ENV: (process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING") as Environment,
