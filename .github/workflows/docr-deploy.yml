@@ -29,7 +29,7 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: Log in to DigitalOcean Registry
-        run: doctl registry login --expiry-seconds 600
+        run: doctl registry login --expiry-seconds 3600
 
       - name: Build and push
         uses: docker/build-push-action@v5
