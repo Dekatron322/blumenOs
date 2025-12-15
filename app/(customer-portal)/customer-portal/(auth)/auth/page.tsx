@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/EmailInput"
 import { motion } from "framer-motion"
@@ -10,6 +11,7 @@ const SignIn: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -23,9 +25,8 @@ const SignIn: React.FC = () => {
     }
 
     // No API call here; implement integration as needed.
-    setTimeout(() => {
-      setLoading(false)
-    }, 500)
+    // After basic validation, redirect to the verify page.
+    router.push("/customer-portal/verify")
   }
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
