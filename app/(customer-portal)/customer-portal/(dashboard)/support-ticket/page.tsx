@@ -6,9 +6,9 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { ArrowLeft, ArrowRight } from "lucide-react"
-import { BsHeadset, BsCalendar, BsClock, BsPaperclip, BsExclamationCircle, BsCheckCircle } from "react-icons/bs"
-import { FaTicketAlt, FaRegCommentDots, FaRegEnvelope, FaPhone, FaUser, FaLightbulb } from "react-icons/fa"
-import { MdOutlinePriorityHigh, MdOutlineAttachFile, MdOutlineCategory, MdOutlineSupportAgent } from "react-icons/md"
+import { BsCalendar, BsCheckCircle, BsClock, BsExclamationCircle, BsHeadset, BsPaperclip } from "react-icons/bs"
+import { FaLightbulb, FaPhone, FaRegEnvelope, FaTicketAlt, FaUser } from "react-icons/fa"
+import { MdOutlineAttachFile, MdOutlineCategory, MdOutlinePriorityHigh, MdOutlineSupportAgent } from "react-icons/md"
 import { HiOutlineDocumentText } from "react-icons/hi"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 
@@ -587,7 +587,7 @@ const SupportTicket: React.FC = () => {
       <div className="mt-6 space-y-3">
         <div className="rounded-md border border-blue-100 bg-blue-50 p-3">
           <p className="text-sm text-blue-700">
-            ✉️ You'll receive a confirmation email with your ticket details. Keep your ticket number for reference.
+            ✉️ You&apos;ll receive a confirmation email with your ticket details. Keep your ticket number for reference.
           </p>
         </div>
 
@@ -865,7 +865,7 @@ const SupportTicket: React.FC = () => {
                     <span className="font-bold">4</span>
                   </div>
                   <h3 className="mb-1 font-medium text-green-800">Resolve</h3>
-                  <p className="text-xs text-green-700">Issue resolved and you're notified</p>
+                  <p className="text-xs text-green-700">Issue resolved and you&apos;re notified</p>
                 </div>
               </div>
 

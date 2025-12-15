@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
@@ -321,7 +321,9 @@ const BuyUnit: React.FC = () => {
         >
           <BsPersonPlus className="mb-3 size-12 text-[#004B23]" />
           <h3 className="mb-2 text-lg font-semibold text-gray-800">For Someone Else</h3>
-          <p className="text-center text-sm text-gray-600">Purchase electricity units for another person's meter</p>
+          <p className="text-center text-sm text-gray-600">
+            Purchase electricity units for another person&apos;s meter
+          </p>
           <div className="mt-4 rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white">Third Party</div>
         </button>
       </div>
@@ -330,7 +332,7 @@ const BuyUnit: React.FC = () => {
         <h4 className="mb-2 font-medium text-blue-800">Important Note:</h4>
         <ul className="ml-5 list-disc space-y-1 text-blue-700">
           <li>For self purchase, your meter number will be automatically validated</li>
-          <li>For third party purchase, you'll need to enter and validate the recipient's meter number</li>
+          <li>For third party purchase, you&apos;ll need to enter and validate the recipient&apos;s meter number</li>
           <li>All payments are processed via bank transfer</li>
           <li>Units are delivered immediately after successful payment</li>
         </ul>
@@ -503,7 +505,7 @@ const BuyUnit: React.FC = () => {
             </div>
             <div className="text-xs text-blue-700">
               <p>Enter the amount you want to pay to purchase electricity units.</p>
-              <p className="mt-1">Units will be calculated based on the customer's tariff rate.</p>
+              <p className="mt-1">Units will be calculated based on the customer&apos;s tariff rate.</p>
             </div>
           </div>
 
@@ -607,10 +609,10 @@ const BuyUnit: React.FC = () => {
                   <strong>Purchase Process:</strong>
                 </p>
                 <ol className="ml-5 list-decimal space-y-2">
-                  <li>Select whether you're buying for yourself or for someone else</li>
+                  <li>Select whether you&apos;re buying for yourself or for someone else</li>
                   <li>Your meter is automatically validated for self purchase</li>
                   <li>Enter the amount you want to pay (minimum ₦500)</li>
-                  <li>Click "Buy Units" to generate bank transfer details</li>
+                  <li>Click &quot;Buy Units&quot; to generate bank transfer details</li>
                   <li>Make payment to the provided account number</li>
                   <li>Units are delivered immediately after payment confirmation</li>
                 </ol>
