@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
-import { DashboardIcon, PaymentIcon } from "./Icons"
+import { DashboardIcon, OutageIcon, PaymentIcon } from "./Icons"
 import {
   CashClearanceIcon,
   CollectCash,
   MakeChangeRequestIcon,
   RaiseTicketIcon,
+  ReportOutageIcon,
   VendingIcon,
   VendingIconOutline,
 } from "components/Icons/Icons"
@@ -35,9 +36,14 @@ const allLinks: NavLink[] = [
     icon: VendingIconOutline,
   },
   {
-    name: "Raise Ticket",
-    href: "/customer-portal/raise-ticket",
+    name: "Support Ticket",
+    href: "/customer-portal/support-ticket",
     icon: RaiseTicketIcon,
+  },
+  {
+    name: "Report Outage",
+    href: "/customer-portal/report-outage",
+    icon: ReportOutageIcon,
   },
   {
     name: "Make Change Request",
@@ -45,13 +51,13 @@ const allLinks: NavLink[] = [
     icon: MakeChangeRequestIcon,
   },
   {
-    name: "View Cash Clearance History",
-    href: "/customer-portal/view-cash-clearance-history",
+    name: "View Payment History",
+    href: "/customer-portal/payment-history",
     icon: CashClearanceIcon,
   },
   {
-    name: "View Payment History",
-    href: "/customer-portal/view-payment-history",
+    name: "View Vending History",
+    href: "/customer-portal/vending-history",
     icon: PaymentIcon,
   },
 ]

@@ -41,6 +41,10 @@ export const OutageIcon = ({ isActive }: { isActive: boolean }) => (
   <Image src={isActive ? "/Icons/outage.svg" : "/Icons/outage.svg"} alt="Dashboard" width={20} height={20} />
 )
 
+export const BulbOutlineIcon = ({ isActive }: { isActive: boolean }) => (
+  <Image src={isActive ? "/Icons/Energy.svg" : "/Icons/Energy.svg"} alt="Report Outage" width={20} height={20} />
+)
+
 export const AnalyticsIcon = ({ isActive }: { isActive: boolean }) => (
   <Image src={isActive ? "/Icons/Analytics.svg" : "/Icons/Analytics.svg"} alt="Dashboard" width={20} height={20} />
 )

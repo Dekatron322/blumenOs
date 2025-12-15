@@ -6,6 +6,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import BankTransferDetailsModal from "components/ui/Modal/generated-bank-transfer-modal"
+import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 
 // Mock data types
 enum PaymentChannel {
@@ -181,6 +182,7 @@ const CustomerPaymentPage: React.FC = () => {
 
   return (
     <section className="size-full">
+      <CustomerDashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">

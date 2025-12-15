@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
 import { motion } from "framer-motion"
 import Image from "next/image"
@@ -10,6 +11,7 @@ const Verify: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
+  const router = useRouter()
 
   useEffect(() => {
     if (inputRefs.current[0]) {
@@ -31,9 +33,8 @@ const Verify: React.FC = () => {
     }
 
     // No API call here; implement integration as needed.
-    setTimeout(() => {
-      setLoading(false)
-    }, 500)
+    // After basic validation, redirect to the customer overview page.
+    router.push("/customer-portal/overview")
   }
 
   const handleOtpChange = (index: number, value: string) => {
