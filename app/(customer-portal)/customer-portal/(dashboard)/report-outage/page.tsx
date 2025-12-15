@@ -646,7 +646,7 @@ const OutageReport: React.FC = () => {
                     <span className="font-bold">4</span>
                   </div>
                   <h3 className="mb-1 font-medium text-green-800">Restore</h3>
-                  <p className="text-xs text-green-700">Power is restored and you're notified</p>
+                  <p className="text-xs text-green-700">Power is restored and you&apos;re notified</p>
                 </div>
               </div>
 
