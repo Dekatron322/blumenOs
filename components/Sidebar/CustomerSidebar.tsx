@@ -1,16 +1,12 @@
 "use client"
 import Link from "next/link"
 import React, { useEffect, useState } from "react"
-
 import Image from "next/image"
 import clsx from "clsx"
 import { usePopover } from "components/Navbar/use-popover"
-import { AnimatePresence, motion } from "framer-motion"
 import { usePathname, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
-import { allLinks, getFirstPermittedPath, hasPermission, type UserPermission } from "./Links"
-import { SalesRepLinks } from "./SalesRepLinks"
 import { CustomerLinks } from "./CustomerLinks"
 
 const CustomerSidebar = () => {
@@ -73,34 +69,13 @@ const CustomerSidebar = () => {
           <div className="flex w-full items-center justify-between pt-5">
             <button
               type="button"
-              onClick={() => {
-                const permissions: UserPermission | null =
-                  user?.roles && user?.privileges
-                    ? {
-                        roles: user.roles,
-                        privileges: user.privileges,
-                      }
-                    : null
-
-                let targetPath = "/dashboard"
-
-                if (permissions) {
-                  const dashboardLink = allLinks.find((link) => link.href === "/dashboard")
-                  const canAccessDashboard = dashboardLink ? hasPermission(dashboardLink, permissions) : false
-
-                  if (!canAccessDashboard) {
-                    const firstPermitted = getFirstPermittedPath(permissions)
-                    if (firstPermitted) {
-                      targetPath = firstPermitted
-                    }
-                  }
-                }
-
-                router.push(targetPath)
-              }}
-              className="flex w-full items-center justify-center rounded-lg bg-[#004B23] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003017]"
+              onClick={toggleSystemSettings}
+              className="flex w-full items-center justify-between gap-2 rounded-md p-2 text-left  hover:bg-gray-100 "
             >
-              Switch to main dashboard
+              <div className="flex items-center gap-2">
+                <img src="/Icons/setting-2.svg" />
+                <p className="bottom-bar  lg:block">System Settings</p>
+              </div>
             </button>
           </div>
         </div>
