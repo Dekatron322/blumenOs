@@ -1,30 +1,42 @@
 # syntax=docker/dockerfile:1
+
 FROM node:20-bullseye-slim AS base
 WORKDIR /app
 
+# Install build tools and dependencies once
 FROM base AS deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential python3 ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+ENV NODE_ENV=development
+RUN set -eux; \
+  export DEBIAN_FRONTEND=noninteractive; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends build-essential python3 ca-certificates; \
+  rm -rf /var/lib/apt/lists/*
+
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
+# Build the Next.js app
 FROM base AS builder
+ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN yarn build
 
-FROM node:20-bullseye-slim AS runner
-WORKDIR /app
+# Production runtime image
+FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
+WORKDIR /app
+
+# Use the non-root node user provided by the base image
 USER node
 
-# Standalone server (includes only required node_modules)
-COPY --from=builder /app/.next/standalone ./
-# Static + public
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
+COPY --from=builder /app/env.mjs ./env.mjs
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["yarn", "start"]
