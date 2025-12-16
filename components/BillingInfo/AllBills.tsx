@@ -190,7 +190,18 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, on
 
 const LoadingSkeleton = () => {
   return (
-    <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-3 sm:p-5">
+    <motion.div
+      className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-3 sm:p-5"
+      initial={{ opacity: 0.6 }}
+      animate={{
+        opacity: [0.6, 1, 0.6],
+        transition: {
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
+    >
       {/* Header Section Skeleton */}
       <div className="items-center justify-between border-b py-2 md:flex md:py-4">
         <div className="mb-3 md:mb-0">
@@ -241,7 +252,7 @@ const LoadingSkeleton = () => {
         </div>
         <div className="h-6 w-32 rounded bg-gray-200"></div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -603,7 +614,6 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
- 
   const generatePeriodOptions = () => {
     const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
 
@@ -889,103 +899,8 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   const tableBills = transformApiBillsToTableBills()
 
-  // Fallback data if no API data
-  const fallbackBills: Bill[] = [
-    {
-      id: 1,
-      customerName: "Fatima Hassan",
-      accountNumber: "2301567890",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦425",
-      status: "Paid",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Residential",
-      location: "Lagos Island",
-      consumption: "35 kWh",
-      tariff: "₦12/kWh",
-    },
-    {
-      id: 2,
-      customerName: "John Adebayo",
-      accountNumber: "2301456789",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦250",
-      status: "Pending",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Residential",
-      location: "Ikeja",
-      consumption: "25 kWh",
-      tariff: "₦10/kWh",
-    },
-    {
-      id: 3,
-      customerName: "Grace Okonkwo",
-      accountNumber: "2301678901",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦187",
-      status: "Overdue",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Commercial",
-      location: "Surulere",
-      consumption: "55 kWh",
-      tariff: "₦3.4/kWh",
-    },
-    {
-      id: 4,
-      customerName: "Tech Solutions Ltd",
-      accountNumber: "2301789012",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦1,250",
-      status: "Paid",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Commercial",
-      location: "Victoria Island",
-      consumption: "230 kWh",
-      tariff: "₦5.4/kWh",
-    },
-    {
-      id: 5,
-      customerName: "Michael Johnson",
-      accountNumber: "2301890123",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦320",
-      status: "Cancelled",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Residential",
-      location: "Lekki",
-      consumption: "30 kWh",
-      tariff: "₦10.7/kWh",
-    },
-    {
-      id: 6,
-      customerName: "Sarah Blumenthal",
-      accountNumber: "2301901234",
-      billingCycle: "January 2024",
-      name: "January, 2024",
-      amount: "₦550",
-      status: "Paid",
-      dueDate: "2024-01-31",
-      issueDate: "2024-01-01",
-      customerType: "Industrial",
-      location: "Ilupeju",
-      consumption: "580 kWh",
-      tariff: "₦0.95/kWh",
-    },
-  ]
-
-  // Only show fallback if no data and not loading
-  const shouldShowFallback = !loading && tableBills.length === 0
-  const displayBills = shouldShowFallback ? fallbackBills : tableBills
+  // Bills to display in the table (API data only)
+  const displayBills = tableBills
 
   const getPageItems = (): (number | string)[] => {
     const total = totalPages
@@ -1050,10 +965,10 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 2xl:mt-5 2xl:flex-row xl:px-16">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 xl:px-16 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Bills Table */}
         <motion.div
-          className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1 2xl:max-w-[calc(100%-356px)]"
+          className="w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
@@ -1064,321 +979,321 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-        <div className="flex items-center gap-3">
-          {/* Filter Button for ALL screens up to 2xl */}
-          <button
-            onClick={() => setShowMobileFilters(true)}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-          >
-            <Filter className="size-4" />
-            Filters
-            {getActiveFilterCount() > 0 && (
-              <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                {getActiveFilterCount()}
-              </span>
-            )}
-          </button>
-
-          <div>
-            <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Bills</p>
-            <p className="text-sm text-gray-600">Manage and monitor all customer bills and payments</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-full sm:w-64 md:w-[380px]">
-            <SearchModule
-              value={searchText}
-              onChange={handleSearch}
-              onCancel={handleCancelSearch}
-              placeholder="Search by customer, account or period..."
-              className="w-full"
-              bgClassName="bg-white"
-            />
-          </div>
-
-          {/* Active filters badge - Desktop only (2xl and above) */}
-          {getActiveFilterCount() > 0 && (
-            <div className="hidden items-center gap-2 2xl:flex">
-              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-              </span>
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {displayBills.length === 0 ? (
-        <motion.div
-          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching bills found" : "No bills available"}
-          </motion.p>
-        </motion.div>
-      ) : (
-        <>
-          <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customerName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Customer <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("billingCycle")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Billing Cycle <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("amount")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Amount <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("dueDate")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Due Date <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customerType")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Customer Type <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("location")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Location <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("consumption")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Consumption <RxCaretSort />
-                    </div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayBills.map((bill: Bill, index: number) => (
-                  <motion.tr
-                    key={bill.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                      <td className="whitespace-nowrap border-b px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
-                            <UserIcon />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{bill.customerName}</div>
-                            <div className="text-xs text-gray-500">{bill.accountNumber}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{bill.name}</div>
-                          <div className="text-xs text-gray-500">{bill.billingCycle}</div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                        {formatCurrency(bill.amount)}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getStatusStyle(bill.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor: getStatusStyle(bill.status).color,
-                            }}
-                          ></span>
-                          {bill.status}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        {formatDate(bill.dueDate)}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getCustomerTypeStyle(bill.customerType)}
-                          className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {bill.customerType}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <MapIcon />
-                          {bill.location}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        <div>
-                          <div className="font-medium">{bill.consumption}</div>
-                          <div className="text-xs text-gray-500">{bill.tariff}</div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <ButtonModule
-                            size="sm"
-                            onClick={() => handleViewBillDetails(bill)}
-                            variant="primary"
-                            className="text-xs sm:text-sm"
-                          >
-                            <span className="hidden sm:inline">View</span>
-                            <span className="sm:hidden">View</span>
-                          </ButtonModule>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-              </tbody>
-            </table>
-          </motion.div>
-
-          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-            <div className="flex items-center gap-1 max-sm:hidden">
-              <p className="text-xs sm:text-sm">Show rows</p>
-              <select
-                value={pagination.pageSize}
-                onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-3">
+              {/* Filter Button for ALL screens up to 2xl */}
               <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
               >
-                <BiSolidLeftArrow className="size-4 sm:size-5" />
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
               </button>
 
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1 sm:hidden">
-                  {getMobilePageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Bills</p>
+                <p className="text-sm text-gray-600">Manage and monitor all customer bills and payments</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-full sm:w-64 md:w-[380px]">
+                <SearchModule
+                  value={searchText}
+                  onChange={handleSearch}
+                  onCancel={handleCancelSearch}
+                  placeholder="Search by customer, account or period..."
+                  className="w-full"
+                  bgClassName="bg-white"
+                />
               </div>
 
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === totalPages || totalPages === 0}
-              >
-                <BiSolidRightArrow className="size-4 sm:size-5" />
-              </button>
+              {/* Active filters badge - Desktop only (2xl and above) */}
+              {getActiveFilterCount() > 0 && (
+                <div className="hidden items-center gap-2 2xl:flex">
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </div>
+          </motion.div>
 
-            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-              Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
-              {searchText.trim() && " - filtered"}
-            </p>
-          </div>
-        </>
-      )}
+          {displayBills.length === 0 ? (
+            <motion.div
+              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {searchText ? "No matching bills found" : "No bills available"}
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th
+                        className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("customerName")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Customer <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("billingCycle")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Billing Cycle <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("amount")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Amount <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("status")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Status <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("dueDate")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Due Date <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("customerType")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Customer Type <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("location")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Location <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("consumption")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Consumption <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayBills.map((bill: Bill, index: number) => (
+                      <motion.tr
+                        key={bill.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <td className="whitespace-nowrap border-b px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
+                              <UserIcon />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{bill.customerName}</div>
+                              <div className="text-xs text-gray-500">{bill.accountNumber}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{bill.name}</div>
+                            <div className="text-xs text-gray-500">{bill.billingCycle}</div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(bill.amount)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getStatusStyle(bill.status)}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor: getStatusStyle(bill.status).color,
+                              }}
+                            ></span>
+                            {bill.status}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {formatDate(bill.dueDate)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getCustomerTypeStyle(bill.customerType)}
+                            className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            {bill.customerType}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <MapIcon />
+                            {bill.location}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          <div>
+                            <div className="font-medium">{bill.consumption}</div>
+                            <div className="text-xs text-gray-500">{bill.tariff}</div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <ButtonModule
+                              size="sm"
+                              onClick={() => handleViewBillDetails(bill)}
+                              variant="primary"
+                              className="text-xs sm:text-sm"
+                            >
+                              <span className="hidden sm:inline">View</span>
+                              <span className="sm:hidden">View</span>
+                            </ButtonModule>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {getMobilePageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === totalPages || totalPages === 0}
+                  >
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
+                  {searchText.trim() && " - filtered"}
+                </p>
+              </div>
+            </>
+          )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Always visible */}
