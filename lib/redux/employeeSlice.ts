@@ -72,6 +72,12 @@ export interface EmployeeDetailsResponse {
 export interface EmployeesRequestParams {
   pageNumber: number
   pageSize: number
+  search?: string
+  department?: string
+  status?: string
+  employmentType?: string
+  areaOffice?: string
+  passwordStatus?: string
 }
 
 // Interfaces for Employee Update
@@ -487,6 +493,18 @@ interface EmployeeState {
   // General employee state
   loading: boolean
   error: string | null
+
+  // Search and filter state for employees list
+  filters: {
+    search: string
+    department: string
+    status: string
+    employmentType: string
+    areaOffice: string
+    passwordStatus: string
+    sortBy: string
+    sortOrder: "asc" | "desc" | ""
+  }
 }
 
 // Initial state
@@ -573,6 +591,16 @@ const initialState: EmployeeState = {
   departmentReportSuccess: false,
   loading: false,
   error: null,
+  filters: {
+    search: "",
+    department: "",
+    status: "",
+    employmentType: "",
+    areaOffice: "",
+    passwordStatus: "",
+    sortBy: "",
+    sortOrder: "",
+  },
 }
 
 // Async thunks
@@ -580,12 +608,18 @@ export const fetchEmployees = createAsyncThunk(
   "employee/fetchEmployees",
   async (params: EmployeesRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize } = params
+      const { pageNumber, pageSize, search, department, status, employmentType, areaOffice, passwordStatus } = params
 
       const response = await api.get<EmployeesResponse>(buildApiUrl(API_ENDPOINTS.EMPLOYEE.EMPLOYEE), {
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
+          ...(search && { Search: search }),
+          ...(department && { Department: department }),
+          ...(status && { Status: status }),
+          ...(employmentType && { EmploymentType: employmentType }),
+          ...(areaOffice && { AreaOffice: areaOffice }),
+          ...(passwordStatus && { PasswordStatus: passwordStatus }),
         },
       })
 
@@ -1318,6 +1352,10 @@ const employeeSlice = createSlice({
       state.employees = state.employees.filter((emp) => emp.id !== action.payload)
       state.pagination.totalCount = Math.max(0, state.pagination.totalCount - 1)
     },
+    // Set filters for employees list
+    setFilters: (state, action: PayloadAction<Partial<EmployeeState["filters"]>>) => {
+      state.filters = { ...state.filters, ...action.payload }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -1860,6 +1898,7 @@ export const {
   setChangeRequestsByEmployeePagination,
   updateEmployeeInList,
   removeEmployeeFromList,
+  setFilters,
 } = employeeSlice.actions
 
 export default employeeSlice.reducer

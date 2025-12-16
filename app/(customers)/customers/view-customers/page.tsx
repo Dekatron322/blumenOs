@@ -18,7 +18,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { useRouter } from "next/navigation"
-import AllCustomers from "components/Tables/ViewAllCustomers"
+import AllCustomers from "components/Tables/AllCustomers"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
