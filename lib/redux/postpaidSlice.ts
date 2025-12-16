@@ -166,6 +166,8 @@ export interface PostpaidBillsRequestParams {
   category?: number
   areaOfficeId?: number
   feederId?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Billing Job Interfaces
@@ -602,6 +604,8 @@ interface PostpaidBillingState {
     category?: number
     areaOfficeId?: number
     feederId?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
   }
 
   // Billing jobs filters
@@ -731,7 +735,7 @@ export const fetchPostpaidBills = createAsyncThunk(
   "postpaidBilling/fetchPostpaidBills",
   async (params: PostpaidBillsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, customerId, accountNumber, status, category, areaOfficeId, feederId } =
+      const { pageNumber, pageSize, period, customerId, accountNumber, status, category, areaOfficeId, feederId, sortBy, sortOrder } =
         params
 
       const response = await api.get<PostpaidBillsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.GET), {
@@ -745,6 +749,8 @@ export const fetchPostpaidBills = createAsyncThunk(
           ...(category !== undefined && { Category: category }),
           ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
           ...(feederId && { FeederId: feederId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 
