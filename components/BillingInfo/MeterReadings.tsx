@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
@@ -10,7 +10,19 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
 import PdfFile from "public/pdf-file"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchMeterReadings, MeterReading } from "lib/redux/meterReadingSlice"
+import { fetchMeterReadings, MeterReading, setPagination as setMeterReadingPagination } from "lib/redux/meterReadingSlice"
+import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
+import { fetchDistributionSubstations, clearDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { fetchCustomers, clearCustomers } from "lib/redux/customerSlice"
+import { ArrowLeft, Filter, X, SortAsc, SortDesc } from "lucide-react"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
 
 interface MeterReadingsProps {
   onExport?: () => void
@@ -157,16 +169,240 @@ const SearchSkeleton = () => (
   ></motion.div>
 )
 
+// Mobile Filter Sidebar Component
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  periodOptions,
+  customerOptions,
+  areaOfficeOptions,
+  feederOptions,
+  distributionSubstationOptions,
+  sortOptions,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  periodOptions: Array<{ value: string; label: string }>
+  customerOptions: Array<{ value: string | number; label: string }>
+  areaOfficeOptions: Array<{ value: string | number; label: string }>
+  feederOptions: Array<{ value: string | number; label: string }>
+  distributionSubstationOptions: Array<{ value: string | number; label: string }>
+  sortOptions: SortOption[]
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Period Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <FormSelectModule
+                  name="period"
+                  value={localFilters.period || ""}
+                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Customer Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <FormSelectModule
+                  name="customerId"
+                  value={localFilters.customerId || ""}
+                  onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feederId"
+                  value={localFilters.feederId || ""}
+                  onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                  options={feederOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Distribution Substation Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Distribution Substation</label>
+                <FormSelectModule
+                  name="distributionSubstationId"
+                  value={localFilters.distributionSubstationId || ""}
+                  onChange={(e) => handleFilterChange("distributionSubstationId", e.target.value || undefined)}
+                  options={distributionSubstationOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills, onViewDetails }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { meterReadings, meterReadingsLoading, meterReadingsError, pagination } = useAppSelector(
     (state) => state.meterReadings
   )
+  const { customers } = useAppSelector((state) => state.customers)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { feeders } = useAppSelector((state) => state.feeders)
+  const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
 
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+
+  // Local state for filters to avoid too many Redux dispatches
+  const [localFilters, setLocalFilters] = useState({
+    period: "",
+    customerId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state - triggers API calls
+  const [appliedFilters, setAppliedFilters] = useState({
+    period: undefined as string | undefined,
+    customerId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
+  })
 
   // Check for mobile view
   useEffect(() => {
@@ -179,17 +415,231 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
+  // Fetch customers, area offices, feeders, and distribution substations on component mount for filter dropdowns
   useEffect(() => {
-    void dispatch(
-      fetchMeterReadings({
-        pageNumber: currentPage,
-        pageSize: pagination.pageSize,
+    dispatch(
+      fetchCustomers({
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
-  }, [dispatch, currentPage, pagination.pageSize])
+
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
+
+    dispatch(
+      fetchFeeders({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    dispatch(
+      fetchDistributionSubstations({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
+
+    // Cleanup function to clear states when component unmounts
+    return () => {
+      dispatch(clearCustomers())
+      dispatch(clearAreaOffices())
+      dispatch(clearFeeders())
+      dispatch(clearDistributionSubstations())
+    }
+  }, [dispatch])
+
+  useEffect(() => {
+    const fetchParams: any = {
+      pageNumber: currentPage,
+      pageSize: pagination.pageSize,
+      ...(searchText && { customerId: Number(searchText) }),
+      ...(appliedFilters.period && { period: appliedFilters.period }),
+      ...(appliedFilters.customerId !== undefined && { customerId: appliedFilters.customerId }),
+      ...(appliedFilters.areaOfficeId !== undefined && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.feederId !== undefined && { feederId: appliedFilters.feederId }),
+      ...(appliedFilters.distributionSubstationId !== undefined && {
+        distributionSubstationId: appliedFilters.distributionSubstationId,
+      }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    void dispatch(fetchMeterReadings(fetchParams))
+  }, [dispatch, currentPage, pagination.pageSize, searchText, appliedFilters])
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setCurrentPage(1)
+    dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  // Generate period options
+  const generatePeriodOptions = () => {
+    const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
+
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    })
+
+    // Include current month + next 12 months
+    for (let i = 0; i <= 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      const value = `${year}-${month}`
+      const label = formatter.format(date)
+
+      options.push({ value, label })
+    }
+
+    const existingPeriods = Array.from(new Set(meterReadings.map((reading) => reading.period)))
+    existingPeriods.forEach((period) => {
+      const alreadyExists = options.some((opt) => opt.value === period)
+      if (!alreadyExists && period) {
+        let label = period
+        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
+        if (match && match[1] && match[2]) {
+          const year = parseInt(match[1], 10)
+          const monthIndex = parseInt(match[2], 10) - 1
+          const date = new Date(year, monthIndex, 1)
+          label = formatter.format(date)
+        }
+        options.push({ value: period, label })
+      }
+    })
+
+    return options
+  }
+
+  const periodOptions = generatePeriodOptions()
+
+  // Customer options
+  const customerOptions = [
+    { value: "", label: "All Customers" },
+    ...customers.map((customer) => ({
+      value: customer.id,
+      label: `${customer.fullName} (${customer.accountNumber})`,
+    })),
+  ]
+
+  // Area office options
+  const areaOfficeOptions = [
+    { value: "", label: "All Area Offices" },
+    ...areaOffices.map((office) => ({
+      value: office.id,
+      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+    })),
+  ]
+
+  // Feeder options
+  const feederOptions = [
+    { value: "", label: "All Feeders" },
+    ...feeders.map((feeder) => ({
+      value: feeder.id,
+      label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
+    })),
+  ]
+
+  // Distribution substation options
+  const distributionSubstationOptions = [
+    { value: "", label: "All Distribution Substations" },
+    ...distributionSubstations.map((substation) => ({
+      value: substation.id,
+      label: `${substation.name} (${substation.code})`,
+    })),
+  ]
+
+  // Sort options
+  const sortOptions: SortOption[] = [
+    { label: "Customer Name A-Z", value: "customerName", order: "asc" },
+    { label: "Customer Name Z-A", value: "customerName", order: "desc" },
+    { label: "Period Asc", value: "period", order: "asc" },
+    { label: "Period Desc", value: "period", order: "desc" },
+    { label: "Consumption Low-High", value: "validConsumptionKwh", order: "asc" },
+    { label: "Consumption High-Low", value: "validConsumptionKwh", order: "desc" },
+    { label: "Captured Date Asc", value: "capturedAtUtc", order: "asc" },
+    { label: "Captured Date Desc", value: "capturedAtUtc", order: "desc" },
+    { label: "Anomaly Score Low-High", value: "anomalyScore", order: "asc" },
+    { label: "Anomaly Score High-Low", value: "anomalyScore", order: "desc" },
+    { label: "Status Asc", value: "isFlaggedForReview", order: "asc" },
+    { label: "Status Desc", value: "isFlaggedForReview", order: "desc" },
+  ]
+
+  // Handle individual filter changes (local state)
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply all filters at once
+  const applyFilters = () => {
+    setAppliedFilters({
+      period: localFilters.period || undefined,
+      customerId: localFilters.customerId,
+      areaOfficeId: localFilters.areaOfficeId,
+      feederId: localFilters.feederId,
+      distributionSubstationId: localFilters.distributionSubstationId,
+      sortBy: localFilters.sortBy || undefined,
+      sortOrder: localFilters.sortOrder || undefined,
+    })
+    setCurrentPage(1)
+    dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      period: "",
+      customerId: undefined,
+      areaOfficeId: undefined,
+      feederId: undefined,
+      distributionSubstationId: undefined,
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setAppliedFilters({
+      period: undefined,
+      customerId: undefined,
+      areaOfficeId: undefined,
+      feederId: undefined,
+      distributionSubstationId: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+    })
+    setSearchText("")
+    setCurrentPage(1)
+    dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (localFilters.period) count++
+    if (localFilters.customerId !== undefined) count++
+    if (localFilters.areaOfficeId !== undefined) count++
+    if (localFilters.feederId !== undefined) count++
+    if (localFilters.distributionSubstationId !== undefined) count++
+    if (localFilters.sortBy) count++
+    return count
   }
 
   const handleViewDetails = (reading: MeterReading) => {
@@ -198,16 +648,8 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     onViewDetails?.(reading)
   }
 
-  const filteredReadings = meterReadings.filter((reading) => {
-    if (!searchText.trim()) return true
-    const query = searchText.toLowerCase()
-    return (
-      reading.customerName.toLowerCase().includes(query) ||
-      reading.customerAccountNumber.toLowerCase().includes(query) ||
-      reading.period.toLowerCase().includes(query) ||
-      reading.id.toString().toLowerCase().includes(query)
-    )
-  })
+  // No client-side filtering - using API filters
+  const displayReadings = meterReadings
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
@@ -456,44 +898,78 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
   )
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full"
-    >
-      <div className="rounded-lg border bg-white p-3 sm:p-4 md:p-6">
-        {/* Header */}
-        <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-semibold sm:text-xl">Recent Meter Readings</h3>
-          <div className="flex gap-2">
-            <ButtonModule
-              icon={<PdfFile />}
-              variant="outline"
-              size="sm"
-              className="text-xs sm:text-sm"
-              onClick={onExport}
-            >
-              <span className="hidden sm:inline">Export</span>
-              <span className="sm:hidden">Export</span>
-            </ButtonModule>
-            <ButtonModule variant="primary" size="sm" className="text-xs sm:text-sm" onClick={onGenerateBills}>
-              <span className="hidden sm:inline">Generate Bills</span>
-              <span className="sm:hidden">Generate</span>
-            </ButtonModule>
+    <>
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
+        {/* Main Content - Meter Readings */}
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          {/* Header */}
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              {/* Filter Button for ALL screens up to 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+              <h3 className="text-lg font-semibold sm:text-xl">Recent Meter Readings</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <ButtonModule
+                icon={<PdfFile />}
+                variant="outline"
+                size="sm"
+                className="text-xs sm:text-sm"
+                onClick={onExport}
+              >
+                <span className="hidden sm:inline">Export</span>
+                <span className="sm:hidden">Export</span>
+              </ButtonModule>
+              <ButtonModule variant="primary" size="sm" className="text-xs sm:text-sm" onClick={onGenerateBills}>
+                <span className="hidden sm:inline">Generate Bills</span>
+                <span className="sm:hidden">Generate</span>
+              </ButtonModule>
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Search */}
-        <div className="mb-4 sm:mb-6">
-          <SearchModule
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onCancel={handleCancelSearch}
-            placeholder="Search meter readings..."
-            className="w-full sm:w-96"
-          />
-        </div>
+          {/* Search */}
+          <div className="mb-4 sm:mb-6">
+            <SearchModule
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value)
+                setCurrentPage(1)
+                dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
+              }}
+              onCancel={handleCancelSearch}
+              placeholder="Search meter readings..."
+              className="w-full sm:w-96"
+            />
+          </div>
 
         {/* Loading State */}
         {meterReadingsLoading && (
@@ -522,7 +998,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
         )}
 
         {/* Empty State */}
-        {!meterReadingsLoading && !meterReadingsError && filteredReadings.length === 0 && (
+        {!meterReadingsLoading && !meterReadingsError && displayReadings.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 sm:py-12">
             <div className="text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
@@ -530,17 +1006,19 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
               </div>
               <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
               <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                {searchText.trim() ? "Try adjusting your search criteria" : "No meter readings available"}
+                {getActiveFilterCount() > 0 || searchText.trim()
+                  ? "Try adjusting your search criteria or filters"
+                  : "No meter readings available"}
               </p>
             </div>
           </div>
         )}
 
         {/* Meter Readings List */}
-        {!meterReadingsLoading && !meterReadingsError && filteredReadings.length > 0 && (
+        {!meterReadingsLoading && !meterReadingsError && displayReadings.length > 0 && (
           <>
             <div className="space-y-3 sm:space-y-4">
-              {filteredReadings.map((reading) =>
+              {displayReadings.map((reading) =>
                 isMobileView ? (
                   <MobileMeterReadingCard key={reading.id} reading={reading} />
                 ) : (
@@ -633,13 +1111,184 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
               <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
                 Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total meter readings)
-                {searchText.trim() && " - filtered"}
+                {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
               </p>
             </div>
           </>
         )}
+        </motion.div>
+
+        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          >
+            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Period Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <FormSelectModule
+                  name="period"
+                  value={localFilters.period || ""}
+                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Customer Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <FormSelectModule
+                  name="customerId"
+                  value={localFilters.customerId || ""}
+                  onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feederId"
+                  value={localFilters.feederId || ""}
+                  onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                  options={feederOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Distribution Substation Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Distribution Substation</label>
+                <FormSelectModule
+                  name="distributionSubstationId"
+                  value={localFilters.distributionSubstationId || ""}
+                  onChange={(e) => handleFilterChange("distributionSubstationId", e.target.value || undefined)}
+                  options={distributionSubstationOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {currentPage} / {totalPages || 1}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
-    </motion.div>
+
+      {/* Mobile & All Screens Filter Sidebar (up to 2xl) */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        periodOptions={periodOptions}
+        customerOptions={customerOptions}
+        areaOfficeOptions={areaOfficeOptions}
+        feederOptions={feederOptions}
+        distributionSubstationOptions={distributionSubstationOptions}
+        sortOptions={sortOptions}
+      />
+    </>
   )
 }
 
