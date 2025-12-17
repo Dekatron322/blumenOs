@@ -511,6 +511,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   }, [dispatch])
 
   // Fetch bills on component mount and when search/pagination/filters change
+  // Note: searchText triggers immediate search, but filters only apply when "Apply Filters" is clicked
   useEffect(() => {
     const fetchParams: any = {
       pageNumber: currentPage,

@@ -484,8 +484,19 @@ const MeterReadings: React.FC = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
 
-  // Local state for filters to avoid too many Redux dispatches
+  // Local state for filters (UI state - what user is selecting)
   const [localFilters, setLocalFilters] = useState({
+    period: "",
+    customerId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state (only updated when "Apply Filters" is clicked)
+  const [appliedFilters, setAppliedFilters] = useState({
     period: "",
     customerId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
@@ -539,24 +550,24 @@ const MeterReadings: React.FC = () => {
     }
   }, [dispatch])
 
-  // Fetch meter readings on component mount and when search/pagination/filters change
+  // Fetch meter readings on component mount and when search/pagination/applied filters change
   useEffect(() => {
     const fetchParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(localFilters.period ? { period: localFilters.period } : {}),
-      ...(localFilters.customerId !== undefined ? { customerId: localFilters.customerId } : {}),
-      ...(localFilters.areaOfficeId !== undefined ? { areaOfficeId: localFilters.areaOfficeId } : {}),
-      ...(localFilters.feederId !== undefined ? { feederId: localFilters.feederId } : {}),
-      ...(localFilters.distributionSubstationId !== undefined
-        ? { distributionSubstationId: localFilters.distributionSubstationId }
+      ...(appliedFilters.period ? { period: appliedFilters.period } : {}),
+      ...(appliedFilters.customerId !== undefined ? { customerId: appliedFilters.customerId } : {}),
+      ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
+      ...(appliedFilters.feederId !== undefined ? { feederId: appliedFilters.feederId } : {}),
+      ...(appliedFilters.distributionSubstationId !== undefined
+        ? { distributionSubstationId: appliedFilters.distributionSubstationId }
         : {}),
-      ...(localFilters.sortBy ? { sortBy: localFilters.sortBy } : {}),
-      ...(localFilters.sortOrder ? { sortOrder: localFilters.sortOrder } : {}),
+      ...(appliedFilters.sortBy ? { sortBy: appliedFilters.sortBy } : {}),
+      ...(appliedFilters.sortOrder ? { sortOrder: appliedFilters.sortOrder } : {}),
     }
 
     dispatch(fetchMeterReadings(fetchParams))
-  }, [dispatch, currentPage, pageSize, localFilters])
+  }, [dispatch, currentPage, pageSize, appliedFilters])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -821,22 +832,25 @@ const MeterReadings: React.FC = () => {
 
   // Apply all filters at once
   const applyFilters = () => {
+    // Copy localFilters to appliedFilters to trigger API call
+    setAppliedFilters({ ...localFilters })
     // Reset to first page when applying filters
     dispatch(setPagination({ page: 1, pageSize }))
-    // Filters are already in localFilters, useEffect will handle the API call
   }
 
   // Reset all filters
   const resetFilters = () => {
-    setLocalFilters({
+    const emptyFilters = {
       period: "",
       customerId: undefined,
       areaOfficeId: undefined,
       feederId: undefined,
       distributionSubstationId: undefined,
       sortBy: "",
-      sortOrder: "asc",
-    })
+      sortOrder: "asc" as "asc" | "desc",
+    }
+    setLocalFilters(emptyFilters)
+    setAppliedFilters(emptyFilters)
     setSearchText("")
     dispatch(setPagination({ page: 1, pageSize }))
   }
@@ -1131,12 +1145,7 @@ const MeterReadings: React.FC = () => {
               </thead>
               <tbody>
                 {meterReadings.map((reading: MeterReading, index: number) => (
-                  <motion.tr
-                    key={reading.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
+                  <tr key={reading.id}>
                       <td className="whitespace-nowrap border-b px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
@@ -1245,7 +1254,7 @@ const MeterReadings: React.FC = () => {
                           </ButtonModule>
                         </div>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
               </tbody>
             </table>
