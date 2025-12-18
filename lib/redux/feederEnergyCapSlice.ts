@@ -55,6 +55,8 @@ export interface FeederEnergyCapsRequestParams {
   feederId?: number
   areaOfficeId?: number
   companyId?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Feeder Energy Cap State
@@ -123,7 +125,7 @@ export const fetchFeederEnergyCaps = createAsyncThunk(
   "feederEnergyCap/fetchFeederEnergyCaps",
   async (params: FeederEnergyCapsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, feederId, areaOfficeId, companyId } = params
+      const { pageNumber, pageSize, period, feederId, areaOfficeId, companyId, sortBy, sortOrder } = params
 
       const response = await api.get<FeederEnergyCapsResponse>(buildApiUrl(API_ENDPOINTS.FEEDER_ENERGY_CAP.GET), {
         params: {
@@ -133,6 +135,8 @@ export const fetchFeederEnergyCaps = createAsyncThunk(
           ...(feederId !== undefined && { FeederId: feederId }),
           ...(areaOfficeId !== undefined && { AreaOfficeId: areaOfficeId }),
           ...(companyId !== undefined && { CompanyId: companyId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 

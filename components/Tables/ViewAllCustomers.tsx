@@ -947,7 +947,7 @@ const AllCustomers = () => {
                     value={filters.search}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onCancel={handleCancelSearch}
-                    placeholder="Search by name, account number, or meter number"
+                    placeholder="Search by name or account number"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
                 </div>
@@ -961,7 +961,7 @@ const AllCustomers = () => {
                   value={filters.search}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
-                  placeholder="Search by name, account number, or meter number"
+                  placeholder="Search by name or account number"
                   className="w-full"
                 />
               </div>

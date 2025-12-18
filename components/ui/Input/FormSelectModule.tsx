@@ -3,7 +3,7 @@ import React, { ChangeEvent, useEffect, useRef, useState } from "react"
 import { ChevronDown } from "lucide-react"
 
 interface FormSelectModuleProps {
-  label: string
+  label?: string
   name: string
   value: string | number
   onChange: (e: ChangeEvent<HTMLSelectElement>) => void

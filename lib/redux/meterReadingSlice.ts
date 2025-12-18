@@ -59,6 +59,8 @@ export interface MeterReadingsRequestParams {
   distributionSubstationId?: number
   feederId?: number
   areaOfficeId?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Create Meter Reading Request Interface
@@ -136,7 +138,17 @@ export const fetchMeterReadings = createAsyncThunk(
   "meterReading/fetchMeterReadings",
   async (params: MeterReadingsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, customerId, distributionSubstationId, feederId, areaOfficeId } = params
+      const {
+        pageNumber,
+        pageSize,
+        period,
+        customerId,
+        distributionSubstationId,
+        feederId,
+        areaOfficeId,
+        sortBy,
+        sortOrder,
+      } = params
 
       const response = await api.get<MeterReadingsResponse>(buildApiUrl(API_ENDPOINTS.METER_READINGS.GET), {
         params: {
@@ -147,6 +159,8 @@ export const fetchMeterReadings = createAsyncThunk(
           ...(distributionSubstationId !== undefined && { DistributionSubstationId: distributionSubstationId }),
           ...(feederId !== undefined && { FeederId: feederId }),
           ...(areaOfficeId !== undefined && { AreaOfficeId: areaOfficeId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 

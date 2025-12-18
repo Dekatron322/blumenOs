@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { AddIcon, RefreshCircleIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppSelector } from "lib/hooks/useRedux"
-import AllEmployees from "components/Tables/ViewAllEmployee"
+import AllEmployees from "components/Tables/AllEmployees"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {

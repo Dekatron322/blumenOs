@@ -10,9 +10,11 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearError, fetchMeterReadings, setPagination } from "lib/redux/meterReadingSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { AddCustomerIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
-import { PlusCircle } from "lucide-react"
+import { ArrowLeft, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
 import { fetchCustomers } from "lib/redux/customerSlice"
-import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface ActionDropdownProps {
@@ -48,6 +50,12 @@ interface MeterReading {
   estimatedConsumptionKwh: number
   validatedAtUtc: string | null
   validationNotes: string | null
+}
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ reading, onViewDetails, onValidateReading }) => {
@@ -185,6 +193,215 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ reading, onViewDetails,
   )
 }
 
+// Mobile & All Screens Filter Sidebar Component (up to 2xl)
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  periodOptions,
+  customerOptions,
+  areaOfficeOptions,
+  feederOptions,
+  distributionSubstationOptions,
+  sortOptions,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  periodOptions: Array<{ value: string; label: string }>
+  customerOptions: Array<{ value: string | number; label: string }>
+  areaOfficeOptions: Array<{ value: string | number; label: string }>
+  feederOptions: Array<{ value: string | number; label: string }>
+  distributionSubstationOptions: Array<{ value: string | number; label: string }>
+  sortOptions: SortOption[]
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Period Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <FormSelectModule
+                  name="period"
+                  value={localFilters.period || ""}
+                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Customer Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <FormSelectModule
+                  name="customerId"
+                  value={localFilters.customerId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("customerId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feederId"
+                  value={localFilters.feederId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("feederId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={feederOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Distribution Substation Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Distribution Substation
+                </label>
+                <FormSelectModule
+                  name="distributionSubstationId"
+                  value={localFilters.distributionSubstationId || ""}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "distributionSubstationId",
+                      e.target.value === "" ? undefined : Number(e.target.value)
+                    )
+                  }
+                  options={distributionSubstationOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const LoadingSkeleton = () => {
   return (
     <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-3 sm:p-5">
@@ -257,11 +474,37 @@ const MeterReadings: React.FC = () => {
   )
   const { customers } = useAppSelector((state) => state.customers)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { feeders } = useAppSelector((state) => state.feeders)
+  const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [selectedReading, setSelectedReading] = useState<MeterReading | null>(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+
+  // Local state for filters (UI state - what user is selecting)
+  const [localFilters, setLocalFilters] = useState({
+    period: "",
+    customerId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state (only updated when "Apply Filters" is clicked)
+  const [appliedFilters, setAppliedFilters] = useState({
+    period: "",
+    customerId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -269,9 +512,8 @@ const MeterReadings: React.FC = () => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages || 1
 
-  // Load initial data
+  // Fetch area offices, feeders, and distribution substations on component mount for filter dropdowns
   useEffect(() => {
-    // Load customers for the customer filter dropdown
     dispatch(
       fetchCustomers({
         pageNumber: 1,
@@ -279,25 +521,53 @@ const MeterReadings: React.FC = () => {
       })
     )
 
-    // Load area offices for the area office filter dropdown
     dispatch(
       fetchAreaOffices({
         PageNumber: 1,
         PageSize: 100,
       })
     )
+
+    dispatch(
+      fetchFeeders({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    dispatch(
+      fetchDistributionSubstations({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    // Cleanup function to clear states when component unmounts
+    return () => {
+      dispatch(clearAreaOffices())
+      dispatch(clearFeeders())
+      dispatch(clearDistributionSubstations())
+    }
   }, [dispatch])
 
-  // Fetch meter readings on component mount and when search/pagination changes
+  // Fetch meter readings on component mount and when search/pagination/applied filters change
   useEffect(() => {
     const fetchParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(searchText && { search: searchText }),
+      ...(appliedFilters.period ? { period: appliedFilters.period } : {}),
+      ...(appliedFilters.customerId !== undefined ? { customerId: appliedFilters.customerId } : {}),
+      ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
+      ...(appliedFilters.feederId !== undefined ? { feederId: appliedFilters.feederId } : {}),
+      ...(appliedFilters.distributionSubstationId !== undefined
+        ? { distributionSubstationId: appliedFilters.distributionSubstationId }
+        : {}),
+      ...(appliedFilters.sortBy ? { sortBy: appliedFilters.sortBy } : {}),
+      ...(appliedFilters.sortOrder ? { sortOrder: appliedFilters.sortOrder } : {}),
     }
 
     dispatch(fetchMeterReadings(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText])
+  }, [dispatch, currentPage, pageSize, appliedFilters])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -305,15 +575,6 @@ const MeterReadings: React.FC = () => {
       dispatch(clearError())
     }
   }, [dispatch])
-
-  // Filter state
-  const [filters, setFilters] = useState({
-    period: "",
-    customerId: "",
-    areaOfficeId: "",
-    feederId: "",
-    distributionSubstationId: "",
-  })
 
   // Generate period options
   const generatePeriodOptions = () => {
@@ -325,8 +586,8 @@ const MeterReadings: React.FC = () => {
       year: "numeric",
     })
 
-    // Include current month + next 5 months
-    for (let i = 0; i <= 5; i++) {
+    // Include current month + next 12 months
+    for (let i = 0; i <= 12; i++) {
       const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, "0")
@@ -340,7 +601,7 @@ const MeterReadings: React.FC = () => {
     const existingPeriods = Array.from(new Set(meterReadings.map((reading) => reading.period)))
     existingPeriods.forEach((period) => {
       const alreadyExists = options.some((opt) => opt.value === period)
-      if (!alreadyExists) {
+      if (!alreadyExists && period) {
         let label = period
         const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
         if (match && match[1] && match[2]) {
@@ -357,6 +618,58 @@ const MeterReadings: React.FC = () => {
   }
 
   const periodOptions = generatePeriodOptions()
+
+  // Customer options
+  const customerOptions = [
+    { value: "", label: "All Customers" },
+    ...customers.map((customer) => ({
+      value: customer.id,
+      label: `${customer.fullName}`,
+    })),
+  ]
+
+  // Area office options
+  const areaOfficeOptions = [
+    { value: "", label: "All Area Offices" },
+    ...areaOffices.map((office) => ({
+      value: office.id,
+      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+    })),
+  ]
+
+  // Feeder options
+  const feederOptions = [
+    { value: "", label: "All Feeders" },
+    ...feeders.map((feeder) => ({
+      value: feeder.id,
+      label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
+    })),
+  ]
+
+  // Distribution substation options
+  const distributionSubstationOptions = [
+    { value: "", label: "All Distribution Substations" },
+    ...distributionSubstations.map((substation) => ({
+      value: substation.id,
+      label: `${substation.dssCode} (${substation.nercCode})`,
+    })),
+  ]
+
+  // Sort options
+  const sortOptions: SortOption[] = [
+    { label: "Customer Name A-Z", value: "customerName", order: "asc" },
+    { label: "Customer Name Z-A", value: "customerName", order: "desc" },
+    { label: "Period Asc", value: "period", order: "asc" },
+    { label: "Period Desc", value: "period", order: "desc" },
+    { label: "Consumption Low-High", value: "validConsumptionKwh", order: "asc" },
+    { label: "Consumption High-Low", value: "validConsumptionKwh", order: "desc" },
+    { label: "Captured Date Asc", value: "capturedAtUtc", order: "asc" },
+    { label: "Captured Date Desc", value: "capturedAtUtc", order: "desc" },
+    { label: "Anomaly Score Low-High", value: "anomalyScore", order: "asc" },
+    { label: "Anomaly Score High-Low", value: "anomalyScore", order: "desc" },
+    { label: "Status Asc", value: "validationStatus", order: "asc" },
+    { label: "Status Desc", value: "validationStatus", order: "desc" },
+  ]
 
   const getValidationStatusStyle = (status: number) => {
     switch (status) {
@@ -500,16 +813,58 @@ const MeterReadings: React.FC = () => {
     // Implement validation logic here
   }
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
+  // Handle individual filter changes (local state)
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply all filters at once
+  const applyFilters = () => {
+    // Copy localFilters to appliedFilters to trigger API call
+    setAppliedFilters({ ...localFilters })
+    // Reset to first page when applying filters
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const handleFilterSelectChange = (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const { name, value } = e.target
-    handleFilterChange(name, String(value))
+  // Reset all filters
+  const resetFilters = () => {
+    const emptyFilters = {
+      period: "",
+      customerId: undefined,
+      areaOfficeId: undefined,
+      feederId: undefined,
+      distributionSubstationId: undefined,
+      sortBy: "",
+      sortOrder: "asc" as "asc" | "desc",
+    }
+    setLocalFilters(emptyFilters)
+    setAppliedFilters(emptyFilters)
+    setSearchText("")
+    dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (localFilters.period) count++
+    if (localFilters.customerId) count++
+    if (localFilters.areaOfficeId) count++
+    if (localFilters.feederId) count++
+    if (localFilters.distributionSubstationId) count++
+    if (localFilters.sortBy) count++
+    return count
   }
 
   const formatDate = (dateString: string) => {
@@ -595,407 +950,590 @@ const MeterReadings: React.FC = () => {
     return <div className="p-4 text-red-500">Error loading meter readings data: {meterReadingsError}</div>
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Meter Readings</p>
-          <p className="text-sm text-gray-600">Manage and validate customer meter readings</p>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-full sm:w-64 md:w-[380px]">
-            <SearchModule
-              value={searchText}
-              onChange={handleSearch}
-              onCancel={handleCancelSearch}
-              placeholder="Search by customer, account or period..."
-              className="w-full"
-              bgClassName="bg-white"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push("/billing/meter-readings/add")}
-            className="rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
-          >
-            <PlusCircle className="size-4 sm:hidden" />
-            <p className="max-sm:hidden"> Add Reading </p>
-          </button>
-        </div>
-      </motion.div>
-
-      {/* Filters Section */}
-      <div className="mt-4 flex flex-wrap gap-3">
-        <FormSelectModule
-          label="Period"
-          name="period"
-          value={filters.period}
-          onChange={handleFilterSelectChange}
-          options={periodOptions}
-          className="w-full sm:w-52"
-        />
-
-        <FormSelectModule
-          label="Customer"
-          name="customerId"
-          value={filters.customerId}
-          onChange={handleFilterSelectChange}
-          options={[
-            { value: "", label: "All Customers" },
-            ...customers.slice(0, 10).map((customer) => ({
-              value: String(customer.id),
-              label: `${customer.fullName}`,
-            })),
-          ]}
-          className="w-full sm:w-56"
-        />
-
-        <FormSelectModule
-          label="Area Office"
-          name="areaOfficeId"
-          value={filters.areaOfficeId}
-          onChange={handleFilterSelectChange}
-          options={[
-            { value: "", label: "All Area Offices" },
-            ...areaOffices.slice(0, 10).map((office) => ({
-              value: String(office.id),
-              label: office.nameOfNewOAreaffice,
-            })),
-          ]}
-          className="w-full sm:w-56"
-        />
-      </div>
-
-      {meterReadings.length === 0 ? (
+    <>
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
+        {/* Main Content - Meter Readings Table */}
         <motion.div
-          className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching readings found" : "No meter readings available"}
-          </motion.p>
-        </motion.div>
-      ) : (
-        <>
           <motion.div
-            className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
           >
-            <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customerName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Customer <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("period")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Period <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("previousReadingKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Previous Reading <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("presentReadingKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Present Reading <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("validConsumptionKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Consumption <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("validationStatus")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("anomalyScore")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Anomaly Score <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("isFlaggedForReview")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Review Flag <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capturedAtUtc")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Captured Date <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capturedByName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Captured By <RxCaretSort />
-                    </div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {meterReadings.map((reading: MeterReading, index: number) => (
-                    <motion.tr
-                      key={reading.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <td className="whitespace-nowrap border-b px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
-                            <UserIcon />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{reading.customerName}</div>
-                            <div className="text-xs text-gray-500">{reading.customerAccountNumber}</div>
-                            <div className="text-xs text-blue-600">ID: {reading.customerId}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{reading.period}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        {reading.previousReadingKwh.toLocaleString()} kWh
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                        {reading.presentReadingKwh.toLocaleString()} kWh
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getConsumptionStyle(
-                            reading.validConsumptionKwh,
-                            reading.averageConsumptionBaselineKwh
-                          )}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {reading.validConsumptionKwh.toLocaleString()} kWh
-                        </motion.div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Baseline:{" "}
-                          {reading.averageConsumptionBaselineKwh != null
-                            ? `${reading.averageConsumptionBaselineKwh.toLocaleString()} kWh`
-                            : "N/A"}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getValidationStatusStyle(reading.validationStatus)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                reading.validationStatus === 1
-                                  ? "#589E67"
-                                  : reading.validationStatus === 2
-                                  ? "#D97706"
-                                  : reading.validationStatus === 3
-                                  ? "#AF4B4B"
-                                  : "#2563EB",
-                            }}
-                          ></span>
-                          {getValidationStatusText(reading.validationStatus)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getAnomalyScoreStyle(reading.anomalyScore)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {reading.anomalyScore}%
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
-                            reading.isFlaggedForReview ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor: reading.isFlaggedForReview ? "#AF4B4B" : "#589E67",
-                            }}
-                          ></span>
-                          {reading.isFlaggedForReview ? "Flagged" : "Clear"}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        <div>{formatDate(reading.capturedAtUtc)}</div>
-                        <div className="text-xs text-gray-500">{formatDateTime(reading.capturedAtUtc)}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        {reading.capturedByName}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <ButtonModule
-                            size="sm"
-                            onClick={() => handleViewReadingDetails(reading)}
-                            variant="primary"
-                            className="text-xs sm:text-sm"
-                          >
-                            <span className="hidden sm:inline">View</span>
-                            <span className="sm:hidden">View</span>
-                          </ButtonModule>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </motion.div>
-
-          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-            <div className="flex items-center gap-1 max-sm:hidden">
-              <p className="text-xs sm:text-sm">Show rows</p>
-              <select
-                value={pagination.pageSize}
-                onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-3">
+              {/* Filter Button for ALL screens up to 2xl */}
               <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
               >
-                <BiSolidLeftArrow className="size-4 sm:size-5" />
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
               </button>
 
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1 sm:hidden">
-                  {getMobilePageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Meter Readings</p>
+                <p className="text-sm text-gray-600">Manage and validate customer meter readings</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-full sm:w-64 md:w-[380px]">
+                <SearchModule
+                  value={searchText}
+                  onChange={handleSearch}
+                  onCancel={handleCancelSearch}
+                  placeholder="Search by customer, account or period..."
+                  className="w-full"
+                  bgClassName="bg-white"
+                />
               </div>
 
+              {/* Active filters badge - Desktop only (2xl and above) */}
+              {getActiveFilterCount() > 0 && (
+                <div className="hidden items-center gap-2 2xl:flex">
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === totalPages || totalPages === 0}
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
               >
-                <BiSolidRightArrow className="size-4 sm:size-5" />
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/billing/meter-readings/add")}
+                className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
+              >
+                <PlusCircle className="size-4 sm:hidden" />
+                <p className="max-sm:hidden"> Add Reading </p>
+              </button>
+            </div>
+          </motion.div>
+
+          {meterReadings.length === 0 ? (
+            <motion.div
+              className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {searchText ? "No matching readings found" : "No meter readings available"}
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th
+                        className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("customerName")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Customer <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("period")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Period <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("previousReadingKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Previous Reading <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("presentReadingKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Present Reading <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("validConsumptionKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Consumption <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("validationStatus")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Status <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("anomalyScore")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Anomaly Score <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("isFlaggedForReview")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Review Flag <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("capturedAtUtc")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Captured Date <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("capturedByName")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Captured By <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {meterReadings.map((reading: MeterReading, index: number) => (
+                      <tr key={reading.id}>
+                        <td className="whitespace-nowrap border-b px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
+                              <UserIcon />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{reading.customerName}</div>
+                              <div className="text-xs text-gray-500">{reading.customerAccountNumber}</div>
+                              <div className="text-xs text-blue-600">ID: {reading.customerId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{reading.period}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          {reading.previousReadingKwh.toLocaleString()} kWh
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {reading.presentReadingKwh.toLocaleString()} kWh
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getConsumptionStyle(
+                              reading.validConsumptionKwh,
+                              reading.averageConsumptionBaselineKwh
+                            )}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            {reading.validConsumptionKwh.toLocaleString()} kWh
+                          </motion.div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            Baseline:{" "}
+                            {reading.averageConsumptionBaselineKwh != null
+                              ? `${reading.averageConsumptionBaselineKwh.toLocaleString()} kWh`
+                              : "N/A"}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getValidationStatusStyle(reading.validationStatus)}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor:
+                                  reading.validationStatus === 1
+                                    ? "#589E67"
+                                    : reading.validationStatus === 2
+                                    ? "#D97706"
+                                    : reading.validationStatus === 3
+                                    ? "#AF4B4B"
+                                    : "#2563EB",
+                              }}
+                            ></span>
+                            {getValidationStatusText(reading.validationStatus)}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getAnomalyScoreStyle(reading.anomalyScore)}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            {reading.anomalyScore}%
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+                              reading.isFlaggedForReview ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor: reading.isFlaggedForReview ? "#AF4B4B" : "#589E67",
+                              }}
+                            ></span>
+                            {reading.isFlaggedForReview ? "Flagged" : "Clear"}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          <div>{formatDate(reading.capturedAtUtc)}</div>
+                          <div className="text-xs text-gray-500">{formatDateTime(reading.capturedAtUtc)}</div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {reading.capturedByName}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <ButtonModule
+                              size="sm"
+                              onClick={() => handleViewReadingDetails(reading)}
+                              variant="primary"
+                              className="text-xs sm:text-sm"
+                            >
+                              <span className="hidden sm:inline">View</span>
+                              <span className="sm:hidden">View</span>
+                            </ButtonModule>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {getMobilePageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === totalPages || totalPages === 0}
+                  >
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
+                  {searchText.trim() && " - filtered"}
+                </p>
+              </div>
+            </>
+          )}
+        </motion.div>
+
+        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          >
+            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
               </button>
             </div>
 
-            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-              Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
-              {searchText.trim() && " - filtered"}
-            </p>
-          </div>
-        </>
-      )}
-    </motion.div>
+            <div className="space-y-4">
+              {/* Period Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <FormSelectModule
+                  name="period"
+                  value={localFilters.period || ""}
+                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Customer Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <FormSelectModule
+                  name="customerId"
+                  value={localFilters.customerId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("customerId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feederId"
+                  value={localFilters.feederId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("feederId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={feederOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Distribution Substation Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Distribution Substation
+                </label>
+                <FormSelectModule
+                  name="distributionSubstationId"
+                  value={localFilters.distributionSubstationId || ""}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "distributionSubstationId",
+                      e.target.value === "" ? undefined : Number(e.target.value)
+                    )
+                  }
+                  options={distributionSubstationOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {pagination.currentPage} / {totalPages || 1}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Mobile & All Screens Filter Sidebar (up to 2xl) */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        periodOptions={periodOptions}
+        customerOptions={customerOptions}
+        areaOfficeOptions={areaOfficeOptions}
+        feederOptions={feederOptions}
+        distributionSubstationOptions={distributionSubstationOptions}
+        sortOptions={sortOptions}
+      />
+    </>
   )
 }
 

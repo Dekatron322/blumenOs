@@ -9,9 +9,12 @@ import SendReminderModal from "components/ui/Modal/send-reminder-modal"
 import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { fetchDepartmentReport, fetchEmployees } from "lib/redux/employeeSlice"
-import { ChevronDown } from "lucide-react"
+import { fetchEmployees, setFilters, setPagination } from "lib/redux/employeeSlice"
+import { fetchDepartments } from "lib/redux/departmentSlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
 
 type SortOrder = "asc" | "desc" | null
@@ -33,16 +36,11 @@ interface Employee {
   areaOfficeName: string | null
 }
 
-// Department report item from API
-interface DepartmentReportItem {
-  departmentId: number
-  departmentName: string
-  totalUsers: number
-  activeUsers: number
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
 }
-
-// Sample departments data
-const departments = ["HR", "Finance", "IT", "Operations", "Sales", "Marketing", "Customer Service"]
 
 // Responsive Skeleton Components
 const EmployeeCardSkeleton = () => (
@@ -138,9 +136,9 @@ const EmployeeListItemSkeleton = () => (
   </motion.div>
 )
 
-const DepartmentCardSkeleton = () => (
+const FilterPanelSkeleton = () => (
   <motion.div
-    className="rounded-lg border bg-white p-3"
+    className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
     initial={{ opacity: 0.6 }}
     animate={{
       opacity: [0.6, 1, 0.6],
@@ -151,18 +149,27 @@ const DepartmentCardSkeleton = () => (
       },
     }}
   >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className="h-5 w-10 rounded bg-gray-200 md:w-12"></div>
-        <div className="h-5 w-16 rounded bg-gray-200 md:w-20"></div>
-      </div>
-      <div className="h-4 w-12 rounded bg-gray-200 md:w-16"></div>
+    <div className="border-b pb-3 md:pb-4">
+      <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
     </div>
-    <div className="mt-2 space-y-1 md:mt-3">
-      <div className="flex justify-between">
-        <div className="h-3 w-16 rounded bg-gray-200 md:h-4 md:w-20"></div>
-        <div className="h-3 w-12 rounded bg-gray-200 md:h-4 md:w-16"></div>
-      </div>
+
+    <div className="mt-4 space-y-4">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="space-y-2">
+          <div className="h-4 w-20 rounded bg-gray-200 md:w-24"></div>
+          <div className="h-9 w-full rounded bg-gray-200"></div>
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-6 space-y-3">
+      <div className="h-4 w-24 rounded bg-gray-200"></div>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="size-4 rounded bg-gray-200"></div>
+          <div className="h-4 w-20 rounded bg-gray-200"></div>
+        </div>
+      ))}
     </div>
   </motion.div>
 )
@@ -214,80 +221,382 @@ const HeaderSkeleton = () => (
   >
     <div className="h-7 w-32 rounded bg-gray-200 md:h-8 md:w-40"></div>
     <div className="mt-2 flex flex-col gap-3 md:mt-3 md:flex-row md:gap-4">
-      <div className="h-9 w-full rounded bg-gray-200 md:h-10 md:w-60 lg:w-80"></div>
+      <div className="h-9 w-full rounded bg-gray-200 md:h-10 md:w-60 2xl:w-80"></div>
       <div className="flex flex-wrap gap-1 md:gap-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 lg:w-24"></div>
+          <div key={i} className="h-9 w-16 rounded bg-gray-200 md:h-10 md:w-20 2xl:w-24"></div>
         ))}
       </div>
     </div>
   </motion.div>
 )
 
-const MobileFilterSkeleton = () => (
-  <motion.div
-    className="flex gap-2 md:hidden"
-    initial={{ opacity: 0.6 }}
-    animate={{
-      opacity: [0.6, 1, 0.6],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    }}
-  >
-    {[...Array(3)].map((_, i) => (
-      <div key={i} className="h-8 w-20 rounded-full bg-gray-200"></div>
-    ))}
-  </motion.div>
-)
+// Mobile & All Screens Filter Sidebar Component (up to 2xl)
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  departments,
+  areaOffices,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  departments: any[]
+  areaOffices: any[]
+}) => {
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
+
+  const sortOptions: SortOption[] = [
+    { label: "Name A-Z", value: "fullName", order: "asc" },
+    { label: "Name Z-A", value: "fullName", order: "desc" },
+    { label: "Email A-Z", value: "email", order: "asc" },
+    { label: "Email Z-A", value: "email", order: "desc" },
+    { label: "Department A-Z", value: "departmentName", order: "asc" },
+    { label: "Department Z-A", value: "departmentName", order: "desc" },
+    { label: "Newest", value: "createdAt", order: "desc" },
+    { label: "Oldest", value: "createdAt", order: "asc" },
+  ]
+  const employmentTypes = ["FULL_TIME", "PART_TIME", "CONTRACT"]
+  const statusTypes = ["ACTIVE", "INACTIVE"]
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Department Filter */}
+              <div>
+                <FormSelectModule
+                  label="Department"
+                  name="department"
+                  value={localFilters.department}
+                  onChange={(e) => handleFilterChange("department", e.target.value)}
+                  options={[
+                    { value: "", label: "All Departments" },
+                    ...departments.map((dept) => ({
+                      value: dept,
+                      label: dept,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="mb-2 block text-sm font-medium">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {statusTypes.map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
+                      className={`rounded-lg px-3 py-2 text-sm ${
+                        localFilters.status === status
+                          ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                          : "bg-gray-50 text-gray-700"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Employment Type Filter */}
+              <div>
+                <label className="mb-2 block text-sm font-medium">Employment Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {employmentTypes.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() =>
+                        handleFilterChange("employmentType", localFilters.employmentType === type ? "" : type)
+                      }
+                      className={`rounded-lg px-3 py-2 text-sm ${
+                        localFilters.employmentType === type
+                          ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                          : "bg-gray-50 text-gray-700"
+                      }`}
+                    >
+                      {type.replace("_", " ")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <FormSelectModule
+                  label="Area Office"
+                  name="areaOffice"
+                  value={localFilters.areaOffice}
+                  onChange={(e) => handleFilterChange("areaOffice", e.target.value)}
+                  options={[
+                    { value: "", label: "All Area Offices" },
+                    ...areaOffices.map((office) => ({
+                      value: office,
+                      label: office,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Password Reset Filter */}
+              <div>
+                <label className="mb-2 block text-sm font-medium">Password Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["REQUIRED", "ACTIVE"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() =>
+                        handleFilterChange("passwordStatus", localFilters.passwordStatus === type ? "" : type)
+                      }
+                      className={`rounded-lg px-3 py-2 text-sm ${
+                        localFilters.passwordStatus === type
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700"
+                      }`}
+                    >
+                      {type === "REQUIRED" ? "Reset Required" : "Active"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-2 flex w-full items-center justify-between text-sm font-medium"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
 const AllEmployees = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const {
-    employees,
-    employeesLoading,
-    employeesError,
-    pagination,
-    departmentReport,
-    departmentReportLoading,
-    departmentReportError,
-  } = useSelector((state: RootState) => state.employee)
+  const { employees, employeesLoading, employeesError, pagination } = useSelector((state: RootState) => state.employee)
+  const departmentsState = useSelector((state: RootState) => state.departments.departments)
+  const areaOfficesState = useSelector((state: RootState) => state.areaOffices.areaOffices)
 
+  const [searchInput, setSearchInput] = useState("")
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchText, setSearchText] = useState("")
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [showDepartments, setShowDepartments] = useState(true)
-  const [selectedDepartment, setSelectedDepartment] = useState("")
-  const [isDeptOpen, setIsDeptOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
-
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
-  // Modal states - only one modal can be open at a time
+  // Local state for filters to avoid too many Redux dispatches
+  const [localFilters, setLocalFilters] = useState({
+    department: "",
+    status: "",
+    employmentType: "",
+    areaOffice: "",
+    passwordStatus: "",
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Modal states
   const [activeModal, setActiveModal] = useState<"details" | "suspend" | "reminder" | "status" | null>(null)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const router = useRouter()
 
-  // Fetch employees on component mount and when page changes
+  // Redux filters
+  const filters = useSelector((state: RootState) => state.employee.filters)
+
+  const departmentNames = React.useMemo(() => {
+    if (!departmentsState || departmentsState.length === 0) return []
+    const names = departmentsState.filter((dept) => dept && dept.name).map((dept) => dept.name)
+    return Array.from(new Set(names))
+  }, [departmentsState])
+
+  const areaOfficeNames = React.useMemo(() => {
+    if (!areaOfficesState || areaOfficesState.length === 0) return []
+    const names = areaOfficesState
+      .filter((office) => office && office.nameOfNewOAreaffice)
+      .map((office) => office.nameOfNewOAreaffice)
+    return Array.from(new Set(names))
+  }, [areaOfficesState])
+
+  // Fetch employees on component mount and when filters/pagination change
+  useEffect(() => {
+    const fetchData = async () => {
+      await dispatch(
+        fetchEmployees({
+          pageNumber: pagination.currentPage,
+          pageSize: pagination.pageSize,
+          search: filters.search,
+          department: filters.department || undefined,
+          status: filters.status || undefined,
+          employmentType: filters.employmentType || undefined,
+          areaOffice: filters.areaOffice || undefined,
+        })
+      )
+    }
+
+    fetchData()
+  }, [dispatch, pagination.currentPage, pagination.pageSize, filters])
+
   useEffect(() => {
     dispatch(
-      fetchEmployees({
-        pageNumber: currentPage,
-        pageSize: pagination.pageSize,
+      fetchDepartments({
+        pageNumber: 1,
+        pageSize: 1000,
       })
     )
-  }, [dispatch, currentPage, pagination.pageSize])
+  }, [dispatch])
 
-  // Fetch department report when sidebar is visible
   useEffect(() => {
-    if (showDepartments) {
-      dispatch(fetchDepartmentReport())
-    }
-  }, [dispatch, showDepartments])
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 1000,
+      })
+    )
+  }, [dispatch])
+
+  // Sync local search input with Redux filters
+  useEffect(() => {
+    setSearchInput(filters.search || "")
+  }, [filters.search])
+
+  // Sync local filters with Redux filters
+  useEffect(() => {
+    setLocalFilters({
+      department: filters.department || "",
+      status: filters.status || "",
+      employmentType: filters.employmentType || "",
+      areaOffice: filters.areaOffice || "",
+      passwordStatus: filters.passwordStatus || "",
+      sortBy: filters.sortBy || "",
+      sortOrder: (filters.sortOrder as "asc" | "desc") || "asc",
+    })
+  }, [filters])
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+      if (shouldUpdate && trimmed !== filters.search) {
+        dispatch(setFilters({ search: trimmed }))
+        dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+      }
+    }, 500)
+
+    return () => clearTimeout(handler)
+  }, [searchInput, filters.search, dispatch, pagination.pageSize])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -296,18 +605,17 @@ const AllEmployees = () => {
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
+
       if (!target.closest('[data-dropdown-root="employee-actions"]')) {
         setActiveDropdown(null)
       }
-      if (!target.closest('[data-dropdown-root="department-filter"]')) {
-        setIsDeptOpen(false)
-      }
     }
+
     document.addEventListener("mousedown", onDocClick)
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [])
 
-  // Modal management functions
+  // Modal management
   const closeAllModals = () => {
     setActiveModal(null)
     setSelectedEmployee(null)
@@ -323,43 +631,150 @@ const AllEmployees = () => {
     setActiveDropdown(null)
   }
 
-  // Specific modal handlers
+  // Modal handlers
   const handleViewDetails = (employee: Employee) => {
-    // Navigate to employee details page
     router.push(`/employees/${employee.id}`)
   }
 
-  const handleOpenSuspendModal = () => {
-    openModal("suspend")
+  // Filter handlers
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
-  const handleOpenReminderModal = () => {
-    openModal("reminder")
+  const handleCancelSearch = () => {
+    setSearchInput("")
+    dispatch(setFilters({ search: "" }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
-  const handleOpenStatusModal = (employee?: Employee) => {
-    openModal("status", employee ?? selectedEmployee ?? undefined)
+  // Apply all filters at once
+  const applyFilters = () => {
+    const filterPayload: any = {
+      search: searchInput,
+    }
+
+    if (localFilters.department) filterPayload.department = localFilters.department
+    if (localFilters.status) filterPayload.status = localFilters.status
+    if (localFilters.employmentType) filterPayload.employmentType = localFilters.employmentType
+    if (localFilters.areaOffice) filterPayload.areaOffice = localFilters.areaOffice
+    if (localFilters.passwordStatus) filterPayload.passwordStatus = localFilters.passwordStatus
+    if (localFilters.sortBy) filterPayload.sortBy = localFilters.sortBy
+    if (localFilters.sortOrder) filterPayload.sortOrder = localFilters.sortOrder
+
+    dispatch(setFilters(filterPayload))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
-  // Modal confirmation handlers
-  const handleConfirmSuspend = () => {
-    console.log("Employee suspended")
-    closeAllModals()
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      department: "",
+      status: "",
+      employmentType: "",
+      areaOffice: "",
+      passwordStatus: "",
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setSearchInput("")
+    dispatch(
+      setFilters({
+        search: "",
+        department: undefined,
+        status: undefined,
+        employmentType: undefined,
+        areaOffice: undefined,
+        passwordStatus: undefined,
+        sortBy: undefined,
+        sortOrder: undefined,
+      })
+    )
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
-  const handleConfirmReminder = (message: string) => {
-    console.log("Reminder sent:", message)
-    closeAllModals()
+  // Handle individual filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key as keyof typeof localFilters]: value,
+    }))
   }
 
-  const handleConfirmStatusChange = (status: string) => {
-    console.log("Status changed to:", status)
-    closeAllModals()
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+    // Apply sort immediately
+    dispatch(setFilters({ sortBy: option.value, sortOrder: option.order }))
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (localFilters.department) count++
+    if (localFilters.status) count++
+    if (localFilters.employmentType) count++
+    if (localFilters.areaOffice) count++
+    if (localFilters.passwordStatus) count++
+    if (localFilters.sortBy) count++
+    return count
+  }
+
+  // Filter employees based on active filters
+  const filteredEmployees = React.useMemo(() => {
+    if (!employees) return []
+
+    return employees.filter((employee: Employee) => {
+      // Search filter
+      const matchesSearch =
+        searchInput === "" ||
+        employee.fullName.toLowerCase().includes(searchInput.toLowerCase()) ||
+        employee.email.toLowerCase().includes(searchInput.toLowerCase()) ||
+        (employee.employeeId && employee.employeeId.toLowerCase().includes(searchInput.toLowerCase())) ||
+        (employee.departmentName && employee.departmentName.toLowerCase().includes(searchInput.toLowerCase()))
+
+      // Department filter
+      const matchesDepartment =
+        !localFilters.department || (employee.departmentName && employee.departmentName === localFilters.department)
+
+      // Status filter
+      const matchesStatus =
+        !localFilters.status ||
+        (localFilters.status === "ACTIVE" && employee.isActive) ||
+        (localFilters.status === "INACTIVE" && !employee.isActive)
+
+      // Employment type filter
+      const matchesEmploymentType =
+        !localFilters.employmentType || employee.employmentType === localFilters.employmentType
+
+      // Area office filter
+      const matchesAreaOffice =
+        !localFilters.areaOffice || (employee.areaOfficeName && employee.areaOfficeName === localFilters.areaOffice)
+
+      // Password status filter
+      const matchesPasswordStatus =
+        !localFilters.passwordStatus ||
+        (localFilters.passwordStatus === "REQUIRED" && employee.mustChangePassword) ||
+        (localFilters.passwordStatus === "ACTIVE" && !employee.mustChangePassword)
+
+      return (
+        matchesSearch &&
+        matchesDepartment &&
+        matchesStatus &&
+        matchesEmploymentType &&
+        matchesAreaOffice &&
+        matchesPasswordStatus
+      )
+    })
+  }, [employees, searchInput, localFilters])
 
   // CSV Export functionality
   const exportToCSV = () => {
-    if (!employees || employees.length === 0) {
+    if (!filteredEmployees || filteredEmployees.length === 0) {
       alert("No employee data to export")
       return
     }
@@ -381,7 +796,7 @@ const AllEmployees = () => {
     ]
 
     // Convert employee data to CSV rows
-    const csvRows = employees.map((employee) => [
+    const csvRows = filteredEmployees.map((employee) => [
       employee.id.toString(),
       `"${employee.fullName.replace(/"/g, '""')}"`,
       `"${employee.email}"`,
@@ -414,6 +829,75 @@ const AllEmployees = () => {
     URL.revokeObjectURL(url)
   }
 
+  // Pagination handlers
+  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = Number(event.target.value)
+    dispatch(setPagination({ page: 1, pageSize: newPageSize }))
+  }
+
+  const changePage = (page: number) => {
+    if (page > 0 && page <= pagination.totalPages) {
+      dispatch(setPagination({ page, pageSize: pagination.pageSize }))
+    }
+  }
+
+  const getPageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    items.push(1)
+    const showLeftEllipsis = current > 4
+    const showRightEllipsis = current < total - 3
+
+    if (!showLeftEllipsis) {
+      items.push(2, 3, 4, "...")
+    } else if (!showRightEllipsis) {
+      items.push("...", total - 3, total - 2, total - 1)
+    } else {
+      items.push("...", current - 1, current, current + 1, "...")
+    }
+
+    if (!items.includes(total)) {
+      items.push(total)
+    }
+
+    return items
+  }
+
+  const getMobilePageItems = (): (number | string)[] => {
+    const total = pagination.totalPages
+    const current = pagination.currentPage
+    const items: (number | string)[] = []
+
+    if (total <= 4) {
+      for (let i = 1; i <= total; i += 1) {
+        items.push(i)
+      }
+      return items
+    }
+
+    if (current <= 3) {
+      items.push(1, 2, 3, "...", total)
+      return items
+    }
+
+    if (current > 3 && current < total - 2) {
+      items.push(1, "...", current, "...", total)
+      return items
+    }
+
+    items.push(1, "...", total - 2, total - 1, total)
+    return items
+  }
+
   const getStatusStyle = (isActive: boolean) => {
     return isActive
       ? { backgroundColor: "#EEF5F0", color: "#589E67" }
@@ -437,112 +921,10 @@ const AllEmployees = () => {
     return isActive ? { backgroundColor: "#589E67" } : { backgroundColor: "#AF4B4B" }
   }
 
-  const toggleSort = (column: keyof Employee) => {
+  const toggleSort = (column: string) => {
     const isAscending = sortColumn === column && sortOrder === "asc"
     setSortOrder(isAscending ? "desc" : "asc")
     setSortColumn(column)
-  }
-
-  const handleCancelSearch = () => {
-    setSearchText("")
-  }
-
-  // Filter employees based on search text and department
-  const filteredEmployees =
-    employees?.filter((employee: Employee) => {
-      const matchesSearch =
-        searchText === "" ||
-        Object.values(employee).some((value) => value?.toString().toLowerCase().includes(searchText.toLowerCase()))
-      const matchesDepartment =
-        selectedDepartment === "" || employee.departmentName?.toLowerCase().includes(selectedDepartment.toLowerCase())
-      return matchesSearch && matchesDepartment
-    }) || []
-
-  const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newPageSize = Number(event.target.value)
-    dispatch(
-      fetchEmployees({
-        pageNumber: 1,
-        pageSize: newPageSize,
-      })
-    )
-    setCurrentPage(1)
-  }
-
-  const totalPages = pagination.totalPages || 1
-  const totalRecords = pagination.totalCount || 0
-
-  const changePage = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page)
-    }
-  }
-
-  // Pagination helpers
-  const getPageItems = (): (number | string)[] => {
-    const total = totalPages
-    const current = currentPage
-    const items: (number | string)[] = []
-
-    if (total <= 7) {
-      for (let i = 1; i <= total; i += 1) {
-        items.push(i)
-      }
-      return items
-    }
-
-    // Always show first page
-    items.push(1)
-
-    const showLeftEllipsis = current > 4
-    const showRightEllipsis = current < total - 3
-
-    if (!showLeftEllipsis) {
-      // Close to the start: show first few pages
-      items.push(2, 3, 4, "...")
-    } else if (!showRightEllipsis) {
-      // Close to the end: show ellipsis then last few pages
-      items.push("...", total - 3, total - 2, total - 1)
-    } else {
-      // In the middle: show ellipsis, surrounding pages, then ellipsis
-      items.push("...", current - 1, current, current + 1, "...")
-    }
-
-    // Always show last page
-    if (!items.includes(total)) {
-      items.push(total)
-    }
-
-    return items
-  }
-
-  const getMobilePageItems = (): (number | string)[] => {
-    const total = totalPages
-    const current = currentPage
-    const items: (number | string)[] = []
-
-    if (total <= 4) {
-      for (let i = 1; i <= total; i += 1) {
-        items.push(i)
-      }
-      return items
-    }
-
-    // Example for early pages on mobile: 1,2,3,...,last
-    if (current <= 3) {
-      items.push(1, 2, 3, "...", total)
-      return items
-    }
-
-    // Middle pages: 1, ..., current, ..., last
-    if (current > 3 && current < total - 2) {
-      items.push(1, "...", current, "...", total)
-      return items
-    }
-
-    // Near the end: 1, ..., last-2, last-1, last
-    items.push(1, "...", total - 2, total - 1, total)
-    return items
   }
 
   const EmployeeCard = ({ employee }: { employee: Employee }) => (
@@ -696,45 +1078,17 @@ const AllEmployees = () => {
     </div>
   )
 
-  const DepartmentCard = ({ department }: { department: DepartmentReportItem }) => (
-    <div className="rounded-lg border bg-[#f9f9f9] p-3 transition-all hover:shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium text-gray-900 md:text-base">{department.departmentName}</h3>
-        </div>
-        <div className="flex text-sm">
-          <span className="font-medium">{department.totalUsers.toLocaleString()}</span>
-        </div>
-      </div>
-      <div className="mt-2 space-y-1 md:mt-3">
-        <div className="flex justify-between text-xs md:text-sm">
-          <span className="text-gray-600">Active:</span>
-          <span className="font-medium">{department.activeUsers.toLocaleString()}</span>
-        </div>
-        <div className="flex justify-between text-xs md:text-sm">
-          <span className="text-gray-600">Inactive:</span>
-          <span className="font-medium">{(department.totalUsers - department.activeUsers).toLocaleString()}</span>
-        </div>
-      </div>
-    </div>
-  )
-
   if (employeesLoading) {
     return (
-      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 lg:flex-row">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
         {/* Main Content Skeleton */}
-        <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showDepartments ? "lg:flex-1" : ""}`}>
+        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
           <HeaderSkeleton />
-
-          {/* Mobile Filters Skeleton */}
-          <div className="mt-3 md:hidden">
-            <MobileFilterSkeleton />
-          </div>
 
           {/* Employee Display Area Skeleton */}
           <div className="mt-4 w-full">
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 2xl:grid-cols-3">
                 {[...Array(6)].map((_, index) => (
                   <EmployeeCardSkeleton key={index} />
                 ))}
@@ -751,45 +1105,49 @@ const AllEmployees = () => {
           <PaginationSkeleton />
         </div>
 
-        {/* Departments Sidebar Skeleton */}
-        {showDepartments && (
-          <div className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 lg:w-80">
-            <div className="border-b pb-3 md:pb-4">
-              <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 lg:grid-cols-1">
-              {[...Array(6)].map((_, index) => (
-                <DepartmentCardSkeleton key={index} />
-              ))}
-            </div>
-
-            {/* Summary Stats Skeleton */}
-            <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <div className="mb-2 h-5 w-16 rounded bg-gray-200 md:w-20"></div>
-              <div className="space-y-1">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="flex justify-between">
-                    <div className="h-3 w-20 rounded bg-gray-200 md:h-4 md:w-24"></div>
-                    <div className="h-3 w-10 rounded bg-gray-200 md:h-4 md:w-12"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Desktop Filters Sidebar Skeleton (2xl and above) */}
+        <FilterPanelSkeleton />
       </div>
     )
   }
+
+  const sortOptions: SortOption[] = [
+    { label: "Name A-Z", value: "fullName", order: "asc" },
+    { label: "Name Z-A", value: "fullName", order: "desc" },
+    { label: "Employee ID Asc", value: "employeeId", order: "asc" },
+    { label: "Employee ID Desc", value: "employeeId", order: "desc" },
+    { label: "Account ID Asc", value: "accountId", order: "asc" },
+    { label: "Account ID Desc", value: "accountId", order: "desc" },
+    { label: "Newest", value: "createdAt", order: "desc" },
+    { label: "Oldest", value: "createdAt", order: "asc" },
+  ]
+
+  const departments = ["HR", "Finance", "IT", "Operations", "Sales", "Marketing", "Customer Service"]
 
   return (
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Employees List/Grid */}
-        <div className={`w-full rounded-md border bg-white p-3 md:p-5 ${showDepartments ? "lg:flex-1" : ""}`}>
+        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
           <div className="flex flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">All Employees</p>
+              <div className="flex items-center gap-3">
+                {/* Filter Button for ALL screens up to 2xl */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">All Employees</p>
+              </div>
 
               <div className="flex items-center gap-2">
                 {/* Mobile search icon button */}
@@ -805,19 +1163,28 @@ const AllEmployees = () => {
                 {/* Desktop/Tablet search input */}
                 <div className="hidden sm:block">
                   <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     onCancel={handleCancelSearch}
                     placeholder="Search by name, email, or department"
-                    className="w-full max-w-full md:max-w-[300px]"
+                    className="w-full max-w-full sm:max-w-[320px]"
                   />
                 </div>
+
+                {/* Active filters badge - Desktop only (2xl and above) */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
 
                 {/* Export CSV Button - Desktop */}
                 <button
                   className="button-oulined hidden items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:flex md:text-base"
                   onClick={exportToCSV}
-                  disabled={!employees || employees.length === 0}
+                  disabled={!filteredEmployees || filteredEmployees.length === 0}
                 >
                   <ExportCsvIcon color="#2563EB" size={20} />
                   <p className="text-sm text-[#2563EB] md:text-base">Export CSV</p>
@@ -829,15 +1196,14 @@ const AllEmployees = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
                   placeholder="Search by name, email, or department"
                   className="w-full"
                 />
               </div>
             )}
-
             <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
               <div className="flex flex-wrap gap-2">
                 <button
@@ -856,69 +1222,15 @@ const AllEmployees = () => {
                 </button>
               </div>
 
-              <button
-                className="button-oulined hidden text-sm sm:block md:text-base xl:block"
-                onClick={() => setShowDepartments(!showDepartments)}
-              >
-                {showDepartments ? "Hide Departments" : "Show Departments"}
-              </button>
-
               {/* Export CSV Button - Mobile */}
               <button
                 className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:hidden"
                 onClick={exportToCSV}
-                disabled={!employees || employees.length === 0}
+                disabled={!filteredEmployees || filteredEmployees.length === 0}
               >
                 <ExportCsvIcon color="#2563EB" size={18} />
                 <p className="text-xs text-[#2563EB]">Export</p>
               </button>
-
-              <div className="relative" data-dropdown-root="department-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsDeptOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isDeptOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span className="truncate max-sm:max-w-[100px]">{selectedDepartment || "All Departments"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${isDeptOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {isDeptOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-64">
-                    <div className="py-1">
-                      <button
-                        className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 md:px-4 md:text-sm ${
-                          selectedDepartment === "" ? "bg-gray-50" : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedDepartment("")
-                          setIsDeptOpen(false)
-                        }}
-                      >
-                        All Departments
-                      </button>
-                      {departments.map((dept) => (
-                        <button
-                          key={dept}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedDepartment === dept ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedDepartment(dept)
-                            setIsDeptOpen(false)
-                          }}
-                        >
-                          {dept}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -931,7 +1243,7 @@ const AllEmployees = () => {
 
           {/* Employee Display Area */}
           <div className="w-full">
-            {filteredEmployees.length === 0 ? (
+            {filteredEmployees.length === 0 && !employeesLoading ? (
               <div className="flex flex-col items-center justify-center py-8 md:py-12">
                 <div className="text-center">
                   <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
@@ -939,12 +1251,22 @@ const AllEmployees = () => {
                   </div>
                   <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No employees found</h3>
                   <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText ? "Try adjusting your search criteria" : "No employees available"}
+                    {searchInput || getActiveFilterCount() > 0
+                      ? "Try adjusting your search or filter criteria"
+                      : "No employees available"}
                   </p>
+                  {getActiveFilterCount() > 0 && (
+                    <button
+                      onClick={resetFilters}
+                      className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Clear All Filters
+                    </button>
+                  )}
                 </div>
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 2xl:grid-cols-3">
                 {filteredEmployees.map((employee: Employee) => (
                   <EmployeeCard key={employee.id} employee={employee} />
                 ))}
@@ -963,26 +1285,32 @@ const AllEmployees = () => {
             <div className="mt-4 flex w-full flex-row items-center justify-between gap-3 md:flex-row">
               <div className="flex items-center gap-1 max-sm:hidden">
                 <p className="text-sm md:text-base">Show rows</p>
-                <select
-                  value={pagination.pageSize}
-                  onChange={handleRowsChange}
-                  className="bg-[#F2F2F2] p-1 text-sm md:text-base"
-                >
-                  <option value={6}>6</option>
-                  <option value={12}>12</option>
-                  <option value={18}>18</option>
-                  <option value={24}>24</option>
-                  <option value={50}>50</option>
-                </select>
+                <div className="min-w-[80px]">
+                  <FormSelectModule
+                    label=""
+                    name="pageSize"
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    options={[
+                      { value: 6, label: "6" },
+                      { value: 12, label: "12" },
+                      { value: 18, label: "18" },
+                      { value: 24, label: "24" },
+                      { value: 50, label: "50" },
+                    ]}
+                    className="w-full"
+                    controlClassName="h-8 text-sm md:h-9 md:text-base"
+                  />
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start md:gap-3">
                 <button
                   className={`px-2 py-1 md:px-3 md:py-2 ${
-                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
                   }`}
-                  onClick={() => changePage(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={() => changePage(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
                 >
                   <BiSolidLeftArrow className="size-4 md:size-5" />
                 </button>
@@ -994,7 +1322,7 @@ const AllEmployees = () => {
                         <button
                           key={item}
                           className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-8 md:text-sm ${
-                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                           }`}
                           onClick={() => changePage(item)}
                         >
@@ -1014,7 +1342,7 @@ const AllEmployees = () => {
                         <button
                           key={item}
                           className={`flex size-6 items-center justify-center rounded-md text-xs md:w-8 ${
-                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
                           }`}
                           onClick={() => changePage(item)}
                         >
@@ -1031,84 +1359,248 @@ const AllEmployees = () => {
 
                 <button
                   className={`px-2 py-1 md:px-3 md:py-2 ${
-                    currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    pagination.currentPage === pagination.totalPages
+                      ? "cursor-not-allowed text-gray-400"
+                      : "text-[#000000]"
                   }`}
-                  onClick={() => changePage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  onClick={() => changePage(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
                 >
                   <BiSolidRightArrow className="size-4 md:size-5" />
                 </button>
               </div>
               <p className="text-sm max-sm:hidden md:text-base">
-                Page {currentPage} of {totalPages} ({totalRecords} total records)
+                Page {pagination.currentPage} of {pagination.totalPages} ({filteredEmployees.length} filtered records)
               </p>
             </div>
           )}
         </div>
 
-        {/* Departments Sidebar */}
-        <AnimatePresence initial={false}>
-          {showDepartments && (
-            <motion.div
-              key="departments-sidebar"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ type: "spring", damping: 24, stiffness: 260 }}
-              className="mt-4 w-full rounded-md border bg-white p-3 md:p-5 lg:mt-0 2xl:w-80"
+        {/* Desktop Filters Sidebar (2xl and above) - Always visible by default */}
+        <motion.div
+          key="desktop-filters-sidebar"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+        >
+          <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+            <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
             >
-              <div className="border-b pb-3 md:pb-4">
-                <h2 className="text-base font-semibold text-gray-900 md:text-lg">Departments</h2>
-              </div>
+              <X className="size-3 md:size-4" />
+              Clear All
+            </button>
+          </div>
 
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 2xl:grid-cols-1">
-                {departmentReportLoading ? (
-                  [...Array(6)].map((_, index) => <DepartmentCardSkeleton key={index} />)
-                ) : departmentReportError ? (
-                  <div className="col-span-full rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                    <p className="mb-2">Failed to load departments: {departmentReportError}</p>
-                    <button className="button-oulined" onClick={() => dispatch(fetchDepartmentReport())}>
-                      Retry
+          <div className="space-y-4">
+            {/* Department Filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Department</label>
+              <FormSelectModule
+                name="department"
+                value={localFilters.department}
+                onChange={(e) => handleFilterChange("department", e.target.value)}
+                options={[
+                  { value: "", label: "All Departments" },
+                  ...departmentNames.map((dept) => ({
+                    value: dept,
+                    label: dept,
+                  })),
+                ]}
+                className="w-full"
+                controlClassName="h-9 text-sm"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+              <div className="grid grid-cols-2 gap-2">
+                {["ACTIVE", "INACTIVE"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
+                    className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                      localFilters.status === status
+                        ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Employment Type Filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Employment Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                {["FULL_TIME", "PART_TIME", "CONTRACT"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() =>
+                      handleFilterChange("employmentType", localFilters.employmentType === type ? "" : type)
+                    }
+                    className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                      localFilters.employmentType === type
+                        ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {type.replace("_", " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Area Office Filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+              <FormSelectModule
+                name="areaOffice"
+                value={localFilters.areaOffice}
+                onChange={(e) => handleFilterChange("areaOffice", e.target.value)}
+                options={[
+                  { value: "", label: "All Area Offices" },
+                  ...areaOfficeNames.map((office) => ({
+                    value: office,
+                    label: office,
+                  })),
+                ]}
+                className="w-full"
+                controlClassName="h-9 text-sm"
+              />
+            </div>
+
+            {/* Password Status Filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Password Status</label>
+              <div className="grid grid-cols-2 gap-2">
+                {["REQUIRED", "ACTIVE"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() =>
+                      handleFilterChange("passwordStatus", localFilters.passwordStatus === type ? "" : type)
+                    }
+                    className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                      localFilters.passwordStatus === type
+                        ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {type === "REQUIRED" ? "Reset Required" : "Active"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort Options */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setIsSortExpanded((prev) => !prev)}
+                className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                aria-expanded={isSortExpanded}
+              >
+                <span>Sort By</span>
+                {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+              </button>
+
+              {isSortExpanded && (
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
                     </button>
-                  </div>
-                ) : (
-                  departmentReport.map((department) => (
-                    <DepartmentCard key={department.departmentId} department={department} />
-                  ))
-                )}
-              </div>
-
-              {/* Summary Stats */}
-              <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
-                <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-                <div className="space-y-1 text-xs md:text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Employees:</span>
-                    <span className="font-medium">{totalRecords.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Active:</span>
-                    <span className="font-medium">
-                      {employees?.filter((emp) => emp.isActive).length.toLocaleString() || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Departments:</span>
-                    <span className="font-medium">{departmentReport?.length || 0}</span>
-                  </div>
+                  ))}
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-6 space-y-3 border-t pt-4">
+            <button
+              onClick={applyFilters}
+              className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+            >
+              <Filter className="size-4" />
+              Apply Filters
+            </button>
+            <button
+              onClick={resetFilters}
+              className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+            >
+              <X className="size-4" />
+              Reset All
+            </button>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+            <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+            <div className="space-y-1 text-xs md:text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Employees:</span>
+                <span className="font-medium">{employees?.length.toLocaleString() || 0}</span>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Filtered Employees:</span>
+                <span className="font-medium">{filteredEmployees.length.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Current Page:</span>
+                <span className="font-medium">
+                  {pagination.currentPage} / {pagination.totalPages}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Active Filters:</span>
+                <span className="font-medium">{getActiveFilterCount()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Active Employees:</span>
+                <span className="font-medium">
+                  {employees?.filter((emp) => emp.isActive).length.toLocaleString() || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Modal Components - Only one modal can be open at a time */}
-      <SendReminderModal
-        isOpen={activeModal === "reminder"}
-        onRequestClose={closeAllModals}
-        onConfirm={handleConfirmReminder}
+      {/* Mobile & All Screens Filter Sidebar (up to 2xl) */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        departments={departmentNames}
+        areaOffices={areaOfficeNames}
       />
+
+      {/* Modal Components */}
+      <SendReminderModal isOpen={activeModal === "reminder"} onRequestClose={closeAllModals} onConfirm={() => {}} />
     </>
   )
 }

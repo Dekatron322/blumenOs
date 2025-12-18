@@ -166,6 +166,8 @@ export interface PostpaidBillsRequestParams {
   category?: number
   areaOfficeId?: number
   feederId?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Billing Job Interfaces
@@ -214,6 +216,8 @@ export interface BillingJobsRequestParams {
   status?: number
   fromRequestedAtUtc?: string
   toRequestedAtUtc?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Create Billing Job Interfaces
@@ -602,6 +606,8 @@ interface PostpaidBillingState {
     category?: number
     areaOfficeId?: number
     feederId?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
   }
 
   // Billing jobs filters
@@ -731,8 +737,19 @@ export const fetchPostpaidBills = createAsyncThunk(
   "postpaidBilling/fetchPostpaidBills",
   async (params: PostpaidBillsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, customerId, accountNumber, status, category, areaOfficeId, feederId } =
-        params
+      const {
+        pageNumber,
+        pageSize,
+        period,
+        customerId,
+        accountNumber,
+        status,
+        category,
+        areaOfficeId,
+        feederId,
+        sortBy,
+        sortOrder,
+      } = params
 
       const response = await api.get<PostpaidBillsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.GET), {
         params: {
@@ -745,6 +762,8 @@ export const fetchPostpaidBills = createAsyncThunk(
           ...(category !== undefined && { Category: category }),
           ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
           ...(feederId && { FeederId: feederId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 
@@ -816,7 +835,17 @@ export const fetchBillingJobs = createAsyncThunk(
   "postpaidBilling/fetchBillingJobs",
   async (params: BillingJobsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, areaOfficeId, status, fromRequestedAtUtc, toRequestedAtUtc } = params
+      const {
+        pageNumber,
+        pageSize,
+        period,
+        areaOfficeId,
+        status,
+        fromRequestedAtUtc,
+        toRequestedAtUtc,
+        sortBy,
+        sortOrder,
+      } = params
 
       const response = await api.get<BillingJobsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.BILLING_JOBS), {
         params: {
@@ -827,6 +856,8 @@ export const fetchBillingJobs = createAsyncThunk(
           ...(status !== undefined && { Status: status }),
           ...(fromRequestedAtUtc && { FromRequestedAtUtc: fromRequestedAtUtc }),
           ...(toRequestedAtUtc && { ToRequestedAtUtc: toRequestedAtUtc }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 
