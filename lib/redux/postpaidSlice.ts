@@ -737,8 +737,19 @@ export const fetchPostpaidBills = createAsyncThunk(
   "postpaidBilling/fetchPostpaidBills",
   async (params: PostpaidBillsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, customerId, accountNumber, status, category, areaOfficeId, feederId, sortBy, sortOrder } =
-        params
+      const {
+        pageNumber,
+        pageSize,
+        period,
+        customerId,
+        accountNumber,
+        status,
+        category,
+        areaOfficeId,
+        feederId,
+        sortBy,
+        sortOrder,
+      } = params
 
       const response = await api.get<PostpaidBillsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.GET), {
         params: {
@@ -824,8 +835,17 @@ export const fetchBillingJobs = createAsyncThunk(
   "postpaidBilling/fetchBillingJobs",
   async (params: BillingJobsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, areaOfficeId, status, fromRequestedAtUtc, toRequestedAtUtc, sortBy, sortOrder } =
-        params
+      const {
+        pageNumber,
+        pageSize,
+        period,
+        areaOfficeId,
+        status,
+        fromRequestedAtUtc,
+        toRequestedAtUtc,
+        sortBy,
+        sortOrder,
+      } = params
 
       const response = await api.get<BillingJobsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.BILLING_JOBS), {
         params: {
