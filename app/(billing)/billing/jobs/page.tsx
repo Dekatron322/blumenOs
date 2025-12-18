@@ -1023,7 +1023,7 @@ const BillingJobs: React.FC = () => {
 
                       <h3 className="text-lg font-semibold">Job Queue</h3>
                     </div>
-                    <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex w-full items-center justify-between gap-3 sm:gap-4">
                       <div className="w-full sm:w-64 md:max-w-md">
                         <SearchModule
                           placeholder="Search by period (e.g., 2024-01)..."
@@ -1068,9 +1068,7 @@ const BillingJobs: React.FC = () => {
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
                       >
-                        {searchText || getActiveFilterCount() > 0
-                          ? "No matching jobs found"
-                          : "No jobs available"}
+                        {searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"}
                       </motion.p>
                     </motion.div>
                   ) : (
@@ -1159,92 +1157,92 @@ const BillingJobs: React.FC = () => {
                             <tbody className="bg-white">
                               {billingJobs.map((job, index) => (
                                 <tr key={job.id} className="hover:bg-gray-50">
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
-                                      <div className="flex items-center gap-2">
-                                        <CycleIcon />
-                                        <div>
-                                          <div className="font-medium text-gray-900">{job.period}</div>
-                                        </div>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <CycleIcon />
+                                      <div>
+                                        <div className="font-medium text-gray-900">{job.period}</div>
                                       </div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.areaOfficeName || "General Bill"}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getStatusStyle(job.status)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
+                                    </div>
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                    {job.areaOfficeName || "General Bill"}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                    <motion.div
+                                      style={getStatusStyle(job.status)}
+                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                      whileHover={{ scale: 1.05 }}
+                                      transition={{ duration: 0.1 }}
+                                    >
+                                      <span
+                                        className="size-2 rounded-full"
+                                        style={{
+                                          backgroundColor:
+                                            job.status === 0
+                                              ? "#D97706"
+                                              : job.status === 1
+                                              ? "#2563EB"
+                                              : job.status === 2
+                                              ? "#589E67"
+                                              : job.status === 3
+                                              ? "#AF4B4B"
+                                              : "#6B7280",
+                                        }}
+                                      ></span>
+                                      {getStatusText(job.status)}
+                                    </motion.div>
+                                    {job.lastError && (
+                                      <div
+                                        className="mt-1 max-w-xs truncate text-xs text-red-500"
+                                        title={job.lastError}
                                       >
-                                        <span
-                                          className="size-2 rounded-full"
-                                          style={{
-                                            backgroundColor:
-                                              job.status === 0
-                                                ? "#D97706"
-                                                : job.status === 1
-                                                ? "#2563EB"
-                                                : job.status === 2
-                                                ? "#589E67"
-                                                : job.status === 3
-                                                ? "#AF4B4B"
-                                                : "#6B7280",
-                                          }}
-                                        ></span>
-                                        {getStatusText(job.status)}
-                                      </motion.div>
-                                      {job.lastError && (
+                                        Error: {job.lastError}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                    {job.draftedCount.toLocaleString()}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                    {job.finalizedCount.toLocaleString()}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 w-20 rounded-full bg-gray-200">
                                         <div
-                                          className="mt-1 max-w-xs truncate text-xs text-red-500"
-                                          title={job.lastError}
-                                        >
-                                          Error: {job.lastError}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.draftedCount.toLocaleString()}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.finalizedCount.toLocaleString()}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <div className="flex items-center gap-2">
-                                        <div className="h-2 w-20 rounded-full bg-gray-200">
-                                          <div
-                                            className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                                            style={{ width: `${calculateProgress(job)}%` }}
-                                          />
-                                        </div>
-                                        <span className="text-xs font-medium text-gray-700">
-                                          {calculateProgress(job)}%
-                                        </span>
+                                          className="h-2 rounded-full bg-green-500 transition-all duration-300"
+                                          style={{ width: `${calculateProgress(job)}%` }}
+                                        />
                                       </div>
-                                      <div className="mt-1 text-xs text-gray-500">
-                                        {job.processedCustomers.toLocaleString()} /{" "}
-                                        {job.totalCustomers.toLocaleString()} customers
-                                      </div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.requestedByName}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {formatDate(job.requestedAtUtc)}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {job.completedAtUtc ? formatDate(job.completedAtUtc) : "In Progress"}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ButtonModule
-                                        size="sm"
-                                        onClick={() => router.push(`/billing/jobs/jobs-detail/${job.id}`)}
-                                      >
-                                        View Details
-                                      </ButtonModule>
-                                    </td>
-                                  </tr>
-                                ))}
+                                      <span className="text-xs font-medium text-gray-700">
+                                        {calculateProgress(job)}%
+                                      </span>
+                                    </div>
+                                    <div className="mt-1 text-xs text-gray-500">
+                                      {job.processedCustomers.toLocaleString()} / {job.totalCustomers.toLocaleString()}{" "}
+                                      customers
+                                    </div>
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                    {job.requestedByName}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                    {formatDate(job.requestedAtUtc)}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                    {job.completedAtUtc ? formatDate(job.completedAtUtc) : "In Progress"}
+                                  </td>
+                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                    <ButtonModule
+                                      size="sm"
+                                      onClick={() => router.push(`/billing/jobs/jobs-detail/${job.id}`)}
+                                    >
+                                      View Details
+                                    </ButtonModule>
+                                  </td>
+                                </tr>
+                              ))}
                             </tbody>
                           </table>
                         </div>
@@ -1388,7 +1386,10 @@ const BillingJobs: React.FC = () => {
                           name="areaOfficeId"
                           value={localFilters.areaOfficeId || ""}
                           onChange={(e) =>
-                            handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
+                            handleFilterChange(
+                              "areaOfficeId",
+                              e.target.value === "" ? undefined : Number(e.target.value)
+                            )
                           }
                           options={areaOfficeOptions}
                           className="w-full"
@@ -1428,7 +1429,11 @@ const BillingJobs: React.FC = () => {
                               <span>{option.label}</span>
                               {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                                 <span className="text-purple-600">
-                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                  {option.order === "asc" ? (
+                                    <SortAsc className="size-4" />
+                                  ) : (
+                                    <SortDesc className="size-4" />
+                                  )}
                                 </span>
                               )}
                             </button>
