@@ -42,6 +42,12 @@ export const API_ENDPOINTS = {
     GET_ALL_DISPUTES: "/billing/disputes",
     GET_DISPUTE_BY_ID: "/billing/disputes/{id}",
     UPDATE_DISPUTE: "/billing/disputes/{id}/status",
+    CHANGE_REQUEST: "/billing/disputes/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/billing/disputes/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/billing/disputes/change-requests",
+    CHANGE_REQUEST_DETAILS: "/billing/disputes/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/billing/disputes/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/billing/disputes/change-requests/{publicId}/decline",
   },
 
   EMPLOYEE: {
