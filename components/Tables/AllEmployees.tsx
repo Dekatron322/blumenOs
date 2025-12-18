@@ -12,7 +12,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { fetchEmployees, setFilters, setPagination } from "lib/redux/employeeSlice"
 import { fetchDepartments } from "lib/redux/departmentSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
-import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
@@ -252,16 +252,18 @@ const MobileFilterSidebar = ({
   applyFilters: () => void
   resetFilters: () => void
   getActiveFilterCount: () => number
-  departments: string[]
-  areaOffices: string[]
+  departments: any[]
+  areaOffices: any[]
 }) => {
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
+
   const sortOptions: SortOption[] = [
     { label: "Name A-Z", value: "fullName", order: "asc" },
     { label: "Name Z-A", value: "fullName", order: "desc" },
-    { label: "Employee ID Asc", value: "employeeId", order: "asc" },
-    { label: "Employee ID Desc", value: "employeeId", order: "desc" },
-    { label: "Account ID Asc", value: "accountId", order: "asc" },
-    { label: "Account ID Desc", value: "accountId", order: "desc" },
+    { label: "Email A-Z", value: "email", order: "asc" },
+    { label: "Email Z-A", value: "email", order: "desc" },
+    { label: "Department A-Z", value: "departmentName", order: "asc" },
+    { label: "Department Z-A", value: "departmentName", order: "desc" },
     { label: "Newest", value: "createdAt", order: "desc" },
     { label: "Oldest", value: "createdAt", order: "asc" },
   ]
@@ -413,27 +415,38 @@ const MobileFilterSidebar = ({
 
               {/* Sort Options */}
               <div>
-                <label className="mb-2 block text-sm font-medium">Sort By</label>
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
-                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                          : "bg-gray-50 text-gray-700"
-                      }`}
-                    >
-                      <span>{option.label}</span>
-                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-2 flex w-full items-center justify-between text-sm font-medium"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -476,6 +489,7 @@ const AllEmployees = () => {
   const [searchInput, setSearchInput] = useState("")
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -1485,27 +1499,38 @@ const AllEmployees = () => {
 
             {/* Sort Options */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-              <div className="space-y-2">
-                {sortOptions.map((option) => (
-                  <button
-                    key={`${option.value}-${option.order}`}
-                    onClick={() => handleSortChange(option)}
-                    className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                      localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                        ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <span>{option.label}</span>
-                    {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                      <span className="text-purple-600">
-                        {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsSortExpanded((prev) => !prev)}
+                className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                aria-expanded={isSortExpanded}
+              >
+                <span>Sort By</span>
+                {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+              </button>
+
+              {isSortExpanded && (
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

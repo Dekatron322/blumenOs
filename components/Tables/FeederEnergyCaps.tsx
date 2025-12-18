@@ -16,7 +16,11 @@ import {
 } from "lib/redux/feederEnergyCapSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { AddCustomerIcon } from "components/Icons/Icons"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, ArrowLeft, Filter, X, SortAsc, SortDesc } from "lucide-react"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
+import { fetchCompanies, clearCompanies } from "lib/redux/companySlice"
 
 interface ActionDropdownProps {
   energyCap: FeederEnergyCap
@@ -35,6 +39,12 @@ interface FeederEnergyCap {
   capturedByUserId: number
   capturedByName: string
   notes: string
+}
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ energyCap, onViewDetails, onUpdateEnergyCap }) => {
@@ -152,6 +162,193 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ energyCap, onViewDetail
   )
 }
 
+// Mobile & All Screens Filter Sidebar Component (up to 2xl)
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  periodOptions,
+  areaOfficeOptions,
+  feederOptions,
+  companyOptions,
+  sortOptions,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  periodOptions: Array<{ value: string; label: string }>
+  areaOfficeOptions: Array<{ value: string | number; label: string }>
+  feederOptions: Array<{ value: string | number; label: string }>
+  companyOptions: Array<{ value: string | number; label: string }>
+  sortOptions: SortOption[]
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Period Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <FormSelectModule
+                  name="period"
+                  value={localFilters.period || ""}
+                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feederId"
+                  value={localFilters.feederId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("feederId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={feederOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Company Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                <FormSelectModule
+                  name="companyId"
+                  value={localFilters.companyId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("companyId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={companyOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const LoadingSkeleton = () => {
   return (
     <div className="flex-3 mt-5 flex flex-col rounded-md border bg-white p-5">
@@ -214,11 +411,36 @@ const FeederEnergyCaps: React.FC = () => {
   const { feederEnergyCaps, feederEnergyCapsLoading, feederEnergyCapsError, pagination } = useAppSelector(
     (state) => state.feederEnergyCaps
   )
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { feeders } = useAppSelector((state) => state.feeders)
+  const { companies } = useAppSelector((state) => state.companies)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [selectedEnergyCap, setSelectedEnergyCap] = useState<FeederEnergyCap | null>(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+
+  // Local state for filters (UI state - what user is selecting)
+  const [localFilters, setLocalFilters] = useState({
+    period: "",
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    companyId: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state (only updated when "Apply Filters" is clicked)
+  const [appliedFilters, setAppliedFilters] = useState({
+    period: "",
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    companyId: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -226,16 +448,52 @@ const FeederEnergyCaps: React.FC = () => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages || 1
 
-  // Fetch feeder energy caps on component mount and when search/pagination changes
+  // Fetch area offices, feeders, and companies on component mount for filter dropdowns
+  useEffect(() => {
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
+
+    dispatch(
+      fetchFeeders({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    dispatch(
+      fetchCompanies({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    // Cleanup function to clear states when component unmounts
+    return () => {
+      dispatch(clearAreaOffices())
+      dispatch(clearFeeders())
+      dispatch(clearCompanies())
+    }
+  }, [dispatch])
+
+  // Fetch feeder energy caps on component mount and when search/pagination/applied filters change
   useEffect(() => {
     const fetchParams: FeederEnergyCapsRequestParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(searchText && { period: searchText }),
+      ...(appliedFilters.period ? { period: appliedFilters.period } : {}),
+      ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
+      ...(appliedFilters.feederId !== undefined ? { feederId: appliedFilters.feederId } : {}),
+      ...(appliedFilters.companyId !== undefined ? { companyId: appliedFilters.companyId } : {}),
+      ...(appliedFilters.sortBy ? { sortBy: appliedFilters.sortBy } : {}),
+      ...(appliedFilters.sortOrder ? { sortOrder: appliedFilters.sortOrder } : {}),
     }
 
     dispatch(fetchFeederEnergyCaps(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText])
+  }, [dispatch, currentPage, pageSize, appliedFilters])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -243,6 +501,144 @@ const FeederEnergyCaps: React.FC = () => {
       dispatch(clearError())
     }
   }, [dispatch])
+
+  // Generate period options
+  const generatePeriodOptions = () => {
+    const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
+
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    })
+
+    // Include current month + next 12 months
+    for (let i = 0; i <= 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      const value = `${year}-${month}`
+      const label = formatter.format(date)
+
+      options.push({ value, label })
+    }
+
+    // Add existing periods from data
+    const existingPeriods = Array.from(new Set(feederEnergyCaps.map((cap) => cap.period)))
+    existingPeriods.forEach((period) => {
+      const alreadyExists = options.some((opt) => opt.value === period)
+      if (!alreadyExists && period) {
+        let label = period
+        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
+        if (match && match[1] && match[2]) {
+          const year = parseInt(match[1], 10)
+          const monthIndex = parseInt(match[2], 10) - 1
+          const date = new Date(year, monthIndex, 1)
+          label = formatter.format(date)
+        }
+        options.push({ value: period, label })
+      }
+    })
+
+    return options
+  }
+
+  const periodOptions = generatePeriodOptions()
+
+  // Area office options
+  const areaOfficeOptions = [
+    { value: "", label: "All Area Offices" },
+    ...areaOffices.map((office) => ({
+      value: office.id,
+      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+    })),
+  ]
+
+  // Feeder options
+  const feederOptions = [
+    { value: "", label: "All Feeders" },
+    ...feeders.map((feeder) => ({
+      value: feeder.id,
+      label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
+    })),
+  ]
+
+  // Company options
+  const companyOptions = [
+    { value: "", label: "All Companies" },
+    ...companies.map((company) => ({
+      value: company.id,
+      label: `${company.name} (${company.nercCode})`,
+    })),
+  ]
+
+  // Sort options
+  const sortOptions: SortOption[] = [
+    { label: "Feeder ID Asc", value: "feederId", order: "asc" },
+    { label: "Feeder ID Desc", value: "feederId", order: "desc" },
+    { label: "Period Asc", value: "period", order: "asc" },
+    { label: "Period Desc", value: "period", order: "desc" },
+    { label: "Energy Cap Low-High", value: "energyCapKwh", order: "asc" },
+    { label: "Energy Cap High-Low", value: "energyCapKwh", order: "desc" },
+    { label: "Tariff Override Low-High", value: "tariffOverridePerKwh", order: "asc" },
+    { label: "Tariff Override High-Low", value: "tariffOverridePerKwh", order: "desc" },
+    { label: "Captured Date Asc", value: "capturedAtUtc", order: "asc" },
+    { label: "Captured Date Desc", value: "capturedAtUtc", order: "desc" },
+    { label: "Captured By A-Z", value: "capturedByName", order: "asc" },
+    { label: "Captured By Z-A", value: "capturedByName", order: "desc" },
+  ]
+
+  // Handle individual filter changes (local state)
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply all filters at once
+  const applyFilters = () => {
+    // Copy localFilters to appliedFilters to trigger API call
+    setAppliedFilters({ ...localFilters })
+    // Reset to first page when applying filters
+    dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    const emptyFilters = {
+      period: "",
+      areaOfficeId: undefined,
+      feederId: undefined,
+      companyId: undefined,
+      sortBy: "",
+      sortOrder: "asc" as "asc" | "desc",
+    }
+    setLocalFilters(emptyFilters)
+    setAppliedFilters(emptyFilters)
+    setSearchText("")
+    dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (localFilters.period) count++
+    if (localFilters.areaOfficeId) count++
+    if (localFilters.feederId) count++
+    if (localFilters.companyId) count++
+    if (localFilters.sortBy) count++
+    return count
+  }
 
   const getStatusStyle = (energyCapKwh: number) => {
     if (energyCapKwh > 10000) {
@@ -400,40 +796,90 @@ const FeederEnergyCaps: React.FC = () => {
     return <div className="p-4 text-red-500">Error loading feeder energy cap data: {feederEnergyCapsError}</div>
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Feeder Energy Caps</p>
-          <p className="text-sm text-gray-600">Manage and monitor feeder energy consumption caps and tariffs</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <SearchModule
-            value={searchText}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            placeholder="Search by period (e.g., 2024-01)..."
-            className="w-[380px]"
-            bgClassName="bg-white"
-          />
-          <button
-            type="button"
-            onClick={() => router.push("/billing/feeder-energy-caps/add")}
-            className="rounded-md bg-[#004B23] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+    <>
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
+        {/* Main Content - Feeder Energy Caps Table */}
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.div
+            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
           >
-            <PlusCircle className="size-4 md:hidden" />
-            <p className="max-md:hidden"> Add Feeder Cap </p>
-          </button>
-        </div>
-      </motion.div>
+            <div className="flex items-center gap-3">
+              {/* Filter Button for ALL screens up to 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Feeder Energy Caps</p>
+                <p className="text-sm text-gray-600">Manage and monitor feeder energy consumption caps and tariffs</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-full sm:w-64 md:w-[380px]">
+                <SearchModule
+                  value={searchText}
+                  onChange={handleSearch}
+                  onCancel={handleCancelSearch}
+                  placeholder="Search by period (e.g., 2024-01)..."
+                  className="w-full"
+                  bgClassName="bg-white"
+                />
+              </div>
+
+              {/* Active filters badge - Desktop only (2xl and above) */}
+              {getActiveFilterCount() > 0 && (
+                <div className="hidden items-center gap-2 2xl:flex">
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/billing/feeder-energy-caps/add")}
+                className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
+              >
+                <PlusCircle className="size-4 sm:hidden" />
+                <p className="max-sm:hidden"> Add Feeder Cap </p>
+              </button>
+            </div>
+          </motion.div>
 
       {feederEnergyCaps.length === 0 ? (
         <motion.div
-          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+          className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
@@ -444,7 +890,9 @@ const FeederEnergyCaps: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText ? "No matching feeder energy caps found" : "No feeder energy caps available"}
+            {searchText || getActiveFilterCount() > 0
+              ? "No matching feeder energy caps found"
+              : "No feeder energy caps available"}
           </motion.p>
         </motion.div>
       ) : (
@@ -520,15 +968,8 @@ const FeederEnergyCaps: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {feederEnergyCaps.map((energyCap: FeederEnergyCap, index: number) => (
-                    <motion.tr
-                      key={energyCap.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
+                {feederEnergyCaps.map((energyCap: FeederEnergyCap, index: number) => (
+                  <tr key={energyCap.id}>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">FEEDER-{energyCap.feederId}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{energyCap.period}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
@@ -562,9 +1003,8 @@ const FeederEnergyCaps: React.FC = () => {
                           View Details
                         </ButtonModule>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
-                </AnimatePresence>
               </tbody>
             </table>
           </motion.div>
@@ -657,7 +1097,171 @@ const FeederEnergyCaps: React.FC = () => {
           </div>
         </>
       )}
-    </motion.div>
+        </motion.div>
+
+        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          >
+            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Period Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <FormSelectModule
+                  name="period"
+                  value={localFilters.period || ""}
+                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  options={periodOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feederId"
+                  value={localFilters.feederId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("feederId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={feederOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Company Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                <FormSelectModule
+                  name="companyId"
+                  value={localFilters.companyId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("companyId", e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  options={companyOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {pagination.currentPage} / {totalPages || 1}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Mobile & All Screens Filter Sidebar (up to 2xl) */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        periodOptions={periodOptions}
+        areaOfficeOptions={areaOfficeOptions}
+        feederOptions={feederOptions}
+        companyOptions={companyOptions}
+        sortOptions={sortOptions}
+      />
+    </>
   )
 }
 

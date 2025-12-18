@@ -320,9 +320,9 @@ export default function MeteringDashboard() {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 2xl:px-16">
+          <div className="w-full">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6  max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
               <div>
                 <h4 className="text-2xl font-semibold">Billing Engine</h4>
                 <p>Tariff management, bill generation, and billing cycles</p>
@@ -347,28 +347,24 @@ export default function MeteringDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6  max-md:flex-col max-md:px-0 max-sm:my-4 ">
-              <div className="w-full">
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State - Redesigned Metering Dashboard
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      <AllBills />
-                    </motion.div>
-                  </>
-                )}
-              </div>
-            </div>
+            {isLoading ? (
+              // Loading State
+              <>
+                <SkeletonLoader />
+                <LoadingState showCategories={true} />
+              </>
+            ) : (
+              // Loaded State - Redesigned Metering Dashboard
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <AllBills />
+                </motion.div>
+              </>
+            )}
           </div>
         </div>
       </div>
