@@ -162,7 +162,7 @@ const BankReconciliation: React.FC<BankReconciliationProps> = ({ onViewDetails, 
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-gray-200 bg-white shadow-lg"
+                  className="absolute inset-x-0 top-full z-50 mt-1 rounded-md border border-gray-200 bg-white shadow-lg"
                 >
                   <div className="p-2">
                     <button

@@ -170,7 +170,7 @@ const SignIn: React.FC = () => {
         </motion.div>
 
         {/* Text positioned at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-24">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center px-10 pb-24">
           <motion.h1
             className="mb-4 max-w-[70%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
             initial={{ opacity: 0, y: 20 }}
@@ -182,7 +182,7 @@ const SignIn: React.FC = () => {
             <span className="text-[#FFFFFF80]">for Utilities</span>
           </motion.h1>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-10 ">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center px-10 pb-10 ">
           <motion.p
             className="max-w-[80%] text-center  text-[#FFFFFF80]"
             initial={{ opacity: 0, y: 20 }}

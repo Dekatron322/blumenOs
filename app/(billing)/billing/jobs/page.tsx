@@ -17,9 +17,9 @@ import {
   setBillingJobsPagination,
 } from "lib/redux/postpaidSlice"
 import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
-import { ArrowLeft, Filter, X, SortAsc, SortDesc } from "lucide-react"
+import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 
 interface BillingJob {
   id: number
