@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
@@ -10,7 +10,11 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
 import PdfFile from "public/pdf-file"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchMeterReadings, MeterReading, setPagination as setMeterReadingPagination } from "lib/redux/meterReadingSlice"
+import {
+  fetchMeterReadings,
+  MeterReading,
+  setPagination as setMeterReadingPagination,
+} from "lib/redux/meterReadingSlice"
 import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
 import { fetchDistributionSubstations, clearDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
@@ -298,7 +302,9 @@ const MobileFilterSidebar = ({
 
               {/* Distribution Substation Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Distribution Substation</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Distribution Substation
+                </label>
                 <FormSelectModule
                   name="distributionSubstationId"
                   value={localFilters.distributionSubstationId || ""}
@@ -419,8 +425,8 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
   useEffect(() => {
     dispatch(
       fetchCustomers({
-        PageNumber: 1,
-        PageSize: 100,
+        pageNumber: 1,
+        pageSize: 100,
       })
     )
 
@@ -440,8 +446,8 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
     dispatch(
       fetchDistributionSubstations({
-        PageNumber: 1,
-        PageSize: 100,
+        pageNumber: 1,
+        pageSize: 100,
       })
     )
 
@@ -553,7 +559,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
     { value: "", label: "All Distribution Substations" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
-      label: `${substation.name} (${substation.code})`,
+      label: `${substation.dssCode} (${substation.nercCode})`,
     })),
   ]
 
@@ -971,151 +977,151 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
             />
           </div>
 
-        {/* Loading State */}
-        {meterReadingsLoading && (
-          <div className="space-y-3 sm:space-y-4">
-            {isMobileView ? (
-              <>
-                <MobileMeterReadingCardSkeleton />
-                <MobileMeterReadingCardSkeleton />
-                <MobileMeterReadingCardSkeleton />
-              </>
-            ) : (
-              <>
-                <MeterReadingCardSkeleton />
-                <MeterReadingCardSkeleton />
-                <MeterReadingCardSkeleton />
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Error State */}
-        {!meterReadingsLoading && meterReadingsError && (
-          <div className="rounded-lg bg-red-50 p-3 sm:p-4">
-            <p className="text-xs text-red-600 sm:text-sm">Error loading meter readings: {meterReadingsError}</p>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!meterReadingsLoading && !meterReadingsError && displayReadings.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-            <div className="text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
-                <DateIcon />
-              </div>
-              <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
-              <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                {getActiveFilterCount() > 0 || searchText.trim()
-                  ? "Try adjusting your search criteria or filters"
-                  : "No meter readings available"}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Meter Readings List */}
-        {!meterReadingsLoading && !meterReadingsError && displayReadings.length > 0 && (
-          <>
+          {/* Loading State */}
+          {meterReadingsLoading && (
             <div className="space-y-3 sm:space-y-4">
-              {displayReadings.map((reading) =>
-                isMobileView ? (
-                  <MobileMeterReadingCard key={reading.id} reading={reading} />
-                ) : (
-                  <MeterReadingCard key={reading.id} reading={reading} />
-                )
+              {isMobileView ? (
+                <>
+                  <MobileMeterReadingCardSkeleton />
+                  <MobileMeterReadingCardSkeleton />
+                  <MobileMeterReadingCardSkeleton />
+                </>
+              ) : (
+                <>
+                  <MeterReadingCardSkeleton />
+                  <MeterReadingCardSkeleton />
+                  <MeterReadingCardSkeleton />
+                </>
               )}
             </div>
+          )}
 
-            {/* Pagination */}
-            <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-              <div className="flex items-center gap-1 max-sm:hidden">
-                <p className="text-xs sm:text-sm">Show rows</p>
-                <select
-                  value={pagination.pageSize}
-                  onChange={handleRowsChange}
-                  className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
+          {/* Error State */}
+          {!meterReadingsLoading && meterReadingsError && (
+            <div className="rounded-lg bg-red-50 p-3 sm:p-4">
+              <p className="text-xs text-red-600 sm:text-sm">Error loading meter readings: {meterReadingsError}</p>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!meterReadingsLoading && !meterReadingsError && displayReadings.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+              <div className="text-center">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
+                  <DateIcon />
+                </div>
+                <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Meter Readings Found</h3>
+                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
+                  {getActiveFilterCount() > 0 || searchText.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No meter readings available"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Meter Readings List */}
+          {!meterReadingsLoading && !meterReadingsError && displayReadings.length > 0 && (
+            <>
+              <div className="space-y-3 sm:space-y-4">
+                {displayReadings.map((reading) =>
+                  isMobileView ? (
+                    <MobileMeterReadingCard key={reading.id} reading={reading} />
+                  ) : (
+                    <MeterReadingCard key={reading.id} reading={reading} />
+                  )
+                )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                <button
-                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                  }`}
-                  onClick={() => changePage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <BiSolidLeftArrow className="size-4 sm:size-5" />
-                </button>
-
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                    {getPageItems().map((item, index) =>
-                      typeof item === "number" ? (
-                        <button
-                          key={item}
-                          className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                          }`}
-                          onClick={() => changePage(item)}
-                        >
-                          {item}
-                        </button>
-                      ) : (
-                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                          {item}
-                        </span>
-                      )
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1 sm:hidden">
-                    {getMobilePageItems().map((item, index) =>
-                      typeof item === "number" ? (
-                        <button
-                          key={item}
-                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                          }`}
-                          onClick={() => changePage(item)}
-                        >
-                          {item}
-                        </button>
-                      ) : (
-                        <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                          {item}
-                        </span>
-                      )
-                    )}
-                  </div>
+              {/* Pagination */}
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
                 </div>
 
-                <button
-                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                    currentPage === totalPages || totalPages === 0
-                      ? "cursor-not-allowed text-gray-400"
-                      : "text-[#000000]"
-                  }`}
-                  onClick={() => changePage(currentPage + 1)}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                >
-                  <BiSolidRightArrow className="size-4 sm:size-5" />
-                </button>
-              </div>
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
 
-              <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-                Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total meter readings)
-                {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
-              </p>
-            </div>
-          </>
-        )}
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                              currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {getMobilePageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                              currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(currentPage + 1)}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                  >
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total meter readings)
+                  {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
+                </p>
+              </div>
+            </>
+          )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
@@ -1192,7 +1198,9 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
               {/* Distribution Substation Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Distribution Substation</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Distribution Substation
+                </label>
                 <FormSelectModule
                   name="distributionSubstationId"
                   value={localFilters.distributionSubstationId || ""}

@@ -2,19 +2,14 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import {
-  clearFeederEnergyCaps,
-  FeederEnergyCap,
-  fetchFeederEnergyCaps,
-  setPagination,
-} from "lib/redux/feederEnergyCapSlice"
+import { FeederEnergyCap, fetchFeederEnergyCaps, setPagination } from "lib/redux/feederEnergyCapSlice"
 import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
 import { fetchCompanies, clearCompanies } from "lib/redux/companySlice"
@@ -437,8 +432,8 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
 
     dispatch(
       fetchCompanies({
-        PageNumber: 1,
-        PageSize: 100,
+        pageNumber: 1,
+        pageSize: 100,
       })
     )
 
@@ -1169,135 +1164,135 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                 className="w-full"
               />
             </div>
-          {feederEnergyCapsError && (
-            <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
-              <p className="text-xs text-red-600 sm:text-sm">Error loading energy caps: {feederEnergyCapsError}</p>
-            </div>
-          )}
-          {shouldShowFallback && (
-            <div className="mt-2 rounded-lg bg-yellow-50 p-2 sm:p-3">
-              <p className="text-xs text-yellow-600 sm:text-sm">Showing sample data - no energy caps found</p>
-            </div>
-          )}
-        </div>
-
-        {/* Energy Cap Cycles List */}
-        <div className="space-y-3 sm:space-y-4">
-          {displayCycles.map((cycle) =>
-            isMobileView ? (
-              <MobileEnergyCapCard key={cycle.id} cycle={cycle} />
-            ) : (
-              <EnergyCapCard key={cycle.id} cycle={cycle} />
-            )
-          )}
-        </div>
-
-        {/* Empty State */}
-        {!feederEnergyCapsLoading && !feederEnergyCapsError && displayCycles.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-            <div className="text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
-                <CyclesIcon />
+            {feederEnergyCapsError && (
+              <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
+                <p className="text-xs text-red-600 sm:text-sm">Error loading energy caps: {feederEnergyCapsError}</p>
               </div>
-              <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Energy Caps Found</h3>
-              <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                {getActiveFilterCount() > 0 || searchText.trim()
-                  ? "Try adjusting your search criteria or filters"
-                  : "No energy caps available"}
+            )}
+            {shouldShowFallback && (
+              <div className="mt-2 rounded-lg bg-yellow-50 p-2 sm:p-3">
+                <p className="text-xs text-yellow-600 sm:text-sm">Showing sample data - no energy caps found</p>
+              </div>
+            )}
+          </div>
+
+          {/* Energy Cap Cycles List */}
+          <div className="space-y-3 sm:space-y-4">
+            {displayCycles.map((cycle) =>
+              isMobileView ? (
+                <MobileEnergyCapCard key={cycle.id} cycle={cycle} />
+              ) : (
+                <EnergyCapCard key={cycle.id} cycle={cycle} />
+              )
+            )}
+          </div>
+
+          {/* Empty State */}
+          {!feederEnergyCapsLoading && !feederEnergyCapsError && displayCycles.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+              <div className="text-center">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
+                  <CyclesIcon />
+                </div>
+                <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Energy Caps Found</h3>
+                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
+                  {getActiveFilterCount() > 0 || searchText.trim()
+                    ? "Try adjusting your search criteria or filters"
+                    : "No energy caps available"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {displayCycles.length > 0 && totalPages > 1 && (
+            <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:mt-6 sm:flex-row">
+              <div className="flex items-center gap-1 max-sm:hidden">
+                <p className="text-xs sm:text-sm">Show rows</p>
+                <select
+                  value={pagination.pageSize}
+                  onChange={handleRowsChange}
+                  className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                <button
+                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                    pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  <BiSolidLeftArrow className="size-4 sm:size-5" />
+                </button>
+
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                    {getPageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 sm:hidden">
+                    {getMobilePageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                            pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                    pagination.currentPage === totalPages || totalPages === 0
+                      ? "cursor-not-allowed text-gray-400"
+                      : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === totalPages || totalPages === 0}
+                >
+                  <BiSolidRightArrow className="size-4 sm:size-5" />
+                </button>
+              </div>
+
+              <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total cycles)
+                {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
               </p>
             </div>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {displayCycles.length > 0 && totalPages > 1 && (
-          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:mt-6 sm:flex-row">
-            <div className="flex items-center gap-1 max-sm:hidden">
-              <p className="text-xs sm:text-sm">Show rows</p>
-              <select
-                value={pagination.pageSize}
-                onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-              >
-                <BiSolidLeftArrow className="size-4 sm:size-5" />
-              </button>
-
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1 sm:hidden">
-                  {getMobilePageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === totalPages || totalPages === 0}
-              >
-                <BiSolidRightArrow className="size-4 sm:size-5" />
-              </button>
-            </div>
-
-            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-              Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total cycles)
-              {(getActiveFilterCount() > 0 || searchText.trim()) && " - filtered"}
-            </p>
-          </div>
-        )}
+          )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}

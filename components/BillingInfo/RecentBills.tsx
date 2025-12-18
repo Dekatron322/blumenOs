@@ -2,12 +2,11 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { ButtonModule } from "components/ui/Button/Button"
-import BillDetailsModal from "components/ui/Modal/bill-details-modal"
 import { BillsIcon, BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGeneratedIcon } from "components/Icons/Icons"
 import PdfFile from "public/pdf-file"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
