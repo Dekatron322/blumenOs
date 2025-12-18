@@ -953,7 +953,7 @@ const AddEmployeePage = () => {
 
   // Mobile Bottom Navigation Bar
   const MobileBottomNavigation = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2">
           {currentStep > 1 && (

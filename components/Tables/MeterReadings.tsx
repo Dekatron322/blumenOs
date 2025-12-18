@@ -10,11 +10,11 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearError, fetchMeterReadings, setPagination } from "lib/redux/meterReadingSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { AddCustomerIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
-import { PlusCircle, ArrowLeft, Filter, X, SortAsc, SortDesc } from "lucide-react"
+import { ArrowLeft, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
 import { fetchCustomers } from "lib/redux/customerSlice"
-import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
-import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
-import { fetchDistributionSubstations, clearDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface ActionDropdownProps {
@@ -1031,323 +1031,323 @@ const MeterReadings: React.FC = () => {
             </div>
           </motion.div>
 
-      {meterReadings.length === 0 ? (
-        <motion.div
-          className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText ? "No matching readings found" : "No meter readings available"}
-          </motion.p>
-        </motion.div>
-      ) : (
-        <>
-          <motion.div
-            className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("customerName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Customer <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("period")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Period <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("previousReadingKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Previous Reading <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("presentReadingKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Present Reading <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("validConsumptionKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Consumption <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("validationStatus")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("anomalyScore")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Anomaly Score <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("isFlaggedForReview")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Review Flag <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capturedAtUtc")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Captured Date <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capturedByName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Captured By <RxCaretSort />
-                    </div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {meterReadings.map((reading: MeterReading, index: number) => (
-                  <tr key={reading.id}>
-                      <td className="whitespace-nowrap border-b px-4 py-3">
+          {meterReadings.length === 0 ? (
+            <motion.div
+              className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {searchText ? "No matching readings found" : "No meter readings available"}
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="mt-4 w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th
+                        className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("customerName")}
+                      >
                         <div className="flex items-center gap-2">
-                          <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
-                            <UserIcon />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{reading.customerName}</div>
-                            <div className="text-xs text-gray-500">{reading.customerAccountNumber}</div>
-                            <div className="text-xs text-blue-600">ID: {reading.customerId}</div>
-                          </div>
+                          Customer <RxCaretSort />
                         </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{reading.period}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        {reading.previousReadingKwh.toLocaleString()} kWh
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                        {reading.presentReadingKwh.toLocaleString()} kWh
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getConsumptionStyle(
-                            reading.validConsumptionKwh,
-                            reading.averageConsumptionBaselineKwh
-                          )}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {reading.validConsumptionKwh.toLocaleString()} kWh
-                        </motion.div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Baseline:{" "}
-                          {reading.averageConsumptionBaselineKwh != null
-                            ? `${reading.averageConsumptionBaselineKwh.toLocaleString()} kWh`
-                            : "N/A"}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getValidationStatusStyle(reading.validationStatus)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                reading.validationStatus === 1
-                                  ? "#589E67"
-                                  : reading.validationStatus === 2
-                                  ? "#D97706"
-                                  : reading.validationStatus === 3
-                                  ? "#AF4B4B"
-                                  : "#2563EB",
-                            }}
-                          ></span>
-                          {getValidationStatusText(reading.validationStatus)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          style={getAnomalyScoreStyle(reading.anomalyScore)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {reading.anomalyScore}%
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                        <motion.div
-                          className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
-                            reading.isFlaggedForReview ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor: reading.isFlaggedForReview ? "#AF4B4B" : "#589E67",
-                            }}
-                          ></span>
-                          {reading.isFlaggedForReview ? "Flagged" : "Clear"}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        <div>{formatDate(reading.capturedAtUtc)}</div>
-                        <div className="text-xs text-gray-500">{formatDateTime(reading.capturedAtUtc)}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                        {reading.capturedByName}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("period")}
+                      >
                         <div className="flex items-center gap-2">
-                          <ButtonModule
-                            size="sm"
-                            onClick={() => handleViewReadingDetails(reading)}
-                            variant="primary"
-                            className="text-xs sm:text-sm"
-                          >
-                            <span className="hidden sm:inline">View</span>
-                            <span className="sm:hidden">View</span>
-                          </ButtonModule>
+                          Period <RxCaretSort />
                         </div>
-                      </td>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("previousReadingKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Previous Reading <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("presentReadingKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Present Reading <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("validConsumptionKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Consumption <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("validationStatus")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Status <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("anomalyScore")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Anomaly Score <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("isFlaggedForReview")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Review Flag <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("capturedAtUtc")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Captured Date <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("capturedByName")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Captured By <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
-          </motion.div>
+                  </thead>
+                  <tbody>
+                    {meterReadings.map((reading: MeterReading, index: number) => (
+                      <tr key={reading.id}>
+                        <td className="whitespace-nowrap border-b px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
+                              <UserIcon />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{reading.customerName}</div>
+                              <div className="text-xs text-gray-500">{reading.customerAccountNumber}</div>
+                              <div className="text-xs text-blue-600">ID: {reading.customerId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">{reading.period}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          {reading.previousReadingKwh.toLocaleString()} kWh
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {reading.presentReadingKwh.toLocaleString()} kWh
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getConsumptionStyle(
+                              reading.validConsumptionKwh,
+                              reading.averageConsumptionBaselineKwh
+                            )}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            {reading.validConsumptionKwh.toLocaleString()} kWh
+                          </motion.div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            Baseline:{" "}
+                            {reading.averageConsumptionBaselineKwh != null
+                              ? `${reading.averageConsumptionBaselineKwh.toLocaleString()} kWh`
+                              : "N/A"}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getValidationStatusStyle(reading.validationStatus)}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor:
+                                  reading.validationStatus === 1
+                                    ? "#589E67"
+                                    : reading.validationStatus === 2
+                                    ? "#D97706"
+                                    : reading.validationStatus === 3
+                                    ? "#AF4B4B"
+                                    : "#2563EB",
+                              }}
+                            ></span>
+                            {getValidationStatusText(reading.validationStatus)}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            style={getAnomalyScoreStyle(reading.anomalyScore)}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            {reading.anomalyScore}%
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                          <motion.div
+                            className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+                              reading.isFlaggedForReview ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor: reading.isFlaggedForReview ? "#AF4B4B" : "#589E67",
+                              }}
+                            ></span>
+                            {reading.isFlaggedForReview ? "Flagged" : "Clear"}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          <div>{formatDate(reading.capturedAtUtc)}</div>
+                          <div className="text-xs text-gray-500">{formatDateTime(reading.capturedAtUtc)}</div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {reading.capturedByName}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <ButtonModule
+                              size="sm"
+                              onClick={() => handleViewReadingDetails(reading)}
+                              variant="primary"
+                              className="text-xs sm:text-sm"
+                            >
+                              <span className="hidden sm:inline">View</span>
+                              <span className="sm:hidden">View</span>
+                            </ButtonModule>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
 
-          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-            <div className="flex items-center gap-1 max-sm:hidden">
-              <p className="text-xs sm:text-sm">Show rows</p>
-              <select
-                value={pagination.pageSize}
-                onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-              >
-                <BiSolidLeftArrow className="size-4 sm:size-5" />
-              </button>
-
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
                 </div>
 
-                <div className="flex items-center gap-1 sm:hidden">
-                  {getMobilePageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {getMobilePageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === totalPages || totalPages === 0}
+                  >
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
+                  </button>
                 </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
+                  {searchText.trim() && " - filtered"}
+                </p>
               </div>
-
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === totalPages || totalPages === 0}
-              >
-                <BiSolidRightArrow className="size-4 sm:size-5" />
-              </button>
-            </div>
-
-            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-              Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
-              {searchText.trim() && " - filtered"}
-            </p>
-          </div>
-        </>
-      )}
+            </>
+          )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}

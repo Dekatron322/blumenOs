@@ -71,7 +71,7 @@ const SkeletonLoader = () => {
           }}
         >
           <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-            <div className="h-6 w-6 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+            <div className="size-6 animate-pulse rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             <div className="h-4 w-32 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
           </div>
           <div className="flex flex-col gap-3 pt-4">
@@ -201,7 +201,7 @@ const TableSkeleton = () => {
                   </div>
                 </div>
               </div>
-              <div className="h-6 w-6 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+              <div className="size-6 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
             </div>
 
             <div className="mt-4 space-y-2">
@@ -232,16 +232,16 @@ const TableSkeleton = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+          <div className="size-8 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
           <div className="flex gap-2">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="h-7 w-7 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"
+                className="size-7 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"
               ></div>
             ))}
           </div>
-          <div className="h-8 w-8 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+          <div className="size-8 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
         </div>
 
         <div className="h-4 w-24 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>

@@ -11,9 +11,9 @@ import { BillsIcon, BillsIdIcon, CategoryIcon, CycleIcon, DateIcon, RevenueGener
 import PdfFile from "public/pdf-file"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPostpaidBills, PostpaidBill, setPagination } from "lib/redux/postpaidSlice"
-import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
-import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
-import { ArrowLeft, Filter, X, SortAsc, SortDesc } from "lucide-react"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface SortOption {

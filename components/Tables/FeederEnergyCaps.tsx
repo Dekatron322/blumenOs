@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
-import { MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
@@ -15,12 +14,11 @@ import {
   setPagination,
 } from "lib/redux/feederEnergyCapSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { AddCustomerIcon } from "components/Icons/Icons"
-import { PlusCircle, ArrowLeft, Filter, X, SortAsc, SortDesc } from "lucide-react"
+import { ArrowLeft, Filter, PlusCircle, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import { fetchAreaOffices, clearAreaOffices } from "lib/redux/areaOfficeSlice"
-import { fetchFeeders, clearFeeders } from "lib/redux/feedersSlice"
-import { fetchCompanies, clearCompanies } from "lib/redux/companySlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { clearCompanies, fetchCompanies } from "lib/redux/companySlice"
 
 interface ActionDropdownProps {
   energyCap: FeederEnergyCap
@@ -877,226 +875,230 @@ const FeederEnergyCaps: React.FC = () => {
             </div>
           </motion.div>
 
-      {feederEnergyCaps.length === 0 ? (
-        <motion.div
-          className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || getActiveFilterCount() > 0
-              ? "No matching feeder energy caps found"
-              : "No feeder energy caps available"}
-          </motion.p>
-        </motion.div>
-      ) : (
-        <>
-          <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("feederId")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Feeder ID <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("period")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Period <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("energyCapKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Energy Cap (kWh) <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("tariffOverridePerKwh")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Tariff Override <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capturedAtUtc")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Captured Date <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("capturedByName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Captured By <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Cap Level <RxCaretSort />
-                    </div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {feederEnergyCaps.map((energyCap: FeederEnergyCap, index: number) => (
-                  <tr key={energyCap.id}>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">FEEDER-{energyCap.feederId}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{energyCap.period}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {energyCap.energyCapKwh.toLocaleString()} kWh
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {formatCurrency(energyCap.tariffOverridePerKwh)}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {formatDate(energyCap.capturedAtUtc)}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{energyCap.capturedByName}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getStatusStyle(energyCap.energyCapKwh)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor: getStatusStyle(energyCap.energyCapKwh).color,
-                            }}
-                          ></span>
-                          {getStatusLabel(energyCap.energyCapKwh)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ButtonModule size="sm" onClick={() => handleViewEnergyCapDetails(energyCap)} variant="primary">
-                          View Details
-                        </ButtonModule>
-                      </td>
+          {feederEnergyCaps.length === 0 ? (
+            <motion.div
+              className="mt-4 flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {searchText || getActiveFilterCount() > 0
+                  ? "No matching feeder energy caps found"
+                  : "No feeder energy caps available"}
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th
+                        className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("feederId")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Feeder ID <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("period")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Period <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("energyCapKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Energy Cap (kWh) <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("tariffOverridePerKwh")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Tariff Override <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("capturedAtUtc")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Captured Date <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("capturedByName")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Captured By <RxCaretSort />
+                        </div>
+                      </th>
+                      <th
+                        className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                        onClick={() => toggleSort("status")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Cap Level <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
-          </motion.div>
+                  </thead>
+                  <tbody>
+                    {feederEnergyCaps.map((energyCap: FeederEnergyCap, index: number) => (
+                      <tr key={energyCap.id}>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">FEEDER-{energyCap.feederId}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{energyCap.period}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {energyCap.energyCapKwh.toLocaleString()} kWh
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {formatCurrency(energyCap.tariffOverridePerKwh)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {formatDate(energyCap.capturedAtUtc)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{energyCap.capturedByName}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <motion.div
+                            style={getStatusStyle(energyCap.energyCapKwh)}
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor: getStatusStyle(energyCap.energyCapKwh).color,
+                              }}
+                            ></span>
+                            {getStatusLabel(energyCap.energyCapKwh)}
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                          <ButtonModule
+                            size="sm"
+                            onClick={() => handleViewEnergyCapDetails(energyCap)}
+                            variant="primary"
+                          >
+                            View Details
+                          </ButtonModule>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
 
-          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-            <div className="flex items-center gap-1 max-sm:hidden">
-              <p className="text-xs sm:text-sm">Show rows</p>
-              <select
-                value={pagination.pageSize}
-                onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-              >
-                <BiSolidLeftArrow className="size-4 sm:size-5" />
-              </button>
-
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={handleRowsChange}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
                 </div>
 
-                <div className="flex items-center gap-1 sm:hidden">
-                  {getMobilePageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {getPageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {getMobilePageItems().map((item, index) =>
+                        typeof item === "number" ? (
+                          <button
+                            key={item}
+                            className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                              pagination.currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                            }`}
+                            onClick={() => changePage(item)}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                            {item}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === totalPages || totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
+                    onClick={() => changePage(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === totalPages || totalPages === 0}
+                  >
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
+                  </button>
                 </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
+                  {searchText.trim() && " - filtered"}
+                </p>
               </div>
-
-              <button
-                className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                  pagination.currentPage === totalPages || totalPages === 0
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-[#000000]"
-                }`}
-                onClick={() => changePage(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === totalPages || totalPages === 0}
-              >
-                <BiSolidRightArrow className="size-4 sm:size-5" />
-              </button>
-            </div>
-
-            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-              Page {pagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total entries)
-              {searchText.trim() && " - filtered"}
-            </p>
-          </div>
-        </>
-      )}
+            </>
+          )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
