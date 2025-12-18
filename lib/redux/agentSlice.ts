@@ -239,6 +239,8 @@ export interface AgentsRequestParams {
   lastCashCollectionDateTo?: string
   areaOfficeId?: number
   serviceCenterId?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Interfaces for Change Request
@@ -328,6 +330,8 @@ export interface ChangeRequestsRequestParams {
   source?: number
   reference?: string
   publicId?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Interfaces for Change Request Details
@@ -1398,6 +1402,8 @@ export const fetchAgents = createAsyncThunk(
         lastCashCollectionDateTo,
         areaOfficeId,
         serviceCenterId,
+        sortBy,
+        sortOrder,
       } = params
 
       const response = await api.get<AgentsResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.GET), {
@@ -1413,6 +1419,8 @@ export const fetchAgents = createAsyncThunk(
           ...(lastCashCollectionDateTo && { LastCashCollectionDateTo: lastCashCollectionDateTo }),
           ...(areaOfficeId !== undefined && { AreaOfficeId: areaOfficeId }),
           ...(serviceCenterId !== undefined && { ServiceCenterId: serviceCenterId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 
@@ -1656,7 +1664,7 @@ export const fetchChangeRequests = createAsyncThunk(
   "agents/fetchChangeRequests",
   async (params: ChangeRequestsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, status, source, reference, publicId } = params
+      const { pageNumber, pageSize, status, source, reference, publicId, sortBy, sortOrder } = params
 
       const response = await api.get<ChangeRequestsResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.VIEW_CHANGE_REQUEST), {
         params: {
@@ -1666,6 +1674,8 @@ export const fetchChangeRequests = createAsyncThunk(
           ...(source !== undefined && { Source: source }),
           ...(reference && { Reference: reference }),
           ...(publicId && { PublicId: publicId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 

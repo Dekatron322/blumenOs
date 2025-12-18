@@ -3,14 +3,20 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
+import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { useDispatch, useSelector } from "react-redux"
-import { AppDispatch, RootState } from "lib/redux/store"
-import { Outage as ApiOutage, fetchOutages, OutageRequestParams } from "lib/redux/outageSlice"
-import SearchInput from "components/Search/SearchInput"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { Outage as ApiOutage, fetchOutages, OutageRequestParams, setPagination } from "lib/redux/outageSlice"
+import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
 
 // Types
 interface Outage {
@@ -332,9 +338,188 @@ const mapApiOutageToLocal = (apiOutage: ApiOutage): Outage => {
   }
 }
 
+// Mobile Filter Sidebar Component
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  statusOptions,
+  priorityOptions,
+  sourceOptions,
+  sortOptions,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | boolean | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  statusOptions: Array<{ value: string | number; label: string }>
+  priorityOptions: Array<{ value: string | number; label: string }>
+  sourceOptions: Array<{ value: string; label: string }>
+  sortOptions: SortOption[]
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <FormSelectModule
+                  name="Status"
+                  value={localFilters.Status !== undefined ? localFilters.Status.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("Status", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={statusOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Priority Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
+                <FormSelectModule
+                  name="Priority"
+                  value={localFilters.Priority !== undefined ? localFilters.Priority.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("Priority", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={priorityOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Source Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                <FormSelectModule
+                  name="CustomerGenerated"
+                  value={
+                    localFilters.CustomerGenerated !== undefined
+                      ? localFilters.CustomerGenerated.toString()
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "CustomerGenerated",
+                      e.target.value === "" ? undefined : e.target.value === "true"
+                    )
+                  }
+                  options={sourceOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.SortBy === option.value && localFilters.SortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.SortBy === option.value && localFilters.SortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const OutagesTab: React.FC = () => {
   const router = useRouter()
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useAppDispatch()
   const {
     outages: apiOutages,
     loading,
@@ -344,38 +529,140 @@ const OutagesTab: React.FC = () => {
     pageSize,
     hasNext,
     hasPrevious,
-  } = useSelector((state: RootState) => state.outages)
+  } = useAppSelector((state) => state.outages)
 
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOutage, setSelectedOutage] = useState<Outage | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [filters, setFilters] = useState<Partial<OutageRequestParams>>({
-    Status: undefined,
-    Priority: undefined,
-    Scope: undefined,
-    CustomerGenerated: undefined,
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+
+  // Filter state
+  const [localFilters, setLocalFilters] = useState<{
+    Status?: number
+    Priority?: number
+    CustomerGenerated?: boolean
+    SortBy?: string
+    SortOrder?: "asc" | "desc"
+  }>({
+    SortBy: "",
+    SortOrder: "asc",
   })
+
+  const [appliedFilters, setAppliedFilters] = useState<{
+    Status?: number
+    Priority?: number
+    CustomerGenerated?: boolean
+    SortBy?: string
+    SortOrder?: "asc" | "desc"
+  }>({})
+
+  // Filter options
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: 1, label: "Reported" },
+    { value: 2, label: "Investigating" },
+    { value: 3, label: "Repairing" },
+    { value: 4, label: "Restored" },
+    { value: 5, label: "Cancelled" },
+  ]
+
+  const priorityOptions = [
+    { value: "", label: "All Priorities" },
+    { value: 1, label: "Low" },
+    { value: 2, label: "Medium" },
+    { value: 3, label: "High" },
+    { value: 4, label: "Critical" },
+  ]
+
+  const sourceOptions = [
+    { value: "", label: "All Sources" },
+    { value: "true", label: "Customer Reported" },
+    { value: "false", label: "System Detected" },
+  ]
+
+  const sortOptions: SortOption[] = [
+    { label: "Title (A-Z)", value: "title", order: "asc" },
+    { label: "Title (Z-A)", value: "title", order: "desc" },
+    { label: "Status (A-Z)", value: "status", order: "asc" },
+    { label: "Status (Z-A)", value: "status", order: "desc" },
+    { label: "Priority (Low to High)", value: "priority", order: "asc" },
+    { label: "Priority (High to Low)", value: "priority", order: "desc" },
+    { label: "Reported Date (Oldest First)", value: "reportedAt", order: "asc" },
+    { label: "Reported Date (Newest First)", value: "reportedAt", order: "desc" },
+  ]
+
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string | number | boolean | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value === "" ? undefined : value,
+    }))
+  }
+
+  // Handle sort changes
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      SortBy: option.value,
+      SortOrder: option.order,
+    }))
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    setAppliedFilters({
+      Status: localFilters.Status,
+      Priority: localFilters.Priority,
+      CustomerGenerated: localFilters.CustomerGenerated,
+      SortBy: localFilters.SortBy || undefined,
+      SortOrder: localFilters.SortOrder || undefined,
+    })
+    dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
+    setCurrentPage(1)
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      SortBy: "",
+      SortOrder: "asc",
+    })
+    setAppliedFilters({})
+    dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
+    setCurrentPage(1)
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.Status !== undefined) count++
+    if (appliedFilters.Priority !== undefined) count++
+    if (appliedFilters.CustomerGenerated !== undefined) count++
+    if (appliedFilters.SortBy) count++
+    return count
+  }
 
   // Map API outages to local format
   const outages: Outage[] = apiOutages.map(mapApiOutageToLocal)
 
-  // Fetch outages on component mount and when filters/search change
+  // Fetch outages with filters
   useEffect(() => {
     const params: OutageRequestParams = {
       PageNumber: currentPage,
       PageSize: pageSize || 10,
-      ...filters,
-    }
-
-    if (searchText) {
-      params.Search = searchText
+      ...(searchText && { Search: searchText }),
+      ...(appliedFilters.Status !== undefined && { Status: appliedFilters.Status }),
+      ...(appliedFilters.Priority !== undefined && { Priority: appliedFilters.Priority }),
+      ...(appliedFilters.CustomerGenerated !== undefined && {
+        CustomerGenerated: appliedFilters.CustomerGenerated,
+      }),
+      ...(appliedFilters.SortBy && { SortBy: appliedFilters.SortBy }),
+      ...(appliedFilters.SortOrder && { SortOrder: appliedFilters.SortOrder }),
     }
 
     dispatch(fetchOutages(params))
-  }, [dispatch, currentPage, pageSize, filters, searchText])
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
 
   const getStatusStyle = (status: Outage["status"]) => {
     switch (status) {
@@ -448,45 +735,15 @@ const OutagesTab: React.FC = () => {
     return `${hours}h ${mins}m`
   }
 
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
-  }
-
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
+    dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
     setCurrentPage(1)
-  }
-
-  const handleFormSelectChange = (
-    e: ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const { name, value } = e.target
-
-    if (name === "Status") {
-      const numeric = value === "" ? undefined : Number(value)
-      handleFilterChange("Status", isNaN(numeric as number) ? undefined : numeric)
-      return
-    }
-
-    if (name === "Priority") {
-      const numeric = value === "" ? undefined : Number(value)
-      handleFilterChange("Priority", isNaN(numeric as number) ? undefined : numeric)
-      return
-    }
-
-    if (name === "CustomerGenerated") {
-      if (value === "") {
-        handleFilterChange("CustomerGenerated", undefined)
-      } else {
-        handleFilterChange("CustomerGenerated", value === "true")
-      }
-    }
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
     setCurrentPage(1)
   }
 
@@ -496,25 +753,6 @@ const OutagesTab: React.FC = () => {
   }
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
-
-  const handleFilterChange = (filterType: keyof typeof filters, value: any) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterType]: value,
-    }))
-    setCurrentPage(1)
-  }
-
-  const clearFilters = () => {
-    setFilters({
-      Status: undefined,
-      Priority: undefined,
-      Scope: undefined,
-      CustomerGenerated: undefined,
-    })
-    setSearchText("")
-    setCurrentPage(1)
-  }
 
   if (loading) {
     return <LoadingSkeleton />
@@ -545,108 +783,187 @@ const OutagesTab: React.FC = () => {
   }
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.div
-        className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
-          <p className="text-sm text-gray-500">Track and manage power outages</p>
-        </div>
-        <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
-          <SearchInput
-            placeholder="Search outages..."
-            value={searchText}
-            onChange={handleSearch}
-            className="w-full sm:w-64 md:w-80"
-          />
-          <button
-            className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
-            onClick={() => router.push("/outage-management/report-outage")}
+    <div className="relative w-full">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row-reverse">
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
           >
-            Report Outage
-          </button>
-        </div>
-      </motion.div>
+            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
 
-      {/* Mobile Filters Toggle */}
-      <div className="mt-3 md:hidden">
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-          onClick={() => setShowMobileFilters((prev) => !prev)}
-        >
-          <span>Filters</span>
-          <span className="text-xs text-gray-500">(Status, Priority, Source)</span>
-        </button>
-      </div>
+            <div className="space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <FormSelectModule
+                  name="Status"
+                  value={localFilters.Status !== undefined ? localFilters.Status.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("Status", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={statusOptions}
+                  className="w-full"
+                />
+              </div>
 
-      {/* Filter Controls */}
-      <motion.div
-        className={`flex flex-wrap gap-4 py-4 ${showMobileFilters ? "" : "hidden"} md:flex`}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        <div className="md:min-w-[220px]">
-          <FormSelectModule
-            label="Status"
-            name="Status"
-            value={filters.Status ?? ""}
-            onChange={handleFormSelectChange}
-            options={[
-              { value: "", label: "All Statuses" },
-              { value: 1, label: "Reported" },
-              { value: 2, label: "Investigating" },
-              { value: 3, label: "Repairing" },
-              { value: 4, label: "Restored" },
-              { value: 5, label: "Cancelled" },
-            ]}
-          />
-        </div>
+              {/* Priority Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
+                <FormSelectModule
+                  name="Priority"
+                  value={localFilters.Priority !== undefined ? localFilters.Priority.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("Priority", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={priorityOptions}
+                  className="w-full"
+                />
+              </div>
 
-        <div className="lg:min-w-[220px]">
-          <FormSelectModule
-            label="Priority"
-            name="Priority"
-            value={filters.Priority ?? ""}
-            onChange={handleFormSelectChange}
-            options={[
-              { value: "", label: "All Priorities" },
-              { value: 1, label: "Low" },
-              { value: 2, label: "Medium" },
-              { value: 3, label: "High" },
-              { value: 4, label: "Critical" },
-            ]}
-          />
-        </div>
+              {/* Source Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                <FormSelectModule
+                  name="CustomerGenerated"
+                  value={
+                    localFilters.CustomerGenerated !== undefined
+                      ? localFilters.CustomerGenerated.toString()
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "CustomerGenerated",
+                      e.target.value === "" ? undefined : e.target.value === "true"
+                    )
+                  }
+                  options={sourceOptions}
+                  className="w-full"
+                />
+              </div>
 
-        <div className="md:min-w-[220px]">
-          <FormSelectModule
-            label="Source"
-            name="CustomerGenerated"
-            value={filters.CustomerGenerated === undefined ? "" : filters.CustomerGenerated ? "true" : "false"}
-            onChange={handleFormSelectChange}
-            options={[
-              { value: "", label: "All Sources" },
-              { value: "true", label: "Customer Reported" },
-              { value: "false", label: "System Detected" },
-            ]}
-          />
-        </div>
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.SortBy === option.value && localFilters.SortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.SortBy === option.value && localFilters.SortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? (
+                            <SortAsc className="size-4" />
+                          ) : (
+                            <SortDesc className="size-4" />
+                          )}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        {(filters.Status !== undefined ||
-          filters.Priority !== undefined ||
-          filters.CustomerGenerated !== undefined ||
-          searchText) && (
-          <button className="rounded-md bg-gray-200 px-3 py-2 text-sm hover:bg-gray-300" onClick={clearFilters}>
-            Clear Filters
-          </button>
+              {/* Apply Filters Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={applyFilters}
+                  className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
-      </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.div
+            className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
+              <p className="text-sm text-gray-500">Track and manage power outages</p>
+            </div>
+            <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
+              {/* Mobile Filter Button */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop Filter Toggle */}
+              <button
+                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
+              >
+                <Filter className="size-4" />
+                {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+                {getActiveFilterCount() > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              <div className="w-full sm:w-64 md:w-80">
+                <SearchModule
+                  placeholder="Search outages..."
+                  value={searchText}
+                  onChange={handleSearch}
+                  onCancel={handleCancelSearch}
+                  className="w-full"
+                />
+              </div>
+              <button
+                className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
+                onClick={() => router.push("/outage-management/report-outage")}
+              >
+                Report Outage
+              </button>
+            </div>
+          </motion.div>
 
       {outages.length === 0 ? (
         <motion.div
@@ -661,12 +978,12 @@ const OutagesTab: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText || Object.values(filters).some((f) => f !== undefined)
+            {searchText || getActiveFilterCount() > 0
               ? "No matching outages found"
               : "No outages reported"}
           </motion.p>
-          {(searchText || Object.values(filters).some((f) => f !== undefined)) && (
-            <button className="text-blue-600 hover:underline" onClick={clearFilters}>
+          {(searchText || getActiveFilterCount() > 0) && (
+            <button className="text-blue-600 hover:underline" onClick={resetFilters}>
               Clear filters
             </button>
           )}
@@ -688,37 +1005,17 @@ const OutagesTab: React.FC = () => {
                       Outage Details
                     </div>
                   </th>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("location")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Location & Impact <RxCaretSort />
-                    </div>
+                  <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Location & Impact</div>
                   </th>
-                  <th
-                    className="hidden cursor-pointer whitespace-nowrap border-b p-4 text-sm md:table-cell"
-                    onClick={() => toggleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status & Priority <RxCaretSort />
-                    </div>
+                  <th className="hidden whitespace-nowrap border-b p-4 text-sm md:table-cell">
+                    <div className="flex items-center gap-2">Status & Priority</div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("startTime")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Timeline <RxCaretSort />
-                    </div>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Timeline</div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("cause")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Cause & Team <RxCaretSort />
-                    </div>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Cause & Team</div>
                   </th>
                   <th className="whitespace-nowrap border-b p-4 text-sm">
                     <div className="flex items-center gap-2">Actions</div>
@@ -917,7 +1214,25 @@ const OutagesTab: React.FC = () => {
           </motion.div>
         </>
       )}
-    </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Mobile Filter Sidebar */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        statusOptions={statusOptions}
+        priorityOptions={priorityOptions}
+        sourceOptions={sourceOptions}
+        sortOptions={sortOptions}
+      />
+    </div>
   )
 }
 

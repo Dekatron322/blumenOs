@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { Filter } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -193,12 +194,41 @@ const LoadingSkeleton = () => {
   )
 }
 
+interface AppliedFilters {
+  agentId?: number
+  status?: PaymentStatus
+  channel?: PaymentChannel
+  collectorType?: CollectorType
+  paymentTypeId?: number
+  paidFromUtc?: string
+  paidToUtc?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+}
+
 interface AllPaymentsTableProps {
   agentId?: number
   customerId?: number
+  appliedFilters?: AppliedFilters
+  showStatisticsOnly?: boolean
+  showMobileFilters?: boolean
+  setShowMobileFilters?: (show: boolean) => void
+  showDesktopFilters?: boolean
+  setShowDesktopFilters?: (show: boolean) => void
+  getActiveFilterCount?: () => number
 }
 
-const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId }) => {
+const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
+  agentId,
+  customerId,
+  appliedFilters = {} as AppliedFilters,
+  showStatisticsOnly = false,
+  showMobileFilters,
+  setShowMobileFilters,
+  showDesktopFilters,
+  setShowDesktopFilters,
+  getActiveFilterCount,
+}) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
@@ -206,37 +236,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [filters, setFilters] = useState({
-    status: "",
-    channel: "",
-    collectorType: "",
-  })
 
-  const statusOptions = [
-    { value: "", label: "All Status" },
-    { value: PaymentStatus.Pending, label: "Pending" },
-    { value: PaymentStatus.Confirmed, label: "Confirmed" },
-    { value: PaymentStatus.Failed, label: "Failed" },
-    { value: PaymentStatus.Reversed, label: "Reversed" },
-  ]
-
-  const channelOptions = [
-    { value: "", label: "All Channels" },
-    { value: PaymentChannel.Cash, label: "Cash" },
-    { value: PaymentChannel.BankTransfer, label: "Bank Transfer" },
-    { value: PaymentChannel.Pos, label: "POS" },
-    { value: PaymentChannel.Card, label: "Card" },
-    { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
-    { value: PaymentChannel.Chaque, label: "Cheque" },
-  ]
-
-  const collectorOptions = [
-    { value: "", label: "All Collectors" },
-    { value: CollectorType.Customer, label: "Customer" },
-    { value: CollectorType.SalesRep, label: "Sales Rep" },
-    { value: CollectorType.Vendor, label: "Vendor" },
-    { value: CollectorType.Staff, label: "Staff" },
-  ]
 
   const handleViewPaymentDetails = (payment: Payment) => {
     router.push(`/agents/payments/payment-details/${payment.id}`)
@@ -253,16 +253,23 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId
     const fetchParams: PaymentsRequestParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(agentId !== undefined && { agentId }),
+      // Use agentId prop if provided, otherwise use appliedFilters.agentId
+      ...(agentId !== undefined ? { agentId } : appliedFilters.agentId ? { agentId: appliedFilters.agentId } : {}),
       ...(customerId !== undefined && { customerId }),
       ...(searchText && { search: searchText }),
-      ...(filters.status && { status: filters.status as PaymentStatus }),
-      ...(filters.channel && { channel: filters.channel as PaymentChannel }),
-      ...(filters.collectorType && { collectorType: filters.collectorType as CollectorType }),
+      // Applied filters from parent component
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.channel && { channel: appliedFilters.channel }),
+      ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
+      ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
+      ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
     }
 
     dispatch(fetchPayments(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, filters, agentId, customerId])
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters, agentId, customerId])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -414,135 +421,101 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId
     dispatch(setPaymentsPagination({ page: 1, pageSize }))
   }
 
-  const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterType]: value,
-    }))
-    // Reset to first page when filtering
-    dispatch(setPaymentsPagination({ page: 1, pageSize }))
-  }
-
-  const handleSelectFilter = (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const name = e.target.name as keyof typeof filters
-    const value = String(e.target.value)
-    handleFilterChange(name, value)
-  }
-
-  const clearFilters = () => {
-    setFilters({
-      status: "",
-      channel: "",
-      collectorType: "",
-    })
-    setSearchText("")
-    dispatch(setPaymentsPagination({ page: 1, pageSize }))
-  }
 
   const paginate = (pageNumber: number) => {
     dispatch(setPaymentsPagination({ page: pageNumber, pageSize }))
   }
 
+  // If only showing statistics, return just the statistics cards
+  if (showStatisticsOnly) {
+    return (
+      <>
+        {payments.length > 0 && (
+          <motion.div
+            className="grid grid-cols-1 gap-4 md:grid-cols-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <div className="rounded-lg border border-[#004B23]/20 bg-[#004B23]/5 p-4 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-[#004B23]/80">Total Amount</div>
+              <div className="mt-1 text-xl font-semibold text-[#004B23]">
+                {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
+              </div>
+            </div>
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">Confirmed</div>
+              <div className="mt-1 text-xl font-semibold text-emerald-900">
+                {payments.filter((p) => p.status === PaymentStatus.Confirmed).length}
+              </div>
+            </div>
+            <div className="rounded-lg border border-amber-100 bg-amber-50 p-4 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-amber-700">Pending</div>
+              <div className="mt-1 text-xl font-semibold text-amber-900">
+                {payments.filter((p) => p.status === PaymentStatus.Pending).length}
+              </div>
+            </div>
+            <div className="rounded-lg border border-red-100 bg-red-50 p-4 shadow-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-red-700">Failed</div>
+              <div className="mt-1 text-xl font-semibold text-red-900">
+                {payments.filter((p) => p.status === PaymentStatus.Failed).length}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </>
+    )
+  }
+
   if (paymentsLoading) return <LoadingSkeleton />
 
   return (
-    <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      {/* Summary Statistics (Payment Breakdown) */}
-      {payments.length > 0 && (
-        <motion.div
-          className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <div className="rounded-lg border border-[#004B23]/20 bg-[#004B23]/5 p-4 shadow-sm">
-            <div className="text-xs font-medium uppercase tracking-wide text-[#004B23]/80">Total Amount</div>
-            <div className="mt-1 text-xl font-semibold text-[#004B23]">
-              {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
-            </div>
-          </div>
-          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
-            <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">Confirmed</div>
-            <div className="mt-1 text-xl font-semibold text-emerald-900">
-              {payments.filter((p) => p.status === PaymentStatus.Confirmed).length}
-            </div>
-          </div>
-          <div className="rounded-lg border border-amber-100 bg-amber-50 p-4 shadow-sm">
-            <div className="text-xs font-medium uppercase tracking-wide text-amber-700">Pending</div>
-            <div className="mt-1 text-xl font-semibold text-amber-900">
-              {payments.filter((p) => p.status === PaymentStatus.Pending).length}
-            </div>
-          </div>
-          <div className="rounded-lg border border-red-100 bg-red-50 p-4 shadow-sm">
-            <div className="text-xs font-medium uppercase tracking-wide text-red-700">Failed</div>
-            <div className="mt-1 text-xl font-semibold text-red-900">
-              {payments.filter((p) => p.status === PaymentStatus.Failed).length}
-            </div>
-          </div>
-        </motion.div>
-      )}
-      <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payments</p>
-          <p className="text-sm text-gray-600">View and manage all payment transactions</p>
-        </div>
-      </motion.div>
+    <div className="w-full">
+      {/* Header Section with Search and Filters */}
+      <div className="mb-4 flex items-center justify-between border-b pb-4">
+        <div className="flex items-center gap-3">
+          {/* Mobile Filter Button */}
+          {setShowMobileFilters && (
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+            >
+              <Filter className="size-4" />
+              Filters
+              {getActiveFilterCount && getActiveFilterCount() > 0 && (
+                <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
+          )}
 
-      {/* Filters Section */}
-      <motion.div
-        className="my-4 flex flex-wrap gap-3"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center gap-2">
-          <FormSelectModule
-            label="Status"
-            name="status"
-            value={filters.status}
-            onChange={handleSelectFilter}
-            options={statusOptions}
-          />
+          {/* Desktop Filter Toggle */}
+          {setShowDesktopFilters && (
+            <button
+              onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+              className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
+            >
+              <Filter className="size-4" />
+              {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+              {getActiveFilterCount && getActiveFilterCount() > 0 && (
+                <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <FormSelectModule
-            label="Channel"
-            name="channel"
-            value={filters.channel}
-            onChange={handleSelectFilter}
-            options={channelOptions}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FormSelectModule
-            label="Collector"
-            name="collectorType"
-            value={filters.collectorType}
-            onChange={handleSelectFilter}
-            options={collectorOptions}
-          />
-        </div>
-
-        {(filters.status || filters.channel || filters.collectorType || searchText) && (
-          <motion.button
-            onClick={clearFilters}
-            className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Clear Filters
-          </motion.button>
-        )}
-      </motion.div>
+        <SearchModule
+          value={searchText}
+          onChange={handleSearch}
+          onCancel={handleCancelSearch}
+          placeholder="Search payments..."
+          className="w-full max-w-[380px]"
+          bgClassName="bg-white"
+        />
+      </div>
 
       {/* Error Message */}
       {paymentsError && (
@@ -564,9 +537,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "No matching payments found"
-              : "No payments available"}
+            {searchText ? "No matching payments found" : "No payments available"}
           </motion.p>
           <motion.p
             className="text-sm text-gray-600"
@@ -574,9 +545,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "Try adjusting your search or filters"
-              : "Payments will appear here once transactions are processed"}
+            {searchText ? "Try adjusting your search term" : "Payments will appear here once transactions are processed"}
           </motion.p>
         </motion.div>
       ) : (
@@ -841,7 +810,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({ agentId, customerId
           </motion.div>
         </>
       )}
-    </motion.div>
+    </div>
   )
 }
 

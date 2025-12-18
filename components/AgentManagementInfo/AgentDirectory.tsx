@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import {
   AddAgentIcon,
@@ -17,10 +18,187 @@ import {
   UserIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { type Agent, clearAgents, fetchAgents } from "lib/redux/agentSlice"
+import { type Agent, clearAgents, fetchAgents, AgentsRequestParams, setPagination } from "lib/redux/agentSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { EyeIcon } from "lucide-react"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { VscEye } from "react-icons/vsc"
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
+
+// Mobile Filter Sidebar Component
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  statusOptions,
+  canCollectCashOptions,
+  areaOfficeOptions,
+  sortOptions,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | boolean | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  statusOptions: Array<{ value: string; label: string }>
+  canCollectCashOptions: Array<{ value: string; label: string }>
+  areaOfficeOptions: Array<{ value: string | number; label: string }>
+  sortOptions: SortOption[]
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <FormSelectModule
+                  name="status"
+                  value={localFilters.status || ""}
+                  onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
+                  options={statusOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Can Collect Cash Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Collect Cash</label>
+                <FormSelectModule
+                  name="canCollectCash"
+                  value={localFilters.canCollectCash !== undefined ? localFilters.canCollectCash.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("canCollectCash", e.target.value === "" ? undefined : e.target.value === "true")
+                  }
+                  options={canCollectCashOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -149,9 +327,35 @@ interface AgentDirectoryProps {
 const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { agents, loading, error } = useAppSelector((state) => state.agents)
+  const { agents, loading, error, pagination } = useAppSelector((state) => state.agents)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+
   const [searchText, setSearchText] = useState("")
   const [isMobileView, setIsMobileView] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+
+  // Filter state
+  const [localFilters, setLocalFilters] = useState<{
+    status?: string
+    canCollectCash?: boolean
+    areaOfficeId?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }>({
+    sortBy: "",
+    sortOrder: "asc",
+  })
+
+  const [appliedFilters, setAppliedFilters] = useState<{
+    status?: string
+    canCollectCash?: boolean
+    areaOfficeId?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }>({})
 
   // Check for mobile view
   useEffect(() => {
@@ -164,33 +368,127 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  const handleCancelSearch = () => {
-    setSearchText("")
-  }
-
+  // Fetch area offices for filter options
   useEffect(() => {
     dispatch(
-      fetchAgents({
-        pageNumber: 1,
-        pageSize: 10,
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
       })
     )
 
     return () => {
-      dispatch(clearAgents())
+      dispatch(clearAreaOffices())
     }
   }, [dispatch])
 
-  const filteredAgents: Agent[] = agents.filter((agent) => {
-    if (!searchText.trim()) return true
-    const search = searchText.toLowerCase()
-    return (
-      agent.user.fullName.toLowerCase().includes(search) ||
-      agent.user.phoneNumber.toLowerCase().includes(search) ||
-      agent.areaOfficeName.toLowerCase().includes(search) ||
-      agent.serviceCenterName.toLowerCase().includes(search)
-    )
-  })
+  // Filter options
+  const statusOptions = [
+    { value: "", label: "All Status" },
+    { value: "Active", label: "Active" },
+    { value: "Inactive", label: "Inactive" },
+    { value: "LowFloat", label: "Low Float" },
+  ]
+
+  const canCollectCashOptions = [
+    { value: "", label: "All" },
+    { value: "true", label: "Yes" },
+    { value: "false", label: "No" },
+  ]
+
+  const areaOfficeOptions = [
+    { value: "", label: "All Area Offices" },
+    ...areaOffices.map((office) => ({
+      value: office.id,
+      label: office.nameOfNewOAreaffice || `Area Office ${office.id}`,
+    })),
+  ]
+
+  const sortOptions: SortOption[] = [
+    { label: "Name (A-Z)", value: "name", order: "asc" },
+    { label: "Name (Z-A)", value: "name", order: "desc" },
+    { label: "Status (A-Z)", value: "status", order: "asc" },
+    { label: "Status (Z-A)", value: "status", order: "desc" },
+    { label: "Cash At Hand (Low to High)", value: "cashAtHand", order: "asc" },
+    { label: "Cash At Hand (High to Low)", value: "cashAtHand", order: "desc" },
+  ]
+
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string | number | boolean | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value === "" ? undefined : value,
+    }))
+  }
+
+  // Handle sort changes
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    setAppliedFilters({
+      status: localFilters.status,
+      canCollectCash: localFilters.canCollectCash,
+      areaOfficeId: localFilters.areaOfficeId,
+      sortBy: localFilters.sortBy || undefined,
+      sortOrder: localFilters.sortOrder || undefined,
+    })
+    dispatch(setPagination({ page: 1, pageSize }))
+    setCurrentPage(1)
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setAppliedFilters({})
+    dispatch(setPagination({ page: 1, pageSize }))
+    setCurrentPage(1)
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.status) count++
+    if (appliedFilters.canCollectCash !== undefined) count++
+    if (appliedFilters.areaOfficeId) count++
+    if (appliedFilters.sortBy) count++
+    return count
+  }
+
+  const handleCancelSearch = () => {
+    setSearchText("")
+    dispatch(setPagination({ page: 1, pageSize }))
+    setCurrentPage(1)
+  }
+
+  // Fetch agents with filters
+  useEffect(() => {
+    const params: AgentsRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.canCollectCash !== undefined && { canCollectCash: appliedFilters.canCollectCash }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    dispatch(fetchAgents(params))
+
+    return () => {
+      // Don't clear agents on unmount to preserve data
+    }
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -437,31 +735,172 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full"
-    >
-      {/* Main Content - Agent Directory */}
-      <div className="rounded-lg border bg-white p-3 sm:p-4 md:p-6">
-        <div className="mb-4 sm:mb-6">
-          <h3 className="mb-2 text-lg font-semibold sm:text-xl">Agent Directory</h3>
-          <div className="w-full sm:w-96">
-            <SearchModule
-              placeholder="Search agents..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onCancel={handleCancelSearch}
-              className="w-full"
-            />
-          </div>
-          {error && (
-            <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
-              <p className="text-xs text-red-600 sm:text-sm">Error loading agents: {error}</p>
+    <div className="w-full">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          >
+            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
             </div>
-          )}
-        </div>
+
+            <div className="space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <FormSelectModule
+                  name="status"
+                  value={localFilters.status || ""}
+                  onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
+                  options={statusOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Can Collect Cash Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Collect Cash</label>
+                <FormSelectModule
+                  name="canCollectCash"
+                  value={localFilters.canCollectCash !== undefined ? localFilters.canCollectCash.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("canCollectCash", e.target.value === "" ? undefined : e.target.value === "true")
+                  }
+                  options={canCollectCashOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? (
+                            <SortAsc className="size-4" />
+                          ) : (
+                            <SortDesc className="size-4" />
+                          )}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Apply Filters Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={applyFilters}
+                  className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Main Content - Agent Directory */}
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-lg border bg-white p-3 sm:p-4 md:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-lg border bg-white p-3 sm:p-4 md:p-6 2xl:flex-1"
+          }
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-4 sm:mb-6">
+            <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
+              <h3 className="text-lg font-semibold sm:text-xl">Agent Directory</h3>
+
+              <div className="flex items-center gap-3">
+                {/* Mobile Filter Button */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Desktop Filter Toggle */}
+                <button
+                  onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                  className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
+                >
+                  <Filter className="size-4" />
+                  {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+                  {getActiveFilterCount() > 0 && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="w-full sm:w-96">
+              <SearchModule
+                placeholder="Search agents..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onCancel={handleCancelSearch}
+                className="w-full"
+              />
+            </div>
+            {error && (
+              <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
+                <p className="text-xs text-red-600 sm:text-sm">Error loading agents: {error}</p>
+              </div>
+            )}
+          </div>
 
         {/* Agents List */}
         <div className="space-y-3 sm:space-y-4">
@@ -477,7 +916,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
             </div>
           )}
 
-          {!loading && !error && filteredAgents.length === 0 && (
+          {!loading && !error && agents.length === 0 && (
             <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 text-center">
               <div className="flex flex-col items-center justify-center py-4 sm:py-8">
                 <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
@@ -485,7 +924,9 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 </div>
                 <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Agents Found</h3>
                 <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  {searchText.trim() ? "Try adjusting your search criteria" : "No agents available in the system"}
+                  {searchText.trim() || getActiveFilterCount() > 0
+                    ? "Try adjusting your search criteria or filters"
+                    : "No agents available in the system"}
                 </p>
               </div>
             </div>
@@ -493,7 +934,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
 
           {!loading &&
             !error &&
-            filteredAgents.map((agent) =>
+            agents.map((agent) =>
               isMobileView ? (
                 <MobileAgentCard key={agent.id} agent={agent} />
               ) : (
@@ -503,14 +944,13 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
         </div>
 
         {/* Load More Button */}
-        {!loading && filteredAgents.length > 0 && agents.length > filteredAgents.length && (
+        {!loading && agents.length > 0 && pagination.hasNext && (
           <div className="mt-4 flex justify-center border-t pt-4">
             <ButtonModule
               variant="outline"
               size="sm"
               onClick={() => {
-                // Load more agents logic
-                console.log("Load more agents")
+                setCurrentPage((prev) => prev + 1)
               }}
               className="text-sm"
             >
@@ -518,8 +958,25 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
             </ButtonModule>
           </div>
         )}
+        </motion.div>
       </div>
-    </motion.div>
+
+      {/* Mobile Filter Sidebar */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        statusOptions={statusOptions}
+        canCollectCashOptions={canCollectCashOptions}
+        areaOfficeOptions={areaOfficeOptions}
+        sortOptions={sortOptions}
+      />
+    </div>
   )
 }
 

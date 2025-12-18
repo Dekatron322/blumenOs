@@ -2,12 +2,20 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
+import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { MapIcon } from "components/Icons/Icons"
-import { clearFilters, fetchMaintenances, setFilters, setPagination } from "lib/redux/maintenanceSlice"
+import { fetchMaintenances, setPagination } from "lib/redux/maintenanceSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { ButtonModule } from "components/ui/Button/Button"
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
 
 const MaintenanceIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -46,63 +54,346 @@ interface MaintenanceTabProps {
   onViewMaintenanceDetails?: (maintenance: Maintenance) => void
 }
 
+// Mobile Filter Sidebar Component
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  statusOptions,
+  priorityOptions,
+  typeOptions,
+  scopeOptions,
+  sortOptions,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  statusOptions: Array<{ value: string | number; label: string }>
+  priorityOptions: Array<{ value: string | number; label: string }>
+  typeOptions: Array<{ value: string | number; label: string }>
+  scopeOptions: Array<{ value: string | number; label: string }>
+  sortOptions: SortOption[]
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="space-y-4 pb-20">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <FormSelectModule
+                  name="status"
+                  value={localFilters.status !== undefined ? localFilters.status.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={statusOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Priority Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
+                <FormSelectModule
+                  name="priority"
+                  value={localFilters.priority !== undefined ? localFilters.priority.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("priority", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={priorityOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Type</label>
+                <FormSelectModule
+                  name="type"
+                  value={localFilters.type !== undefined ? localFilters.type.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("type", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={typeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Scope Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Scope</label>
+                <FormSelectModule
+                  name="scope"
+                  value={localFilters.scope !== undefined ? localFilters.scope.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("scope", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={scopeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.SortBy === option.value && localFilters.SortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.SortBy === option.value && localFilters.SortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetails }) => {
   const [searchText, setSearchText] = useState("")
   const dispatch = useAppDispatch()
   const router = useRouter()
 
   // Get state from Redux store
-  const { maintenances, loading, error, pagination, filters } = useAppSelector((state) => state.maintenances)
+  const { maintenances, loading, error, pagination } = useAppSelector((state) => state.maintenances)
 
-  console.log("MaintenanceTab Redux State:", {
-    maintenancesCount: maintenances?.length,
-    loading,
-    error,
-    pagination,
-    filters,
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+
+  // Filter state
+  const [localFilters, setLocalFilters] = useState<{
+    status?: number
+    priority?: number
+    type?: number
+    scope?: number
+    SortBy?: string
+    SortOrder?: "asc" | "desc"
+  }>({
+    SortBy: "",
+    SortOrder: "asc",
   })
 
-  // Fetch maintenances on component mount and when filters/pagination change
-  useEffect(() => {
-    console.log("MaintenanceTab useEffect triggered - fetching maintenances...")
+  const [appliedFilters, setAppliedFilters] = useState<{
+    status?: number
+    priority?: number
+    type?: number
+    scope?: number
+    SortBy?: string
+    SortOrder?: "asc" | "desc"
+  }>({})
 
-    const fetchMaintenanceData = async () => {
+  // Filter options
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: 1, label: "Scheduled" },
+    { value: 2, label: "In Progress" },
+    { value: 3, label: "Completed" },
+    { value: 4, label: "Cancelled" },
+  ]
+
+  const priorityOptions = [
+    { value: "", label: "All Priorities" },
+    { value: 1, label: "Low" },
+    { value: 2, label: "Medium" },
+    { value: 3, label: "High" },
+    { value: 4, label: "Critical" },
+  ]
+
+  const typeOptions = [
+    { value: "", label: "All Types" },
+    { value: 1, label: "Preventive" },
+    { value: 2, label: "Corrective" },
+    { value: 3, label: "Emergency" },
+  ]
+
+  const scopeOptions = [
+    { value: "", label: "All Scopes" },
+    { value: 1, label: "Local" },
+    { value: 2, label: "Regional" },
+  ]
+
+  const sortOptions: SortOption[] = [
+    { label: "Title (A-Z)", value: "title", order: "asc" },
+    { label: "Title (Z-A)", value: "title", order: "desc" },
+    { label: "Status (A-Z)", value: "status", order: "asc" },
+    { label: "Status (Z-A)", value: "status", order: "desc" },
+    { label: "Priority (Low to High)", value: "priority", order: "asc" },
+    { label: "Priority (High to Low)", value: "priority", order: "desc" },
+    { label: "Scheduled Date (Oldest First)", value: "scheduledStartAt", order: "asc" },
+    { label: "Scheduled Date (Newest First)", value: "scheduledStartAt", order: "desc" },
+  ]
+
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value === "" ? undefined : value,
+    }))
+  }
+
+  // Handle sort changes
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      SortBy: option.value,
+      SortOrder: option.order,
+    }))
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    setAppliedFilters({
+      status: localFilters.status,
+      priority: localFilters.priority,
+      type: localFilters.type,
+      scope: localFilters.scope,
+      SortBy: localFilters.SortBy || undefined,
+      SortOrder: localFilters.SortOrder || undefined,
+    })
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      SortBy: "",
+      SortOrder: "asc",
+    })
+    setAppliedFilters({})
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.status !== undefined) count++
+    if (appliedFilters.priority !== undefined) count++
+    if (appliedFilters.type !== undefined) count++
+    if (appliedFilters.scope !== undefined) count++
+    if (appliedFilters.SortBy) count++
+    return count
+  }
+
+  // Fetch maintenances with filters
+  useEffect(() => {
       const requestParams = {
         pageNumber: pagination.currentPage,
         pageSize: pagination.pageSize,
-        ...filters,
         ...(searchText && { search: searchText }),
-      }
-
-      console.log("MaintenanceTab Dispatching fetchMaintenances with params:", requestParams)
-
-      const result = await dispatch(fetchMaintenances(requestParams))
-
-      console.log("MaintenanceTab Fetch result:", result)
-
-      if (fetchMaintenances.fulfilled.match(result)) {
-        console.log("MaintenanceTab fetched successfully:", result.payload.data?.length)
-      } else if (fetchMaintenances.rejected.match(result)) {
-        console.error("MaintenanceTab failed to fetch maintenances:", result.error)
-      }
+      ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
+      ...(appliedFilters.priority !== undefined && { priority: appliedFilters.priority }),
+      ...(appliedFilters.type !== undefined && { type: appliedFilters.type }),
+      ...(appliedFilters.scope !== undefined && { scope: appliedFilters.scope }),
+      ...(appliedFilters.SortBy && { sortBy: appliedFilters.SortBy }),
+      ...(appliedFilters.SortOrder && { sortOrder: appliedFilters.SortOrder }),
     }
 
-    fetchMaintenanceData()
-  }, [dispatch, pagination.currentPage, pagination.pageSize, filters, searchText])
+    dispatch(fetchMaintenances(requestParams))
+  }, [dispatch, pagination.currentPage, pagination.pageSize, searchText, appliedFilters])
 
   // Handle search
   const handleSearch = (text: string) => {
     setSearchText(text)
-    if (text.trim()) {
-      dispatch(setFilters({ search: text.trim() }))
-    } else {
-      dispatch(clearFilters())
-    }
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    dispatch(clearFilters())
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
   // Helper functions for mapping API values to display values
@@ -303,33 +594,186 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
   }
 
   return (
+    <div className="relative w-full">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row-reverse">
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {showDesktopFilters && (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full"
-    >
-      {/* Debug info - remove in production */}
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          >
+            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
 
-      {/* Main Content - Maintenance Table */}
-      <div className=" mx-auto">
-        <div className="rounded-lg border bg-white p-4 sm:p-6">
+            <div className="space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <FormSelectModule
+                  name="status"
+                  value={localFilters.status !== undefined ? localFilters.status.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={statusOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Priority Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
+                <FormSelectModule
+                  name="priority"
+                  value={localFilters.priority !== undefined ? localFilters.priority.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("priority", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={priorityOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Type</label>
+                <FormSelectModule
+                  name="type"
+                  value={localFilters.type !== undefined ? localFilters.type.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("type", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={typeOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Scope Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Scope</label>
+                <FormSelectModule
+                  name="scope"
+                  value={localFilters.scope !== undefined ? localFilters.scope.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("scope", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={scopeOptions}
+      className="w-full"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
+                <div className="space-y-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.value}-${option.order}`}
+                      onClick={() => handleSortChange(option)}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                        localFilters.SortBy === option.value && localFilters.SortOrder === option.order
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {localFilters.SortBy === option.value && localFilters.SortOrder === option.order && (
+                        <span className="text-purple-600">
+                          {option.order === "asc" ? (
+                            <SortAsc className="size-4" />
+                          ) : (
+                            <SortDesc className="size-4" />
+                          )}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Apply Filters Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={applyFilters}
+                  className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Main Content */}
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="w-full md:w-auto">
               <h3 className="mb-2 text-lg font-semibold">Maintenance Management</h3>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                {/* Mobile Filter Button */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Desktop Filter Toggle */}
+                <button
+                  onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                  className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
+                >
+                  <Filter className="size-4" />
+                  {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+                  {getActiveFilterCount() > 0 && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                <div className="w-full sm:w-64 md:w-80">
               <SearchModule
                 value={searchText}
                 onChange={(e) => handleSearch(e.target.value)}
                 onCancel={handleCancelSearch}
                 placeholder="Search maintenance by title, reference code, or location..."
               />
+                </div>
+              </div>
             </div>
             <div className="w-full md:w-auto md:pl-4">
               <ButtonModule
                 onClick={() => router.push("/outage-management/schedule-maintenance")}
                 variant="primary"
                 size="md"
-                className="mt-2  md:mt-0 md:w-auto"
+                className="mt-2 md:mt-0 md:w-auto"
               >
                 Schedule Maintenance
               </ButtonModule>
@@ -507,9 +951,26 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </motion.div>
+
+      {/* Mobile Filter Sidebar */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        statusOptions={statusOptions}
+        priorityOptions={priorityOptions}
+        typeOptions={typeOptions}
+        scopeOptions={scopeOptions}
+        sortOptions={sortOptions}
+      />
+    </div>
   )
 }
 

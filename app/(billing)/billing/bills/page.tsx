@@ -347,24 +347,24 @@ export default function MeteringDashboard() {
             </div>
 
             {/* Main Content Area */}
-            {isLoading ? (
-              // Loading State
-              <>
-                <SkeletonLoader />
-                <LoadingState showCategories={true} />
-              </>
-            ) : (
-              // Loaded State - Redesigned Metering Dashboard
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <AllBills />
-                </motion.div>
-              </>
-            )}
+                {isLoading ? (
+                  // Loading State
+                  <>
+                    <SkeletonLoader />
+                    <LoadingState showCategories={true} />
+                  </>
+                ) : (
+                  // Loaded State - Redesigned Metering Dashboard
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      <AllBills />
+                    </motion.div>
+                  </>
+                )}
           </div>
         </div>
       </div>
