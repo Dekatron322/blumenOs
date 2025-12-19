@@ -574,7 +574,7 @@ const AllCustomers = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false) // For mobile/tablet/desktop up to 2xl
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false) // For desktop 2xl and above
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true) // For desktop 2xl and above
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
@@ -1117,16 +1117,16 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row-reverse">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
         {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
         {showDesktopFilters && (
           <motion.div
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
           >
-            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
               <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
               <button
                 onClick={resetFilters}
@@ -1137,7 +1137,7 @@ const AllCustomers = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
               {/* DSS Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
@@ -1155,6 +1155,7 @@ const AllCustomers = () => {
                     })),
                   ]}
                   className="w-full"
+                  controlClassName="h-9 text-sm"
                 />
               </div>
 
@@ -1173,6 +1174,7 @@ const AllCustomers = () => {
                     })),
                   ]}
                   className="w-full"
+                  controlClassName="h-9 text-sm"
                 />
               </div>
 
@@ -1190,6 +1192,7 @@ const AllCustomers = () => {
                     { value: "SUSPENDED", label: "Suspended" },
                   ]}
                   className="w-full"
+                  controlClassName="h-9 text-sm"
                 />
               </div>
 
@@ -1206,6 +1209,7 @@ const AllCustomers = () => {
                     { value: "POSTPAID", label: "Postpaid" },
                   ]}
                   className="w-full"
+                  controlClassName="h-9 text-sm"
                 />
               </div>
 
@@ -1221,6 +1225,7 @@ const AllCustomers = () => {
                     ...serviceBands.map((band) => ({ value: band, label: band })),
                   ]}
                   className="w-full"
+                  controlClassName="h-9 text-sm"
                 />
               </div>
 
@@ -1236,6 +1241,7 @@ const AllCustomers = () => {
                     ...regions.map((region) => ({ value: region, label: region })),
                   ]}
                   className="w-full"
+                  controlClassName="h-9 text-sm"
                 />
               </div>
 
@@ -1268,15 +1274,44 @@ const AllCustomers = () => {
                 </div>
               </div>
 
-              {/* Apply Filters Button */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={applyFilters}
-                  className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                >
-                  Apply Filters
-                </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {pagination.currentPage} / {pagination.totalPages}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -1332,18 +1367,23 @@ const AllCustomers = () => {
                   />
                 </div>
 
-                {/* Desktop Filter Toggle */}
-                <button
-                  onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                  className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
-                >
-                  <Filter className="size-4" />
-                  {showDesktopFilters ? "Hide Filters" : "Show Filters"}
-                  {getActiveFilterCount() > 0 && (
-                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                      {getActiveFilterCount()}
+                {/* Active filters badge - Desktop only (2xl and above) */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
                     </span>
-                  )}
+                  </div>
+                )}
+
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
               </div>
             </div>

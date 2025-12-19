@@ -212,8 +212,8 @@ export default function MeteringDashboard() {
   }
 
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">

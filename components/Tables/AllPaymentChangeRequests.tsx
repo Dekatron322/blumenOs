@@ -417,9 +417,9 @@ const AllPaymentChangeRequests = () => {
   // Fetch payment change requests
   useEffect(() => {
     const fetchParams: ChangeRequestsRequestParams = {
-      pageNumber: currentPage,
-      pageSize: changeRequestsPagination.pageSize,
-      ...(searchText && { reference: searchText }),
+        pageNumber: currentPage,
+        pageSize: changeRequestsPagination.pageSize,
+        ...(searchText && { reference: searchText }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.source !== undefined && { source: appliedFilters.source }),
       ...(appliedFilters.publicId && { publicId: appliedFilters.publicId }),
@@ -557,9 +557,9 @@ const AllPaymentChangeRequests = () => {
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
     const fetchParams: ChangeRequestsRequestParams = {
-      pageNumber: 1,
-      pageSize: newPageSize,
-      ...(searchText && { reference: searchText }),
+        pageNumber: 1,
+        pageSize: newPageSize,
+        ...(searchText && { reference: searchText }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.source !== undefined && { source: appliedFilters.source }),
       ...(appliedFilters.publicId && { publicId: appliedFilters.publicId }),
@@ -830,9 +830,9 @@ const AllPaymentChangeRequests = () => {
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
           >
-            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
               <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
               <button
                 onClick={resetFilters}
@@ -843,7 +843,7 @@ const AllPaymentChangeRequests = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
               {/* Status Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
@@ -912,20 +912,43 @@ const AllPaymentChangeRequests = () => {
               </div>
             </div>
 
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 flex gap-2 border-t pt-4">
-              <button
-                onClick={resetFilters}
-                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Reset
-              </button>
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
               <button
                 onClick={applyFilters}
-                className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
               >
+                <Filter className="size-4" />
                 Apply Filters
               </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{changeRequestsPagination?.totalCount?.toLocaleString() || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {currentPage} / {changeRequestsPagination?.totalPages || 1}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -959,39 +982,39 @@ const AllPaymentChangeRequests = () => {
               </button>
               <h3 className="text-lg font-semibold sm:text-xl">Payment Change Requests</h3>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Mobile search icon button */}
-              <button
-                type="button"
-                className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-                onClick={() => setShowMobileSearch((prev) => !prev)}
-                aria-label="Toggle search"
-              >
-                <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Mobile search icon button */}
+                <button
+                  type="button"
+                  className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
+                  onClick={() => setShowMobileSearch((prev) => !prev)}
+                  aria-label="Toggle search"
+                >
+                  <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
+                </button>
 
-              {/* Desktop/Tablet search input */}
-              <div className="hidden sm:block">
-                <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  onCancel={handleCancelSearch}
-                  placeholder="Search by reference or requester"
-                  className="w-full max-w-full md:max-w-[300px]"
-                />
-              </div>
+                {/* Desktop/Tablet search input */}
+                <div className="hidden sm:block">
+                  <SearchModule
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    onCancel={handleCancelSearch}
+                    placeholder="Search by reference or requester"
+                    className="w-full max-w-full md:max-w-[300px]"
+                  />
+                </div>
 
-              {/* Export CSV Button */}
-              <button
-                className="button-oulined items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE] max-sm:hidden sm:flex"
-                onClick={() => {
-                  // TODO: CSV export for payment change requests
-                }}
-                disabled={!changeRequests || changeRequests.length === 0}
-              >
-                <ExportCsvIcon color="#2563EB" size={20} />
-                <p className="text-sm text-[#2563EB]">Export CSV</p>
-              </button>
+                {/* Export CSV Button */}
+                <button
+                  className="button-oulined items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE] max-sm:hidden sm:flex"
+                  onClick={() => {
+                    // TODO: CSV export for payment change requests
+                  }}
+                  disabled={!changeRequests || changeRequests.length === 0}
+                >
+                  <ExportCsvIcon color="#2563EB" size={20} />
+                  <p className="text-sm text-[#2563EB]">Export CSV</p>
+                </button>
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
@@ -1001,9 +1024,9 @@ const AllPaymentChangeRequests = () => {
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
 
           {/* Search */}
           <div className="mb-4 sm:mb-6">
@@ -1038,20 +1061,20 @@ const AllPaymentChangeRequests = () => {
 
           {/* View Mode Toggle */}
           <div className="mb-4 flex flex-wrap gap-2">
-            <button
-              className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-              onClick={() => setViewMode("grid")}
-            >
-              <MdGridView className="size-4 md:size-5" />
-              <p className="text-sm md:text-base">Grid</p>
-            </button>
-            <button
-              className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-              onClick={() => setViewMode("list")}
-            >
-              <MdFormatListBulleted className="size-4 md:size-5" />
-              <p className="text-sm md:text-base">List</p>
-            </button>
+                <button
+                  className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <MdGridView className="size-4 md:size-5" />
+                  <p className="text-sm md:text-base">Grid</p>
+                </button>
+                <button
+                  className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                  onClick={() => setViewMode("list")}
+                >
+                  <MdFormatListBulleted className="size-4 md:size-5" />
+                  <p className="text-sm md:text-base">List</p>
+                </button>
           </div>
 
           {/* Change Request Display Area */}

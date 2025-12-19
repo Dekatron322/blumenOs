@@ -851,9 +851,9 @@ const AllAgents: React.FC = () => {
   // Fetch agents based on applied filters
   useEffect(() => {
     const params: AgentsRequestParams = {
-      pageNumber: currentPage,
-      pageSize,
-      search: searchText || undefined,
+        pageNumber: currentPage,
+        pageSize,
+        search: searchText || undefined,
       status: appliedFilters.status,
       canCollectCash: appliedFilters.canCollectCash,
       areaOfficeId: appliedFilters.areaOfficeId,
@@ -871,8 +871,8 @@ const AllAgents: React.FC = () => {
   if (isError) return <div>Error loading agents</div>
 
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full ">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
@@ -902,13 +902,13 @@ const AllAgents: React.FC = () => {
             <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
-                <motion.div
+            <motion.div
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
-                  className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+                  className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
                 >
-                  <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+                  <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
                     <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                     <button
                       onClick={resetFilters}
@@ -919,7 +919,7 @@ const AllAgents: React.FC = () => {
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
                     {/* Status Filter */}
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
@@ -929,6 +929,7 @@ const AllAgents: React.FC = () => {
                         onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
                         options={statusOptions}
                         className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
@@ -948,6 +949,7 @@ const AllAgents: React.FC = () => {
                         }
                         options={canCollectCashOptions}
                         className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
@@ -962,6 +964,7 @@ const AllAgents: React.FC = () => {
                         }
                         options={areaOfficeOptions}
                         className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
@@ -1046,38 +1049,67 @@ const AllAgents: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Apply Filters Button */}
-                    <div className="pt-2">
-                      <button
-                        type="button"
-                        onClick={applyFilters}
-                        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                      >
-                        Apply Filters
-                      </button>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+                    <button
+                      onClick={applyFilters}
+                      className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                    >
+                      <Filter className="size-4" />
+                      Apply Filters
+                    </button>
+                    <button
+                      onClick={resetFilters}
+                      className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                    >
+                      <X className="size-4" />
+                      Reset All
+                    </button>
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+                    <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+                    <div className="space-y-1 text-xs md:text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Records:</span>
+                        <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Current Page:</span>
+                        <span className="font-medium">
+                          {currentPage} / {totalPages || 1}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Active Filters:</span>
+                        <span className="font-medium">{getActiveFilterCount()}</span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
               )}
 
               {/* Main Content - Agent Table */}
-              <motion.div
+                <motion.div
                 className={
                   showDesktopFilters
                     ? "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
                     : "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:flex-1"
                 }
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
-              >
-                {/* Table Header */}
-                <motion.div
-                  className="items-center justify-between border-b py-2 md:flex md:py-4"
-                  initial={{ y: -10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4 }}
                 >
+                {/* Table Header */}
+                  <motion.div
+                    className="items-center justify-between border-b py-2 md:flex md:py-4"
+                    initial={{ y: -10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
                   <div className="flex items-center gap-3">
                     {/* Filter Button for ALL screens up to 2xl */}
                     <button
@@ -1107,16 +1139,16 @@ const AllAgents: React.FC = () => {
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
                     </button>
-                    <SearchModule
-                      placeholder="Search agents..."
-                      value={searchText}
-                      onChange={handleSearch}
-                      onCancel={handleCancelSearch}
-                      className="w-[260px] md:w-[320px]"
-                      bgClassName="bg-white"
-                    />
-                  </div>
-                </motion.div>
+                      <SearchModule
+                        placeholder="Search agents..."
+                        value={searchText}
+                        onChange={handleSearch}
+                        onCancel={handleCancelSearch}
+                        className="w-[260px] md:w-[320px]"
+                        bgClassName="bg-white"
+                      />
+                    </div>
+                  </motion.div>
 
                   {agents.length === 0 ? (
                     <motion.div
@@ -1136,48 +1168,48 @@ const AllAgents: React.FC = () => {
                     </motion.div>
                   ) : (
                     <>
-                {/* Table Wrapper - responsive with horizontal scroll on small screens */}
-                <motion.div
-                  className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <table className="w-full border-separate border-spacing-0 text-left md:min-w-[900px] 2xl:min-w-[1200px]">
-                    <thead>
-                      <tr>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                            Agent Name
-                          </div>
-                        </th>
+                      {/* Table Wrapper - responsive with horizontal scroll on small screens */}
+                      <motion.div
+                        className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        <table className="w-full border-separate border-spacing-0 text-left md:min-w-[900px] 2xl:min-w-[1200px]">
+                          <thead>
+                            <tr>
+                              <th className="whitespace-nowrap border-y p-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                                  Agent Name
+                                </div>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Status</div>
-                        </th>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Phone</div>
-                        </th>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Location</div>
-                        </th>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Daily Collection</div>
-                        </th>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Vends Today</div>
-                        </th>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Float Balance</div>
-                        </th>
+                              </th>
                         <th className="whitespace-nowrap border-y p-4 text-sm">
                           <div className="flex items-center gap-2">Performance</div>
-                        </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Actions</div>
-                        </th>
-                      </tr>
-                    </thead>
+                              </th>
+                              <th className="whitespace-nowrap border-y p-4 text-sm">
+                                <div className="flex items-center gap-2">Actions</div>
+                              </th>
+                            </tr>
+                          </thead>
                           <tbody>
                             <AnimatePresence>
                               {agents.map((agent, index) => (
@@ -1284,17 +1316,17 @@ const AllAgents: React.FC = () => {
                       </motion.div>
 
                 {/* Pagination */}
-                <motion.div
-                  className="flex items-center justify-between border-t py-3"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  <div className="text-sm text-gray-700">
+                      <motion.div
+                        className="flex items-center justify-between border-t py-3"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                      >
+                        <div className="text-sm text-gray-700">
                     Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
                     {totalRecords} agents
                     {getActiveFilterCount() > 0 && " - filtered"}
-                  </div>
+                        </div>
                         <div className="flex items-center gap-2">
                           <motion.button
                             onClick={() => paginate(currentPage - 1)}
@@ -1378,9 +1410,9 @@ const AllAgents: React.FC = () => {
                   )}
                 </motion.div>
               </div>
-            </div>
           </div>
         </div>
+      </div>
 
       {/* Mobile Filter Sidebar */}
       <MobileFilterSidebar

@@ -44,7 +44,7 @@ const MobileFilterSidebar = ({
   sortOptions: SortOption[]
 }) => {
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {isOpen && (
         <motion.div
           key="mobile-filter-sidebar"
@@ -323,8 +323,8 @@ export default function CashClearancesPage() {
   }
 
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
@@ -335,9 +335,9 @@ export default function CashClearancesPage() {
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
-                  className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+                  className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
                 >
-                  <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+                  <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
                     <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                     <button
                       onClick={resetFilters}
@@ -348,7 +348,7 @@ export default function CashClearancesPage() {
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
                     {/* Agent Filter */}
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
@@ -429,30 +429,49 @@ export default function CashClearancesPage() {
                       </div>
                     </div>
 
-                    {/* Apply Filters Button */}
-                    <div className="pt-2">
-                      <button
-                        type="button"
-                        onClick={applyFilters}
-                        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                      >
-                        Apply Filters
-                      </button>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+                    <button
+                      onClick={applyFilters}
+                      className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                    >
+                      <Filter className="size-4" />
+                      Apply Filters
+                    </button>
+                    <button
+                      onClick={resetFilters}
+                      className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                    >
+                      <X className="size-4" />
+                      Reset All
+                    </button>
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+                    <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+                    <div className="space-y-1 text-xs md:text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Active Filters:</span>
+                        <span className="font-medium">{getActiveFilterCount()}</span>
+                      </div>
                     </div>
                   </div>
-                    </motion.div>
+                </motion.div>
               )}
 
               {/* Main Content - Clearances Table */}
-              <motion.div
+                    <motion.div
                 className={
                   showDesktopFilters
                     ? "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
                     : "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:flex-1"
                 }
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
               >
                 {/* Header Section */}
                 <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
@@ -490,7 +509,7 @@ export default function CashClearancesPage() {
                       )}
                     </button>
                   </div>
-                </div>
+              </div>
 
                 <AgentClearanceTable appliedFilters={appliedFilters} />
               </motion.div>

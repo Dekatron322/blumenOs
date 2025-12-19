@@ -1130,9 +1130,9 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
           >
-            <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
               <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
               <button
                 onClick={resetFilters}
@@ -1143,7 +1143,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
               {/* Period Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
@@ -1238,7 +1238,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 space-y-3 border-t pt-4">
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
               <button
                 onClick={applyFilters}
                 className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1256,7 +1256,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
             </div>
 
             {/* Summary Stats */}
-            <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
               <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
               <div className="space-y-1 text-xs md:text-sm">
                 <div className="flex justify-between">

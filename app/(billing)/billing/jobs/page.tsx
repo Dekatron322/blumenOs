@@ -958,8 +958,8 @@ const BillingJobs: React.FC = () => {
   if (billingJobsError) return <div className="p-4 text-red-500">Error loading jobs: {billingJobsError}</div>
 
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-3 2xl:px-16">
@@ -1352,9 +1352,9 @@ const BillingJobs: React.FC = () => {
                     key="desktop-filters-sidebar"
                     initial={{ opacity: 1 }}
                     animate={{ opacity: 1 }}
-                    className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+                    className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
                   >
-                    <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
+                    <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
                       <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                       <button
                         onClick={resetFilters}
@@ -1365,7 +1365,7 @@ const BillingJobs: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
                       {/* Period Filter */}
                       <div>
                         <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
