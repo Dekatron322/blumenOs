@@ -10,7 +10,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPayments, Payment, PaymentsRequestParams } from "lib/redux/paymentSlice"
-import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
@@ -245,6 +245,8 @@ const MobileFilterSidebar = ({
   collectorTypeOptions: Array<{ value: string; label: string }>
   sortOptions: SortOption[]
 }) => {
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
+
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
@@ -330,16 +332,29 @@ const MobileFilterSidebar = ({
               {/* Payment Type Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-                <FormSelectModule
-                  name="paymentTypeId"
-                  value={localFilters.paymentTypeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("paymentTypeId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={paymentTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentTypeOptions
+                    .filter((opt) => opt.value !== "")
+                    .slice(0, 6)
+                    .map((typeOption) => (
+                      <button
+                        key={typeOption.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "paymentTypeId",
+                            localFilters.paymentTypeId === Number(typeOption.value) ? undefined : Number(typeOption.value)
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.paymentTypeId === Number(typeOption.value)
+                            ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {typeOption.label}
+                      </button>
+                    ))}
+                </div>
               </div>
 
               {/* Area Office Filter */}
@@ -373,27 +388,55 @@ const MobileFilterSidebar = ({
               {/* Status Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <FormSelectModule
-                  name="status"
-                  value={localFilters.status || ""}
-                  onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
-                  options={statusOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {["Confirmed", "Pending", "Failed", "Reversed"].map((statusValue) => {
+                    const statusLabel = statusOptions.find((opt) => opt.value === statusValue)?.label || statusValue
+                    return (
+                      <button
+                        key={statusValue}
+                        onClick={() =>
+                          handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.status === statusValue
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {statusLabel}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* Collector Type Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
-                <FormSelectModule
-                  name="collectorType"
-                  value={localFilters.collectorType || ""}
-                  onChange={(e) => handleFilterChange("collectorType", e.target.value || undefined)}
-                  options={collectorTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {["Customer", "Agent", "Vendor", "Staff"].map((collectorTypeValue) => {
+                    const collectorTypeLabel =
+                      collectorTypeOptions.find((opt) => opt.value === collectorTypeValue)?.label || collectorTypeValue
+                    return (
+                      <button
+                        key={collectorTypeValue}
+                        onClick={() =>
+                          handleFilterChange(
+                            "collectorType",
+                            localFilters.collectorType === collectorTypeValue ? undefined : collectorTypeValue
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.collectorType === collectorTypeValue
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {collectorTypeLabel}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* Date Range Filters */}
@@ -403,7 +446,7 @@ const MobileFilterSidebar = ({
                   type="date"
                   value={localFilters.paidFromUtc || ""}
                   onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
               </div>
 
@@ -413,33 +456,44 @@ const MobileFilterSidebar = ({
                   type="date"
                   value={localFilters.paidToUtc || ""}
                   onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
               </div>
 
               {/* Sort Options */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>{option.label}</span>
-                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -489,6 +543,7 @@ const RecentPayments = () => {
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
   const router = useRouter()
 
   // Local state for filters to avoid too many Redux dispatches
@@ -1089,255 +1144,56 @@ const RecentPayments = () => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
-        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-        {showDesktopFilters && (
-          <motion.div
-            key="desktop-filters-sidebar"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
-          >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-              >
-                <X className="size-3 md:size-4" />
-                Clear All
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              {/* Customer Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
-                <FormSelectModule
-                  name="customerId"
-                  value={localFilters.customerId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={customerOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Vendor Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
-                <FormSelectModule
-                  name="vendorId"
-                  value={localFilters.vendorId || ""}
-                  onChange={(e) => handleFilterChange("vendorId", e.target.value ? Number(e.target.value) : undefined)}
-                  options={vendorOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Agent Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                <FormSelectModule
-                  name="agentId"
-                  value={localFilters.agentId || ""}
-                  onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
-                  options={agentOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Payment Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-                <FormSelectModule
-                  name="paymentTypeId"
-                  value={localFilters.paymentTypeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("paymentTypeId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={paymentTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Channel Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
-                <FormSelectModule
-                  name="channel"
-                  value={localFilters.channel || ""}
-                  onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                  options={channelOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <FormSelectModule
-                  name="status"
-                  value={localFilters.status || ""}
-                  onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
-                  options={statusOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Collector Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
-                <FormSelectModule
-                  name="collectorType"
-                  value={localFilters.collectorType || ""}
-                  onChange={(e) => handleFilterChange("collectorType", e.target.value || undefined)}
-                  options={collectorTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>{option.label}</span>
-                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-            </div>
-
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
-              <button
-                onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <Filter className="size-4" />
-                Apply Filters
-              </button>
-              <button
-                onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <X className="size-4" />
-                Reset All
-              </button>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-              <div className="space-y-1 text-xs md:text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Records:</span>
-                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
-                  </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">
-                    {currentPage} / {totalPages || 1}
-                  </span>
-              </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCount()}</span>
-            </div>
-          </div>
-      </div>
-          </motion.div>
-        )}
-
-      {/* Main Content - Payments List/Grid */}
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
+        {/* Main Content */}
         <motion.div
           className={
             showDesktopFilters
-              ? "w-full rounded-md border bg-white p-3 md:p-4 lg:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-              : "w-full rounded-md border bg-white p-3 md:p-4 lg:p-5 2xl:flex-1"
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
           }
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-        <div className="flex flex-col py-1 md:py-2">
-          <div className="mb-3 flex items-center justify-between gap-3 md:mb-4">
-              <div className="flex items-center gap-3">
-                {/* Filter Button for ALL screens up to 2xl */}
-                <button
-                  onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-                >
-                  <Filter className="size-4" />
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
-                </button>
-            <p className="text-lg font-medium md:text-xl lg:text-2xl">Recent Payments</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                <button
-                  type="button"
-                  onClick={() => setShowDesktopFilters((prev) => !prev)}
-                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                >
-                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                  {showDesktopFilters ? "Hide filters" : "Show filters"}
-                </button>
-            <button
-              className="button-oulined flex items-center gap-1.5 border-[#2563EB] bg-[#DBEAFE] px-2 py-1.5 text-xs hover:border-[#2563EB] hover:bg-[#DBEAFE] md:gap-2 md:px-3 md:py-2 md:text-sm"
-              onClick={() => {
-                /* Export functionality */
-              }}
-              disabled={!payments || payments.length === 0}
-            >
-              <ExportCsvIcon color="#2563EB" size={16} className="md:size-5" />
-              <p className="text-xs text-[#2563EB] md:text-sm">Export CSV</p>
-            </button>
-              </div>
+          <div className="items-center justify-between border-b py-2 md:flex md:py-4">
+            <div>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Recent Payments</p>
+            </div>
+            <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
+              {/* Mobile Filter Button */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+
+              {/* Active filters badge - Desktop only (2xl and above) */}
+              {getActiveFilterCount() > 0 && (
+                <div className="hidden items-center gap-2 2xl:flex">
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
@@ -1374,10 +1230,9 @@ const RecentPayments = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Payment Display Area */}
-        <div className="w-full">
+          {/* Payment Display Area */}
+          <div className="w-full">
             {payments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 md:py-8">
               <div className="text-center">
@@ -1386,21 +1241,21 @@ const RecentPayments = () => {
                 </div>
                 <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No payments found</h3>
                 <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || getActiveFilterCount() > 0
-                      ? "Try adjusting your search criteria or filters"
-                      : "No payments available"}
+                  {searchText || getActiveFilterCount() > 0
+                    ? "Try adjusting your search criteria or filters"
+                    : "No payments available"}
                 </p>
               </div>
             </div>
           ) : viewMode === "grid" ? (
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 md:gap-4 lg:grid-cols-3">
-                {payments.map((payment) => (
+              {payments.map((payment) => (
                 <PaymentCard key={payment.id} payment={payment} />
               ))}
             </div>
           ) : (
             <div className="mt-3 divide-y md:mt-4">
-                {payments.map((payment) => (
+              {payments.map((payment) => (
                 <PaymentListItem key={payment.id} payment={payment} />
               ))}
             </div>
@@ -1408,7 +1263,7 @@ const RecentPayments = () => {
         </div>
 
         {/* Pagination */}
-          {payments.length > 0 && (
+        {payments.length > 0 && (
           <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
             <div className="order-2 flex items-center gap-1.5 md:order-1">
               <p className="text-xs md:text-sm">Show rows</p>
@@ -1498,6 +1353,256 @@ const RecentPayments = () => {
           </div>
         )}
         </motion.div>
+
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
+          >
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+              {/* Customer Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <FormSelectModule
+                  name="customerId"
+                  value={localFilters.customerId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Vendor Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
+                <FormSelectModule
+                  name="vendorId"
+                  value={localFilters.vendorId || ""}
+                  onChange={(e) => handleFilterChange("vendorId", e.target.value ? Number(e.target.value) : undefined)}
+                  options={vendorOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Agent Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                <FormSelectModule
+                  name="agentId"
+                  value={localFilters.agentId || ""}
+                  onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
+                  options={agentOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Payment Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentTypeOptions
+                    .filter((opt) => opt.value !== "")
+                    .slice(0, 6)
+                    .map((typeOption) => (
+                      <button
+                        key={typeOption.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "paymentTypeId",
+                            localFilters.paymentTypeId === Number(typeOption.value) ? undefined : Number(typeOption.value)
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.paymentTypeId === Number(typeOption.value)
+                            ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {typeOption.label}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) =>
+                    handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Channel Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
+                <FormSelectModule
+                  name="channel"
+                  value={localFilters.channel || ""}
+                  onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                  options={channelOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Confirmed", "Pending", "Failed", "Reversed"].map((statusValue) => {
+                    const statusLabel = statusOptions.find((opt) => opt.value === statusValue)?.label || statusValue
+                    return (
+                      <button
+                        key={statusValue}
+                        onClick={() =>
+                          handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.status === statusValue
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {statusLabel}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Collector Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Customer", "Agent", "Vendor", "Staff"].map((collectorTypeValue) => {
+                    const collectorTypeLabel =
+                      collectorTypeOptions.find((opt) => opt.value === collectorTypeValue)?.label || collectorTypeValue
+                    return (
+                      <button
+                        key={collectorTypeValue}
+                        onClick={() =>
+                          handleFilterChange(
+                            "collectorType",
+                            localFilters.collectorType === collectorTypeValue ? undefined : collectorTypeValue
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.collectorType === collectorTypeValue
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {collectorTypeLabel}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                  </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {currentPage} / {totalPages || 1}
+                  </span>
+              </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+            </div>
+          </div>
+      </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Mobile Filter Sidebar */}

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -30,6 +30,8 @@ const MobileFilterSidebar = ({
   agentOptions,
   areaOfficeOptions,
   sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -42,6 +44,8 @@ const MobileFilterSidebar = ({
   agentOptions: Array<{ value: string | number; label: string }>
   areaOfficeOptions: Array<{ value: string | number; label: string }>
   sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
   return (
     <AnimatePresence>
@@ -121,7 +125,7 @@ const MobileFilterSidebar = ({
                   type="date"
                   value={localFilters.startDate || ""}
                   onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
       </div>
 
@@ -131,33 +135,44 @@ const MobileFilterSidebar = ({
                   type="date"
                   value={localFilters.endDate || ""}
                   onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
     </div>
 
               {/* Sort Options */}
-                <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>{option.label}</span>
-                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -198,6 +213,7 @@ export default function CashClearancesPage() {
 
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
@@ -328,7 +344,52 @@ export default function CashClearancesPage() {
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
-            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
+            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
+              {/* Main Content */}
+              <motion.div
+                className={
+                  showDesktopFilters
+                    ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+                    : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+                }
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
+                  <div>
+                    <h4 className="text-2xl font-semibold">Cash Clearances</h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Mobile Filter Button */}
+                    <button
+                      onClick={() => setShowMobileFilters(true)}
+                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+                    >
+                      <Filter className="size-4" />
+                      Filters
+                      {getActiveFilterCount() > 0 && (
+                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                          {getActiveFilterCount()}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                    <button
+                      type="button"
+                      onClick={() => setShowDesktopFilters((prev) => !prev)}
+                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                    >
+                      {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                      {showDesktopFilters ? "Hide filters" : "Show filters"}
+                    </button>
+                  </div>
+                </div>
+
+                <AgentClearanceTable appliedFilters={appliedFilters} />
+              </motion.div>
+
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
                 <motion.div
@@ -386,7 +447,7 @@ export default function CashClearancesPage() {
                         type="date"
                         value={localFilters.startDate || ""}
                         onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                       />
                     </div>
 
@@ -396,37 +457,48 @@ export default function CashClearancesPage() {
                         type="date"
                         value={localFilters.endDate || ""}
                         onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                       />
                     </div>
 
                     {/* Sort Options */}
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                      <div className="space-y-2">
-                        {sortOptions.map((option) => (
-                          <button
-                            key={`${option.value}-${option.order}`}
-                            onClick={() => handleSortChange(option)}
-                            className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                              localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            <span>{option.label}</span>
-                            {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                              <span className="text-purple-600">
-                                {option.order === "asc" ? (
-                                  <SortAsc className="size-4" />
-                                ) : (
-                                  <SortDesc className="size-4" />
-                                )}
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsSortExpanded((prev) => !prev)}
+                        className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                        aria-expanded={isSortExpanded}
+                      >
+                        <span>Sort By</span>
+                        {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                      </button>
+
+                      {isSortExpanded && (
+                        <div className="space-y-2">
+                          {sortOptions.map((option) => (
+                            <button
+                              key={`${option.value}-${option.order}`}
+                              onClick={() => handleSortChange(option)}
+                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                  ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <span>{option.label}</span>
+                              {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                <span className="text-purple-600">
+                                  {option.order === "asc" ? (
+                                    <SortAsc className="size-4" />
+                                  ) : (
+                                    <SortDesc className="size-4" />
+                                  )}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -461,58 +533,6 @@ export default function CashClearancesPage() {
                   </div>
                 </motion.div>
               )}
-
-              {/* Main Content - Clearances Table */}
-                    <motion.div
-                className={
-                  showDesktopFilters
-                    ? "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-                    : "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:flex-1"
-                }
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                {/* Header Section */}
-                <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
-                  <div>
-                    <h4 className="text-2xl font-semibold">Cash Clearances</h4>
-                    <p className="text-sm text-gray-600">Track and manage agent cash clearance history</p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Mobile Filter Button */}
-                    <button
-                      onClick={() => setShowMobileFilters(true)}
-                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
-                    >
-                      <Filter className="size-4" />
-                      Filters
-                      {getActiveFilterCount() > 0 && (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                          {getActiveFilterCount()}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Desktop Filter Toggle */}
-                    <button
-                      onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                      className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
-                    >
-                      <Filter className="size-4" />
-                      {showDesktopFilters ? "Hide Filters" : "Show Filters"}
-                      {getActiveFilterCount() > 0 && (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                          {getActiveFilterCount()}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-              </div>
-
-                <AgentClearanceTable appliedFilters={appliedFilters} />
-              </motion.div>
             </div>
           </div>
         </div>
@@ -531,6 +551,8 @@ export default function CashClearancesPage() {
         agentOptions={agentOptions}
         areaOfficeOptions={areaOfficeOptions}
         sortOptions={sortOptions}
+        isSortExpanded={isSortExpanded}
+        setIsSortExpanded={setIsSortExpanded}
       />
     </section>
   )

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -33,6 +33,8 @@ const MobileFilterSidebar = ({
   collectorTypeOptions,
   paymentTypeOptions,
   sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -48,6 +50,8 @@ const MobileFilterSidebar = ({
   collectorTypeOptions: Array<{ value: string; label: string }>
   paymentTypeOptions: Array<{ value: string | number; label: string }>
   sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
   return (
     <AnimatePresence>
@@ -108,14 +112,25 @@ const MobileFilterSidebar = ({
               {/* Status Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <FormSelectModule
-                  name="status"
-                  value={localFilters.status || ""}
-                  onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
-                  options={statusOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {statusOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.status === option.value
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+              </div>
             </div>
 
               {/* Channel Filter */}
@@ -134,14 +149,28 @@ const MobileFilterSidebar = ({
               {/* Collector Type Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
-                <FormSelectModule
-                  name="collectorType"
-                  value={localFilters.collectorType || ""}
-                  onChange={(e) => handleFilterChange("collectorType", e.target.value || undefined)}
-                  options={collectorTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {collectorTypeOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "collectorType",
+                            localFilters.collectorType === option.value ? undefined : option.value
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.collectorType === option.value
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                </div>
       </div>
 
               {/* Payment Type Filter */}
@@ -166,7 +195,7 @@ const MobileFilterSidebar = ({
                   type="date"
                   value={localFilters.paidFromUtc || ""}
                   onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
         </div>
 
@@ -176,33 +205,44 @@ const MobileFilterSidebar = ({
                   type="date"
                   value={localFilters.paidToUtc || ""}
                   onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
     </div>
 
               {/* Sort Options */}
                 <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>{option.label}</span>
-                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -244,6 +284,7 @@ export default function PaymentsPage() {
 
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
@@ -438,7 +479,52 @@ export default function PaymentsPage() {
               <AllPaymentsTable appliedFilters={appliedFilters} showStatisticsOnly />
             </motion.div>
 
-            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
+            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
+              {/* Main Content */}
+              <motion.div
+                className={
+                  showDesktopFilters
+                    ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+                    : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+                }
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
+                  <div>
+                    <h4 className="text-2xl font-semibold">Payments</h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Mobile Filter Button */}
+                    <button
+                      onClick={() => setShowMobileFilters(true)}
+                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+                    >
+                      <Filter className="size-4" />
+                      Filters
+                      {getActiveFilterCount() > 0 && (
+                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                          {getActiveFilterCount()}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                    <button
+                      type="button"
+                      onClick={() => setShowDesktopFilters((prev) => !prev)}
+                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                    >
+                      {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                      {showDesktopFilters ? "Hide filters" : "Show filters"}
+                    </button>
+                  </div>
+                </div>
+
+                <AllPaymentsTable appliedFilters={appliedFilters} />
+                    </motion.div>
+
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
                 <motion.div
@@ -477,14 +563,25 @@ export default function PaymentsPage() {
                     {/* Status Filter */}
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                      <FormSelectModule
-                        name="status"
-                        value={localFilters.status || ""}
-                        onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
-                        options={statusOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        {statusOptions
+                          .filter((opt) => opt.value !== "")
+                          .map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() =>
+                                handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                              }
+                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                localFilters.status === option.value
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                      </div>
                     </div>
 
                     {/* Channel Filter */}
@@ -503,14 +600,28 @@ export default function PaymentsPage() {
                     {/* Collector Type Filter */}
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
-                      <FormSelectModule
-                        name="collectorType"
-                        value={localFilters.collectorType || ""}
-                        onChange={(e) => handleFilterChange("collectorType", e.target.value || undefined)}
-                        options={collectorTypeOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        {collectorTypeOptions
+                          .filter((opt) => opt.value !== "")
+                          .map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() =>
+                                handleFilterChange(
+                                  "collectorType",
+                                  localFilters.collectorType === option.value ? undefined : option.value
+                                )
+                              }
+                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                localFilters.collectorType === option.value
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                      </div>
                     </div>
 
                     {/* Payment Type Filter */}
@@ -535,7 +646,7 @@ export default function PaymentsPage() {
                         type="date"
                         value={localFilters.paidFromUtc || ""}
                         onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                       />
                     </div>
 
@@ -545,37 +656,44 @@ export default function PaymentsPage() {
                         type="date"
                         value={localFilters.paidToUtc || ""}
                         onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                       />
                     </div>
 
                     {/* Sort Options */}
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                      <div className="space-y-2">
-                        {sortOptions.map((option) => (
-                          <button
-                            key={`${option.value}-${option.order}`}
-                            onClick={() => handleSortChange(option)}
-                            className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                              localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            <span>{option.label}</span>
-                            {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                              <span className="text-purple-600">
-                                {option.order === "asc" ? (
-                                  <SortAsc className="size-4" />
-                                ) : (
-                                  <SortDesc className="size-4" />
-                                )}
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsSortExpanded((prev) => !prev)}
+                        className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                        aria-expanded={isSortExpanded}
+                      >
+                        <span>Sort By</span>
+                        {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                      </button>
+
+                      {isSortExpanded && (
+                        <div className="space-y-2">
+                          {sortOptions.map((option) => (
+                            <button
+                              key={`${option.value}-${option.order}`}
+                              onClick={() => handleSortChange(option)}
+                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                  ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <span>{option.label}</span>
+                              {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                <span className="text-purple-600">
+                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -607,30 +725,9 @@ export default function PaymentsPage() {
                         <span className="font-medium">{getActiveFilterCount()}</span>
                       </div>
                     </div>
-                  </div>
+              </div>
                 </motion.div>
               )}
-
-              {/* Main Content - Payments Table */}
-              <motion.div
-                className={
-                  showDesktopFilters
-                    ? "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-                    : "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:flex-1"
-                }
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <AllPaymentsTable
-                  appliedFilters={appliedFilters}
-                  showMobileFilters={showMobileFilters}
-                  setShowMobileFilters={setShowMobileFilters}
-                  showDesktopFilters={showDesktopFilters}
-                  setShowDesktopFilters={setShowDesktopFilters}
-                  getActiveFilterCount={getActiveFilterCount}
-                />
-              </motion.div>
             </div>
           </div>
         </div>
@@ -652,6 +749,8 @@ export default function PaymentsPage() {
         collectorTypeOptions={collectorTypeOptions}
         paymentTypeOptions={paymentTypeOptions}
         sortOptions={sortOptions}
+        isSortExpanded={isSortExpanded}
+        setIsSortExpanded={setIsSortExpanded}
       />
     </section>
   )

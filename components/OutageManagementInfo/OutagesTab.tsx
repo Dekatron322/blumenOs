@@ -3,7 +3,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -412,53 +412,79 @@ const MobileFilterSidebar = ({
               {/* Status Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <FormSelectModule
-                  name="Status"
-                  value={localFilters.Status !== undefined ? localFilters.Status.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("Status", e.target.value === "" ? undefined : parseInt(e.target.value))
-                  }
-                  options={statusOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {[1, 2, 3, 4, 5].map((statusValue) => {
+                    const statusLabel = statusOptions.find((opt) => opt.value === statusValue)?.label || ""
+                    return (
+                      <button
+                        key={statusValue}
+                        onClick={() =>
+                          handleFilterChange("Status", localFilters.Status === statusValue ? undefined : statusValue)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.Status === statusValue
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {statusLabel}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* Priority Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
-                <FormSelectModule
-                  name="Priority"
-                  value={localFilters.Priority !== undefined ? localFilters.Priority.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("Priority", e.target.value === "" ? undefined : parseInt(e.target.value))
-                  }
-                  options={priorityOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {[1, 2, 3, 4].map((priorityValue) => {
+                    const priorityLabel = priorityOptions.find((opt) => opt.value === priorityValue)?.label || ""
+                    return (
+                      <button
+                        key={priorityValue}
+                        onClick={() =>
+                          handleFilterChange("Priority", localFilters.Priority === priorityValue ? undefined : priorityValue)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.Priority === priorityValue
+                            ? "bg-orange-50 text-orange-700 ring-1 ring-orange-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {priorityLabel}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* Source Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
-                <FormSelectModule
-                  name="CustomerGenerated"
-                  value={
-                    localFilters.CustomerGenerated !== undefined
-                      ? localFilters.CustomerGenerated.toString()
-                      : ""
-                  }
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "CustomerGenerated",
-                      e.target.value === "" ? undefined : e.target.value === "true"
-                    )
-                  }
-                  options={sourceOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: true, label: "Customer Reported" },
+                    { value: false, label: "System Detected" },
+                  ].map((source) => (
+                    <button
+                      key={source.value.toString()}
+                      onClick={() =>
+                        handleFilterChange(
+                          "CustomerGenerated",
+                          localFilters.CustomerGenerated === source.value ? undefined : source.value
+                        )
+                      }
+                      className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                        localFilters.CustomerGenerated === source.value
+                          ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {source.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Sort Options */}
@@ -537,6 +563,7 @@ const OutagesTab: React.FC = () => {
   const [selectedOutage, setSelectedOutage] = useState<Outage | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Filter state
   const [localFilters, setLocalFilters] = useState<{
@@ -785,151 +812,7 @@ const OutagesTab: React.FC = () => {
 
   return (
     <div className="relative w-full">
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row-reverse">
-        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
-        {showDesktopFilters && (
-          <motion.div
-            key="desktop-filters-sidebar"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
-          >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-              >
-                <X className="size-3 md:size-4" />
-                Clear All
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <FormSelectModule
-                  name="Status"
-                  value={localFilters.Status !== undefined ? localFilters.Status.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("Status", e.target.value === "" ? undefined : parseInt(e.target.value))
-                  }
-                  options={statusOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Priority Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
-                <FormSelectModule
-                  name="Priority"
-                  value={localFilters.Priority !== undefined ? localFilters.Priority.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("Priority", e.target.value === "" ? undefined : parseInt(e.target.value))
-                  }
-                  options={priorityOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Source Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
-                <FormSelectModule
-                  name="CustomerGenerated"
-                  value={
-                    localFilters.CustomerGenerated !== undefined
-                      ? localFilters.CustomerGenerated.toString()
-                      : ""
-                  }
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "CustomerGenerated",
-                      e.target.value === "" ? undefined : e.target.value === "true"
-                    )
-                  }
-                  options={sourceOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Sort By</label>
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                        localFilters.SortBy === option.value && localFilters.SortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>{option.label}</span>
-                      {localFilters.SortBy === option.value && localFilters.SortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? (
-                            <SortAsc className="size-4" />
-                          ) : (
-                            <SortDesc className="size-4" />
-                          )}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
-              <button
-                onClick={applyFilters}
-                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <Filter className="size-4" />
-                Apply Filters
-              </button>
-              <button
-                onClick={resetFilters}
-                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <X className="size-4" />
-                Reset All
-              </button>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
-              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-              <div className="space-y-1 text-xs md:text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Records:</span>
-                  <span className="font-medium">{totalCount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">
-                    {reduxCurrentPage} / {totalPages || 1}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Filters:</span>
-                  <span className="font-medium">{getActiveFilterCount()}</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content */}
         <motion.div
           className={
@@ -950,7 +833,7 @@ const OutagesTab: React.FC = () => {
             <div>
               <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
               <p className="text-sm text-gray-500">Track and manage power outages</p>
-            </div>
+        </div>
             <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
               {/* Mobile Filter Button */}
               <button
@@ -972,14 +855,14 @@ const OutagesTab: React.FC = () => {
                   <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                     {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
                   </span>
-                </div>
+        </div>
               )}
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
                 type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -992,16 +875,16 @@ const OutagesTab: React.FC = () => {
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
                   className="w-full"
-                />
-              </div>
+          />
+        </div>
               <button
                 className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
                 onClick={() => router.push("/outage-management/report-outage")}
               >
                 Report Outage
-              </button>
+          </button>
             </div>
-          </motion.div>
+      </motion.div>
 
       {outages.length === 0 ? (
         <motion.div
@@ -1253,6 +1136,167 @@ const OutagesTab: React.FC = () => {
         </>
       )}
         </motion.div>
+
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
+          >
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[1, 2, 3, 4, 5].map((statusValue) => {
+                    const statusLabel = statusOptions.find((opt) => opt.value === statusValue)?.label || ""
+                    return (
+                      <button
+                        key={statusValue}
+                        onClick={() =>
+                          handleFilterChange("Status", localFilters.Status === statusValue ? undefined : statusValue)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.Status === statusValue
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {statusLabel}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Priority Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Priority</label>
+                <FormSelectModule
+                  name="Priority"
+                  value={localFilters.Priority !== undefined ? localFilters.Priority.toString() : ""}
+                  onChange={(e) =>
+                    handleFilterChange("Priority", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={priorityOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Source Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                <FormSelectModule
+                  name="CustomerGenerated"
+                  value={
+                    localFilters.CustomerGenerated !== undefined
+                      ? localFilters.CustomerGenerated.toString()
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "CustomerGenerated",
+                      e.target.value === "" ? undefined : e.target.value === "true"
+                    )
+                  }
+                  options={sourceOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.SortBy === option.value && localFilters.SortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.SortBy === option.value && localFilters.SortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {reduxCurrentPage} / {totalPages || 1}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Mobile Filter Sidebar */}
