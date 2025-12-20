@@ -383,7 +383,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -408,7 +408,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Filter Content */}
-            <div className="space-y-4 pb-20">
+            <div className="flex-1 space-y-4">
               {/* Status Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
@@ -514,7 +514,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons */}
-            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -824,19 +824,19 @@ const OutagesTab: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <motion.div
-            className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div>
-              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
-              <p className="text-sm text-gray-500">Track and manage power outages</p>
+      <motion.div
+        className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
+          <p className="text-sm text-gray-500">Track and manage power outages</p>
         </div>
-            <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
+        <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
               {/* Mobile Filter Button */}
-              <button
+          <button
                 onClick={() => setShowMobileFilters(true)}
                 className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
               >
@@ -847,7 +847,7 @@ const OutagesTab: React.FC = () => {
                     {getActiveFilterCount()}
                   </span>
                 )}
-              </button>
+          </button>
 
               {/* Active filters badge - Desktop only (2xl and above) */}
               {getActiveFilterCount() > 0 && (
@@ -859,14 +859,14 @@ const OutagesTab: React.FC = () => {
               )}
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-              <button
-                type="button"
+        <button
+          type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
                 className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-              >
+        >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
-              </button>
+        </button>
 
               <div className="w-full sm:w-64 md:w-80">
                 <SearchModule
@@ -1135,7 +1135,7 @@ const OutagesTab: React.FC = () => {
           </motion.div>
         </>
       )}
-        </motion.div>
+    </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
         {showDesktopFilters && (
@@ -1143,7 +1143,7 @@ const OutagesTab: React.FC = () => {
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
           >
             <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
               <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
@@ -1156,7 +1156,7 @@ const OutagesTab: React.FC = () => {
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+            <div className="space-y-4">
               {/* Status Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>

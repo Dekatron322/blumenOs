@@ -271,7 +271,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Filter Content */}
-            <div className="space-y-4 pb-20">
+            <div className="flex-1 space-y-4">
               {/* Period Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
@@ -388,7 +388,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons */}
-            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -1372,7 +1372,7 @@ const MeterReadings: React.FC = () => {
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:max-h-[calc(100vh-200px)]"
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
           >
             <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
               <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
@@ -1385,7 +1385,7 @@ const MeterReadings: React.FC = () => {
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+            <div className="space-y-4 overflow-y-auto">
               {/* Period Filter */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
