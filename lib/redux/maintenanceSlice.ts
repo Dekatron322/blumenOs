@@ -52,6 +52,8 @@ export interface MaintenanceRequestParams {
   from?: string
   to?: string
   search?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Create Maintenance Request
@@ -180,6 +182,8 @@ export const fetchMaintenances = createAsyncThunk(
         from,
         to,
         search,
+        sortBy,
+        sortOrder,
       } = params
 
       const response = await api.get<MaintenanceResponse>(buildApiUrl(API_ENDPOINTS.MAINTENANCE.GET), {
@@ -195,6 +199,8 @@ export const fetchMaintenances = createAsyncThunk(
           ...(from && { From: from }),
           ...(to && { To: to }),
           ...(search && { Search: search }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 

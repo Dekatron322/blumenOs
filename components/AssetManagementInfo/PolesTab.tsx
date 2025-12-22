@@ -8,15 +8,23 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearError, fetchPoles, type Pole, PolesRequestParams, setPagination } from "lib/redux/polesSlice"
 import { useRouter } from "next/navigation"
-
-interface Status {
-  value: number
-  label: string
-}
+import { fetchCompanies } from "lib/redux/companySlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
+import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface ActionDropdownProps {
   pole: Pole
   onViewDetails: (pole: Pole) => void
+}
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ pole, onViewDetails }) => {
@@ -348,28 +356,126 @@ const LoadingSkeleton = () => {
 
 const PolesTab: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { poles, loading, error, pagination } = useAppSelector((state) => state.poles)
-
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
-  const [searchText, setSearchText] = useState("")
-  const [selectedPole, setSelectedPole] = useState<Pole | null>(null)
-
   const router = useRouter()
+  const { poles, loading, error, pagination } = useAppSelector((state) => state.poles)
+  const { companies } = useAppSelector((state) => state.companies)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { injectionSubstations } = useAppSelector((state) => state.injectionSubstations)
+  const { feeders } = useAppSelector((state) => state.feeders)
+  const { serviceStations } = useAppSelector((state) => state.serviceStations)
+
+  const [searchInput, setSearchInput] = useState("")
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
+
+  // Local filter state (not applied yet)
+  const [localFilters, setLocalFilters] = useState({
+    companyId: "",
+    areaOfficeId: "",
+    injectionSubstationId: "",
+    feederId: "",
+    serviceCenterId: "",
+    poleNumberId: "",
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters (used for API calls and client-side filtering)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchText: "",
+    companyId: "",
+    areaOfficeId: "",
+    injectionSubstationId: "",
+    feederId: "",
+    serviceCenterId: "",
+    poleNumberId: "",
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
 
   const currentPage = pagination.currentPage
   const pageSize = pagination.pageSize
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages
 
+  // Fetch companies, area offices, injection substations, feeders, and service stations for filter options
+  useEffect(() => {
+    dispatch(
+      fetchCompanies({
+        pageNumber: 1,
+        pageSize: 1000,
+      })
+    )
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 1000,
+      })
+    )
+    dispatch(
+      fetchInjectionSubstations({
+        pageNumber: 1,
+        pageSize: 1000,
+      })
+    )
+    dispatch(
+      fetchFeeders({
+        pageNumber: 1,
+        pageSize: 1000,
+      })
+    )
+    dispatch(
+      fetchServiceStations({
+        pageNumber: 1,
+        pageSize: 1000,
+      })
+    )
+  }, [dispatch])
+
+  // Extract unique pole numbers from poles for filter options (client-side only)
+  const uniquePoleNumbers = React.useMemo(() => {
+    if (!poles || poles.length === 0) return []
+    const poleMap = new Map<number, { id: number; name: string }>()
+    poles.forEach((pole) => {
+      if (pole.id && pole.htPoleNumber) {
+        if (!poleMap.has(pole.id)) {
+          poleMap.set(pole.id, {
+            id: pole.id,
+            name: pole.htPoleNumber,
+          })
+        }
+      }
+    })
+    return Array.from(poleMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [poles])
+
+  // Client-side filtering for pole number (all other filters are server-side via API)
+  const filteredPoles = React.useMemo(() => {
+    let filtered = poles
+
+    // Filter by pole number ID (client-side only)
+    if (appliedFilters.poleNumberId) {
+      filtered = filtered.filter((pole) => pole.id.toString() === appliedFilters.poleNumberId)
+    }
+
+    return filtered
+  }, [poles, appliedFilters.poleNumberId])
+
+  // Fetch poles on component mount and when applied filters/pagination change
   useEffect(() => {
     const params: PolesRequestParams = {
       pageNumber: currentPage,
-      pageSize,
-      ...(searchText && { search: searchText }),
+      pageSize: pageSize,
+      ...(appliedFilters.searchText && { search: appliedFilters.searchText }),
+      ...(appliedFilters.companyId && { companyId: parseInt(appliedFilters.companyId) }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: parseInt(appliedFilters.areaOfficeId) }),
+      ...(appliedFilters.injectionSubstationId && { injectionSubstationId: parseInt(appliedFilters.injectionSubstationId) }),
+      ...(appliedFilters.feederId && { feederId: parseInt(appliedFilters.feederId) }),
+      ...(appliedFilters.serviceCenterId && { serviceCenterId: parseInt(appliedFilters.serviceCenterId) }),
     }
     dispatch(fetchPoles(params))
-  }, [dispatch, currentPage, pageSize, searchText])
+  }, [dispatch, currentPage, pageSize, appliedFilters])
 
   useEffect(() => {
     return () => {
@@ -377,142 +483,384 @@ const PolesTab: React.FC = () => {
     }
   }, [dispatch])
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "operational":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "maintenance":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "damaged":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      case "replacement_needed":
-        return {
-          backgroundColor: "#F0F4FF",
-          color: "#3B82F6",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value === "" || value === undefined ? "" : value,
+    }))
   }
 
-  const getConditionStyle = (condition: string) => {
-    switch (condition) {
-      case "excellent":
-        return {
-          backgroundColor: "#EEF5F0",
-          color: "#589E67",
-        }
-      case "good":
-        return {
-          backgroundColor: "#F0F4FF",
-          color: "#3B82F6",
-        }
-      case "fair":
-        return {
-          backgroundColor: "#FEF6E6",
-          color: "#D97706",
-        }
-      case "poor":
-        return {
-          backgroundColor: "#F7EDED",
-          color: "#AF4B4B",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
   }
 
-  const getMaterialStyle = (material: string) => {
-    switch (material) {
-      case "concrete":
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#374151",
-        }
-      case "steel":
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#1E40AF",
-        }
-      case "wood":
-        return {
-          backgroundColor: "#FEF3C7",
-          color: "#92400E",
-        }
-      case "composite":
-        return {
-          backgroundColor: "#F0FDF4",
-          color: "#166534",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
-  }
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
+  // Apply all filters at once
+  const applyFilters = () => {
+    setAppliedFilters({
+      searchText: searchInput.trim(),
+      companyId: localFilters.companyId,
+      areaOfficeId: localFilters.areaOfficeId,
+      injectionSubstationId: localFilters.injectionSubstationId,
+      feederId: localFilters.feederId,
+      serviceCenterId: localFilters.serviceCenterId,
+      poleNumberId: localFilters.poleNumberId,
+      sortBy: localFilters.sortBy,
+      sortOrder: localFilters.sortOrder,
+    })
     dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      companyId: "",
+      areaOfficeId: "",
+      injectionSubstationId: "",
+      feederId: "",
+      serviceCenterId: "",
+      poleNumberId: "",
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setSearchInput("")
+    setAppliedFilters({
+      searchText: "",
+      companyId: "",
+      areaOfficeId: "",
+      injectionSubstationId: "",
+      feederId: "",
+      serviceCenterId: "",
+      poleNumberId: "",
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.searchText) count++
+    if (appliedFilters.companyId) count++
+    if (appliedFilters.areaOfficeId) count++
+    if (appliedFilters.injectionSubstationId) count++
+    if (appliedFilters.feederId) count++
+    if (appliedFilters.serviceCenterId) count++
+    if (appliedFilters.poleNumberId) count++
+    if (appliedFilters.sortBy) count++
+    return count
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
-    dispatch(setPagination({ page: 1, pageSize }))
+    setSearchInput("")
   }
 
   const paginate = (pageNumber: number) => dispatch(setPagination({ page: pageNumber, pageSize }))
+
+  const sortOptions: SortOption[] = [
+    { label: "Pole Number A-Z", value: "htPoleNumber", order: "asc" },
+    { label: "Pole Number Z-A", value: "htPoleNumber", order: "desc" },
+  ]
+
+  // Mobile Filter Sidebar Component
+  const MobileFilterSidebar = () => {
+    return (
+      <AnimatePresence>
+        {showMobileFilters && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+            onClick={() => setShowMobileFilters(false)}
+          >
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.3 }}
+              className="flex w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="mb-4 flex items-center justify-between border-b pb-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
+              </div>
+
+              {/* Filter Content */}
+              <div className="flex-1 space-y-4">
+                {/* Company Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                  <FormSelectModule
+                    name="company"
+                    value={localFilters.companyId}
+                    onChange={(e) => handleFilterChange("companyId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Companies" },
+                      ...companies.map((company) => ({
+                        value: company.id.toString(),
+                        label: company.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOffice"
+                    value={localFilters.areaOfficeId}
+                    onChange={(e) => handleFilterChange("areaOfficeId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Area Offices" },
+                      ...areaOffices.map((office) => ({
+                        value: office.id.toString(),
+                        label: office.nameOfNewOAreaffice,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Injection Substation Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                    Injection Substation
+                  </label>
+                  <FormSelectModule
+                    name="injectionSubstation"
+                    value={localFilters.injectionSubstationId}
+                    onChange={(e) => handleFilterChange("injectionSubstationId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Injection Substations" },
+                      ...injectionSubstations.map((substation) => ({
+                        value: substation.id.toString(),
+                        label: substation.injectionSubstationCode,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Feeder Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                  <FormSelectModule
+                    name="feeder"
+                    value={localFilters.feederId}
+                    onChange={(e) => handleFilterChange("feederId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Feeders" },
+                      ...feeders.map((feeder) => ({
+                        value: feeder.id.toString(),
+                        label: feeder.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Service Center Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Service Center</label>
+                  <FormSelectModule
+                    name="serviceCenter"
+                    value={localFilters.serviceCenterId}
+                    onChange={(e) => handleFilterChange("serviceCenterId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Service Centers" },
+                      ...serviceStations.map((station) => ({
+                        value: station.id.toString(),
+                        label: station.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Pole Number Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Pole Number</label>
+                  <FormSelectModule
+                    name="poleNumber"
+                    value={localFilters.poleNumberId}
+                    onChange={(e) => handleFilterChange("poleNumberId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Pole Numbers" },
+                      ...uniquePoleNumbers.map((pole) => ({
+                        value: pole.id.toString(),
+                        label: pole.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-2 flex w-full items-center justify-between text-sm font-medium"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Action Buttons */}
+              <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      applyFilters()
+                      setShowMobileFilters(false)
+                    }}
+                    className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Apply Filters
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetFilters()
+                      setShowMobileFilters(false)
+                    }}
+                    className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    )
+  }
 
   if (loading) return <LoadingSkeleton />
   if (error) return <div className="p-4 text-red-500">Error loading pole data: {error}</div>
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.div
-        className="items-center justify-between py-2 md:flex md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Pole Management</p>
-          <p className="text-sm text-gray-600">Monitor and manage electrical poles infrastructure</p>
-        </div>
-        <div className="flex gap-4">
-          <SearchModule
-            value={searchText}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            placeholder="Search poles..."
-            className="w-[380px]"
-            bgClassName="bg-white"
-          />
-        </div>
-      </motion.div>
+      <MobileFilterSidebar />
+      <div className="flex flex-col items-start gap-6 2xl:mt-5 2xl:flex-row">
+        {/* Main Content */}
+        <div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+        >
+          <motion.div
+            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="mb-3 flex items-center gap-3 md:mb-0">
+              {/* Filter Button for ALL screens up to 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Pole Management</p>
+                <p className="text-sm text-gray-600">Monitor and manage electrical poles infrastructure</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <SearchModule
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search poles..."
+                className="w-full max-w-[300px]"
+                bgClassName="bg-white"
+              />
 
-      {poles.length === 0 ? (
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+              </button>
+            </div>
+          </motion.div>
+
+          {filteredPoles.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -525,7 +873,9 @@ const PolesTab: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText ? "No matching poles found" : "No poles available"}
+            {appliedFilters.searchText || getActiveFilterCount() > 0
+              ? "No matching poles found"
+              : "No poles available"}
           </motion.p>
         </motion.div>
       ) : (
@@ -538,7 +888,7 @@ const PolesTab: React.FC = () => {
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <AnimatePresence>
-                {poles.map((pole, index) => (
+                {filteredPoles.map((pole, index) => (
                   <motion.div
                     key={pole.id}
                     className="relative rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
@@ -653,6 +1003,220 @@ const PolesTab: React.FC = () => {
           </motion.div>
         </>
       )}
+        </div>
+
+        {/* Desktop Filters Sidebar (2xl and above) */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+          >
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Company Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                <FormSelectModule
+                  name="company"
+                  value={localFilters.companyId}
+                  onChange={(e) => handleFilterChange("companyId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Companies" },
+                    ...companies.map((company) => ({
+                      value: company.id.toString(),
+                      label: company.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOffice"
+                  value={localFilters.areaOfficeId}
+                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Area Offices" },
+                    ...areaOffices.map((office) => ({
+                      value: office.id.toString(),
+                      label: office.nameOfNewOAreaffice,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Injection Substation Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Injection Substation</label>
+                <FormSelectModule
+                  name="injectionSubstation"
+                  value={localFilters.injectionSubstationId}
+                  onChange={(e) => handleFilterChange("injectionSubstationId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Injection Substations" },
+                    ...injectionSubstations.map((substation) => ({
+                      value: substation.id.toString(),
+                      label: substation.injectionSubstationCode,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Feeder Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                <FormSelectModule
+                  name="feeder"
+                  value={localFilters.feederId}
+                  onChange={(e) => handleFilterChange("feederId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Feeders" },
+                    ...feeders.map((feeder) => ({
+                      value: feeder.id.toString(),
+                      label: feeder.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Service Center Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Service Center</label>
+                <FormSelectModule
+                  name="serviceCenter"
+                  value={localFilters.serviceCenterId}
+                  onChange={(e) => handleFilterChange("serviceCenterId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Service Centers" },
+                    ...serviceStations.map((station) => ({
+                      value: station.id.toString(),
+                      label: station.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Pole Number Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Pole Number</label>
+                <FormSelectModule
+                  name="poleNumber"
+                  value={localFilters.poleNumberId}
+                  onChange={(e) => handleFilterChange("poleNumberId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Pole Numbers" },
+                    ...uniquePoleNumbers.map((pole) => ({
+                      value: pole.id.toString(),
+                      label: pole.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {currentPage} / {totalPages}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   )
 }

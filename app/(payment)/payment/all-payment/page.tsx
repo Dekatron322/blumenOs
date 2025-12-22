@@ -2,16 +2,24 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { SearchModule } from "components/ui/Search/search-module"
-import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { MapIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
-import DashboardNav from "components/Navbar/DashboardNav"
-import { ButtonModule } from "components/ui/Button/Button"
-import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 
-import { clearPayments, fetchPayments, PaymentsRequestParams } from "lib/redux/paymentSlice"
+import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import { ButtonModule } from "components/ui/Button/Button"
+import DashboardNav from "components/Navbar/DashboardNav"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { MapIcon, PlusIcon, UserIcon } from "components/Icons/Icons"
+import { SearchModule } from "components/ui/Search/search-module"
+
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { clearAgents, fetchAgents } from "lib/redux/agentSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
+import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
+import { clearPayments, fetchPayments, PaymentsRequestParams } from "lib/redux/paymentSlice"
+import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -22,6 +30,12 @@ const CyclesIcon = () => (
     <path d="M10.5 5H9V11L14.2 14.2L15 13L10.5 10.25V5Z" fill="currentColor" />
   </svg>
 )
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
 
 interface Payment {
   id: number
@@ -184,8 +198,8 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails 
 
 const LoadingSkeleton = () => {
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
@@ -264,46 +278,438 @@ const LoadingSkeleton = () => {
   )
 }
 
+// Mobile Filter Sidebar Component
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  customerOptions,
+  vendorOptions,
+  agentOptions,
+  paymentTypeOptions,
+  areaOfficeOptions,
+  channelOptions,
+  statusOptions,
+  collectorTypeOptions,
+  sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  customerOptions: Array<{ value: string | number; label: string }>
+  vendorOptions: Array<{ value: string | number; label: string }>
+  agentOptions: Array<{ value: string | number; label: string }>
+  paymentTypeOptions: Array<{ value: string | number; label: string }>
+  areaOfficeOptions: Array<{ value: string | number; label: string }>
+  channelOptions: Array<{ value: string; label: string }>
+  statusOptions: Array<{ value: string; label: string }>
+  collectorTypeOptions: Array<{ value: string; label: string }>
+  sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="flex-1 space-y-4">
+              {/* Customer Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                <FormSelectModule
+                  name="customerId"
+                  value={localFilters.customerId || ""}
+                  onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
+                  options={customerOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Vendor Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
+                <FormSelectModule
+                  name="vendorId"
+                  value={localFilters.vendorId || ""}
+                  onChange={(e) => handleFilterChange("vendorId", e.target.value || undefined)}
+                  options={vendorOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Agent Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                <FormSelectModule
+                  name="agentId"
+                  value={localFilters.agentId || ""}
+                  onChange={(e) => handleFilterChange("agentId", e.target.value || undefined)}
+                  options={agentOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Payment Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentTypeOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => {
+                      const paymentTypeValue = typeof option.value === "number" ? option.value : Number(option.value)
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "paymentTypeId",
+                              localFilters.paymentTypeId === paymentTypeValue ? undefined : paymentTypeValue
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.paymentTypeId === paymentTypeValue
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
+                </div>
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOfficeId"
+                  value={localFilters.areaOfficeId || ""}
+                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                  options={areaOfficeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Channel Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Channel</label>
+                <FormSelectModule
+                  name="channel"
+                  value={localFilters.channel || ""}
+                  onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                  options={channelOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {statusOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.status === option.value
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Collector Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {collectorTypeOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "collectorType",
+                            localFilters.collectorType === option.value ? undefined : option.value
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.collectorType === option.value
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Date Range Filters */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                <input
+                  type="date"
+                  value={localFilters.paidFromUtc || ""}
+                  onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                <input
+                  type="date"
+                  value={localFilters.paidToUtc || ""}
+                  onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
+                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const AllPayments: React.FC = () => {
   const dispatch = useAppDispatch()
   const { payments, loading, error, success, pagination } = useAppSelector((state) => state.payments)
+  const { customers } = useAppSelector((state) => state.customers)
+  const { vendors } = useAppSelector((state) => state.vendors)
+  const { agents } = useAppSelector((state) => state.agents)
+  const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
 
   const router = useRouter()
 
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false)
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const [filters, setFilters] = useState<Partial<PaymentsRequestParams>>({
-    pageNumber: 1,
-    pageSize: 10,
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [isSortExpanded, setIsSortExpanded] = useState(false)
+
+  // Local state for filters to avoid too many Redux dispatches
+  const [localFilters, setLocalFilters] = useState({
+    customerId: undefined as number | undefined,
+    vendorId: undefined as number | undefined,
+    agentId: undefined as number | undefined,
+    paymentTypeId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    channel: undefined as "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | undefined,
+    status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
+    collectorType: undefined as "Customer" | "Agent" | "Vendor" | "Staff" | undefined,
+    paidFromUtc: undefined as string | undefined,
+    paidToUtc: undefined as string | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state - triggers API calls
+  const [appliedFilters, setAppliedFilters] = useState({
+    customerId: undefined as number | undefined,
+    vendorId: undefined as number | undefined,
+    agentId: undefined as number | undefined,
+    paymentTypeId: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    channel: undefined as "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | undefined,
+    status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
+    collectorType: undefined as "Customer" | "Agent" | "Vendor" | "Staff" | undefined,
+    paidFromUtc: undefined as string | undefined,
+    paidToUtc: undefined as string | undefined,
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
   })
 
   const pageSize = 10
 
-  // Fetch payments when component mounts or filters change
+  // Fetch related data for filters
   useEffect(() => {
-    const fetchData = async () => {
-      await dispatch(
-        fetchPayments({
-          pageNumber: currentPage,
-          pageSize,
-          ...(searchText && { search: searchText }),
-          ...filters,
-        })
-      )
-    }
+    dispatch(
+      fetchCustomers({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+    dispatch(
+      fetchVendors({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+    dispatch(
+      fetchAgents({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+    dispatch(fetchPaymentTypes())
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
 
-    fetchData()
-  }, [dispatch, currentPage, searchText, filters])
-
-  // Clear payments when component unmounts
-  useEffect(() => {
+    // Cleanup function to clear states when component unmounts
     return () => {
+      dispatch(clearCustomers())
+      dispatch(clearVendors())
+      dispatch(clearAgents())
+      dispatch(clearPaymentTypes())
+      dispatch(clearAreaOffices())
       dispatch(clearPayments())
     }
   }, [dispatch])
+
+  // Fetch payments when component mounts or filters change
+  useEffect(() => {
+    const fetchParams: PaymentsRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
+      ...(appliedFilters.customerId && { customerId: appliedFilters.customerId }),
+      ...(appliedFilters.vendorId && { vendorId: appliedFilters.vendorId }),
+      ...(appliedFilters.agentId && { agentId: appliedFilters.agentId }),
+      ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.channel && { channel: appliedFilters.channel }),
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
+      ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    void dispatch(fetchPayments(fetchParams))
+  }, [dispatch, currentPage, searchText, appliedFilters])
 
   const getStatusStyle = (status: Payment["status"]) => {
     switch (status) {
@@ -419,11 +825,169 @@ const AllPayments: React.FC = () => {
     }).format(date)
   }
 
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
+  // Handle individual filter changes (local state)
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
   }
+
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply all filters at once
+  const applyFilters = () => {
+    setAppliedFilters({
+      customerId: localFilters.customerId,
+      vendorId: localFilters.vendorId,
+      agentId: localFilters.agentId,
+      paymentTypeId: localFilters.paymentTypeId,
+      areaOfficeId: localFilters.areaOfficeId,
+      channel: localFilters.channel,
+      status: localFilters.status,
+      collectorType: localFilters.collectorType,
+      paidFromUtc: localFilters.paidFromUtc,
+      paidToUtc: localFilters.paidToUtc,
+      sortBy: localFilters.sortBy || undefined,
+      sortOrder: localFilters.sortOrder || undefined,
+    })
+    setCurrentPage(1)
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      customerId: undefined,
+      vendorId: undefined,
+      agentId: undefined,
+      paymentTypeId: undefined,
+      areaOfficeId: undefined,
+      channel: undefined,
+      status: undefined,
+      collectorType: undefined,
+      paidFromUtc: undefined,
+      paidToUtc: undefined,
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setAppliedFilters({
+      customerId: undefined,
+      vendorId: undefined,
+      agentId: undefined,
+      paymentTypeId: undefined,
+      areaOfficeId: undefined,
+      channel: undefined,
+      status: undefined,
+      collectorType: undefined,
+      paidFromUtc: undefined,
+      paidToUtc: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+    })
+    setCurrentPage(1)
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.customerId) count++
+    if (appliedFilters.vendorId) count++
+    if (appliedFilters.agentId) count++
+    if (appliedFilters.paymentTypeId) count++
+    if (appliedFilters.areaOfficeId) count++
+    if (appliedFilters.channel) count++
+    if (appliedFilters.status) count++
+    if (appliedFilters.collectorType) count++
+    if (appliedFilters.paidFromUtc) count++
+    if (appliedFilters.paidToUtc) count++
+    if (appliedFilters.sortBy) count++
+    return count
+  }
+
+  // Filter options
+  const customerOptions = [
+    { value: "", label: "All Customers" },
+    ...customers.map((customer) => ({
+      value: customer.id,
+      label: `${customer.fullName} (${customer.accountNumber})`,
+    })),
+  ]
+
+  const vendorOptions = [
+    { value: "", label: "All Vendors" },
+    ...vendors.map((vendor) => ({
+      value: vendor.id,
+      label: vendor.name,
+    })),
+  ]
+
+  const agentOptions = [
+    { value: "", label: "All Agents" },
+    ...agents.map((agent) => ({
+      value: agent.id,
+      label: `${agent.user.fullName} (${agent.agentCode})`,
+    })),
+  ]
+
+  const paymentTypeOptions = [
+    { value: "", label: "All Payment Types" },
+    ...paymentTypes.map((type) => ({
+      value: type.id,
+      label: type.name,
+    })),
+  ]
+
+  const areaOfficeOptions = [
+    { value: "", label: "All Area Offices" },
+    ...areaOffices.map((office) => ({
+      value: office.id,
+      label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
+    })),
+  ]
+
+  const channelOptions = [
+    { value: "", label: "All Channels" },
+    { value: "Cash", label: "Cash" },
+    { value: "BankTransfer", label: "Bank Transfer" },
+    { value: "Pos", label: "POS" },
+    { value: "Card", label: "Card" },
+    { value: "VendorWallet", label: "Vendor Wallet" },
+  ]
+
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "Pending", label: "Pending" },
+    { value: "Confirmed", label: "Confirmed" },
+    { value: "Failed", label: "Failed" },
+    { value: "Reversed", label: "Reversed" },
+  ]
+
+  const collectorTypeOptions = [
+    { value: "", label: "All Collector Types" },
+    { value: "Customer", label: "Customer" },
+    { value: "Agent", label: "Agent" },
+    { value: "Vendor", label: "Vendor" },
+    { value: "Staff", label: "Staff" },
+  ]
+
+  // Sort options
+  const sortOptions: SortOption[] = [
+    { label: "Amount Low-High", value: "amount", order: "asc" },
+    { label: "Amount High-Low", value: "amount", order: "desc" },
+    { label: "Date Asc", value: "paidAtUtc", order: "asc" },
+    { label: "Date Desc", value: "paidAtUtc", order: "desc" },
+    { label: "Customer Name A-Z", value: "customerName", order: "asc" },
+    { label: "Customer Name Z-A", value: "customerName", order: "desc" },
+    { label: "Reference Asc", value: "reference", order: "asc" },
+    { label: "Reference Desc", value: "reference", order: "desc" },
+  ]
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
@@ -438,14 +1002,13 @@ const AllPayments: React.FC = () => {
   const handleAddPaymentSuccess = async () => {
     setIsAddPaymentModalOpen(false)
     // Refresh data after adding payment
-    dispatch(
-      fetchPayments({
+    const fetchParams: PaymentsRequestParams = {
         pageNumber: currentPage,
         pageSize,
         ...(searchText && { search: searchText }),
-        ...filters,
-      })
-    )
+      ...appliedFilters,
+    }
+    void dispatch(fetchPayments(fetchParams))
   }
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
@@ -454,8 +1017,8 @@ const AllPayments: React.FC = () => {
   if (error) return <div className="p-4 text-red-600">Error loading payments: {error}</div>
 
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-3 xl:px-16">
@@ -482,22 +1045,51 @@ const AllPayments: React.FC = () => {
               </motion.div>
             </div>
 
+            <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
+              {/* Main Content */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-full"
-            >
-              {/* Payment Table Container */}
-              <div className="w-full">
-                <motion.div
-                  className="w-full rounded-lg border bg-white p-4 lg:p-6"
+                className={
+                  showDesktopFilters
+                    ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+                    : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+                }
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <div className="mb-6">
-                    <h3 className="mb-3 text-lg font-semibold">Payment Directory</h3>
+                {/* Header */}
+                <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    {/* Filter Button for ALL screens up to 2xl */}
+                    <button
+                      onClick={() => setShowMobileFilters(true)}
+                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                    >
+                      <Filter className="size-4" />
+                      Filters
+                      {getActiveFilterCount() > 0 && (
+                        <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                          {getActiveFilterCount()}
+                        </span>
+                      )}
+                    </button>
+                    <h3 className="text-lg font-semibold sm:text-xl">Payment Directory</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                    <button
+                      type="button"
+                      onClick={() => setShowDesktopFilters((prev) => !prev)}
+                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                    >
+                      {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                      {showDesktopFilters ? "Hide filters" : "Show filters"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="mb-4 sm:mb-6">
                     <div className="max-w-md">
                       <SearchModule
                         placeholder="Search customers or references..."
@@ -538,61 +1130,26 @@ const AllPayments: React.FC = () => {
                                     Customer
                                   </div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("amount")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Amount <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Amount</div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("status")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Status <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Status</div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("channel")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Payment Method <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Payment Method</div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("reference")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Reference <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Reference</div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("paidAtUtc")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Timestamp <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Timestamp</div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("collectorType")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Collector Type <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Collector Type</div>
                                 </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("areaOfficeName")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Location <RxCaretSort className="text-gray-400" />
-                                  </div>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Location</div>
                                 </th>
                                 <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                   Actions
@@ -600,14 +1157,12 @@ const AllPayments: React.FC = () => {
                               </tr>
                             </thead>
                             <tbody className="bg-white">
-                              <AnimatePresence>
-                                {payments.map((payment, index) => (
+                            {payments.map((payment) => (
                                   <motion.tr
                                     key={payment.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                                    exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
                                     className="hover:bg-gray-50"
                                   >
                                     <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
@@ -690,7 +1245,6 @@ const AllPayments: React.FC = () => {
                                     </td>
                                   </motion.tr>
                                 ))}
-                              </AnimatePresence>
                             </tbody>
                           </table>
                         </div>
@@ -723,7 +1277,7 @@ const AllPayments: React.FC = () => {
                           </motion.button>
 
                           {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, index) => {
-                            let pageNum
+                          let pageNum: number
                             if (pagination.totalPages <= 5) {
                               pageNum = index + 1
                             } else if (currentPage <= 3) {
@@ -791,15 +1345,285 @@ const AllPayments: React.FC = () => {
                     </>
                   )}
                 </motion.div>
+
+              {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+              {showDesktopFilters && (
+            <motion.div
+                  key="desktop-filters-sidebar"
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
+                  className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+                >
+                  <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+                    <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+                    <button
+                      onClick={resetFilters}
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+                    >
+                      <X className="size-3 md:size-4" />
+                      Clear All
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 overflow-y-auto">
+                    {/* Customer Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                      <FormSelectModule
+                        name="customerId"
+                        value={localFilters.customerId || ""}
+                        onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
+                        options={customerOptions}
+              className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    </div>
+
+                    {/* Vendor Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
+                      <FormSelectModule
+                        name="vendorId"
+                        value={localFilters.vendorId || ""}
+                        onChange={(e) => handleFilterChange("vendorId", e.target.value || undefined)}
+                        options={vendorOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    </div>
+
+                    {/* Agent Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                      <FormSelectModule
+                        name="agentId"
+                        value={localFilters.agentId || ""}
+                        onChange={(e) => handleFilterChange("agentId", e.target.value || undefined)}
+                        options={agentOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    </div>
+
+                    {/* Payment Type Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {paymentTypeOptions
+                          .filter((opt) => opt.value !== "")
+                          .map((option) => {
+                            const paymentTypeValue = typeof option.value === "number" ? option.value : Number(option.value)
+                            return (
+                              <button
+                                key={option.value}
+                                onClick={() =>
+                                  handleFilterChange(
+                                    "paymentTypeId",
+                                    localFilters.paymentTypeId === paymentTypeValue ? undefined : paymentTypeValue
+                                  )
+                                }
+                                className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                  localFilters.paymentTypeId === paymentTypeValue
+                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            )
+                          })}
+                      </div>
+                    </div>
+
+                    {/* Area Office Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                      <FormSelectModule
+                        name="areaOfficeId"
+                        value={localFilters.areaOfficeId || ""}
+                        onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                        options={areaOfficeOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    </div>
+
+                    {/* Channel Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
+                      <FormSelectModule
+                        name="channel"
+                        value={localFilters.channel || ""}
+                        onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                        options={channelOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
+                      />
+                    </div>
+
+                    {/* Status Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {statusOptions
+                          .filter((opt) => opt.value !== "")
+                          .map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() =>
+                                handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                              }
+                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                localFilters.status === option.value
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Collector Type Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Collector Type
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {collectorTypeOptions
+                          .filter((opt) => opt.value !== "")
+                          .map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() =>
+                                handleFilterChange(
+                                  "collectorType",
+                                  localFilters.collectorType === option.value ? undefined : option.value
+                                )
+                              }
+                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                localFilters.collectorType === option.value
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Sort Options */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setIsSortExpanded((prev) => !prev)}
+                        className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                        aria-expanded={isSortExpanded}
+                      >
+                        <span>Sort By</span>
+                        {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                      </button>
+
+                      {isSortExpanded && (
+                        <div className="space-y-2">
+                          {sortOptions.map((option) => (
+                            <button
+                              key={`${option.value}-${option.order}`}
+                              onClick={() => handleSortChange(option)}
+                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                  ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <span>{option.label}</span>
+                              {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                <span className="text-purple-600">
+                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+                    <button
+                      onClick={applyFilters}
+                      className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                    >
+                      <Filter className="size-4" />
+                      Apply Filters
+                    </button>
+                    <button
+                      onClick={resetFilters}
+                      className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+                    >
+                      <X className="size-4" />
+                      Reset All
+                    </button>
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+                    <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+                    <div className="space-y-1 text-xs md:text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Records:</span>
+                        <span className="font-medium">{pagination.totalCount?.toLocaleString() || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Current Page:</span>
+                        <span className="font-medium">
+                          {currentPage} / {pagination.totalPages || 1}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Active Filters:</span>
+                        <span className="font-medium">{getActiveFilterCount()}</span>
+                      </div>
+                    </div>
               </div>
             </motion.div>
+              )}
           </div>
         </div>
       </div>
+      </div>
+
       <AddAgentModal
         isOpen={isAddPaymentModalOpen}
         onRequestClose={() => setIsAddPaymentModalOpen(false)}
         onSuccess={handleAddPaymentSuccess}
+      />
+
+      {/* Mobile Filter Sidebar */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        customerOptions={customerOptions}
+        vendorOptions={vendorOptions}
+        agentOptions={agentOptions}
+        paymentTypeOptions={paymentTypeOptions}
+        areaOfficeOptions={areaOfficeOptions}
+        channelOptions={channelOptions}
+        statusOptions={statusOptions}
+        collectorTypeOptions={collectorTypeOptions}
+        sortOptions={sortOptions}
+        isSortExpanded={isSortExpanded}
+        setIsSortExpanded={setIsSortExpanded}
       />
     </section>
   )

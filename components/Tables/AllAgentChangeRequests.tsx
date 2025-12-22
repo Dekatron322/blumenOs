@@ -2,16 +2,14 @@
 
 import React, { useEffect, useState } from "react"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
-import { IoMdFunnel } from "react-icons/io"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useDispatch, useSelector } from "react-redux"
-import { AppDispatch, RootState } from "lib/redux/store"
-import { ChangeRequestListItem, fetchChangeRequests } from "lib/redux/agentSlice"
-import { ChevronDown, Search } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { ChangeRequestListItem, fetchChangeRequests, setChangeRequestsPagination, ChangeRequestsRequestParams } from "lib/redux/agentSlice"
+import { Search } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import ViewAgentChangeRequestModal from "components/ui/Modal/view-agent-change-request-modal"
 import Image from "next/image"
@@ -225,23 +223,26 @@ const MobileFilterSkeleton = () => (
   </motion.div>
 )
 
-const AllAgentChangeRequests = () => {
-  const dispatch = useDispatch<AppDispatch>()
-  const { changeRequests, changeRequestsLoading, changeRequestsError, changeRequestsPagination } = useSelector(
-    (state: RootState) => state.agents
+interface AppliedFilters {
+  status?: number
+  source?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+}
+
+interface AllAgentChangeRequestsProps {
+  appliedFilters?: AppliedFilters
+}
+
+const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ appliedFilters = {} }) => {
+  const dispatch = useAppDispatch()
+  const { changeRequests, changeRequestsLoading, changeRequestsError, changeRequestsPagination } = useAppSelector(
+    (state) => state.agents
   )
 
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [selectedStatus, setSelectedStatus] = useState("")
-  const [selectedSource, setSelectedSource] = useState("")
-  const [selectedEntityType, setSelectedEntityType] = useState("1") // Default to Agent
-  const [isStatusOpen, setIsStatusOpen] = useState(false)
-  const [isSourceOpen, setIsSourceOpen] = useState(false)
-  const [isEntityTypeOpen, setIsEntityTypeOpen] = useState(false)
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
@@ -251,24 +252,26 @@ const AllAgentChangeRequests = () => {
 
   // Fetch change requests on component mount and when filters change
   useEffect(() => {
-    dispatch(
-      fetchChangeRequests({
-        pageNumber: currentPage,
-        pageSize: changeRequestsPagination.pageSize,
-        ...(selectedStatus && { status: parseInt(selectedStatus) }),
-        ...(selectedSource && { source: parseInt(selectedSource) }),
-        ...(searchText && { reference: searchText }),
-        ...(selectedEntityType && { entityType: parseInt(selectedEntityType) }),
-      })
-    )
+    const params: ChangeRequestsRequestParams = {
+      pageNumber: currentPage,
+      pageSize: changeRequestsPagination.pageSize,
+      ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
+      ...(appliedFilters.source !== undefined && { source: appliedFilters.source }),
+      ...(searchText && { reference: searchText }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    dispatch(fetchChangeRequests(params))
   }, [
     dispatch,
     currentPage,
     changeRequestsPagination.pageSize,
-    selectedStatus,
-    selectedSource,
+    appliedFilters.status,
+    appliedFilters.source,
+    appliedFilters.sortBy,
+    appliedFilters.sortOrder,
     searchText,
-    selectedEntityType,
   ])
 
   const toggleDropdown = (id: string) => {
@@ -280,15 +283,6 @@ const AllAgentChangeRequests = () => {
       const target = e.target as HTMLElement
       if (!target.closest('[data-dropdown-root="change-request-actions"]')) {
         setActiveDropdown(null)
-      }
-      if (!target.closest('[data-dropdown-root="status-filter"]')) {
-        setIsStatusOpen(false)
-      }
-      if (!target.closest('[data-dropdown-root="source-filter"]')) {
-        setIsSourceOpen(false)
-      }
-      if (!target.closest('[data-dropdown-root="entity-type-filter"]')) {
-        setIsEntityTypeOpen(false)
       }
     }
     document.addEventListener("mousedown", onDocClick)
@@ -379,16 +373,7 @@ const AllAgentChangeRequests = () => {
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
-    dispatch(
-      fetchChangeRequests({
-        pageNumber: 1,
-        pageSize: newPageSize,
-        ...(selectedStatus && { status: parseInt(selectedStatus) }),
-        ...(selectedSource && { source: parseInt(selectedSource) }),
-        ...(searchText && { reference: searchText }),
-        ...(selectedEntityType && { entityType: parseInt(selectedEntityType) }),
-      })
-    )
+    dispatch(setChangeRequestsPagination({ page: 1, pageSize: newPageSize }))
     setCurrentPage(1)
   }
 
@@ -659,7 +644,7 @@ const AllAgentChangeRequests = () => {
   }
 
   // Get user permissions from Redux
-  const { user } = useSelector((state: RootState) => state.auth)
+  const { user } = useAppSelector((state) => state.auth)
   const canApprove = !!user?.privileges?.some((p) => p.actions?.includes("A")) // Approve permission
 
   if (changeRequestsLoading) {
@@ -789,122 +774,6 @@ const AllAgentChangeRequests = () => {
                 </button>
               </div>
 
-              {/* Status Filter */}
-              <div className="relative" data-dropdown-root="status-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsStatusOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isStatusOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                      isStatusOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isStatusOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                    <div className="py-1">
-                      {statusOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedStatus === option.value ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedStatus(option.value)
-                            setIsStatusOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Source Filter */}
-              <div className="relative" data-dropdown-root="source-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsSourceOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isSourceOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{sourceOptions.find((opt) => opt.value === selectedSource)?.label || "All Sources"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                      isSourceOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isSourceOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                    <div className="py-1">
-                      {sourceOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedSource === option.value ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedSource(option.value)
-                            setIsSourceOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Entity Type Filter */}
-              <div className="relative" data-dropdown-root="entity-type-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsEntityTypeOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isEntityTypeOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{entityTypeOptions.find((opt) => opt.value === selectedEntityType)?.label || "All Types"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                      isEntityTypeOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isEntityTypeOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                    <div className="py-1">
-                      {entityTypeOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedEntityType === option.value ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedEntityType(option.value)
-                            setIsEntityTypeOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -927,22 +796,11 @@ const AllAgentChangeRequests = () => {
                     No agent change requests found
                   </h3>
                   <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || selectedStatus || selectedSource || selectedEntityType !== "1"
-                      ? "Try adjusting your filters or search criteria"
-                      : "No agent change requests available"}
+                    {searchText ? "Try adjusting your search criteria" : "No agent change requests available"}
                   </p>
-                  {(searchText || selectedStatus || selectedSource || selectedEntityType !== "1") && (
-                    <button
-                      className="button-oulined mt-3"
-                      onClick={() => {
-                        setSearchText("")
-                        setSelectedStatus("")
-                        setSelectedSource("")
-                        setSelectedEntityType("1")
-                        setCurrentPage(1)
-                      }}
-                    >
-                      Clear All Filters
+                  {searchText && (
+                    <button className="button-oulined mt-3" onClick={() => setSearchText("")}>
+                      Clear Search
                     </button>
                   )}
                 </div>

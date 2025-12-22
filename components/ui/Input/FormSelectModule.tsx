@@ -115,7 +115,7 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search..."
-              className="h-8 w-full rounded border border-[#E0E0E0] bg-transparent px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+              className="h-8 w-full rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
             />
           </div>
           <div className="max-h-60 overflow-auto py-1">

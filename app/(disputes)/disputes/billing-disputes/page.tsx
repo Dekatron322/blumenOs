@@ -528,8 +528,8 @@ const PostpaidBillDisputes: React.FC = () => {
   if (isError) return <div className="p-4 text-red-500">Error loading disputes: {disputesError}</div>
 
   return (
-    <section className="size-full flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex min-h-screen w-full">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto mt-6 flex w-full flex-col px-3 2xl:container xl:px-16">

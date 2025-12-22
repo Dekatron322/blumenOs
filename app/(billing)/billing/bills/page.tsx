@@ -316,8 +316,8 @@ export default function MeteringDashboard() {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="w-full">
@@ -347,24 +347,24 @@ export default function MeteringDashboard() {
             </div>
 
             {/* Main Content Area */}
-            {isLoading ? (
-              // Loading State
-              <>
-                <SkeletonLoader />
-                <LoadingState showCategories={true} />
-              </>
-            ) : (
-              // Loaded State - Redesigned Metering Dashboard
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <AllBills />
-                </motion.div>
-              </>
-            )}
+                {isLoading ? (
+                  // Loading State
+                  <>
+                    <SkeletonLoader />
+                    <LoadingState showCategories={true} />
+                  </>
+                ) : (
+                  // Loaded State - Redesigned Metering Dashboard
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      <AllBills />
+                    </motion.div>
+                  </>
+                )}
           </div>
         </div>
       </div>

@@ -1,48 +1,33 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
+import { RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
+import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  InjectionSubstation,
   clearError,
   fetchInjectionSubstations,
   InjectionSubstationsRequestParams,
   setPagination,
 } from "lib/redux/injectionSubstationSlice"
-
-interface Status {
-  value: number
-  label: string
-}
+import { fetchCompanies } from "lib/redux/companySlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface ActionDropdownProps {
   substation: InjectionSubstation
   onViewDetails: (substation: InjectionSubstation) => void
 }
 
-// Use the InjectionSubstation interface from your slice
-interface InjectionSubstation {
-  id: number
-  nercCode: string
-  injectionSubstationCode: string
-  areaOffice: {
-    id: number
-    nameOfNewOAreaffice: string
-    newKaedcoCode: string
-    newNercCode: string
-    latitude: number
-    longitude: number
-    company: {
-      id: number
-      name: string
-      nercCode: string
-      nercSupplyStructure: number
-    }
-  }
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetails }) => {
@@ -217,16 +202,34 @@ const SubstationsTab: React.FC = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { injectionSubstations, loading, error, pagination } = useAppSelector((state) => state.injectionSubstations)
+  const { companies } = useAppSelector((state) => state.companies)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
 
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
-  const [searchText, setSearchText] = useState("")
-  const [selectedSubstation, setSelectedSubstation] = useState<InjectionSubstation | null>(null)
+  const [searchInput, setSearchInput] = useState("")
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
 
-  const handleViewDetails = (substation: InjectionSubstation) => {
-    setSelectedSubstation(substation)
-    router.push(`/assets-management/injection-substations/injection-substation-details/${substation.id}`)
-  }
+  // Local filter state (not applied yet)
+  const [localFilters, setLocalFilters] = useState({
+    companyId: "",
+    areaOfficeId: "",
+    substationNameId: "",
+    status: undefined as string | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters (used for API calls and client-side filtering)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchText: "",
+    companyId: "",
+    areaOfficeId: "",
+    substationNameId: "",
+    status: undefined as string | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
 
   // Get pagination values from Redux state
   const currentPage = pagination.currentPage
@@ -234,16 +237,83 @@ const SubstationsTab: React.FC = () => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages
 
-  // Fetch injection substations on component mount and when search/pagination changes
+  // Fetch companies and area offices for filter options
+  useEffect(() => {
+    dispatch(
+      fetchCompanies({
+        pageNumber: 1,
+        pageSize: 1000,
+      })
+    )
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 1000,
+      })
+    )
+  }, [dispatch])
+
+  // Extract unique substation names from injection substations for filter options (client-side only)
+  const uniqueSubstationNames = React.useMemo(() => {
+    if (!injectionSubstations || injectionSubstations.length === 0) return []
+    const substationMap = new Map<number, { id: number; name: string }>()
+    injectionSubstations.forEach((substation) => {
+      if (substation.id && substation.injectionSubstationCode) {
+        if (!substationMap.has(substation.id)) {
+          substationMap.set(substation.id, {
+            id: substation.id,
+            name: substation.injectionSubstationCode,
+          })
+        }
+      }
+    })
+    return Array.from(substationMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [injectionSubstations])
+
+  // Status options for filter
+  const statusOptions = [
+    { value: "operational", label: "Operational" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "faulty", label: "Faulty" },
+    { value: "limited_operations", label: "Limited Operations" },
+  ]
+
+  // Function to get status for a substation
+  const getSubstationStatus = React.useCallback((substation: InjectionSubstation): string => {
+    // Default to operational for all substations
+    // You can add logic here based on substation properties
+    return "operational"
+  }, [])
+
+  // Client-side filtering for status and substation name
+  const filteredSubstations = React.useMemo(() => {
+    let filtered = injectionSubstations
+
+    // Filter by substation name ID
+    if (appliedFilters.substationNameId) {
+      filtered = filtered.filter((substation) => substation.id.toString() === appliedFilters.substationNameId)
+    }
+
+    // Filter by status (client-side filtering based on computed status)
+    if (appliedFilters.status) {
+      filtered = filtered.filter((substation) => getSubstationStatus(substation) === appliedFilters.status)
+    }
+
+    return filtered
+  }, [injectionSubstations, appliedFilters.substationNameId, appliedFilters.status, getSubstationStatus])
+
+  // Fetch injection substations on component mount and when applied filters/pagination change
   useEffect(() => {
     const fetchParams: InjectionSubstationsRequestParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(searchText && { search: searchText }),
+      ...(appliedFilters.searchText && { search: appliedFilters.searchText }),
+      ...(appliedFilters.companyId && { companyId: parseInt(appliedFilters.companyId) }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: parseInt(appliedFilters.areaOfficeId) }),
     }
 
     dispatch(fetchInjectionSubstations(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText])
+  }, [dispatch, currentPage, pageSize, appliedFilters])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -253,9 +323,7 @@ const SubstationsTab: React.FC = () => {
   }, [dispatch])
 
   const getStatusStyle = (status: string) => {
-    // Since your API doesn't have status, we'll create a mock status based on some logic
-    // You can modify this based on your actual business logic
-    const effectiveStatus = status || "operational" // Default status
+    const effectiveStatus = status || "operational"
 
     switch (effectiveStatus) {
       case "operational":
@@ -286,26 +354,286 @@ const SubstationsTab: React.FC = () => {
     }
   }
 
-  const toggleSort = (column: string) => {
-    const isAscending = sortColumn === column && sortOrder === "asc"
-    setSortOrder(isAscending ? "desc" : "asc")
-    setSortColumn(column)
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value === "" || value === undefined ? (key === "status" ? undefined : "") : value,
+    }))
   }
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
-    // Reset to first page when searching
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply all filters at once
+  const applyFilters = () => {
+    setAppliedFilters({
+      searchText: searchInput.trim(),
+      companyId: localFilters.companyId,
+      areaOfficeId: localFilters.areaOfficeId,
+      substationNameId: localFilters.substationNameId,
+      status: localFilters.status,
+      sortBy: localFilters.sortBy,
+      sortOrder: localFilters.sortOrder,
+    })
     dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      companyId: "",
+      areaOfficeId: "",
+      substationNameId: "",
+      status: undefined,
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setSearchInput("")
+    setAppliedFilters({
+      searchText: "",
+      companyId: "",
+      areaOfficeId: "",
+      substationNameId: "",
+      status: undefined,
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.searchText) count++
+    if (appliedFilters.companyId) count++
+    if (appliedFilters.areaOfficeId) count++
+    if (appliedFilters.substationNameId) count++
+    if (appliedFilters.status) count++
+    if (appliedFilters.sortBy) count++
+    return count
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
-    // Reset to first page when clearing search
-    dispatch(setPagination({ page: 1, pageSize }))
+    setSearchInput("")
+  }
+
+  const handleViewDetails = (substation: InjectionSubstation) => {
+    router.push(`/assets-management/injection-substations/injection-substation-details/${substation.id}`)
   }
 
   const paginate = (pageNumber: number) => {
     dispatch(setPagination({ page: pageNumber, pageSize }))
+  }
+
+  const sortOptions: SortOption[] = [
+    { label: "NERC Code A-Z", value: "nercCode", order: "asc" },
+    { label: "NERC Code Z-A", value: "nercCode", order: "desc" },
+    { label: "Substation Code A-Z", value: "injectionSubstationCode", order: "asc" },
+    { label: "Substation Code Z-A", value: "injectionSubstationCode", order: "desc" },
+    { label: "Area Office A-Z", value: "areaOffice", order: "asc" },
+    { label: "Area Office Z-A", value: "areaOffice", order: "desc" },
+    { label: "Company A-Z", value: "company", order: "asc" },
+    { label: "Company Z-A", value: "company", order: "desc" },
+  ]
+
+  // Mobile Filter Sidebar Component
+  const MobileFilterSidebar = () => {
+    return (
+      <AnimatePresence>
+        {showMobileFilters && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+            onClick={() => setShowMobileFilters(false)}
+          >
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.3 }}
+              className="flex w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="mb-4 flex items-center justify-between border-b pb-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
+              </div>
+
+              {/* Filter Content */}
+              <div className="flex-1 space-y-4">
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.status === option.value
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Company Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                  <FormSelectModule
+                    name="company"
+                    value={localFilters.companyId}
+                    onChange={(e) => handleFilterChange("companyId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Companies" },
+                      ...companies.map((company) => ({
+                        value: company.id.toString(),
+                        label: company.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOffice"
+                    value={localFilters.areaOfficeId}
+                    onChange={(e) => handleFilterChange("areaOfficeId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Area Offices" },
+                      ...areaOffices.map((office) => ({
+                        value: office.id.toString(),
+                        label: office.nameOfNewOAreaffice,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Substation Name Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Substation Code</label>
+                  <FormSelectModule
+                    name="substationName"
+                    value={localFilters.substationNameId}
+                    onChange={(e) => handleFilterChange("substationNameId", e.target.value)}
+                    options={[
+                      { value: "", label: "All Substations" },
+                      ...uniqueSubstationNames.map((substation) => ({
+                        value: substation.id.toString(),
+                        label: substation.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-2 flex w-full items-center justify-between text-sm font-medium"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Action Buttons */}
+              <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      applyFilters()
+                      setShowMobileFilters(false)
+                    }}
+                    className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Apply Filters
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetFilters()
+                      setShowMobileFilters(false)
+                    }}
+                    className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    )
   }
 
   if (loading) return <LoadingSkeleton />
@@ -313,29 +641,64 @@ const SubstationsTab: React.FC = () => {
 
   return (
     <motion.div className="relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.div
-        className="items-center justify-between border-b py-2 md:flex md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Injection Substations</p>
-          <p className="text-sm text-gray-600">Manage and monitor injection substations operations</p>
-        </div>
-        <div className="flex gap-4">
-          <SearchModule
-            value={searchText}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            placeholder="Search injection substations..."
-            className="w-[380px]"
-            bgClassName="bg-white"
-          />
-        </div>
-      </motion.div>
+      <MobileFilterSidebar />
+      <div className="flex flex-col items-start gap-6 2xl:mt-5 2xl:flex-row">
+        {/* Main Content */}
+        <div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+        >
+          <motion.div
+            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="mb-3 flex items-center gap-3 md:mb-0">
+              {/* Filter Button for ALL screens up to 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Injection Substations</p>
+                <p className="text-sm text-gray-600">Manage and monitor injection substations operations</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <SearchModule
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search injection substations..."
+                className="w-full max-w-[300px]"
+                bgClassName="bg-white"
+              />
 
-      {injectionSubstations.length === 0 ? (
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+              </button>
+            </div>
+          </motion.div>
+
+          {filteredSubstations.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -348,7 +711,9 @@ const SubstationsTab: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText ? "No matching injection substations found" : "No injection substations available"}
+            {appliedFilters.searchText || getActiveFilterCount() > 0
+              ? "No matching injection substations found"
+              : "No injection substations available"}
           </motion.p>
         </motion.div>
       ) : (
@@ -359,7 +724,8 @@ const SubstationsTab: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+            <div className="min-w-0">
+              <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
                   <th className="whitespace-nowrap border-b p-4 text-sm">
@@ -368,45 +734,20 @@ const SubstationsTab: React.FC = () => {
                       ID
                     </div>
                   </th>
-                  <th
-                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("nercCode")}
-                  >
-                    <div className="flex items-center gap-2">
-                      NERC Code <RxCaretSort />
-                    </div>
+                  <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">NERC Code</div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("injectionSubstationCode")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Substation Code <RxCaretSort />
-                    </div>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Substation Code</div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("areaOffice")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Area Office <RxCaretSort />
-                    </div>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Area Office</div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("company")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Company <RxCaretSort />
-                    </div>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Company</div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status <RxCaretSort />
-                    </div>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Status</div>
                   </th>
                   <th className="whitespace-nowrap border-b p-4 text-sm">
                     <div className="flex items-center gap-2">Actions</div>
@@ -415,7 +756,7 @@ const SubstationsTab: React.FC = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {injectionSubstations.map((substation, index) => (
+                  {filteredSubstations.map((substation, index) => (
                     <motion.tr
                       key={substation.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -435,20 +776,33 @@ const SubstationsTab: React.FC = () => {
                         {substation.areaOffice.company.name}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getStatusStyle("operational")}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor: "#589E67",
-                            }}
-                          ></span>
-                          Operational
-                        </motion.div>
+                        {(() => {
+                          const substationStatus = getSubstationStatus(substation)
+                          const statusConfig = getStatusStyle(substationStatus)
+                          const statusLabel = statusOptions.find((opt) => opt.value === substationStatus)?.label || substationStatus
+                          const statusColorMap: { [key: string]: string } = {
+                            operational: "#589E67",
+                            maintenance: "#D97706",
+                            faulty: "#AF4B4B",
+                            limited_operations: "#3B82F6",
+                          }
+                          return (
+                            <motion.div
+                              style={statusConfig}
+                              className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs capitalize"
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.1 }}
+                            >
+                              <span
+                                className="size-2 rounded-full"
+                                style={{
+                                  backgroundColor: statusColorMap[substationStatus] || "#6B7280",
+                                }}
+                              ></span>
+                              {statusLabel}
+                            </motion.div>
+                          )
+                        })()}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         <ActionDropdown substation={substation} onViewDetails={handleViewDetails} />
@@ -458,15 +812,16 @@ const SubstationsTab: React.FC = () => {
                 </AnimatePresence>
               </tbody>
             </table>
+            </div>
           </motion.div>
 
           <motion.div
-            className="flex items-center justify-between border-t py-3"
+            className="flex flex-col items-center justify-between gap-4 border-t py-3 sm:flex-row"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <div className="text-sm text-gray-700">
+            <div className="text-xs text-gray-700 sm:text-sm">
               Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
               {totalRecords} entries
             </div>
@@ -547,6 +902,185 @@ const SubstationsTab: React.FC = () => {
           </motion.div>
         </>
       )}
+        </div>
+
+        {/* Desktop Filters Sidebar (2xl and above) */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+          >
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {statusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() =>
+                        handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                      }
+                      className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                        localFilters.status === option.value
+                          ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Company Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                <FormSelectModule
+                  name="company"
+                  value={localFilters.companyId}
+                  onChange={(e) => handleFilterChange("companyId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Companies" },
+                    ...companies.map((company) => ({
+                      value: company.id.toString(),
+                      label: company.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Area Office Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                <FormSelectModule
+                  name="areaOffice"
+                  value={localFilters.areaOfficeId}
+                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Area Offices" },
+                    ...areaOffices.map((office) => ({
+                      value: office.id.toString(),
+                      label: office.nameOfNewOAreaffice,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Substation Name Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Substation Code</label>
+                <FormSelectModule
+                  name="substationName"
+                  value={localFilters.substationNameId}
+                  onChange={(e) => handleFilterChange("substationNameId", e.target.value)}
+                  options={[
+                    { value: "", label: "All Substations" },
+                    ...uniqueSubstationNames.map((substation) => ({
+                      value: substation.id.toString(),
+                      label: substation.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {currentPage} / {totalPages}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   )
 }

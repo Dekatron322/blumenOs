@@ -363,7 +363,7 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            className="flex w-full max-w-sm flex-col bg-white p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -388,7 +388,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Filter Content */}
-            <div className="space-y-4 pb-20">
+            <div className="flex-1 space-y-4">
               {/* DSS Filter */}
               <div>
                 <FormSelectModule
@@ -537,7 +537,7 @@ const MobileFilterSidebar = ({
             </div>
 
             {/* Bottom Action Buttons - confined to sidebar width */}
-            <div className="sticky bottom-0 border-t bg-white p-4 shadow-xl 2xl:hidden">
+            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -574,6 +574,7 @@ const AllCustomers = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false) // For mobile/tablet/desktop up to 2xl
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true) // For desktop 2xl and above
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
@@ -622,11 +623,12 @@ const AllCustomers = () => {
           pageNumber: pagination.currentPage,
           pageSize: pagination.pageSize,
           search: filters.search,
-          status: filters.status,
+          status: filters.status || undefined,
           isSuspended: filters.isSuspended !== null ? filters.isSuspended : undefined,
           distributionSubstationId:
             filters.distributionSubstationId !== null ? filters.distributionSubstationId : undefined,
           serviceCenterId: filters.serviceCenterId !== null ? filters.serviceCenterId : undefined,
+          isPPM: filters.isPPM !== null ? filters.isPPM : undefined,
         })
       )
     }
@@ -737,12 +739,21 @@ const AllCustomers = () => {
 
   // Apply all filters at once
   const applyFilters = () => {
+    // Convert customerType string to isPPM boolean
+    let isPPM: boolean | undefined = undefined
+    if (localFilters.customerType === "PREPAID") {
+      isPPM = true
+    } else if (localFilters.customerType === "POSTPAID") {
+      isPPM = false
+    }
+
     dispatch(
       setFilters({
         search: searchInput,
-        status: localFilters.status || undefined,
+        status: localFilters.status || "",
         serviceCenterId: localFilters.serviceCenter ? Number(localFilters.serviceCenter) : undefined,
         distributionSubstationId: localFilters.dss ? Number(localFilters.dss) : undefined,
+        isPPM: isPPM,
       })
     )
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -767,6 +778,7 @@ const AllCustomers = () => {
         status: undefined,
         serviceCenterId: undefined,
         distributionSubstationId: undefined,
+        isPPM: undefined,
       })
     )
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -1116,16 +1128,22 @@ const AllCustomers = () => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Customers List/Grid */}
-        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
+        <div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+        >
           <div className="flex flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
                   onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
                 >
                   <Filter className="size-4" />
                   Filters
@@ -1169,6 +1187,16 @@ const AllCustomers = () => {
                     </span>
                   </div>
                 )}
+
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
+                </button>
               </div>
             </div>
 
@@ -1336,213 +1364,216 @@ const AllCustomers = () => {
           )}
         </div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Always visible by default */}
-        <motion.div
-          key="desktop-filters-sidebar"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-          className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
-        >
-          <div className="mb-4 flex items-center justify-between border-b pb-3 md:pb-4">
-            <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-            <button
-              onClick={resetFilters}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-            >
-              <X className="size-3 md:size-4" />
-              Clear All
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {/* DSS Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                Distribution Substation (DSS)
-              </label>
-              <FormSelectModule
-                name="dss"
-                value={localFilters.dss}
-                onChange={(e) => handleFilterChange("dss", e.target.value)}
-                options={[
-                  { value: "", label: "All DSS" },
-                  ...distributionSubstations.map((dss) => ({
-                    value: dss.id.toString(),
-                    label: `${dss.dssCode} - ${dss.feeder.name}`,
-                  })),
-                ]}
-                className="w-full"
-                controlClassName="h-9 text-sm"
-              />
-            </div>
-
-            {/* Service Center Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Service Center</label>
-              <FormSelectModule
-                name="serviceCenter"
-                value={localFilters.serviceCenter}
-                onChange={(e) => handleFilterChange("serviceCenter", e.target.value)}
-                options={[
-                  { value: "", label: "All Service Centers" },
-                  ...serviceStations.map((sc) => ({
-                    value: sc.id.toString(),
-                    label: sc.name,
-                  })),
-                ]}
-                className="w-full"
-                controlClassName="h-9 text-sm"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-              <div className="grid grid-cols-2 gap-2">
-                {["ACTIVE", "INACTIVE", "SUSPENDED"].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                    className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                      localFilters.status === status
-                        ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {status}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Customer Type Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Type</label>
-              <div className="grid grid-cols-2 gap-2">
-                {["PREPAID", "POSTPAID"].map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => handleFilterChange("customerType", localFilters.customerType === type ? "" : type)}
-                    className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                      localFilters.customerType === type
-                        ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tariff Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Tariff Band</label>
-              <FormSelectModule
-                name="tariff"
-                value={localFilters.tariff}
-                onChange={(e) => handleFilterChange("tariff", e.target.value)}
-                options={[
-                  { value: "", label: "All Tariffs" },
-                  ...serviceBands.map((band) => ({ value: band, label: band })),
-                ]}
-                className="w-full"
-                controlClassName="h-9 text-sm"
-              />
-            </div>
-
-            {/* Region Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Region</label>
-              <FormSelectModule
-                name="region"
-                value={localFilters.region}
-                onChange={(e) => handleFilterChange("region", e.target.value)}
-                options={[
-                  { value: "", label: "All Regions" },
-                  ...regions.map((region) => ({ value: region, label: region })),
-                ]}
-                className="w-full"
-                controlClassName="h-9 text-sm"
-              />
-            </div>
-
-            {/* Sort Options */}
-            <div>
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+          >
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
               <button
-                type="button"
-                onClick={() => setIsSortExpanded((prev) => !prev)}
-                className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                aria-expanded={isSortExpanded}
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
               >
-                <span>Sort By</span>
-                {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                <X className="size-3 md:size-4" />
+                Clear All
               </button>
+            </div>
 
-              {isSortExpanded && (
-                <div className="space-y-2">
-                  {sortOptions.map((option) => (
+            <div className="space-y-4">
+              {/* DSS Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Distribution Substation (DSS)
+                </label>
+                <FormSelectModule
+                  name="dss"
+                  value={localFilters.dss}
+                  onChange={(e) => handleFilterChange("dss", e.target.value)}
+                  options={[
+                    { value: "", label: "All DSS" },
+                    ...distributionSubstations.map((dss) => ({
+                      value: dss.id.toString(),
+                      label: `${dss.dssCode} - ${dss.feeder.name}`,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Service Center Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Service Center</label>
+                <FormSelectModule
+                  name="serviceCenter"
+                  value={localFilters.serviceCenter}
+                  onChange={(e) => handleFilterChange("serviceCenter", e.target.value)}
+                  options={[
+                    { value: "", label: "All Service Centers" },
+                    ...serviceStations.map((sc) => ({
+                      value: sc.id.toString(),
+                      label: sc.name,
+                    })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["ACTIVE", "INACTIVE", "SUSPENDED"].map((status) => (
                     <button
-                      key={`${option.value}-${option.order}`}
-                      onClick={() => handleSortChange(option)}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                        localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                      key={status}
+                      onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
+                      className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                        localFilters.status === status
+                          ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                           : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                       }`}
                     >
-                      <span>{option.label}</span>
-                      {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                        <span className="text-purple-600">
-                          {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                        </span>
-                      )}
+                      {status}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="mt-6 space-y-3 border-t pt-4">
-            <button
-              onClick={applyFilters}
-              className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
-            >
-              <Filter className="size-4" />
-              Apply Filters
-            </button>
-            <button
-              onClick={resetFilters}
-              className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
-            >
-              <X className="size-4" />
-              Reset All
-            </button>
-          </div>
+              {/* Customer Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["PREPAID", "POSTPAID"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => handleFilterChange("customerType", localFilters.customerType === type ? "" : type)}
+                      className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                        localFilters.customerType === type
+                          ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Summary Stats */}
-          <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
-            <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
-            <div className="space-y-1 text-xs md:text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Records:</span>
-                <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
+              {/* Tariff Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Tariff Band</label>
+                <FormSelectModule
+                  name="tariff"
+                  value={localFilters.tariff}
+                  onChange={(e) => handleFilterChange("tariff", e.target.value)}
+                  options={[
+                    { value: "", label: "All Tariffs" },
+                    ...serviceBands.map((band) => ({ value: band, label: band })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current Page:</span>
-                <span className="font-medium">
-                  {pagination.currentPage} / {pagination.totalPages}
-                </span>
+
+              {/* Region Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Region</label>
+                <FormSelectModule
+                  name="region"
+                  value={localFilters.region}
+                  onChange={(e) => handleFilterChange("region", e.target.value)}
+                  options={[
+                    { value: "", label: "All Regions" },
+                    ...regions.map((region) => ({ value: region, label: region })),
+                  ]}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Active Filters:</span>
-                <span className="font-medium">{getActiveFilterCount()}</span>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{pagination.totalCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {pagination.currentPage} / {pagination.totalPages}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
 
       {/* Mobile & All Screens Filter Sidebar (up to 2xl) */}

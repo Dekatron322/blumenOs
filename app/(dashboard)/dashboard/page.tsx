@@ -245,8 +245,8 @@ export default function Dashboard() {
       : "text-red-500"
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
