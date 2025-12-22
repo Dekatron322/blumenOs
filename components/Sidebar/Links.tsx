@@ -13,7 +13,6 @@ import {
   OutageIcon,
   PaymentIcon,
   ServiceIcon,
-  TokenIcon,
 } from "./Icons"
 
 export type LinkChild = { name: string; href: string; privilegeKey?: string; requiredActions?: string[] }
@@ -376,6 +375,12 @@ export const allLinks: LinkItem[] = [
         href: "/disputes/payment-disputes",
         privilegeKey: "disputes",
         requiredActions: ["R"],
+      },
+      {
+        name: "Change Requests",
+        href: "/disputes/billing-disputes/change-requests",
+        privilegeKey: "disputes",
+        requiredActions: ["E"],
       },
     ],
   },
