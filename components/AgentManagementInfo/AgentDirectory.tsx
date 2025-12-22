@@ -18,7 +18,7 @@ import {
   UserIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { type Agent, clearAgents, fetchAgents, AgentsRequestParams, setPagination } from "lib/redux/agentSlice"
+import { type Agent, AgentsRequestParams, fetchAgents, setPagination } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -62,7 +62,6 @@ const MobileFilterSidebar = ({
   isSortExpanded: boolean
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
-
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
@@ -143,9 +142,7 @@ const MobileFilterSidebar = ({
                         onClick={() =>
                           handleFilterChange(
                             "canCollectCash",
-                            localFilters.canCollectCash === (cashValue === "true")
-                              ? undefined
-                              : cashValue === "true"
+                            localFilters.canCollectCash === (cashValue === "true") ? undefined : cashValue === "true"
                           )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
@@ -782,17 +779,17 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
     <div className="w-full">
       <div className="flex-3 relative flex flex-col items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content */}
-    <motion.div
+        <motion.div
           className={
             showDesktopFilters
               ? "w-full rounded-lg border bg-white p-3 sm:p-4 md:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
               : "w-full rounded-lg border bg-white p-3 sm:p-4 md:p-6 2xl:flex-1"
           }
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-        <div className="mb-4 sm:mb-6">
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-4 sm:mb-6">
             <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
               <h3 className="text-lg font-semibold sm:text-xl">Agent Directory</h3>
 
@@ -827,78 +824,78 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
               </div>
             </div>
 
-          <div className="w-full sm:w-96">
-            <SearchModule
-              placeholder="Search agents..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onCancel={handleCancelSearch}
-              className="w-full"
-            />
-          </div>
-          {error && (
-            <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
-              <p className="text-xs text-red-600 sm:text-sm">Error loading agents: {error}</p>
+            <div className="w-full sm:w-96">
+              <SearchModule
+                placeholder="Search agents..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onCancel={handleCancelSearch}
+                className="w-full"
+              />
             </div>
-          )}
-        </div>
-
-        {/* Agents List */}
-        <div className="space-y-3 sm:space-y-4">
-          {loading && agents.length > 0 && (
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 text-center">
-              <p className="text-sm text-gray-600">Loading more agents...</p>
-            </div>
-          )}
-
-          {error && !loading && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center sm:p-4">
-              <p className="text-sm text-red-700 sm:text-base">{error}</p>
-            </div>
-          )}
-
-          {!loading && !error && agents.length === 0 && (
-            <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 text-center">
-              <div className="flex flex-col items-center justify-center py-4 sm:py-8">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
-                  <UserIcon />
-                </div>
-                <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Agents Found</h3>
-                <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
-                  {searchText.trim() || getActiveFilterCount() > 0
-                    ? "Try adjusting your search criteria or filters"
-                    : "No agents available in the system"}
-                </p>
+            {error && (
+              <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
+                <p className="text-xs text-red-600 sm:text-sm">Error loading agents: {error}</p>
               </div>
+            )}
+          </div>
+
+          {/* Agents List */}
+          <div className="space-y-3 sm:space-y-4">
+            {loading && agents.length > 0 && (
+              <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 text-center">
+                <p className="text-sm text-gray-600">Loading more agents...</p>
+              </div>
+            )}
+
+            {error && !loading && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center sm:p-4">
+                <p className="text-sm text-red-700 sm:text-base">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && agents.length === 0 && (
+              <div className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 text-center">
+                <div className="flex flex-col items-center justify-center py-4 sm:py-8">
+                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
+                    <UserIcon />
+                  </div>
+                  <h3 className="mt-3 text-base font-medium text-gray-900 sm:mt-4 sm:text-lg">No Agents Found</h3>
+                  <p className="mt-1 text-xs text-gray-500 sm:mt-2 sm:text-sm">
+                    {searchText.trim() || getActiveFilterCount() > 0
+                      ? "Try adjusting your search criteria or filters"
+                      : "No agents available in the system"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!loading &&
+              !error &&
+              agents.map((agent) =>
+                isMobileView ? (
+                  <MobileAgentCard key={agent.id} agent={agent} />
+                ) : (
+                  <DesktopAgentCard key={agent.id} agent={agent} />
+                )
+              )}
+          </div>
+
+          {/* Load More Button */}
+          {!loading && agents.length > 0 && pagination.hasNext && (
+            <div className="mt-4 flex justify-center border-t pt-4">
+              <ButtonModule
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCurrentPage((prev) => prev + 1)
+                }}
+                className="text-sm"
+              >
+                Load More Agents
+              </ButtonModule>
             </div>
           )}
-
-          {!loading &&
-            !error &&
-            agents.map((agent) =>
-              isMobileView ? (
-                <MobileAgentCard key={agent.id} agent={agent} />
-              ) : (
-                <DesktopAgentCard key={agent.id} agent={agent} />
-              )
-            )}
-        </div>
-
-        {/* Load More Button */}
-        {!loading && agents.length > 0 && pagination.hasNext && (
-          <div className="mt-4 flex justify-center border-t pt-4">
-            <ButtonModule
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setCurrentPage((prev) => prev + 1)
-              }}
-              className="text-sm"
-            >
-              Load More Agents
-            </ButtonModule>
-          </div>
-        )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
@@ -943,7 +940,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                       </button>
                     )
                   })}
-            </div>
+                </div>
               </div>
 
               {/* Can Collect Cash Filter */}
@@ -958,9 +955,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                         onClick={() =>
                           handleFilterChange(
                             "canCollectCash",
-                            localFilters.canCollectCash === (cashValue === "true")
-                              ? undefined
-                              : cashValue === "true"
+                            localFilters.canCollectCash === (cashValue === "true") ? undefined : cashValue === "true"
                           )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
@@ -1026,8 +1021,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                   </div>
                 )}
               </div>
-
-                </div>
+            </div>
 
             {/* Action Buttons */}
             <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
@@ -1045,7 +1039,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 <X className="size-4" />
                 Reset All
               </button>
-              </div>
+            </div>
 
             {/* Summary Stats */}
             <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
@@ -1054,7 +1048,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Records:</span>
                   <span className="font-medium">{pagination?.totalCount?.toLocaleString() || 0}</span>
-            </div>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Current Page:</span>
                   <span className="font-medium">

@@ -8,7 +8,12 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { ChangeRequestListItem, fetchChangeRequests, setChangeRequestsPagination, ChangeRequestsRequestParams } from "lib/redux/agentSlice"
+import {
+  ChangeRequestListItem,
+  ChangeRequestsRequestParams,
+  fetchChangeRequests,
+  setChangeRequestsPagination,
+} from "lib/redux/agentSlice"
 import { Search } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import ViewAgentChangeRequestModal from "components/ui/Modal/view-agent-change-request-modal"
@@ -246,6 +251,9 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState("")
+  const [selectedSource, setSelectedSource] = useState("")
+  const [selectedEntityType, setSelectedEntityType] = useState("")
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const router = useRouter()
@@ -773,7 +781,6 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
                   <p className="text-sm md:text-base">List</p>
                 </button>
               </div>
-
             </div>
           </div>
 

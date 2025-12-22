@@ -12,7 +12,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { type Agent as BackendAgent, fetchAgents, AgentsRequestParams } from "lib/redux/agentSlice"
+import { type Agent as BackendAgent, AgentsRequestParams, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { formatCurrency } from "utils/formatCurrency"
 
@@ -530,9 +530,7 @@ const MobileFilterSidebar = ({
                 <input
                   type="date"
                   value={localFilters.lastCashCollectionDateFrom || ""}
-                  onChange={(e) =>
-                    handleFilterChange("lastCashCollectionDateFrom", e.target.value || undefined)
-                  }
+                  onChange={(e) => handleFilterChange("lastCashCollectionDateFrom", e.target.value || undefined)}
                   className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
               </div>
@@ -889,9 +887,9 @@ const AllAgents: React.FC = () => {
   // Fetch agents based on applied filters
   useEffect(() => {
     const params: AgentsRequestParams = {
-        pageNumber: currentPage,
-        pageSize,
-        search: searchText || undefined,
+      pageNumber: currentPage,
+      pageSize,
+      search: searchText || undefined,
       status: appliedFilters.status,
       canCollectCash: appliedFilters.canCollectCash,
       areaOfficeId: appliedFilters.areaOfficeId,
@@ -939,23 +937,23 @@ const AllAgents: React.FC = () => {
             </div>
             <div className="flex-3 relative flex flex-col items-start gap-6 2xl:mt-5 2xl:flex-row">
               {/* Main Content - Agent Table */}
-                <motion.div
+              <motion.div
                 className={
                   showDesktopFilters
                     ? "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
                     : "w-full rounded-md border bg-white p-3 md:p-4 lg:p-6 2xl:flex-1"
                 }
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4 }}
-                >
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+              >
                 {/* Table Header */}
-                  <motion.div
-                    className="items-center justify-between border-b py-2 md:flex md:py-4"
-                    initial={{ y: -10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
+                <motion.div
+                  className="items-center justify-between border-b py-2 md:flex md:py-4"
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <div className="flex items-center gap-3">
                     {/* Filter Button for ALL screens up to 2xl */}
                     <button
@@ -985,276 +983,270 @@ const AllAgents: React.FC = () => {
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
                     </button>
-                      <SearchModule
-                        placeholder="Search agents..."
-                        value={searchText}
-                        onChange={handleSearch}
-                        onCancel={handleCancelSearch}
-                        className="w-[260px] md:w-[320px]"
-                        bgClassName="bg-white"
-                      />
-                    </div>
-                  </motion.div>
+                    <SearchModule
+                      placeholder="Search agents..."
+                      value={searchText}
+                      onChange={handleSearch}
+                      onCancel={handleCancelSearch}
+                      className="w-[260px] md:w-[320px]"
+                      bgClassName="bg-white"
+                    />
+                  </div>
+                </motion.div>
 
-                  {agents.length === 0 ? (
+                {agents.length === 0 ? (
+                  <motion.div
+                    className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <motion.p
+                      className="text-base font-bold text-[#202B3C]"
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                      {searchText ? "No matching agents found" : "No agents available"}
+                    </motion.p>
+                  </motion.div>
+                ) : (
+                  <>
+                    {/* Table Wrapper - responsive with horizontal scroll on small screens */}
                     <motion.div
-                      className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4 }}
                     >
-                      <motion.p
-                        className="text-base font-bold text-[#202B3C]"
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                      >
-                        {searchText ? "No matching agents found" : "No agents available"}
-                      </motion.p>
-                    </motion.div>
-                  ) : (
-                    <>
-                      {/* Table Wrapper - responsive with horizontal scroll on small screens */}
-                      <motion.div
-                        className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                      >
-                        <table className="w-full border-separate border-spacing-0 text-left md:min-w-[900px] 2xl:min-w-[1200px]">
-                          <thead>
-                            <tr>
-                              <th className="whitespace-nowrap border-y p-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                                  Agent Name
-                                </div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Status</div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Phone</div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Location</div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Daily Collection</div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Vends Today</div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Float Balance</div>
-                              </th>
-                        <th className="whitespace-nowrap border-y p-4 text-sm">
-                          <div className="flex items-center gap-2">Performance</div>
-                              </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm">
-                                <div className="flex items-center gap-2">Actions</div>
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <AnimatePresence>
-                              {agents.map((agent, index) => (
-                                <motion.tr
-                                  key={agent.id}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                                  exit={{ opacity: 0, y: -10 }}
-                                >
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                                    <div className="flex items-center gap-2">
-                                      <UserIcon />
-                                      {agent.name}
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                    <motion.div
-                                      style={getStatusStyle(agent.status)}
-                                      className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                                      whileHover={{ scale: 1.05 }}
-                                      transition={{ duration: 0.1 }}
-                                    >
-                                      <span
-                                        className="size-2 rounded-full"
-                                        style={{
-                                          backgroundColor:
-                                            agent.status === "active"
-                                              ? "#589E67"
-                                              : agent.status === "inactive"
-                                              ? "#6B7280"
-                                              : "#AF4B4B",
-                                        }}
-                                      ></span>
-                                      {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
-                                    </motion.div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <PhoneIcon />
-                                      {agent.phone}
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <MapIcon />
-                                      {agent.location}
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                                    {agent.dailyCollection}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{agent.vendsToday}</td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <BillsIcon />
-                                      <span
-                                        className={agent.status === "low float" ? "text-red-600" : "text-green-600"}
-                                      >
-                                        {agent.floatBalance}
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                    <motion.div
-                                      style={getPerformanceStyle(agent.performance)}
-                                      className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                                      whileHover={{ scale: 1.05 }}
-                                      transition={{ duration: 0.1 }}
-                                    >
-                                      <span
-                                        className="size-2 rounded-full"
-                                        style={{
-                                          backgroundColor:
-                                            agent.performance === "Excellent"
-                                              ? "#589E67"
-                                              : agent.performance === "Good"
-                                              ? "#003F9F"
-                                              : agent.performance === "Average"
-                                              ? "#AF4B4B"
-                                              : "#AF4B4B",
-                                        }}
-                                      ></span>
-                                      {agent.performance}
-                                    </motion.div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                                    <ButtonModule
-                                      variant="outline"
-                                      type="button"
-                                      size="sm"
-                                      onClick={() =>
-                                        router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)
-                                      }
-                                    >
-                                      View details
-                                    </ButtonModule>
-                                  </td>
-                                </motion.tr>
-                              ))}
-                            </AnimatePresence>
-                          </tbody>
-                        </table>
-                      </motion.div>
-
-                {/* Pagination */}
-                      <motion.div
-                        className="flex items-center justify-between border-t py-3"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                      >
-                        <div className="text-sm text-gray-700">
-                    Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-                    {totalRecords} agents
-                    {getActiveFilterCount() > 0 && " - filtered"}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <motion.button
-                            onClick={() => paginate(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className={`flex items-center justify-center rounded-md p-2 ${
-                              currentPage === 1
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-[#003F9F] hover:bg-gray-100"
-                            }`}
-                            whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                            whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-                          >
-                            <MdOutlineArrowBackIosNew />
-                          </motion.button>
-
-                          {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                            let pageNum
-                            if (totalPages <= 5) {
-                              pageNum = index + 1
-                            } else if (currentPage <= 3) {
-                              pageNum = index + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + index
-                            } else {
-                              pageNum = currentPage - 2 + index
-                            }
-
-                            return (
-                              <motion.button
-                                key={index}
-                                onClick={() => paginate(pageNum)}
-                                className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                                  currentPage === pageNum
-                                    ? "bg-[#004B23] text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ duration: 0.2, delay: index * 0.05 }}
+                      <table className="w-full border-separate border-spacing-0 text-left md:min-w-[900px] 2xl:min-w-[1200px]">
+                        <thead>
+                          <tr>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">
+                                <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                                Agent Name
+                              </div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Status</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Phone</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Location</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Daily Collection</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Vends Today</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Float Balance</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Performance</div>
+                            </th>
+                            <th className="whitespace-nowrap border-y p-4 text-sm">
+                              <div className="flex items-center gap-2">Actions</div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <AnimatePresence>
+                            {agents.map((agent, index) => (
+                              <motion.tr
+                                key={agent.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                                exit={{ opacity: 0, y: -10 }}
                               >
-                                {pageNum}
-                              </motion.button>
-                            )
-                          })}
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <UserIcon />
+                                    {agent.name}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                                  <motion.div
+                                    style={getStatusStyle(agent.status)}
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <span
+                                      className="size-2 rounded-full"
+                                      style={{
+                                        backgroundColor:
+                                          agent.status === "active"
+                                            ? "#589E67"
+                                            : agent.status === "inactive"
+                                            ? "#6B7280"
+                                            : "#AF4B4B",
+                                      }}
+                                    ></span>
+                                    {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
+                                  </motion.div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <PhoneIcon />
+                                    {agent.phone}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <MapIcon />
+                                    {agent.location}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
+                                  {agent.dailyCollection}
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{agent.vendsToday}</td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <BillsIcon />
+                                    <span className={agent.status === "low float" ? "text-red-600" : "text-green-600"}>
+                                      {agent.floatBalance}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                                  <motion.div
+                                    style={getPerformanceStyle(agent.performance)}
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <span
+                                      className="size-2 rounded-full"
+                                      style={{
+                                        backgroundColor:
+                                          agent.performance === "Excellent"
+                                            ? "#589E67"
+                                            : agent.performance === "Good"
+                                            ? "#003F9F"
+                                            : agent.performance === "Average"
+                                            ? "#AF4B4B"
+                                            : "#AF4B4B",
+                                      }}
+                                    ></span>
+                                    {agent.performance}
+                                  </motion.div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                                  <ButtonModule
+                                    variant="outline"
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)}
+                                  >
+                                    View details
+                                  </ButtonModule>
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </AnimatePresence>
+                        </tbody>
+                      </table>
+                    </motion.div>
 
-                          {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+                    {/* Pagination */}
+                    <motion.div
+                      className="flex items-center justify-between border-t py-3"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                      <div className="text-sm text-gray-700">
+                        Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)}{" "}
+                        of {totalRecords} agents
+                        {getActiveFilterCount() > 0 && " - filtered"}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <motion.button
+                          onClick={() => paginate(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className={`flex items-center justify-center rounded-md p-2 ${
+                            currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                          }`}
+                          whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
+                          whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                        >
+                          <MdOutlineArrowBackIosNew />
+                        </motion.button>
 
-                          {totalPages > 5 && currentPage < totalPages - 1 && (
+                        {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                          let pageNum
+                          if (totalPages <= 5) {
+                            pageNum = index + 1
+                          } else if (currentPage <= 3) {
+                            pageNum = index + 1
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + index
+                          } else {
+                            pageNum = currentPage - 2 + index
+                          }
+
+                          return (
                             <motion.button
-                              onClick={() => paginate(totalPages)}
+                              key={index}
+                              onClick={() => paginate(pageNum)}
                               className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                                currentPage === totalPages
+                                currentPage === pageNum
                                   ? "bg-[#004B23] text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                               }`}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.2, delay: index * 0.05 }}
                             >
-                              {totalPages}
+                              {pageNum}
                             </motion.button>
-                          )}
+                          )
+                        })}
 
+                        {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+
+                        {totalPages > 5 && currentPage < totalPages - 1 && (
                           <motion.button
-                            onClick={() => paginate(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className={`flex items-center justify-center rounded-md p-2 ${
+                            onClick={() => paginate(totalPages)}
+                            className={`flex size-8 items-center justify-center rounded-md text-sm ${
                               currentPage === totalPages
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-[#003F9F] hover:bg-gray-100"
+                                ? "bg-[#004B23] text-white"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
-                            whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                            whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            <MdOutlineArrowForwardIos />
+                            {totalPages}
                           </motion.button>
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </motion.div>
+                        )}
+
+                        <motion.button
+                          onClick={() => paginate(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className={`flex items-center justify-center rounded-md p-2 ${
+                            currentPage === totalPages
+                              ? "cursor-not-allowed text-gray-400"
+                              : "text-[#003F9F] hover:bg-gray-100"
+                          }`}
+                          whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
+                          whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                        >
+                          <MdOutlineArrowForwardIos />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </motion.div>
 
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
@@ -1286,7 +1278,10 @@ const AllAgents: React.FC = () => {
                             <button
                               key={option.value}
                               onClick={() =>
-                                handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                                handleFilterChange(
+                                  "status",
+                                  localFilters.status === option.value ? undefined : option.value
+                                )
                               }
                               className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                                 localFilters.status === option.value
@@ -1429,7 +1424,11 @@ const AllAgents: React.FC = () => {
                               <span>{option.label}</span>
                               {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                                 <span className="text-purple-600">
-                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                  {option.order === "asc" ? (
+                                    <SortAsc className="size-4" />
+                                  ) : (
+                                    <SortDesc className="size-4" />
+                                  )}
                                 </span>
                               )}
                             </button>
@@ -1479,7 +1478,7 @@ const AllAgents: React.FC = () => {
                   </div>
                 </motion.div>
               )}
-              </div>
+            </div>
           </div>
         </div>
       </div>

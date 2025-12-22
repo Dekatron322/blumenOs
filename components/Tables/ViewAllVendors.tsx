@@ -11,7 +11,7 @@ import { VscEye } from "react-icons/vsc"
 import { ExportCsvIcon, MapIcon, PhoneIcon, UserIcon } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchVendors, VendorsRequestParams, setPagination } from "lib/redux/vendorSlice"
+import { fetchVendors, setPagination, VendorsRequestParams } from "lib/redux/vendorSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import Image from "next/image"
 
@@ -422,10 +422,14 @@ const MobileFilterSidebar = ({
 
               {/* Can Process Postpaid Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Process Postpaid</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Can Process Postpaid
+                </label>
                 <FormSelectModule
                   name="canProcessPostpaid"
-                  value={localFilters.canProcessPostpaid !== undefined ? localFilters.canProcessPostpaid.toString() : ""}
+                  value={
+                    localFilters.canProcessPostpaid !== undefined ? localFilters.canProcessPostpaid.toString() : ""
+                  }
                   onChange={(e) =>
                     handleFilterChange(
                       "canProcessPostpaid",
@@ -644,8 +648,8 @@ const AllVendors: React.FC = () => {
   // Fetch vendors with filters
   useEffect(() => {
     const params: VendorsRequestParams = {
-        pageNumber: currentPage,
-        pageSize,
+      pageNumber: currentPage,
+      pageSize,
       ...(searchText && { search: searchText }),
       ...(appliedFilters.status && { status: appliedFilters.status }),
       ...(appliedFilters.state && { state: appliedFilters.state }),
@@ -781,7 +785,6 @@ const AllVendors: React.FC = () => {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
-
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
@@ -1353,10 +1356,14 @@ const AllVendors: React.FC = () => {
 
               {/* Can Process Postpaid Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Process Postpaid</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Can Process Postpaid
+                </label>
                 <FormSelectModule
                   name="canProcessPostpaid"
-                  value={localFilters.canProcessPostpaid !== undefined ? localFilters.canProcessPostpaid.toString() : ""}
+                  value={
+                    localFilters.canProcessPostpaid !== undefined ? localFilters.canProcessPostpaid.toString() : ""
+                  }
                   onChange={(e) =>
                     handleFilterChange(
                       "canProcessPostpaid",
@@ -1404,7 +1411,6 @@ const AllVendors: React.FC = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}
