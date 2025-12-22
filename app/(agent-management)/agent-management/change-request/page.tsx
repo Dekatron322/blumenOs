@@ -114,7 +114,7 @@ const MobileFilterSidebar = ({
                       )
                     })}
                 </div>
-            </div>
+              </div>
 
               {/* Source Filter */}
               <div>
@@ -127,7 +127,7 @@ const MobileFilterSidebar = ({
                   className="w-full"
                   controlClassName="h-9 text-sm"
                 />
-            </div>
+              </div>
 
               {/* Sort Options */}
               <div>
@@ -164,7 +164,7 @@ const MobileFilterSidebar = ({
                   </div>
                 )}
               </div>
-                </div>
+            </div>
 
             {/* Bottom Action Buttons */}
             <div className="mt-6 border-t bg-white p-4 2xl:hidden">
@@ -338,7 +338,7 @@ export default function AgentChangeRequestManagement() {
                     <button
                       type="button"
                       onClick={() => setShowDesktopFilters((prev) => !prev)}
-                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300  bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                     >
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -351,10 +351,10 @@ export default function AgentChangeRequestManagement() {
 
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
-                    <motion.div
+                <motion.div
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
-                      animate={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
                   className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
                 >
                   <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
@@ -381,7 +381,10 @@ export default function AgentChangeRequestManagement() {
                               <button
                                 key={option.value}
                                 onClick={() =>
-                                  handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                                  handleFilterChange(
+                                    "status",
+                                    localFilters.status === statusValue ? undefined : statusValue
+                                  )
                                 }
                                 className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                                   localFilters.status === statusValue
@@ -412,7 +415,7 @@ export default function AgentChangeRequestManagement() {
                     </div>
 
                     {/* Sort Options */}
-              <div>
+                    <div>
                       <button
                         type="button"
                         onClick={() => setIsSortExpanded((prev) => !prev)}
@@ -438,7 +441,11 @@ export default function AgentChangeRequestManagement() {
                               <span>{option.label}</span>
                               {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                                 <span className="text-purple-600">
-                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                  {option.order === "asc" ? (
+                                    <SortAsc className="size-4" />
+                                  ) : (
+                                    <SortDesc className="size-4" />
+                                  )}
                                 </span>
                               )}
                             </button>
@@ -446,7 +453,6 @@ export default function AgentChangeRequestManagement() {
                         </div>
                       )}
                     </div>
-
                   </div>
 
                   {/* Action Buttons */}
@@ -465,7 +471,7 @@ export default function AgentChangeRequestManagement() {
                       <X className="size-4" />
                       Reset All
                     </button>
-              </div>
+                  </div>
 
                   {/* Summary Stats */}
                   <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">

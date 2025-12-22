@@ -1003,9 +1003,9 @@ const AllPayments: React.FC = () => {
     setIsAddPaymentModalOpen(false)
     // Refresh data after adding payment
     const fetchParams: PaymentsRequestParams = {
-        pageNumber: currentPage,
-        pageSize,
-        ...(searchText && { search: searchText }),
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
       ...appliedFilters,
     }
     void dispatch(fetchPayments(fetchParams))
@@ -1047,23 +1047,23 @@ const AllPayments: React.FC = () => {
 
             <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
               {/* Main Content */}
-            <motion.div
+              <motion.div
                 className={
                   showDesktopFilters
                     ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
                     : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
                 }
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4 }}
-                >
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+              >
                 {/* Header */}
                 <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     {/* Filter Button for ALL screens up to 2xl */}
                     <button
                       onClick={() => setShowMobileFilters(true)}
-                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white  px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
                     >
                       <Filter className="size-4" />
                       Filters
@@ -1080,7 +1080,7 @@ const AllPayments: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowDesktopFilters((prev) => !prev)}
-                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300  bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                     >
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -1090,265 +1090,263 @@ const AllPayments: React.FC = () => {
 
                 {/* Search */}
                 <div className="mb-4 sm:mb-6">
-                    <div className="max-w-md">
-                      <SearchModule
-                        placeholder="Search customers or references..."
-                        value={searchText}
-                        onChange={handleSearch}
-                        onCancel={handleCancelSearch}
-                      />
-                    </div>
+                  <div className="max-w-md">
+                    <SearchModule
+                      placeholder="Search customers or references..."
+                      value={searchText}
+                      onChange={handleSearch}
+                      onCancel={handleCancelSearch}
+                    />
                   </div>
+                </div>
 
-                  {payments.length === 0 ? (
-                    <motion.div
-                      className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4 }}
+                {payments.length === 0 ? (
+                  <motion.div
+                    className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <motion.p
+                      className="text-base font-bold text-[#202B3C]"
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
                     >
-                      <motion.p
-                        className="text-base font-bold text-[#202B3C]"
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                      >
-                        {searchText ? "No matching payments found" : "No payments available"}
-                      </motion.p>
-                    </motion.div>
-                  ) : (
-                    <>
-                      {/* Table Container with Max Width and Scroll */}
-                      <div className="w-full overflow-hidden rounded-lg border border-gray-200">
-                        <div className="max-w-full overflow-x-auto">
-                          <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                  <div className="flex items-center gap-2">
-                                    <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
-                                    Customer
-                                  </div>
-                                </th>
+                      {searchText ? "No matching payments found" : "No payments available"}
+                    </motion.p>
+                  </motion.div>
+                ) : (
+                  <>
+                    {/* Table Container with Max Width and Scroll */}
+                    <div className="w-full overflow-hidden rounded-lg border border-gray-200">
+                      <div className="max-w-full overflow-x-auto">
+                        <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">
+                                  <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
+                                  Customer
+                                </div>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Amount</div>
-                                </th>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Status</div>
-                                </th>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Payment Method</div>
-                                </th>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Reference</div>
-                                </th>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Timestamp</div>
-                                </th>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Collector Type</div>
-                                </th>
+                              </th>
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Location</div>
-                                </th>
-                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                  Actions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white">
+                              </th>
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white">
                             {payments.map((payment) => (
-                                  <motion.tr
-                                    key={payment.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
+                              <motion.tr
+                                key={payment.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
-                                    className="hover:bg-gray-50"
-                                  >
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
-                                      <div className="flex items-center gap-2">
-                                        <UserIcon />
-                                        <div>
-                                          <div className="font-medium text-gray-900">{payment.customerName}</div>
-                                          <div className="text-xs text-gray-500">{payment.customerAccountNumber}</div>
-                                          {payment.postpaidBillPeriod && (
-                                            <div className="text-xs text-blue-600">{payment.postpaidBillPeriod}</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                                      {formatCurrency(payment.amount, payment.currency)}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getStatusStyle(payment.status)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        <span
-                                          className="size-2 rounded-full"
-                                          style={{
-                                            backgroundColor:
-                                              payment.status === "Confirmed"
-                                                ? "#589E67"
-                                                : payment.status === "Pending"
-                                                ? "#D97706"
-                                                : payment.status === "Failed"
-                                                ? "#AF4B4B"
-                                                : "#6B7280",
-                                          }}
-                                        ></span>
-                                        {payment.status}
-                                      </motion.div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getPaymentMethodStyle(payment.channel)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        {payment.channel}
-                                      </motion.div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {payment.reference}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      {formatDate(payment.paidAtUtc)}
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <motion.div
-                                        style={getCollectorTypeStyle(payment.collectorType)}
-                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        {payment.collectorType}
-                                      </motion.div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                      <div className="flex items-center gap-2">
-                                        <MapIcon />
-                                        {payment.areaOfficeName}
-                                      </div>
-                                    </td>
-                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                      <ButtonModule
-                                        size="sm"
-                                        onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
-                                      >
-                                        View Details
-                                      </ButtonModule>
-                                    </td>
-                                  </motion.tr>
-                                ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Pagination */}
-                      <motion.div
-                        className="flex flex-col items-center justify-between gap-4 pt-6 sm:flex-row"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                      >
-                        <div className="text-sm text-gray-700">
-                          Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                          {Math.min(currentPage * pageSize, pagination.totalCount)} of {pagination.totalCount} entries
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <motion.button
-                            onClick={() => paginate(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className={`flex items-center justify-center rounded-md p-2 ${
-                              currentPage === 1
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-[#003F9F] hover:bg-gray-100"
-                            }`}
-                            whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                            whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-                          >
-                            <MdOutlineArrowBackIosNew size={16} />
-                          </motion.button>
-
-                          {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, index) => {
-                          let pageNum: number
-                            if (pagination.totalPages <= 5) {
-                              pageNum = index + 1
-                            } else if (currentPage <= 3) {
-                              pageNum = index + 1
-                            } else if (currentPage >= pagination.totalPages - 2) {
-                              pageNum = pagination.totalPages - 4 + index
-                            } else {
-                              pageNum = currentPage - 2 + index
-                            }
-
-                            return (
-                              <motion.button
-                                key={index}
-                                onClick={() => paginate(pageNum)}
-                                className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                                  currentPage === pageNum
-                                    ? "bg-[#004B23] text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ duration: 0.2, delay: index * 0.05 }}
+                                className="hover:bg-gray-50"
                               >
-                                {pageNum}
-                              </motion.button>
-                            )
-                          })}
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <UserIcon />
+                                    <div>
+                                      <div className="font-medium text-gray-900">{payment.customerName}</div>
+                                      <div className="text-xs text-gray-500">{payment.customerAccountNumber}</div>
+                                      {payment.postpaidBillPeriod && (
+                                        <div className="text-xs text-blue-600">{payment.postpaidBillPeriod}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                                  {formatCurrency(payment.amount, payment.currency)}
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <motion.div
+                                    style={getStatusStyle(payment.status)}
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <span
+                                      className="size-2 rounded-full"
+                                      style={{
+                                        backgroundColor:
+                                          payment.status === "Confirmed"
+                                            ? "#589E67"
+                                            : payment.status === "Pending"
+                                            ? "#D97706"
+                                            : payment.status === "Failed"
+                                            ? "#AF4B4B"
+                                            : "#6B7280",
+                                      }}
+                                    ></span>
+                                    {payment.status}
+                                  </motion.div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <motion.div
+                                    style={getPaymentMethodStyle(payment.channel)}
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    {payment.channel}
+                                  </motion.div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                  {payment.reference}
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                  {formatDate(payment.paidAtUtc)}
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <motion.div
+                                    style={getCollectorTypeStyle(payment.collectorType)}
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    {payment.collectorType}
+                                  </motion.div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2">
+                                    <MapIcon />
+                                    {payment.areaOfficeName}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <ButtonModule
+                                    size="sm"
+                                    onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
+                                  >
+                                    View Details
+                                  </ButtonModule>
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
 
-                          {pagination.totalPages > 5 && currentPage < pagination.totalPages - 2 && (
-                            <span className="px-1 text-gray-500">...</span>
-                          )}
+                    {/* Pagination */}
+                    <motion.div
+                      className="flex flex-col items-center justify-between gap-4 pt-6 sm:flex-row"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                      <div className="text-sm text-gray-700">
+                        Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                        {Math.min(currentPage * pageSize, pagination.totalCount)} of {pagination.totalCount} entries
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <motion.button
+                          onClick={() => paginate(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className={`flex items-center justify-center rounded-md p-2 ${
+                            currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                          }`}
+                          whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
+                          whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                        >
+                          <MdOutlineArrowBackIosNew size={16} />
+                        </motion.button>
 
-                          {pagination.totalPages > 5 && currentPage < pagination.totalPages - 1 && (
+                        {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, index) => {
+                          let pageNum: number
+                          if (pagination.totalPages <= 5) {
+                            pageNum = index + 1
+                          } else if (currentPage <= 3) {
+                            pageNum = index + 1
+                          } else if (currentPage >= pagination.totalPages - 2) {
+                            pageNum = pagination.totalPages - 4 + index
+                          } else {
+                            pageNum = currentPage - 2 + index
+                          }
+
+                          return (
                             <motion.button
-                              onClick={() => paginate(pagination.totalPages)}
+                              key={index}
+                              onClick={() => paginate(pageNum)}
                               className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                                currentPage === pagination.totalPages
+                                currentPage === pageNum
                                   ? "bg-[#004B23] text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                               }`}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.2, delay: index * 0.05 }}
                             >
-                              {pagination.totalPages}
+                              {pageNum}
                             </motion.button>
-                          )}
+                          )
+                        })}
 
+                        {pagination.totalPages > 5 && currentPage < pagination.totalPages - 2 && (
+                          <span className="px-1 text-gray-500">...</span>
+                        )}
+
+                        {pagination.totalPages > 5 && currentPage < pagination.totalPages - 1 && (
                           <motion.button
-                            onClick={() => paginate(currentPage + 1)}
-                            disabled={currentPage === pagination.totalPages}
-                            className={`flex items-center justify-center rounded-md p-2 ${
+                            onClick={() => paginate(pagination.totalPages)}
+                            className={`flex size-8 items-center justify-center rounded-md text-sm ${
                               currentPage === pagination.totalPages
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-[#003F9F] hover:bg-gray-100"
+                                ? "bg-[#004B23] text-white"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
-                            whileHover={{ scale: currentPage === pagination.totalPages ? 1 : 1.1 }}
-                            whileTap={{ scale: currentPage === pagination.totalPages ? 1 : 0.95 }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            <MdOutlineArrowForwardIos size={16} />
+                            {pagination.totalPages}
                           </motion.button>
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </motion.div>
+                        )}
+
+                        <motion.button
+                          onClick={() => paginate(currentPage + 1)}
+                          disabled={currentPage === pagination.totalPages}
+                          className={`flex items-center justify-center rounded-md p-2 ${
+                            currentPage === pagination.totalPages
+                              ? "cursor-not-allowed text-gray-400"
+                              : "text-[#003F9F] hover:bg-gray-100"
+                          }`}
+                          whileHover={{ scale: currentPage === pagination.totalPages ? 1 : 1.1 }}
+                          whileTap={{ scale: currentPage === pagination.totalPages ? 1 : 0.95 }}
+                        >
+                          <MdOutlineArrowForwardIos size={16} />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </motion.div>
 
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
-            <motion.div
+                <motion.div
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
@@ -1374,7 +1372,7 @@ const AllPayments: React.FC = () => {
                         value={localFilters.customerId || ""}
                         onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
                         options={customerOptions}
-              className="w-full"
+                        className="w-full"
                         controlClassName="h-9 text-sm"
                       />
                     </div>
@@ -1412,7 +1410,8 @@ const AllPayments: React.FC = () => {
                         {paymentTypeOptions
                           .filter((opt) => opt.value !== "")
                           .map((option) => {
-                            const paymentTypeValue = typeof option.value === "number" ? option.value : Number(option.value)
+                            const paymentTypeValue =
+                              typeof option.value === "number" ? option.value : Number(option.value)
                             return (
                               <button
                                 key={option.value}
@@ -1471,7 +1470,10 @@ const AllPayments: React.FC = () => {
                             <button
                               key={option.value}
                               onClick={() =>
-                                handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                                handleFilterChange(
+                                  "status",
+                                  localFilters.status === option.value ? undefined : option.value
+                                )
                               }
                               className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                                 localFilters.status === option.value
@@ -1541,7 +1543,11 @@ const AllPayments: React.FC = () => {
                               <span>{option.label}</span>
                               {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                                 <span className="text-purple-600">
-                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                  {option.order === "asc" ? (
+                                    <SortAsc className="size-4" />
+                                  ) : (
+                                    <SortDesc className="size-4" />
+                                  )}
                                 </span>
                               )}
                             </button>
@@ -1549,7 +1555,6 @@ const AllPayments: React.FC = () => {
                         </div>
                       )}
                     </div>
-
                   </div>
 
                   {/* Action Buttons */}
@@ -1589,12 +1594,12 @@ const AllPayments: React.FC = () => {
                         <span className="font-medium">{getActiveFilterCount()}</span>
                       </div>
                     </div>
-              </div>
-            </motion.div>
+                  </div>
+                </motion.div>
               )}
+            </div>
           </div>
         </div>
-      </div>
       </div>
 
       <AddAgentModal

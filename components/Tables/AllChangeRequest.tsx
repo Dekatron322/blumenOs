@@ -252,7 +252,14 @@ const AllChangeRequest = () => {
         ...(appliedFilters.searchText && { reference: appliedFilters.searchText }),
       })
     )
-  }, [dispatch, currentPage, changeRequestsPagination.pageSize, appliedFilters.selectedStatus, appliedFilters.selectedSource, appliedFilters.searchText])
+  }, [
+    dispatch,
+    currentPage,
+    changeRequestsPagination.pageSize,
+    appliedFilters.selectedStatus,
+    appliedFilters.selectedSource,
+    appliedFilters.searchText,
+  ])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -716,7 +723,9 @@ const AllChangeRequest = () => {
                   aria-expanded={isStatusOpen}
                 >
                   <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{statusOptions.find((opt) => opt.value === localFilters.selectedStatus)?.label || "All Status"}</span>
+                  <span>
+                    {statusOptions.find((opt) => opt.value === localFilters.selectedStatus)?.label || "All Status"}
+                  </span>
                   <ChevronDown
                     className={`size-3 text-gray-500 transition-transform md:size-4 ${
                       isStatusOpen ? "rotate-180" : ""
@@ -755,7 +764,9 @@ const AllChangeRequest = () => {
                   aria-expanded={isSourceOpen}
                 >
                   <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{sourceOptions.find((opt) => opt.value === localFilters.selectedSource)?.label || "All Sources"}</span>
+                  <span>
+                    {sourceOptions.find((opt) => opt.value === localFilters.selectedSource)?.label || "All Sources"}
+                  </span>
                   <ChevronDown
                     className={`size-3 text-gray-500 transition-transform md:size-4 ${
                       isSourceOpen ? "rotate-180" : ""

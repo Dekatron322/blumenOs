@@ -763,9 +763,12 @@ const ReportsTab: React.FC = () => {
 
   // Filter and sort reports (client-side for now since using mock data)
   const filteredReports = mockReports.filter((report) => {
-    if (searchText && !report.title.toLowerCase().includes(searchText.toLowerCase()) && 
-        !report.description.toLowerCase().includes(searchText.toLowerCase()) &&
-        !report.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()))) {
+    if (
+      searchText &&
+      !report.title.toLowerCase().includes(searchText.toLowerCase()) &&
+      !report.description.toLowerCase().includes(searchText.toLowerCase()) &&
+      !report.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()))
+    ) {
       return false
     }
     if (appliedFilters.type && report.type !== appliedFilters.type) return false
@@ -911,7 +914,7 @@ const ReportsTab: React.FC = () => {
     <div className="relative w-full">
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content */}
-      <motion.div
+        <motion.div
           className={
             showDesktopFilters
               ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
@@ -922,10 +925,10 @@ const ReportsTab: React.FC = () => {
           transition={{ duration: 0.4 }}
         >
           <div className="items-center justify-between border-b py-2 md:flex md:py-4">
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Reports Management</p>
-          <p className="text-sm text-gray-500">Generate and manage system reports</p>
-        </div>
+            <div>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Reports Management</p>
+              <p className="text-sm text-gray-500">Generate and manage system reports</p>
+            </div>
             <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
               {/* Mobile Filter Button */}
               <button
@@ -947,14 +950,14 @@ const ReportsTab: React.FC = () => {
                   <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                     {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
                   </span>
-        </div>
+                </div>
               )}
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
                 type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -972,261 +975,263 @@ const ReportsTab: React.FC = () => {
               <button className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto">
                 Generate Report
               </button>
-        </div>
-      </div>
+            </div>
+          </div>
 
           {reports.length === 0 ? (
-        <motion.div
-          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || getActiveFilterCount() > 0 ? "No matching reports found" : "No reports available"}
-          </motion.p>
-          {(searchText || getActiveFilterCount() > 0) && (
-            <button className="text-blue-600 hover:underline" onClick={resetFilters}>
-              Clear filters
-            </button>
+            <motion.div
+              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {searchText || getActiveFilterCount() > 0 ? "No matching reports found" : "No reports available"}
+              </motion.p>
+              {(searchText || getActiveFilterCount() > 0) && (
+                <button className="text-blue-600 hover:underline" onClick={resetFilters}>
+                  Clear filters
+                </button>
+              )}
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                          Report Details
+                        </div>
+                      </th>
+                      <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Type & Period</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Status</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">File Info</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Usage Stats</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence>
+                      {reports.map((report, index) => (
+                        <motion.tr
+                          key={report.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="text-sm font-medium text-gray-900">{report.title}</div>
+                            <div className="text-sm text-gray-500">{report.description}</div>
+                            <div className="text-sm text-gray-500">ID: {report.id}</div>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {report.tags.map((tag, tagIndex) => (
+                                <span
+                                  key={tagIndex}
+                                  className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="flex flex-col gap-1">
+                              <motion.div
+                                style={getTypeStyle(report.type)}
+                                className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 0.1 }}
+                              >
+                                <span
+                                  className="size-2 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      report.type === "outage"
+                                        ? "#AF4B4B"
+                                        : report.type === "maintenance"
+                                        ? "#D97706"
+                                        : report.type === "performance"
+                                        ? "#2563EB"
+                                        : report.type === "compliance"
+                                        ? "#7C3AED"
+                                        : "#589E67",
+                                  }}
+                                ></span>
+                                {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
+                              </motion.div>
+                              <div className="text-sm text-gray-500">{report.period}</div>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <motion.div
+                              style={getStatusStyle(report.status)}
+                              className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.1 }}
+                            >
+                              <span
+                                className="size-2 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    report.status === "draft"
+                                      ? "#D97706"
+                                      : report.status === "pending"
+                                      ? "#2563EB"
+                                      : report.status === "approved"
+                                      ? "#589E67"
+                                      : "#16A34A",
+                                }}
+                              ></span>
+                              {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                            </motion.div>
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{getFormatIcon(report.format)}</span>
+                              <div>
+                                <div className="text-sm text-gray-900">{report.format.toUpperCase()}</div>
+                                <div className="text-sm text-gray-500">{report.fileSize}</div>
+                              </div>
+                            </div>
+                            <div className="mt-1 text-sm text-gray-500">
+                              Generated: {new Date(report.generatedDate).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="text-sm text-gray-900">{report.downloadCount} downloads</div>
+                            {report.lastDownloaded && (
+                              <div className="text-sm text-gray-500">
+                                Last: {new Date(report.lastDownloaded).toLocaleDateString()}
+                              </div>
+                            )}
+                            <div className="text-sm text-gray-500">By: {report.generatedBy}</div>
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                            <ButtonModule variant="outline" size="sm" className="mt-2 md:mt-0 md:w-auto">
+                              View Details
+                            </ButtonModule>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </motion.div>
+
+              <motion.div
+                className="flex items-center justify-between border-t py-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <div className="text-sm text-gray-700">
+                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
+                  {totalRecords} entries
+                </div>
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`flex items-center justify-center rounded-md p-2 ${
+                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                    }`}
+                    whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
+                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                  >
+                    <MdOutlineArrowBackIosNew />
+                  </motion.button>
+
+                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = index + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = index + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + index
+                    } else {
+                      pageNum = currentPage - 2 + index
+                    }
+
+                    return (
+                      <motion.button
+                        key={index}
+                        onClick={() => paginate(pageNum)}
+                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                          currentPage === pageNum
+                            ? "bg-[#004B23] text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                      >
+                        {pageNum}
+                      </motion.button>
+                    )
+                  })}
+
+                  {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+
+                  {totalPages > 5 && currentPage < totalPages - 1 && (
+                    <motion.button
+                      onClick={() => paginate(totalPages)}
+                      className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                        currentPage === totalPages
+                          ? "bg-[#004B23] text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {totalPages}
+                    </motion.button>
+                  )}
+
+                  <motion.button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`flex items-center justify-center rounded-md p-2 ${
+                      currentPage === totalPages
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#003F9F] hover:bg-gray-100"
+                    }`}
+                    whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
+                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                  >
+                    <MdOutlineArrowForwardIos />
+                  </motion.button>
+                </div>
+              </motion.div>
+            </>
           )}
         </motion.div>
-      ) : (
-        <>
-          <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <table className="w-full min-w-[1200px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                      Report Details
-                    </div>
-                  </th>
-                  <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Type & Period</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Status</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">File Info</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Usage Stats</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {reports.map((report, index) => (
-                    <motion.tr
-                      key={report.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm font-medium text-gray-900">{report.title}</div>
-                        <div className="text-sm text-gray-500">{report.description}</div>
-                        <div className="text-sm text-gray-500">ID: {report.id}</div>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {report.tags.map((tag, tagIndex) => (
-                            <span
-                              key={tagIndex}
-                              className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="flex flex-col gap-1">
-                          <motion.div
-                            style={getTypeStyle(report.type)}
-                            className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            <span
-                              className="size-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  report.type === "outage"
-                                    ? "#AF4B4B"
-                                    : report.type === "maintenance"
-                                    ? "#D97706"
-                                    : report.type === "performance"
-                                    ? "#2563EB"
-                                    : report.type === "compliance"
-                                    ? "#7C3AED"
-                                    : "#589E67",
-                              }}
-                            ></span>
-                            {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
-                          </motion.div>
-                          <div className="text-sm text-gray-500">{report.period}</div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <motion.div
-                          style={getStatusStyle(report.status)}
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{
-                              backgroundColor:
-                                report.status === "draft"
-                                  ? "#D97706"
-                                  : report.status === "pending"
-                                  ? "#2563EB"
-                                  : report.status === "approved"
-                                  ? "#589E67"
-                                  : "#16A34A",
-                            }}
-                          ></span>
-                          {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{getFormatIcon(report.format)}</span>
-                          <div>
-                            <div className="text-sm text-gray-900">{report.format.toUpperCase()}</div>
-                            <div className="text-sm text-gray-500">{report.fileSize}</div>
-                          </div>
-                        </div>
-                        <div className="mt-1 text-sm text-gray-500">
-                          Generated: {new Date(report.generatedDate).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm text-gray-900">{report.downloadCount} downloads</div>
-                        {report.lastDownloaded && (
-                          <div className="text-sm text-gray-500">
-                            Last: {new Date(report.lastDownloaded).toLocaleDateString()}
-                          </div>
-                        )}
-                        <div className="text-sm text-gray-500">By: {report.generatedBy}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ButtonModule variant="outline" size="sm" className="mt-2 md:mt-0 md:w-auto">
-                          View Details
-                        </ButtonModule>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </motion.div>
-
-          <motion.div
-            className="flex items-center justify-between border-t py-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-              {totalRecords} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowBackIosNew />
-              </motion.button>
-
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = index + 1
-                } else if (currentPage <= 3) {
-                  pageNum = index + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + index
-                } else {
-                  pageNum = currentPage - 2 + index
-                }
-
-                return (
-                  <motion.button
-                    key={index}
-                    onClick={() => paginate(pageNum)}
-                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === pageNum
-                        ? "bg-[#004B23] text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                  >
-                    {pageNum}
-                  </motion.button>
-                )
-              })}
-
-              {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
-
-              {totalPages > 5 && currentPage < totalPages - 1 && (
-                <motion.button
-                  onClick={() => paginate(totalPages)}
-                  className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                    currentPage === totalPages
-                      ? "bg-[#004B23] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {totalPages}
-                </motion.button>
-              )}
-
-              <motion.button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowForwardIos />
-              </motion.button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
         {showDesktopFilters && (
@@ -1346,7 +1351,6 @@ const ReportsTab: React.FC = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}

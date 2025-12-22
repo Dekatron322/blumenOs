@@ -1084,7 +1084,7 @@ const AllEmployees = () => {
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
                   onClick={() => setShowMobileFilters(true)}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                  className="flex items-center gap-2 rounded-lg border border-gray-300  bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
                 >
                   <Filter className="size-4" />
                   Filters
@@ -1133,14 +1133,14 @@ const AllEmployees = () => {
                 <button
                   type="button"
                   onClick={() => setShowDesktopFilters((prev) => !prev)}
-                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300  bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                 >
                   {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                   {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
 
                 {/* Export CSV Button - Desktop */}
-                  <button
+                <button
                   className="button-oulined hidden items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:flex md:text-base"
                   onClick={exportToCSV}
                   disabled={!employees || employees.length === 0}
@@ -1226,15 +1226,11 @@ const AllEmployees = () => {
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 2xl:grid-cols-3">
-                {employees?.map((employee: Employee) => (
-                  <EmployeeCard key={employee.id} employee={employee} />
-                ))}
+                {employees?.map((employee: Employee) => <EmployeeCard key={employee.id} employee={employee} />)}
               </div>
             ) : (
               <div className="divide-y">
-                {employees?.map((employee: Employee) => (
-                  <EmployeeListItem key={employee.id} employee={employee} />
-                ))}
+                {employees?.map((employee: Employee) => <EmployeeListItem key={employee.id} employee={employee} />)}
               </div>
             )}
           </div>
@@ -1398,7 +1394,9 @@ const AllEmployees = () => {
                   {["FULL_TIME", "PART_TIME", "CONTRACT"].map((type) => (
                     <button
                       key={type}
-                      onClick={() => handleFilterChange("employmentType", localFilters.employmentType === type ? "" : type)}
+                      onClick={() =>
+                        handleFilterChange("employmentType", localFilters.employmentType === type ? "" : type)
+                      }
                       className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                         localFilters.employmentType === type
                           ? "bg-green-50 text-green-700 ring-1 ring-green-200"
@@ -1479,7 +1477,6 @@ const AllEmployees = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}

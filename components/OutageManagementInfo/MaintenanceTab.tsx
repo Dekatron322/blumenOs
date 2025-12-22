@@ -404,10 +404,10 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
 
   // Fetch maintenances with filters
   useEffect(() => {
-      const requestParams = {
-        pageNumber: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        ...(searchText && { search: searchText }),
+    const requestParams = {
+      pageNumber: pagination.currentPage,
+      pageSize: pagination.pageSize,
+      ...(searchText && { search: searchText }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.priority !== undefined && { priority: appliedFilters.priority }),
       ...(appliedFilters.type !== undefined && { type: appliedFilters.type }),
@@ -631,7 +631,7 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
     <div className="relative w-full">
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content */}
-    <motion.div
+        <motion.div
           className={
             showDesktopFilters
               ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
@@ -672,19 +672,19 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
                 <button
                   type="button"
                   onClick={() => setShowDesktopFilters((prev) => !prev)}
-                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
                 >
                   {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                   {showDesktopFilters ? "Hide filters" : "Show filters"}
                 </button>
 
                 <div className="w-full sm:w-64 md:w-80">
-              <SearchModule
-                value={searchText}
-                onChange={(e) => handleSearch(e.target.value)}
-                onCancel={handleCancelSearch}
-                placeholder="Search maintenance by title, reference code, or location..."
-              />
+                  <SearchModule
+                    value={searchText}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onCancel={handleCancelSearch}
+                    placeholder="Search maintenance by title, reference code, or location..."
+                  />
                 </div>
               </div>
             </div>
@@ -1008,7 +1008,6 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}

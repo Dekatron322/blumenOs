@@ -443,9 +443,9 @@ const AllPaymentChangeRequests = () => {
   // Fetch payment change requests
   useEffect(() => {
     const fetchParams: ChangeRequestsRequestParams = {
-        pageNumber: currentPage,
-        pageSize: changeRequestsPagination.pageSize,
-        ...(searchText && { reference: searchText }),
+      pageNumber: currentPage,
+      pageSize: changeRequestsPagination.pageSize,
+      ...(searchText && { reference: searchText }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.source !== undefined && { source: appliedFilters.source }),
       ...(appliedFilters.publicId && { publicId: appliedFilters.publicId }),
@@ -523,16 +523,10 @@ const AllPaymentChangeRequests = () => {
   ]
 
   // Status options for FormSelectModule
-  const statusSelectOptions = [
-    { value: "", label: "All Status" },
-    ...statusOptions.filter((opt) => opt.value !== ""),
-  ]
+  const statusSelectOptions = [{ value: "", label: "All Status" }, ...statusOptions.filter((opt) => opt.value !== "")]
 
   // Source options for FormSelectModule
-  const sourceSelectOptions = [
-    { value: "", label: "All Sources" },
-    ...sourceOptions.filter((opt) => opt.value !== ""),
-  ]
+  const sourceSelectOptions = [{ value: "", label: "All Sources" }, ...sourceOptions.filter((opt) => opt.value !== "")]
 
   const getStatusConfig = (status: number) => {
     const configs = {
@@ -583,9 +577,9 @@ const AllPaymentChangeRequests = () => {
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
     const fetchParams: ChangeRequestsRequestParams = {
-        pageNumber: 1,
-        pageSize: newPageSize,
-        ...(searchText && { reference: searchText }),
+      pageNumber: 1,
+      pageSize: newPageSize,
+      ...(searchText && { reference: searchText }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.source !== undefined && { source: appliedFilters.source }),
       ...(appliedFilters.publicId && { publicId: appliedFilters.publicId }),
@@ -867,7 +861,7 @@ const AllPaymentChangeRequests = () => {
               {/* Filter Button for ALL screens up to 2xl */}
               <button
                 onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white  px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
               >
                 <Filter className="size-4" />
                 Filters
@@ -917,7 +911,7 @@ const AllPaymentChangeRequests = () => {
               <button
                 type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white  px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -1205,7 +1199,6 @@ const AllPaymentChangeRequests = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}
