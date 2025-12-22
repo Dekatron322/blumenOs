@@ -959,7 +959,8 @@ export const fetchCustomers = createAsyncThunk(
   "customers/fetchCustomers",
   async (params: CustomersRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, search, status, isSuspended, distributionSubstationId, serviceCenterId, isPPM } = params
+      const { pageNumber, pageSize, search, status, isSuspended, distributionSubstationId, serviceCenterId, isPPM } =
+        params
 
       const response = await api.get<CustomersResponse>(buildApiUrl(API_ENDPOINTS.CUSTOMER.GET), {
         params: {
@@ -1553,6 +1554,7 @@ const customerSlice = createSlice({
         isSuspended: null,
         distributionSubstationId: null,
         serviceCenterId: null,
+        isPPM: null,
       }
       state.paymentDisputesFilters = {
         customerId: null,

@@ -3,6 +3,24 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import {
+  fetchCollectionByBand,
+  fetchCboPerformance,
+  fetchCustomerSegments,
+  fetchDashboardCards,
+  fetchDailyCollection,
+  fetchEnergyBalance,
+  fetchMetersProgrammed,
+  fetchNewConnections,
+  fetchPrepaidVends,
+  fetchTokenGenerated,
+  fetchTrend,
+  fetchBreakdown,
+  fetchCollectionEfficiency,
+  fetchOutstandingArrears,
+  fetchDisputes,
+} from "lib/redux/reportingSlice"
 
 import {
   BillingIcon,
@@ -10,9 +28,6 @@ import {
   ConnectionIcon,
   CustomeraIcon,
   MetersProgrammedIcon,
-  OutstandingIcon,
-  PostpaidIcon,
-  PrepaidIcon,
   RevenueIcon,
   TokenGeneratedIcon,
   VendingIcon,
@@ -47,45 +62,55 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const router = useRouter()
+  const dispatch = useAppDispatch()
 
-  // Mock data for charts based on the image
-  const energyData = [
-    { name: "B1D1F", delivered: 1200, billed: 1150 },
-    { name: "B2D2F", delivered: 1800, billed: 1720 },
-    { name: "B3D3F", delivered: 1500, billed: 1420 },
-    { name: "B4D4F", delivered: 2200, billed: 2100 },
-    { name: "B5D5F", delivered: 1900, billed: 1850 },
-    { name: "B6D6F", delivered: 2400, billed: 2300 },
-    { name: "B7D7F", delivered: 2100, billed: 2050 },
-    { name: "B8D8F", delivered: 1700, billed: 1650 },
-    { name: "B9D9F", delivered: 1300, billed: 1250 },
-    { name: "B10D10F", delivered: 1600, billed: 1550 },
-  ]
-
-  const collectionByBandData = [
-    { name: "Band A", value: 18900023.46, percentage: 54 },
-    { name: "Band B", value: 18900023.46, percentage: 56.93 },
-    { name: "Band C", value: 18900023.46, percentage: 56.93 },
-    { name: "Band D", value: 18900023.46, percentage: 56.93 },
-    { name: "Total", value: 75600093.84, percentage: 56.93 },
-  ]
-
-  const dailyCollectionData = [
-    { day: "Mon", collection: 4200000 },
-    { day: "Tue", collection: 5200000 },
-    { day: "Wed", collection: 3800000 },
-    { day: "Thu", collection: 6100000 },
-    { day: "Fri", collection: 4900000 },
-    { day: "Sat", collection: 3200000 },
-    { day: "Sun", collection: 2800000 },
-  ]
-
-  const cboPerformanceData = [
-    { name: "Hero.db", performance: 95 },
-    { name: "Mt2.db", performance: 87 },
-    { name: "Hto.db", performance: 92 },
-    { name: "Hta.db", performance: 78 },
-  ]
+  const {
+    dashboardCards,
+    dashboardCardsLoading,
+    dashboardCardsError,
+    energyBalancePoints,
+    energyBalanceLoading,
+    energyBalanceError,
+    dailyCollectionPoints,
+    dailyCollectionLoading,
+    dailyCollectionError,
+    collectionByBandSlices,
+    collectionByBandLoading,
+    collectionByBandError,
+    cboPerformanceSlices,
+    cboPerformanceLoading,
+    cboPerformanceError,
+    newConnectionsTotal,
+    newConnectionsLoading,
+    newConnectionsError,
+    prepaidVendsPoints,
+    prepaidVendsLoading,
+    prepaidVendsError,
+    tokenGeneratedPoints,
+    tokenGeneratedLoading,
+    tokenGeneratedError,
+    metersProgrammedPoints,
+    metersProgrammedLoading,
+    metersProgrammedError,
+    customerSegmentsData,
+    customerSegmentsLoading,
+    customerSegmentsError,
+    trendPoints,
+    trendLoading,
+    trendError,
+    breakdownSlices,
+    breakdownLoading,
+    breakdownError,
+    collectionEfficiencyData,
+    collectionEfficiencyLoading,
+    collectionEfficiencyError,
+    outstandingArrearsData,
+    outstandingArrearsLoading,
+    outstandingArrearsError,
+    disputesData,
+    disputesLoading,
+    disputesError,
+  } = useAppSelector((state) => state.reporting)
 
   const serviceTypeData = [
     { name: "H1A", collection: 85, total: 100 },
@@ -98,12 +123,15 @@ export default function Dashboard() {
     { month: "Nov", losses: 9.8 },
   ]
 
-  const activeCustomersData = [
+  const activeCustomersData = customerSegmentsData?.segments?.map((segment) => ({
+    name: segment.label,
+    value: segment.count,
+  })) || [
     { name: "Postpaid", value: 35000 },
     { name: "Prepaid", value: 85000 },
   ]
 
-  const COLORS = ["#004B23", "#006400", "#007200", "#38b000", "#70e000"]
+  const COLORS = ["#004B23", "#ea5806", "#007200", "#38b000", "#4f46e5"]
 
   // Mock currencies data
   const currenciesData = {
@@ -146,6 +174,210 @@ export default function Dashboard() {
     // Refresh utility data when time filter changes
     setUtilityData(generateUtilityData())
   }, [timeFilter])
+
+  useEffect(() => {
+    const now = new Date()
+    const endDateUtc = now.toISOString()
+    const start = new Date(now)
+
+    if (timeFilter === "day") {
+      start.setUTCDate(start.getUTCDate() - 1)
+    } else if (timeFilter === "week") {
+      start.setUTCDate(start.getUTCDate() - 7)
+    } else if (timeFilter === "month") {
+      start.setUTCMonth(start.getUTCMonth() - 1)
+    } else {
+      start.setUTCFullYear(start.getUTCFullYear() - 10)
+    }
+
+    const startDateUtc = start.toISOString()
+
+    dispatch(
+      fetchDashboardCards({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchEnergyBalance({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchDailyCollection({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchCollectionByBand({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchCboPerformance({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchNewConnections({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchPrepaidVends({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchTokenGenerated({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchMetersProgrammed({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchCustomerSegments({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchTrend({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(
+      fetchBreakdown({
+        startDateUtc,
+        endDateUtc,
+        dimension: 0,
+      })
+    )
+
+    dispatch(
+      fetchCollectionEfficiency({
+        startDateUtc,
+        endDateUtc,
+      })
+    )
+
+    dispatch(fetchOutstandingArrears())
+    dispatch(fetchDisputes())
+  }, [dispatch, timeFilter])
+
+  const energyBalanceChartData = (energyBalancePoints || []).map((p) => ({
+    name: p.feederName,
+    delivered: p.energyDeliveredKwh,
+    billed: p.energyBilledKwh,
+  }))
+
+  const disputesChartData = [
+    ...(disputesData?.billing?.map((item) => ({
+      name: `Billing - ${item.status}`,
+      count: item.count,
+      amount: item.amount,
+      percentage: item.percentage,
+      type: "billing",
+    })) || []),
+    ...(disputesData?.payments?.map((item) => ({
+      name: `Payment - ${item.status}`,
+      count: item.count,
+      amount: item.amount,
+      percentage: item.percentage,
+      type: "payments",
+    })) || []),
+  ]
+
+  const dailyCollectionChartData = (dailyCollectionPoints || []).map((p) => ({
+    day: new Date(p.bucketDate).toLocaleDateString(undefined, { month: "short", day: "2-digit" }),
+    collection: p.amount,
+  }))
+
+  const collectionByBandChartData = (collectionByBandSlices || []).map((s) => ({
+    name: s.label,
+    percentage: s.percentage,
+    amount: s.amount,
+    count: s.count,
+  }))
+
+  const collectionByBandTotal = (collectionByBandSlices || []).reduce(
+    (acc, s) => {
+      acc.amount += s.amount
+      acc.count += s.count
+      return acc
+    },
+    { amount: 0, count: 0 }
+  )
+
+  const cboPerformanceChartData = (cboPerformanceSlices || []).map((s) => ({
+    name: s.label,
+    performance: s.percentage,
+    amount: s.amount,
+    count: s.count,
+  }))
+
+  const prepaidVendsTotal = (prepaidVendsPoints || []).reduce((acc, p) => acc + (p.vendCount || 0), 0)
+
+  const tokensGeneratedTotal = (tokenGeneratedPoints || []).reduce((acc, p) => acc + (p.totalTokens || 0), 0)
+
+  const metersProgrammedTotal = (metersProgrammedPoints || []).reduce((acc, p) => acc + (p.programmedCount || 0), 0)
+  const metersProgrammedDistinctTotal = (metersProgrammedPoints || []).reduce(
+    (acc, p) => acc + (p.distinctMeters || 0),
+    0
+  )
+
+  const formatCardValue = (value: number, valueFormat: string) => {
+    if (valueFormat === "currency") {
+      return `${selectedCurrencySymbol}${Number(value).toLocaleString()}`
+    }
+    if (valueFormat === "percent") {
+      return `${Number(value).toFixed(1)}%`
+    }
+    return Number(value).toLocaleString()
+  }
+
+  const getCardTrend = (card: { comparisonChangePercent: number | null } | undefined) => {
+    const changePercent = card?.comparisonChangePercent
+    if (changePercent === null || changePercent === undefined) return null
+    if (!Number.isFinite(changePercent)) return null
+    return {
+      value: `${Math.abs(changePercent).toFixed(1)}%`,
+      positive: changePercent >= 0,
+    }
+  }
+
+  const getCardIcon = (title: string) => {
+    const normalized = title.toLowerCase()
+    if (normalized.includes("collection")) return <CollectionIcon />
+    if (normalized.includes("ticket")) return <RevenueIcon />
+    if (normalized.includes("customer")) return <CustomeraIcon />
+    if (normalized.includes("dispute")) return <BillingIcon />
+    if (normalized.includes("vendor")) return <VendingIcon />
+    return <RevenueIcon />
+  }
 
   useEffect(() => {
     if (currenciesData?.data) {
@@ -283,13 +515,6 @@ export default function Dashboard() {
                     <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
                       <span className="text-sm font-medium text-gray-500">Time Range:</span>
 
-                      {/* <div className="hidden items-center gap-2 sm:flex">
-                        <TimeFilterButton filter="day" label="Today" />
-                        <TimeFilterButton filter="week" label="This Week" />
-                        <TimeFilterButton filter="month" label="This Month" />
-                        <TimeFilterButton filter="all" label="All Time" />
-                      </div> */}
-
                       {/* Mobile Dropdown Layout */}
                       <div className="relative xl:hidden">
                         <button
@@ -361,68 +586,160 @@ export default function Dashboard() {
 
             {activeView === "kpi" && (
               <>
-                {/* Customer Metrics */}
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-4">
-                  <Card title="Total Customers" icon={<CustomeraIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>All Customer Accounts</Text>
-                    </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-6">
+                  {(dashboardCards || []).map((card, index) => (
+                    <Card
+                      key={card.title}
+                      title={card.title}
+                      icon={getCardIcon(card.title)}
+                      className={index < 3 ? "2xl:col-span-2" : "2xl:col-span-3"}
+                    >
+                      <div className="mb-2 flex items-center justify-between border-b py-2">
+                        <Text>{card.description}</Text>
+                        <Text className="text-xs">{card.periodLabel}</Text>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric>{utilityData.totalCustomers.toLocaleString()}</Metric>
-                        <TrendIndicator value="2.5%" positive={true} />
-                      </div>
-                    )}
-                  </Card>
 
-                  <Card title="Prepaid Customers" icon={<PrepaidIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Token-based Meters</Text>
-                    </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric>{utilityData.prepaidCustomers.toLocaleString()}</Metric>
-                        <TrendIndicator value="4.1%" positive={true} />
-                      </div>
-                    )}
-                  </Card>
+                      {dashboardCardsLoading || isLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
+                          {getCardTrend(card) && (
+                            <TrendIndicator value={getCardTrend(card)!.value} positive={getCardTrend(card)!.positive} />
+                          )}
+                        </div>
+                      )}
+                    </Card>
+                  ))}
 
-                  <Card title="Postpaid Customers" icon={<PostpaidIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Billed Monthly</Text>
-                    </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                  {!dashboardCardsLoading && !isLoading && dashboardCards.length === 0 && (
+                    <Card title="Dashboard Cards" icon={<RevenueIcon />}>
+                      <div className="mb-2 flex items-center justify-between border-b py-2">
+                        <Text>No card data returned.</Text>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric>{utilityData.postpaidCustomers.toLocaleString()}</Metric>
-                        <TrendIndicator value="0.8%" positive={true} />
-                      </div>
-                    )}
-                  </Card>
+                      <Metric size="sm">-</Metric>
+                    </Card>
+                  )}
+                </div>
 
-                  <Card title="Estimated Billing" icon={<BillingIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Unmetered Customers</Text>
-                    </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                {/* Collection Efficiency Card */}
+                <div className="mb-6">
+                  <Card title="Collection Efficiency">
+                    {collectionEfficiencyLoading ? (
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                        {/* Efficiency Percentage Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                          <div className="mb-2 h-4 w-32 animate-pulse rounded bg-green-200"></div>
+                          <div className="mb-2 h-10 w-20 animate-pulse rounded bg-green-300"></div>
+                          <div className="h-4 w-24 animate-pulse rounded bg-green-200"></div>
+                        </div>
+
+                        {/* Total Billed Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                          <div className="mb-2 h-4 w-24 animate-pulse rounded bg-blue-200"></div>
+                          <div className="mb-2 h-8 w-32 animate-pulse rounded bg-blue-300"></div>
+                          <div className="h-4 w-16 animate-pulse rounded bg-blue-200"></div>
+                        </div>
+
+                        {/* Total Collected Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
+                          <div className="mb-2 h-4 w-28 animate-pulse rounded bg-purple-200"></div>
+                          <div className="mb-2 h-8 w-32 animate-pulse rounded bg-purple-300"></div>
+                          <div className="h-4 w-20 animate-pulse rounded bg-purple-200"></div>
+                        </div>
+
+                        {/* Performance Indicator Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                          <div className="mb-2 h-4 w-20 animate-pulse rounded bg-gray-300"></div>
+                          <div className="mb-4 h-4 w-full animate-pulse rounded bg-gray-200"></div>
+                          <div className="h-4 w-24 animate-pulse rounded bg-gray-300"></div>
+                        </div>
+                      </div>
+                    ) : collectionEfficiencyError ? (
+                      <div className="flex h-64 items-center justify-center">
+                        <div className="text-center">
+                          <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                          <div className="text-sm text-gray-600">{collectionEfficiencyError}</div>
+                        </div>
+                      </div>
+                    ) : !collectionEfficiencyData ? (
+                      <div className="flex h-64 items-center justify-center">
+                        <div className="text-center">
+                          <div className="mb-2 text-lg font-semibold text-gray-900">No collection efficiency data</div>
+                          <div className="text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric>{utilityData.estimatedBillingCustomers.toLocaleString()}</Metric>
-                        <TrendIndicator value="-1.2%" positive={false} />
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                        {/* Efficiency Percentage Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
+                            Collection Efficiency
+                          </div>
+                          <div className={`text-4xl font-bold ${collectionEfficiencyColor}`}>
+                            {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+                          </div>
+                          <div className="mt-2 text-sm text-green-700">
+                            {collectionEfficiencyData.efficiencyPercent >= 90
+                              ? "Excellent"
+                              : collectionEfficiencyData.efficiencyPercent >= 80
+                              ? "Good"
+                              : "Needs Improvement"}
+                          </div>
+                        </div>
+
+                        {/* Total Billed Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
+                            Total Billed
+                          </div>
+                          <div className="text-3xl font-bold text-blue-900">
+                            {selectedCurrencySymbol}
+                            {collectionEfficiencyData.totalBilled?.toLocaleString() || "0"}
+                          </div>
+                          <div className="mt-2 text-sm text-blue-700">
+                            {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
+                          </div>
+                        </div>
+
+                        {/* Total Collected Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
+                            Total Collected
+                          </div>
+                          <div className="text-3xl font-bold text-purple-900">
+                            {selectedCurrencySymbol}
+                            {collectionEfficiencyData.totalCollected?.toLocaleString() || "0"}
+                          </div>
+                          <div className="mt-2 text-sm text-purple-700">
+                            {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
+                          </div>
+                        </div>
+
+                        {/* Performance Indicator */}
+                        <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
+                            Performance
+                          </div>
+                          <div className="mb-4">
+                            <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600"
+                                style={{ width: `${Math.min(collectionEfficiencyData.efficiencyPercent || 0, 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            <div className="flex justify-between">
+                              <span>Target: 85%</span>
+                              <span className="font-semibold">
+                                {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </Card>
@@ -430,160 +747,176 @@ export default function Dashboard() {
 
                 {/* ENERGY DELIVERED vs ENERGY BILLED Chart */}
                 <Card title="ENERGY DELIVERED vs ENERGY BILLED" className="mb-6">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={energyData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="delivered" name="Energy Delivered" fill="#004B23" />
-                      <Bar dataKey="billed" name="Energy Billed" fill="#38b000" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Card>
-
-                {/* Financial Metrics */}
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3">
-                  <Card title="Total Revenue" icon={<RevenueIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>All Channels</Text>
-                      <Text className="text-xs">
-                        {timeFilter === "day"
-                          ? "Today"
-                          : timeFilter === "week"
-                          ? "This Week"
-                          : timeFilter === "month"
-                          ? "MTD"
-                          : "YTD"}
-                      </Text>
+                  {energyBalanceLoading ? (
+                    <div className="animate-pulse">
+                      <div className="h-[300px] w-full rounded bg-gray-200" />
                     </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric>
-                          {selectedCurrencySymbol}
-                          {utilityData.totalRevenue.toLocaleString()}
-                        </Metric>
-                        <TrendIndicator value="12.5%" positive={true} />
-                      </div>
-                    )}
-                  </Card>
-
-                  <Card title="Collection Efficiency" icon={<CollectionIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Revenue Collection Rate</Text>
+                  ) : energyBalanceError ? (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                      {energyBalanceError}
                     </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                  ) : energyBalanceChartData.length === 0 ? (
+                    <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                      <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                        <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 3v18h18M7 14l3-3 4 4 6-7"
+                          />
+                        </svg>
                       </div>
-                    ) : (
-                      <Metric>{utilityData.collectionEfficiency.toFixed(1)}%</Metric>
-                    )}
-                    <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
-                      <div
-                        className={`h-2 rounded-full ${
-                          utilityData.collectionEfficiency >= 90
-                            ? "bg-green-500"
-                            : utilityData.collectionEfficiency >= 80
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                        }`}
-                        style={{ width: `${utilityData.collectionEfficiency}%` }}
-                      ></div>
-                    </div>
-                  </Card>
-
-                  <Card title="Outstanding Arrears" icon={<OutstandingIcon />} className="lg:col-span-2 2xl:col-span-1">
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Total Receivables</Text>
-                    </div>
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
+                      <div className="text-sm font-semibold text-gray-900">No energy balance data</div>
+                      <div className="mt-1 max-w-md text-sm text-gray-600">
+                        Try changing the time range or confirm feeders exist for the selected period.
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric>
-                          {selectedCurrencySymbol}
-                          {utilityData.outstandingArrears.toLocaleString()}
-                        </Metric>
-                        <TrendIndicator value="-3.2%" positive={false} />
-                      </div>
-                    )}
-                  </Card>
-                </div>
-
-                {/* Collection by BAND Section */}
-                <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
-                  <Card title="Collection by BAND">
-                    <div className="mb-4">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="py-2 text-left">Band</th>
-                            <th className="py-2 text-right">Collection</th>
-                            <th className="py-2 text-right">%</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {collectionByBandData.map((item, index) => (
-                            <tr key={item.name} className="border-b">
-                              <td className="py-2">{item.name}</td>
-                              <td className="py-2 text-right">
-                                {selectedCurrencySymbol}
-                                {item.value.toLocaleString()}
-                              </td>
-                              <td className="py-2 text-right">{item.percentage}%</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
                     </div>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={collectionByBandData.slice(0, -1)}>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={energyBalanceChartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="percentage" name="Collection %" fill="#004B23" />
+                        <Legend />
+                        <Bar dataKey="delivered" name="Energy Delivered (kWh)" fill="#004B23" />
+                        <Bar dataKey="billed" name="Energy Billed (kWh)" fill="#38b000" />
                       </BarChart>
                     </ResponsiveContainer>
+                  )}
+                </Card>
+
+                {dashboardCardsError && (
+                  <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    {dashboardCardsError}
+                  </div>
+                )}
+
+                {/* Collection by BAND Section */}
+                <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
+                  <Card title="Collection by BAND">
+                    <div className="flex h-[200px] flex-col justify-center">
+                      {collectionByBandLoading ? (
+                        <div className="animate-pulse">
+                          <div className="mb-4 h-24 w-full rounded bg-gray-200" />
+                          <div className="h-[200px] w-full rounded bg-gray-200" />
+                        </div>
+                      ) : collectionByBandError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {collectionByBandError}
+                        </div>
+                      ) : collectionByBandSlices.length === 0 ? (
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="text-sm font-semibold text-gray-900">No collection-by-band data</div>
+                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-4">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b">
+                                  <th className="py-2 text-left">Band</th>
+                                  <th className="py-2 text-right">Collection</th>
+                                  <th className="py-2 text-right">%</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {collectionByBandSlices.map((item) => (
+                                  <tr key={item.label} className="border-b">
+                                    <td className="py-2">{item.label}</td>
+                                    <td className="py-2 text-right">
+                                      {selectedCurrencySymbol}
+                                      {item.amount.toLocaleString()}
+                                    </td>
+                                    <td className="py-2 text-right">{item.percentage}%</td>
+                                  </tr>
+                                ))}
+                                <tr className="border-b font-medium">
+                                  <td className="py-2">Total</td>
+                                  <td className="py-2 text-right">
+                                    {selectedCurrencySymbol}
+                                    {collectionByBandTotal.amount.toLocaleString()}
+                                  </td>
+                                  <td className="py-2 text-right">100%</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={collectionByBandChartData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="percentage" name="Collection %" fill="#004B23" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </>
+                      )}
+                    </div>
                   </Card>
 
                   <div className="grid grid-cols-1  gap-6">
                     <Card title="Daily Collection">
-                      <ResponsiveContainer width="100%" height={200}>
-                        <AreaChart data={dailyCollectionData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
-                          <YAxis />
-                          <Tooltip />
-                          <Area
-                            type="monotone"
-                            dataKey="collection"
-                            stroke="#004B23"
-                            fill="#004B23"
-                            fillOpacity={0.3}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                      {dailyCollectionLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-[200px] w-full rounded bg-gray-200" />
+                        </div>
+                      ) : dailyCollectionError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {dailyCollectionError}
+                        </div>
+                      ) : dailyCollectionChartData.length === 0 ? (
+                        <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="text-sm font-semibold text-gray-900">No daily collection data</div>
+                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={200}>
+                          <AreaChart data={dailyCollectionChartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="day" />
+                            <YAxis />
+                            <Tooltip />
+                            <Area
+                              type="monotone"
+                              dataKey="collection"
+                              stroke="#004B23"
+                              fill="#004B23"
+                              fillOpacity={0.3}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
                     </Card>
 
                     <Card title="CBO Performance">
-                      <ResponsiveContainer width="100%" height={150}>
-                        <BarChart data={cboPerformanceData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis domain={[0, 100]} />
-                          <Tooltip />
-                          <Bar dataKey="performance" name="Performance %" fill="#004B23" />
-                        </BarChart>
-                      </ResponsiveContainer>
+                      {cboPerformanceLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-[150px] w-full rounded bg-gray-200" />
+                        </div>
+                      ) : cboPerformanceError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {cboPerformanceError}
+                        </div>
+                      ) : cboPerformanceChartData.length === 0 ? (
+                        <div className="flex h-[150px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="text-sm font-semibold text-gray-900">No CBO performance data</div>
+                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={150}>
+                          <BarChart data={cboPerformanceChartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis domain={[0, 100]} />
+                            <Tooltip />
+                            <Bar dataKey="performance" name="Performance %" fill="#004B23" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
                     </Card>
                   </div>
                 </div>
@@ -594,15 +927,23 @@ export default function Dashboard() {
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>Meter Installations</Text>
                     </div>
-                    {isLoading ? (
+                    {newConnectionsLoading || isLoading ? (
                       <div className="animate-pulse">
                         <div className="h-8 w-32 rounded bg-gray-200"></div>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric size="lg">{utilityData.newConnectionsMTD.toLocaleString()}</Metric>
-                        <TrendIndicator value="8.7%" positive={true} />
+                    ) : newConnectionsError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {newConnectionsError}
                       </div>
+                    ) : newConnectionsTotal === 0 ? (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                        No new connections for this period.
+                      </div>
+                    ) : (
+                      <>
+                        <Metric size="lg">{newConnectionsTotal.toLocaleString()}</Metric>
+                        <div className="mt-2 text-sm text-gray-600">Total connections this period</div>
+                      </>
                     )}
                   </Card>
 
@@ -610,14 +951,21 @@ export default function Dashboard() {
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>Token Transactions</Text>
                     </div>
-                    {isLoading ? (
+                    {prepaidVendsLoading || isLoading ? (
                       <div className="animate-pulse">
                         <div className="h-8 w-32 rounded bg-gray-200"></div>
                       </div>
+                    ) : prepaidVendsError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {prepaidVendsError}
+                      </div>
+                    ) : prepaidVendsTotal === 0 ? (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                        No prepaid vends for this period.
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Metric size="lg">{utilityData.prepaidVends.toLocaleString()}</Metric>
-                        <TrendIndicator value="15.3%" positive={true} />
+                        <Metric size="lg">{prepaidVendsTotal.toLocaleString()}</Metric>
                       </div>
                     )}
                   </Card>
@@ -626,30 +974,182 @@ export default function Dashboard() {
                     <div className="mb-2 flex items-center justify-between border-b py-2">
                       <Text>KCT, CTT, CCT Tokens</Text>
                     </div>
-                    {isLoading ? (
+                    {tokenGeneratedLoading || isLoading ? (
                       <div className="animate-pulse">
                         <div className="h-8 w-32 rounded bg-gray-200"></div>
                       </div>
+                    ) : tokenGeneratedError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {tokenGeneratedError}
+                      </div>
+                    ) : tokensGeneratedTotal === 0 ? (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                        No tokens generated for this period.
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Metric size="lg">{utilityData.tokensGenerated.toLocaleString()}</Metric>
-                        <TrendIndicator value="12.1%" positive={true} />
+                        <Metric size="lg">{tokensGeneratedTotal.toLocaleString()}</Metric>
                       </div>
                     )}
                   </Card>
 
                   <Card title="Meters Programmed" icon={<MetersProgrammedIcon />}>
                     <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>{utilityData.pendingMeterProgramming} pending</Text>
+                      <Text>{metersProgrammedDistinctTotal.toLocaleString()} distinct meters</Text>
                     </div>
-                    {isLoading ? (
+                    {metersProgrammedLoading || isLoading ? (
                       <div className="animate-pulse">
                         <div className="h-8 w-32 rounded bg-gray-200"></div>
                       </div>
+                    ) : metersProgrammedError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {metersProgrammedError}
+                      </div>
+                    ) : metersProgrammedTotal === 0 ? (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                        No meters programmed for this period.
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Metric size="lg">{utilityData.metersProgrammed.toLocaleString()}</Metric>
-                        <TrendIndicator value="5.6%" positive={true} />
+                        <Metric size="lg">{metersProgrammedTotal.toLocaleString()}</Metric>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+
+                {/* Outstanding Arrears Section */}
+                <div className="mb-6">
+                  <Card title="Outstanding Arrears Summary" icon={<RevenueIcon />}>
+                    {outstandingArrearsLoading || isLoading ? (
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        {/* Total Outstanding Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
+                          <div className="mb-2 h-4 w-32 animate-pulse rounded bg-red-200"></div>
+                          <div className="mb-2 h-10 w-32 animate-pulse rounded bg-red-300"></div>
+                          <div className="h-4 w-24 animate-pulse rounded bg-red-200"></div>
+                        </div>
+
+                        {/* Debits Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
+                          <div className="mb-2 h-4 w-24 animate-pulse rounded bg-orange-200"></div>
+                          <div className="mb-2 h-8 w-28 animate-pulse rounded bg-orange-300"></div>
+                          <div className="h-4 w-20 animate-pulse rounded bg-orange-200"></div>
+                        </div>
+
+                        {/* Credits Skeleton */}
+                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                          <div className="mb-2 h-4 w-24 animate-pulse rounded bg-green-200"></div>
+                          <div className="mb-2 h-8 w-28 animate-pulse rounded bg-green-300"></div>
+                          <div className="h-4 w-20 animate-pulse rounded bg-green-200"></div>
+                        </div>
+                      </div>
+                    ) : outstandingArrearsError ? (
+                      <div className="flex h-64 items-center justify-center">
+                        <div className="text-center">
+                          <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                          <div className="text-sm text-gray-600">{outstandingArrearsError}</div>
+                        </div>
+                      </div>
+                    ) : !outstandingArrearsData ? (
+                      <div className="flex h-64 items-center justify-center">
+                        <div className="text-center">
+                          <div className="mb-2 text-lg font-semibold text-gray-900">No arrears data</div>
+                          <div className="text-sm text-gray-600">Try refreshing the dashboard.</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        {/* Total Outstanding Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-red-600">
+                            Total Outstanding
+                          </div>
+                          <div className="text-3xl font-bold text-red-900">
+                            {selectedCurrencySymbol}
+                            {outstandingArrearsData.totalOutstanding.toLocaleString()}
+                          </div>
+                          <div className="mt-2 text-sm text-red-700">
+                            {outstandingArrearsData.customersInArrears.toLocaleString()} customers in arrears
+                          </div>
+                        </div>
+
+                        {/* Total Debits Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-orange-600">
+                            Total Debits
+                          </div>
+                          <div className="text-3xl font-bold text-orange-900">
+                            {selectedCurrencySymbol}
+                            {outstandingArrearsData.totalDebits.toLocaleString()}
+                          </div>
+                          <div className="mt-2 text-sm text-orange-700">Outstanding charges and fees</div>
+                        </div>
+
+                        {/* Total Credits Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
+                            Total Credits
+                          </div>
+                          <div className="text-3xl font-bold text-green-900">
+                            {selectedCurrencySymbol}
+                            {outstandingArrearsData.totalCredits.toLocaleString()}
+                          </div>
+                          <div className="mt-2 text-sm text-green-700">Payments and adjustments</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bottom row with net amount and performance indicator */}
+                    {outstandingArrearsData && !outstandingArrearsLoading && !outstandingArrearsError && (
+                      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                        {/* Net Amount Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
+                            Net Amount
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900">
+                            {selectedCurrencySymbol}
+                            {(
+                              outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits
+                            ).toLocaleString()}
+                          </div>
+                          <div className="mt-2 text-sm text-gray-700">Debits minus credits</div>
+                        </div>
+
+                        {/* Arrears Ratio Card */}
+                        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
+                            Arrears Ratio
+                          </div>
+                          <div className="mb-4">
+                            <div className="h-4 w-full overflow-hidden rounded-full bg-blue-200">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
+                                style={{
+                                  width: `${Math.min(
+                                    (outstandingArrearsData.totalDebits /
+                                      (outstandingArrearsData.totalDebits + outstandingArrearsData.totalCredits)) *
+                                      100 || 0,
+                                    100
+                                  )}%`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-blue-700">
+                            <div className="flex justify-between">
+                              <span>Debit/Credit Ratio</span>
+                              <span className="font-semibold">
+                                {(
+                                  (outstandingArrearsData.totalDebits /
+                                    (outstandingArrearsData.totalDebits + outstandingArrearsData.totalCredits)) *
+                                    100 || 0
+                                ).toFixed(1)}
+                                %
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </Card>
@@ -657,79 +1157,391 @@ export default function Dashboard() {
 
                 {/* Additional Charts Section */}
                 <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-3">
-                  <Card title="SERVICE TYPE COLLECTION SUMMARY">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={serviceTypeData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry) => `${entry.name}: ${entry.collection}/${entry.total}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="collection"
-                        >
-                          {serviceTypeData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Card>
+                  <div className="col-span-2 grid grid-cols-1 gap-6">
+                    <Card>
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Payment Breakdown</h3>
+                        <p className="text-sm text-gray-600">Payment channels and collector types analysis</p>
+                      </div>
+                      {breakdownLoading ? (
+                        <div className="flex h-64 items-center justify-center p-4">
+                          <div className="w-full">
+                            {/* Chart skeleton */}
+                            <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
+                            <div className="flex h-48 items-end justify-between gap-2">
+                              {[...Array(8)].map((_, i) => (
+                                <div key={i} className="flex w-full flex-col gap-1">
+                                  <div
+                                    className="h-full animate-pulse rounded bg-gray-200"
+                                    style={{ height: `${Math.random() * 60 + 20}%` }}
+                                  ></div>
+                                  <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="mt-4 flex justify-center gap-4">
+                              <div className="flex items-center gap-2">
+                                <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                                <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                                <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : breakdownError ? (
+                        <div className="flex h-64 items-center justify-center">
+                          <div className="text-center">
+                            <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                            <div className="text-sm text-gray-600">{breakdownError}</div>
+                          </div>
+                        </div>
+                      ) : !breakdownSlices || breakdownSlices.length === 0 ? (
+                        <div className="flex h-64 items-center justify-center">
+                          <div className="text-center">
+                            <div className="mb-2 text-lg font-semibold text-gray-900">No breakdown data</div>
+                            <div className="text-sm text-gray-600">Try changing the time range.</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={breakdownSlices}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="label" />
+                            <YAxis yAxisId="left" orientation="left" stroke="#004B23" />
+                            <YAxis yAxisId="right" orientation="right" stroke="#ea5806" />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                border: "1px solid #e5e7eb",
+                                borderRadius: "8px",
+                              }}
+                              formatter={(value: number, name: string) => [
+                                name === "amount"
+                                  ? `${selectedCurrencySymbol}${value.toLocaleString()}`
+                                  : value.toLocaleString(),
+                                name === "amount" ? "Amount" : name === "count" ? "Count" : "Percentage",
+                              ]}
+                            />
+                            <Legend />
+                            <Bar yAxisId="left" dataKey="amount" fill="#004B23" name="Amount" />
+                            <Bar yAxisId="right" dataKey="count" fill="#ea5806" name="Count" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </Card>
 
-                  <Card title="ATC AND C LOSSES 3 MONTH TREND ANALYSIS">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={atcLossesData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis domain={[0, 15]} />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="losses" stroke="#004B23" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </Card>
+                    <Card title="DISPUTES OVERVIEW">
+                      {disputesLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-[300px] w-full rounded bg-gray-200" />
+                        </div>
+                      ) : disputesError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {disputesError}
+                        </div>
+                      ) : disputesChartData.length === 0 ? (
+                        <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                            <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="text-sm font-semibold text-gray-900">No disputes data</div>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={disputesChartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="count" name="Dispute Count" fill="#dc2626" />
+                            <Bar dataKey="amount" name="Dispute Amount" fill="#f97316" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </Card>
+                  </div>
 
-                  <Card title="ACTIVE CUSTOMERS SUMMARY">
-                    <div className="text-center">
-                      <div className="mb-4 text-2xl font-bold text-gray-900">
-                        {utilityData.totalCustomers.toLocaleString()}
+                  <div className="grid grid-cols-1 gap-6">
+                    <Card title="ACTIVE CUSTOMERS SUMMARY" className="border-0 shadow-lg">
+                      <div className="space-y-6">
+                        {/* Header with total customers */}
+                        <div className="border-b border-gray-100 pb-4 text-center">
+                          <div className="mb-2">
+                            <div className="mb-1 text-4xl font-bold text-gray-900">
+                              {customerSegmentsData?.totalCustomers?.toLocaleString() ||
+                                utilityData.totalCustomers.toLocaleString()}
+                            </div>
+                            <div className="text-sm font-medium uppercase tracking-wide text-gray-500">
+                              Total Active Customers
+                            </div>
+                          </div>
+                          {customerSegmentsData && (
+                            <div className="mt-3 flex justify-center gap-6 text-xs text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                <span>Active: {customerSegmentsData.activeCustomers.toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+                                <span>Suspended: {customerSegmentsData.suspendedCustomers.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Pie Chart */}
+                        <div className="flex justify-center">
+                          <ResponsiveContainer width="100%" height={180}>
+                            <PieChart>
+                              <Pie
+                                data={activeCustomersData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={45}
+                                outerRadius={70}
+                                paddingAngle={3}
+                                dataKey="value"
+                                startAngle={90}
+                                endAngle={-270}
+                              >
+                                {activeCustomersData.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={COLORS[index % COLORS.length]}
+                                    className="transition-opacity hover:opacity-80"
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: "8px",
+                                  fontSize: "12px",
+                                }}
+                                formatter={(value: number) => [value.toLocaleString(), "Customers"]}
+                              />
+                              <Legend
+                                verticalAlign="bottom"
+                                height={36}
+                                formatter={(value) => <span className="text-xs text-gray-700">{value}</span>}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* Customer metrics grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-3 text-center">
+                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-blue-600">
+                              Postpaid
+                            </div>
+                            <div className="text-xl font-bold text-blue-900">
+                              {customerSegmentsData?.postpaidCustomers?.toLocaleString() ||
+                                utilityData.postpaidCustomers.toLocaleString()}
+                            </div>
+                            <div className="mt-1 text-xs text-blue-600">
+                              {customerSegmentsData &&
+                                `${(
+                                  (customerSegmentsData.postpaidCustomers / customerSegmentsData.totalCustomers) *
+                                  100
+                                ).toFixed(1)}%`}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-3 text-center">
+                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-green-600">
+                              Prepaid
+                            </div>
+                            <div className="text-xl font-bold text-green-900">
+                              {customerSegmentsData?.prepaidCustomers?.toLocaleString() ||
+                                utilityData.prepaidCustomers.toLocaleString()}
+                            </div>
+                            <div className="mt-1 text-xs text-green-600">
+                              {customerSegmentsData &&
+                                `${(
+                                  (customerSegmentsData.prepaidCustomers / customerSegmentsData.totalCustomers) *
+                                  100
+                                ).toFixed(1)}%`}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-3 text-center">
+                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-purple-600">
+                              Active
+                            </div>
+                            <div className="text-xl font-bold text-purple-900">
+                              {customerSegmentsData?.activeCustomers?.toLocaleString() ||
+                                (utilityData.totalCustomers - 2000).toLocaleString()}
+                            </div>
+                            <div className="mt-1 text-xs text-purple-600">
+                              {customerSegmentsData &&
+                                `${(
+                                  (customerSegmentsData.activeCustomers / customerSegmentsData.totalCustomers) *
+                                  100
+                                ).toFixed(1)}%`}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 text-center">
+                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-orange-600">
+                              Suspended
+                            </div>
+                            <div className="text-xl font-bold text-orange-900">
+                              {customerSegmentsData?.suspendedCustomers?.toLocaleString() || "2,000"}
+                            </div>
+                            <div className="mt-1 text-xs text-orange-600">
+                              {customerSegmentsData &&
+                                `${(
+                                  (customerSegmentsData.suspendedCustomers / customerSegmentsData.totalCustomers) *
+                                  100
+                                ).toFixed(1)}%`}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 text-center">
+                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-cyan-600">
+                              Unmetered
+                            </div>
+                            <div className="text-xl font-bold text-cyan-900">
+                              {customerSegmentsData?.unmeteredCustomers?.toLocaleString() || "1,500"}
+                            </div>
+                            <div className="mt-1 text-xs text-cyan-600">
+                              {customerSegmentsData &&
+                                `${(
+                                  (customerSegmentsData.unmeteredCustomers / customerSegmentsData.totalCustomers) *
+                                  100
+                                ).toFixed(1)}%`}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 p-3 text-center">
+                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-indigo-600">MD</div>
+                            <div className="text-xl font-bold text-indigo-900">
+                              {customerSegmentsData?.mdCustomers?.toLocaleString() || "800"}
+                            </div>
+                            <div className="mt-1 text-xs text-indigo-600">
+                              {customerSegmentsData &&
+                                `${(
+                                  (customerSegmentsData.mdCustomers / customerSegmentsData.totalCustomers) *
+                                  100
+                                ).toFixed(1)}%`}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="mb-4 text-sm text-gray-600">Total Active Customers</div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={150}>
-                      <PieChart>
-                        <Pie
-                          data={activeCustomersData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={60}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {activeCustomersData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <div className="font-medium text-gray-900">Postpaid</div>
-                        <div className="text-gray-600">{utilityData.postpaidCustomers.toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">Prepaid</div>
-                        <div className="text-gray-600">{utilityData.prepaidCustomers.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  </div>
                 </div>
+
+                {/* Trend Chart */}
+                <Card className="mb-6">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Payment Trends</h3>
+                    <p className="text-sm text-gray-600">Confirmed payments over time</p>
+                  </div>
+                  {trendLoading ? (
+                    <div className="flex h-64 items-center justify-center p-4">
+                      <div className="w-full">
+                        {/* Chart skeleton */}
+                        <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
+                        <div className="flex h-48 items-end justify-between gap-2">
+                          {[...Array(12)].map((_, i) => (
+                            <div key={i} className="flex w-full flex-col gap-1">
+                              <div
+                                className="h-full animate-pulse rounded bg-gray-200"
+                                style={{ height: `${Math.random() * 60 + 20}%` }}
+                              ></div>
+                              <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 flex justify-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                            <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                            <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : trendError ? (
+                    <div className="flex h-64 items-center justify-center">
+                      <div className="text-center">
+                        <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                        <div className="text-sm text-gray-600">{trendError}</div>
+                      </div>
+                    </div>
+                  ) : !trendPoints || trendPoints.length === 0 ? (
+                    <div className="flex h-64 items-center justify-center">
+                      <div className="text-center">
+                        <div className="mb-2 text-lg font-semibold text-gray-900">No trend data</div>
+                        <div className="text-sm text-gray-600">Try changing the time range.</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <AreaChart
+                        data={trendPoints.map((point) => ({
+                          date: new Date(point.bucketDate).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "2-digit",
+                          }),
+                          amount: point.amount,
+                          count: point.count,
+                        }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis yAxisId="left" orientation="left" stroke="#004B23" />
+                        <YAxis yAxisId="right" orientation="right" stroke="#ea5806" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                          }}
+                          formatter={(value: number, name: string) => [
+                            name === "amount"
+                              ? `${selectedCurrencySymbol}${value.toLocaleString()}`
+                              : value.toLocaleString(),
+                            name === "amount" ? "Amount" : "Count",
+                          ]}
+                        />
+                        <Legend />
+                        <Area
+                          yAxisId="left"
+                          type="monotone"
+                          dataKey="amount"
+                          stroke="#004B23"
+                          fill="#004B23"
+                          fillOpacity={0.3}
+                          name="Amount"
+                        />
+                        <Area
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="count"
+                          stroke="#ea5806"
+                          fill="#ea5806"
+                          fillOpacity={0.3}
+                          name="Count"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </Card>
+
+                {/* Breakdown Chart */}
 
                 {/* Date Range */}
                 <Card className="mb-6">

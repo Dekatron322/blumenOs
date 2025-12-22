@@ -279,6 +279,24 @@ export const API_ENDPOINTS = {
     ADD: "/payments/dunning/cases",
   },
 
+  REPORTING: {
+    CARDS: "/reporting/dashboard/cards",
+    ENERGY_BALANCE: "/reporting/dashboard/energy-balance",
+    DAILY_COLLECTION: "/reporting/dashboard/daily-collection",
+    COLLECTION_BY_BAND: "/reporting/performance/collection-by-band",
+    CBO_PERFORMANCE: "/reporting/performance/cbo-performance",
+    NEW_CONNECTIONS: "/reporting/dashboard/new-connections",
+    PREPAID_VENDS: "/reporting/dashboard/prepaid-vends",
+    TOKEN_GENERATED: "/reporting/dashboard/prepaid-tokens",
+    METERS_PROGRAMMED: "/reporting/dashboard/meters-programmed",
+    CUSTOMER_SEGMENT: "/reporting/dashboard/customer-segments",
+    TREND: "/reporting/dashboard/trend",
+    BREAKDOWN: "/reporting/dashboard/breakdown",
+    COLLECTION_EFFICIENCY: "/reporting/dashboard/collection-efficiency",
+    OUTSTANDING_ARREARS: "/reporting/dashboard/outstanding-arrears",
+    DISPUTES: "/reporting/dashboard/disputes",
+  },
+
   VENDORS: {
     GET: "/vendors",
     GET_BY_ID: "/vendors/{id}",
