@@ -8,11 +8,8 @@ export const env = createEnv({
       .optional()
       .transform((value) => value === "true"),
   },
-  client: {
-    NEXT_PUBLIC_API_BASE_URL: z.string().url(),
-  },
+  client: {},
   runtimeEnv: {
     ANALYZE: process.env.ANALYZE,
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   },
 })
