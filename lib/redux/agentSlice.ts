@@ -404,7 +404,7 @@ export interface ClearancesResponse {
 
 // Interface for Clearances Request Parameters
 export interface ClearancesRequestParams {
-  id: number
+  id?: number
   pageNumber: number
   pageSize: number
 }

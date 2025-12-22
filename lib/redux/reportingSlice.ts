@@ -1422,7 +1422,7 @@ const reportingSlice = createSlice({
     setDashboardCardValue: (state, action: PayloadAction<{ index: number; value: number }>) => {
       const { index, value } = action.payload
       if (state.dashboardCards[index]) {
-        state.dashboardCards[index].value = value
+        state.dashboardCards[index]!.value = value
       }
     },
 

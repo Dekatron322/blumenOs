@@ -210,7 +210,10 @@ interface AgentClearanceTableProps {
   appliedFilters?: AppliedFilters
 }
 
-const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appliedFilters = {} as AppliedFilters }) => {
+const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
+  agentId,
+  appliedFilters = {} as AppliedFilters,
+}) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { clearances, clearancesLoading, clearancesError, clearancesPagination, clearCashLoading, clearCashError } =
@@ -290,17 +293,9 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
   // Fetch clearances on component mount and when search/pagination/filters change
   useEffect(() => {
     const fetchParams: ClearancesRequestParams = {
-      // Only include id if agentId prop is provided (for fetching clearances for a specific agent)
-      ...(agentId && { id: agentId }),
       pageNumber: currentPage,
       pageSize: pageSize,
-      // Filter parameters for /agents/clearances endpoint
-      agentId: appliedFilters.agentId,
-      areaOfficeId: appliedFilters.areaOfficeId,
-      startDate: appliedFilters.startDate,
-      endDate: appliedFilters.endDate,
-      sortBy: appliedFilters.sortBy,
-      sortOrder: appliedFilters.sortOrder,
+      ...(agentId ? { id: agentId } : {}),
     }
 
     dispatch(fetchClearances(fetchParams))
@@ -438,338 +433,338 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appl
         />
       </div>
 
-        {filteredClearances.length === 0 ? (
+      {filteredClearances.length === 0 ? (
+        <motion.div
+          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.p
+            className="text-base font-bold text-[#202B3C]"
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            {searchText ? "No matching clearances found" : "No clearance records available"}
+          </motion.p>
+          <motion.p
+            className="text-sm text-gray-500"
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            {searchText ? "Try a different search term" : "Cash clearance records will appear here"}
+          </motion.p>
+        </motion.div>
+      ) : (
+        <>
           <motion.div
-            className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <motion.p
-              className="text-base font-bold text-[#202B3C]"
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              {searchText ? "No matching clearances found" : "No clearance records available"}
-            </motion.p>
-            <motion.p
-              className="text-sm text-gray-500"
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              {searchText ? "Try a different search term" : "Cash clearance records will appear here"}
-            </motion.p>
-          </motion.div>
-        ) : (
-          <>
-            <motion.div
-              className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-                <thead>
-                  <tr>
-                    <th className="whitespace-nowrap border-b p-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                        ID
-                      </div>
-                    </th>
-                    <th
-                      className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("amountCleared")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Amount Cleared <RxCaretSort />
-                      </div>
-                    </th>
-                    <th
-                      className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("cashAtHandBefore")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Cash Before <RxCaretSort />
-                      </div>
-                    </th>
-                    <th
-                      className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("cashAtHandAfter")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Cash After <RxCaretSort />
-                      </div>
-                    </th>
-                    <th
-                      className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("clearedAt")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Cleared At <RxCaretSort />
-                      </div>
-                    </th>
-                    <th
-                      className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("collectionOfficer")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Collection Officer <RxCaretSort />
-                      </div>
-                    </th>
-                    <th
-                      className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("clearedBy")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Cleared By <RxCaretSort />
-                      </div>
-                    </th>
-                    <th
-                      className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("status")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Status <RxCaretSort />
-                      </div>
-                    </th>
-                    <th className="whitespace-nowrap border-b p-4 text-sm">
-                      <div className="flex items-center gap-2">Actions</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <AnimatePresence>
-                    {filteredClearances.map((clearance, index) => (
-                      <React.Fragment key={clearance.id}>
-                        <motion.tr
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          exit={{ opacity: 0, y: -10 }}
-                        >
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                            CL-{clearance.id.toString().padStart(5, "0")}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                            {formatCurrency(clearance.amountCleared)}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            {formatCurrency(clearance.cashAtHandBefore)}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            {formatCurrency(clearance.cashAtHandAfter)}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            {formatDate(clearance.clearedAt)}
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{clearance.collectionOfficer?.fullName || "N/A"}</span>
-                              <span className="text-xs text-gray-500">
-                                {clearance.collectionOfficer?.employeeId || ""}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{clearance.clearedBy?.fullName || "N/A"}</span>
-                              <span className="text-xs text-gray-500">{clearance.clearedBy?.employeeId || ""}</span>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                            <motion.div
-                              className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
+            <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+              <thead>
+                <tr>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                      ID
+                    </div>
+                  </th>
+                  <th
+                    className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("amountCleared")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Amount Cleared <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("cashAtHandBefore")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Cash Before <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("cashAtHandAfter")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Cash After <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("clearedAt")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Cleared At <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("collectionOfficer")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Collection Officer <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("clearedBy")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Cleared By <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("status")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Status <RxCaretSort />
+                    </div>
+                  </th>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Actions</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                  {filteredClearances.map((clearance, index) => (
+                    <React.Fragment key={clearance.id}>
+                      <motion.tr
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        exit={{ opacity: 0, y: -10 }}
+                      >
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
+                          CL-{clearance.id.toString().padStart(5, "0")}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
+                          {formatCurrency(clearance.amountCleared)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {formatCurrency(clearance.cashAtHandBefore)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {formatCurrency(clearance.cashAtHandAfter)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {formatDate(clearance.clearedAt)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <div className="flex flex-col">
+                            <span className="font-medium">{clearance.collectionOfficer?.fullName || "N/A"}</span>
+                            <span className="text-xs text-gray-500">
+                              {clearance.collectionOfficer?.employeeId || ""}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <div className="flex flex-col">
+                            <span className="font-medium">{clearance.clearedBy?.fullName || "N/A"}</span>
+                            <span className="text-xs text-gray-500">{clearance.clearedBy?.employeeId || ""}</span>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          <motion.div
+                            className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
+                            style={{
+                              backgroundColor: "#EEF5F0",
+                              color: "#589E67",
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            <span
+                              className="size-2 rounded-full"
                               style={{
-                                backgroundColor: "#EEF5F0",
-                                color: "#589E67",
+                                backgroundColor: "#589E67",
                               }}
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.1 }}
-                            >
-                              <span
-                                className="size-2 rounded-full"
-                                style={{
-                                  backgroundColor: "#589E67",
-                                }}
-                              ></span>
-                              Completed
-                            </motion.div>
-                          </td>
-                          <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                            <ButtonModule
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
-                              }
-                            >
-                              {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
-                            </ButtonModule>
-                          </td>
-                        </motion.tr>
+                            ></span>
+                            Completed
+                          </motion.div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                          <ButtonModule
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
+                            }
+                          >
+                            {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
+                          </ButtonModule>
+                        </td>
+                      </motion.tr>
 
-                        {expandedClearanceId === clearance.id && (
-                          <tr>
-                            <td colSpan={9} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
-                              <div className="grid gap-4 md:grid-cols-4">
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500">Notes</p>
-                                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
-                                    {clearance.notes || "No notes provided"}
-                                  </p>
-                                </div>
-
-                                {clearance.salesRep && (
-                                  <div>
-                                    <p className="text-xs font-semibold text-gray-500">Sales Rep</p>
-                                    <p className="mt-1 text-sm font-medium text-gray-800">
-                                      {clearance.salesRep.fullName}
-                                    </p>
-                                    <p className="text-xs text-gray-500">{clearance.salesRep.email}</p>
-                                    <p className="text-xs text-gray-500">{clearance.salesRep.phoneNumber}</p>
-                                    <p className="text-xs text-gray-500">Acct ID: {clearance.salesRep.accountId}</p>
-                                  </div>
-                                )}
-
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500">Collection Officer</p>
-                                  <p className="mt-1 text-sm font-medium text-gray-800">
-                                    {clearance.collectionOfficer?.fullName || "N/A"}
-                                  </p>
-                                  <p className="text-xs text-gray-500">{clearance.collectionOfficer?.email || ""}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {clearance.collectionOfficer?.phoneNumber || ""}
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500">Cleared By</p>
-                                  <p className="mt-1 text-sm font-medium text-gray-800">
-                                    {clearance.clearedBy?.fullName || "N/A"}
-                                  </p>
-                                  <p className="text-xs text-gray-500">{clearance.clearedBy?.email || ""}</p>
-                                  <p className="text-xs text-gray-500">{clearance.clearedBy?.phoneNumber || ""}</p>
-                                </div>
+                      {expandedClearanceId === clearance.id && (
+                        <tr>
+                          <td colSpan={9} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
+                            <div className="grid gap-4 md:grid-cols-4">
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Notes</p>
+                                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
+                                  {clearance.notes || "No notes provided"}
+                                </p>
                               </div>
 
-                              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                              {clearance.salesRep && (
                                 <div>
-                                  <p className="text-xs font-semibold text-gray-500">Cleared At</p>
-                                  <p className="mt-1 text-sm text-gray-800">{formatDate(clearance.clearedAt)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500">Cash Before</p>
-                                  <p className="mt-1 text-sm text-gray-800">
-                                    {formatCurrency(clearance.cashAtHandBefore)}
+                                  <p className="text-xs font-semibold text-gray-500">Sales Rep</p>
+                                  <p className="mt-1 text-sm font-medium text-gray-800">
+                                    {clearance.salesRep.fullName}
                                   </p>
+                                  <p className="text-xs text-gray-500">{clearance.salesRep.email}</p>
+                                  <p className="text-xs text-gray-500">{clearance.salesRep.phoneNumber}</p>
+                                  <p className="text-xs text-gray-500">Acct ID: {clearance.salesRep.accountId}</p>
                                 </div>
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500">Cash After</p>
-                                  <p className="mt-1 text-sm text-gray-800">
-                                    {formatCurrency(clearance.cashAtHandAfter)}
-                                  </p>
-                                </div>
+                              )}
+
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Collection Officer</p>
+                                <p className="mt-1 text-sm font-medium text-gray-800">
+                                  {clearance.collectionOfficer?.fullName || "N/A"}
+                                </p>
+                                <p className="text-xs text-gray-500">{clearance.collectionOfficer?.email || ""}</p>
+                                <p className="text-xs text-gray-500">
+                                  {clearance.collectionOfficer?.phoneNumber || ""}
+                                </p>
                               </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </motion.div>
 
-            <motion.div
-              className="flex items-center justify-between border-t py-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              <div className="text-sm text-gray-700">
-                Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-                {totalRecords} entries
-              </div>
-              <div className="flex items-center gap-2">
-                <motion.button
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`flex items-center justify-center rounded-md p-2 ${
-                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                  }`}
-                  whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                  whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-                >
-                  <MdOutlineArrowBackIosNew />
-                </motion.button>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Cleared By</p>
+                                <p className="mt-1 text-sm font-medium text-gray-800">
+                                  {clearance.clearedBy?.fullName || "N/A"}
+                                </p>
+                                <p className="text-xs text-gray-500">{clearance.clearedBy?.email || ""}</p>
+                                <p className="text-xs text-gray-500">{clearance.clearedBy?.phoneNumber || ""}</p>
+                              </div>
+                            </div>
 
-                {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                  let pageNum
-                  if (totalPages <= 5) {
-                    pageNum = index + 1
-                  } else if (currentPage <= 3) {
-                    pageNum = index + 1
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + index
-                  } else {
-                    pageNum = currentPage - 2 + index
-                  }
+                            <div className="mt-4 grid gap-4 md:grid-cols-3">
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Cleared At</p>
+                                <p className="mt-1 text-sm text-gray-800">{formatDate(clearance.clearedAt)}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Cash Before</p>
+                                <p className="mt-1 text-sm text-gray-800">
+                                  {formatCurrency(clearance.cashAtHandBefore)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Cash After</p>
+                                <p className="mt-1 text-sm text-gray-800">
+                                  {formatCurrency(clearance.cashAtHandAfter)}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </motion.div>
 
-                  return (
-                    <motion.button
-                      key={index}
-                      onClick={() => paginate(pageNum)}
-                      className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                        currentPage === pageNum
-                          ? "bg-[#004B23] text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                    >
-                      {pageNum}
-                    </motion.button>
-                  )
-                })}
+          <motion.div
+            className="flex items-center justify-between border-t py-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <div className="text-sm text-gray-700">
+              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
+              {totalRecords} entries
+            </div>
+            <div className="flex items-center gap-2">
+              <motion.button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`flex items-center justify-center rounded-md p-2 ${
+                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                }`}
+                whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
+                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+              >
+                <MdOutlineArrowBackIosNew />
+              </motion.button>
 
-                {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                let pageNum
+                if (totalPages <= 5) {
+                  pageNum = index + 1
+                } else if (currentPage <= 3) {
+                  pageNum = index + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + index
+                } else {
+                  pageNum = currentPage - 2 + index
+                }
 
-                {totalPages > 5 && currentPage < totalPages - 1 && (
+                return (
                   <motion.button
-                    onClick={() => paginate(totalPages)}
+                    key={index}
+                    onClick={() => paginate(pageNum)}
                     className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === totalPages
+                      currentPage === pageNum
                         ? "bg-[#004B23] text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
                   >
-                    {totalPages}
+                    {pageNum}
                   </motion.button>
-                )}
+                )
+              })}
 
+              {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+
+              {totalPages > 5 && currentPage < totalPages - 1 && (
                 <motion.button
-                  onClick={() => paginate(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`flex items-center justify-center rounded-md p-2 ${
-                    currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                  onClick={() => paginate(totalPages)}
+                  className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                    currentPage === totalPages
+                      ? "bg-[#004B23] text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
-                  whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                  whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <MdOutlineArrowForwardIos />
+                  {totalPages}
                 </motion.button>
-              </div>
-            </motion.div>
-          </>
-        )}
+              )}
+
+              <motion.button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`flex items-center justify-center rounded-md p-2 ${
+                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                }`}
+                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
+                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+              >
+                <MdOutlineArrowForwardIos />
+              </motion.button>
+            </div>
+          </motion.div>
+        </>
+      )}
     </div>
   )
 }
