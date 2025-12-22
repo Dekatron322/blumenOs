@@ -444,7 +444,10 @@ const MobileFilterSidebar = ({
                       <button
                         key={priorityValue}
                         onClick={() =>
-                          handleFilterChange("Priority", localFilters.Priority === priorityValue ? undefined : priorityValue)
+                          handleFilterChange(
+                            "Priority",
+                            localFilters.Priority === priorityValue ? undefined : priorityValue
+                          )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                           localFilters.Priority === priorityValue
@@ -797,7 +800,7 @@ const OutagesTab: React.FC = () => {
               const params: OutageRequestParams = {
                 PageNumber: currentPage,
                 PageSize: pageSize || 10,
-                ...filters,
+                ...appliedFilters,
               }
               if (searchText) params.Search = searchText
               dispatch(fetchOutages(params))
@@ -824,19 +827,19 @@ const OutagesTab: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-      <motion.div
-        className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
-          <p className="text-sm text-gray-500">Track and manage power outages</p>
-        </div>
-        <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
+          <motion.div
+            className="border-b py-2 md:flex md:items-center md:justify-between md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div>
+              <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Outage Management</p>
+              <p className="text-sm text-gray-500">Track and manage power outages</p>
+            </div>
+            <div className="mt-3 flex w-full flex-col gap-2 sm:mt-4 sm:flex-row sm:items-center sm:justify-end md:mt-0 md:w-auto md:gap-4">
               {/* Mobile Filter Button */}
-          <button
+              <button
                 onClick={() => setShowMobileFilters(true)}
                 className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
               >
@@ -847,7 +850,7 @@ const OutagesTab: React.FC = () => {
                     {getActiveFilterCount()}
                   </span>
                 )}
-          </button>
+              </button>
 
               {/* Active filters badge - Desktop only (2xl and above) */}
               {getActiveFilterCount() > 0 && (
@@ -855,18 +858,18 @@ const OutagesTab: React.FC = () => {
                   <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                     {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
                   </span>
-        </div>
+                </div>
               )}
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-        <button
-          type="button"
+              <button
+                type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
                 className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-        >
+              >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
-        </button>
+              </button>
 
               <div className="w-full sm:w-64 md:w-80">
                 <SearchModule
@@ -875,267 +878,267 @@ const OutagesTab: React.FC = () => {
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
                   className="w-full"
-          />
-        </div>
+                />
+              </div>
               <button
                 className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
                 onClick={() => router.push("/outage-management/report-outage")}
               >
                 Report Outage
-          </button>
+              </button>
             </div>
-      </motion.div>
+          </motion.div>
 
-      {outages.length === 0 ? (
-        <motion.div
-          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.p
-            className="text-base font-bold text-[#202B3C]"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {searchText || getActiveFilterCount() > 0
-              ? "No matching outages found"
-              : "No outages reported"}
-          </motion.p>
-          {(searchText || getActiveFilterCount() > 0) && (
-            <button className="text-blue-600 hover:underline" onClick={resetFilters}>
-              Clear filters
-            </button>
+          {outages.length === 0 ? (
+            <motion.div
+              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {searchText || getActiveFilterCount() > 0 ? "No matching outages found" : "No outages reported"}
+              </motion.p>
+              {(searchText || getActiveFilterCount() > 0) && (
+                <button className="text-blue-600 hover:underline" onClick={resetFilters}>
+                  Clear filters
+                </button>
+              )}
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                          Outage Details
+                        </div>
+                      </th>
+                      <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Location & Impact</div>
+                      </th>
+                      <th className="hidden whitespace-nowrap border-b p-4 text-sm md:table-cell">
+                        <div className="flex items-center gap-2">Status & Priority</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Timeline</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Cause & Team</div>
+                      </th>
+                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence>
+                      {outages.map((outage, index) => (
+                        <motion.tr
+                          key={outage.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="text-sm font-medium text-gray-900">{outage.title}</div>
+                            <div className="text-sm text-gray-500">{outage.description}</div>
+                            <div className="text-sm text-gray-500">ID: {outage.id}</div>
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="text-sm text-gray-900">{outage.location}</div>
+                            <div className="text-sm text-gray-500">{outage.affectedCustomers} customers affected</div>
+                          </td>
+                          <td className="hidden whitespace-nowrap border-b p-4 sm:table-cell">
+                            <div className="flex flex-col gap-1">
+                              <motion.div
+                                style={getStatusStyle(outage.status)}
+                                className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1 text-sm"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 0.1 }}
+                              >
+                                <span
+                                  className="size-2 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      outage.status === "reported"
+                                        ? "#D97706"
+                                        : outage.status === "investigating"
+                                        ? "#2563EB"
+                                        : outage.status === "repairing"
+                                        ? "#AF4B4B"
+                                        : outage.status === "restored"
+                                        ? "#589E67"
+                                        : "#6B7280",
+                                  }}
+                                ></span>
+                                {outage.status.charAt(0).toUpperCase() + outage.status.slice(1)}
+                              </motion.div>
+                              <motion.div
+                                style={getPriorityStyle(outage.priority)}
+                                className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1 text-sm"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 0.1 }}
+                              >
+                                <span
+                                  className="size-2 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      outage.priority === "critical"
+                                        ? "#AF4B4B"
+                                        : outage.priority === "high"
+                                        ? "#D97706"
+                                        : outage.priority === "medium"
+                                        ? "#2563EB"
+                                        : "#589E67",
+                                  }}
+                                ></span>
+                                {outage.priority.charAt(0).toUpperCase() + outage.priority.slice(1)}
+                              </motion.div>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="text-sm text-gray-900">
+                              Started: {new Date(outage.startTime).toLocaleString()}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Est. Duration: {formatDuration(outage.estimatedDuration)}
+                            </div>
+                            {outage.status === "restored" && outage.actualRestoration && (
+                              <div className="text-sm text-green-600">
+                                Restored: {new Date(outage.actualRestoration).toLocaleString()}
+                              </div>
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap border-b p-4">
+                            <div className="text-sm text-gray-900">{outage.cause}</div>
+                            <div className="text-sm text-gray-500">Team: {outage.assignedTeam}</div>
+                            <div className="hidden text-sm text-gray-500 sm:block">
+                              Reported by: {outage.reportedBy}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              className="mt-2 md:mt-0 md:w-auto"
+                              onClick={() => handleViewOutageDetails(outage)}
+                            >
+                              View Details
+                            </ButtonModule>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </motion.div>
+
+              <motion.div
+                className="flex flex-col gap-3 border-t py-3 md:flex-row md:items-center md:justify-between"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <div className="text-sm text-gray-700">
+                  Showing {(currentPage - 1) * (pageSize || 10) + 1} to{" "}
+                  {Math.min(currentPage * (pageSize || 10), totalCount)} of {totalCount} entries
+                </div>
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={!hasPrevious}
+                    className={`flex items-center justify-center rounded-md p-2 ${
+                      !hasPrevious ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                    }`}
+                    whileHover={{ scale: !hasPrevious ? 1 : 1.1 }}
+                    whileTap={{ scale: !hasPrevious ? 1 : 0.95 }}
+                  >
+                    <MdOutlineArrowBackIosNew />
+                  </motion.button>
+
+                  {Array.from({ length: Math.min(5, Math.ceil(totalCount / (pageSize || 10))) }).map((_, index) => {
+                    const totalPages = Math.ceil(totalCount / (pageSize || 10))
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = index + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = index + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + index
+                    } else {
+                      pageNum = currentPage - 2 + index
+                    }
+
+                    return (
+                      <motion.button
+                        key={index}
+                        onClick={() => paginate(pageNum)}
+                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                          currentPage === pageNum
+                            ? "bg-[#004B23] text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                      >
+                        {pageNum}
+                      </motion.button>
+                    )
+                  })}
+
+                  {Math.ceil(totalCount / (pageSize || 10)) > 5 &&
+                    currentPage < Math.ceil(totalCount / (pageSize || 10)) - 2 && <span className="px-2">...</span>}
+
+                  {Math.ceil(totalCount / (pageSize || 10)) > 5 &&
+                    currentPage < Math.ceil(totalCount / (pageSize || 10)) - 1 && (
+                      <motion.button
+                        onClick={() => paginate(Math.ceil(totalCount / (pageSize || 10)))}
+                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                          currentPage === Math.ceil(totalCount / (pageSize || 10))
+                            ? "bg-[#004B23] text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {Math.ceil(totalCount / (pageSize || 10))}
+                      </motion.button>
+                    )}
+
+                  <motion.button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={!hasNext}
+                    className={`flex items-center justify-center rounded-md p-2 ${
+                      !hasNext ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
+                    }`}
+                    whileHover={{ scale: !hasNext ? 1 : 1.1 }}
+                    whileTap={{ scale: !hasNext ? 1 : 0.95 }}
+                  >
+                    <MdOutlineArrowForwardIos />
+                  </motion.button>
+                </div>
+              </motion.div>
+            </>
           )}
         </motion.div>
-      ) : (
-        <>
-          <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                      Outage Details
-                    </div>
-                  </th>
-                  <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Location & Impact</div>
-                  </th>
-                  <th className="hidden whitespace-nowrap border-b p-4 text-sm md:table-cell">
-                    <div className="flex items-center gap-2">Status & Priority</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Timeline</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Cause & Team</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {outages.map((outage, index) => (
-                    <motion.tr
-                      key={outage.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm font-medium text-gray-900">{outage.title}</div>
-                        <div className="text-sm text-gray-500">{outage.description}</div>
-                        <div className="text-sm text-gray-500">ID: {outage.id}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm text-gray-900">{outage.location}</div>
-                        <div className="text-sm text-gray-500">{outage.affectedCustomers} customers affected</div>
-                      </td>
-                      <td className="hidden whitespace-nowrap border-b p-4 sm:table-cell">
-                        <div className="flex flex-col gap-1">
-                          <motion.div
-                            style={getStatusStyle(outage.status)}
-                            className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1 text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            <span
-                              className="size-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  outage.status === "reported"
-                                    ? "#D97706"
-                                    : outage.status === "investigating"
-                                    ? "#2563EB"
-                                    : outage.status === "repairing"
-                                    ? "#AF4B4B"
-                                    : outage.status === "restored"
-                                    ? "#589E67"
-                                    : "#6B7280",
-                              }}
-                            ></span>
-                            {outage.status.charAt(0).toUpperCase() + outage.status.slice(1)}
-                          </motion.div>
-                          <motion.div
-                            style={getPriorityStyle(outage.priority)}
-                            className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2 py-1 text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            <span
-                              className="size-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  outage.priority === "critical"
-                                    ? "#AF4B4B"
-                                    : outage.priority === "high"
-                                    ? "#D97706"
-                                    : outage.priority === "medium"
-                                    ? "#2563EB"
-                                    : "#589E67",
-                              }}
-                            ></span>
-                            {outage.priority.charAt(0).toUpperCase() + outage.priority.slice(1)}
-                          </motion.div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm text-gray-900">
-                          Started: {new Date(outage.startTime).toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Est. Duration: {formatDuration(outage.estimatedDuration)}
-                        </div>
-                        {outage.status === "restored" && outage.actualRestoration && (
-                          <div className="text-sm text-green-600">
-                            Restored: {new Date(outage.actualRestoration).toLocaleString()}
-                          </div>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap border-b p-4">
-                        <div className="text-sm text-gray-900">{outage.cause}</div>
-                        <div className="text-sm text-gray-500">Team: {outage.assignedTeam}</div>
-                        <div className="hidden text-sm text-gray-500 sm:block">Reported by: {outage.reportedBy}</div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ButtonModule
-                          variant="outline"
-                          size="sm"
-                          className="mt-2 md:mt-0 md:w-auto"
-                          onClick={() => handleViewOutageDetails(outage)}
-                        >
-                          View Details
-                        </ButtonModule>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </motion.div>
-
-          <motion.div
-            className="flex flex-col gap-3 border-t py-3 md:flex-row md:items-center md:justify-between"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * (pageSize || 10) + 1} to{" "}
-              {Math.min(currentPage * (pageSize || 10), totalCount)} of {totalCount} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={!hasPrevious}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  !hasPrevious ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: !hasPrevious ? 1 : 1.1 }}
-                whileTap={{ scale: !hasPrevious ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowBackIosNew />
-              </motion.button>
-
-              {Array.from({ length: Math.min(5, Math.ceil(totalCount / (pageSize || 10))) }).map((_, index) => {
-                const totalPages = Math.ceil(totalCount / (pageSize || 10))
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = index + 1
-                } else if (currentPage <= 3) {
-                  pageNum = index + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + index
-                } else {
-                  pageNum = currentPage - 2 + index
-                }
-
-                return (
-                  <motion.button
-                    key={index}
-                    onClick={() => paginate(pageNum)}
-                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === pageNum
-                        ? "bg-[#004B23] text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                  >
-                    {pageNum}
-                  </motion.button>
-                )
-              })}
-
-              {Math.ceil(totalCount / (pageSize || 10)) > 5 &&
-                currentPage < Math.ceil(totalCount / (pageSize || 10)) - 2 && <span className="px-2">...</span>}
-
-              {Math.ceil(totalCount / (pageSize || 10)) > 5 &&
-                currentPage < Math.ceil(totalCount / (pageSize || 10)) - 1 && (
-                  <motion.button
-                    onClick={() => paginate(Math.ceil(totalCount / (pageSize || 10)))}
-                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === Math.ceil(totalCount / (pageSize || 10))
-                        ? "bg-[#004B23] text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {Math.ceil(totalCount / (pageSize || 10))}
-                  </motion.button>
-                )}
-
-              <motion.button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={!hasNext}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  !hasNext ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: !hasNext ? 1 : 1.1 }}
-                whileTap={{ scale: !hasNext ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowForwardIos />
-              </motion.button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
         {showDesktopFilters && (
@@ -1202,11 +1205,7 @@ const OutagesTab: React.FC = () => {
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
                 <FormSelectModule
                   name="CustomerGenerated"
-                  value={
-                    localFilters.CustomerGenerated !== undefined
-                      ? localFilters.CustomerGenerated.toString()
-                      : ""
-                  }
+                  value={localFilters.CustomerGenerated !== undefined ? localFilters.CustomerGenerated.toString() : ""}
                   onChange={(e) =>
                     handleFilterChange(
                       "CustomerGenerated",
@@ -1254,7 +1253,6 @@ const OutagesTab: React.FC = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}

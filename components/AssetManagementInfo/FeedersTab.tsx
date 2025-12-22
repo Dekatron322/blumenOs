@@ -7,7 +7,7 @@ import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOu
 import { useRouter } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { Feeder, FeedersRequestParams, clearError, fetchFeeders, setPagination } from "lib/redux/feedersSlice"
+import { clearError, Feeder, FeedersRequestParams, fetchFeeders, setPagination } from "lib/redux/feedersSlice"
 import { fetchCompanies } from "lib/redux/companySlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
@@ -314,7 +314,9 @@ const FeedersTab: React.FC = () => {
       ...(appliedFilters.searchText && { search: appliedFilters.searchText }),
       ...(appliedFilters.companyId && { companyId: parseInt(appliedFilters.companyId) }),
       ...(appliedFilters.areaOfficeId && { areaOfficeId: parseInt(appliedFilters.areaOfficeId) }),
-      ...(appliedFilters.injectionSubstationId && { injectionSubstationId: parseInt(appliedFilters.injectionSubstationId) }),
+      ...(appliedFilters.injectionSubstationId && {
+        injectionSubstationId: parseInt(appliedFilters.injectionSubstationId),
+      }),
     }
 
     dispatch(fetchFeeders(fetchParams))
@@ -626,7 +628,11 @@ const FeedersTab: React.FC = () => {
                           <span>{option.label}</span>
                           {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                             <span className="text-purple-600">
-                              {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
                             </span>
                           )}
                         </button>
@@ -747,197 +753,204 @@ const FeedersTab: React.FC = () => {
               </motion.p>
             </motion.div>
           ) : (
-        <>
-          <motion.div
-            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="min-w-0">
-              <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
-              <thead>
-                <tr>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                      ID
-                    </div>
-                  </th>
-                  <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Name</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">NERC Code</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">KAEDCO Code</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Voltage (KV)</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Injection Substation</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">HT Pole</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Status</div>
-                  </th>
-                  <th className="whitespace-nowrap border-b p-4 text-sm">
-                    <div className="flex items-center gap-2">Actions</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {filteredFeeders.map((feeder, index) => (
-                    <motion.tr
-                      key={feeder.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">FD-{feeder.id}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name || "-"}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode || "-"}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.kaedcoFeederCode || "-"}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.feederVoltage ?? "-"} KV</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder?.injectionSubstation?.injectionSubstationCode || "-"}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {feeder.htPole?.htPoleNumber || "-"}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        {(() => {
-                          const feederStatus = getFeederStatus(feeder)
-                          const statusConfig = getStatusStyle(feederStatus)
-                          const statusLabel = statusOptions.find((opt) => opt.value === feederStatus)?.label || feederStatus
-                          const statusColorMap: { [key: string]: string } = {
-                            operational: "#589E67",
-                            maintenance: "#D97706",
-                            faulty: "#AF4B4B",
-                            limited_operations: "#3B82F6",
-                          }
-                          return (
-                            <motion.div
-                              style={statusConfig}
-                              className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs capitalize"
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.1 }}
-                            >
-                              <span
-                                className="size-2 rounded-full"
-                                style={{
-                                  backgroundColor: statusColorMap[feederStatus] || "#6B7280",
-                                }}
-                              ></span>
-                              {statusLabel}
-                            </motion.div>
-                          )
-                        })()}
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown feeder={feeder} onViewDetails={handleViewFeederDetails} />
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="flex flex-col items-center justify-between gap-4 border-t py-3 sm:flex-row"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="text-xs text-gray-700 sm:text-sm">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
-              {totalRecords} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+            <>
+              <motion.div
+                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
               >
-                <MdOutlineArrowBackIosNew />
-              </motion.button>
+                <div className="min-w-0">
+                  <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+                    <thead>
+                      <tr>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <MdOutlineCheckBoxOutlineBlank className="text-lg" />
+                            ID
+                          </div>
+                        </th>
+                        <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">Name</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">NERC Code</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">KAEDCO Code</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">Voltage (KV)</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">Injection Substation</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">HT Pole</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">Status</div>
+                        </th>
+                        <th className="whitespace-nowrap border-b p-4 text-sm">
+                          <div className="flex items-center gap-2">Actions</div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {filteredFeeders.map((feeder, index) => (
+                          <motion.tr
+                            key={feeder.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            exit={{ opacity: 0, y: -10 }}
+                          >
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">FD-{feeder.id}</td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.name || "-"}</td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{feeder.nercCode || "-"}</td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                              {feeder.kaedcoFeederCode || "-"}
+                            </td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                              {feeder.feederVoltage ?? "-"} KV
+                            </td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                              {feeder?.injectionSubstation?.injectionSubstationCode || "-"}
+                            </td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                              {feeder.htPole?.htPoleNumber || "-"}
+                            </td>
+                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                              {(() => {
+                                const feederStatus = getFeederStatus(feeder)
+                                const statusConfig = getStatusStyle(feederStatus)
+                                const statusLabel =
+                                  statusOptions.find((opt) => opt.value === feederStatus)?.label || feederStatus
+                                const statusColorMap: { [key: string]: string } = {
+                                  operational: "#589E67",
+                                  maintenance: "#D97706",
+                                  faulty: "#AF4B4B",
+                                  limited_operations: "#3B82F6",
+                                }
+                                return (
+                                  <motion.div
+                                    style={statusConfig}
+                                    className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs capitalize"
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <span
+                                      className="size-2 rounded-full"
+                                      style={{
+                                        backgroundColor: statusColorMap[feederStatus] || "#6B7280",
+                                      }}
+                                    ></span>
+                                    {statusLabel}
+                                  </motion.div>
+                                )
+                              })()}
+                            </td>
+                            <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                              <ActionDropdown feeder={feeder} onViewDetails={handleViewFeederDetails} />
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
 
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = index + 1
-                } else if (currentPage <= 3) {
-                  pageNum = index + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + index
-                } else {
-                  pageNum = currentPage - 2 + index
-                }
-
-                return (
+              <motion.div
+                className="flex flex-col items-center justify-between gap-4 border-t py-3 sm:flex-row"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <div className="text-xs text-gray-700 sm:text-sm">
+                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)} of{" "}
+                  {totalRecords} entries
+                </div>
+                <div className="flex items-center gap-2">
                   <motion.button
-                    key={index}
-                    onClick={() => paginate(pageNum)}
-                    className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                      currentPage === pageNum
-                        ? "bg-[#004B23] text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`flex items-center justify-center rounded-md p-2 ${
+                      currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
                     }`}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                    whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
+                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
                   >
-                    {pageNum}
+                    <MdOutlineArrowBackIosNew />
                   </motion.button>
-                )
-              })}
 
-              {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = index + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = index + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + index
+                    } else {
+                      pageNum = currentPage - 2 + index
+                    }
 
-              {totalPages > 5 && currentPage < totalPages - 1 && (
-                <motion.button
-                  onClick={() => paginate(totalPages)}
-                  className={`flex size-8 items-center justify-center rounded-md text-sm ${
-                    currentPage === totalPages
-                      ? "bg-[#004B23] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {totalPages}
-                </motion.button>
-              )}
+                    return (
+                      <motion.button
+                        key={index}
+                        onClick={() => paginate(pageNum)}
+                        className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                          currentPage === pageNum
+                            ? "bg-[#004B23] text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                      >
+                        {pageNum}
+                      </motion.button>
+                    )
+                  })}
 
-              <motion.button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`flex items-center justify-center rounded-md p-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#003F9F] hover:bg-gray-100"
-                }`}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-              >
-                <MdOutlineArrowForwardIos />
-              </motion.button>
-            </div>
-          </motion.div>
-        </>
-      )}
+                  {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
+
+                  {totalPages > 5 && currentPage < totalPages - 1 && (
+                    <motion.button
+                      onClick={() => paginate(totalPages)}
+                      className={`flex size-8 items-center justify-center rounded-md text-sm ${
+                        currentPage === totalPages
+                          ? "bg-[#004B23] text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {totalPages}
+                    </motion.button>
+                  )}
+
+                  <motion.button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`flex items-center justify-center rounded-md p-2 ${
+                      currentPage === totalPages
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#003F9F] hover:bg-gray-100"
+                    }`}
+                    whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
+                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                  >
+                    <MdOutlineArrowForwardIos />
+                  </motion.button>
+                </div>
+              </motion.div>
+            </>
+          )}
         </div>
 
         {/* Desktop Filters Sidebar (2xl and above) */}
@@ -1022,7 +1035,9 @@ const FeedersTab: React.FC = () => {
 
               {/* Injection Substation Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Injection Substation</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                  Injection Substation
+                </label>
                 <FormSelectModule
                   name="injectionSubstation"
                   value={localFilters.injectionSubstationId}
@@ -1093,7 +1108,6 @@ const FeedersTab: React.FC = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}
