@@ -10,14 +10,21 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { ChevronDown } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import Image from "next/image"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 import { ChangeRequestListItem, fetchChangeRequests } from "lib/redux/postpaidSlice"
 import ViewChangeRequestModal from "../ui/Modal/view-billing-change-request-modal"
 
 type SortOrder = "asc" | "desc" | null
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
 
 // Status options for filtering
 const statusOptions = [
@@ -217,6 +224,205 @@ const MobileFilterSkeleton = () => (
   </motion.div>
 )
 
+// Mobile & All Screens Filter Sidebar Component (up to 2xl)
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  statusOptions,
+  sourceOptions,
+  entityTypeOptions,
+  sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  statusOptions: Array<{ value: string; label: string }>
+  sourceOptions: Array<{ value: string; label: string }>
+  entityTypeOptions: Array<{ value: string; label: string }>
+  sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <ArrowLeft className="size-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                Clear All
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="flex-1 space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {statusOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => {
+                      const statusValue = parseInt(option.value)
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.status === statusValue
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
+                </div>
+              </div>
+
+              {/* Source Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                <FormSelectModule
+                  name="source"
+                  value={localFilters.source !== undefined ? String(localFilters.source) : ""}
+                  onChange={(e) =>
+                    handleFilterChange("source", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={sourceOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Entity Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Entity Type</label>
+                <FormSelectModule
+                  name="entityType"
+                  value={localFilters.entityType !== undefined ? String(localFilters.entityType) : ""}
+                  onChange={(e) =>
+                    handleFilterChange("entityType", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={entityTypeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 const BillingChangeRequestsTable = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { changeRequests, changeRequestsLoading, changeRequestsError, changeRequestsPagination } = useSelector(
@@ -228,31 +434,46 @@ const BillingChangeRequestsTable = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [selectedStatus, setSelectedStatus] = useState("")
-  const [selectedSource, setSelectedSource] = useState("")
-  const [selectedEntityType, setSelectedEntityType] = useState("")
-  const [isStatusOpen, setIsStatusOpen] = useState(false)
-  const [isSourceOpen, setIsSourceOpen] = useState(false)
-  const [isEntityTypeOpen, setIsEntityTypeOpen] = useState(false)
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const router = useRouter()
 
-  // Fetch billing change requests on component mount and when filters change
+  // Local state for filters (UI state - what user is selecting)
+  const [localFilters, setLocalFilters] = useState({
+    status: undefined as number | undefined,
+    source: undefined as number | undefined,
+    entityType: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Applied filters state (only updated when "Apply Filters" is clicked)
+  const [appliedFilters, setAppliedFilters] = useState({
+    status: undefined as number | undefined,
+    source: undefined as number | undefined,
+    entityType: undefined as number | undefined,
+    sortBy: "",
+    sortOrder: "asc" as "asc" | "desc",
+  })
+
+  // Fetch billing change requests on component mount and when applied filters change
   useEffect(() => {
     dispatch(
       fetchChangeRequests({
         pageNumber: currentPage,
         pageSize: changeRequestsPagination.pageSize,
-        ...(selectedStatus && { status: parseInt(selectedStatus) }),
-        ...(selectedSource && { source: parseInt(selectedSource) }),
+        ...(appliedFilters.status !== undefined ? { status: appliedFilters.status } : {}),
+        ...(appliedFilters.source !== undefined ? { source: appliedFilters.source } : {}),
         ...(searchText && { reference: searchText }),
       })
     )
-  }, [dispatch, currentPage, changeRequestsPagination.pageSize, selectedStatus, selectedSource, searchText])
+  }, [dispatch, currentPage, changeRequestsPagination.pageSize, appliedFilters, searchText])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -264,19 +485,74 @@ const BillingChangeRequestsTable = () => {
       if (!target.closest('[data-dropdown-root="change-request-actions"]')) {
         setActiveDropdown(null)
       }
-      if (!target.closest('[data-dropdown-root="status-filter"]')) {
-        setIsStatusOpen(false)
-      }
-      if (!target.closest('[data-dropdown-root="source-filter"]')) {
-        setIsSourceOpen(false)
-      }
-      if (!target.closest('[data-dropdown-root="entity-type-filter"]')) {
-        setIsEntityTypeOpen(false)
-      }
     }
     document.addEventListener("mousedown", onDocClick)
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [])
+
+  // Sort options
+  const sortOptions: SortOption[] = [
+    { label: "Reference A-Z", value: "reference", order: "asc" },
+    { label: "Reference Z-A", value: "reference", order: "desc" },
+    { label: "Requested By A-Z", value: "requestedBy", order: "asc" },
+    { label: "Requested By Z-A", value: "requestedBy", order: "desc" },
+    { label: "Requested Date Asc", value: "requestedAtUtc", order: "asc" },
+    { label: "Requested Date Desc", value: "requestedAtUtc", order: "desc" },
+    { label: "Status Asc", value: "status", order: "asc" },
+    { label: "Status Desc", value: "status", order: "desc" },
+    { label: "Entity Type Asc", value: "entityType", order: "asc" },
+    { label: "Entity Type Desc", value: "entityType", order: "desc" },
+  ]
+
+  // Handle individual filter changes (local state)
+  const handleFilterChange = (key: string, value: string | number | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  // Handle sort change
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply all filters at once
+  const applyFilters = () => {
+    // Copy localFilters to appliedFilters to trigger API call
+    setAppliedFilters({ ...localFilters })
+    // Reset to first page when applying filters
+    setCurrentPage(1)
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    const emptyFilters = {
+      status: undefined,
+      source: undefined,
+      entityType: undefined,
+      sortBy: "",
+      sortOrder: "asc" as "asc" | "desc",
+    }
+    setLocalFilters(emptyFilters)
+    setAppliedFilters(emptyFilters)
+    setSearchText("")
+    setCurrentPage(1)
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (localFilters.status !== undefined) count++
+    if (localFilters.source !== undefined) count++
+    if (localFilters.entityType !== undefined) count++
+    if (localFilters.sortBy) count++
+    return count
+  }
 
   const getStatusConfig = (status: number) => {
     const configs = {
@@ -350,8 +626,8 @@ const BillingChangeRequestsTable = () => {
       fetchChangeRequests({
         pageNumber: 1,
         pageSize: newPageSize,
-        ...(selectedStatus && { status: parseInt(selectedStatus) }),
-        ...(selectedSource && { source: parseInt(selectedSource) }),
+        ...(appliedFilters.status !== undefined ? { status: appliedFilters.status } : {}),
+        ...(appliedFilters.source !== undefined ? { source: appliedFilters.source } : {}),
         ...(searchText && { reference: searchText }),
       })
     )
@@ -625,12 +901,37 @@ const BillingChangeRequestsTable = () => {
 
   return (
     <>
-      <div className="flex-3 relative flex w-full flex-col-reverse items-start gap-6  2xl:mt-5 2xl:flex-row">
+      <div className="flex-3 relative flex flex-col items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Billing Change Requests List/Grid */}
-        <div className="w-full rounded-md border bg-white p-3 md:p-5">
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
           <div className="flex w-full flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Billing Change Requests</p>
+              <div className="flex items-center gap-3">
+                {/* Filter Button for ALL screens up to 2xl */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Billing Change Requests</p>
+              </div>
 
               <div className="flex items-center gap-2">
                 {/* Mobile search icon button */}
@@ -653,6 +954,25 @@ const BillingChangeRequestsTable = () => {
                     className="w-full max-w-full md:max-w-[300px]"
                   />
                 </div>
+
+                {/* Active filters badge - Desktop only (2xl and above) */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
+                </button>
 
                 {/* Export CSV Button */}
                 <button
@@ -714,123 +1034,6 @@ const BillingChangeRequestsTable = () => {
                   <p className="text-sm md:text-base">List</p>
                 </button>
               </div>
-
-              {/* Status Filter */}
-              <div className="relative" data-dropdown-root="status-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsStatusOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isStatusOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                      isStatusOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isStatusOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                    <div className="py-1">
-                      {statusOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedStatus === option.value ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedStatus(option.value)
-                            setIsStatusOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Source Filter */}
-              <div className="relative" data-dropdown-root="source-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsSourceOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isSourceOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{sourceOptions.find((opt) => opt.value === selectedSource)?.label || "All Sources"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                      isSourceOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isSourceOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                    <div className="py-1">
-                      {sourceOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedSource === option.value ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedSource(option.value)
-                            setIsSourceOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Entity Type Filter */}
-              <div className="relative" data-dropdown-root="entity-type-filter">
-                <button
-                  type="button"
-                  className="button-oulined flex items-center gap-2 text-sm md:text-base"
-                  onClick={() => setIsEntityTypeOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isEntityTypeOpen}
-                >
-                  <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{entityTypeOptions.find((opt) => opt.value === selectedEntityType)?.label || "All Types"}</span>
-                  <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                      isEntityTypeOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isEntityTypeOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                    <div className="py-1">
-                      {entityTypeOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedEntityType === option.value ? "bg-gray-50" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedEntityType(option.value)
-                            setIsEntityTypeOpen(false)
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -853,7 +1056,7 @@ const BillingChangeRequestsTable = () => {
                     No billing change requests found
                   </h3>
                   <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || selectedStatus || selectedSource || selectedEntityType
+                    {searchText || getActiveFilterCount() > 0
                       ? "Try adjusting your filters or search criteria"
                       : "No billing change requests available"}
                   </p>
@@ -960,8 +1163,181 @@ const BillingChangeRequestsTable = () => {
               </p>
             </div>
           )}
-        </div>
+        </motion.div>
+
+        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {showDesktopFilters && (
+          <motion.div
+            key="desktop-filters-sidebar"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+          >
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
+              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+              >
+                <X className="size-3 md:size-4" />
+                Clear All
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {statusOptions
+                    .filter((opt) => opt.value !== "")
+                    .map((option) => {
+                      const statusValue = parseInt(option.value)
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.status === statusValue
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
+                </div>
+              </div>
+
+              {/* Source Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                <FormSelectModule
+                  name="source"
+                  value={localFilters.source !== undefined ? String(localFilters.source) : ""}
+                  onChange={(e) =>
+                    handleFilterChange("source", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={sourceOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Entity Type Filter */}
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Entity Type</label>
+                <FormSelectModule
+                  name="entityType"
+                  value={localFilters.entityType !== undefined ? String(localFilters.entityType) : ""}
+                  onChange={(e) =>
+                    handleFilterChange("entityType", e.target.value === "" ? undefined : parseInt(e.target.value))
+                  }
+                  options={entityTypeOptions}
+                  className="w-full"
+                  controlClassName="h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsSortExpanded((prev) => !prev)}
+                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                  aria-expanded={isSortExpanded}
+                >
+                  <span>Sort By</span>
+                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+
+                {isSortExpanded && (
+                  <div className="space-y-2">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={`${option.value}-${option.order}`}
+                        onClick={() => handleSortChange(option)}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                          <span className="text-purple-600">
+                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+              <button
+                onClick={applyFilters}
+                className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <Filter className="size-4" />
+                Apply Filters
+              </button>
+              <button
+                onClick={resetFilters}
+                className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
+              >
+                <X className="size-4" />
+                Reset All
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+              <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
+              <div className="space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Records:</span>
+                  <span className="font-medium">{totalRecords.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Page:</span>
+                  <span className="font-medium">
+                    {currentPage} / {totalPages || 1}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Filters:</span>
+                  <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
+
+      {/* Mobile & All Screens Filter Sidebar (up to 2xl) */}
+      <MobileFilterSidebar
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        localFilters={localFilters}
+        handleFilterChange={handleFilterChange}
+        handleSortChange={handleSortChange}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+        getActiveFilterCount={getActiveFilterCount}
+        statusOptions={statusOptions}
+        sourceOptions={sourceOptions}
+        entityTypeOptions={entityTypeOptions}
+        sortOptions={sortOptions}
+        isSortExpanded={isSortExpanded}
+        setIsSortExpanded={setIsSortExpanded}
+      />
 
       {/* View Change Request Modal */}
       <ViewChangeRequestModal

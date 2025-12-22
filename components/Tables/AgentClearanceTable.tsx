@@ -196,7 +196,21 @@ const LoadingSkeleton = () => {
   )
 }
 
-const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
+interface AppliedFilters {
+  agentId?: number
+  areaOfficeId?: number
+  startDate?: string
+  endDate?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+}
+
+interface AgentClearanceTableProps {
+  agentId?: number
+  appliedFilters?: AppliedFilters
+}
+
+const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appliedFilters = {} as AppliedFilters }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { clearances, clearancesLoading, clearancesError, clearancesPagination, clearCashLoading, clearCashError } =
@@ -220,7 +234,11 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
   }>({})
 
   const handleViewClearanceDetails = (clearance: CashClearance) => {
-    router.push(`/agents/${agentId}/clearances/${clearance.id}`)
+    if (agentId) {
+      router.push(`/agents/${agentId}/clearances/${clearance.id}`)
+    } else {
+      router.push(`/clearances/${clearance.id}`)
+    }
   }
 
   const openClearCashPanel = (clearance: CashClearance) => {
@@ -269,16 +287,24 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
     }
   }
 
-  // Fetch clearances on component mount and when search/pagination changes
+  // Fetch clearances on component mount and when search/pagination/filters change
   useEffect(() => {
     const fetchParams: ClearancesRequestParams = {
-      id: agentId!,
+      // Only include id if agentId prop is provided (for fetching clearances for a specific agent)
+      ...(agentId && { id: agentId }),
       pageNumber: currentPage,
       pageSize: pageSize,
+      // Filter parameters for /agents/clearances endpoint
+      agentId: appliedFilters.agentId,
+      areaOfficeId: appliedFilters.areaOfficeId,
+      startDate: appliedFilters.startDate,
+      endDate: appliedFilters.endDate,
+      sortBy: appliedFilters.sortBy,
+      sortOrder: appliedFilters.sortOrder,
     }
 
     dispatch(fetchClearances(fetchParams))
-  }, [dispatch, agentId, currentPage, pageSize])
+  }, [dispatch, agentId, currentPage, pageSize, appliedFilters])
 
   // Clear error and clearances when component unmounts
   useEffect(() => {
@@ -399,38 +425,18 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
   if (clearancesError) return <div className="p-4 text-red-500">Error loading clearance data: {clearancesError}</div>
 
   return (
-    <motion.div
-      className="relative flex w-full gap-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1.2 }}
-    >
-      {/* Main Content Area */}
-      <div className="min-w-0 flex-1 transition-all duration-300 ease-in-out">
-        <motion.div
-          className="items-center justify-between border-b py-2 md:flex md:py-4"
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div>
-            <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Cash Clearances</p>
-            <p className="text-sm text-gray-600">Track and manage agent cash clearance history</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <SearchModule
-              value={searchText}
-              onChange={handleSearch}
-              onCancel={handleCancelSearch}
-              placeholder="Search clearances..."
-              className="w-[380px]"
-              bgClassName="bg-white"
-            />
-            {/* <ButtonModule variant="primary" size="sm" disabled={clearCashLoading}>
-              Clear Cash
-            </ButtonModule> */}
-          </div>
-        </motion.div>
+    <div className="w-full">
+      {/* Search Section */}
+      <div className="mb-4 flex items-center justify-end">
+        <SearchModule
+          value={searchText}
+          onChange={handleSearch}
+          onCancel={handleCancelSearch}
+          placeholder="Search clearances..."
+          className="w-full max-w-[380px]"
+          bgClassName="bg-white"
+        />
+      </div>
 
         {filteredClearances.length === 0 ? (
           <motion.div
@@ -764,10 +770,7 @@ const AgentClearanceTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
             </motion.div>
           </>
         )}
-      </div>
-
-      {/* Clear Cash Panel */}
-    </motion.div>
+    </div>
   )
 }
 

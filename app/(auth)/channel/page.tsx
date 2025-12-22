@@ -135,7 +135,7 @@ const SelectUserType: React.FC = () => {
                         selectedDepartment === department.id ? "scale-100 opacity-100" : "scale-50 opacity-0"
                       }`}
                     >
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#004B23]">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]">
                         <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
@@ -143,7 +143,7 @@ const SelectUserType: React.FC = () => {
                     </div>
 
                     <div className="flex items-start space-x-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0EFFB]">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-[#F0EFFB]">
                         <span className="text-2xl">{department.icon}</span>
                       </div>
                       <div className="flex-1">
@@ -214,7 +214,7 @@ const SelectUserType: React.FC = () => {
         </motion.div>
 
         {/* Text positioned at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-24">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center px-10 pb-24">
           <motion.h1
             className="mb-4 max-w-[70%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
             initial={{ opacity: 0, y: 20 }}
@@ -226,7 +226,7 @@ const SelectUserType: React.FC = () => {
             <span className="text-[#FFFFFF80]">for Utilities</span>
           </motion.h1>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center px-10 pb-10 ">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center px-10 pb-10 ">
           <motion.p
             className="max-w-[80%] text-center  text-[#FFFFFF80]"
             initial={{ opacity: 0, y: 20 }}

@@ -96,6 +96,8 @@ export interface OutageRequestParams {
   Search?: string
   PageNumber: number
   PageSize: number
+  SortBy?: string
+  SortOrder?: "asc" | "desc"
 }
 
 // Outage State
@@ -180,6 +182,8 @@ export const fetchOutages = createAsyncThunk(
       if (params.From) queryParams.append("From", params.From)
       if (params.To) queryParams.append("To", params.To)
       if (params.Search) queryParams.append("Search", params.Search)
+      if (params.SortBy) queryParams.append("SortBy", params.SortBy)
+      if (params.SortOrder) queryParams.append("SortOrder", params.SortOrder)
 
       // Add required pagination parameters
       queryParams.append("PageNumber", params.PageNumber.toString())

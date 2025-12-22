@@ -58,8 +58,8 @@ type TabType = "basic-info" | "payments" | "change-requests" | "postpaid-billing
 // Skeleton Components
 const CustomerDetailsSkeleton = () => {
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           {/* Dashboard Nav Skeleton */}
           <div className="sticky top-0 z-50 h-16 border-b border-gray-200 bg-white">
@@ -903,8 +903,8 @@ const CustomerDetailsPage = () => {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container">

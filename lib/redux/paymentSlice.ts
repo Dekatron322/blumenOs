@@ -80,6 +80,8 @@ export interface PaymentsRequestParams {
   paidFromUtc?: string
   paidToUtc?: string
   search?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Create Payment Request Interface
@@ -417,6 +419,8 @@ export const fetchPayments = createAsyncThunk(
         paidFromUtc,
         paidToUtc,
         search,
+        sortBy,
+        sortOrder,
       } = params
 
       const response = await api.get<PaymentsResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.GET), {
@@ -434,6 +438,8 @@ export const fetchPayments = createAsyncThunk(
           ...(paidFromUtc && { PaidFromUtc: paidFromUtc }),
           ...(paidToUtc && { PaidToUtc: paidToUtc }),
           ...(search && { Search: search }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 

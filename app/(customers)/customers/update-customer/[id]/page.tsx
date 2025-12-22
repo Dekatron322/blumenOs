@@ -530,7 +530,7 @@ const UpdateCustomerPage = () => {
 
   // Mobile Bottom Navigation
   const MobileBottomNavigation = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2">
           <button
@@ -571,8 +571,8 @@ const UpdateCustomerPage = () => {
   // Show error state if failed to load customer
   if (currentCustomerError && !currentCustomer) {
     return (
-      <section className="size-full">
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+        <div className="flex w-full">
           <div className="flex w-full flex-col">
             <DashboardNav />
             <div className="container mx-auto flex flex-1 items-center justify-center p-4">
@@ -601,8 +601,8 @@ const UpdateCustomerPage = () => {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
@@ -1141,7 +1141,7 @@ const LoadingSkeleton = () => (
 
       {/* Mobile Header Skeleton */}
       <div className="mb-4 flex items-center gap-3 sm:hidden">
-        <div className="h-8 w-8 rounded bg-gray-200"></div>
+        <div className="size-8 rounded bg-gray-200"></div>
         <div>
           <div className="mb-1 h-6 w-32 rounded bg-gray-200"></div>
           <div className="h-4 w-48 rounded bg-gray-200"></div>

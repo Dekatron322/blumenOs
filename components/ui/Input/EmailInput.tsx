@@ -1,5 +1,5 @@
 "use client"
-import { EmailIcon } from "components/Icons/Icons"
+import { EmailIcon, PhoneOutlineIcon } from "components/Icons/Icons"
 import React, { useState } from "react"
 import { MdOutlineEmail } from "react-icons/md"
 
@@ -49,10 +49,8 @@ export const FormInputModule: React.FC<FormInputProps> = ({
         transition-all duration-200
       `}
       >
-        {/* Email Icon on the left side */}
-        <div className="mr-2">
-          <EmailIcon />
-        </div>
+        {/* Icon on the left side */}
+        <div className="mr-2">{type === "tel" ? <PhoneOutlineIcon /> : <EmailIcon />}</div>
 
         <input
           type={type}

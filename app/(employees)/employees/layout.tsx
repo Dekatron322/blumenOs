@@ -5,16 +5,16 @@ import "styles/tailwind.css"
 import ProtectedRoute from "lib/protectedRoutes"
 
 export const metadata: Metadata = {
-  title: "BlumenOS Admin Dashboard",
+  title: "Kaduna Electric Admin Dashboard",
   description:
-    "We help distribution companies leverage data-driven, scalable, and secure grid management. Unlock the power of real-time analytics and asset control, enabling proactive outage management and optimized energy distribution.",
+    "End-to-end billing and field-ops platform powering KadElectric: customer/CRM, meter and billing, outage management, agent cash collection with clearance/remittance tracking, vendor payments, and real-time performance analytics—all secured by role-based controls.",
   icons: {
     icon: [
-      { url: "/blumen.png" },
-      { url: "/blumen.png", sizes: "16x16", type: "image/png" },
-      { url: "/blumen.png", sizes: "32x32", type: "image/png" },
+      { url: "/ke.png" },
+      { url: "/ke.png", sizes: "16x16", type: "image/png" },
+      { url: "/ke.png", sizes: "32x32", type: "image/png" },
     ],
-    apple: [{ url: "/blumen.png" }],
+    apple: [{ url: "/ke.png" }],
     other: [{ rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#5bbad5" }],
   },
   twitter: {

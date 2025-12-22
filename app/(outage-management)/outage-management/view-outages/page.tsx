@@ -212,32 +212,27 @@ export default function MeteringDashboard() {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container xl:px-16">
-            <div className="flex w-full gap-6  max-md:flex-col  max-sm:my-4">
-              <div className="w-full">
-                {isLoading ? (
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
-                    >
-                      <OutagesTab />
-                    </motion.div>
-                  </>
-                )}
-              </div>
-            </div>
+          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+            {isLoading ? (
+              <>
+                <SkeletonLoader />
+                <LoadingState showCategories={true} />
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <OutagesTab />
+                </motion.div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -357,8 +357,12 @@ body {
   @apply flex h-[37px] items-center justify-center gap-2 rounded-md bg-[#000000]   px-4 text-[#ffffff] transition-colors hover:bg-[#252525] hover:text-[#FFFFFF] focus:bg-[#2952CC] active:bg-[#061E66]  max-sm:h-10 max-sm:w-full;
 }
 
+.button-filled {
+  @apply flex h-[37px] items-center justify-center gap-2 rounded-md bg-[#004B23] px-4 text-sm font-medium text-white transition-colors hover:bg-[#008000] focus:outline-none focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2;
+}
+
 .button-oulined {
-  @apply flex h-[37px] items-center gap-2 rounded-md border px-4 text-sm font-medium text-[#000000];
+  @apply flex h-[37px] items-center gap-2 rounded-md border px-4 text-sm font-medium text-[#000000] transition-colors hover:bg-gray-50;
 }
 
 .button-rounded {

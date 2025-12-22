@@ -217,10 +217,7 @@ const AllChangeRequest = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [selectedStatus, setSelectedStatus] = useState("")
-  const [selectedSource, setSelectedSource] = useState("")
   const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [isSourceOpen, setIsSourceOpen] = useState(false)
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
@@ -230,18 +227,32 @@ const AllChangeRequest = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const router = useRouter()
 
+  // Local filter state (not applied yet)
+  const [localFilters, setLocalFilters] = useState({
+    searchText: "",
+    selectedStatus: "",
+    selectedSource: "",
+  })
+
+  // Applied filters (used for API calls)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchText: "",
+    selectedStatus: "",
+    selectedSource: "",
+  })
+
   // Fetch change requests on component mount and when page changes
   useEffect(() => {
     dispatch(
       fetchChangeRequests({
         pageNumber: currentPage,
         pageSize: changeRequestsPagination.pageSize,
-        ...(selectedStatus && { status: parseInt(selectedStatus) }),
-        ...(selectedSource && { source: parseInt(selectedSource) }),
-        ...(searchText && { reference: searchText }),
+        ...(appliedFilters.selectedStatus && { status: parseInt(appliedFilters.selectedStatus) }),
+        ...(appliedFilters.selectedSource && { source: parseInt(appliedFilters.selectedSource) }),
+        ...(appliedFilters.searchText && { reference: appliedFilters.searchText }),
       })
     )
-  }, [dispatch, currentPage, changeRequestsPagination.pageSize, selectedStatus, selectedSource, searchText])
+  }, [dispatch, currentPage, changeRequestsPagination.pageSize, appliedFilters.selectedStatus, appliedFilters.selectedSource, appliedFilters.searchText])
 
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id)
@@ -306,7 +317,30 @@ const AllChangeRequest = () => {
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
+    setLocalFilters((prev) => ({ ...prev, searchText: "" }))
+  }
+
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      searchText: localFilters.searchText,
+      selectedStatus: localFilters.selectedStatus,
+      selectedSource: localFilters.selectedSource,
+    })
+    setCurrentPage(1)
+  }
+
+  const handleResetFilters = () => {
+    setLocalFilters({
+      searchText: "",
+      selectedStatus: "",
+      selectedSource: "",
+    })
+    setAppliedFilters({
+      searchText: "",
+      selectedStatus: "",
+      selectedSource: "",
+    })
+    setCurrentPage(1)
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -315,9 +349,9 @@ const AllChangeRequest = () => {
       fetchChangeRequests({
         pageNumber: 1,
         pageSize: newPageSize,
-        ...(selectedStatus && { status: parseInt(selectedStatus) }),
-        ...(selectedSource && { source: parseInt(selectedSource) }),
-        ...(searchText && { reference: searchText }),
+        ...(appliedFilters.selectedStatus && { status: parseInt(appliedFilters.selectedStatus) }),
+        ...(appliedFilters.selectedSource && { source: parseInt(appliedFilters.selectedSource) }),
+        ...(appliedFilters.searchText && { reference: appliedFilters.searchText }),
       })
     )
     setCurrentPage(1)
@@ -603,8 +637,8 @@ const AllChangeRequest = () => {
                 {/* Desktop/Tablet search input */}
                 <div className="hidden sm:block">
                   <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={localFilters.searchText}
+                    onChange={(e) => setLocalFilters((prev) => ({ ...prev, searchText: e.target.value }))}
                     onCancel={handleCancelSearch}
                     placeholder="Search by reference, requester, or entity label"
                     className="w-full max-w-full md:max-w-[300px]"
@@ -630,8 +664,8 @@ const AllChangeRequest = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={localFilters.searchText}
+                  onChange={(e) => setLocalFilters((prev) => ({ ...prev, searchText: e.target.value }))}
                   onCancel={handleCancelSearch}
                   placeholder="Search by reference, requester, or entity label"
                   className="w-full"
@@ -682,7 +716,7 @@ const AllChangeRequest = () => {
                   aria-expanded={isStatusOpen}
                 >
                   <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}</span>
+                  <span>{statusOptions.find((opt) => opt.value === localFilters.selectedStatus)?.label || "All Status"}</span>
                   <ChevronDown
                     className={`size-3 text-gray-500 transition-transform md:size-4 ${
                       isStatusOpen ? "rotate-180" : ""
@@ -696,10 +730,10 @@ const AllChangeRequest = () => {
                         <button
                           key={option.value}
                           className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedStatus === option.value ? "bg-gray-50" : ""
+                            localFilters.selectedStatus === option.value ? "bg-gray-50" : ""
                           }`}
                           onClick={() => {
-                            setSelectedStatus(option.value)
+                            setLocalFilters((prev) => ({ ...prev, selectedStatus: option.value }))
                             setIsStatusOpen(false)
                           }}
                         >
@@ -721,7 +755,7 @@ const AllChangeRequest = () => {
                   aria-expanded={isSourceOpen}
                 >
                   <IoMdFunnel className="size-4 md:size-5" />
-                  <span>{sourceOptions.find((opt) => opt.value === selectedSource)?.label || "All Sources"}</span>
+                  <span>{sourceOptions.find((opt) => opt.value === localFilters.selectedSource)?.label || "All Sources"}</span>
                   <ChevronDown
                     className={`size-3 text-gray-500 transition-transform md:size-4 ${
                       isSourceOpen ? "rotate-180" : ""
@@ -735,10 +769,10 @@ const AllChangeRequest = () => {
                         <button
                           key={option.value}
                           className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                            selectedSource === option.value ? "bg-gray-50" : ""
+                            localFilters.selectedSource === option.value ? "bg-gray-50" : ""
                           }`}
                           onClick={() => {
-                            setSelectedSource(option.value)
+                            setLocalFilters((prev) => ({ ...prev, selectedSource: option.value }))
                             setIsSourceOpen(false)
                           }}
                         >
@@ -749,6 +783,20 @@ const AllChangeRequest = () => {
                   </div>
                 )}
               </div>
+
+              {/* Apply Filters Button */}
+              <button
+                onClick={handleApplyFilters}
+                className="button-filled flex items-center gap-2 text-sm md:text-base"
+              >
+                Apply Filters
+              </button>
+              <button
+                onClick={handleResetFilters}
+                className="button-oulined flex items-center gap-2 text-sm md:text-base"
+              >
+                Reset
+              </button>
             </div>
           </div>
 
@@ -771,7 +819,7 @@ const AllChangeRequest = () => {
                     No change requests found
                   </h3>
                   <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                    {searchText || selectedStatus || selectedSource
+                    {appliedFilters.searchText || appliedFilters.selectedStatus || appliedFilters.selectedSource
                       ? "Try adjusting your filters or search criteria"
                       : "No change requests available"}
                   </p>

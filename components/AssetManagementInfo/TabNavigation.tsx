@@ -1,4 +1,5 @@
-import React from "react"
+import React, { useState } from "react"
+import { ChevronDown } from "lucide-react"
 
 // Tab Icons
 export const InventoryIcon = () => (
@@ -120,24 +121,77 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }
     { id: "service-stations", label: "Service Stations", icon: <ServiceStationIcon /> },
   ]
 
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  const activeTabConfig = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]
+
+  if (!activeTabConfig) {
+    return null
+  }
+
   return (
-    <div className="w-fit rounded-md bg-white p-2">
-      <nav className="-mb-px flex space-x-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-              activeTab === tab.id
-                ? " bg-[#004B23]  text-[#FFFFFF]"
-                : " border-transparent  text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700 "
+    <div className="relative w-full lg:w-fit">
+      {/* Mobile/Tablet: dropdown trigger */}
+      <div className="flex w-full items-center justify-between rounded-md bg-white p-2 lg:hidden">
+        <button
+          type="button"
+          className="flex flex-1 items-center justify-between gap-2 rounded-md px-2 py-1 text-sm font-medium text-gray-800"
+          onClick={() => setIsMobileOpen((prev) => !prev)}
+        >
+          <span className="flex items-center gap-2 truncate">
+            {activeTabConfig.icon}
+            <span className="truncate">{activeTabConfig.label}</span>
+          </span>
+          <span
+            className={`inline-block shrink-0 transform text-xs text-gray-500 transition-transform duration-200 ${
+              isMobileOpen ? "rotate-180" : "rotate-0"
             }`}
           >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+            <ChevronDown />
+          </span>
+        </button>
+      </div>
+
+      {/* Mobile/Tablet: popover list */}
+      {isMobileOpen && (
+        <div className="absolute z-20 mt-1 w-full rounded-md border bg-white p-1 shadow-md lg:hidden">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id)
+                setIsMobileOpen(false)
+              }}
+              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md p-2 text-left text-sm font-medium transition-all duration-150 ${
+                activeTab === tab.id ? "bg-[#004B23] text-white" : "text-gray-600 hover:bg-[#F6F6F9]"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop: horizontal tab list with wrap support */}
+      <div className="hidden rounded-md bg-white p-2 lg:block">
+        <nav className="-mb-px flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                activeTab === tab.id
+                  ? " bg-[#004B23]  text-[#FFFFFF]"
+                  : " border-transparent  text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700 "
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
     </div>
   )
 }

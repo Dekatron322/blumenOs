@@ -1,18 +1,7 @@
 // API Configuration
-type Environment = "STAGING" | "PRODUCTION"
 
 export const API_CONFIG = {
-  // Environment-based base URLs
-  STAGING: "https://blumenos-e0fba1f74776.herokuapp.com",
-  PRODUCTION: "https://blumenos-e0fba1f74776.herokuapp.com",
-
-  // Current environment (change this to switch between staging/production)
-  CURRENT_ENV: (process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING") as Environment,
-
-  // Get current base URL
-  get BASE_URL(): string {
-    return this[this.CURRENT_ENV]
-  },
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL as string,
 }
 
 export const API_ENDPOINTS = {
@@ -53,6 +42,12 @@ export const API_ENDPOINTS = {
     GET_ALL_DISPUTES: "/billing/disputes",
     GET_DISPUTE_BY_ID: "/billing/disputes/{id}",
     UPDATE_DISPUTE: "/billing/disputes/{id}/status",
+    CHANGE_REQUEST: "/billing/disputes/{id}/change-requests",
+    CHANGE_REQUESTS_BY_ID: "/billing/disputes/{id}/change-requests",
+    VIEW_CHANGE_REQUEST: "/billing/disputes/change-requests",
+    CHANGE_REQUEST_DETAILS: "/billing/disputes/change-requests/{identifier}",
+    APPROVE_CHANGE_REQUEST: "/billing/disputes/change-requests/{publicId}/approve",
+    DECLINE_CHANGE_REQUEST: "/billing/disputes/change-requests/{publicId}/decline",
   },
 
   EMPLOYEE: {
@@ -311,5 +306,5 @@ export const buildApiUrl = (endpoint: string): string => {
 // Environment switcher utility (for development/testing)
 export const switchEnvironment = (env: "STAGING" | "PRODUCTION") => {
   // This would typically be handled by environment variables in a real app
-  console.log(`Switching to ${env} environment: ${API_CONFIG[env]}`)
+  console.log(`Switching to ${env} environment: ${API_CONFIG.BASE_URL}`)
 }

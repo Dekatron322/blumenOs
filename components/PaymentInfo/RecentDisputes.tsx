@@ -176,7 +176,7 @@ const RecentDisputes = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-lg border border-gray-200 bg-white shadow-lg md:absolute md:right-0 md:top-full md:mt-1 md:w-48 md:rounded-md md:rounded-t-none"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-lg border border-gray-200 bg-white shadow-lg md:absolute md:right-0 md:top-full md:mt-1 md:w-48 md:rounded-md md:rounded-t-none"
             >
               <div className="p-2 md:p-0 md:py-1">
                 <div className="mb-2 flex items-center justify-between border-b pb-2 md:hidden">

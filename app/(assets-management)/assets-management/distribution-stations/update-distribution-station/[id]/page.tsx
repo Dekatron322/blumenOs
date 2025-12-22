@@ -452,8 +452,8 @@ const UpdateDistributionStationPage = () => {
   // Show loading state while fetching distribution station data
   if (currentDistributionSubstationLoading) {
     return (
-      <section className="size-full">
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+        <div className="flex w-full">
           <div className="flex w-full flex-col">
             <DashboardNav />
             <div className="container mx-auto flex flex-col">
@@ -486,8 +486,8 @@ const UpdateDistributionStationPage = () => {
   // Show error state if failed to load distribution station
   if (currentDistributionSubstationError && !currentDistributionSubstation) {
     return (
-      <section className="size-full">
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+        <div className="flex w-full">
           <div className="flex w-full flex-col">
             <DashboardNav />
             <div className="container mx-auto flex flex-1 items-center justify-center">
@@ -516,8 +516,8 @@ const UpdateDistributionStationPage = () => {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 

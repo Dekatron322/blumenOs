@@ -383,7 +383,7 @@ const ChangePassword: React.FC = () => {
         </motion.div>
 
         {/* Text positioned at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center p-32">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center p-32">
           <motion.h1
             className="max-w-[60%] text-center text-3xl font-semibold text-[#FFFFFFCC]"
             initial={{ opacity: 0, y: 20 }}
@@ -395,7 +395,7 @@ const ChangePassword: React.FC = () => {
             <span className="text-[#FFFFFF80]">system integrity</span>
           </motion.h1>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center p-10">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center p-10">
           <motion.p
             className="max-w-[80%] text-center text-[#FFFFFF80]"
             initial={{ opacity: 0, y: 20 }}

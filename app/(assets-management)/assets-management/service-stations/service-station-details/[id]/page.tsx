@@ -635,8 +635,8 @@ const ServiceStationDetailsPage = () => {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="container mx-auto flex flex-col">

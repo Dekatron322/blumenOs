@@ -245,8 +245,8 @@ export default function Dashboard() {
       : "text-red-500"
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
 
@@ -254,7 +254,9 @@ export default function Dashboard() {
             <div className="mb-6 flex w-full flex-col gap-4">
               <div className="flex w-full items-start justify-between">
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">Utility Dashboard Overview</h1>
+                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
+                    Utility Dashboard Overview
+                  </h1>
                   <p className="text-sm font-medium text-gray-500 sm:text-base">
                     Real-time overview of customer accounts, revenue, and operational metrics
                   </p>

@@ -152,6 +152,8 @@ export interface VendorsRequestParams {
   canProcessPrepaid?: boolean
   canProcessPostpaid?: boolean
   employeeUserId?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // API Key Generation Interfaces
@@ -254,6 +256,8 @@ export interface ChangeRequestsRequestParams {
   source?: number
   reference?: string
   publicId?: string
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
 }
 
 // Interfaces for Change Request Details
@@ -604,6 +608,8 @@ export const fetchVendors = createAsyncThunk(
         canProcessPrepaid,
         canProcessPostpaid,
         employeeUserId,
+        sortBy,
+        sortOrder,
       } = params
 
       const response = await api.get<VendorsResponse>(buildApiUrl(API_ENDPOINTS.VENDORS.GET), {
@@ -617,6 +623,8 @@ export const fetchVendors = createAsyncThunk(
           ...(canProcessPrepaid !== undefined && { CanProcessPrepaid: canProcessPrepaid }),
           ...(canProcessPostpaid !== undefined && { CanProcessPostpaid: canProcessPostpaid }),
           ...(employeeUserId !== undefined && { EmployeeUserId: employeeUserId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 
@@ -810,7 +818,7 @@ export const fetchVendorChangeRequests = createAsyncThunk(
   "vendors/fetchChangeRequests",
   async (params: ChangeRequestsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, status, source, reference, publicId } = params
+      const { pageNumber, pageSize, status, source, reference, publicId, sortBy, sortOrder } = params
 
       const response = await api.get<ChangeRequestsResponse>(buildApiUrl(API_ENDPOINTS.VENDORS.VIEW_CHANGE_REQUEST), {
         params: {
@@ -820,6 +828,8 @@ export const fetchVendorChangeRequests = createAsyncThunk(
           ...(source !== undefined && { Source: source }),
           ...(reference && { Reference: reference }),
           ...(publicId && { PublicId: publicId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortOrder && { SortOrder: sortOrder }),
         },
       })
 

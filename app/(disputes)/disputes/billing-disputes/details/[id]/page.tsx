@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import UpdateDisputeStatusModal from "components/ui/Modal/update-billing-status-modal"
+import BillingDisputeChangeRequestModal from "components/ui/Modal/billing-dispute-change-request-modal"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ExportCsvIcon, UserIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -155,11 +156,15 @@ const BillingDisputeDetailsPage = () => {
   // Get dispute details from Redux store
   const { disputeById, loadingDisputeById, disputeByIdError } = useAppSelector((state) => state.billingDispute)
   const { currentBill } = useAppSelector((state) => state.postpaidBilling)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
   const [isExporting, setIsExporting] = useState(false)
   const [activeTab, setActiveTab] = useState<"details" | "payments" | "timeline">("details")
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false)
+  const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false)
 
   useEffect(() => {
     if (disputeId) {
@@ -421,6 +426,12 @@ const BillingDisputeDetailsPage = () => {
     setIsUpdateStatusModalOpen(true)
   }
 
+  const openModal = (type: "changeRequest") => {
+    if (type === "changeRequest") {
+      setIsChangeRequestModalOpen(true)
+    }
+  }
+
   const handleAdjustBill = () => {
     // TODO: Implement adjust bill functionality
     console.log("Adjust bill clicked")
@@ -461,8 +472,8 @@ const BillingDisputeDetailsPage = () => {
   const totalOriginalAmount = calculateTotalOriginalAmount()
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col xl:container">
@@ -502,16 +513,28 @@ const BillingDisputeDetailsPage = () => {
                       <span className="sm:hidden">Export</span>
                     </ButtonModule>
 
-                    <ButtonModule
-                      variant="primary"
-                      size="sm"
-                      className="flex items-center gap-2 text-sm"
-                      onClick={handleUpdateStatus}
-                    >
-                      <Edit3 className="size-3 sm:size-4" />
-                      <span className="max-sm:hidden">Update Status</span>
-                      <span className="sm:hidden">Update</span>
-                    </ButtonModule>
+                    {canUpdate ? (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2 text-sm"
+                        onClick={handleUpdateStatus}
+                      >
+                        <Edit3 className="size-3 sm:size-4" />
+                        <span className="max-sm:hidden">Update Status</span>
+                        <span className="sm:hidden">Update</span>
+                      </ButtonModule>
+                    ) : (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => openModal("changeRequest")}
+                      >
+                        <Edit3 className="size-4" />
+                        Change Request
+                      </ButtonModule>
+                    )}
                   </div>
                 </div>
               </div>
@@ -594,6 +617,7 @@ const BillingDisputeDetailsPage = () => {
                         size="md"
                         className="w-full justify-start gap-3 text-sm"
                         onClick={handleUpdateStatus}
+                        disabled={!canUpdate}
                       >
                         <Edit3 className="size-4" />
                         Update Status
@@ -1120,6 +1144,17 @@ const BillingDisputeDetailsPage = () => {
           }
         }}
         dispute={disputeById}
+      />
+      <BillingDisputeChangeRequestModal
+        isOpen={isChangeRequestModalOpen}
+        onRequestClose={() => setIsChangeRequestModalOpen(false)}
+        disputeId={disputeById.id}
+        disputeLabel={`Dispute #${disputeById.id}`}
+        onSuccess={() => {
+          if (disputeById?.id) {
+            dispatch(getDisputeById({ id: disputeById.id }))
+          }
+        }}
       />
     </section>
   )

@@ -402,17 +402,15 @@ export default function OutageManagementDashboard() {
   // Show error state if there's an error loading data
   if (outageSummaryError && !outageSummaryData) {
     return (
-      <section className="size-full">
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="flex w-full">
           <div className="flex w-full flex-col">
             <DashboardNav />
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex w-full flex-col justify-between gap-6 py-4 sm:py-6 md:flex-row md:py-8">
-                <div className="mb-4 md:mb-0">
-                  <h4 className="text-xl font-semibold sm:text-2xl">Outage Management</h4>
-                  <p className="text-sm text-gray-600 sm:text-base">
-                    Track and manage power outages across the network
-                  </p>
+            <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+              <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                <div className="flex-1">
+                  <h4 className="text-2xl font-semibold">Outage Management</h4>
+                  <p className="text-gray-600">Track and manage power outages across the network</p>
                 </div>
               </div>
 
@@ -443,16 +441,16 @@ export default function OutageManagementDashboard() {
   }
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 2xl:container">
+          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col justify-between gap-6 py-4 sm:py-6 md:flex-row md:py-8">
-              <div className="md:mb-0">
-                <h4 className="text-xl font-semibold sm:text-2xl">Outage Management</h4>
-                <p className="text-sm text-gray-600 sm:text-base">Track and manage power outages across the network</p>
+            <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
+              <div className="flex-1">
+                <h4 className="text-2xl font-semibold">Outage Management</h4>
+                <p className="text-gray-600">Track and manage power outages across the network</p>
               </div>
 
               <motion.div

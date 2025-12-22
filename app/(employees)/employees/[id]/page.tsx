@@ -307,23 +307,34 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
   } = useAppSelector((state) => state.employee)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [searchText, setSearchText] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [selectedStatus, setSelectedStatus] = useState("")
-  const [selectedSource, setSelectedSource] = useState("")
   const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [isSourceOpen, setIsSourceOpen] = useState(false)
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Local filter state (not applied yet)
+  const [localFilters, setLocalFilters] = useState({
+    searchText: "",
+    selectedStatus: "",
+    selectedSource: "",
+  })
+
+  // Applied filters (used for API calls)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchText: "",
+    selectedStatus: "",
+    selectedSource: "",
+  })
 
   // Fetch change requests for this employee
   useEffect(() => {
     const params: ChangeRequestsRequestParams = {
       pageNumber: currentPage,
       pageSize: changeRequestsByEmployeePagination.pageSize,
-      ...(selectedStatus && { status: parseInt(selectedStatus) }),
-      ...(selectedSource && { source: parseInt(selectedSource) }),
-      ...(searchText && { reference: searchText }),
+      ...(appliedFilters.selectedStatus && { status: parseInt(appliedFilters.selectedStatus) }),
+      ...(appliedFilters.selectedSource && { source: parseInt(appliedFilters.selectedSource) }),
+      ...(appliedFilters.searchText && { reference: appliedFilters.searchText }),
     }
 
     dispatch(fetchChangeRequestsByEmployeeId({ id: employeeId, params }))
@@ -332,9 +343,9 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
     employeeId,
     currentPage,
     changeRequestsByEmployeePagination.pageSize,
-    selectedStatus,
-    selectedSource,
-    searchText,
+    appliedFilters.selectedStatus,
+    appliedFilters.selectedSource,
+    appliedFilters.searchText,
   ])
 
   // Cleanup on unmount
@@ -355,7 +366,30 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
   }
 
   const handleCancelSearch = () => {
-    setSearchText("")
+    setLocalFilters((prev) => ({ ...prev, searchText: "" }))
+  }
+
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      searchText: localFilters.searchText,
+      selectedStatus: localFilters.selectedStatus,
+      selectedSource: localFilters.selectedSource,
+    })
+    setCurrentPage(1)
+  }
+
+  const handleResetFilters = () => {
+    setLocalFilters({
+      searchText: "",
+      selectedStatus: "",
+      selectedSource: "",
+    })
+    setAppliedFilters({
+      searchText: "",
+      selectedStatus: "",
+      selectedSource: "",
+    })
+    setCurrentPage(1)
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -363,9 +397,9 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
     const params: ChangeRequestsRequestParams = {
       pageNumber: 1,
       pageSize: newPageSize,
-      ...(selectedStatus && { status: parseInt(selectedStatus) }),
-      ...(selectedSource && { source: parseInt(selectedSource) }),
-      ...(searchText && { reference: searchText }),
+      ...(appliedFilters.selectedStatus && { status: parseInt(appliedFilters.selectedStatus) }),
+      ...(appliedFilters.selectedSource && { source: parseInt(appliedFilters.selectedSource) }),
+      ...(appliedFilters.searchText && { reference: appliedFilters.searchText }),
     }
 
     dispatch(fetchChangeRequestsByEmployeeId({ id: employeeId, params }))
@@ -507,8 +541,8 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
         {/* Filters and Controls */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <SearchModule
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            value={localFilters.searchText}
+            onChange={(e) => setLocalFilters((prev) => ({ ...prev, searchText: e.target.value }))}
             onCancel={handleCancelSearch}
             placeholder="Search by reference or requester"
             className="w-full sm:max-w-[300px]"
@@ -543,7 +577,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
               >
                 <IoMdFunnel className="size-4" />
                 <span className="max-sm:hidden">
-                  {statusOptions.find((opt) => opt.value === selectedStatus)?.label || "All Status"}
+                  {statusOptions.find((opt) => opt.value === localFilters.selectedStatus)?.label || "All Status"}
                 </span>
                 <span className="sm:hidden">Status</span>
                 <ChevronDown
@@ -557,10 +591,10 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                       <button
                         key={option.value}
                         className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
-                          selectedStatus === option.value ? "bg-gray-50" : ""
+                          localFilters.selectedStatus === option.value ? "bg-gray-50" : ""
                         }`}
                         onClick={() => {
-                          setSelectedStatus(option.value)
+                          setLocalFilters((prev) => ({ ...prev, selectedStatus: option.value }))
                           setIsStatusOpen(false)
                         }}
                       >
@@ -583,7 +617,7 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
               >
                 <IoMdFunnel className="size-4" />
                 <span className="max-sm:hidden">
-                  {sourceOptions.find((opt) => opt.value === selectedSource)?.label || "All Sources"}
+                  {sourceOptions.find((opt) => opt.value === localFilters.selectedSource)?.label || "All Sources"}
                 </span>
                 <span className="sm:hidden">Source</span>
                 <ChevronDown
@@ -597,10 +631,10 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                       <button
                         key={option.value}
                         className={`flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50 ${
-                          selectedSource === option.value ? "bg-gray-50" : ""
+                          localFilters.selectedSource === option.value ? "bg-gray-50" : ""
                         }`}
                         onClick={() => {
-                          setSelectedSource(option.value)
+                          setLocalFilters((prev) => ({ ...prev, selectedSource: option.value }))
                           setIsSourceOpen(false)
                         }}
                       >
@@ -611,6 +645,20 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
                 </div>
               )}
             </div>
+
+            {/* Apply Filters Button */}
+            <button
+              onClick={handleApplyFilters}
+              className="button-filled flex items-center gap-2 text-sm"
+            >
+              Apply Filters
+            </button>
+            <button
+              onClick={handleResetFilters}
+              className="button-oulined flex items-center gap-2 text-sm"
+            >
+              Reset
+            </button>
           </div>
         </div>
 
@@ -1096,8 +1144,8 @@ const EmployeeDetailsPage = () => {
   const tenure = calculateTenure(employeeDetails.createdAt || new Date().toISOString())
 
   return (
-    <section className="size-full">
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
+      <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col xl:container">
