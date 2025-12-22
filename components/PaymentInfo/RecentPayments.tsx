@@ -296,7 +296,9 @@ const MobileFilterSidebar = ({
                 <FormSelectModule
                   name="customerId"
                   value={localFilters.customerId || ""}
-                  onChange={(e) => handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)}
+                  onChange={(e) =>
+                    handleFilterChange("customerId", e.target.value ? Number(e.target.value) : undefined)
+                  }
                   options={customerOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -342,7 +344,9 @@ const MobileFilterSidebar = ({
                         onClick={() =>
                           handleFilterChange(
                             "paymentTypeId",
-                            localFilters.paymentTypeId === Number(typeOption.value) ? undefined : Number(typeOption.value)
+                            localFilters.paymentTypeId === Number(typeOption.value)
+                              ? undefined
+                              : Number(typeOption.value)
                           )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
@@ -1188,7 +1192,7 @@ const RecentPayments = () => {
               <button
                 type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -1234,124 +1238,124 @@ const RecentPayments = () => {
           {/* Payment Display Area */}
           <div className="w-full">
             {payments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 md:py-8">
-              <div className="text-center">
-                <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
-                  <VscEye className="size-5 text-gray-400 md:size-6" />
+              <div className="flex flex-col items-center justify-center py-6 md:py-8">
+                <div className="text-center">
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-gray-100 md:size-12">
+                    <VscEye className="size-5 text-gray-400 md:size-6" />
+                  </div>
+                  <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No payments found</h3>
+                  <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
+                    {searchText || getActiveFilterCount() > 0
+                      ? "Try adjusting your search criteria or filters"
+                      : "No payments available"}
+                  </p>
                 </div>
-                <h3 className="mt-3 text-base font-medium text-gray-900 md:mt-4 md:text-lg">No payments found</h3>
-                <p className="mt-1 text-xs text-gray-500 md:mt-2 md:text-sm">
-                  {searchText || getActiveFilterCount() > 0
-                    ? "Try adjusting your search criteria or filters"
-                    : "No payments available"}
-                </p>
               </div>
-            </div>
-          ) : viewMode === "grid" ? (
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 md:gap-4 lg:grid-cols-3">
-              {payments.map((payment) => (
-                <PaymentCard key={payment.id} payment={payment} />
-              ))}
-            </div>
-          ) : (
-            <div className="mt-3 divide-y md:mt-4">
-              {payments.map((payment) => (
-                <PaymentListItem key={payment.id} payment={payment} />
-              ))}
+            ) : viewMode === "grid" ? (
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-4 md:gap-4 lg:grid-cols-3">
+                {payments.map((payment) => (
+                  <PaymentCard key={payment.id} payment={payment} />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3 divide-y md:mt-4">
+                {payments.map((payment) => (
+                  <PaymentListItem key={payment.id} payment={payment} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {payments.length > 0 && (
+            <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
+              <div className="order-2 flex items-center gap-1.5 md:order-1">
+                <p className="text-xs md:text-sm">Show rows</p>
+                <select
+                  value={pagination.pageSize || 6}
+                  onChange={handleRowsChange}
+                  className="bg-[#F2F2F2] p-1 text-xs md:text-sm"
+                >
+                  <option value={6}>6</option>
+                  <option value={12}>12</option>
+                  <option value={18}>18</option>
+                  <option value={24}>24</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
+                <button
+                  className={`px-2 py-1 md:px-3 md:py-2 ${
+                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <BiSolidLeftArrow className="size-3.5 md:size-4 lg:size-5" />
+                </button>
+
+                <div className="flex items-center gap-1 md:gap-2">
+                  {/* Desktop pagination */}
+                  <div className="hidden items-center gap-1 md:flex md:gap-2">
+                    {getPageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-7 md:text-sm lg:h-[27px] lg:w-[30px] ${
+                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  {/* Mobile pagination */}
+                  <div className="flex items-center gap-1 md:hidden">
+                    {getMobilePageItems().map((item, index) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                            currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => changePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  className={`px-2 py-1 md:px-3 md:py-2 ${
+                    currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                  }`}
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <BiSolidRightArrow className="size-3.5 md:size-4 lg:size-5" />
+                </button>
+              </div>
+
+              <p className="order-3 text-xs max-sm:hidden md:text-sm lg:text-base">
+                Page {currentPage} of {totalPages} ({totalRecords} total records
+                {getActiveFilterCount() > 0 && " - filtered"})
+              </p>
             </div>
           )}
-        </div>
-
-        {/* Pagination */}
-        {payments.length > 0 && (
-          <div className="mt-4 flex flex-col items-center justify-between gap-3 md:flex-row md:gap-0">
-            <div className="order-2 flex items-center gap-1.5 md:order-1">
-              <p className="text-xs md:text-sm">Show rows</p>
-              <select
-                value={pagination.pageSize || 6}
-                onChange={handleRowsChange}
-                className="bg-[#F2F2F2] p-1 text-xs md:text-sm"
-              >
-                <option value={6}>6</option>
-                <option value={12}>12</option>
-                <option value={18}>18</option>
-                <option value={24}>24</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="order-1 flex items-center gap-2 md:order-2 md:gap-3">
-              <button
-                className={`px-2 py-1 md:px-3 md:py-2 ${
-                  currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <BiSolidLeftArrow className="size-3.5 md:size-4 lg:size-5" />
-              </button>
-
-              <div className="flex items-center gap-1 md:gap-2">
-                {/* Desktop pagination */}
-                <div className="hidden items-center gap-1 md:flex md:gap-2">
-                  {getPageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs md:h-7 md:w-7 md:text-sm lg:h-[27px] lg:w-[30px] ${
-                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
-
-                {/* Mobile pagination */}
-                <div className="flex items-center gap-1 md:hidden">
-                  {getMobilePageItems().map((item, index) =>
-                    typeof item === "number" ? (
-                      <button
-                        key={item}
-                        className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                          currentPage === item ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                        }`}
-                        onClick={() => changePage(item)}
-                      >
-                        {item}
-                      </button>
-                    ) : (
-                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                        {item}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <button
-                className={`px-2 py-1 md:px-3 md:py-2 ${
-                  currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
-                }`}
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                <BiSolidRightArrow className="size-3.5 md:size-4 lg:size-5" />
-              </button>
-            </div>
-
-            <p className="order-3 text-xs max-sm:hidden md:text-sm lg:text-base">
-              Page {currentPage} of {totalPages} ({totalRecords} total records
-              {getActiveFilterCount() > 0 && " - filtered"})
-            </p>
-          </div>
-        )}
         </motion.div>
 
         {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
@@ -1428,7 +1432,9 @@ const RecentPayments = () => {
                         onClick={() =>
                           handleFilterChange(
                             "paymentTypeId",
-                            localFilters.paymentTypeId === Number(typeOption.value) ? undefined : Number(typeOption.value)
+                            localFilters.paymentTypeId === Number(typeOption.value)
+                              ? undefined
+                              : Number(typeOption.value)
                           )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
@@ -1560,7 +1566,6 @@ const RecentPayments = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}
@@ -1588,19 +1593,19 @@ const RecentPayments = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Records:</span>
                   <span className="font-medium">{totalRecords.toLocaleString()}</span>
-                  </div>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Current Page:</span>
                   <span className="font-medium">
                     {currentPage} / {totalPages || 1}
                   </span>
-              </div>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Active Filters:</span>
                   <span className="font-medium">{getActiveFilterCount()}</span>
+                </div>
+              </div>
             </div>
-          </div>
-      </div>
           </motion.div>
         )}
       </div>

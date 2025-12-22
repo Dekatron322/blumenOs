@@ -647,16 +647,10 @@ const EmployeeChangeRequestsSection = ({ employeeId }: { employeeId: number }) =
             </div>
 
             {/* Apply Filters Button */}
-            <button
-              onClick={handleApplyFilters}
-              className="button-filled flex items-center gap-2 text-sm"
-            >
+            <button onClick={handleApplyFilters} className="button-filled flex items-center gap-2 text-sm">
               Apply Filters
             </button>
-            <button
-              onClick={handleResetFilters}
-              className="button-oulined flex items-center gap-2 text-sm"
-            >
+            <button onClick={handleResetFilters} className="button-oulined flex items-center gap-2 text-sm">
               Reset
             </button>
           </div>

@@ -237,7 +237,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
 
-
   const handleViewPaymentDetails = (payment: Payment) => {
     router.push(`/agents/payments/payment-details/${payment.id}`)
   }
@@ -421,7 +420,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     dispatch(setPaymentsPagination({ page: 1, pageSize }))
   }
 
-
   const paginate = (pageNumber: number) => {
     dispatch(setPaymentsPagination({ page: pageNumber, pageSize }))
   }
@@ -545,7 +543,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            {searchText ? "Try adjusting your search term" : "Payments will appear here once transactions are processed"}
+            {searchText
+              ? "Try adjusting your search term"
+              : "Payments will appear here once transactions are processed"}
           </motion.p>
         </motion.div>
       ) : (

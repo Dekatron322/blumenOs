@@ -1,13 +1,9 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { MetersProgrammedIcon, PlayIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import BillingInfo from "components/BillingInfo/BillingInfo"
-import { ButtonModule } from "components/ui/Button/Button"
 import AllBills from "components/BillingInfo/AllBills"
 import StartBillingRun from "components/ui/Modal/start-billing-run"
 
@@ -347,24 +343,24 @@ export default function MeteringDashboard() {
             </div>
 
             {/* Main Content Area */}
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State - Redesigned Metering Dashboard
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      <AllBills />
-                    </motion.div>
-                  </>
-                )}
+            {isLoading ? (
+              // Loading State
+              <>
+                <SkeletonLoader />
+                <LoadingState showCategories={true} />
+              </>
+            ) : (
+              // Loaded State - Redesigned Metering Dashboard
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <AllBills />
+                </motion.div>
+              </>
+            )}
           </div>
         </div>
       </div>
