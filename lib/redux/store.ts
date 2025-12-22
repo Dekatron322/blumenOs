@@ -29,6 +29,7 @@ import companyReducer from "./companySlice"
 import backgroundJobsReducer from "./backgroundJobsSlice"
 import statusMapReducer from "./statusMapSlice"
 import billingDisputeReducer from "./billingDisputeSlice"
+import reportingReducer from "./reportingSlice"
 
 export const store = configureStore({
   reducer: {
@@ -61,6 +62,7 @@ export const store = configureStore({
     backgroundJobs: backgroundJobsReducer,
     statusMap: statusMapReducer,
     billingDispute: billingDisputeReducer,
+    reporting: reportingReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
