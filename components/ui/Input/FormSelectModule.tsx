@@ -34,7 +34,9 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const selectedOption = options.find((option) => String(option.value) === String(value))
 
-  const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredOptions = options.filter((option) =>
+    String(option.label).toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const handleSelect = (value: string | number) => {
     const syntheticEvent = {
