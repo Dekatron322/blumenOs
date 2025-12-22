@@ -11,8 +11,8 @@ import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   ChangeRequestListItem,
-  fetchVendorChangeRequests,
   ChangeRequestsRequestParams,
+  fetchVendorChangeRequests,
   setChangeRequestsPagination,
 } from "lib/redux/vendorSlice"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -495,9 +495,9 @@ const VendorChangeRequests = () => {
   // Fetch vendor change requests with filters
   useEffect(() => {
     const params: ChangeRequestsRequestParams = {
-        pageNumber: currentPage,
-        pageSize: changeRequestsPagination.pageSize,
-        ...(searchText && { reference: searchText }),
+      pageNumber: currentPage,
+      pageSize: changeRequestsPagination.pageSize,
+      ...(searchText && { reference: searchText }),
       ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
       ...(appliedFilters.source !== undefined && { source: appliedFilters.source }),
       ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
@@ -1223,7 +1223,6 @@ const VendorChangeRequests = () => {
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Action Buttons */}

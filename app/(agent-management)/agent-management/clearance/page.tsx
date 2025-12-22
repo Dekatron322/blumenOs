@@ -4,10 +4,9 @@ import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import DashboardNav from "components/Navbar/DashboardNav"
-import { ButtonModule } from "components/ui/Button/Button"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchAgents, AgentsRequestParams } from "lib/redux/agentSlice"
+import { AgentsRequestParams, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import AgentClearanceTable from "components/Tables/AgentClearanceTable"
 
@@ -116,7 +115,7 @@ const MobileFilterSidebar = ({
                   className="w-full"
                   controlClassName="h-9 text-sm"
                 />
-            </div>
+              </div>
 
               {/* Date Range Filters */}
               <div>
@@ -127,7 +126,7 @@ const MobileFilterSidebar = ({
                   onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
                   className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
-      </div>
+              </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">End Date</label>
@@ -137,7 +136,7 @@ const MobileFilterSidebar = ({
                   onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
                   className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
-    </div>
+              </div>
 
               {/* Sort Options */}
               <div>
@@ -197,7 +196,7 @@ const MobileFilterSidebar = ({
                 >
                   Reset
                 </button>
-                </div>
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -500,7 +499,6 @@ export default function CashClearancesPage() {
                         </div>
                       )}
                     </div>
-
                   </div>
 
                   {/* Action Buttons */}

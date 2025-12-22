@@ -5,7 +5,7 @@ import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
@@ -416,7 +416,10 @@ const DistributionSubstationChangeRequest = () => {
                       <button
                         key={option.value}
                         onClick={() =>
-                          handleFilterChange("status", localFilters.status === parseInt(option.value) ? undefined : parseInt(option.value))
+                          handleFilterChange(
+                            "status",
+                            localFilters.status === parseInt(option.value) ? undefined : parseInt(option.value)
+                          )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                           localFilters.status === parseInt(option.value)
@@ -438,7 +441,10 @@ const DistributionSubstationChangeRequest = () => {
                       <button
                         key={option.value}
                         onClick={() =>
-                          handleFilterChange("source", localFilters.source === parseInt(option.value) ? undefined : parseInt(option.value))
+                          handleFilterChange(
+                            "source",
+                            localFilters.source === parseInt(option.value) ? undefined : parseInt(option.value)
+                          )
                         }
                         className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                           localFilters.source === parseInt(option.value)
@@ -479,7 +485,11 @@ const DistributionSubstationChangeRequest = () => {
                           <span>{option.label}</span>
                           {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                             <span className="text-purple-600">
-                              {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
                             </span>
                           )}
                         </button>
@@ -623,7 +633,9 @@ const DistributionSubstationChangeRequest = () => {
               {/* View Mode Toggle */}
               <div className="flex gap-1.5 sm:gap-2">
                 <button
-                  className={`button-oulined flex items-center justify-center gap-1 px-2 py-2 sm:gap-2 sm:px-3 ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                  className={`button-oulined flex items-center justify-center gap-1 px-2 py-2 sm:gap-2 sm:px-3 ${
+                    viewMode === "grid" ? "bg-[#f9f9f9]" : ""
+                  }`}
                   onClick={() => setViewMode("grid")}
                   title="Grid View"
                 >
@@ -631,7 +643,9 @@ const DistributionSubstationChangeRequest = () => {
                   <p className="hidden text-xs sm:block sm:text-sm">Grid</p>
                 </button>
                 <button
-                  className={`button-oulined flex items-center justify-center gap-1 px-2 py-2 sm:gap-2 sm:px-3 ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                  className={`button-oulined flex items-center justify-center gap-1 px-2 py-2 sm:gap-2 sm:px-3 ${
+                    viewMode === "list" ? "bg-[#f9f9f9]" : ""
+                  }`}
                   onClick={() => setViewMode("list")}
                   title="List View"
                 >
@@ -724,7 +738,10 @@ const DistributionSubstationChangeRequest = () => {
                     <button
                       key={option.value}
                       onClick={() =>
-                        handleFilterChange("status", localFilters.status === parseInt(option.value) ? undefined : parseInt(option.value))
+                        handleFilterChange(
+                          "status",
+                          localFilters.status === parseInt(option.value) ? undefined : parseInt(option.value)
+                        )
                       }
                       className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                         localFilters.status === parseInt(option.value)
@@ -746,7 +763,10 @@ const DistributionSubstationChangeRequest = () => {
                     <button
                       key={option.value}
                       onClick={() =>
-                        handleFilterChange("source", localFilters.source === parseInt(option.value) ? undefined : parseInt(option.value))
+                        handleFilterChange(
+                          "source",
+                          localFilters.source === parseInt(option.value) ? undefined : parseInt(option.value)
+                        )
                       }
                       className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                         localFilters.source === parseInt(option.value)
@@ -942,7 +962,7 @@ const ChangeRequestListItem: React.FC<ChangeRequestListItemProps> = ({ changeReq
     <div className="border-b bg-white p-3 transition-all hover:bg-gray-50 sm:p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-          <div className="flex shrink-0 size-10 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
             <span className="text-sm font-semibold text-blue-600">
               {changeRequest.requestedBy
                 .split(" ")
@@ -959,7 +979,9 @@ const ChangeRequestListItem: React.FC<ChangeRequestListItemProps> = ({ changeReq
                 <span className={`size-2 rounded-full ${statusConfig.bg} ${statusConfig.border}`}></span>
                 {statusConfig.label}
               </div>
-              <div className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{sourceConfig.label}</div>
+              <div className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
+                {sourceConfig.label}
+              </div>
               <div className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
                 Ref: {changeRequest.reference}
               </div>
@@ -984,7 +1006,10 @@ const ChangeRequestListItem: React.FC<ChangeRequestListItemProps> = ({ changeReq
             <div className="mt-1 text-xs text-gray-500">{sourceConfig.label}</div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => onViewDetails(changeRequest)} className="button-oulined flex items-center gap-2 text-xs sm:text-sm">
+            <button
+              onClick={() => onViewDetails(changeRequest)}
+              className="button-oulined flex items-center gap-2 text-xs sm:text-sm"
+            >
               <VscEye className="size-4" />
               <span className="hidden sm:inline">View</span>
             </button>
@@ -1015,7 +1040,11 @@ const Pagination: React.FC<PaginationProps> = ({
   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div className="flex items-center gap-1.5 text-xs sm:text-sm">
       <p className="whitespace-nowrap">Show rows</p>
-      <select value={pageSize} onChange={onRowsChange} className="rounded-md border border-gray-300 bg-[#F2F2F2] px-2 py-1.5 text-xs sm:text-sm">
+      <select
+        value={pageSize}
+        onChange={onRowsChange}
+        className="rounded-md border border-gray-300 bg-[#F2F2F2] px-2 py-1.5 text-xs sm:text-sm"
+      >
         <option value={6}>6</option>
         <option value={12}>12</option>
         <option value={18}>18</option>
@@ -1026,7 +1055,9 @@ const Pagination: React.FC<PaginationProps> = ({
 
     <div className="flex items-center justify-center gap-2 sm:gap-3">
       <button
-        className={`flex items-center justify-center rounded-md p-1.5 sm:p-2 ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000] hover:bg-gray-100"}`}
+        className={`flex items-center justify-center rounded-md p-1.5 sm:p-2 ${
+          currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000] hover:bg-gray-100"
+        }`}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         aria-label="Previous page"
@@ -1062,7 +1093,9 @@ const Pagination: React.FC<PaginationProps> = ({
       </div>
 
       <button
-        className={`flex items-center justify-center rounded-md p-1.5 sm:p-2 ${currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000] hover:bg-gray-100"}`}
+        className={`flex items-center justify-center rounded-md p-1.5 sm:p-2 ${
+          currentPage === totalPages ? "cursor-not-allowed text-gray-400" : "text-[#000000] hover:bg-gray-100"
+        }`}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         aria-label="Next page"

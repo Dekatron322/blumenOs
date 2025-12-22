@@ -6,7 +6,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from 
 import DashboardNav from "components/Navbar/DashboardNav"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchAgents, AgentsRequestParams, CollectorType, PaymentChannel, PaymentStatus } from "lib/redux/agentSlice"
+import { AgentsRequestParams, CollectorType, fetchAgents, PaymentChannel, PaymentStatus } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
@@ -130,8 +130,8 @@ const MobileFilterSidebar = ({
                         {option.label}
                       </button>
                     ))}
+                </div>
               </div>
-            </div>
 
               {/* Channel Filter */}
               <div>
@@ -144,7 +144,7 @@ const MobileFilterSidebar = ({
                   className="w-full"
                   controlClassName="h-9 text-sm"
                 />
-          </div>
+              </div>
 
               {/* Collector Type Filter */}
               <div>
@@ -171,7 +171,7 @@ const MobileFilterSidebar = ({
                       </button>
                     ))}
                 </div>
-      </div>
+              </div>
 
               {/* Payment Type Filter */}
               <div>
@@ -186,7 +186,7 @@ const MobileFilterSidebar = ({
                   className="w-full"
                   controlClassName="h-9 text-sm"
                 />
-            </div>
+              </div>
 
               {/* Date Range Filters */}
               <div>
@@ -197,7 +197,7 @@ const MobileFilterSidebar = ({
                   onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
                   className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
-        </div>
+              </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
@@ -207,10 +207,10 @@ const MobileFilterSidebar = ({
                   onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
                   className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
                 />
-    </div>
+              </div>
 
               {/* Sort Options */}
-                <div>
+              <div>
                 <button
                   type="button"
                   onClick={() => setIsSortExpanded((prev) => !prev)}
@@ -267,7 +267,7 @@ const MobileFilterSidebar = ({
                 >
                   Reset
                 </button>
-                </div>
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -463,11 +463,11 @@ export default function PaymentsPage() {
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
             {/* Header and Statistics Container - At the Top */}
-                    <motion.div
+            <motion.div
               className="mb-6 w-full rounded-md border bg-white p-3 md:p-4 lg:p-6"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
               {/* Header Section */}
               <div className="mb-4">
@@ -523,7 +523,7 @@ export default function PaymentsPage() {
                 </div>
 
                 <AllPaymentsTable appliedFilters={appliedFilters} />
-                    </motion.div>
+              </motion.div>
 
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
               {showDesktopFilters && (
@@ -570,7 +570,10 @@ export default function PaymentsPage() {
                             <button
                               key={option.value}
                               onClick={() =>
-                                handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
+                                handleFilterChange(
+                                  "status",
+                                  localFilters.status === option.value ? undefined : option.value
+                                )
                               }
                               className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
                                 localFilters.status === option.value
@@ -599,7 +602,9 @@ export default function PaymentsPage() {
 
                     {/* Collector Type Filter */}
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Collector Type
+                      </label>
                       <div className="grid grid-cols-2 gap-2">
                         {collectorTypeOptions
                           .filter((opt) => opt.value !== "")
@@ -687,7 +692,11 @@ export default function PaymentsPage() {
                               <span>{option.label}</span>
                               {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
                                 <span className="text-purple-600">
-                                  {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
+                                  {option.order === "asc" ? (
+                                    <SortAsc className="size-4" />
+                                  ) : (
+                                    <SortDesc className="size-4" />
+                                  )}
                                 </span>
                               )}
                             </button>
@@ -695,7 +704,6 @@ export default function PaymentsPage() {
                         </div>
                       )}
                     </div>
-
                   </div>
 
                   {/* Action Buttons */}
@@ -725,7 +733,7 @@ export default function PaymentsPage() {
                         <span className="font-medium">{getActiveFilterCount()}</span>
                       </div>
                     </div>
-              </div>
+                  </div>
                 </motion.div>
               )}
             </div>
