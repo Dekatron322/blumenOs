@@ -61,6 +61,8 @@ export default function Dashboard() {
   const [activeView, setActiveView] = useState<"kpi" | "statistics">("kpi")
   const [isLoading, setIsLoading] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null)
+  const [secondsAgo, setSecondsAgo] = useState(0)
   const router = useRouter()
   const dispatch = useAppDispatch()
 
@@ -175,8 +177,9 @@ export default function Dashboard() {
     setUtilityData(generateUtilityData())
   }, [timeFilter])
 
-  useEffect(() => {
+  const refreshDashboardData = () => {
     const now = new Date()
+    setLastFetchTime(now)
     const endDateUtc = now.toISOString()
     const start = new Date(now)
 
@@ -286,7 +289,31 @@ export default function Dashboard() {
 
     dispatch(fetchOutstandingArrears())
     dispatch(fetchDisputes())
+  }
+
+  useEffect(() => {
+    refreshDashboardData()
   }, [dispatch, timeFilter])
+
+  // Short polling effect - fetch data every 20 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshDashboardData()
+    }, 20000) // 20 seconds
+
+    return () => clearInterval(interval)
+  }, [dispatch, timeFilter])
+
+  // Update seconds counter every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastFetchTime) {
+        setSecondsAgo(Math.floor((Date.now() - lastFetchTime.getTime()) / 1000))
+      }
+    }, 1000) // 1 second
+
+    return () => clearInterval(interval)
+  }, [lastFetchTime])
 
   const energyBalanceChartData = (energyBalancePoints || []).map((p) => ({
     name: p.feederName,
@@ -490,7 +517,10 @@ export default function Dashboard() {
                     Utility Dashboard Overview
                   </h1>
                   <p className="text-sm font-medium text-gray-500 sm:text-base">
-                    Real-time overview of customer accounts, revenue, and operational metrics
+                    Real-time overview of platform activites
+                    {lastFetchTime && (
+                      <span className="text-sm font-medium text-[#004B23]"> Last updated: {secondsAgo}s ago</span>
+                    )}
                   </p>
                 </div>
                 <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">

@@ -297,6 +297,13 @@ export const API_ENDPOINTS = {
     DISPUTES: "/reporting/dashboard/disputes",
   },
 
+  REVENUE_ANALYTICS: {
+    DAILY_COLLECTION: "/reporting/revenue/daily-collection",
+    BREAKDOWN: "/reporting/revenue/breakdown",
+    PAYMENT_TYPES: "/reporting/revenue/payment-types",
+    TOP_COLLECTORS: "/reporting/revenue/top-collectors",
+  },
+
   VENDORS: {
     GET: "/vendors",
     GET_BY_ID: "/vendors/{id}",
