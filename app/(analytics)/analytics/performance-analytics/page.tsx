@@ -1,7 +1,7 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -135,6 +135,8 @@ export default function PerformanceAnalyticsDashboard() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
   const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("NGN")
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState(30000) // 30 seconds default
 
   const dispatch = useAppDispatch()
 
@@ -201,7 +203,7 @@ export default function PerformanceAnalyticsDashboard() {
   }
 
   // Fetch all performance data
-  const fetchPerformanceData = () => {
+  const fetchPerformanceData = useCallback(() => {
     const dateRange = getDateRange()
 
     // Clear previous errors
@@ -218,12 +220,23 @@ export default function PerformanceAnalyticsDashboard() {
 
     // Fetch CBO performance
     dispatch(fetchCboPerformance(dateRange))
-  }
+  }, [dispatch, timeFilter])
 
   // Initial data fetch
   useEffect(() => {
     fetchPerformanceData()
-  }, [timeFilter, dispatch])
+  }, [timeFilter, dispatch, fetchPerformanceData])
+
+  // Short polling effect
+  useEffect(() => {
+    if (!isPolling) return
+
+    const interval = setInterval(() => {
+      fetchPerformanceData()
+    }, pollingInterval)
+
+    return () => clearInterval(interval)
+  }, [dispatch, timeFilter, isPolling, pollingInterval, fetchPerformanceData])
 
   // Handle currency change
   useEffect(() => {
@@ -243,6 +256,14 @@ export default function PerformanceAnalyticsDashboard() {
   const handleTimeFilterChange = (filter: TimeFilter) => {
     setTimeFilter(filter)
     setIsMobileFilterOpen(false)
+  }
+
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
+  }
+
+  const handlePollingIntervalChange = (interval: number) => {
+    setPollingInterval(interval)
   }
 
   const handleAddCustomerSuccess = async () => {
@@ -301,23 +322,75 @@ export default function PerformanceAnalyticsDashboard() {
               <div className="flex w-full items-start justify-between">
                 <div>
                   <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
-                    Performance Analytics Dashboard
+                    Performance Analytics
                   </h1>
-                  <p className="text-sm font-medium text-gray-500 sm:text-base">
-                    Collection efficiency, outstanding arrears, and performance metrics
-                  </p>
+                  <p className="text-sm font-medium text-gray-500 sm:text-base">Real Time performance analytics</p>
                 </div>
 
                 {/* Time Filter - Desktop */}
                 <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
-                  <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
-                    <span className="text-sm font-medium text-gray-500">Time Range:</span>
-                    <div className="hidden items-center gap-2 sm:flex">
-                      <TimeFilterButton filter="day" label="Today" />
-                      <TimeFilterButton filter="week" label="This Week" />
-                      <TimeFilterButton filter="month" label="This Month" />
-                      <TimeFilterButton filter="quarter" label="This Quarter" />
-                      <TimeFilterButton filter="year" label="This Year" />
+                  <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
+                    <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
+                      <span className="text-sm font-medium text-gray-500">Time Range:</span>
+                      <div className="hidden items-center gap-2 sm:flex">
+                        <TimeFilterButton filter="day" label="Today" />
+                        <TimeFilterButton filter="week" label="This Week" />
+                        <TimeFilterButton filter="month" label="This Month" />
+                        <TimeFilterButton filter="quarter" label="This Quarter" />
+                        <TimeFilterButton filter="year" label="This Year" />
+                      </div>
+                    </div>
+
+                    {/* Polling Controls */}
+                    <div className="flex items-center gap-2 border-l pl-4">
+                      <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                      <button
+                        onClick={togglePolling}
+                        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          isPolling
+                            ? "bg-green-100 text-green-700 hover:bg-green-200"
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                        }`}
+                      >
+                        {isPolling ? (
+                          <>
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            ON
+                          </>
+                        ) : (
+                          <>
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            OFF
+                          </>
+                        )}
+                      </button>
+
+                      {isPolling && (
+                        <select
+                          value={pollingInterval}
+                          onChange={(e) => handlePollingIntervalChange(Number(e.target.value))}
+                          className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value={10000}>10s</option>
+                          <option value={30000}>30s</option>
+                          <option value={60000}>1m</option>
+                          <option value={300000}>5m</option>
+                        </select>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -352,6 +425,11 @@ export default function PerformanceAnalyticsDashboard() {
 
                         {isMobileFilterOpen && (
                           <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-sm shadow-lg">
+                            <div className="border-b border-gray-100 px-3 py-2">
+                              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                Time Range
+                              </div>
+                            </div>
                             {(["day", "week", "month", "quarter", "year"] as TimeFilter[]).map((filter) => (
                               <button
                                 key={filter}
@@ -364,6 +442,58 @@ export default function PerformanceAnalyticsDashboard() {
                                 {getTimeFilterLabel(filter)}
                               </button>
                             ))}
+
+                            <div className="mb-2 mt-2 border-b border-gray-100"></div>
+                            <div className="px-3 py-2">
+                              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                Auto-refresh
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={togglePolling}
+                              className={`flex w-full items-center justify-between px-3 py-2 ${
+                                isPolling ? "bg-green-50 text-green-700" : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                {isPolling ? (
+                                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                )}
+                                {isPolling ? "Enabled" : "Disabled"}
+                              </span>
+                            </button>
+
+                            {isPolling && (
+                              <div className="px-3 py-2">
+                                <select
+                                  value={pollingInterval}
+                                  onChange={(e) => handlePollingIntervalChange(Number(e.target.value))}
+                                  className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 shadow-sm"
+                                >
+                                  <option value={10000}>10 seconds</option>
+                                  <option value={30000}>30 seconds</option>
+                                  <option value={60000}>1 minute</option>
+                                  <option value={300000}>5 minutes</option>
+                                </select>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
