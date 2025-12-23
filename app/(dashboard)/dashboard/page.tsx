@@ -33,6 +33,70 @@ import {
   VendingIcon,
 } from "components/Icons/Icons"
 
+// Dropdown Popover Component
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {children}
+        <svg
+          className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onSelect(option.value)
+                  setIsOpen(false)
+                }}
+                className={`block w-full px-3 py-2 text-left ${
+                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 import {
   Area,
   AreaChart,
@@ -60,7 +124,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(30000) // 30 seconds default
+  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
   const router = useRouter()
   const dispatch = useAppDispatch()
 
@@ -433,6 +497,16 @@ export default function Dashboard() {
     setPollingInterval(interval)
   }
 
+  // Polling interval options
+  const pollingOptions = [
+    { value: 300000, label: "5m" },
+    { value: 480000, label: "8m" },
+    { value: 660000, label: "11m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
   const getTimeFilterLabel = (filter: TimeFilter) => {
     if (filter === "day") return "Today"
     if (filter === "week") return "This Week"
@@ -581,16 +655,13 @@ export default function Dashboard() {
                       </button>
 
                       {isPolling && (
-                        <select
-                          value={pollingInterval}
-                          onChange={(e) => handlePollingIntervalChange(Number(e.target.value))}
-                          className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <DropdownPopover
+                          options={pollingOptions}
+                          selectedValue={pollingInterval}
+                          onSelect={handlePollingIntervalChange}
                         >
-                          <option value={10000}>10s</option>
-                          <option value={30000}>30s</option>
-                          <option value={60000}>1m</option>
-                          <option value={300000}>5m</option>
-                        </select>
+                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                        </DropdownPopover>
                       )}
                     </div>
                   </div>
@@ -709,16 +780,13 @@ export default function Dashboard() {
 
                             {isPolling && (
                               <div className="px-3 py-2">
-                                <select
-                                  value={pollingInterval}
-                                  onChange={(e) => handlePollingIntervalChange(Number(e.target.value))}
-                                  className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 shadow-sm"
+                                <DropdownPopover
+                                  options={pollingOptions}
+                                  selectedValue={pollingInterval}
+                                  onSelect={handlePollingIntervalChange}
                                 >
-                                  <option value={10000}>10 seconds</option>
-                                  <option value={30000}>30 seconds</option>
-                                  <option value={60000}>1 minute</option>
-                                  <option value={300000}>5 minutes</option>
-                                </select>
+                                  {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                                </DropdownPopover>
                               </div>
                             )}
                           </div>
