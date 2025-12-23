@@ -295,26 +295,6 @@ export default function Dashboard() {
     refreshDashboardData()
   }, [dispatch, timeFilter])
 
-  // Short polling effect - fetch data every 20 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshDashboardData()
-    }, 20000) // 20 seconds
-
-    return () => clearInterval(interval)
-  }, [dispatch, timeFilter])
-
-  // Update seconds counter every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (lastFetchTime) {
-        setSecondsAgo(Math.floor((Date.now() - lastFetchTime.getTime()) / 1000))
-      }
-    }, 1000) // 1 second
-
-    return () => clearInterval(interval)
-  }, [lastFetchTime])
-
   const energyBalanceChartData = (energyBalancePoints || []).map((p) => ({
     name: p.feederName,
     delivered: p.energyDeliveredKwh,
@@ -517,10 +497,7 @@ export default function Dashboard() {
                     Utility Dashboard Overview
                   </h1>
                   <p className="text-sm font-medium text-gray-500 sm:text-base">
-                    Real-time overview of platform activites
-                    {lastFetchTime && (
-                      <span className="text-sm font-medium text-[#004B23]"> Last updated: {secondsAgo}s ago</span>
-                    )}
+                    Comprehensive overview of utility operations, revenue, and customer metrics
                   </p>
                 </div>
                 <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">

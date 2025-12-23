@@ -443,26 +443,6 @@ export default function MeteringDashboard() {
     }
   }, [dispatch, timeFilter, breakdownDimension])
 
-  // Short polling effect - fetch data every 20 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshRevenueData()
-    }, 20000) // 20 seconds
-
-    return () => clearInterval(interval)
-  }, [dispatch, timeFilter, breakdownDimension])
-
-  // Update seconds counter every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (lastFetchTime) {
-        setSecondsAgo(Math.floor((Date.now() - lastFetchTime.getTime()) / 1000))
-      }
-    }, 1000) // 1 second
-
-    return () => clearInterval(interval)
-  }, [lastFetchTime])
-
   const handleTimeFilterChange = (filter: TimeFilter) => {
     setTimeFilter(filter)
     setIsMobileFilterOpen(false)
@@ -543,10 +523,7 @@ export default function MeteringDashboard() {
                     Revenue Analytics
                   </h1>
                   <p className="text-sm font-medium text-gray-500 sm:text-base">
-                    Real-time overview of revenue analytics
-                    {lastFetchTime && (
-                      <span className=" text-sm font-medium text-[#004B23]"> Last updated: {secondsAgo}s ago</span>
-                    )}
+                    Comprehensive view of revenue collection, payment methods, and top performers
                   </p>
                 </div>
                 <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">

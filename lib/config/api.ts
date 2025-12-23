@@ -304,6 +304,15 @@ export const API_ENDPOINTS = {
     TOP_COLLECTORS: "/reporting/revenue/top-collectors",
   },
 
+  CONSUMPTION_ANALYTICS: {
+    ENERGY_BALANCE: "/reporting/consumption/energy-balance",
+    POSTPAID_TREND: "/reporting/consumption/postpaid-trend",
+    PREPAID_VENDS: "/reporting/consumption/prepaid-vends",
+    PREPAID_TOKENS: "/reporting/consumption/prepaid-tokens",
+    NEW_CONNECTIONS: "/reporting/consumption/new-connections",
+    METERS_PROGRAMMED: "/reporting/consumption/meters-programmed",
+  },
+
   VENDORS: {
     GET: "/vendors",
     GET_BY_ID: "/vendors/{id}",
