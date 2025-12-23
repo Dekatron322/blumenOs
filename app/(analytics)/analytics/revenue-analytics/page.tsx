@@ -6,14 +6,14 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { motion } from "framer-motion"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import {
-  fetchRevenueAnalytics,
-  fetchRevenueBreakdown,
-  fetchRevenuePaymentTypes,
-  fetchRevenueTopCollectors,
   clearRevenueAnalytics,
   clearRevenueBreakdown,
   clearRevenuePaymentTypes,
   clearRevenueTopCollectors,
+  fetchRevenueAnalytics,
+  fetchRevenueBreakdown,
+  fetchRevenuePaymentTypes,
+  fetchRevenueTopCollectors,
 } from "lib/redux/revenueAnalyticsSlice"
 import {
   Area,
@@ -32,16 +32,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import {
-  BillingIcon,
-  CollectionIcon,
-  ConnectionIcon,
-  CustomeraIcon,
-  MetersProgrammedIcon,
-  RevenueIcon,
-  TokenGeneratedIcon,
-  VendingIcon,
-} from "components/Icons/Icons"
+import { BillingIcon, CollectionIcon, CustomeraIcon, MetersProgrammedIcon, RevenueIcon } from "components/Icons/Icons"
 
 // Time filter types
 type TimeFilter = "day" | "week" | "month" | "year" | "all"
