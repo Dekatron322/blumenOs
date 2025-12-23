@@ -10,9 +10,11 @@ import {
   AuditIcon,
   BillingIcon,
   DashboardIcon,
+  MeteringIcon,
   OutageIcon,
   PaymentIcon,
   ServiceIcon,
+  TokenIcon,
 } from "./Icons"
 
 export type LinkChild = { name: string; href: string; privilegeKey?: string; requiredActions?: string[] }
@@ -118,20 +120,20 @@ export const allLinks: LinkItem[] = [
       },
     ],
   },
-  // {
-  //   name: "Metering & AMI",
-  //   href: "/metering",
-  //   icon: MeteringIcon,
-  //   privilegeKey: "assets",
-  //   requiredActions: ["R"],
-  // },
-  // {
-  //   name: "Prepaid & Tokens",
-  //   href: "/tokens",
-  //   icon: TokenIcon,
-  //   privilegeKey: "payments",
-  //   requiredActions: ["R"],
-  // },
+  {
+    name: "Metering & AMI",
+    href: "/metering",
+    icon: MeteringIcon,
+    privilegeKey: "assets",
+    requiredActions: ["R"],
+  },
+  {
+    name: "Prepaid & Tokens",
+    href: "/tokens",
+    icon: TokenIcon,
+    privilegeKey: "payments",
+    requiredActions: ["R"],
+  },
   {
     name: "Payments",
     href: "/payment",

@@ -313,6 +313,13 @@ export const API_ENDPOINTS = {
     METERS_PROGRAMMED: "/reporting/consumption/meters-programmed",
   },
 
+  PERFORMANCE_ANALYTICS: {
+    COLLECTION_EFFICIENCY: "/reporting/performance/collection-efficiency",
+    OUTSTANDING_ARREARS: "/reporting/performance/outstanding-arrears",
+    COLLECTION_BY_BAND: "/reporting/performance/collection-by-band",
+    CBO_PERFORMANCE: "/reporting/performance/cbo-performance",
+  },
+
   VENDORS: {
     GET: "/vendors",
     GET_BY_ID: "/vendors/{id}",
