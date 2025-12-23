@@ -297,30 +297,6 @@ const TimeFilterButton = ({
   </button>
 )
 
-// Generate mock meter data
-const generateMeterData = () => {
-  return {
-    smartMeters: 89420,
-    conventionalMeters: 29514,
-    readSuccessRate: 94.2,
-    alerts: 847,
-    totalMeters: 89420 + 29514,
-    revenueToday: 2450000,
-    revenueMTD: 45200000,
-    revenueYTD: 512000000,
-    customers: 125000,
-    prepaidCustomers: 85000,
-    postpaidCustomers: 35000,
-    collectionEfficiency: 92.5,
-    totalEnergyDelivered: 15200000,
-    totalEnergyBilled: 14500000,
-    prepaidVendsToday: 1250,
-    tokensGeneratedToday: 1850,
-    newConnectionsToday: 45,
-    metersProgrammedToday: 68,
-  }
-}
-
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -358,29 +334,17 @@ export default function MeteringDashboard() {
     metersProgrammedSuccess,
   } = useAppSelector((state) => state.consumptionAnalytics)
 
-  const [meterData, setMeterData] = useState(generateMeterData())
-
-  // Use mock data
-  const {
-    smartMeters,
-    conventionalMeters,
-    readSuccessRate,
-    alerts,
-    totalMeters,
-    revenueToday,
-    revenueMTD,
-    revenueYTD,
-    customers,
-    prepaidCustomers,
-    postpaidCustomers,
-    collectionEfficiency,
-    totalEnergyDelivered,
-    totalEnergyBilled,
-    prepaidVendsToday,
-    tokensGeneratedToday,
-    newConnectionsToday,
-    metersProgrammedToday,
-  } = meterData
+  // Calculate totals from API data
+  const totalEnergyDelivered = (consumptionData || []).reduce((acc, point) => acc + point.energyDeliveredKwh, 0)
+  const totalEnergyBilled = (consumptionData || []).reduce((acc, point) => acc + point.energyBilledKwh, 0)
+  const totalCustomers =
+    (prepaidVendsData || []).reduce((acc, point) => acc + point.vendCount, 0) + (postpaidTrendData || []).length
+  const totalPrepaidCustomers = (prepaidVendsData || []).reduce((acc, point) => acc + point.vendCount, 0)
+  const totalPostpaidCustomers = totalCustomers - totalPrepaidCustomers
+  const totalMeters = totalCustomers // Assuming one meter per customer
+  const readSuccessRate = consumptionData.length > 0 ? 95.5 : 0 // Placeholder - should come from API
+  const alerts = 0 // Placeholder - should come from API
+  const collectionEfficiency = 90.2 // Placeholder - should come from API
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -394,7 +358,6 @@ export default function MeteringDashboard() {
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
     // Refresh data after adding customer
-    setMeterData(generateMeterData())
     refreshConsumptionData()
   }
 
@@ -402,7 +365,6 @@ export default function MeteringDashboard() {
     setIsLoading(true)
     refreshConsumptionData()
     setTimeout(() => {
-      setMeterData(generateMeterData())
       setIsLoading(false)
     }, 1000)
   }
@@ -552,16 +514,6 @@ export default function MeteringDashboard() {
     programmed: point.programmedCount,
     distinct: point.distinctMeters,
   }))
-
-  const meterTypesData = [
-    { name: "Smart Meters", value: smartMeters, color: "#004B23" },
-    { name: "Conventional Meters", value: conventionalMeters, color: "#38b000" },
-  ]
-
-  const customerTypesData = [
-    { name: "Prepaid", value: prepaidCustomers, color: "#004B23" },
-    { name: "Postpaid", value: postpaidCustomers, color: "#38b000" },
-  ]
 
   const COLORS = ["#004B23", "#38b000", "#007200", "#4f46e5", "#ea5806", "#dc2626"]
 
@@ -747,7 +699,7 @@ export default function MeteringDashboard() {
                 <Metric>{formatNumber(totalPrepaidVends)} vends</Metric>
                 <div className="mt-2 flex gap-4 text-sm">
                   <span className="text-green-600">{formatNumber(totalPrepaidTokens)} tokens</span>
-                  <span className="text-blue-600">{formatNumber(prepaidCustomers)} customers</span>
+                  <span className="text-blue-600">{formatNumber(totalPrepaidCustomers)} customers</span>
                 </div>
               </Card>
 
@@ -759,7 +711,7 @@ export default function MeteringDashboard() {
                 <Metric>{formatNumber(totalMeters)}</Metric>
                 <div className="mt-2 flex gap-4 text-sm">
                   <span className="text-green-600">Programmed: {formatNumber(totalMetersProgrammed)}</span>
-                  <span className="text-blue-600">New: {formatNumber(newConnectionsData.totalConnections)}</span>
+                  <span className="text-blue-600">New: {formatNumber(newConnectionsData.totalConnections || 0)}</span>
                 </div>
               </Card>
 

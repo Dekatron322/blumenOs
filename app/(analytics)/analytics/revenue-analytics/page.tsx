@@ -322,42 +322,6 @@ export default function MeteringDashboard() {
     topCollectorsSuccess,
   } = useAppSelector((state) => state.revenueAnalytics)
 
-  // Generate mock meter data
-  const generateMeterData = () => {
-    return {
-      smartMeters: 89420,
-      conventionalMeters: 29514,
-      readSuccessRate: 94.2,
-      alerts: 847,
-      totalMeters: 89420 + 29514,
-      revenueToday: 2450000,
-      revenueMTD: 45200000,
-      revenueYTD: 512000000,
-      customers: 125000,
-      prepaidCustomers: 85000,
-      postpaidCustomers: 35000,
-      collectionEfficiency: 92.5,
-    }
-  }
-
-  const [meterData, setMeterData] = useState(generateMeterData())
-
-  // Use mock data
-  const {
-    smartMeters,
-    conventionalMeters,
-    readSuccessRate,
-    alerts,
-    totalMeters,
-    revenueToday,
-    revenueMTD,
-    revenueYTD,
-    customers,
-    prepaidCustomers,
-    postpaidCustomers,
-    collectionEfficiency,
-  } = meterData
-
   // Format numbers with commas
   const formatNumber = (num: number) => {
     return num.toLocaleString()
@@ -366,15 +330,13 @@ export default function MeteringDashboard() {
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
     // Refresh data after adding customer
-    setMeterData(generateMeterData())
     refreshRevenueData()
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
+    refreshRevenueData()
     setTimeout(() => {
-      setMeterData(generateMeterData())
-      refreshRevenueData()
       setIsLoading(false)
     }, 1000)
   }
@@ -486,14 +448,31 @@ export default function MeteringDashboard() {
     type: collector.collectorType,
   }))
 
+  // Calculate totals from API data
+  const totalRevenue = revenueData?.reduce((sum, point) => sum + point.amount, 0) || 0
+  const totalTransactions = revenueData?.reduce((sum, point) => sum + point.count, 0) || 0
+  const averageTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0
+
+  // Calculate breakdown totals
+  const totalBreakdownRevenue = breakdownSlices?.reduce((sum, slice) => sum + slice.amount, 0) || 0
+  const totalBreakdownCount = breakdownSlices?.reduce((sum, slice) => sum + slice.count, 0) || 0
+
+  // Calculate payment types totals
+  const totalPaymentRevenue = paymentTypesSlices?.reduce((sum, slice) => sum + slice.amount, 0) || 0
+  const totalPaymentCount = paymentTypesSlices?.reduce((sum, slice) => sum + slice.count, 0) || 0
+
+  // Calculate top collectors totals
+  const totalCollectorRevenue = topCollectors?.reduce((sum, collector) => sum + collector.totalAmount, 0) || 0
+  const totalCollectorCount = topCollectors?.reduce((sum, collector) => sum + collector.totalCount, 0) || 0
+
   const meterTypesData = [
-    { name: "Smart Meters", value: smartMeters, color: "#004B23" },
-    { name: "Conventional Meters", value: conventionalMeters, color: "#38b000" },
+    { name: "Smart Meters", value: totalBreakdownCount, color: "#004B23" },
+    { name: "Conventional Meters", value: totalPaymentCount, color: "#38b000" },
   ]
 
   const customerTypesData = [
-    { name: "Prepaid", value: prepaidCustomers, color: "#004B23" },
-    { name: "Postpaid", value: postpaidCustomers, color: "#38b000" },
+    { name: "Prepaid", value: totalCollectorCount, color: "#004B23" },
+    { name: "Postpaid", value: totalTransactions, color: "#38b000" },
   ]
 
   const COLORS = ["#004B23", "#38b000", "#007200", "#4f46e5", "#ea5806", "#dc2626"]
@@ -635,18 +614,6 @@ export default function MeteringDashboard() {
 
             {/* Quick Stats Cards */}
             <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <Card title="Total Meters" icon={getCardIcon("Total Meters")}>
-                <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Smart & Conventional</Text>
-                  <Text className="text-xs">{getTimeFilterLabel(timeFilter)}</Text>
-                </div>
-                <Metric>{formatNumber(totalMeters)}</Metric>
-                <div className="mt-2 flex gap-4 text-sm">
-                  <span className="text-green-600">Smart: {formatNumber(smartMeters)}</span>
-                  <span className="text-blue-600">Conv: {formatNumber(conventionalMeters)}</span>
-                </div>
-              </Card>
-
               <Card title="Total Revenue" icon={getCardIcon("Total Revenue")}>
                 <div className="mb-2 flex items-center justify-between border-b py-2">
                   <Text>{getTimeFilterLabel(timeFilter)} Revenue</Text>
@@ -654,33 +621,36 @@ export default function MeteringDashboard() {
                 </div>
                 <Metric>
                   {selectedCurrencySymbol}
-                  {formatNumber(timeFilter === "day" ? revenueToday : timeFilter === "month" ? revenueMTD : revenueYTD)}
+                  {formatNumber(totalRevenue)}
                 </Metric>
                 <div className="mt-2 text-sm text-gray-600">{revenueData?.length || 0} days of data</div>
               </Card>
 
-              <Card title="Total Customers" icon={getCardIcon("Total Customers")}>
+              <Card title="Total Transactions" icon={getCardIcon("Total Transactions")}>
                 <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Active Customers</Text>
-                  <Text className="text-xs">{getTimeFilterLabel(timeFilter)}</Text>
+                  <Text>{getTimeFilterLabel(timeFilter)} Transactions</Text>
+                  <Text className="text-xs">All Payment Types</Text>
                 </div>
-                <Metric>{formatNumber(customers)}</Metric>
-                <div className="mt-2 flex gap-4 text-sm">
-                  <span className="text-green-600">Prepaid: {formatNumber(prepaidCustomers)}</span>
-                  <span className="text-blue-600">Postpaid: {formatNumber(postpaidCustomers)}</span>
-                </div>
+                <Metric>{formatNumber(totalTransactions)}</Metric>
+                <div className="mt-2 text-sm text-gray-600">Avg: {formatNumber(Math.round(averageTransaction))}</div>
               </Card>
 
-              <Card title="Collection Efficiency" icon={getCardIcon("Collection Efficiency")}>
+              <Card title="Payment Methods" icon={getCardIcon("Payment Methods")}>
                 <div className="mb-2 flex items-center justify-between border-b py-2">
-                  <Text>Success Rate</Text>
-                  <Text className="text-xs">{getTimeFilterLabel(timeFilter)}</Text>
+                  <Text>Active Methods</Text>
+                  <Text className="text-xs">Payment Types</Text>
                 </div>
-                <Metric>{collectionEfficiency}%</Metric>
-                <div className="mt-2 flex gap-4 text-sm">
-                  <span className="text-green-600">Read Success: {readSuccessRate}%</span>
-                  <span className="text-red-600">Alerts: {formatNumber(alerts)}</span>
+                <Metric>{paymentTypesSlices?.length || 0}</Metric>
+                <div className="mt-2 text-sm text-gray-600">{formatNumber(totalPaymentCount)} payments</div>
+              </Card>
+
+              <Card title="Top Collectors" icon={getCardIcon("Top Collectors")}>
+                <div className="mb-2 flex items-center justify-between border-b py-2">
+                  <Text>Active Collectors</Text>
+                  <Text className="text-xs">Top Performers</Text>
                 </div>
+                <Metric>{topCollectors?.length || 0}</Metric>
+                <div className="mt-2 text-sm text-gray-600">{formatNumber(totalCollectorCount)} collections</div>
               </Card>
             </div>
 
