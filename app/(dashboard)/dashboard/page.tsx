@@ -33,6 +33,22 @@ import {
   VendingIcon,
 } from "components/Icons/Icons"
 
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
 // Dropdown Popover Component
 const DropdownPopover = ({
   options,
@@ -97,22 +113,6 @@ const DropdownPopover = ({
   )
 }
 
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
-
 // Time filter types
 type TimeFilter = "day" | "week" | "month" | "all"
 
@@ -175,17 +175,6 @@ export default function Dashboard() {
     disputesLoading,
     disputesError,
   } = useAppSelector((state) => state.reporting)
-
-  const serviceTypeData = [
-    { name: "H1A", collection: 85, total: 100 },
-    { name: "Other", collection: 60, total: 100 },
-  ]
-
-  const atcLossesData = [
-    { month: "Sep", losses: 12.5 },
-    { month: "Oct", losses: 11.2 },
-    { month: "Nov", losses: 9.8 },
-  ]
 
   const activeCustomersData = customerSegmentsData?.segments?.map((segment) => ({
     name: segment.label,

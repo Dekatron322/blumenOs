@@ -236,7 +236,7 @@ const AddDunningCasePage = () => {
           areaOfficeName: result.areaOfficeName,
           address: result.address,
           city: result.city,
-          state: result.state,
+          state: result.provinceName,
           serviceCenterName: result.serviceCenterName,
           meterNumber: result.meterNumber,
           isPPM: result.isPPM,

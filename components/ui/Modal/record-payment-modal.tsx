@@ -9,7 +9,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { notify } from "components/ui/Notification/Notification"
-import { recordCustomerPayment, fetchCustomerPaymentChannels } from "lib/redux/createCustomerSlice"
+import { fetchCustomerPaymentChannels, recordCustomerPayment } from "lib/redux/createCustomerSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 
 interface RecordPaymentModalProps {
