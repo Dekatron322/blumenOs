@@ -756,9 +756,11 @@ const AllCustomerCategoriesTable: React.FC = () => {
               <p className="mb-6 text-gray-600">
                 {searchText ? "Try adjusting your search or filters" : "Create your first category to get started"}
               </p>
-              <ButtonModule variant="primary" onClick={() => router.push("/customer-categories/add")}>
-                Create New Category
-              </ButtonModule>
+              <div className="flex justify-center">
+                <ButtonModule variant="primary" onClick={() => router.push("/customer-categories/add")}>
+                  Create New Category
+                </ButtonModule>
+              </div>
             </div>
           ) : viewMode === "grid" ? (
             <motion.div

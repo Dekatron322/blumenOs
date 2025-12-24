@@ -617,7 +617,7 @@ const AllCustomers = () => {
         </div>
         <div className="flex justify-between">
           <span className="text-xs md:text-sm">Region:</span>
-          <span className="text-xs font-medium md:text-sm">{customer.state}</span>
+          <span className="text-xs font-medium md:text-sm">{customer.provinceName}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-xs md:text-sm">Service Center:</span>
@@ -701,7 +701,7 @@ const AllCustomers = () => {
                 <strong className="hidden md:inline">Account:</strong> {customer.accountNumber}
               </span>
               <span>
-                <strong>Region:</strong> {customer.state}
+                <strong>Region:</strong> {customer.provinceName}
               </span>
               <span>
                 <strong>Service Center:</strong> {customer.serviceCenterName}

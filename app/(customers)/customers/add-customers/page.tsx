@@ -24,12 +24,18 @@ interface CustomerFormData {
   phoneNumber: string
   phoneOffice: string
   gender: string
+  customerID: string
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
   email: string
   address: string
   distributionSubstationId: number
   addressTwo: string
   city: string
-  state: string
+  provinceId: number
   lga: string
   serviceCenterId: number
   latitude: number
@@ -101,12 +107,18 @@ const AddCustomerPage = () => {
     phoneNumber: "",
     phoneOffice: "",
     gender: "",
+    customerID: "",
+    autoNumber: "",
+    isCustomerNew: true,
+    isPostEnumerated: false,
+    statusCode: "",
+    isReadyforExtraction: false,
     email: "",
     address: "",
     distributionSubstationId: 0,
     addressTwo: "",
     city: "",
-    state: "",
+    provinceId: 0,
     lga: "",
     serviceCenterId: 0,
     latitude: 0,
@@ -256,9 +268,9 @@ const AddCustomerPage = () => {
   )
 
   const provinceOptions = [
-    { value: "", label: "Select state" },
+    { value: 0, label: "Select state" },
     ...((nigeria?.provinces ?? []).map((province) => ({
-      value: province.name,
+      value: province.id,
       label: province.name,
     })) || []),
   ]
@@ -390,23 +402,26 @@ const AddCustomerPage = () => {
     }
 
     try {
-      const createData: CreateCustomerRequest = {
+      // Find the selected province name to use as state
+      const selectedProvince = nigeria?.provinces?.find((province) => province.id === formData.provinceId)
+
+      const createData = {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         phoneOffice: formData.phoneOffice,
         gender: formData.gender,
-        customerID: "",
-        autoNumber: "",
-        isCustomerNew: true,
-        isPostEnumerated: false,
-        statusCode: "ACTIVE",
-        isReadyforExtraction: false,
+        customerID: formData.customerID,
+        autoNumber: formData.autoNumber || "",
+        isCustomerNew: formData.isCustomerNew,
+        isPostEnumerated: formData.isPostEnumerated,
+        statusCode: formData.statusCode || "ACTIVE",
+        isReadyforExtraction: formData.isReadyforExtraction,
         email: formData.email,
         address: formData.address,
         distributionSubstationId: formData.distributionSubstationId,
         addressTwo: formData.addressTwo,
         city: formData.city,
-        state: formData.state,
+        state: selectedProvince?.name || "",
         lga: formData.lga,
         serviceCenterId: formData.serviceCenterId,
         latitude: formData.latitude,
@@ -446,12 +461,18 @@ const AddCustomerPage = () => {
       phoneNumber: "",
       phoneOffice: "",
       gender: "",
+      customerID: "",
+      autoNumber: "",
+      isCustomerNew: true,
+      isPostEnumerated: false,
+      statusCode: "",
+      isReadyforExtraction: false,
       email: "",
       address: "",
       distributionSubstationId: 0,
       addressTwo: "",
       city: "",
-      state: "",
+      provinceId: 0,
       lga: "",
       serviceCenterId: 0,
       latitude: 0,
@@ -478,8 +499,8 @@ const AddCustomerPage = () => {
       customerCategoryId: 0,
       customerSubCategoryId: 0,
     })
-    setFormErrors({})
     setCurrentStep(1)
+    setFormErrors({})
     dispatch(clearCreateState())
   }
 
@@ -943,8 +964,8 @@ const AddCustomerPage = () => {
 
                             <FormSelectModule
                               label="State"
-                              name="state"
-                              value={formData.state}
+                              name="provinceId"
+                              value={formData.provinceId}
                               onChange={handleInputChange}
                               options={provinceOptions}
                               disabled={countriesLoading}

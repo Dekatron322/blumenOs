@@ -9,6 +9,8 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch } from "lib/hooks/useRedux"
 import { notify } from "components/ui/Notification/Notification"
 import { createManualBill } from "lib/redux/postpaidSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
+import { useAppSelector } from "lib/hooks/useRedux"
 
 interface ManualBillModalProps {
   isOpen: boolean
@@ -34,8 +36,9 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
   vatRate,
 }) => {
   const dispatch = useAppDispatch()
+  const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
 
-  const [period, setPeriod] = React.useState("")
+  const [billingPeriodId, setBillingPeriodId] = React.useState<number | "">("")
   const [category, setCategory] = React.useState<number | "">("")
   const [previousReadingKwh, setPreviousReadingKwh] = React.useState("")
   const [presentReadingKwh, setPresentReadingKwh] = React.useState("")
@@ -46,9 +49,9 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
 
   React.useEffect(() => {
     if (isOpen) {
-      const now = new Date()
-      const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
-      setPeriod(defaultPeriod)
+      // Fetch billing periods
+      dispatch(fetchBillingPeriods({ status: 1 })) // Fetch active periods
+      setBillingPeriodId("")
       setCategory("")
       setPreviousReadingKwh("")
       setPresentReadingKwh("")
@@ -56,13 +59,13 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
       setIsEstimated(false)
       setEstimatedConsumptionKwh("")
     }
-  }, [isOpen])
+  }, [isOpen, dispatch])
 
   if (!isOpen) return null
 
   const handleSubmit = async () => {
-    if (!period.trim()) {
-      notify("error", "Please provide a billing period")
+    if (billingPeriodId === "" || Number.isNaN(Number(billingPeriodId))) {
+      notify("error", "Please select a billing period")
       return
     }
 
@@ -71,8 +74,13 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
       return
     }
 
-    if (!previousReadingKwh || !presentReadingKwh || !energyCapKwh) {
-      notify("error", "Please provide all meter readings and energy cap")
+    if (!previousReadingKwh || !presentReadingKwh) {
+      notify("error", "Please provide all meter readings")
+      return
+    }
+
+    if (category === 2 && !energyCapKwh) {
+      notify("error", "Please provide energy cap for unmetered customers")
       return
     }
 
@@ -83,12 +91,17 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
 
     const previousReading = Number(previousReadingKwh)
     const presentReading = Number(presentReadingKwh)
-    const energyCap = Number(energyCapKwh)
+    const energyCap = category === 2 ? Number(energyCapKwh) : 0
     const categoryValue = Number(category)
     const estimatedKwh = estimatedConsumptionKwh ? Number(estimatedConsumptionKwh) : undefined
 
-    if ([previousReading, presentReading, energyCap, categoryValue].some((v) => Number.isNaN(v))) {
+    if ([previousReading, presentReading, categoryValue].some((v) => Number.isNaN(v))) {
       notify("error", "Numeric fields must contain valid numbers")
+      return
+    }
+
+    if (category === 2 && Number.isNaN(energyCap)) {
+      notify("error", "Energy cap must contain a valid number")
       return
     }
 
@@ -103,13 +116,13 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
       const result = await dispatch(
         createManualBill({
           customerId,
-          period: period.trim(),
+          billingPeriodId: Number(billingPeriodId),
           category: categoryValue,
           feederId,
           distributionSubstationId,
           previousReadingKwh: previousReading,
           presentReadingKwh: presentReading,
-          energyCapKwh: energyCap,
+          ...(category === 2 ? { energyCapKwh: energyCap } : {}),
           tariffPerKwh,
           vatRate,
           isEstimated,
@@ -169,14 +182,17 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
             </p>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <FormInputModule
-                label="Period"
-                type="text"
-                placeholder="e.g. 2025-01"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
+              <FormSelectModule
+                label="Billing Period"
+                name="billingPeriodId"
+                value={billingPeriodId === "" ? "" : billingPeriodId}
+                onChange={({ target }) => setBillingPeriodId(target.value === "" ? "" : Number(target.value))}
+                options={billingPeriods.map((period) => ({
+                  value: period.id,
+                  label: period.displayName,
+                }))}
                 required
-                disabled={isLoading}
+                disabled={isLoading || billingPeriodsLoading}
               />
 
               <FormSelectModule
@@ -212,15 +228,17 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
                 disabled={isLoading}
               />
 
-              <FormInputModule
-                label="Energy Cap (kWh)"
-                type="number"
-                placeholder="0"
-                value={energyCapKwh}
-                onChange={(e) => setEnergyCapKwh(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+              {category === 2 && (
+                <FormInputModule
+                  label="Energy Cap (kWh)"
+                  type="number"
+                  placeholder="0"
+                  value={energyCapKwh}
+                  onChange={(e) => setEnergyCapKwh(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              )}
 
               <div className="flex items-center gap-2 pt-5">
                 <input
@@ -272,8 +290,8 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
         <div className="flex gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:gap-4 sm:px-6 sm:py-5">
           <ButtonModule
             variant="secondary"
-            className="flex-1 text-sm sm:text-base"
-            size="sm"
+            className="flex w-full text-sm sm:text-base"
+            size="md"
             onClick={onRequestClose}
             disabled={isLoading}
           >
@@ -281,8 +299,8 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
           </ButtonModule>
           <ButtonModule
             variant="primary"
-            className="flex-1 text-sm sm:text-base"
-            size="sm"
+            className="flex w-full text-sm sm:text-base"
+            size="md"
             onClick={handleSubmit}
             disabled={isLoading}
           >

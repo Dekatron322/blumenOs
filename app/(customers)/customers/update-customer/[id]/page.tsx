@@ -20,33 +20,57 @@ import {
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
+import { fetchCountries } from "lib/redux/countriesSlice"
+import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
 import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface CustomerFormData {
   fullName: string
   phoneNumber: string
   email: string
+  customerID: string | undefined
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
+  phoneOffice: string
+  gender: string
   address: string
   distributionSubstationId: number
   status: string
   addressTwo: string
   city: string
-  state: string
+  provinceId: number
+  lga: string
   serviceCenterId: number
   latitude: number
   longitude: number
   tariff: number
-  meterNumber: string
+  tariffCode: string
+  tariffID: string
+  tariffInddex: string
+  tariffType: string
+  tariffClass: string
+  newRate: number
+  vat: number
+  isVATWaved: boolean
   isPPM: boolean
   isMD: boolean
+  isUrban: boolean
+  isHRB: boolean
+  isCustomerAccGovt: boolean
   comment: string
   band: string
   storedAverage: number
+  salesRepUserId: number
+  technicalEngineerUserId: number
+  customerCategoryId: number
+  customerSubCategoryId: number
+  meterNumber: string
   totalMonthlyVend: number
   totalMonthlyDebt: number
   customerOutstandingDebtBalance: number
-  salesRepUserId: number
-  technicalEngineerUserId: number
 }
 
 const UpdateCustomerPage = () => {
@@ -72,31 +96,67 @@ const UpdateCustomerPage = () => {
 
   const { employees, employeesLoading, employeesError } = useSelector((state: RootState) => state.employee)
 
+  const {
+    countries,
+    loading: countriesLoading,
+    error: countriesError,
+  } = useSelector((state: RootState) => state.countries)
+
+  const {
+    categories: customerCategories,
+    loading: customerCategoriesLoading,
+    error: customerCategoriesError,
+  } = useSelector((state: RootState) => state.customerCategories)
+
+  const { subCategories, subCategoriesLoading } = useSelector((state: RootState) => state.customerCategories)
+
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: "",
     phoneNumber: "",
     email: "",
+    customerID: undefined,
+    autoNumber: "",
+    isCustomerNew: false,
+    isPostEnumerated: false,
+    statusCode: "",
+    isReadyforExtraction: false,
+    phoneOffice: "",
+    gender: "",
     address: "",
     distributionSubstationId: 0,
     status: "",
     addressTwo: "",
     city: "",
-    state: "",
+    provinceId: 0,
+    lga: "",
     serviceCenterId: 0,
     latitude: 0,
     longitude: 0,
     tariff: 0,
-    meterNumber: "",
+    tariffCode: "",
+    tariffID: "",
+    tariffInddex: "",
+    tariffType: "",
+    tariffClass: "",
+    newRate: 0,
+    vat: 0,
+    isVATWaved: false,
     isPPM: false,
     isMD: false,
+    isUrban: false,
+    isHRB: false,
+    isCustomerAccGovt: false,
     comment: "",
     band: "",
     storedAverage: 0,
+    salesRepUserId: 0,
+    technicalEngineerUserId: 0,
+    customerCategoryId: 0,
+    customerSubCategoryId: 0,
+    meterNumber: "",
     totalMonthlyVend: 0,
     totalMonthlyDebt: 0,
     customerOutstandingDebtBalance: 0,
-    salesRepUserId: 0,
-    technicalEngineerUserId: 0,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -147,39 +207,80 @@ const UpdateCustomerPage = () => {
         pageSize: 100,
       })
     )
+
+    // Load countries so we can populate provinces (states) for Nigeria
+    dispatch(fetchCountries())
+
+    // Fetch customer categories for the dropdown
+    dispatch(fetchCustomerCategories())
   }, [dispatch, id, router])
 
   // Populate form when current customer data is loaded
   useEffect(() => {
     if (currentCustomer) {
+      const categoryId = currentCustomer.category?.id || 0
       setFormData({
         fullName: currentCustomer.fullName || "",
         phoneNumber: currentCustomer.phoneNumber || "",
         email: currentCustomer.email || "",
+        customerID: currentCustomer.customerID || undefined,
+        autoNumber: currentCustomer.autoNumber || "",
+        isCustomerNew: currentCustomer.isCustomerNew || false,
+        isPostEnumerated: currentCustomer.isPostEnumerated || false,
+        statusCode: currentCustomer.statusCode || "",
+        isReadyforExtraction: currentCustomer.isReadyforExtraction || false,
+        phoneOffice: currentCustomer.phoneOffice || "",
+        gender: currentCustomer.gender || "",
         address: currentCustomer.address || "",
         distributionSubstationId: currentCustomer.distributionSubstationId || 0,
         status: currentCustomer.status || "",
         addressTwo: currentCustomer.addressTwo || "",
         city: currentCustomer.city || "",
-        state: currentCustomer.state || "",
+        provinceId: currentCustomer.provinceId || 0,
+        lga: currentCustomer.lga || "",
         serviceCenterId: currentCustomer.serviceCenterId || 0,
         latitude: currentCustomer.latitude || 0,
         longitude: currentCustomer.longitude || 0,
         tariff: currentCustomer.tariff || 0,
-        meterNumber: currentCustomer.meterNumber || "",
+        tariffCode: currentCustomer.tariffCode || "",
+        tariffID: currentCustomer.tariffID || "",
+        tariffInddex: currentCustomer.tariffInddex || "",
+        tariffType: currentCustomer.tariffType || "",
+        tariffClass: currentCustomer.tariffClass || "",
+        newRate: currentCustomer.newRate || 0,
+        vat: currentCustomer.vat || 0,
+        isVATWaved: currentCustomer.isVATWaved || false,
         isPPM: currentCustomer.isPPM || false,
         isMD: currentCustomer.isMD || false,
+        isUrban: currentCustomer.isUrban || false,
+        isHRB: currentCustomer.isHRB || false,
+        isCustomerAccGovt: currentCustomer.isCustomerAccGovt || false,
         comment: currentCustomer.comment || "",
         band: currentCustomer.band || "",
         storedAverage: currentCustomer.storedAverage || 0,
+        salesRepUserId: currentCustomer.salesRepUserId || 0,
+        technicalEngineerUserId: currentCustomer.technicalEngineerUserId || 0,
+        customerCategoryId: categoryId,
+        customerSubCategoryId: currentCustomer.subCategory?.id || 0,
+        meterNumber: currentCustomer.meterNumber || "",
         totalMonthlyVend: currentCustomer.totalMonthlyVend || 0,
         totalMonthlyDebt: currentCustomer.totalMonthlyDebt || 0,
         customerOutstandingDebtBalance: currentCustomer.customerOutstandingDebtBalance || 0,
-        salesRepUserId: currentCustomer.salesRepUserId || 0,
-        technicalEngineerUserId: currentCustomer.technicalEngineerUserId || 0,
       })
+
+      // Fetch subcategories for the existing customer category
+      if (categoryId && categoryId !== 0) {
+        dispatch(fetchSubCategoriesByCategoryId(categoryId))
+      }
     }
-  }, [currentCustomer])
+  }, [currentCustomer, dispatch])
+
+  // Fetch subcategories whenever a customer category is selected
+  useEffect(() => {
+    if (formData.customerCategoryId && formData.customerCategoryId !== 0) {
+      dispatch(fetchSubCategoriesByCategoryId(formData.customerCategoryId))
+    }
+  }, [dispatch, formData.customerCategoryId])
 
   // Handle success and error states
   useEffect(() => {
@@ -252,6 +353,43 @@ const UpdateCustomerPage = () => {
     { value: "Band C", label: "Band C" },
     { value: "Band D", label: "Band D" },
     { value: "Band E", label: "Band E" },
+  ]
+
+  // Province (state) options from countries endpoint (Nigeria only)
+  const nigeria = countries.find(
+    (country) => country.name.toLowerCase() === "nigeria" || country.abbreviation.toUpperCase() === "NG"
+  )
+
+  const provinceOptions = [
+    { value: 0, label: "Select state" },
+    ...((nigeria?.provinces ?? []).map((province) => ({
+      value: province.id,
+      label: province.name,
+    })) || []),
+  ]
+
+  // Gender options
+  const genderOptions = [
+    { value: "", label: "Select gender" },
+    { value: "Male", label: "Male" },
+    { value: "Female", label: "Female" },
+  ]
+
+  // Customer category options from fetched data
+  const customerCategoryOptions = [
+    { value: 0, label: "Select customer category" },
+    ...customerCategories.map((category) => ({
+      value: category.id,
+      label: category.name,
+    })),
+  ]
+
+  // Customer sub-category options based on selected category
+  const customerSubCategoryOptions = [
+    { value: 0, label: "Select sub-category" },
+    ...subCategories
+      .filter((sub) => sub.customerCategoryId === formData.customerCategoryId)
+      .map((sub) => ({ value: sub.id, label: sub.name })),
   ]
 
   const handleInputChange = (
@@ -335,27 +473,45 @@ const UpdateCustomerPage = () => {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
+        customerID: formData.customerID || "",
+        autoNumber: formData.autoNumber,
+        isCustomerNew: formData.isCustomerNew,
+        isPostEnumerated: formData.isPostEnumerated,
+        statusCode: formData.statusCode,
+        isReadyforExtraction: formData.isReadyforExtraction,
+        phoneOffice: formData.phoneOffice,
+        gender: formData.gender,
         address: formData.address,
         distributionSubstationId: formData.distributionSubstationId,
         status: formData.status,
         addressTwo: formData.addressTwo,
         city: formData.city,
-        state: formData.state,
+        provinceId: formData.provinceId,
+        lga: formData.lga,
         serviceCenterId: formData.serviceCenterId,
         latitude: formData.latitude,
         longitude: formData.longitude,
         tariff: formData.tariff,
-        meterNumber: formData.meterNumber,
+        tariffCode: formData.tariffCode,
+        tariffID: formData.tariffID,
+        tariffInddex: formData.tariffInddex,
+        tariffType: formData.tariffType,
+        tariffClass: formData.tariffClass,
+        newRate: formData.newRate,
+        vat: formData.vat,
+        isVATWaved: formData.isVATWaved,
         isPPM: formData.isPPM,
         isMD: formData.isMD,
+        isUrban: formData.isUrban,
+        isHRB: formData.isHRB,
+        isCustomerAccGovt: formData.isCustomerAccGovt,
         comment: formData.comment,
         band: formData.band,
         storedAverage: formData.storedAverage,
-        totalMonthlyVend: formData.totalMonthlyVend,
-        totalMonthlyDebt: formData.totalMonthlyDebt,
-        customerOutstandingDebtBalance: formData.customerOutstandingDebtBalance,
         salesRepUserId: formData.salesRepUserId,
         technicalEngineerUserId: formData.technicalEngineerUserId,
+        customerCategoryId: formData.customerCategoryId,
+        customerSubCategoryId: formData.customerSubCategoryId,
       }
 
       const result = await dispatch(updateCustomerById({ id: customerId, updateData })).unwrap()
@@ -373,19 +529,39 @@ const UpdateCustomerPage = () => {
         fullName: currentCustomer.fullName || "",
         phoneNumber: currentCustomer.phoneNumber || "",
         email: currentCustomer.email || "",
+        customerID: currentCustomer.customerID || undefined,
+        autoNumber: currentCustomer.autoNumber || "",
+        isCustomerNew: currentCustomer.isCustomerNew || false,
+        isPostEnumerated: currentCustomer.isPostEnumerated || false,
+        statusCode: currentCustomer.statusCode || "",
+        isReadyforExtraction: currentCustomer.isReadyforExtraction || false,
+        phoneOffice: currentCustomer.phoneOffice || "",
+        gender: currentCustomer.gender || "",
         address: currentCustomer.address || "",
         distributionSubstationId: currentCustomer.distributionSubstationId || 0,
         status: currentCustomer.status || "",
         addressTwo: currentCustomer.addressTwo || "",
         city: currentCustomer.city || "",
-        state: currentCustomer.state || "",
+        provinceId: currentCustomer.provinceId || 0,
+        lga: currentCustomer.lga || "",
         serviceCenterId: currentCustomer.serviceCenterId || 0,
         latitude: currentCustomer.latitude || 0,
         longitude: currentCustomer.longitude || 0,
         tariff: currentCustomer.tariff || 0,
+        tariffCode: currentCustomer.tariffCode || "",
+        tariffID: currentCustomer.tariffID || "",
+        tariffInddex: currentCustomer.tariffInddex || "",
+        tariffType: currentCustomer.tariffType || "",
+        tariffClass: currentCustomer.tariffClass || "",
+        newRate: currentCustomer.newRate || 0,
+        vat: currentCustomer.vat || 0,
+        isVATWaved: currentCustomer.isVATWaved || false,
         meterNumber: currentCustomer.meterNumber || "",
         isPPM: currentCustomer.isPPM || false,
         isMD: currentCustomer.isMD || false,
+        isUrban: currentCustomer.isUrban || false,
+        isHRB: currentCustomer.isHRB || false,
+        isCustomerAccGovt: currentCustomer.isCustomerAccGovt || false,
         comment: currentCustomer.comment || "",
         band: currentCustomer.band || "",
         storedAverage: currentCustomer.storedAverage || 0,
@@ -394,6 +570,8 @@ const UpdateCustomerPage = () => {
         customerOutstandingDebtBalance: currentCustomer.customerOutstandingDebtBalance || 0,
         salesRepUserId: currentCustomer.salesRepUserId || 0,
         technicalEngineerUserId: currentCustomer.technicalEngineerUserId || 0,
+        customerCategoryId: currentCustomer.customerCategoryId || 0,
+        customerSubCategoryId: currentCustomer.customerSubCategoryId || 0,
       })
     }
     setFormErrors({})
@@ -707,6 +885,25 @@ const UpdateCustomerPage = () => {
                         required
                       />
 
+                      <FormInputModule
+                        label="Office Phone"
+                        name="phoneOffice"
+                        type="text"
+                        placeholder="Enter office phone (optional)"
+                        value={formData.phoneOffice}
+                        onChange={handleInputChange}
+                      />
+
+                      <FormSelectModule
+                        label="Gender"
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleInputChange}
+                        options={genderOptions}
+                        error={formErrors.gender}
+                        required
+                      />
+
                       <FormSelectModule
                         label="Status"
                         name="status"
@@ -757,35 +954,13 @@ const UpdateCustomerPage = () => {
                           onChange={handleInputChange}
                         />
 
-                        <FormInputModule
-                          label="State"
-                          name="state"
-                          type="text"
-                          placeholder="Enter state"
-                          value={formData.state}
+                        <FormSelectModule
+                          label="Province"
+                          name="provinceId"
+                          value={formData.provinceId}
                           onChange={handleInputChange}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                        <FormInputModule
-                          label="Latitude"
-                          name="latitude"
-                          type="number"
-                          placeholder="Enter latitude"
-                          value={formData.latitude}
-                          onChange={handleInputChange}
-                          step="0.000001"
-                        />
-
-                        <FormInputModule
-                          label="Longitude"
-                          name="longitude"
-                          type="number"
-                          placeholder="Enter longitude"
-                          value={formData.longitude}
-                          onChange={handleInputChange}
-                          step="0.000001"
+                          options={provinceOptions}
+                          disabled={countriesLoading}
                         />
                       </div>
                     </div>
@@ -841,6 +1016,24 @@ const UpdateCustomerPage = () => {
                         options={bandOptions}
                         error={formErrors.band}
                         required
+                      />
+
+                      <FormSelectModule
+                        label="Customer Category"
+                        name="customerCategoryId"
+                        value={formData.customerCategoryId}
+                        onChange={handleInputChange}
+                        options={customerCategoryOptions}
+                        disabled={customerCategoriesLoading}
+                      />
+
+                      <FormSelectModule
+                        label="Customer Sub-Category"
+                        name="customerSubCategoryId"
+                        value={formData.customerSubCategoryId}
+                        onChange={handleInputChange}
+                        options={customerSubCategoryOptions}
+                        disabled={subCategoriesLoading || !formData.customerCategoryId}
                       />
                     </div>
 
@@ -1148,46 +1341,111 @@ const LoadingSkeleton = () => (
         </div>
       </div>
 
-      {/* Form Skeleton */}
+      {/* Form Skeleton - Matching exact form structure */}
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-        {/* Form Header Skeleton */}
-        <div className="mb-6 border-b pb-4">
-          <div className="size-64 overflow-hidden rounded bg-gray-200">
-            <motion.div
-              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
+        {/* Section 1: Personal Information - 6 fields */}
+        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+          <div className="border-b pb-3">
+            <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.1,
+                }}
+              />
+            </div>
           </div>
-          <div className="mt-2 h-4 w-96 overflow-hidden rounded bg-gray-200">
-            <motion.div
-              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.2,
-              }}
-            />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            {[1, 2, 3, 4, 5, 6].map((field) => (
+              <div key={field} className="space-y-2">
+                <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: field * 0.1,
+                    }}
+                  />
+                </div>
+                <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: field * 0.1 + 0.05,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Form Sections Skeleton */}
-        <div className="space-y-6">
-          {[1, 2, 3, 4, 5, 6].map((section) => (
-            <div key={section} className="space-y-6 rounded-lg bg-[#f9f9f9] p-4 sm:p-6">
-              {/* Section Header */}
-              <div className="border-b pb-3 sm:pb-4">
-                <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
+        {/* Section 2: Address Information - 4 fields */}
+        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+          <div className="border-b pb-3">
+            <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.7,
+                }}
+              />
+            </div>
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.8,
+                }}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            {[1, 2, 3, 4].map((field) => (
+              <div key={field} className="space-y-2">
+                <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -1197,11 +1455,11 @@ const LoadingSkeleton = () => (
                       duration: 1.5,
                       repeat: Infinity,
                       ease: "easeInOut",
-                      delay: section * 0.1,
+                      delay: 0.7 + field * 0.1,
                     }}
                   />
                 </div>
-                <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
+                <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
                   <motion.div
                     className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                     animate={{
@@ -1211,85 +1469,119 @@ const LoadingSkeleton = () => (
                       duration: 1.5,
                       repeat: Infinity,
                       ease: "easeInOut",
-                      delay: section * 0.1 + 0.1,
+                      delay: 0.7 + field * 0.1 + 0.05,
                     }}
                   />
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
 
-              {/* Form Fields Skeleton */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                {[1, 2, 3, 4].map((field) => (
-                  <div key={field} className="space-y-2">
-                    <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                        animate={{
-                          x: ["-100%", "100%"],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: section * 0.1 + field * 0.1,
-                        }}
-                      />
-                    </div>
-                    <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-                        animate={{
-                          x: ["-100%", "100%"],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: section * 0.1 + field * 0.1 + 0.05,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Section 3: Service Information - 4 fields */}
+        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+          <div className="border-b pb-3">
+            <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1.2,
+                }}
+              />
             </div>
-          ))}
-
-          {/* Current Information Skeleton */}
-          <div className="space-y-6 rounded-lg bg-blue-50 p-4 sm:p-6">
-            <div className="border-b border-blue-200 pb-3 sm:pb-4">
-              <div className="h-6 w-48 overflow-hidden rounded bg-blue-200">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              </div>
-              <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-blue-200">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"
-                  animate={{
-                    x: ["-100%", "100%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.2,
-                  }}
-                />
-              </div>
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1.3,
+                }}
+              />
             </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            {[1, 2, 3, 4].map((field) => (
+              <div key={field} className="space-y-2">
+                <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 1.2 + field * 0.1,
+                    }}
+                  />
+                </div>
+                <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 1.2 + field * 0.1 + 0.05,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div key={item} className="rounded-lg border border-blue-200 bg-white p-4">
+        {/* Section 4: Technical Information - 4 fields */}
+        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+          <div className="border-b pb-3">
+            <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1.7,
+                }}
+              />
+            </div>
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1.8,
+                }}
+              />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+              {[1, 2, 3, 4].map((field) => (
+                <div key={field} className="space-y-2">
                   <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
                     <motion.div
                       className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
@@ -1300,11 +1592,11 @@ const LoadingSkeleton = () => (
                         duration: 1.5,
                         repeat: Infinity,
                         ease: "easeInOut",
-                        delay: item * 0.1,
+                        delay: 1.7 + field * 0.1,
                       }}
                     />
                   </div>
-                  <div className="mt-2 h-6 w-40 overflow-hidden rounded bg-gray-200">
+                  <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
                     <motion.div
                       className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                       animate={{
@@ -1314,7 +1606,7 @@ const LoadingSkeleton = () => (
                         duration: 1.5,
                         repeat: Infinity,
                         ease: "easeInOut",
-                        delay: item * 0.1 + 0.05,
+                        delay: 1.7 + field * 0.1 + 0.05,
                       }}
                     />
                   </div>
@@ -1322,10 +1614,12 @@ const LoadingSkeleton = () => (
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Form Actions Skeleton */}
-          <div className="flex justify-end gap-4 border-t pt-6">
-            <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+        {/* Section 5: Financial Information - 8 fields */}
+        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+          <div className="border-b pb-3">
+            <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
               <motion.div
                 className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
@@ -1335,10 +1629,11 @@ const LoadingSkeleton = () => (
                   duration: 1.5,
                   repeat: Infinity,
                   ease: "easeInOut",
+                  delay: 2.2,
                 }}
               />
             </div>
-            <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
               <motion.div
                 className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
@@ -1348,11 +1643,51 @@ const LoadingSkeleton = () => (
                   duration: 1.5,
                   repeat: Infinity,
                   ease: "easeInOut",
-                  delay: 0.2,
+                  delay: 2.3,
                 }}
               />
             </div>
-            <div className="h-10 w-32 overflow-hidden rounded bg-gray-200">
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((field) => (
+              <div key={field} className="space-y-2">
+                <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 2.2 + field * 0.1,
+                    }}
+                  />
+                </div>
+                <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 2.2 + field * 0.1 + 0.05,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 6: Additional Information - 4 fields */}
+        <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
+          <div className="border-b pb-3">
+            <div className="h-6 w-48 overflow-hidden rounded bg-gray-200">
               <motion.div
                 className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
                 animate={{
@@ -1362,10 +1697,175 @@ const LoadingSkeleton = () => (
                   duration: 1.5,
                   repeat: Infinity,
                   ease: "easeInOut",
-                  delay: 0.4,
+                  delay: 3.1,
                 }}
               />
             </div>
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-gray-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 3.2,
+                }}
+              />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+              {[1, 2, 3, 4].map((field) => (
+                <div key={field} className="space-y-2">
+                  <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 3.1 + field * 0.1,
+                      }}
+                    />
+                  </div>
+                  <div className="h-10 w-full overflow-hidden rounded bg-gray-200">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 3.1 + field * 0.1 + 0.05,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Current Information Skeleton */}
+        <div className="space-y-6 rounded-lg bg-blue-50 p-4 sm:p-6">
+          <div className="border-b border-blue-200 pb-3 sm:pb-4">
+            <div className="h-6 w-48 overflow-hidden rounded bg-blue-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 3.6,
+                }}
+              />
+            </div>
+            <div className="mt-2 h-4 w-64 overflow-hidden rounded bg-blue-200">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 3.7,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+              <div key={item} className="rounded-lg border border-blue-200 bg-white p-4">
+                <div className="h-4 w-32 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 3.6 + item * 0.1,
+                    }}
+                  />
+                </div>
+                <div className="mt-2 h-6 w-40 overflow-hidden rounded bg-gray-200">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 3.6 + item * 0.1 + 0.05,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Actions Skeleton */}
+        <div className="flex justify-end gap-4 border-t pt-6">
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 4.5,
+              }}
+            />
+          </div>
+          <div className="h-10 w-24 overflow-hidden rounded bg-gray-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 4.6,
+              }}
+            />
+          </div>
+          <div className="h-10 w-32 overflow-hidden rounded bg-gray-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 4.7,
+              }}
+            />
           </div>
         </div>
       </div>

@@ -642,6 +642,14 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
             </p>
 
             <div className="flex items-center gap-2">
+              <SearchModule
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onCancel={handleCancelSearch}
+                placeholder="Search by account number"
+                className="w-full md:max-w-[300px]"
+              />
+
               {/* Mobile search icon button */}
               <button
                 type="button"
@@ -654,7 +662,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
               {/* Export CSV button */}
               <button
-                className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] md:text-base"
+                className="button-oulined  flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] text-sm hover:border-[#2563EB] hover:bg-[#DBEAFE] md:text-base"
                 onClick={() => {
                   /* TODO: Implement CSV export for postpaid bills */
                 }}
@@ -668,7 +676,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
           {/* Mobile search input revealed when icon is tapped */}
           {showMobileSearch && (
-            <div className="mb-3 sm:hidden">
+            <div className="mb-3  sm:hidden">
               <SearchModule
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
@@ -681,7 +689,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
 
           <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
             {/* Desktop/Tablet search input */}
-            <div className="hidden w-full sm:block md:max-w-[300px]">
+            {/* <div className="hidden w-full sm:block md:max-w-[300px]">
               <SearchModule
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
@@ -689,7 +697,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
                 placeholder="Search by account number"
                 className="w-full"
               />
-            </div>
+            </div> */}
 
             <div className="flex flex-wrap gap-2">
               <button
@@ -814,7 +822,7 @@ const PostpaidBillingTab: React.FC<PostpaidBillingTabProps> = ({ customerId }) =
             </div>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-2">
             {bills.map((bill: PostpaidBill) => (
               <PostpaidBillCard key={bill.id} bill={bill} onViewDetails={handleViewDetails} />
             ))}

@@ -401,13 +401,13 @@ export interface DeclineChangeRequestResponse {
 // Manual Bill Interfaces
 export interface CreateManualBillRequest {
   customerId: number
-  period: string
+  billingPeriodId: number
   category: number
   feederId: number
   distributionSubstationId: number
   previousReadingKwh: number
   presentReadingKwh: number
-  energyCapKwh: number
+  energyCapKwh?: number
   tariffPerKwh: number
   vatRate: number
   isEstimated: boolean
@@ -423,7 +423,7 @@ export interface CreateManualBillResponse {
 // Meter Reading Interfaces
 export interface CreateMeterReadingRequest {
   customerId: number
-  period: string
+  billingPeriodId: number
   previousReadingKwh: number
   presentReadingKwh: number
   notes?: string

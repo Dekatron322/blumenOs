@@ -244,6 +244,13 @@ export interface DeclineChangeRequestResponse {
   data: ChangeRequestResponseData
 }
 
+// Interface for Payment Channels Response
+export interface PaymentChannelsResponse {
+  isSuccess: boolean
+  message: string
+  data: string[]
+}
+
 // Payment State
 interface PaymentState {
   // Payments list state
@@ -325,6 +332,12 @@ interface PaymentState {
   declineChangeRequestError: string | null
   declineChangeRequestSuccess: boolean
   declineChangeRequestResponse: ChangeRequestResponseData | null
+
+  // Payment Channels state
+  paymentChannels: string[]
+  paymentChannelsLoading: boolean
+  paymentChannelsError: string | null
+  paymentChannelsSuccess: boolean
 }
 
 // Initial state
@@ -398,6 +411,12 @@ const initialState: PaymentState = {
   declineChangeRequestError: null,
   declineChangeRequestSuccess: false,
   declineChangeRequestResponse: null,
+
+  // Payment Channels
+  paymentChannels: [],
+  paymentChannelsLoading: false,
+  paymentChannelsError: null,
+  paymentChannelsSuccess: false,
 }
 
 // Async thunk for fetching payments
@@ -692,6 +711,27 @@ export const declineChangeRequest = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to decline change request")
       }
       return rejectWithValue(error.message || "Network error during change request decline")
+    }
+  }
+)
+
+// Async thunk for fetching payment channels
+export const fetchPaymentChannels = createAsyncThunk(
+  "payments/fetchPaymentChannels",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get<PaymentChannelsResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.PAYMENT_CHANNELS))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment channels")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment channels")
+      }
+      return rejectWithValue(error.message || "Network error during payment channels fetch")
     }
   }
 )
@@ -1199,6 +1239,24 @@ const paymentSlice = createSlice({
         state.declineChangeRequestError = (action.payload as string) || "Failed to decline change request"
         state.declineChangeRequestSuccess = false
         state.declineChangeRequestResponse = null
+      })
+      // Fetch payment channels cases
+      .addCase(fetchPaymentChannels.pending, (state) => {
+        state.paymentChannelsLoading = true
+        state.paymentChannelsError = null
+        state.paymentChannelsSuccess = false
+      })
+      .addCase(fetchPaymentChannels.fulfilled, (state, action: PayloadAction<string[]>) => {
+        state.paymentChannelsLoading = false
+        state.paymentChannelsSuccess = true
+        state.paymentChannelsError = null
+        state.paymentChannels = action.payload
+      })
+      .addCase(fetchPaymentChannels.rejected, (state, action) => {
+        state.paymentChannelsLoading = false
+        state.paymentChannelsError = (action.payload as string) || "Failed to fetch payment channels"
+        state.paymentChannelsSuccess = false
+        state.paymentChannels = []
       })
   },
 })

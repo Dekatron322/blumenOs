@@ -943,7 +943,7 @@ const AllCustomers = () => {
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-full bg-green-100 md:size-12">
             <span className="text-sm font-semibold text-green-600 md:text-base">
-              {customer.fullName
+              {(customer.fullName || "")
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
@@ -977,7 +977,7 @@ const AllCustomers = () => {
         </div>
         <div className="flex justify-between">
           <span className="text-xs md:text-sm">Region:</span>
-          <span className="text-xs font-medium md:text-sm">{customer.state}</span>
+          <span className="text-xs font-medium md:text-sm">{customer.provinceName}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-xs md:text-sm">Service Center:</span>
@@ -1020,7 +1020,7 @@ const AllCustomers = () => {
         <div className="flex items-start gap-3 md:items-center md:gap-4">
           <div className="flex size-8 items-center justify-center rounded-full bg-green-100 max-sm:hidden md:size-10">
             <span className="text-xs font-semibold text-green-600 md:text-sm">
-              {customer.fullName
+              {(customer.fullName || "")
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
@@ -1061,7 +1061,7 @@ const AllCustomers = () => {
                 <strong className="hidden md:inline">Account:</strong> {customer.accountNumber}
               </span>
               <span>
-                <strong>Region:</strong> {customer.state}
+                <strong>Region:</strong> {customer.provinceName}
               </span>
               <span>
                 <strong>Service Center:</strong> {customer.serviceCenterName}

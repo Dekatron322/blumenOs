@@ -122,13 +122,13 @@ export interface AccountNumberHistory {
   oldAddress: string
   oldAddressTwo: string
   oldCity: string
-  oldState: string
+  oldProvinceId: number
   oldLatitude: number
   oldLongitude: number
   newAddress: string
   newAddressTwo: string
   newCity: string
-  newState: string
+  newProvinceId: number
   newLatitude: number
   newLongitude: number
 }
@@ -142,18 +142,77 @@ export interface MeterHistory {
   oldAddress: string
   oldAddressTwo: string
   oldCity: string
-  oldState: string
+  oldProvinceId: number
   oldLatitude: number
   oldLongitude: number
   newAddress: string
   newAddressTwo: string
   newCity: string
-  newState: string
+  newProvinceId: number
   newLatitude: number
   newLongitude: number
 }
 
+export interface Category {
+  id: number
+  name: string
+  description: string
+  subCategories: SubCategory[]
+}
+
+export interface SubCategory {
+  id: number
+  name: string
+  description: string
+  customerCategoryId: number
+}
+
+export interface Meter {
+  id: number
+  customerId: number
+  customerAccountNumber: string
+  customerFullName: string
+  meterIsPPM: boolean
+  drn: string
+  sgc: number
+  krn: string
+  ti: number
+  ea: number
+  tct: number
+  ken: number
+  mfrCode: number
+  installationDate: string
+  meterID: string
+  meterAddedBy: string
+  meterEditedBy: string
+  meterDateCreated: string
+  meterTypeId: string
+  meterType: number
+  meterBrand: string
+  meterCategory: string
+  isMeterActive: boolean
+  status: number
+  state: number
+  sealNumber: string
+  tariffRate: number
+  tariffIndex: string
+  serviceBand: number
+  customerClass: string
+  injectionSubstationId: number
+  locationState: string
+  address: string
+  addressTwo: string
+  city: string
+  apartmentNumber: string
+  latitude: number
+  longitude: number
+  tenantFullName: string
+  tenantPhoneNumber: string
+}
+
 export interface Customer {
+  customerSubCategoryId: number
+  customerCategoryId: number
   id: number
   customerNumber: number
   customerID: string
@@ -178,7 +237,8 @@ export interface Customer {
   address: string
   addressTwo: string
   city: string
-  state: string
+  provinceId: number
+  provinceName: string
   lga: string
   serviceCenterId: number
   serviceCenterName: string
@@ -204,9 +264,15 @@ export interface Customer {
   storedAverage: number
   totalMonthlyVend: number
   totalMonthlyDebt: number
+  totalLifetimeDebit: number
+  totalLifetimeCredit: number
   customerOutstandingDebtBalance: number
+  customerOutstandingCreditBalance: number
+  customerOutstandingBalance: number
   salesRepUserId: number
   technicalEngineerUserId: number
+  category: Category
+  subCategory: SubCategory
   salesRepUser: SalesRepUser
   lastLoginAt: string
   suspensionReason: string
@@ -216,6 +282,7 @@ export interface Customer {
   serviceCenter: ServiceCenter
   accountNumberHistory: AccountNumberHistory[]
   meterHistory: MeterHistory[]
+  meters: Meter[]
   createdAt?: any
 }
 
@@ -497,27 +564,45 @@ export interface UpdateCustomerRequest {
   fullName: string
   phoneNumber: string
   email: string
+  customerID: string
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
+  phoneOffice: string
+  gender: string
   address: string
   distributionSubstationId: number
   status: string
   addressTwo: string
   city: string
-  state: string
+  provinceId: number
+  lga: string
   serviceCenterId: number
   latitude: number
   longitude: number
   tariff: number
-  meterNumber: string
+  tariffCode: string
+  tariffID: string
+  tariffInddex: string
+  tariffType: string
+  tariffClass: string
+  newRate: number
+  vat: number
+  isVATWaved: boolean
   isPPM: boolean
   isMD: boolean
+  isUrban: boolean
+  isHRB: boolean
+  isCustomerAccGovt: boolean
   comment: string
   band: string
   storedAverage: number
-  totalMonthlyVend: number
-  totalMonthlyDebt: number
-  customerOutstandingDebtBalance: number
   salesRepUserId: number
   technicalEngineerUserId: number
+  customerCategoryId: number
+  customerSubCategoryId: number
 }
 
 // Suspend Customer Request Interface
@@ -686,6 +771,23 @@ export interface CustomerLookupResponse {
   data: Customer
 }
 
+// Change Account Number Interfaces
+export interface ChangeAccountNumberRequest {
+  reason: string
+  address: string
+  addressTwo: string
+  city: string
+  provinceId: number
+  latitude: number
+  longitude: number
+}
+
+export interface ChangeAccountNumberResponse {
+  isSuccess: boolean
+  message: string
+  data: Customer
+}
+
 // Customer State
 interface CustomerState {
   // Customers list state
@@ -815,6 +917,12 @@ interface CustomerState {
   declineChangeRequestSuccess: boolean
   declineChangeRequestResponse: ChangeRequestResponseData | null
 
+  // Change Account Number state
+  changeAccountNumberLoading: boolean
+  changeAccountNumberError: string | null
+  changeAccountNumberSuccess: boolean
+  changeAccountNumberResponse: Customer | null
+
   // Search and filter state
   filters: {
     search: string
@@ -925,6 +1033,10 @@ const initialState: CustomerState = {
   declineChangeRequestError: null,
   declineChangeRequestSuccess: false,
   declineChangeRequestResponse: null,
+  changeAccountNumberLoading: false,
+  changeAccountNumberError: null,
+  changeAccountNumberSuccess: false,
+  changeAccountNumberResponse: null,
   filters: {
     search: "",
     status: "",
@@ -1178,6 +1290,31 @@ export const activateCustomer = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to activate customer")
       }
       return rejectWithValue(error.message || "Network error during customer activation")
+    }
+  }
+)
+
+export const changeAccountNumber = createAsyncThunk(
+  "customers/changeAccountNumber",
+  async ({ id, changeData }: { id: number; changeData: ChangeAccountNumberRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.CREATE_CUSTOMER.CHANGE_ACCOUNT_NUMBER, { id })
+      const response = await api.post<ChangeAccountNumberResponse>(buildApiUrl(endpoint), changeData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to change account number")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Customer data not returned after account number change")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to change account number")
+      }
+      return rejectWithValue(error.message || "Network error during account number change")
     }
   }
 )
@@ -2106,6 +2243,33 @@ const customerSlice = createSlice({
         state.activateLoading = false
         state.activateError = (action.payload as string) || "Failed to activate customer"
         state.activateSuccess = false
+      })
+      // Change account number cases
+      .addCase(changeAccountNumber.pending, (state) => {
+        state.changeAccountNumberLoading = true
+        state.changeAccountNumberError = null
+        state.changeAccountNumberSuccess = false
+      })
+      .addCase(changeAccountNumber.fulfilled, (state, action: PayloadAction<Customer>) => {
+        state.changeAccountNumberLoading = false
+        state.changeAccountNumberSuccess = true
+        state.changeAccountNumberResponse = action.payload
+
+        // Update the customer in the list
+        const index = state.customers.findIndex((customer) => customer.id === action.payload.id)
+        if (index !== -1) {
+          state.customers[index] = action.payload
+        }
+
+        // Update current customer if it's the same
+        if (state.currentCustomer?.id === action.payload.id) {
+          state.currentCustomer = action.payload
+        }
+      })
+      .addCase(changeAccountNumber.rejected, (state, action) => {
+        state.changeAccountNumberLoading = false
+        state.changeAccountNumberError = (action.payload as string) || "Failed to change account number"
+        state.changeAccountNumberSuccess = false
       })
       // Fetch payment disputes cases
       .addCase(fetchPaymentDisputes.pending, (state) => {

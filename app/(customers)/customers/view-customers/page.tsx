@@ -2,7 +2,7 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import AddCustomerModal from "components/ui/Modal/add-customer-modal"
 import { motion } from "framer-motion"
 import {
@@ -19,6 +19,70 @@ import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyt
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { useRouter } from "next/navigation"
 import AllCustomers from "components/Tables/AllCustomers"
+import { fetchCustomers } from "lib/redux/customerSlice"
+
+// Dropdown Popover Component
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {children}
+        <svg
+          className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-10 mt-1 w-32 rounded-md border border-gray-200 bg-white shadow-lg">
+          <div className="py-1">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onSelect(option.value)
+                  setIsOpen(false)
+                }}
+                className={`block w-full px-3 py-2 text-left text-sm ${
+                  selectedValue === option.value ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -288,6 +352,8 @@ const CustomerAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
 
 export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
 
   const router = useRouter()
 
@@ -295,20 +361,63 @@ export default function AllTransactions() {
   const dispatch = useAppDispatch()
   const { customerAnalyticsData, customerAnalyticsLoading, customerAnalyticsError, customerAnalyticsSuccess } =
     useAppSelector((state) => state.analytics)
+  const { customers, loading: customersLoading } = useAppSelector((state) => state.customers)
 
   // Fetch customer analytics on component mount
   useEffect(() => {
     dispatch(fetchCustomerAnalytics())
   }, [dispatch])
 
+  const handleRefreshData = useCallback(() => {
+    dispatch(clearCustomerAnalytics())
+    dispatch(fetchCustomerAnalytics())
+    // Also refresh customer data
+    dispatch(
+      fetchCustomers({
+        pageNumber: 1,
+        pageSize: 20,
+        search: "",
+        status: undefined,
+        isSuspended: undefined,
+        distributionSubstationId: undefined,
+        serviceCenterId: undefined,
+        isPPM: undefined,
+      })
+    )
+  }, [dispatch])
+
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
+  }
+
+  const handlePollingIntervalChange = (interval: number) => {
+    setPollingInterval(interval)
+  }
+
+  // Polling interval options
+  const pollingOptions = [
+    { value: 300000, label: "5m" },
+    { value: 480000, label: "8m" },
+    { value: 660000, label: "11m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
+  // Short polling effect
+  useEffect(() => {
+    if (!isPolling) return
+
+    const interval = setInterval(() => {
+      handleRefreshData()
+    }, pollingInterval)
+
+    return () => clearInterval(interval)
+  }, [dispatch, isPolling, pollingInterval, handleRefreshData])
+
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
     // Refresh customer analytics after adding customer
-    dispatch(fetchCustomerAnalytics())
-  }
-
-  const handleRefreshData = () => {
-    dispatch(clearCustomerAnalytics())
     dispatch(fetchCustomerAnalytics())
   }
 
@@ -340,7 +449,7 @@ export default function AllTransactions() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
+                {/* <ButtonModule
                   variant="primary"
                   size="md"
                   onClick={handleRefreshData}
@@ -349,7 +458,55 @@ export default function AllTransactions() {
                   disabled={customerAnalyticsLoading}
                 >
                   {customerAnalyticsLoading ? "Refreshing..." : "Refresh Data"}
-                </ButtonModule>
+                </ButtonModule> */}
+                {/* Polling Controls */}
+                <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
+                  <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                  <button
+                    onClick={togglePolling}
+                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isPolling
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    {isPolling ? (
+                      <>
+                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                        ON
+                      </>
+                    ) : (
+                      <>
+                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        OFF
+                      </>
+                    )}
+                  </button>
+
+                  {isPolling && (
+                    <DropdownPopover
+                      options={pollingOptions}
+                      selectedValue={pollingInterval}
+                      onSelect={handlePollingIntervalChange}
+                    >
+                      {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                    </DropdownPopover>
+                  )}
+                </div>
               </motion.div>
             </div>
 

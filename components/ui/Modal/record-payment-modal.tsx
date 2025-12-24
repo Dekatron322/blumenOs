@@ -9,7 +9,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { notify } from "components/ui/Notification/Notification"
-import { createPayment } from "lib/redux/paymentSlice"
+import { recordCustomerPayment, fetchCustomerPaymentChannels } from "lib/redux/createCustomerSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 
 interface RecordPaymentModalProps {
@@ -19,14 +19,6 @@ interface RecordPaymentModalProps {
   customerName: string
   accountNumber: string
 }
-
-const channelOptions = [
-  { value: "Cash", label: "Cash" },
-  { value: "BankTransfer", label: "Bank Transfer" },
-  { value: "Pos", label: "POS" },
-  { value: "Card", label: "Card" },
-  { value: "VendorWallet", label: "Vendor Wallet" },
-]
 
 const currencyOptions = [{ value: "NGN", label: "NGN - Nigerian Naira" }]
 
@@ -39,10 +31,12 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
-  const { createPaymentLoading } = useAppSelector((state) => state.payments)
+  const { customerPaymentChannels, customerPaymentChannelsLoading } = useAppSelector((state) => state.createCustomer)
+  const { recordPaymentLoading } = useAppSelector((state) => state.createCustomer)
 
   const [amount, setAmount] = React.useState("")
-  const [channel, setChannel] = React.useState<"Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet">("Cash")
+  const [paymentTypeId, setPaymentTypeId] = React.useState<number>(1)
+  const [channel, setChannel] = React.useState<string>("")
   const [currency, setCurrency] = React.useState("NGN")
   const [paidAtUtc, setPaidAtUtc] = React.useState<string>(new Date().toISOString().slice(0, 16))
   const [externalReference, setExternalReference] = React.useState("")
@@ -51,7 +45,8 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       setAmount("")
-      setChannel("Cash")
+      setPaymentTypeId(1)
+      setChannel("")
       setCurrency("NGN")
       setPaidAtUtc(new Date().toISOString().slice(0, 16))
       setExternalReference("")
@@ -60,10 +55,15 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
       if (!paymentTypes || paymentTypes.length === 0) {
         dispatch(fetchPaymentTypes())
       }
+      if (!customerPaymentChannels || customerPaymentChannels.length === 0) {
+        dispatch(fetchCustomerPaymentChannels(customerId))
+      }
     }
-  }, [isOpen, dispatch, paymentTypes])
+  }, [isOpen, dispatch, paymentTypes, customerPaymentChannels, customerId])
 
   if (!isOpen) return null
+
+  const paymentTypeOptions = paymentTypes.map((type) => ({ value: type.id.toString(), label: type.name }))
 
   const energyBillPaymentType = paymentTypes.find(
     (paymentType) => paymentType.name && paymentType.name.toLowerCase() === "bills payment"
@@ -75,6 +75,10 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
     const numericAmount = Number(amount)
     if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
       errors.push("Amount must be greater than zero")
+    }
+
+    if (!paymentTypeId) {
+      errors.push("Payment type is required")
     }
 
     if (!paidAtUtc) {
@@ -111,23 +115,17 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
 
     try {
       const numericAmount = Number(amount)
-      const resolvedPaymentTypeId = energyBillPaymentType?.id ?? 1
-
       const paymentData = {
-        customerId,
-        paymentTypeId: resolvedPaymentTypeId,
+        paymentTypeId: paymentTypeId,
         amount: numericAmount,
         channel,
         currency,
         paidAtUtc,
-        collectorType: "Staff" as const,
         ...(externalReference.trim() && { externalReference: externalReference.trim() }),
         ...(narrative.trim() && { narrative: narrative.trim() }),
-        agentId: null,
-        vendorId: null,
       }
 
-      const result = await dispatch(createPayment(paymentData)).unwrap()
+      const result = await dispatch(recordCustomerPayment({ customerId, paymentData })).unwrap()
 
       if (result.isSuccess) {
         notify("success", "Payment recorded successfully", {
@@ -167,7 +165,7 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           <button
             onClick={onRequestClose}
             className="flex size-7 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 sm:size-8"
-            disabled={createPaymentLoading}
+            disabled={recordPaymentLoading}
           >
             <CloseIcon />
           </button>
@@ -184,28 +182,42 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
               Enter the payment details for this customer. Payment type and customer are already set.
             </p>
 
+            <FormInputModule
+              label="Amount"
+              type="number"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              disabled={recordPaymentLoading}
+            />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormInputModule
-                label="Amount"
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+              <FormSelectModule
+                label="Payment Type"
+                name="paymentTypeId"
+                value={paymentTypeId.toString()}
+                onChange={({ target }) => setPaymentTypeId(Number(target.value))}
+                options={paymentTypeOptions}
                 required
-                disabled={createPaymentLoading}
+                disabled={recordPaymentLoading}
               />
-
               <FormSelectModule
                 label="Channel"
                 name="channel"
                 value={channel}
                 onChange={({ target }) => setChannel(target.value as typeof channel)}
-                options={channelOptions}
+                options={
+                  customerPaymentChannels && customerPaymentChannels.length > 0
+                    ? customerPaymentChannels.map((channel) => ({ value: channel, label: channel }))
+                    : []
+                }
                 required
-                disabled={createPaymentLoading}
+                disabled={recordPaymentLoading || customerPaymentChannelsLoading}
               />
+            </div>
 
-              {/* <FormSelectModule
+            {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormSelectModule
                 label="Currency"
                 name="currency"
                 value={currency}
@@ -213,8 +225,8 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
                 options={currencyOptions}
                 required
                 disabled
-              /> */}
-            </div>
+              />
+            </div> */}
 
             <FormInputModule
               label="Paid At"
@@ -223,7 +235,7 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
               value={paidAtUtc}
               onChange={(e) => setPaidAtUtc(e.target.value)}
               required
-              disabled={createPaymentLoading}
+              disabled={recordPaymentLoading}
             />
 
             <FormInputModule
@@ -232,7 +244,7 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
               placeholder="Receipt number or bank reference"
               value={externalReference}
               onChange={(e) => setExternalReference(e.target.value)}
-              disabled={createPaymentLoading}
+              disabled={recordPaymentLoading}
             />
 
             <FormTextAreaModule
@@ -242,7 +254,7 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
               value={narrative}
               onChange={(e) => setNarrative(e.target.value)}
               rows={3}
-              disabled={createPaymentLoading}
+              disabled={recordPaymentLoading}
             />
           </div>
         </div>
@@ -250,21 +262,21 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
         <div className="flex gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:gap-4 sm:px-6 sm:py-5">
           <ButtonModule
             variant="secondary"
-            className="flex-1 text-sm sm:text-base"
-            size="sm"
+            className="flex w-full text-sm sm:text-base"
+            size="md"
             onClick={onRequestClose}
-            disabled={createPaymentLoading}
+            disabled={recordPaymentLoading}
           >
             Cancel
           </ButtonModule>
           <ButtonModule
             variant="primary"
-            className="flex-1 text-sm sm:text-base"
-            size="sm"
+            className="flex w-full text-sm sm:text-base"
+            size="md"
             onClick={handleSubmit}
-            disabled={createPaymentLoading}
+            disabled={recordPaymentLoading}
           >
-            {createPaymentLoading ? "Recording..." : "Record Payment"}
+            {recordPaymentLoading ? "Recording..." : "Record Payment"}
           </ButtonModule>
         </div>
       </motion.div>

@@ -92,20 +92,30 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
       const imgData = canvas.toDataURL("image/png")
 
-      const margin = 32
-      const pageWidth = canvas.width + margin * 2
-      const pageHeight = canvas.height + margin * 2
+      // A5 format: 148 x 210 mm = 420 x 595 points at 72 DPI
+      const pageWidth = 420
+      const pageHeight = 595
+      const margin = 20
 
       const pdf = new jsPDF({
         orientation: "portrait",
-        unit: "px",
-        format: [pageWidth, pageHeight],
+        unit: "pt",
+        format: "a5",
       })
 
       pdf.setFillColor(255, 255, 255)
       pdf.rect(0, 0, pageWidth, pageHeight, "F")
 
-      pdf.addImage(imgData, "PNG", margin, margin, canvas.width, canvas.height)
+      // Scale image to fit A5 page with margins
+      const maxWidth = pageWidth - margin * 2
+      const maxHeight = pageHeight - margin * 2
+      const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height)
+      const imgWidth = canvas.width * scale
+      const imgHeight = canvas.height * scale
+      const x = (pageWidth - imgWidth) / 2
+      const y = margin
+
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight)
 
       const fileName = `KAD-ELEC-Invoice-${bill.customerAccountNumber}-${bill.period.replace(/\s+/g, "-")}.pdf`
 
@@ -202,23 +212,32 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
       // Create PDF with margins
       const imgData = canvas.toDataURL("image/png")
 
-      // Define margins (in px since we use "px" as unit)
-      const margin = 32 // adjust this value for more/less margin
-      const pageWidth = canvas.width + margin * 2
-      const pageHeight = canvas.height + margin * 2
+      // A5 format: 148 x 210 mm = 420 x 595 points at 72 DPI
+      const pageWidth = 420
+      const pageHeight = 595
+      const margin = 20
 
       const pdf = new jsPDF({
         orientation: "portrait",
-        unit: "px",
-        format: [pageWidth, pageHeight],
+        unit: "pt",
+        format: "a5",
       })
 
       // Optional: fill background (some viewers show transparent areas as gray)
       pdf.setFillColor(255, 255, 255)
       pdf.rect(0, 0, pageWidth, pageHeight, "F")
 
+      // Scale image to fit A5 page with margins
+      const maxWidth = pageWidth - margin * 2
+      const maxHeight = pageHeight - margin * 2
+      const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height)
+      const imgWidth = canvas.width * scale
+      const imgHeight = canvas.height * scale
+      const x = (pageWidth - imgWidth) / 2
+      const y = margin
+
       // Draw the captured invoice centered with margins
-      pdf.addImage(imgData, "PNG", margin, margin, canvas.width, canvas.height)
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight)
 
       // Generate filename
       const fileName = `KAD-ELEC-Invoice-${bill.customerAccountNumber}-${bill.period.replace(/\s+/g, "-")}.pdf`

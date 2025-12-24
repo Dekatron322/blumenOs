@@ -184,6 +184,9 @@ export const API_ENDPOINTS = {
 
   CREATE_CUSTOMER: {
     ADD: "/customers/bulk",
+    RECORD_PAYMENT: "/customers/{id}/payments/record",
+    PAYMENT_CHANNELS: "/customers/{id}/payments/record/channels",
+    CHANGE_ACCOUNT_NUMBER: "/customers/{id}/account-number/change",
   },
 
   CUSTOMER_CATEGORIES: {
@@ -223,6 +226,10 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/billing/postpaid/change-requests/{publicId}/decline",
     MANUAL_BILLS: "/billing/postpaid/manual-bills",
     METER_READINGS: "/billing/postpaid/meter-readings",
+  },
+
+  BILLING_PERIODS: {
+    GET: "/billing/periods",
   },
 
   METER_READINGS: {
@@ -267,6 +274,7 @@ export const API_ENDPOINTS = {
     GET_BY_ID: "/payments/{id}",
     ADD: "/payments",
     CHANGE_REQUEST: "/payments/{id}/change-requests",
+    PAYMENT_CHANNELS: "/payments/record/channels",
     CHANGE_REQUESTS_BY_ID: "/payments/{id}/change-requests",
     VIEW_CHANGE_REQUEST: "/payments/change-requests",
     CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",

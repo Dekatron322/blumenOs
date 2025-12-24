@@ -5,10 +5,12 @@ import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
-import { useAppDispatch } from "lib/hooks/useRedux"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { notify } from "components/ui/Notification/Notification"
 import { createMeterReading } from "lib/redux/postpaidSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 
 interface MeterReadingModalProps {
   isOpen: boolean
@@ -26,8 +28,9 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
   accountNumber,
 }) => {
   const dispatch = useAppDispatch()
+  const { billingPeriods } = useAppSelector((state) => state.billingPeriods)
 
-  const [period, setPeriod] = React.useState("")
+  const [billingPeriodId, setBillingPeriodId] = React.useState("")
   const [previousReadingKwh, setPreviousReadingKwh] = React.useState("")
   const [presentReadingKwh, setPresentReadingKwh] = React.useState("")
   const [notes, setNotes] = React.useState("")
@@ -35,20 +38,21 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
 
   React.useEffect(() => {
     if (isOpen) {
-      const now = new Date()
-      const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
-      setPeriod(defaultPeriod)
+      setBillingPeriodId("")
       setPreviousReadingKwh("")
       setPresentReadingKwh("")
       setNotes("")
+
+      // Fetch billing periods
+      dispatch(fetchBillingPeriods({ status: 1 })) // Fetch active periods
     }
-  }, [isOpen])
+  }, [isOpen, dispatch])
 
   if (!isOpen) return null
 
   const handleSubmit = async () => {
-    if (!period.trim()) {
-      notify("error", "Please provide a meter reading period")
+    if (!billingPeriodId) {
+      notify("error", "Please select a billing period")
       return
     }
 
@@ -76,7 +80,7 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
       const result = await dispatch(
         createMeterReading({
           customerId,
-          period: period.trim(),
+          billingPeriodId: Number(billingPeriodId),
           previousReadingKwh: previousReading,
           presentReadingKwh: presentReading,
           ...(notes.trim() ? { notes: notes.trim() } : {}),
@@ -113,7 +117,7 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between bg-[#F9F9F9] p-4 sm:px-6 sm:py-5">
-          <h2 className="text-base font-bold text-gray-900 sm:text-lg md:text-xl">Generate Meter Reading</h2>
+          <h2 className="text-base font-bold text-gray-900 sm:text-lg md:text-xl">Record Meter Reading</h2>
           <button
             onClick={onRequestClose}
             className="flex size-7 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 sm:size-8"
@@ -135,12 +139,15 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
             </p>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <FormInputModule
-                label="Period"
-                type="text"
-                placeholder="e.g. 2025-01"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
+              <FormSelectModule
+                label="Billing Period"
+                name="billingPeriodId"
+                value={billingPeriodId === "" ? "" : billingPeriodId}
+                onChange={({ target }) => setBillingPeriodId(target.value === "" ? "" : target.value)}
+                options={billingPeriods.map((period) => ({
+                  value: period.id,
+                  label: period.displayName,
+                }))}
                 required
                 disabled={isLoading}
               />
@@ -181,8 +188,8 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
         <div className="flex gap-3 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:gap-4 sm:px-6 sm:py-5">
           <ButtonModule
             variant="secondary"
-            className="flex-1 text-sm sm:text-base"
-            size="sm"
+            className="flex w-full text-sm sm:text-base"
+            size="md"
             onClick={onRequestClose}
             disabled={isLoading}
           >
@@ -190,8 +197,8 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
           </ButtonModule>
           <ButtonModule
             variant="primary"
-            className="flex-1 text-sm sm:text-base"
-            size="sm"
+            className="flex w-full text-sm sm:text-base"
+            size="md"
             onClick={handleSubmit}
             disabled={isLoading}
           >

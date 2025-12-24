@@ -382,7 +382,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <MeteringOutlineIcon className="size-5" />
           Financial Information
         </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
             <label className="text-sm font-medium text-gray-500">Stored Average</label>
             <p className="text-2xl font-bold text-gray-900">{currentCustomer.storedAverage}Kwh</p>
@@ -396,10 +396,34 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             <p className="text-2xl font-bold text-amber-600">{formatCurrency(currentCustomer.totalMonthlyDebt)}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
-            <label className="text-sm font-medium text-gray-500">Outstanding Balance</label>
+            <label className="text-sm font-medium text-gray-500">Outstanding Debt</label>
             <p className="text-2xl font-bold text-red-600">
               {formatCurrency(currentCustomer.customerOutstandingDebtBalance)}
             </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
+            <label className="text-sm font-medium text-gray-500">Outstanding Credit</label>
+            <p className="text-2xl font-bold text-blue-600">
+              {formatCurrency(currentCustomer.customerOutstandingCreditBalance)}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
+            <label className="text-sm font-medium text-gray-500">Net Balance</label>
+            <p className="text-2xl font-bold text-purple-600">
+              {formatCurrency(currentCustomer.customerOutstandingBalance)}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
+            <label className="text-sm font-medium text-gray-500">Lifetime Debit</label>
+            <p className="text-2xl font-bold text-orange-600">{formatCurrency(currentCustomer.totalLifetimeDebit)}</p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
+            <label className="text-sm font-medium text-gray-500">Lifetime Credit</label>
+            <p className="text-2xl font-bold text-teal-600">{formatCurrency(currentCustomer.totalLifetimeCredit)}</p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 text-center">
+            <label className="text-sm font-medium text-gray-500">Tariff Rate</label>
+            <p className="text-2xl font-bold text-indigo-600">{formatCurrency(currentCustomer.tariff)}/kWh</p>
           </div>
         </div>
       </motion.div>

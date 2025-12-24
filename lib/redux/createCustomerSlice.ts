@@ -349,6 +349,88 @@ export interface CreateCustomerResponse {
   data: CreatedCustomer[]
 }
 
+// Record Payment interfaces
+export interface CustomerRecordPaymentRequest {
+  paymentTypeId: number
+  amount: number
+  channel: string
+  currency: string
+  externalReference?: string
+  narrative?: string
+  evidenceFileUrl?: string
+  paidAtUtc: string
+}
+
+export interface CustomerRecordPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    id: number
+    reference: string
+    latitude: number
+    longitude: number
+    channel: string
+    status: string
+    collectorType: string
+    amount: number
+    amountApplied: number
+    overPaymentAmount: number
+    outstandingAfterPayment: number
+    outstandingBeforePayment: number
+    currency: string
+    paidAtUtc: string
+    confirmedAtUtc: string
+    customerId: number
+    customerName: string
+    customerAccountNumber: string
+    postpaidBillId: number
+    postpaidBillPeriod: string
+    billTotalDue: number
+    vendorId: number
+    vendorName: string
+    agentId: number
+    agentCode: string
+    agentName: string
+    areaOfficeName: string
+    distributionSubstationCode: string
+    feederName: string
+    paymentTypeId: number
+    paymentTypeName: string
+    isManualEntry: boolean
+    isSystemGenerated: boolean
+    evidenceFileUrl?: string
+    recoveryApplied: boolean
+    recoveryAmount: number
+    recoveryPolicyId: number
+    recoveryPolicyName: string
+    tokens: Array<{
+      token: string
+      tokenDec: string
+      vendedAmount: string
+      unit: string
+      description: string
+      drn: string
+    }>
+    narrative: string
+    externalReference: string
+    virtualAccount?: {
+      accountNumber: string
+      bankName: string
+      reference: string
+      expiresAtUtc: string
+    }
+    vendorAccountId: string
+    recordedByName: string
+  }
+}
+
+// Customer payment channels interfaces
+export interface CustomerPaymentChannelsResponse {
+  isSuccess: boolean
+  message: string
+  data: string[]
+}
+
 // Customer State
 interface CustomerState {
   // Create customer state
@@ -356,6 +438,18 @@ interface CustomerState {
   createError: string | null
   createSuccess: boolean
   createdCustomers: CreatedCustomer[]
+
+  // Record payment state
+  recordPaymentLoading: boolean
+  recordPaymentError: string | null
+  recordPaymentSuccess: boolean
+  recordedPayment: CustomerRecordPaymentResponse["data"] | null
+
+  // Customer payment channels state
+  customerPaymentChannelsLoading: boolean
+  customerPaymentChannelsError: string | null
+  customerPaymentChannelsSuccess: boolean
+  customerPaymentChannels: string[]
 }
 
 // Initial state
@@ -364,6 +458,18 @@ const initialState: CustomerState = {
   createError: null,
   createSuccess: false,
   createdCustomers: [],
+
+  // Record payment initial state
+  recordPaymentLoading: false,
+  recordPaymentError: null,
+  recordPaymentSuccess: false,
+  recordedPayment: null,
+
+  // Customer payment channels initial state
+  customerPaymentChannelsLoading: false,
+  customerPaymentChannelsError: null,
+  customerPaymentChannelsSuccess: false,
+  customerPaymentChannels: [],
 }
 
 // Async thunk for creating a single customer
@@ -392,6 +498,53 @@ export const createCustomer = createAsyncThunk(
   }
 )
 
+// Async thunk for recording payment for a customer
+export const recordCustomerPayment = createAsyncThunk(
+  "customers/recordCustomerPayment",
+  async (
+    { customerId, paymentData }: { customerId: number; paymentData: CustomerRecordPaymentRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.CREATE_CUSTOMER.RECORD_PAYMENT).replace("{id}", customerId.toString())
+      const response = await api.post<CustomerRecordPaymentResponse>(url, paymentData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to record payment")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to record payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment recording")
+    }
+  }
+)
+
+// Async thunk for fetching customer payment channels
+export const fetchCustomerPaymentChannels = createAsyncThunk(
+  "customers/fetchCustomerPaymentChannels",
+  async (customerId: number, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.CREATE_CUSTOMER.PAYMENT_CHANNELS).replace("{id}", customerId.toString())
+      const response = await api.get<CustomerPaymentChannelsResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch customer payment channels")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch customer payment channels")
+      }
+      return rejectWithValue(error.message || "Network error during customer payment channels fetch")
+    }
+  }
+)
+
 // Customer slice
 const createCustomerSlice = createSlice({
   name: "createCustomer",
@@ -405,9 +558,27 @@ const createCustomerSlice = createSlice({
       state.createdCustomers = []
     },
 
+    // Clear record payment state
+    clearRecordPaymentState: (state) => {
+      state.recordPaymentLoading = false
+      state.recordPaymentError = null
+      state.recordPaymentSuccess = false
+      state.recordedPayment = null
+    },
+
+    // Clear customer payment channels state
+    clearCustomerPaymentChannelsState: (state) => {
+      state.customerPaymentChannelsLoading = false
+      state.customerPaymentChannelsError = null
+      state.customerPaymentChannelsSuccess = false
+      state.customerPaymentChannels = []
+    },
+
     // Clear errors
     clearError: (state) => {
       state.createError = null
+      state.recordPaymentError = null
+      state.customerPaymentChannelsError = null
     },
 
     // Reset customer state
@@ -416,6 +587,14 @@ const createCustomerSlice = createSlice({
       state.createError = null
       state.createSuccess = false
       state.createdCustomers = []
+      state.recordPaymentLoading = false
+      state.recordPaymentError = null
+      state.recordPaymentSuccess = false
+      state.recordedPayment = null
+      state.customerPaymentChannelsLoading = false
+      state.customerPaymentChannelsError = null
+      state.customerPaymentChannelsSuccess = false
+      state.customerPaymentChannels = []
     },
   },
   extraReducers: (builder) => {
@@ -442,9 +621,51 @@ const createCustomerSlice = createSlice({
         state.createSuccess = false
         state.createdCustomers = []
       })
+      // Record payment cases
+      .addCase(recordCustomerPayment.pending, (state) => {
+        state.recordPaymentLoading = true
+        state.recordPaymentError = null
+        state.recordPaymentSuccess = false
+      })
+      .addCase(recordCustomerPayment.fulfilled, (state, action: PayloadAction<CustomerRecordPaymentResponse>) => {
+        state.recordPaymentLoading = false
+        state.recordPaymentSuccess = true
+        state.recordPaymentError = null
+        state.recordedPayment = action.payload.data
+      })
+      .addCase(recordCustomerPayment.rejected, (state, action) => {
+        state.recordPaymentLoading = false
+        state.recordPaymentError = (action.payload as string) || "Failed to record payment"
+        state.recordPaymentSuccess = false
+        state.recordedPayment = null
+      })
+      // Fetch customer payment channels cases
+      .addCase(fetchCustomerPaymentChannels.pending, (state) => {
+        state.customerPaymentChannelsLoading = true
+        state.customerPaymentChannelsError = null
+        state.customerPaymentChannelsSuccess = false
+      })
+      .addCase(fetchCustomerPaymentChannels.fulfilled, (state, action: PayloadAction<string[]>) => {
+        state.customerPaymentChannelsLoading = false
+        state.customerPaymentChannelsSuccess = true
+        state.customerPaymentChannelsError = null
+        state.customerPaymentChannels = action.payload
+      })
+      .addCase(fetchCustomerPaymentChannels.rejected, (state, action) => {
+        state.customerPaymentChannelsLoading = false
+        state.customerPaymentChannelsError = (action.payload as string) || "Failed to fetch customer payment channels"
+        state.customerPaymentChannelsSuccess = false
+        state.customerPaymentChannels = []
+      })
   },
 })
 
-export const { clearCreateState, clearError, resetCustomerState } = createCustomerSlice.actions
+export const {
+  clearCreateState,
+  clearRecordPaymentState,
+  clearCustomerPaymentChannelsState,
+  clearError,
+  resetCustomerState,
+} = createCustomerSlice.actions
 
 export default createCustomerSlice.reducer

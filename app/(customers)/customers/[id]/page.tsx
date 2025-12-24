@@ -34,6 +34,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPayments } from "lib/redux/paymentSlice"
 import type { Payment } from "lib/redux/paymentSlice"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
+import ChangeAccountNumberModal from "components/ui/Modal/change-account-number-modal"
 import { formatCurrency as formatCurrencyUtil } from "utils/formatCurrency"
 
 // Import tab components
@@ -278,6 +279,7 @@ const CustomerDetailsPage = () => {
     | "manualBill"
     | "recordPayment"
     | "meterReading"
+    | "changeAccountNumber"
     | null
   >(null)
   const [activeTab, setActiveTab] = useState<TabType>("basic-info")
@@ -366,6 +368,7 @@ const CustomerDetailsPage = () => {
       | "manualBill"
       | "recordPayment"
       | "meterReading"
+      | "changeAccountNumber"
   ) => setActiveModal(modalType)
 
   const handleConfirmReminder = (message: string) => {
@@ -1032,7 +1035,7 @@ const CustomerDetailsPage = () => {
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                           <MapOutlineIcon className="size-4" />
-                          {currentCustomer.state}
+                          {currentCustomer.provinceName}
                         </div>
                       </div>
                     </div>
@@ -1073,7 +1076,7 @@ const CustomerDetailsPage = () => {
                           onClick={() => openModal("meterReading")}
                         >
                           <MeterOutlineIcon className="size-4" />
-                          Generate Meter Reading
+                          Record Meter Reading
                         </ButtonModule>
                         <ButtonModule
                           variant="secondary"
@@ -1082,6 +1085,14 @@ const CustomerDetailsPage = () => {
                         >
                           <NotificationOutlineIcon />
                           Send Reminder
+                        </ButtonModule>
+                        <ButtonModule
+                          variant="outline"
+                          className="w-full justify-start gap-3"
+                          onClick={() => openModal("changeAccountNumber")}
+                        >
+                          <Edit3 className="size-4" />
+                          Change Account Number
                         </ButtonModule>
                         {canUpdate && (
                           <ButtonModule
@@ -1351,6 +1362,15 @@ const CustomerDetailsPage = () => {
         customerId={customerId}
         customerName={currentCustomer.fullName}
         accountNumber={currentCustomer.accountNumber}
+      />
+
+      <ChangeAccountNumberModal
+        isOpen={activeModal === "changeAccountNumber"}
+        onRequestClose={closeAllModals}
+        customerId={customerId}
+        customerName={currentCustomer.fullName}
+        accountNumber={currentCustomer.accountNumber}
+        currentCustomer={currentCustomer}
       />
 
       <PaymentReceiptModal
