@@ -8,7 +8,7 @@ import { BillsIcon, CycleIcon, DateIcon, RevenueGeneratedIcon, StatusIcon } from
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { clearBillingPeriodsState, fetchBillingPeriods, BillingPeriod } from "lib/redux/billingPeriodsSlice"
+import { BillingPeriod, fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"

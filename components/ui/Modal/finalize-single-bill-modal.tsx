@@ -7,7 +7,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "../Input/Input"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { finalizeSingleBill, clearFinalizeSingleBillStatus } from "lib/redux/postpaidSlice"
+import { clearFinalizeSingleBillStatus, finalizeSingleBill } from "lib/redux/postpaidSlice"
 
 // Icon Component
 const CloseIcon = () => (
