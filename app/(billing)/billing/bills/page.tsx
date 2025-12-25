@@ -1,7 +1,7 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useState, Suspense } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import AllBills from "components/BillingInfo/AllBills"

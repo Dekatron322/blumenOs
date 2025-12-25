@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState, Suspense } from "react"
+import React, { Suspense, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
