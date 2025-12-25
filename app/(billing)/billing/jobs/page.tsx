@@ -1158,7 +1158,7 @@ const BillingJobs: React.FC = () => {
                                     Completed At <RxCaretSort className="text-gray-400" />
                                   </div>
                                 </th>
-                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                <th className="shadow-[ -2px_0_4px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-y  bg-gray-50 p-4 text-sm font-semibold text-gray-900">
                                   Actions
                                 </th>
                               </tr>
@@ -1242,7 +1242,7 @@ const BillingJobs: React.FC = () => {
                                   <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
                                     {job.completedAtUtc ? formatDate(job.completedAtUtc) : "In Progress"}
                                   </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <td className="shadow-[ -2px_0_4px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-3 text-sm shadow-md">
                                     <ButtonModule
                                       size="sm"
                                       variant="outline"
