@@ -42,6 +42,20 @@ export interface ApplyFeederEnergyCapsRequest {
   areaOfficeId: number
 }
 
+export interface CreateSingleFeederEnergyCapRequest {
+  feederId: number
+  billingPeriodId: number
+  energyCapKwh: number
+  tariffOverridePerKwh: number
+  notes: string
+}
+
+export interface CreateSingleFeederEnergyCapResponse {
+  isSuccess: boolean
+  message: string
+  data: FeederEnergyCap
+}
+
 export interface ApplyFeederEnergyCapsResponse {
   isSuccess: boolean
   message: string
@@ -79,6 +93,12 @@ interface FeederEnergyCapState {
   applyFeederEnergyCapsSuccess: boolean
   appliedFeederEnergyCaps: FeederEnergyCap[]
 
+  // Create single feeder energy cap state
+  createSingleFeederEnergyCapLoading: boolean
+  createSingleFeederEnergyCapError: string | null
+  createSingleFeederEnergyCapSuccess: boolean
+  createdSingleFeederEnergyCap: FeederEnergyCap | null
+
   // Pagination state
   pagination: {
     totalCount: number
@@ -108,6 +128,12 @@ const initialState: FeederEnergyCapState = {
   applyFeederEnergyCapsError: null,
   applyFeederEnergyCapsSuccess: false,
   appliedFeederEnergyCaps: [],
+
+  // Create single feeder energy cap state
+  createSingleFeederEnergyCapLoading: false,
+  createSingleFeederEnergyCapError: null,
+  createSingleFeederEnergyCapSuccess: false,
+  createdSingleFeederEnergyCap: null,
   pagination: {
     totalCount: 0,
     totalPages: 0,
@@ -193,10 +219,36 @@ export const applyFeederEnergyCaps = createAsyncThunk(
 
       return response.data
     } catch (error: any) {
-      if (error.response?.data) {
-        return rejectWithValue(error.response.data.message || "Failed to apply feeder energy caps")
+      console.error("Error applying feeder energy caps:", error)
+      if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message)
       }
-      return rejectWithValue(error.message || "Network error during feeder energy caps application")
+      return rejectWithValue(error.message || "Failed to apply feeder energy caps")
+    }
+  }
+)
+
+// Async thunks - POST request to create single feeder energy cap
+export const createSingleFeederEnergyCap = createAsyncThunk(
+  "feederEnergyCap/createSingleFeederEnergyCap",
+  async (requestData: CreateSingleFeederEnergyCapRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CreateSingleFeederEnergyCapResponse>(
+        buildApiUrl(API_ENDPOINTS.FEEDER_ENERGY_CAP.CREATE_SINGLE),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to create feeder energy cap")
+      }
+
+      return response.data
+    } catch (error: any) {
+      console.error("Error creating feeder energy cap:", error)
+      if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message)
+      }
+      return rejectWithValue(error.message || "Failed to create feeder energy cap")
     }
   }
 )
@@ -237,12 +289,21 @@ const feederEnergyCapSlice = createSlice({
       state.appliedFeederEnergyCaps = []
     },
 
+    // Clear create single feeder energy cap state
+    clearCreateSingleFeederEnergyCap: (state) => {
+      state.createSingleFeederEnergyCapLoading = false
+      state.createSingleFeederEnergyCapError = null
+      state.createSingleFeederEnergyCapSuccess = false
+      state.createdSingleFeederEnergyCap = null
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
       state.feederEnergyCapsError = null
       state.selectedFeederEnergyCapError = null
       state.applyFeederEnergyCapsError = null
+      state.createSingleFeederEnergyCapError = null
     },
 
     // Reset feeder energy cap state
@@ -259,6 +320,10 @@ const feederEnergyCapSlice = createSlice({
       state.applyFeederEnergyCapsError = null
       state.applyFeederEnergyCapsSuccess = false
       state.appliedFeederEnergyCaps = []
+      state.createSingleFeederEnergyCapLoading = false
+      state.createSingleFeederEnergyCapError = null
+      state.createSingleFeederEnergyCapSuccess = false
+      state.createdSingleFeederEnergyCap = null
       state.pagination = {
         totalCount: 0,
         totalPages: 0,
@@ -414,6 +479,35 @@ const feederEnergyCapSlice = createSlice({
         state.applyFeederEnergyCapsSuccess = false
         state.appliedFeederEnergyCaps = []
       })
+      // Create single feeder energy cap cases
+      .addCase(createSingleFeederEnergyCap.pending, (state) => {
+        state.createSingleFeederEnergyCapLoading = true
+        state.createSingleFeederEnergyCapError = null
+        state.createSingleFeederEnergyCapSuccess = false
+        state.loading = true
+      })
+      .addCase(
+        createSingleFeederEnergyCap.fulfilled,
+        (state, action: PayloadAction<CreateSingleFeederEnergyCapResponse>) => {
+          state.createSingleFeederEnergyCapLoading = false
+          state.createSingleFeederEnergyCapSuccess = true
+          state.loading = false
+          state.createdSingleFeederEnergyCap = action.payload.data || null
+          state.createSingleFeederEnergyCapError = null
+
+          // Optionally add the new cap to the main list
+          if (action.payload.data) {
+            state.feederEnergyCaps.unshift(action.payload.data)
+          }
+        }
+      )
+      .addCase(createSingleFeederEnergyCap.rejected, (state, action) => {
+        state.createSingleFeederEnergyCapLoading = false
+        state.loading = false
+        state.createSingleFeederEnergyCapError = (action.payload as string) || "Failed to create feeder energy cap"
+        state.createSingleFeederEnergyCapSuccess = false
+        state.createdSingleFeederEnergyCap = null
+      })
   },
 })
 
@@ -421,6 +515,7 @@ export const {
   clearFeederEnergyCaps,
   clearSelectedFeederEnergyCap,
   clearApplyFeederEnergyCaps,
+  clearCreateSingleFeederEnergyCap,
   clearError,
   resetFeederEnergyCapState,
   setPagination,

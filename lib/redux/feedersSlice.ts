@@ -419,6 +419,8 @@ export const fetchFeeders = createAsyncThunk(
         serviceCenterId,
       } = params
 
+      console.log("Fetching feeders with params:", params)
+
       const response = await api.get<FeedersResponse>(buildApiUrl(API_ENDPOINTS.FEEDERS.GET), {
         params: {
           PageNumber: pageNumber,
@@ -432,12 +434,15 @@ export const fetchFeeders = createAsyncThunk(
         },
       })
 
+      console.log("Feeders API response:", response.data)
+
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch feeders")
       }
 
       return response.data
     } catch (error: any) {
+      console.error("Feeders API error:", error)
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch feeders")
       }
