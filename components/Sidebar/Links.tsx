@@ -100,7 +100,7 @@ export const allLinks: LinkItem[] = [
       { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["W"] },
       { name: "Postpaid Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       {
-        name: "Customer Meter Readings",
+        name: "Postpaid Meter Readings",
         href: "/billing/meter-readings",
         privilegeKey: "billing-postpaid",
         requiredActions: ["R"],

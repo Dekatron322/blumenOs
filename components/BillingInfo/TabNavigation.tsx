@@ -124,7 +124,7 @@ interface TabNavigationProps {
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: "BillingCycles", label: "Billing Cycles", icon: <InventoryIcon /> },
-    { id: "MeterReadings", label: "Meter Readings", icon: <MeterOutlineIcon /> },
+    { id: "MeterReadings", label: "Postpaid Meter Readings", icon: <MeterOutlineIcon /> },
     { id: "RecentBills", label: "Recent Bills", icon: <AlertsIcon /> },
     { id: "FeederEnergyCaps", label: "Feeder Energy Caps", icon: <MeterOutlineIcon /> },
   ]
