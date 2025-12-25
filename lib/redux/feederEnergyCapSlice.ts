@@ -35,7 +35,7 @@ export interface FeederEnergyCapResponse {
 }
 
 export interface ApplyFeederEnergyCapsRequest {
-  period: string
+  billingPeriodId: number
   energyCapKwh: number
   tariffOverridePerKwh: number
   notes: string
@@ -51,7 +51,7 @@ export interface ApplyFeederEnergyCapsResponse {
 export interface FeederEnergyCapsRequestParams {
   pageNumber: number
   pageSize: number
-  period?: string
+  billingPeriodId?: number
   feederId?: number
   areaOfficeId?: number
   companyId?: number
@@ -112,7 +112,7 @@ const initialState: FeederEnergyCapState = {
     totalCount: 0,
     totalPages: 0,
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 50,
     hasNext: false,
     hasPrevious: false,
   },
@@ -125,13 +125,13 @@ export const fetchFeederEnergyCaps = createAsyncThunk(
   "feederEnergyCap/fetchFeederEnergyCaps",
   async (params: FeederEnergyCapsRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, period, feederId, areaOfficeId, companyId, sortBy, sortOrder } = params
+      const { pageNumber, pageSize, billingPeriodId, feederId, areaOfficeId, companyId, sortBy, sortOrder } = params
 
       const response = await api.get<FeederEnergyCapsResponse>(buildApiUrl(API_ENDPOINTS.FEEDER_ENERGY_CAP.GET), {
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
-          ...(period && { Period: period }),
+          ...(billingPeriodId !== undefined && { BillingPeriodId: billingPeriodId }),
           ...(feederId !== undefined && { FeederId: feederId }),
           ...(areaOfficeId !== undefined && { AreaOfficeId: areaOfficeId }),
           ...(companyId !== undefined && { CompanyId: companyId }),
@@ -215,7 +215,7 @@ const feederEnergyCapSlice = createSlice({
         totalCount: 0,
         totalPages: 0,
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 50,
         hasNext: false,
         hasPrevious: false,
       }
@@ -263,7 +263,7 @@ const feederEnergyCapSlice = createSlice({
         totalCount: 0,
         totalPages: 0,
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 50,
         hasNext: false,
         hasPrevious: false,
       }
@@ -345,7 +345,7 @@ const feederEnergyCapSlice = createSlice({
           totalCount: action.payload.totalCount || 0,
           totalPages: action.payload.totalPages || 0,
           currentPage: action.payload.currentPage || 1,
-          pageSize: action.payload.pageSize || 10,
+          pageSize: action.payload.pageSize || 50,
           hasNext: action.payload.hasNext || false,
           hasPrevious: action.payload.hasPrevious || false,
         }

@@ -19,6 +19,8 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearCompanies, fetchCompanies } from "lib/redux/companySlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
+import { VscEye } from "react-icons/vsc"
 
 interface ActionDropdownProps {
   energyCap: FeederEnergyCap
@@ -241,9 +243,11 @@ const MobileFilterSidebar = ({
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
                 <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  name="billingPeriodId"
+                  value={localFilters.billingPeriodId?.toString() || ""}
+                  onChange={(e) =>
+                    handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
+                  }
                   options={periodOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -427,6 +431,7 @@ const FeederEnergyCaps: React.FC = () => {
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { feeders } = useAppSelector((state) => state.feeders)
   const { companies } = useAppSelector((state) => state.companies)
+  const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -438,7 +443,7 @@ const FeederEnergyCaps: React.FC = () => {
 
   // Local state for filters (UI state - what user is selecting)
   const [localFilters, setLocalFilters] = useState({
-    period: "",
+    billingPeriodId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
     feederId: undefined as number | undefined,
     companyId: undefined as number | undefined,
@@ -448,7 +453,7 @@ const FeederEnergyCaps: React.FC = () => {
 
   // Applied filters state (only updated when "Apply Filters" is clicked)
   const [appliedFilters, setAppliedFilters] = useState({
-    period: "",
+    billingPeriodId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
     feederId: undefined as number | undefined,
     companyId: undefined as number | undefined,
@@ -462,7 +467,7 @@ const FeederEnergyCaps: React.FC = () => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages || 1
 
-  // Fetch area offices, feeders, and companies on component mount for filter dropdowns
+  // Fetch area offices, feeders, companies, and billing periods on component mount for filter dropdowns
   useEffect(() => {
     dispatch(
       fetchAreaOffices({
@@ -485,6 +490,8 @@ const FeederEnergyCaps: React.FC = () => {
       })
     )
 
+    dispatch(fetchBillingPeriods({}))
+
     // Cleanup function to clear states when component unmounts
     return () => {
       dispatch(clearAreaOffices())
@@ -498,7 +505,7 @@ const FeederEnergyCaps: React.FC = () => {
     const fetchParams: FeederEnergyCapsRequestParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(appliedFilters.period ? { period: appliedFilters.period } : {}),
+      ...(appliedFilters.billingPeriodId ? { billingPeriodId: appliedFilters.billingPeriodId } : {}),
       ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
       ...(appliedFilters.feederId !== undefined ? { feederId: appliedFilters.feederId } : {}),
       ...(appliedFilters.companyId !== undefined ? { companyId: appliedFilters.companyId } : {}),
@@ -516,48 +523,14 @@ const FeederEnergyCaps: React.FC = () => {
     }
   }, [dispatch])
 
-  // Generate period options
-  const generatePeriodOptions = () => {
-    const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
-
-    const now = new Date()
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      year: "numeric",
-    })
-
-    // Include current month + next 12 months
-    for (let i = 0; i <= 12; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const value = `${year}-${month}`
-      const label = formatter.format(date)
-
-      options.push({ value, label })
-    }
-
-    // Add existing periods from data
-    const existingPeriods = Array.from(new Set(feederEnergyCaps.map((cap) => cap.period)))
-    existingPeriods.forEach((period) => {
-      const alreadyExists = options.some((opt) => opt.value === period)
-      if (!alreadyExists && period) {
-        let label = period
-        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
-        if (match && match[1] && match[2]) {
-          const year = parseInt(match[1], 10)
-          const monthIndex = parseInt(match[2], 10) - 1
-          const date = new Date(year, monthIndex, 1)
-          label = formatter.format(date)
-        }
-        options.push({ value: period, label })
-      }
-    })
-
-    return options
-  }
-
-  const periodOptions = generatePeriodOptions()
+  // Generate period options from billing periods endpoint
+  const periodOptions = [
+    { value: "", label: billingPeriodsLoading ? "Loading billing periods..." : "All Periods" },
+    ...billingPeriods.map((period) => ({
+      value: period.id.toString(),
+      label: period.displayName,
+    })),
+  ]
 
   // Area office options
   const areaOfficeOptions = [
@@ -630,7 +603,7 @@ const FeederEnergyCaps: React.FC = () => {
   // Reset all filters
   const resetFilters = () => {
     const emptyFilters = {
-      period: "",
+      billingPeriodId: undefined,
       areaOfficeId: undefined,
       feederId: undefined,
       companyId: undefined,
@@ -646,7 +619,7 @@ const FeederEnergyCaps: React.FC = () => {
   // Get active filter count
   const getActiveFilterCount = () => {
     let count = 0
-    if (localFilters.period) count++
+    if (localFilters.billingPeriodId) count++
     if (localFilters.areaOfficeId) count++
     if (localFilters.feederId) count++
     if (localFilters.companyId) count++
@@ -850,25 +823,18 @@ const FeederEnergyCaps: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-full sm:w-64 md:w-[380px]">
+              <div className="">
                 <SearchModule
                   value={searchText}
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
                   placeholder="Search by period (e.g., 2024-01)..."
-                  className="w-full"
+                  className="w-full max-w-[250px]"
                   bgClassName="bg-white"
                 />
               </div>
 
               {/* Active filters badge - Desktop only (2xl and above) */}
-              {getActiveFilterCount() > 0 && (
-                <div className="hidden items-center gap-2 2xl:flex">
-                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
 
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
@@ -878,6 +844,13 @@ const FeederEnergyCaps: React.FC = () => {
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
+                {getActiveFilterCount() > 0 && (
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()}
+                    </span>
+                  </div>
+                )}
               </button>
 
               <button
@@ -976,7 +949,7 @@ const FeederEnergyCaps: React.FC = () => {
                           Cap Level <RxCaretSort />
                         </div>
                       </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                      <th className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white p-4 text-sm">
                         <div className="flex items-center gap-2">Actions</div>
                       </th>
                     </tr>
@@ -1012,13 +985,14 @@ const FeederEnergyCaps: React.FC = () => {
                             {getStatusLabel(energyCap.energyCapKwh)}
                           </motion.div>
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                        <td className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-1 text-sm shadow-md">
                           <ButtonModule
                             size="sm"
                             onClick={() => handleViewEnergyCapDetails(energyCap)}
-                            variant="primary"
+                            variant="outline"
+                            icon={<VscEye />}
                           >
-                            View Details
+                            View
                           </ButtonModule>
                         </td>
                       </tr>
@@ -1141,9 +1115,11 @@ const FeederEnergyCaps: React.FC = () => {
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
                 <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  name="billingPeriodId"
+                  value={localFilters.billingPeriodId?.toString() || ""}
+                  onChange={(e) =>
+                    handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
+                  }
                   options={periodOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"

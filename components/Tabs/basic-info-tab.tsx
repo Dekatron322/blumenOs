@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, Building, History, Mail, MapPin, Phone, User, Zap } from "lucide-react"
+import { AlertCircle, Building, Calendar, History, Mail, MapPin, Phone, User, Zap } from "lucide-react"
 import { MeteringOutlineIcon, MeterOutlineIcon } from "components/Icons/Icons"
 
 interface Asset {
@@ -11,6 +11,23 @@ interface Asset {
   feederName?: string
   transformerCapacityKva?: number
   status?: string
+}
+
+interface AccountNumberHistory {
+  requestedAtUtc: string
+  oldAccountNumber?: string
+  oldAddress?: string
+  oldAddressTwo?: string
+  oldCity?: string
+  oldLatitude?: string
+  oldLongitude?: string
+  newAccountNumber?: string
+  newAddress?: string
+  newAddressTwo?: string
+  newCity?: string
+  newLatitude?: string
+  newLongitude?: string
+  reason?: string
 }
 
 interface BasicInfoTabProps {
@@ -259,6 +276,109 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                 referrerPolicy="no-referrer-when-downgrade"
                 src={`https://www.google.com/maps?q=${currentCustomer.latitude},${currentCustomer.longitude}&z=15&output=embed`}
               ></iframe>
+            </div>
+          </div>
+        )}
+
+        {/* Location Change History */}
+        {currentCustomer.accountNumberHistory && currentCustomer.accountNumberHistory.length > 0 && (
+          <div className="mt-6">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <MapPin className="size-5" />
+              Location Change History
+            </h3>
+            <div className="space-y-3">
+              {currentCustomer.accountNumberHistory.map((history: AccountNumberHistory, index: number) => (
+                <div key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="size-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-900">
+                        {new Date(history.requestedAtUtc).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      Account Change
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-red-600">Previous Location</h4>
+                      <div className="space-y-1 text-sm">
+                        <p>
+                          <span className="font-medium">Account:</span> {history.oldAccountNumber}
+                        </p>
+                        {history.oldAddress && (
+                          <p>
+                            <span className="font-medium">Address:</span> {history.oldAddress}
+                          </p>
+                        )}
+                        {history.oldAddressTwo && (
+                          <p>
+                            <span className="font-medium">Address 2:</span> {history.oldAddressTwo}
+                          </p>
+                        )}
+                        {history.oldCity && (
+                          <p>
+                            <span className="font-medium">City:</span> {history.oldCity}
+                          </p>
+                        )}
+                        {history.oldLatitude && history.oldLongitude && (
+                          <p>
+                            <span className="font-medium">Coordinates:</span> {history.oldLatitude},{" "}
+                            {history.oldLongitude}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-green-600">New Location</h4>
+                      <div className="space-y-1 text-sm">
+                        <p>
+                          <span className="font-medium">Account:</span> {history.newAccountNumber}
+                        </p>
+                        {history.newAddress && (
+                          <p>
+                            <span className="font-medium">Address:</span> {history.newAddress}
+                          </p>
+                        )}
+                        {history.newAddressTwo && (
+                          <p>
+                            <span className="font-medium">Address 2:</span> {history.newAddressTwo}
+                          </p>
+                        )}
+                        {history.newCity && (
+                          <p>
+                            <span className="font-medium">City:</span> {history.newCity}
+                          </p>
+                        )}
+                        {history.newLatitude && history.newLongitude && (
+                          <p>
+                            <span className="font-medium">Coordinates:</span> {history.newLatitude},{" "}
+                            {history.newLongitude}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {history.reason && (
+                    <div className="mt-3 rounded-md bg-blue-50 p-3">
+                      <p className="text-sm">
+                        <span className="font-medium">Reason:</span> {history.reason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

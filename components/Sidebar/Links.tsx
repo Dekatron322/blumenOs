@@ -98,9 +98,9 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["W"] },
-      { name: "Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      { name: "Postpaid Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       {
-        name: "Meter Readings",
+        name: "Customer Meter Readings",
         href: "/billing/meter-readings",
         privilegeKey: "billing-postpaid",
         requiredActions: ["R"],
@@ -111,7 +111,12 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "billing-postpaid",
         requiredActions: ["R"],
       },
-      { name: "Generate Bills", href: "/billing/jobs", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
+      {
+        name: "Generate Postpaid Bills",
+        href: "/billing/jobs",
+        privilegeKey: "billing-postpaid",
+        requiredActions: ["R"],
+      },
       {
         name: "Change Request",
         href: "/billing/change-requests",

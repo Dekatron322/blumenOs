@@ -142,12 +142,9 @@ const ViewChangeRequestModal: React.FC<ViewChangeRequestModalProps> = ({
 
   const getStatusConfig = (status: number) => {
     const configs = {
-      0: { color: "text-amber-600", bg: "bg-amber-50", label: "PENDING" },
-      1: { color: "text-emerald-600", bg: "bg-emerald-50", label: "APPROVED" },
-      2: { color: "text-red-600", bg: "bg-red-50", label: "DECLINED" },
-      3: { color: "text-gray-600", bg: "bg-gray-50", label: "CANCELLED" },
-      4: { color: "text-blue-600", bg: "bg-blue-50", label: "APPLIED" },
-      5: { color: "text-gray-600", bg: "bg-gray-50", label: "FAILED" },
+      0: { color: "text-amber-600", bg: "bg-amber-50", label: "DRAFT" },
+      1: { color: "text-emerald-600", bg: "bg-emerald-50", label: "PUBLISHED" },
+      2: { color: "text-red-600", bg: "bg-red-50", label: "REVERSED" },
     }
     return configs[status as keyof typeof configs] || configs[0]
   }

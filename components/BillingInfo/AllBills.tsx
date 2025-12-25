@@ -4,16 +4,24 @@ import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearError, clearFilters, fetchPostpaidBills, setFilters, setPagination } from "lib/redux/postpaidSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { MapIcon, UserIcon } from "components/Icons/Icons"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { VscEye } from "react-icons/vsc"
+
+export enum BillStatus {
+  Draft = 0,
+  Published = 1,
+  Reversed = 2,
+}
 
 interface ActionDropdownProps {
   bill: Bill
@@ -46,7 +54,7 @@ interface Bill {
   billingCycle: string
   name: string
   amount: string
-  status: "Paid" | "Pending" | "Overdue" | "Cancelled"
+  status: BillStatus
   dueDate: string
   issueDate: string
   customerType: "Residential" | "Commercial" | "Industrial"
@@ -63,6 +71,35 @@ interface SortOption {
   label: string
   value: string
   order: "asc" | "desc"
+}
+
+interface FilterState {
+  billingPeriodId: number | undefined
+  status: number | undefined
+  category: number | undefined
+  areaOfficeId: number | undefined
+  feederId: number | undefined
+  sortBy: string | undefined
+  sortOrder: "asc" | "desc" | undefined
+}
+
+interface MobileFilterSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: FilterState
+  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  billingPeriodOptions: { value: string; label: string }[]
+  statusOptions: { value: string | number; label: string }[]
+  categoryOptions: { value: string | number; label: string }[]
+  areaOfficeOptions: { value: string; label: string }[]
+  feederOptions: { value: string; label: string }[]
+  sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails, onUpdateBill }) => {
@@ -266,7 +303,7 @@ const MobileFilterSidebar = ({
   applyFilters,
   resetFilters,
   getActiveFilterCount,
-  periodOptions,
+  billingPeriodOptions,
   statusOptions,
   categoryOptions,
   areaOfficeOptions,
@@ -274,24 +311,7 @@ const MobileFilterSidebar = ({
   sortOptions,
   isSortExpanded,
   setIsSortExpanded,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  localFilters: any
-  handleFilterChange: (key: string, value: string | number | undefined) => void
-  handleSortChange: (option: SortOption) => void
-  applyFilters: () => void
-  resetFilters: () => void
-  getActiveFilterCount: () => number
-  periodOptions: Array<{ value: string; label: string }>
-  statusOptions: Array<{ value: string | number; label: string }>
-  categoryOptions: Array<{ value: string | number; label: string }>
-  areaOfficeOptions: Array<{ value: string | number; label: string }>
-  feederOptions: Array<{ value: string | number; label: string }>
-  sortOptions: SortOption[]
-  isSortExpanded: boolean
-  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
-}) => {
+}: MobileFilterSidebarProps) => {
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
@@ -309,11 +329,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
+            {/* Fixed Header */}
+            <div className="flex shrink-0 items-center justify-between border-b bg-white p-4">
               <div className="flex items-center gap-2">
                 <button
                   onClick={onClose}
@@ -323,9 +343,6 @@ const MobileFilterSidebar = ({
                 </button>
                 <div>
                   <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
-                  )}
                 </div>
               </div>
               <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
@@ -333,161 +350,168 @@ const MobileFilterSidebar = ({
               </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Period Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
-                <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
-                  options={periodOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const statusValue = Number(option.value)
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.status === statusValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      )
-                    })}
+            {/* Scrollable Filter Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Billing Period Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Billing Period</label>
+                  <FormSelectModule
+                    name="billingPeriodId"
+                    value={localFilters.billingPeriodId?.toString() || ""}
+                    onChange={(e) =>
+                      handleFilterChange("billingPeriodId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={billingPeriodOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
                 </div>
-              </div>
 
-              {/* Category Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Category</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {categoryOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const categoryValue = Number(option.value)
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange(
-                              "category",
-                              localFilters.category === categoryValue ? undefined : categoryValue
-                            )
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.category === categoryValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      )
-                    })}
-                </div>
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Feeder Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
-                <FormSelectModule
-                  name="feederId"
-                  value={localFilters.feederId || ""}
-                  onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
-                  options={feederOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const statusValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "status",
+                                localFilters.status === statusValue ? undefined : statusValue
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.status === statusValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
                   </div>
-                )}
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Category</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {categoryOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const categoryValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "category",
+                                localFilters.category === categoryValue ? undefined : categoryValue
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.category === categoryValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Feeder Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                  <FormSelectModule
+                    name="feederId"
+                    value={localFilters.feederId || ""}
+                    onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                    options={feederOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Fixed Bottom Action Buttons */}
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
-                  onClick={() => {
-                    applyFilters()
-                    onClose()
-                  }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  onClick={applyFilters}
+                  className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
                 >
+                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
-                  onClick={() => {
-                    resetFilters()
-                    onClose()
-                  }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={resetFilters}
+                  className="button-oulined flex w-full items-center justify-center gap-2 text-sm md:text-base"
                 >
-                  Reset
+                  <X className="size-4" />
+                  Reset All
                 </button>
               </div>
             </div>
@@ -501,9 +525,11 @@ const MobileFilterSidebar = ({
 const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { bills, loading, error, pagination, filters } = useAppSelector((state) => state.postpaidBilling)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { feeders } = useAppSelector((state) => state.feeders)
+  const { billingPeriods } = useAppSelector((state) => state.billingPeriods)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -515,13 +541,24 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
-    period: "",
+    billingPeriodId: undefined as number | undefined,
     status: undefined as number | undefined,
     category: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
     feederId: undefined as number | undefined,
-    sortBy: "",
-    sortOrder: "asc" as "asc" | "desc",
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
+  })
+
+  // Applied filters state - triggers API calls
+  const [appliedFilters, setAppliedFilters] = useState({
+    billingPeriodId: undefined as number | undefined,
+    status: undefined as number | undefined,
+    category: undefined as number | undefined,
+    areaOfficeId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    sortBy: undefined as string | undefined,
+    sortOrder: undefined as "asc" | "desc" | undefined,
   })
 
   // Get pagination values from Redux state
@@ -530,7 +567,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const totalRecords = pagination.totalCount
   const totalPages = pagination.totalPages || 1
 
-  // Fetch area offices and feeders on component mount for filter dropdowns
+  // Fetch area offices, feeders, and billing periods on component mount for filter dropdowns
   useEffect(() => {
     dispatch(
       fetchAreaOffices({
@@ -546,6 +583,8 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
       })
     )
 
+    dispatch(fetchBillingPeriods({}))
+
     // Cleanup function to clear states when component unmounts
     return () => {
       dispatch(clearAreaOffices())
@@ -553,24 +592,24 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     }
   }, [dispatch])
 
-  // Fetch bills on component mount and when search/pagination/filters change
+  // Fetch bills on component mount and when search/pagination/appliedFilters change
   // Note: searchText triggers immediate search, but filters only apply when "Apply Filters" is clicked
   useEffect(() => {
     const fetchParams: any = {
       pageNumber: currentPage,
       pageSize: pageSize,
       ...(searchText && { accountNumber: searchText }),
-      ...(filters.period && { period: filters.period }),
-      ...(filters.status !== undefined && { status: filters.status }),
-      ...(filters.category !== undefined && { category: filters.category }),
-      ...(filters.areaOfficeId && { areaOfficeId: filters.areaOfficeId }),
-      ...(filters.feederId && { feederId: filters.feederId }),
-      ...(filters.sortBy && { sortBy: filters.sortBy }),
-      ...(filters.sortOrder && { sortOrder: filters.sortOrder }),
+      ...(appliedFilters.billingPeriodId && { billingPeriodId: appliedFilters.billingPeriodId }),
+      ...(appliedFilters.status !== undefined && { status: appliedFilters.status }),
+      ...(appliedFilters.category !== undefined && { category: appliedFilters.category }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.feederId && { feederId: appliedFilters.feederId }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
     }
 
     dispatch(fetchPostpaidBills(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, filters])
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -579,27 +618,22 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     }
   }, [dispatch])
 
-  const getStatusStyle = (status: Bill["status"]) => {
+  const getStatusStyle = (status: BillStatus) => {
     switch (status) {
-      case "Paid":
+      case BillStatus.Draft:
+        return {
+          backgroundColor: "#F3F4F6",
+          color: "#6B7280",
+        }
+      case BillStatus.Published:
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
         }
-      case "Pending":
-        return {
-          backgroundColor: "#EDF2FE",
-          color: "#4976F4",
-        }
-      case "Overdue":
+      case BillStatus.Reversed:
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
-        }
-      case "Cancelled":
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
         }
       default:
         return {
@@ -659,54 +693,27 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
-  const generatePeriodOptions = () => {
+  const generateBillingPeriodOptions = () => {
     const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
 
-    const now = new Date()
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      year: "numeric",
-    })
-
-    // Include current month + next 12 months
-    for (let i = 0; i <= 12; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const value = `${year}-${month}`
-      const label = formatter.format(date)
-
-      options.push({ value, label })
-    }
-
-    const existingPeriods = Array.from(new Set(bills.map((bill) => bill.period)))
-    existingPeriods.forEach((period) => {
-      const alreadyExists = options.some((opt) => opt.value === period)
-      if (!alreadyExists && period) {
-        let label = period
-        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
-        if (match && match[1] && match[2]) {
-          const year = parseInt(match[1], 10)
-          const monthIndex = parseInt(match[2], 10) - 1
-          const date = new Date(year, monthIndex, 1)
-          label = formatter.format(date)
-        }
-        options.push({ value: period, label })
-      }
+    billingPeriods.forEach((period) => {
+      options.push({
+        value: period.id.toString(),
+        label: period.displayName || period.periodKey,
+      })
     })
 
     return options
   }
 
-  const periodOptions = generatePeriodOptions()
+  const billingPeriodOptions = generateBillingPeriodOptions()
 
   // Status options
   const statusOptions = [
     { value: "", label: "All Statuses" },
-    { value: 1, label: "Paid" },
-    { value: 2, label: "Pending" },
-    { value: 3, label: "Overdue" },
-    { value: 4, label: "Cancelled" },
+    { value: BillStatus.Draft, label: "Draft" },
+    { value: BillStatus.Published, label: "Published" },
+    { value: BillStatus.Reversed, label: "Reversed" },
   ]
 
   // Category options
@@ -721,7 +728,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const areaOfficeOptions = [
     { value: "", label: "All Area Offices" },
     ...areaOffices.map((office) => ({
-      value: office.id,
+      value: office.id.toString(),
       label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
     })),
   ]
@@ -730,7 +737,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const feederOptions = [
     { value: "", label: "All Feeders" },
     ...feeders.map((feeder) => ({
-      value: feeder.id,
+      value: feeder.id.toString(),
       label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
     })),
   ]
@@ -770,30 +777,37 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   // Apply all filters at once
   const applyFilters = () => {
-    dispatch(
-      setFilters({
-        period: localFilters.period || undefined,
-        status: localFilters.status,
-        category: localFilters.category,
-        areaOfficeId: localFilters.areaOfficeId,
-        feederId: localFilters.feederId,
-        sortBy: localFilters.sortBy || undefined,
-        sortOrder: localFilters.sortOrder || undefined,
-      })
-    )
+    setAppliedFilters({
+      billingPeriodId: localFilters.billingPeriodId,
+      status: localFilters.status,
+      category: localFilters.category,
+      areaOfficeId: localFilters.areaOfficeId,
+      feederId: localFilters.feederId,
+      sortBy: localFilters.sortBy,
+      sortOrder: localFilters.sortOrder,
+    })
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
   // Reset all filters
   const resetFilters = () => {
     setLocalFilters({
-      period: "",
+      billingPeriodId: undefined,
       status: undefined,
       category: undefined,
       areaOfficeId: undefined,
       feederId: undefined,
-      sortBy: "",
-      sortOrder: "asc",
+      sortBy: undefined,
+      sortOrder: undefined,
+    })
+    setAppliedFilters({
+      billingPeriodId: undefined,
+      status: undefined,
+      category: undefined,
+      areaOfficeId: undefined,
+      feederId: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     })
     setSearchText("")
     dispatch(clearFilters())
@@ -803,7 +817,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   // Get active filter count
   const getActiveFilterCount = () => {
     let count = 0
-    if (localFilters.period) count++
+    if (localFilters.billingPeriodId) count++
     if (localFilters.status !== undefined) count++
     if (localFilters.category !== undefined) count++
     if (localFilters.areaOfficeId) count++
@@ -812,18 +826,26 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     return count
   }
 
-  // Sync local filters with Redux filters on mount
+  // Sync local filters with appliedFilters on mount
   useEffect(() => {
     setLocalFilters({
-      period: filters.period || "",
-      status: filters.status,
-      category: filters.category,
-      areaOfficeId: filters.areaOfficeId,
-      feederId: filters.feederId,
-      sortBy: filters.sortBy || "",
-      sortOrder: (filters.sortOrder as "asc" | "desc") || "asc",
+      billingPeriodId: appliedFilters.billingPeriodId,
+      status: appliedFilters.status,
+      category: appliedFilters.category,
+      areaOfficeId: appliedFilters.areaOfficeId,
+      feederId: appliedFilters.feederId,
+      sortBy: appliedFilters.sortBy || "",
+      sortOrder: (appliedFilters.sortOrder as "asc" | "desc") || "asc",
     })
   }, []) // Only on mount
+
+  // Handle URL search parameters for billing period filtering
+  useEffect(() => {
+    const billingPeriodIdParam = searchParams.get("billingPeriodId")
+    if (billingPeriodIdParam && Number(billingPeriodIdParam) !== filters.billingPeriodId) {
+      dispatch(setFilters({ billingPeriodId: Number(billingPeriodIdParam) }))
+    }
+  }, [searchParams, dispatch, filters.billingPeriodId])
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
@@ -891,13 +913,13 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
     return bills.map((apiBill) => {
       // Determine status based on bill data
-      let status: "Paid" | "Pending" | "Overdue" | "Cancelled" = "Pending"
+      let status: BillStatus = BillStatus.Draft
 
       // Map your API status to component status
-      if (apiBill.status === 1) status = "Paid"
-      else if (apiBill.status === 2) status = "Pending"
-      else if (apiBill.status === 3) status = "Overdue"
-      else if (apiBill.status === 4) status = "Cancelled"
+      if (apiBill.status === 0) status = BillStatus.Draft
+      else if (apiBill.status === 1) status = BillStatus.Published
+      else if (apiBill.status === 2) status = BillStatus.Reversed
+      else status = BillStatus.Draft // Default to Draft
 
       // Determine customer type based on category
       let customerType: "Residential" | "Commercial" | "Industrial" = "Residential"
@@ -1065,15 +1087,6 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                 />
               </div>
 
-              {/* Active filters badge - Desktop only (2xl and above) */}
-              {getActiveFilterCount() > 0 && (
-                <div className="hidden items-center gap-2 2xl:flex">
-                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
-
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
                 type="button"
@@ -1082,6 +1095,11 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
               </button>
             </div>
           </motion.div>
@@ -1177,7 +1195,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                           Consumption <RxCaretSort />
                         </div>
                       </th>
-                      <th className="whitespace-nowrap border-b p-4 text-sm">
+                      <th className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white p-4 text-sm">
                         <div className="flex items-center gap-2">Actions</div>
                       </th>
                     </tr>
@@ -1223,7 +1241,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                                 backgroundColor: getStatusStyle(bill.status).color,
                               }}
                             ></span>
-                            {bill.status}
+                            {Object.values(BillStatus)[bill.status] || "Unknown"}
                           </motion.div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
@@ -1251,12 +1269,14 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                             <div className="text-xs text-gray-500">{bill.tariff}</div>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        <td className="shadow-[ -4px_0_8px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-2 text-sm shadow-md">
                           <div className="flex items-center gap-2">
                             <ButtonModule
                               size="sm"
+                              icon={<VscEye />}
+                              iconPosition="start"
                               onClick={() => handleViewBillDetails(bill)}
-                              variant="primary"
+                              variant="outline"
                               className="text-xs sm:text-sm"
                             >
                               <span className="hidden sm:inline">View</span>
@@ -1380,14 +1400,16 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
             </div>
 
             <div className="space-y-4">
-              {/* Period Filter */}
+              {/* Billing Period Filter */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Billing Period</label>
                 <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
-                  options={periodOptions}
+                  name="billingPeriodId"
+                  value={localFilters.billingPeriodId?.toString() || ""}
+                  onChange={(e) =>
+                    handleFilterChange("billingPeriodId", e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  options={billingPeriodOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
                 />
@@ -1565,7 +1587,7 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
         applyFilters={applyFilters}
         resetFilters={resetFilters}
         getActiveFilterCount={getActiveFilterCount}
-        periodOptions={periodOptions}
+        billingPeriodOptions={billingPeriodOptions}
         statusOptions={statusOptions}
         categoryOptions={categoryOptions}
         areaOfficeOptions={areaOfficeOptions}

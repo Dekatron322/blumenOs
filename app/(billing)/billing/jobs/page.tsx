@@ -20,6 +20,8 @@ import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
+import { VscEye } from "react-icons/vsc"
 
 interface BillingJob {
   id: number
@@ -311,9 +313,11 @@ const MobileFilterSidebar = ({
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
                 <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                  name="billingPeriodId"
+                  value={localFilters.billingPeriodId?.toString() || ""}
+                  onChange={(e) =>
+                    handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
+                  }
                   options={periodOptions}
                   className="w-full"
                   controlClassName="h-9 text-sm"
@@ -615,6 +619,7 @@ const BillingJobs: React.FC = () => {
   const { billingJobs, billingJobsLoading, billingJobsError, billingJobsSuccess, billingJobsPagination } =
     useAppSelector((state) => state.postpaidBilling)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { billingPeriods } = useAppSelector((state) => state.billingPeriods)
 
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -627,7 +632,7 @@ const BillingJobs: React.FC = () => {
 
   // Local state for filters (UI state - what user is selecting)
   const [localFilters, setLocalFilters] = useState({
-    period: "",
+    billingPeriodId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
     status: undefined as number | undefined,
     sortBy: "",
@@ -636,7 +641,7 @@ const BillingJobs: React.FC = () => {
 
   // Applied filters state (only updated when "Apply Filters" is clicked)
   const [appliedFilters, setAppliedFilters] = useState({
-    period: "",
+    billingPeriodId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
     status: undefined as number | undefined,
     sortBy: "",
@@ -648,7 +653,7 @@ const BillingJobs: React.FC = () => {
   const totalRecords = billingJobsPagination.totalCount
   const totalPages = billingJobsPagination.totalPages || 1
 
-  // Fetch area offices on component mount for filter dropdowns
+  // Fetch area offices and billing periods on component mount for filter dropdowns
   useEffect(() => {
     dispatch(
       fetchAreaOffices({
@@ -656,6 +661,8 @@ const BillingJobs: React.FC = () => {
         PageSize: 100,
       })
     )
+
+    dispatch(fetchBillingPeriods({}))
 
     // Cleanup function to clear states when component unmounts
     return () => {
@@ -668,7 +675,7 @@ const BillingJobs: React.FC = () => {
     const params = {
       pageNumber: currentPage,
       pageSize: pageSize,
-      ...(appliedFilters.period ? { period: appliedFilters.period } : {}),
+      ...(appliedFilters.billingPeriodId ? { billingPeriodId: appliedFilters.billingPeriodId } : {}),
       ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
       ...(appliedFilters.status !== undefined ? { status: appliedFilters.status } : {}),
       ...(appliedFilters.sortBy ? { sortBy: appliedFilters.sortBy } : {}),
@@ -685,42 +692,16 @@ const BillingJobs: React.FC = () => {
     }
   }, [dispatch])
 
-  // Generate period options
+  // Generate period options using billing periods from API
   const generatePeriodOptions = () => {
     const options: { value: string; label: string }[] = [{ value: "", label: "All Periods" }]
 
-    const now = new Date()
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      year: "numeric",
-    })
-
-    // Include current month + next 12 months
-    for (let i = 0; i <= 12; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const value = `${year}-${month}`
-      const label = formatter.format(date)
-
-      options.push({ value, label })
-    }
-
-    // Add existing periods from data
-    const existingPeriods = Array.from(new Set(billingJobs.map((job) => job.period)))
-    existingPeriods.forEach((period) => {
-      const alreadyExists = options.some((opt) => opt.value === period)
-      if (!alreadyExists && period) {
-        let label = period
-        const match = /^([0-9]{4})-([0-9]{2})$/.exec(period)
-        if (match && match[1] && match[2]) {
-          const year = parseInt(match[1], 10)
-          const monthIndex = parseInt(match[2], 10) - 1
-          const date = new Date(year, monthIndex, 1)
-          label = formatter.format(date)
-        }
-        options.push({ value: period, label })
-      }
+    // Use only billing periods from API
+    billingPeriods.forEach((period) => {
+      options.push({
+        value: period.id.toString(),
+        label: period.displayName,
+      })
     })
 
     return options
@@ -791,7 +772,7 @@ const BillingJobs: React.FC = () => {
   // Reset all filters
   const resetFilters = () => {
     const emptyFilters = {
-      period: "",
+      billingPeriodId: undefined,
       areaOfficeId: undefined,
       status: undefined,
       sortBy: "",
@@ -806,7 +787,7 @@ const BillingJobs: React.FC = () => {
   // Get active filter count
   const getActiveFilterCount = () => {
     let count = 0
-    if (localFilters.period) count++
+    if (localFilters.billingPeriodId) count++
     if (localFilters.areaOfficeId) count++
     if (localFilters.status !== undefined) count++
     if (localFilters.sortBy) count++
@@ -1009,7 +990,7 @@ const BillingJobs: React.FC = () => {
                   icon={<PlusIcon />}
                   onClick={() => setIsAddJobModalOpen(true)}
                 >
-                  Generate Jobs
+                  Start Bill Generation
                 </ButtonModule>
               </motion.div>
             </div>
@@ -1063,13 +1044,6 @@ const BillingJobs: React.FC = () => {
                       </div>
 
                       {/* Active filters badge - Desktop only (2xl and above) */}
-                      {getActiveFilterCount() > 0 && (
-                        <div className="hidden items-center gap-2 2xl:flex">
-                          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                            {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      )}
 
                       {/* Hide/Show Filters button - Desktop only (2xl and above) */}
                       <button
@@ -1079,6 +1053,13 @@ const BillingJobs: React.FC = () => {
                       >
                         {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                         {showDesktopFilters ? "Hide filters" : "Show filters"}
+                        {getActiveFilterCount() > 0 && (
+                          <div className="hidden items-center gap-2 2xl:flex">
+                            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                              {getActiveFilterCount()}
+                            </span>
+                          </div>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1264,9 +1245,11 @@ const BillingJobs: React.FC = () => {
                                   <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                     <ButtonModule
                                       size="sm"
+                                      variant="outline"
+                                      icon={<VscEye />}
                                       onClick={() => router.push(`/billing/jobs/jobs-detail/${job.id}`)}
                                     >
-                                      View Details
+                                      View
                                     </ButtonModule>
                                   </td>
                                 </tr>
@@ -1398,9 +1381,11 @@ const BillingJobs: React.FC = () => {
                       <div>
                         <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
                         <FormSelectModule
-                          name="period"
-                          value={localFilters.period || ""}
-                          onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                          name="billingPeriodId"
+                          value={localFilters.billingPeriodId?.toString() || ""}
+                          onChange={(e) =>
+                            handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
+                          }
                           options={periodOptions}
                           className="w-full"
                           controlClassName="h-9 text-sm"

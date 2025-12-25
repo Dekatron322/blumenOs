@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, Building, Calendar, DollarSign, Edit3, FileText, User, Zap } from "lucide-react"
+import { AlertCircle, Building, Calendar, DollarSign, Edit3, FileText, Send, User, Zap } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -12,6 +12,8 @@ import { fetchDistributionSubstationById } from "lib/redux/distributionSubstatio
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import BillingJobChangeRequestModal from "components/ui/Modal/billing-job-change-request-modal"
+import { FinalizeSingleBillModal } from "components/ui/Modal/finalize-single-bill-modal"
+import PostpaidBillDetailsModal from "components/ui/Modal/postpaid-bill-modal"
 import { SearchModule } from "components/ui/Search/search-module"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { IoMdFunnel } from "react-icons/io"
@@ -23,6 +25,7 @@ import type {
   ChangeRequestListItem as ChangeRequestListItemType,
   ChangeRequestsRequestParams,
 } from "lib/redux/postpaidSlice"
+import { BillingAdjustmentStatus, getBillingAdjustmentStatusText } from "lib/types/billing"
 import Image from "next/image"
 
 // Helper functions
@@ -62,6 +65,15 @@ const getStatusConfig = (status: number) => {
   return configs[status as keyof typeof configs] || configs[2]
 }
 
+const getBillStatusConfig = (status: number) => {
+  const configs = {
+    0: { label: "Draft", color: "text-amber-600", bg: "bg-amber-100" },
+    1: { label: "Published", color: "text-emerald-600", bg: "bg-emerald-100" },
+    2: { label: "Reversed", color: "text-red-600", bg: "bg-red-100" },
+  }
+  return configs[status as keyof typeof configs] || configs[0]
+}
+
 const getCategoryConfig = (category: number) => {
   const configs = {
     1: { label: "Residential", color: "text-blue-600", bg: "bg-blue-100" },
@@ -74,12 +86,9 @@ const getCategoryConfig = (category: number) => {
 // Status options for filtering
 const statusOptions = [
   { value: "", label: "All Status" },
-  { value: "0", label: "Pending" },
-  { value: "1", label: "Approved" },
-  { value: "2", label: "Declined" },
-  { value: "3", label: "Cancelled" },
-  { value: "4", label: "Applied" },
-  { value: "5", label: "Failed" },
+  { value: "0", label: "Draft" },
+  { value: "1", label: "Published" },
+  { value: "2", label: "Reversed" },
 ]
 
 // Source options for filtering
@@ -194,12 +203,9 @@ const ChangeRequestCard = ({
 }) => {
   const getStatusConfig = (status: number) => {
     const configs = {
-      0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "PENDING" },
-      1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "APPROVED" },
-      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "DECLINED" },
-      3: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "CANCELLED" },
-      4: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", label: "APPLIED" },
-      5: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "FAILED" },
+      0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "DRAFT" },
+      1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "PUBLISHED" },
+      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "REVERSED" },
     }
     return configs[status as keyof typeof configs] || configs[0]
   }
@@ -864,17 +870,20 @@ const BillDetailsPage = () => {
   const billId = params.id as string
 
   // Get bill details from Redux store
-  const { currentBill, currentBillLoading, currentBillError } = useAppSelector((state) => state.postpaidBilling)
+  const { currentBill, currentBillLoading, currentBillError, finalizeSingleBillLoading } = useAppSelector(
+    (state) => state.postpaidBilling
+  )
   const { currentDistributionSubstation } = useAppSelector((state) => state.distributionSubstations)
 
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
-  const [activeModal, setActiveModal] = useState<"edit" | "changeRequest" | null>(null)
+  const [activeModal, setActiveModal] = useState<"edit" | "changeRequest" | "finalize" | null>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "edit" | "changeRequest") => setActiveModal(modalType)
+  const openModal = (modalType: "edit" | "changeRequest" | "finalize") => setActiveModal(modalType)
 
   useEffect(() => {
     if (billId) {
@@ -905,6 +914,10 @@ const BillDetailsPage = () => {
       }
     }
     closeAllModals()
+  }
+
+  const handlePublishBill = () => {
+    openModal("finalize")
   }
 
   const exportToPDF = () => {
@@ -973,7 +986,7 @@ const BillDetailsPage = () => {
         body: [
           ["Bill Period", currentBill.period],
           ["Bill Name", currentBill.name],
-          ["Status", getStatusConfig(currentBill.status).label],
+          ["Status", getBillStatusConfig(currentBill.status).label],
           ["Due Date", formatDate(currentBill.dueDate)],
           ["Issue Date", formatDate(currentBill.createdAt)],
         ],
@@ -1074,7 +1087,7 @@ const BillDetailsPage = () => {
     )
   }
 
-  const statusConfig = getStatusConfig(currentBill.status)
+  const statusConfig = getBillStatusConfig(currentBill.status)
   const categoryConfig = getCategoryConfig(currentBill.category)
 
   return (
@@ -1123,13 +1136,27 @@ const BillDetailsPage = () => {
                       variant="secondary"
                       size="sm"
                       className="flex items-center gap-2 text-sm"
-                      onClick={exportToPDF}
-                      disabled={isExporting}
+                      onClick={() => setShowInvoiceModal(true)}
                     >
                       <FileText className="size-3 sm:size-4" />
-                      <span className="max-sm:hidden">{isExporting ? "Exporting..." : "Export PDF"}</span>
-                      <span className="sm:hidden">Export</span>
+                      <span className="max-sm:hidden">View Invoice</span>
+                      <span className="sm:hidden">Invoice</span>
                     </ButtonModule>
+                    {currentBill && currentBill.status !== 1 && (
+                      <ButtonModule
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2 text-sm"
+                        onClick={handlePublishBill}
+                        disabled={finalizeSingleBillLoading}
+                      >
+                        <Send className="size-3 sm:size-4" />
+                        <span className="max-sm:hidden">
+                          {finalizeSingleBillLoading ? "Publishing..." : "Publish Postpaid Bill"}
+                        </span>
+                        <span className="sm:hidden">{finalizeSingleBillLoading ? "Publishing..." : "Publish"}</span>
+                      </ButtonModule>
+                    )}
                     {canUpdate ? (
                       <ButtonModule
                         variant="primary"
@@ -1509,7 +1536,7 @@ const BillDetailsPage = () => {
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 sm:p-4">
                         <label className="text-xs font-medium text-gray-600 sm:text-sm">Adjustment Status</label>
                         <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                          {currentBill.adjustmentStatus}
+                          {getBillingAdjustmentStatusText(currentBill.adjustmentStatus as BillingAdjustmentStatus)}
                         </p>
                       </div>
                     </div>
@@ -1587,6 +1614,27 @@ const BillDetailsPage = () => {
         billingJobPeriod={currentBill.period}
         areaOfficeName={currentBill.areaOfficeName}
         onSuccess={handleChangeRequestSuccess}
+      />
+      <FinalizeSingleBillModal
+        isOpen={activeModal === "finalize"}
+        onRequestClose={closeAllModals}
+        billId={currentBill.id}
+        billReference={currentBill.publicReference}
+        onSuccess={() => {
+          // Refresh bill details after successful finalization
+          if (billId) {
+            const id = parseInt(billId)
+            if (!isNaN(id)) {
+              dispatch(fetchPostpaidBillById(id))
+            }
+          }
+        }}
+      />
+      <PostpaidBillDetailsModal
+        isOpen={showInvoiceModal}
+        onRequestClose={() => setShowInvoiceModal(false)}
+        bill={currentBill}
+        loading={currentBillLoading}
       />
     </section>
   )

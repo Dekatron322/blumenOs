@@ -54,11 +54,11 @@ export interface MeterReadingsResponse {
 export interface MeterReadingsRequestParams {
   pageNumber: number
   pageSize: number
-  period?: string
-  customerId?: number
-  distributionSubstationId?: number
-  feederId?: number
-  areaOfficeId?: number
+  BillingPeriodId?: number
+  CustomerId?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+  AreaOfficeId?: number
   sortBy?: string
   sortOrder?: "asc" | "desc"
 }
@@ -66,7 +66,7 @@ export interface MeterReadingsRequestParams {
 // Create Meter Reading Request Interface
 export interface CreateMeterReadingRequest {
   customerId: number
-  period: string
+  billingPeriodId: number
   previousReadingKwh: number
   presentReadingKwh: number
   notes: string
@@ -141,11 +141,11 @@ export const fetchMeterReadings = createAsyncThunk(
       const {
         pageNumber,
         pageSize,
-        period,
-        customerId,
-        distributionSubstationId,
-        feederId,
-        areaOfficeId,
+        BillingPeriodId,
+        CustomerId,
+        DistributionSubstationId,
+        FeederId,
+        AreaOfficeId,
         sortBy,
         sortOrder,
       } = params
@@ -154,11 +154,11 @@ export const fetchMeterReadings = createAsyncThunk(
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
-          ...(period && { Period: period }),
-          ...(customerId !== undefined && { CustomerId: customerId }),
-          ...(distributionSubstationId !== undefined && { DistributionSubstationId: distributionSubstationId }),
-          ...(feederId !== undefined && { FeederId: feederId }),
-          ...(areaOfficeId !== undefined && { AreaOfficeId: areaOfficeId }),
+          ...(BillingPeriodId && { BillingPeriodId }),
+          ...(CustomerId !== undefined && { CustomerId }),
+          ...(DistributionSubstationId !== undefined && { DistributionSubstationId }),
+          ...(FeederId !== undefined && { FeederId }),
+          ...(AreaOfficeId !== undefined && { AreaOfficeId }),
           ...(sortBy && { SortBy: sortBy }),
           ...(sortOrder && { SortOrder: sortOrder }),
         },

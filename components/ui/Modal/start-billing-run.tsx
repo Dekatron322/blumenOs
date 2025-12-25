@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import CloseIcon from "public/close-icon"
 import { ButtonModule } from "../Button/Button"
 import { FormSelectModule } from "../Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { finalizeBillingPeriod, finalizeBillingPeriodByAreaOffice } from "lib/redux/postpaidSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { notify } from "components/ui/Notification/Notification"
 import { AlertCircle, AlertTriangle, Building, Calendar, CheckCircle, Loader2, X } from "lucide-react"
 
@@ -23,7 +23,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
   const dispatch = useAppDispatch()
   const [activeTab, setActiveTab] = useState<TabType>("period")
   const [formData, setFormData] = useState({
-    period: "",
+    billingPeriodId: "",
     areaOfficeId: "",
   })
   const [loading, setLoading] = useState(false)
@@ -31,9 +31,10 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
   const [isConfirmed, setIsConfirmed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Get area offices from Redux store
+  // Get area offices and billing periods from Redux store
   const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
   const { finalizeByAreaOfficeLoading } = useAppSelector((state) => state.postpaidBilling)
+  const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -47,7 +48,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Fetch area offices when component mounts or modal opens
+  // Fetch area offices and billing periods when component mounts or modal opens
   useEffect(() => {
     if (isOpen) {
       dispatch(
@@ -56,6 +57,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           PageSize: 100, // Fetch all area offices
         })
       )
+      dispatch(fetchBillingPeriods({}))
     }
   }, [dispatch, isOpen])
 
@@ -82,7 +84,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
         // Finalize by period
         const resultAction = await dispatch(
           finalizeBillingPeriod({
-            period: formData.period,
+            billingPeriodId: parseInt(formData.billingPeriodId),
           })
         )
 
@@ -102,7 +104,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           finalizeBillingPeriodByAreaOffice({
             areaOfficeId: parseInt(formData.areaOfficeId),
             requestData: {
-              period: formData.period,
+              billingPeriodId: parseInt(formData.billingPeriodId),
             },
           })
         )
@@ -130,7 +132,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
   }
 
   const isFormValid = () => {
-    if (!formData.period.trim() || formData.period.length !== 7) {
+    if (!formData.billingPeriodId.trim()) {
       return false
     }
 
@@ -145,35 +147,22 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
     return true
   }
 
-  // Generate period options (last 12 months and next 3 months)
+  // Generate period options from fetched billing periods
   const generatePeriodOptions = () => {
-    const options = []
-    const currentDate = new Date()
+    const options = [{ value: "", label: "Select billing period" }]
 
-    // Add empty option
-    options.push({ value: "", label: "Select billing period" })
-
-    // Add previous 12 months
-    for (let i = 12; i >= 1; i--) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const period = `${year}-${month}`
-      options.push({
-        value: period,
-        label: `${date.toLocaleString("default", { month: "long" })} ${year}`,
+    if (billingPeriods.length > 0) {
+      // Sort billing periods by year and month (newest first)
+      const sortedPeriods = [...billingPeriods].sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year
+        return b.month - a.month
       })
-    }
 
-    // Add current and next 3 months
-    for (let i = 0; i <= 3; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const period = `${year}-${month}`
-      options.push({
-        value: period,
-        label: `${date.toLocaleString("default", { month: "long" })} ${year}`,
+      sortedPeriods.forEach((period) => {
+        options.push({
+          value: period.id.toString(),
+          label: period.displayName,
+        })
       })
     }
 
@@ -344,17 +333,24 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                 Billing Period
               </label>
               <FormSelectModule
-                name="period"
-                value={formData.period}
+                label=""
+                name="billingPeriodId"
+                value={formData.billingPeriodId}
                 onChange={handleInputChange}
                 options={periodOptions}
                 required
+                disabled={billingPeriodsLoading || loading}
                 className="w-full"
-                label={""}
               />
+              {billingPeriodsLoading && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="size-3 animate-spin" />
+                  <span>Loading billing periods...</span>
+                </div>
+              )}
             </div>
 
-            {/* Area Office Selection - Only for Area Office Tab */}
+            {/* Area Office Selection (only shown for area office tab) */}
             {activeTab === "areaOffice" && (
               <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
@@ -362,7 +358,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                   Area Office
                 </label>
                 <FormSelectModule
-                  label="Area Office"
+                  label=""
                   name="areaOfficeId"
                   value={formData.areaOfficeId}
                   onChange={handleInputChange}
@@ -411,21 +407,32 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                       I understand that this action will finalize the billing period for{" "}
                       <span className="font-semibold">all area offices</span> and cannot be undone. I have verified that
                       all meter readings and adjustments are complete for{" "}
-                      <span className="font-semibold">{formData.period || "the selected period"}</span>.
+                      <span className="font-semibold">
+                        {formData.billingPeriodId
+                          ? periodOptions.find((opt) => opt.value === formData.billingPeriodId)?.label ||
+                            "the selected period"
+                          : "the selected period"}
+                      </span>
+                      .
                     </>
                   ) : (
                     <>
                       I understand that this action will finalize the billing period for the{" "}
                       <span className="font-semibold">selected area office</span> and cannot be undone. I have verified
                       that all meter readings and adjustments are complete for{" "}
-                      <span className="font-semibold">{formData.period || "the selected period"}</span> in this area
-                      office.
+                      <span className="font-semibold">
+                        {formData.billingPeriodId
+                          ? periodOptions.find((opt) => opt.value === formData.billingPeriodId)?.label ||
+                            "the selected period"
+                          : "the selected period"}
+                      </span>{" "}
+                      in this area office.
                     </>
                   )}
                 </label>
               </div>
 
-              {!isConfirmed && (formData.period || formData.areaOfficeId) && (
+              {!isConfirmed && (formData.billingPeriodId || formData.areaOfficeId) && (
                 <div className="mt-3 flex items-start gap-2 text-sm text-amber-600">
                   <AlertTriangle className="size-4 flex-shrink-0" />
                   <span>You must confirm this action to proceed</span>
@@ -434,7 +441,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
             </div>
 
             {/* Summary Preview */}
-            {(formData.period || formData.areaOfficeId) && (
+            {(formData.billingPeriodId || formData.areaOfficeId) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -447,7 +454,7 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
                 <div className="space-y-2 text-sm text-blue-700">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span>Billing Period:</span>
-                    <span className="font-semibold">{formData.period || "Not selected"}</span>
+                    <span className="font-semibold">{formData.billingPeriodId || "Not selected"}</span>
                   </div>
                   {activeTab === "areaOffice" && (
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

@@ -160,6 +160,7 @@ export interface PostpaidBillsRequestParams {
   pageNumber: number
   pageSize: number
   period?: string
+  billingPeriodId?: number
   customerId?: number
   accountNumber?: string
   status?: number
@@ -211,7 +212,7 @@ export interface BillingJobsResponse {
 export interface BillingJobsRequestParams {
   pageNumber: number
   pageSize: number
-  period?: string
+  billingPeriodId?: number
   areaOfficeId?: number
   status?: number
   fromRequestedAtUtc?: string
@@ -234,7 +235,7 @@ export interface CreateBillingJobResponse {
 
 // Finalize Period Interfaces
 export interface FinalizePeriodRequest {
-  period: string
+  billingPeriodId: number
 }
 
 export interface FinalizePeriodResponse {
@@ -245,7 +246,7 @@ export interface FinalizePeriodResponse {
 
 // Finalize Period by Area Office Interfaces
 export interface FinalizePeriodByAreaOfficeRequest {
-  period: string
+  billingPeriodId: number
 }
 
 export interface FinalizePeriodByAreaOfficeResponse {
@@ -464,6 +465,19 @@ export interface CreateMeterReadingResponse {
   data: MeterReadingData
 }
 
+// Finalize Single Bill Interfaces
+export interface FinalizeSingleBillRequest {
+  effectiveAtUtc: string
+  skipLedgerPosting: boolean
+  billPdfUrl: string
+}
+
+export interface FinalizeSingleBillResponse {
+  isSuccess: boolean
+  message: string
+  data: PostpaidBill
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -597,9 +611,17 @@ interface PostpaidBillingState {
   createMeterReadingMessage: string | null
   createdMeterReading: MeterReadingData | null
 
+  // Finalize Single Bill state
+  finalizeSingleBillLoading: boolean
+  finalizeSingleBillError: string | null
+  finalizeSingleBillSuccess: boolean
+  finalizeSingleBillMessage: string | null
+  finalizedSingleBill: PostpaidBill | null
+
   // Search/filter state
   filters: {
     period?: string
+    billingPeriodId?: number
     customerId?: number
     accountNumber?: string
     status?: number
@@ -719,6 +741,11 @@ const initialState: PostpaidBillingState = {
   createMeterReadingSuccess: false,
   createMeterReadingMessage: null,
   createdMeterReading: null,
+  finalizeSingleBillLoading: false,
+  finalizeSingleBillError: null,
+  finalizeSingleBillSuccess: false,
+  finalizeSingleBillMessage: null,
+  finalizedSingleBill: null,
   filters: {},
   billingJobsFilters: {},
 }
@@ -741,6 +768,7 @@ export const fetchPostpaidBills = createAsyncThunk(
         pageNumber,
         pageSize,
         period,
+        billingPeriodId,
         customerId,
         accountNumber,
         status,
@@ -756,6 +784,7 @@ export const fetchPostpaidBills = createAsyncThunk(
           PageNumber: pageNumber,
           PageSize: pageSize,
           ...(period && { Period: period }),
+          ...(billingPeriodId && { BillingPeriodId: billingPeriodId }),
           ...(customerId && { CustomerId: customerId }),
           ...(accountNumber && { AccountNumber: accountNumber }),
           ...(status !== undefined && { Status: status }),
@@ -838,7 +867,7 @@ export const fetchBillingJobs = createAsyncThunk(
       const {
         pageNumber,
         pageSize,
-        period,
+        billingPeriodId,
         areaOfficeId,
         status,
         fromRequestedAtUtc,
@@ -851,7 +880,7 @@ export const fetchBillingJobs = createAsyncThunk(
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
-          ...(period && { Period: period }),
+          ...(billingPeriodId && { BillingPeriodId: billingPeriodId }),
           ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
           ...(status !== undefined && { Status: status }),
           ...(fromRequestedAtUtc && { FromRequestedAtUtc: fromRequestedAtUtc }),
@@ -1219,6 +1248,36 @@ export const createMeterReading = createAsyncThunk(
   }
 )
 
+// Finalize Single Bill Async Thunk
+export const finalizeSingleBill = createAsyncThunk(
+  "postpaidBilling/finalizeSingleBill",
+  async ({ id, requestData }: { id: number; requestData: FinalizeSingleBillRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.POSTPAID_BILLING.FINALIZE_SINGLE_BILL, { id })
+      const response = await api.post<FinalizeSingleBillResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to finalize single bill")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Finalized single bill data not found")
+      }
+
+      return {
+        billId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to finalize single bill")
+      }
+      return rejectWithValue(error.message || "Network error during single bill finalization")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -1398,6 +1457,15 @@ const postpaidSlice = createSlice({
       state.createMeterReadingSuccess = false
       state.createMeterReadingMessage = null
       state.createdMeterReading = null
+    },
+
+    // Clear finalize single bill status
+    clearFinalizeSingleBillStatus: (state) => {
+      state.finalizeSingleBillLoading = false
+      state.finalizeSingleBillError = null
+      state.finalizeSingleBillSuccess = false
+      state.finalizeSingleBillMessage = null
+      state.finalizedSingleBill = null
     },
 
     // Reset billing state
@@ -2001,6 +2069,54 @@ const postpaidSlice = createSlice({
         state.createMeterReadingMessage = null
         state.createdMeterReading = null
       })
+      // Finalize single bill cases
+      .addCase(finalizeSingleBill.pending, (state) => {
+        state.finalizeSingleBillLoading = true
+        state.finalizeSingleBillError = null
+        state.finalizeSingleBillSuccess = false
+        state.finalizeSingleBillMessage = null
+        state.finalizedSingleBill = null
+      })
+      .addCase(
+        finalizeSingleBill.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            billId: number
+            data: PostpaidBill
+            message: string
+          }>
+        ) => {
+          state.finalizeSingleBillLoading = false
+          state.finalizeSingleBillSuccess = true
+          state.finalizeSingleBillMessage = action.payload.message || "Single bill finalized successfully"
+          state.finalizedSingleBill = action.payload.data
+          state.finalizeSingleBillError = null
+
+          // Update the bill in the bills list if it exists
+          const index = state.bills.findIndex((bill) => bill.id === action.payload.billId)
+          if (index !== -1) {
+            state.bills[index] = action.payload.data
+          }
+
+          // Update current bill if it's the same bill
+          if (state.currentBill && state.currentBill.id === action.payload.billId) {
+            state.currentBill = action.payload.data
+          }
+
+          // Update current bill by reference if it's the same bill
+          if (state.currentBillByReference && state.currentBillByReference.id === action.payload.billId) {
+            state.currentBillByReference = action.payload.data
+          }
+        }
+      )
+      .addCase(finalizeSingleBill.rejected, (state, action) => {
+        state.finalizeSingleBillLoading = false
+        state.finalizeSingleBillError = (action.payload as string) || "Failed to finalize single bill"
+        state.finalizeSingleBillSuccess = false
+        state.finalizeSingleBillMessage = null
+        state.finalizedSingleBill = null
+      })
   },
 })
 
@@ -2022,6 +2138,7 @@ export const {
   clearDeclineChangeRequestStatus,
   clearCreateManualBillStatus,
   clearCreateMeterReadingStatus,
+  clearFinalizeSingleBillStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,

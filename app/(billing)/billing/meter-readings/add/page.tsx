@@ -12,6 +12,7 @@ import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { clearCreateMeterReading, createMeterReading, CreateMeterReadingRequest } from "lib/redux/meterReadingSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import {
   AlertCircle,
   Calculator,
@@ -27,7 +28,7 @@ import {
 
 interface MeterReadingFormData {
   customerId: number
-  period: string
+  billingPeriodId: number
   previousReadingKwh: number
   presentReadingKwh: number
   notes: string
@@ -46,11 +47,15 @@ const AddMeterReadingPage = () => {
   const { createMeterReadingLoading, createMeterReadingError, createMeterReadingSuccess, createdMeterReading } =
     useSelector((state: RootState) => state.meterReadings)
 
-  const {
-    customers,
-    loading: customersLoading,
-    error: customersError,
-  } = useSelector((state: RootState) => state.customers)
+  const { customers, customersLoading, customersError, billingPeriods, billingPeriodsLoading } = useSelector(
+    (state: RootState) => ({
+      customers: state.customers.customers,
+      customersLoading: state.customers.loading,
+      customersError: state.customers.error,
+      billingPeriods: state.billingPeriods.billingPeriods,
+      billingPeriodsLoading: state.billingPeriods.loading,
+    })
+  )
 
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -61,7 +66,7 @@ const AddMeterReadingPage = () => {
 
   const [formData, setFormData] = useState<MeterReadingFormData>({
     customerId: 0,
-    period: "",
+    billingPeriodId: 0,
     previousReadingKwh: 0,
     presentReadingKwh: 0,
     notes: "",
@@ -77,6 +82,7 @@ const AddMeterReadingPage = () => {
         pageSize: 100,
       })
     )
+    dispatch(fetchBillingPeriods({}))
   }, [dispatch])
 
   // Generate customer options from API response
@@ -88,34 +94,23 @@ const AddMeterReadingPage = () => {
     })),
   ]
 
-  // Generate period options (last 12 months)
-  const generatePeriodOptions = () => {
-    const options = []
-    const currentDate = new Date()
-
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const period = `${year}-${month}`
-      const label = date.toLocaleString("default", { month: "long", year: "numeric" })
-
-      options.push({ value: period, label })
-    }
-
-    return options
-  }
-
-  const periodOptions = [{ value: "", label: "Select billing period" }, ...generatePeriodOptions()]
+  // Generate period options from billing periods endpoint
+  const periodOptions = [
+    { value: "", label: billingPeriodsLoading ? "Loading billing periods..." : "Select billing period" },
+    ...billingPeriods.map((period) => ({
+      value: period.id.toString(),
+      label: period.displayName,
+    })),
+  ]
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
 
-    // Handle number fields
+    // Handle number fields and billing period
     let processedValue = value
-    if (["customerId", "previousReadingKwh", "presentReadingKwh"].includes(name)) {
+    if (["customerId", "billingPeriodId", "previousReadingKwh", "presentReadingKwh"].includes(name)) {
       processedValue = Number(value)
     }
 
@@ -140,8 +135,8 @@ const AddMeterReadingPage = () => {
       errors.customerId = "Customer is required"
     }
 
-    if (!formData.period.trim()) {
-      errors.period = "Billing period is required"
+    if (formData.billingPeriodId === 0) {
+      errors.billingPeriodId = "Billing period is required"
     }
 
     if (formData.previousReadingKwh < 0) {
@@ -181,7 +176,7 @@ const AddMeterReadingPage = () => {
     try {
       const meterReadingData: CreateMeterReadingRequest = {
         customerId: formData.customerId,
-        period: formData.period,
+        billingPeriodId: formData.billingPeriodId,
         previousReadingKwh: formData.previousReadingKwh,
         presentReadingKwh: formData.presentReadingKwh,
         notes: formData.notes,
@@ -191,14 +186,14 @@ const AddMeterReadingPage = () => {
 
       if (result.isSuccess) {
         notify("success", "Meter reading created successfully", {
-          description: `Meter reading for period ${formData.period} has been recorded`,
+          description: `Meter reading has been recorded`,
           duration: 5000,
         })
 
         // Reset form
         setFormData({
           customerId: 0,
-          period: "",
+          billingPeriodId: 0,
           previousReadingKwh: 0,
           presentReadingKwh: 0,
           notes: "",
@@ -219,7 +214,7 @@ const AddMeterReadingPage = () => {
   const handleReset = () => {
     setFormData({
       customerId: 0,
-      period: "",
+      billingPeriodId: 0,
       previousReadingKwh: 0,
       presentReadingKwh: 0,
       notes: "",
@@ -391,6 +386,27 @@ const AddMeterReadingPage = () => {
     return errors
   }
 
+  // Helper function to convert CSV data to API request format
+  const convertCsvToApiRequest = (csvReading: CSVMeterReading): CreateMeterReadingRequest | null => {
+    // Find the billing period by matching the period string
+    const billingPeriod = billingPeriods.find(
+      (period) => period.displayName === csvReading.period || period.periodKey === csvReading.period
+    )
+
+    if (!billingPeriod) {
+      console.error(`Billing period not found for: ${csvReading.period}`)
+      return null
+    }
+
+    return {
+      customerId: csvReading.customerId,
+      billingPeriodId: billingPeriod.id,
+      previousReadingKwh: csvReading.previousReadingKwh,
+      presentReadingKwh: csvReading.presentReadingKwh,
+      notes: csvReading.notes,
+    }
+  }
+
   const handleBulkSubmit = async () => {
     if (csvData.length === 0) {
       notify("error", "No valid data to upload", {
@@ -408,6 +424,22 @@ const AddMeterReadingPage = () => {
       return
     }
 
+    if (billingPeriodsLoading) {
+      notify("error", "Billing periods still loading", {
+        description: "Please wait for billing periods to load before uploading",
+        duration: 4000,
+      })
+      return
+    }
+
+    if (billingPeriods.length === 0) {
+      notify("error", "No billing periods available", {
+        description: "Cannot process upload without billing periods",
+        duration: 4000,
+      })
+      return
+    }
+
     try {
       // Process each meter reading individually
       let successCount = 0
@@ -415,7 +447,12 @@ const AddMeterReadingPage = () => {
 
       for (const readingData of csvData) {
         try {
-          const result = await dispatch(createMeterReading(readingData)).unwrap()
+          const apiRequest = convertCsvToApiRequest(readingData)
+          if (!apiRequest) {
+            errorCount++
+            continue
+          }
+          const result = await dispatch(createMeterReading(apiRequest)).unwrap()
           if (result.isSuccess) {
             successCount++
           } else {
@@ -503,7 +540,7 @@ const AddMeterReadingPage = () => {
   const isFormValid = (): boolean => {
     return (
       formData.customerId !== 0 &&
-      formData.period.trim() !== "" &&
+      formData.billingPeriodId !== 0 &&
       formData.previousReadingKwh >= 0 &&
       formData.presentReadingKwh >= 0 &&
       formData.presentReadingKwh >= formData.previousReadingKwh &&
@@ -801,11 +838,11 @@ const AddMeterReadingPage = () => {
 
                         <FormSelectModule
                           label="Billing Period"
-                          name="period"
-                          value={formData.period}
+                          name="billingPeriodId"
+                          value={formData.billingPeriodId}
                           onChange={handleInputChange}
                           options={periodOptions}
-                          error={formErrors.period}
+                          error={formErrors.billingPeriodId}
                           required
                         />
                       </div>

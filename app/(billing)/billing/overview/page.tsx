@@ -2,8 +2,9 @@
 
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { FiSend } from "react-icons/fi"
 import { BillingIcon, PlayIcon, PostpaidIcon, RefreshCircleIcon } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import BillingInfo from "components/BillingInfo/BillingInfo"
@@ -13,8 +14,74 @@ import {
   fetchPostpaidBillingAnalytics,
   setPostpaidBillingAnalyticsParams,
 } from "lib/redux/analyticsSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import type { PostpaidBillingAnalyticsParams } from "lib/redux/analyticsSlice"
+import type { BillingPeriod } from "lib/redux/billingPeriodsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+
+// Dropdown Popover Component
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {children}
+        <svg
+          className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onSelect(option.value)
+                  setIsOpen(false)
+                }}
+                className={`block w-full px-3 py-2 text-left ${
+                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -327,22 +394,21 @@ const PeriodSelector = ({
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = String(now.getMonth() + 1).padStart(2, "0")
-  const currentPeriodValue = `${currentYear}-${currentMonth}`
+  // Fetch billing periods from API
+  const dispatch = useAppDispatch()
+  const { billingPeriods, loading: periodsLoading } = useAppSelector((state) => state.billingPeriods)
 
-  const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  useEffect(() => {
+    dispatch(fetchBillingPeriods({}))
+  }, [dispatch])
 
-  const periods = monthLabels.map((label, index) => {
-    const monthNumber = String(index + 1).padStart(2, "0")
-    return {
-      value: `${currentYear}-${monthNumber}`,
-      label: `${label} ${currentYear}`,
-    }
-  })
+  // Convert billing periods to dropdown format
+  const periods = billingPeriods.map((period: BillingPeriod) => ({
+    value: period.periodKey,
+    label: period.displayName,
+  }))
 
-  const selectedValue = currentPeriod ?? currentPeriodValue
+  const selectedValue = currentPeriod ?? (periods.length > 0 ? periods[0]?.value : "")
 
   return (
     <div className="flex items-center gap-2">
@@ -355,20 +421,40 @@ const PeriodSelector = ({
           type="button"
           className="flex min-w-[140px] items-center justify-between gap-2 rounded-md border border-[#004B23] bg-transparent px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23] sm:min-w-[160px]"
           onClick={() => setIsDropdownOpen((prev) => !prev)}
+          disabled={periodsLoading}
         >
-          <span className="truncate">{periods.find((p) => p.value === selectedValue)?.label ?? selectedValue}</span>
-          <svg
-            className="size-4 shrink-0 text-gray-500"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <span className="truncate">
+            {periodsLoading ? "Loading..." : periods.find((p) => p.value === selectedValue)?.label ?? selectedValue}
+          </span>
+          {!periodsLoading && (
+            <svg
+              className="size-4 shrink-0 text-gray-500"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
+          {periodsLoading && (
+            <svg
+              className="size-4 shrink-0 animate-spin text-gray-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          )}
         </button>
 
         {isDropdownOpen && (
@@ -376,21 +462,27 @@ const PeriodSelector = ({
             <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
             <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-md border bg-white shadow-lg">
               <div className="max-h-60 overflow-y-auto">
-                {periods.map((period) => (
-                  <button
-                    key={period.value}
-                    type="button"
-                    className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                      period.value === selectedValue ? "bg-gray-100 font-medium" : ""
-                    }`}
-                    onClick={() => {
-                      onPeriodChange(period.value)
-                      setIsDropdownOpen(false)
-                    }}
-                  >
-                    {period.label}
-                  </button>
-                ))}
+                {periodsLoading ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">Loading periods...</div>
+                ) : periods.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">No periods available</div>
+                ) : (
+                  periods.map((period) => (
+                    <button
+                      key={period.value}
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
+                        period.value === selectedValue ? "bg-gray-100 font-medium" : ""
+                      }`}
+                      onClick={() => {
+                        onPeriodChange(period.value)
+                        setIsDropdownOpen(false)
+                      }}
+                    >
+                      {period.label}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </>
@@ -403,6 +495,16 @@ const PeriodSelector = ({
 export default function BillingDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false)
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState<number>(300000) // Default 5 minutes (300,000 ms)
+
+  // Initialize selectedPeriod with a stable value
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    return `${year}-${month}`
+  })
 
   const getCurrentPeriod = () => {
     const now = new Date()
@@ -410,8 +512,6 @@ export default function BillingDashboard() {
     const month = String(now.getMonth() + 1).padStart(2, "0")
     return `${year}-${month}`
   }
-
-  const [selectedPeriod, setSelectedPeriod] = useState<string>(() => getCurrentPeriod())
 
   // Redux hooks
   const dispatch = useAppDispatch()
@@ -431,13 +531,13 @@ export default function BillingDashboard() {
     }
     dispatch(setPostpaidBillingAnalyticsParams(params))
     dispatch(fetchPostpaidBillingAnalytics(params))
-  }, [dispatch, selectedPeriod])
+  }, [dispatch, selectedPeriod]) // Only run when dispatch or selectedPeriod actually changes
 
   const handlePeriodChange = (period: string) => {
     setSelectedPeriod(period)
   }
 
-  const handleRefreshData = () => {
+  const handleRefreshData = useCallback(() => {
     setIsLoading(true)
     const params: PostpaidBillingAnalyticsParams = {
       period: selectedPeriod,
@@ -447,7 +547,59 @@ export default function BillingDashboard() {
     dispatch(clearPostpaidBillingAnalytics())
     dispatch(fetchPostpaidBillingAnalytics(params))
     setTimeout(() => setIsLoading(false), 1000)
+  }, [dispatch, selectedPeriod])
+
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
   }
+
+  const handlePollingIntervalChange = (interval: number) => {
+    setPollingInterval(interval)
+  }
+
+  // Polling interval options - 5 minutes as default
+  const pollingOptions = [
+    { value: 300000, label: "5m" },
+    { value: 480000, label: "8m" },
+    { value: 660000, label: "11m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
+  // Short polling effect - only runs if isPolling is true and uses the selected interval
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null
+
+    if (isPolling) {
+      // Initial fetch
+      const fetchData = () => {
+        const params: PostpaidBillingAnalyticsParams = {
+          period: selectedPeriod,
+          status: 1,
+          category: 2,
+        }
+        dispatch(fetchPostpaidBillingAnalytics(params))
+      }
+
+      // Set up the interval with the selected pollingInterval
+      intervalId = setInterval(fetchData, pollingInterval)
+
+      // Cleanup function
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId)
+        }
+      }
+    }
+
+    // Return cleanup function even when polling is disabled
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [dispatch, isPolling, pollingInterval, selectedPeriod])
 
   const handleStartBillingRun = () => {
     setIsStartBillingRunModalOpen(true)
@@ -484,39 +636,69 @@ export default function BillingDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <div className="flex w-full items-center justify-between sm:w-auto sm:justify-start">
+                <div className="flex items-center gap-3">
                   <PeriodSelector currentPeriod={selectedPeriod} onPeriodChange={handlePeriodChange} />
-                </div>
-                <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
-                  <ButtonModule
-                    variant="outline"
-                    size="md"
-                    className="flex sm:flex-none"
-                    icon={<PlayIcon />}
-                    onClick={handleStartBillingRun}
-                    disabled={postpaidBillingAnalyticsLoading}
-                  >
-                    <span className="hidden sm:inline">Publish Billing Run</span>
-                    <span className="sm:hidden">Publish</span>
-                  </ButtonModule>
                   <ButtonModule
                     variant="primary"
                     size="md"
                     className="flex sm:flex-none"
-                    onClick={handleRefreshData}
-                    icon={<RefreshCircleIcon />}
-                    iconPosition="start"
-                    disabled={postpaidBillingAnalyticsLoading || isLoading}
+                    icon={<FiSend />}
+                    onClick={handleStartBillingRun}
+                    disabled={postpaidBillingAnalyticsLoading}
                   >
-                    {postpaidBillingAnalyticsLoading || isLoading ? (
-                      "Refreshing..."
-                    ) : (
-                      <>
-                        <span className="hidden sm:inline">Refresh Data</span>
-                        <span className="sm:hidden">Refresh</span>
-                      </>
-                    )}
+                    <span className="hidden sm:inline">Publish Postpaid Bills</span>
+                    <span className="sm:hidden">Publish</span>
                   </ButtonModule>
+                  {/* Polling Controls */}
+                  <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
+                    <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                    <button
+                      onClick={togglePolling}
+                      className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        isPolling
+                          ? "bg-green-100 text-green-700 hover:bg-green-200"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}
+                    >
+                      {isPolling ? (
+                        <>
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                          ON
+                        </>
+                      ) : (
+                        <>
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          OFF
+                        </>
+                      )}
+                    </button>
+
+                    {isPolling && (
+                      <DropdownPopover
+                        options={pollingOptions}
+                        selectedValue={pollingInterval}
+                        onSelect={handlePollingIntervalChange}
+                      >
+                        <span className="text-sm font-medium">
+                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                        </span>
+                      </DropdownPopover>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             </div>

@@ -16,22 +16,15 @@ import {
   clearApplyFeederEnergyCaps,
 } from "lib/redux/feederEnergyCapSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Download, FileText, Menu, Upload, X } from "lucide-react"
 
 interface FeederEnergyCapFormData {
-  period: string
-  energyCapKwh: number
-  tariffOverridePerKwh: number
+  billingPeriodId: number
+  energyCapKwh: string
+  tariffOverridePerKwh: string
   notes: string
-  areaOfficeId: number
-}
-
-interface CSVFeederEnergyCap {
-  period: string
-  energyCapKwh: number
-  tariffOverridePerKwh: number
-  notes: string
-  areaOfficeId: number
+  areaOfficeId?: number
 }
 
 const AddFeederEnergyCapPage = () => {
@@ -49,24 +42,26 @@ const AddFeederEnergyCapPage = () => {
     error: areaOfficesError,
   } = useSelector((state: RootState) => state.areaOffices)
 
+  const { billingPeriods, loading: billingPeriodsLoading } = useSelector((state: RootState) => state.billingPeriods)
+
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single")
   const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [csvData, setCsvData] = useState<CSVFeederEnergyCap[]>([])
+  const [csvData, setCsvData] = useState<ApplyFeederEnergyCapsRequest[]>([])
   const [csvErrors, setCsvErrors] = useState<string[]>([])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<FeederEnergyCapFormData>({
-    period: "",
-    energyCapKwh: 0,
-    tariffOverridePerKwh: 0,
+    billingPeriodId: 0,
+    energyCapKwh: "",
+    tariffOverridePerKwh: "",
     notes: "",
-    areaOfficeId: 0,
+    areaOfficeId: undefined,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  // Fetch area offices on component mount
+  // Fetch area offices and billing periods on component mount
   useEffect(() => {
     dispatch(
       fetchAreaOffices({
@@ -74,47 +69,40 @@ const AddFeederEnergyCapPage = () => {
         PageSize: 100,
       })
     )
+    dispatch(fetchBillingPeriods({}))
   }, [dispatch])
 
   // Generate area office options from API response
   const areaOfficeOptions = [
-    { value: 0, label: "Select area office" },
+    { value: 0, label: "No area office (optional)" },
     ...(areaOffices?.map((office) => ({
       value: office.id,
       label: `${office.newKaedcoCode} - ${office.nameOfNewOAreaffice}`,
     })) || []),
   ]
 
-  // Generate period options (next 12 months)
-  const generatePeriodOptions = () => {
-    const options = []
-    const currentDate = new Date()
-
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const period = `${year}-${month}`
-      const label = date.toLocaleString("default", { month: "long", year: "numeric" })
-
-      options.push({ value: period, label })
-    }
-
-    return options
-  }
-
-  const periodOptions = [{ value: "", label: "Select billing period" }, ...generatePeriodOptions()]
+  // Generate period options from API response
+  const periodOptions = [
+    { value: "", label: "Select billing period" },
+    ...(billingPeriods?.map((period) => ({
+      value: period.id.toString(),
+      label: period.displayName,
+    })) || []),
+  ]
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
 
-    // Handle number fields
+    // Handle number fields and billingPeriodId
     let processedValue = value
-    if (["energyCapKwh", "tariffOverridePerKwh", "areaOfficeId"].includes(name)) {
+    if (["billingPeriodId"].includes(name)) {
       processedValue = Number(value)
+    } else if (name === "areaOfficeId") {
+      processedValue = value === "" ? undefined : Number(value)
     }
+    // Keep energyCapKwh and tariffOverridePerKwh as strings
 
     setFormData((prev) => ({
       ...prev,
@@ -133,19 +121,15 @@ const AddFeederEnergyCapPage = () => {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (formData.areaOfficeId === 0) {
-      errors.areaOfficeId = "Area office is required"
+    if (formData.billingPeriodId === 0) {
+      errors.billingPeriodId = "Billing period is required"
     }
 
-    if (!formData.period.trim()) {
-      errors.period = "Billing period is required"
-    }
-
-    if (formData.energyCapKwh <= 0) {
+    if (!formData.energyCapKwh || parseFloat(formData.energyCapKwh) <= 0) {
       errors.energyCapKwh = "Energy cap must be greater than 0"
     }
 
-    if (formData.tariffOverridePerKwh < 0) {
+    if (!formData.tariffOverridePerKwh || parseFloat(formData.tariffOverridePerKwh) < 0) {
       errors.tariffOverridePerKwh = "Tariff override cannot be negative"
     }
 
@@ -173,28 +157,28 @@ const AddFeederEnergyCapPage = () => {
 
     try {
       const feederEnergyCapData: ApplyFeederEnergyCapsRequest = {
-        period: formData.period,
-        energyCapKwh: formData.energyCapKwh,
-        tariffOverridePerKwh: formData.tariffOverridePerKwh,
+        billingPeriodId: formData.billingPeriodId,
+        energyCapKwh: parseFloat(formData.energyCapKwh),
+        tariffOverridePerKwh: parseFloat(formData.tariffOverridePerKwh),
         notes: formData.notes,
-        areaOfficeId: formData.areaOfficeId,
+        areaOfficeId: formData.areaOfficeId || 0,
       }
 
       const result = await dispatch(applyFeederEnergyCaps(feederEnergyCapData)).unwrap()
 
       if (result.isSuccess) {
         notify("success", "Feeder energy caps applied successfully", {
-          description: `Energy caps for period ${formData.period} have been applied to ${result.data.length} feeders`,
+          description: `Energy caps for billing period ID ${formData.billingPeriodId} have been applied to ${result.data.length} feeders`,
           duration: 5000,
         })
 
         // Reset form
         setFormData({
-          period: "",
-          energyCapKwh: 0,
-          tariffOverridePerKwh: 0,
+          billingPeriodId: 0,
+          energyCapKwh: "",
+          tariffOverridePerKwh: "",
           notes: "",
-          areaOfficeId: 0,
+          areaOfficeId: undefined,
         })
         setFormErrors({})
       }
@@ -211,11 +195,11 @@ const AddFeederEnergyCapPage = () => {
 
   const handleReset = () => {
     setFormData({
-      period: "",
-      energyCapKwh: 0,
-      tariffOverridePerKwh: 0,
+      billingPeriodId: 0,
+      energyCapKwh: "",
+      tariffOverridePerKwh: "",
       notes: "",
-      areaOfficeId: 0,
+      areaOfficeId: undefined,
     })
     setFormErrors({})
     dispatch(clearApplyFeederEnergyCaps())
@@ -265,7 +249,7 @@ const AddFeederEnergyCapPage = () => {
         const headers = lines[0]!.split(",").map((header) => header.trim().toLowerCase())
 
         // Validate headers
-        const expectedHeaders = ["period", "energycapkwh", "tariffoverrideperkwh", "notes", "areaofficeid"]
+        const expectedHeaders = ["billingperiodid", "energycapkwh", "tariffoverrideperkwh", "notes", "areaofficeid"]
 
         const missingHeaders = expectedHeaders.filter((header) => !headers.includes(header))
         if (missingHeaders.length > 0) {
@@ -273,7 +257,7 @@ const AddFeederEnergyCapPage = () => {
           return
         }
 
-        const parsedData: CSVFeederEnergyCap[] = []
+        const parsedData: ApplyFeederEnergyCapsRequest[] = []
         const errors: string[] = []
 
         for (let i = 1; i < lines.length; i++) {
@@ -294,11 +278,11 @@ const AddFeederEnergyCapPage = () => {
             errors.push(...rowErrors)
           } else {
             parsedData.push({
-              period: row.period,
+              billingPeriodId: parseInt(row.billingperiodid),
               energyCapKwh: parseFloat(row.energycapkwh),
               tariffOverridePerKwh: parseFloat(row.tariffoverrideperkwh),
               notes: row.notes,
-              areaOfficeId: parseInt(row.areaofficeid),
+              ...(row.areaofficeid?.trim() && { areaOfficeId: parseInt(row.areaofficeid) }),
             })
           }
         }
@@ -341,10 +325,12 @@ const AddFeederEnergyCapPage = () => {
   const validateCSVRow = (row: any, rowNumber: number): string[] => {
     const errors: string[] = []
 
-    if (!row.period?.trim()) {
-      errors.push(`Row ${rowNumber}: Period is required`)
-    } else if (!/^\d{4}-\d{2}$/.test(row.period)) {
-      errors.push(`Row ${rowNumber}: Period must be in YYYY-MM format`)
+    if (!row.billingperiodid?.trim()) {
+      errors.push(`Row ${rowNumber}: Billing period ID is required`)
+    } else if (isNaN(parseInt(row.billingperiodid))) {
+      errors.push(`Row ${rowNumber}: Billing period ID must be a valid number`)
+    } else if (parseInt(row.billingperiodid) <= 0) {
+      errors.push(`Row ${rowNumber}: Billing period ID must be greater than 0`)
     }
 
     if (!row.energycapkwh?.trim()) {
@@ -368,7 +354,7 @@ const AddFeederEnergyCapPage = () => {
     }
 
     if (!row.areaofficeid?.trim()) {
-      errors.push(`Row ${rowNumber}: Area office ID is required`)
+      // Area office is now optional - no validation needed
     } else if (isNaN(parseInt(row.areaofficeid))) {
       errors.push(`Row ${rowNumber}: Area office ID must be a valid number`)
     }
@@ -442,21 +428,21 @@ const AddFeederEnergyCapPage = () => {
   }
 
   const downloadTemplate = () => {
-    const headers = ["period", "energyCapKwh", "tariffOverridePerKwh", "notes", "areaOfficeId"]
+    const headers = ["billingPeriodId", "energyCapKwh", "tariffOverridePerKwh", "notes", "areaOfficeId"]
 
     // Use actual area office IDs from the API for the template
     const exampleAreaOfficeId = areaOffices[0]?.id?.toString() ?? "1"
 
     const exampleData = [
       {
-        period: "2024-01",
+        billingPeriodId: 1,
         energyCapKwh: "1000.0",
         tariffOverridePerKwh: "50.75",
         notes: "Standard energy cap for all feeders",
         areaOfficeId: exampleAreaOfficeId,
       },
       {
-        period: "2024-01",
+        billingPeriodId: 1,
         energyCapKwh: "1500.0",
         tariffOverridePerKwh: "45.25",
         notes: "Increased cap for high-demand area",
@@ -487,10 +473,11 @@ const AddFeederEnergyCapPage = () => {
 
   const isFormValid = (): boolean => {
     return (
-      formData.areaOfficeId !== 0 &&
-      formData.period.trim() !== "" &&
-      formData.energyCapKwh > 0 &&
-      formData.tariffOverridePerKwh >= 0 &&
+      formData.billingPeriodId !== 0 &&
+      formData.energyCapKwh !== "" &&
+      parseFloat(formData.energyCapKwh) > 0 &&
+      formData.tariffOverridePerKwh !== "" &&
+      parseFloat(formData.tariffOverridePerKwh) >= 0 &&
       formData.notes.trim() !== ""
     )
   }
@@ -767,29 +754,28 @@ const AddFeederEnergyCapPage = () => {
 
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormSelectModule
-                          label="Area Office"
+                          label="Area Office (Optional)"
                           name="areaOfficeId"
-                          value={formData.areaOfficeId}
+                          value={formData.areaOfficeId || ""}
                           onChange={handleInputChange}
                           options={[
                             {
                               value: "",
-                              label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
+                              label: areaOfficesLoading ? "Loading area offices..." : "No area office",
                             },
                             ...areaOfficeOptions.filter((option) => option.value !== 0),
                           ]}
                           error={formErrors.areaOfficeId}
-                          required
                           disabled={areaOfficesLoading}
                         />
 
                         <FormSelectModule
                           label="Billing Period"
-                          name="period"
-                          value={formData.period}
+                          name="billingPeriodId"
+                          value={formData.billingPeriodId}
                           onChange={handleInputChange}
                           options={periodOptions}
-                          error={formErrors.period}
+                          error={formErrors.billingPeriodId}
                           required
                         />
                       </div>
@@ -807,7 +793,7 @@ const AddFeederEnergyCapPage = () => {
                           label="Energy Cap (kWh)"
                           name="energyCapKwh"
                           type="number"
-                          placeholder="0.00"
+                          placeholder="Enter energy cap"
                           value={formData.energyCapKwh}
                           onChange={handleInputChange}
                           error={formErrors.energyCapKwh}
@@ -820,7 +806,7 @@ const AddFeederEnergyCapPage = () => {
                           label="Tariff Override (per kWh)"
                           name="tariffOverridePerKwh"
                           type="number"
-                          placeholder="0.00"
+                          placeholder="Enter tariff override"
                           value={formData.tariffOverridePerKwh}
                           onChange={handleInputChange}
                           error={formErrors.tariffOverridePerKwh}
@@ -1028,7 +1014,7 @@ const AddFeederEnergyCapPage = () => {
                           <thead className="bg-gray-50">
                             <tr>
                               <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
-                                Period
+                                Billing Period ID
                               </th>
                               <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500 sm:px-4">
                                 Energy Cap
@@ -1048,7 +1034,7 @@ const AddFeederEnergyCapPage = () => {
                             {csvData.slice(0, 5).map((energyCap, index) => (
                               <tr key={index}>
                                 <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
-                                  {energyCap.period}
+                                  {energyCap.billingPeriodId}
                                 </td>
                                 <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-900 sm:px-4">
                                   {energyCap.energyCapKwh.toFixed(2)}

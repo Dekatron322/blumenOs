@@ -556,12 +556,9 @@ const BillingChangeRequestsTable = () => {
 
   const getStatusConfig = (status: number) => {
     const configs = {
-      0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "PENDING" },
-      1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "APPROVED" },
-      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "DECLINED" },
-      3: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "CANCELLED" },
-      4: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", label: "APPLIED" },
-      5: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", label: "FAILED" },
+      0: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "DRAFT" },
+      1: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "PUBLISHED" },
+      2: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "REVERSED" },
     }
     return configs[status as keyof typeof configs] || configs[0]
   }

@@ -7,6 +7,7 @@ import { ButtonModule } from "../Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearCreateBillingJob, createBillingJob } from "lib/redux/postpaidSlice"
 import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
 import { AlertCircle, Building, Calendar, CheckCircle, Info, X } from "lucide-react"
 
 interface CreateBillingJobModalProps {
@@ -21,17 +22,15 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
     useAppSelector((state) => state.postpaidBilling)
 
   const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
+  const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
 
   const [formData, setFormData] = useState({
-    period: "",
+    billingPeriodId: "",
     areaOfficeId: "",
   })
 
-  const [month, setMonth] = useState("")
-  const [year, setYear] = useState("")
-
   const [errors, setErrors] = useState({
-    period: "",
+    billingPeriodId: "",
     areaOfficeId: "",
   })
 
@@ -39,15 +38,13 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        period: "",
+        billingPeriodId: "",
         areaOfficeId: "",
       })
       setErrors({
-        period: "",
+        billingPeriodId: "",
         areaOfficeId: "",
       })
-      setMonth("")
-      setYear("")
       dispatch(clearCreateBillingJob())
 
       // Load area offices for the dropdown if not already loaded
@@ -59,8 +56,13 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
           })
         )
       }
+
+      // Load billing periods for the dropdown if not already loaded
+      if (!billingPeriods || billingPeriods.length === 0) {
+        dispatch(fetchBillingPeriods({}))
+      }
     }
-  }, [isOpen, dispatch, areaOffices])
+  }, [isOpen, dispatch, areaOffices, billingPeriods])
 
   // Handle success
   useEffect(() => {
@@ -95,26 +97,32 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
 
   const validateForm = (): boolean => {
     const newErrors = {
-      period: "",
+      billingPeriodId: "",
       areaOfficeId: "",
     }
 
-    if (!formData.period.trim()) {
-      newErrors.period = "Billing period is required"
-    } else if (!/^\d{4}-\d{2}$/.test(formData.period)) {
-      newErrors.period = "Period must be in YYYY-MM format"
+    if (!formData.billingPeriodId.trim()) {
+      newErrors.billingPeriodId = "Billing period is required"
     }
 
     setErrors(newErrors)
-    return !newErrors.period
+    return !newErrors.billingPeriodId
   }
 
   const handleSubmit = async () => {
     if (!validateForm()) return
 
     try {
-      const requestData: { period: string; areaOfficeId?: number } = {
-        period: formData.period,
+      const selectedPeriod = billingPeriods.find((p) => p.id === parseInt(formData.billingPeriodId))
+
+      if (!selectedPeriod) {
+        console.error("Selected billing period not found")
+        return
+      }
+
+      const requestData: { period: string; billingPeriodId: number; areaOfficeId?: number } = {
+        period: selectedPeriod.periodKey,
+        billingPeriodId: parseInt(formData.billingPeriodId),
       }
 
       if (formData.areaOfficeId.trim()) {
@@ -131,106 +139,17 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
   }
 
   const isFormValid = () => {
-    return !!formData.period.trim()
-  }
-
-  const getCurrentPeriod = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, "0")
-    return `${year}-${month}`
-  }
-
-  const handleQuickSelectCurrentPeriod = () => {
-    const currentPeriod = getCurrentPeriod()
-    setFormData((prev) => ({
-      ...prev,
-      period: currentPeriod,
-    }))
-
-    const [, currentMonth] = currentPeriod.split("-")
-    setMonth(currentMonth ?? "")
-    setYear(currentPeriod.split("-")[0] ?? "")
-
-    // Clear period error if any
-    if (errors.period) {
-      setErrors((prev) => ({
-        ...prev,
-        period: "",
-      }))
-    }
-  }
-
-  const handleMonthChange = (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const { value } = ("target" in e ? e.target : e) as { name: string; value: string | number }
-    const selectedMonth = String(value)
-    setMonth(selectedMonth)
-
-    const now = new Date()
-    const currentYear = String(now.getFullYear())
-    const selectedYear = year || currentYear
-
-    setFormData((prev) => ({
-      ...prev,
-      period: selectedMonth ? `${selectedYear}-${selectedMonth}` : "",
-    }))
-
-    if (errors.period) {
-      setErrors((prev) => ({
-        ...prev,
-        period: "",
-      }))
-    }
-  }
-
-  const handleYearChange = (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const { value } = ("target" in e ? e.target : e) as { name: string; value: string | number }
-    const selectedYear = String(value)
-    setYear(selectedYear)
-
-    setFormData((prev) => ({
-      ...prev,
-      period: selectedYear && month ? `${selectedYear}-${month}` : "",
-    }))
-
-    if (errors.period) {
-      setErrors((prev) => ({
-        ...prev,
-        period: "",
-      }))
-    }
+    return !!formData.billingPeriodId.trim()
   }
 
   if (!isOpen) return null
 
-  const monthOptions = [
-    { value: "", label: "Select month" },
-    { value: "01", label: "January" },
-    { value: "02", label: "February" },
-    { value: "03", label: "March" },
-    { value: "04", label: "April" },
-    { value: "05", label: "May" },
-    { value: "06", label: "June" },
-    { value: "07", label: "July" },
-    { value: "08", label: "August" },
-    { value: "09", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" },
-  ]
-
-  const yearOptions = [
-    { value: "", label: "Select year" },
-    { value: "2023", label: "2023" },
-    { value: "2024", label: "2024" },
-    { value: "2025", label: "2025" },
-    { value: "2026", label: "2026" },
-    { value: "2027", label: "2027" },
-    { value: "2028", label: "2028" },
+  const billingPeriodOptions = [
+    { value: "", label: billingPeriodsLoading ? "Loading billing periods..." : "Select Billing Period" },
+    ...billingPeriods.map((period) => ({
+      value: String(period.id),
+      label: period.displayName,
+    })),
   ]
 
   const areaOfficeOptions = [
@@ -260,7 +179,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
         {/* Modal Header - Responsive */}
         <div className="flex w-full items-start justify-between rounded-t-xl bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6">
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Create Billing Job</h2>
+            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Start Bill Generation</h2>
             <p className="mt-1 text-sm text-gray-600">
               Start a new billing process for a specific period and area office
             </p>
@@ -322,56 +241,30 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                   <Calendar className="size-4 text-blue-500" />
                   Billing Period
                 </h3>
-                <button
-                  type="button"
-                  onClick={handleQuickSelectCurrentPeriod}
-                  className="inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-500 sm:text-sm"
-                >
-                  <Calendar className="mr-1 size-3 sm:size-4" />
-                  Use Current Month
-                </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                <FormSelectModule
-                  label="Month"
-                  name="month"
-                  value={month}
-                  onChange={handleMonthChange}
-                  options={monthOptions}
-                  required
-                  error={errors.period}
-                  className="w-full"
-                />
+              <FormSelectModule
+                label="Billing Period"
+                name="billingPeriodId"
+                value={formData.billingPeriodId}
+                onChange={handleInputChange}
+                options={billingPeriodOptions}
+                required
+                error={errors.billingPeriodId}
+                className="w-full"
+              />
 
-                <FormSelectModule
-                  label="Year"
-                  name="year"
-                  value={year}
-                  onChange={handleYearChange}
-                  options={yearOptions}
-                  required
-                  className="w-full"
-                />
-              </div>
-
-              {/* Period Display */}
-              {formData.period ? (
+              {/* Selected Period Display */}
+              {formData.billingPeriodId && (
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
                   <div className="flex items-center">
                     <Info className="mr-2 size-4 text-blue-400 sm:size-5" />
                     <span className="text-sm font-medium text-blue-800">
-                      Selected Period: <span className="font-bold">{formData.period}</span>
+                      Selected Period:{" "}
+                      <span className="font-bold">
+                        {billingPeriods.find((p) => p.id === parseInt(formData.billingPeriodId))?.displayName}
+                      </span>
                     </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="flex items-center">
-                    <Info className="mr-2 size-4 text-gray-400" />
-                    <p className="text-xs text-gray-600 sm:text-sm">
-                      <span className="font-medium">Format:</span> YYYY-MM (e.g., 2024-12 for December 2024)
-                    </p>
                   </div>
                 </div>
               )}
@@ -417,7 +310,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
             </div>
 
             {/* Job Information Summary */}
-            {formData.period && formData.areaOfficeId && (
+            {formData.billingPeriodId && formData.areaOfficeId && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -431,7 +324,9 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
                 <div className="space-y-3">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm text-amber-700">Billing Period:</span>
-                    <span className="text-sm font-medium text-amber-800 sm:text-base">{formData.period}</span>
+                    <span className="text-sm font-medium text-amber-800 sm:text-base">
+                      {billingPeriods.find((p) => p.id === parseInt(formData.billingPeriodId))?.displayName}
+                    </span>
                   </div>
 
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -457,7 +352,7 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
             )}
 
             {/* Quick Info for Mobile */}
-            {!formData.period && (
+            {!formData.billingPeriodId && (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:hidden">
                 <div className="flex items-start">
                   <Info className="mr-2 mt-0.5 size-4 flex-shrink-0 text-gray-400" />
