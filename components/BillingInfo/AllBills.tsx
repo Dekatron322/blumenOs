@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState, Suspense } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
@@ -522,7 +522,16 @@ const MobileFilterSidebar = ({
   )
 }
 
-const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
+// Wrapper component to handle search params with Suspense
+const AllBillsWithSearchParams: React.FC<AllBillsProps> = (props) => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AllBillsContent {...props} />
+    </Suspense>
+  )
+}
+
+const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1600,4 +1609,4 @@ const AllBills: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   )
 }
 
-export default AllBills
+export default AllBillsWithSearchParams
