@@ -121,8 +121,8 @@ interface TabNavigationProps {
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
-    { id: "RecentPayments", label: "Recent Payments", icon: <InventoryIcon /> },
-    { id: "RecentDisputes", label: "Top Performers", icon: <ReadingsIcon /> },
+    { id: "CashRemittance", label: "Cash Remittance", icon: <InventoryIcon /> },
+    { id: "CashHolders", label: "Cash Holder", icon: <AlertsIcon /> },
     // { id: "PerformingVendors", label: "Top Performing Vendors", icon: <QueueIcon /> },
     // { id: "BankReconciliation", label: "Cash Holders", icon: <AlertsIcon /> },
   ]

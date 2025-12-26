@@ -3,6 +3,7 @@
 import { ButtonModule } from "components/ui/Button/Button"
 import React, { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { fetchPaymentDunningCases } from "lib/redux/paymentDunningSlice"
 import { AnimatePresence, motion } from "framer-motion"
@@ -52,74 +53,83 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
   onViewCases,
 }) => {
   const dispatch = useDispatch<AppDispatch>()
+  const router = useRouter()
   const { dunningCases, loading, pagination } = useSelector((state: RootState) => state.paymentDunnings)
-
-  const [dunningStages, setDunningStages] = useState<DunningStage[]>([
-    {
-      id: 1,
-      title: "Soft Reminder",
-      description: "Initial reminder stage",
-      customerCount: 0,
-      actionText: "View Cases",
-      status: "warning",
-      stage: "SoftReminder",
-      statusFilter: "Open",
-    },
-    {
-      id: 2,
-      title: "Hard Reminder",
-      description: "Stronger follow-up required",
-      customerCount: 0,
-      actionText: "View Cases",
-      status: "danger",
-      stage: "HardReminder",
-      statusFilter: "Open",
-    },
-    {
-      id: 3,
-      title: "Field Visit",
-      description: "Physical visit required",
-      customerCount: 0,
-      actionText: "View Cases",
-      status: "critical",
-      stage: "FieldVisit",
-      statusFilter: "Open",
-    },
-    {
-      id: 4,
-      title: "Disconnection Notice",
-      description: "Final notice before disconnection",
-      customerCount: 0,
-      actionText: "View Cases",
-      status: "critical",
-      stage: "DisconnectionNotice",
-      statusFilter: "Open",
-    },
-    {
-      id: 5,
-      title: "On Hold Cases",
-      description: "Cases temporarily paused",
-      customerCount: 0,
-      actionText: "View Cases",
-      status: "info",
-      stage: null as any,
-      statusFilter: "OnHold",
-    },
-    {
-      id: 6,
-      title: "Resolved Cases",
-      description: "Successfully completed cases",
-      customerCount: 0,
-      actionText: "View Cases",
-      status: "info",
-      stage: null as any,
-      statusFilter: "Resolved",
-    },
-  ])
+  const { user } = useSelector((state: RootState) => state.auth)
 
   const [showSummaryStats, setShowSummaryStats] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const hasFetchedRef = useRef(false)
+
+  // Calculate dunning stages from actual cases
+  const getDunningStages = (): DunningStage[] => {
+    if (dunningCases.length === 0) return []
+
+    const stages: DunningStage[] = [
+      {
+        id: 1,
+        title: "Soft Reminder",
+        description: "Initial reminder stage",
+        customerCount: dunningCases.filter((c) => c.stage === "SoftReminder" && c.status === "Open").length,
+        actionText: "View Cases",
+        status: "warning",
+        stage: "SoftReminder",
+        statusFilter: "Open",
+      },
+      {
+        id: 2,
+        title: "Hard Reminder",
+        description: "Stronger follow-up required",
+        customerCount: dunningCases.filter((c) => c.stage === "HardReminder" && c.status === "Open").length,
+        actionText: "View Cases",
+        status: "danger",
+        stage: "HardReminder",
+        statusFilter: "Open",
+      },
+      {
+        id: 3,
+        title: "Field Visits",
+        description: "Physical visit required",
+        customerCount: dunningCases.filter((c) => c.stage === "FieldVisit" && c.status === "Open").length,
+        actionText: "View Cases",
+        status: "critical",
+        stage: "FieldVisit",
+        statusFilter: "Open",
+      },
+      {
+        id: 4,
+        title: "Disconnection Notice",
+        description: "Final notice before disconnection",
+        customerCount: dunningCases.filter((c) => c.stage === "DisconnectionNotice" && c.status === "Open").length,
+        actionText: "View Cases",
+        status: "critical",
+        stage: "DisconnectionNotice",
+        statusFilter: "Open",
+      },
+      {
+        id: 5,
+        title: "On Hold Cases",
+        description: "Cases temporarily paused",
+        customerCount: dunningCases.filter((c) => c.status === "OnHold").length,
+        actionText: "View Cases",
+        status: "info",
+        stage: null as any,
+        statusFilter: "OnHold",
+      },
+      {
+        id: 6,
+        title: "Resolved Cases",
+        description: "Successfully completed cases",
+        customerCount: dunningCases.filter((c) => c.status === "Resolved").length,
+        actionText: "View Cases",
+        status: "info",
+        stage: null as any,
+        statusFilter: "Resolved",
+      },
+    ]
+
+    return stages.filter((stage) => stage.customerCount > 0)
+  }
 
   // Fetch dunning cases on component mount (guarded for Strict Mode)
   useEffect(() => {
@@ -144,32 +154,6 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
 
     fetchAllDunningCases()
   }, [dispatch])
-
-  // Update stage counts when dunning cases change
-  useEffect(() => {
-    if (dunningCases.length > 0) {
-      const updatedStages = dunningStages.map((stage) => {
-        let count = 0
-
-        if (stage.stage && stage.statusFilter) {
-          count = dunningCases.filter(
-            (caseItem) => caseItem.stage === stage.stage && caseItem.status === stage.statusFilter
-          ).length
-        } else if (stage.stage) {
-          count = dunningCases.filter((caseItem) => caseItem.stage === stage.stage).length
-        } else if (stage.statusFilter) {
-          count = dunningCases.filter((caseItem) => caseItem.status === stage.statusFilter).length
-        }
-
-        return {
-          ...stage,
-          customerCount: count,
-        }
-      })
-
-      setDunningStages(updatedStages)
-    }
-  }, [dunningCases])
 
   // Auto-hide summary stats on mobile
   useEffect(() => {
@@ -257,7 +241,11 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
     }
   }
 
+  const dunningStages = getDunningStages()
   const totalCustomers = dunningStages.reduce((total, stage) => total + stage.customerCount, 0)
+
+  // Check if user has W payment privilege
+  const hasWritePaymentPrivilege = user?.privileges?.some((p) => p.key === "payments" && p.actions?.includes("W"))
 
   const StageCard = ({ stage, index }: { stage: DunningStage; index: number }) => (
     <motion.div
@@ -369,17 +357,33 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
         </div>
 
         <div className="flex items-center justify-between md:justify-end">
-          <div className="text-xs text-gray-500 md:text-sm">
+          {/* <div className="text-xs text-gray-500 md:text-sm">
             Total Cases: <span className="font-semibold text-gray-800">{totalCustomers.toLocaleString()}</span>
+          </div> */}
+          <div className="flex items-center gap-2">
+            {hasWritePaymentPrivilege && (
+              <ButtonModule
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/payment/add-duning-mgt")}
+                className="text-xs md:text-sm"
+              >
+                Create Dunning Case
+              </ButtonModule>
+            )}
+            <button
+              onClick={() => setShowSummaryStats(!showSummaryStats)}
+              className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
+              aria-label="Toggle summary stats"
+            >
+              <span>Stats</span>
+              {showSummaryStats ? (
+                <HiOutlineChevronUp className="size-3" />
+              ) : (
+                <HiOutlineChevronDown className="size-3" />
+              )}
+            </button>
           </div>
-          <button
-            onClick={() => setShowSummaryStats(!showSummaryStats)}
-            className="ml-3 flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
-            aria-label="Toggle summary stats"
-          >
-            <span>Stats</span>
-            {showSummaryStats ? <HiOutlineChevronUp className="size-3" /> : <HiOutlineChevronDown className="size-3" />}
-          </button>
         </div>
       </div>
 
@@ -390,12 +394,44 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
         </div>
       )}
 
+      {/* No Cases State */}
+      {!isLoading && dunningStages.length === 0 && (
+        <div className="rounded-lg border bg-gray-50 p-8 text-center">
+          <div className="mb-4 text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <h3 className="mb-2 text-lg font-medium text-gray-900">No dunning cases</h3>
+          <p className="mb-4 text-sm text-gray-500">There are currently no dunning cases to manage.</p>
+          {hasWritePaymentPrivilege && (
+            <div className="flex justify-center">
+              <ButtonModule
+                variant="primary"
+                size="sm"
+                onClick={() => console.log("Add dunning case clicked")}
+                className="text-sm"
+              >
+                Add Case
+              </ButtonModule>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Dunning Stages Grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
-        {dunningStages.map((stage, index) => (
-          <StageCard key={stage.id} stage={stage} index={index} />
-        ))}
-      </div>
+      {!isLoading && dunningStages.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+          {dunningStages.map((stage, index) => (
+            <StageCard key={stage.id} stage={stage} index={index} />
+          ))}
+        </div>
+      )}
 
       {/* Summary Stats */}
       <AnimatePresence>
@@ -438,52 +474,6 @@ const DunningManagement: React.FC<DunningManagementProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Quick Actions - Mobile */}
-      {/* <div className="sm:hidden">
-        <div className="grid grid-cols-2 gap-2">
-          <ButtonModule variant="outline" size="sm" onClick={onSendSMS} className="text-xs">
-            Send SMS
-          </ButtonModule>
-          <ButtonModule variant="outline" size="sm" onClick={onSendFinalNotices} className="text-xs">
-            Final Notices
-          </ButtonModule>
-          <ButtonModule variant="outline" size="sm" onClick={onGenerateWorkOrders} className="text-xs">
-            Work Orders
-          </ButtonModule>
-          <ButtonModule variant="outline" size="sm" onClick={onReviewPlans} className="text-xs">
-            Review Plans
-          </ButtonModule>
-        </div>
-      </div> */}
-
-      {/* Quick Actions - Desktop */}
-      {/* <div className="hidden sm:block">
-        <div className="flex flex-wrap gap-2">
-          <ButtonModule variant="outline" size="sm" onClick={onSendSMS} className="text-sm">
-            Send SMS Reminders
-          </ButtonModule>
-          <ButtonModule variant="outline" size="sm" onClick={onSendFinalNotices} className="text-sm">
-            Send Final Notices
-          </ButtonModule>
-          <ButtonModule variant="outline" size="sm" onClick={onGenerateWorkOrders} className="text-sm">
-            Generate Work Orders
-          </ButtonModule>
-          <ButtonModule variant="outline" size="sm" onClick={onReviewPlans} className="text-sm">
-            Review Collection Plans
-          </ButtonModule>
-        </div>
-      </div> */}
-
-      {/* Toggle Stats Button - Mobile */}
-      {/* <button
-        onClick={() => setShowSummaryStats(!showSummaryStats)}
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-xs font-medium text-white shadow-lg hover:bg-blue-700 md:hidden"
-        aria-label="Toggle summary stats"
-      >
-        <span>{showSummaryStats ? "Hide" : "Show"} Stats</span>
-        {showSummaryStats ? <HiOutlineChevronUp className="size-3" /> : <HiOutlineChevronDown className="size-3" />}
-      </button> */}
     </motion.div>
   )
 }

@@ -3,7 +3,7 @@
 import { toast, Toaster } from "sonner"
 import type { ToasterProps } from "sonner"
 
-type NotificationType = "success" | "error" | "warning" | "info"
+export type NotificationType = "success" | "error" | "warning" | "info"
 
 interface NotificationOptions {
   title?: string

@@ -282,11 +282,22 @@ export const API_ENDPOINTS = {
     CHANGE_REQUEST_DETAILS: "/payments/change-requests/{identifier}",
     APPROVE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/payments/change-requests/{publicId}/decline",
+    TRACK_PAYMENT: "/payments/{id}/tracking",
+    CASH_HOLDERS: "/payments/cash-holders",
+    TOP_PERFORMERS: "/payments/reports/performers",
+    CONFIRM: "/payments/{id}/confirm",
   },
 
   PAYMENT_DUNNING: {
     GET: "/payments/dunning/cases",
     ADD: "/payments/dunning/cases",
+  },
+
+  CASH_REMITTANCE: {
+    SUMMARY: "/payments/cash-remittances/summary",
+    GET: "/payments/cash-remittances",
+    ADD: "/payments/cash-remittances",
+    RECORD: "/payments/cash-remittances/{id}/receipt",
   },
 
   REPORTING: {

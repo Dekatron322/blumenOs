@@ -3,7 +3,19 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, Building, Calendar, CreditCard, Download, Edit3, MapPin, User, Zap } from "lucide-react"
+import {
+  AlertCircle,
+  Building,
+  Calendar,
+  CreditCard,
+  Download,
+  Edit3,
+  MapPin,
+  Receipt,
+  User,
+  Zap,
+  Package,
+} from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ExportOutlineIcon } from "components/Icons/Icons"
@@ -12,6 +24,9 @@ import { clearCurrentPayment, fetchPaymentById } from "lib/redux/paymentSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import ChangeRequestModal from "components/ui/Modal/change-payment-request-modal"
+import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
+import PaymentTrackingModal from "components/ui/Modal/payment-tracking-modal"
+import ConfirmBankTransferModal from "components/ui/Modal/confirm-bank-transfer-modal"
 import { SearchModule } from "components/ui/Search/search-module"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { IoMdFunnel } from "react-icons/io"
@@ -1206,7 +1221,9 @@ const PaymentDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
-  const [activeModal, setActiveModal] = useState<"edit" | "changeRequest" | null>(null)
+  const [activeModal, setActiveModal] = useState<
+    "edit" | "changeRequest" | "receipt" | "tracking" | "confirmBankTransfer" | null
+  >(null)
   const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
@@ -1242,10 +1259,22 @@ const PaymentDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "edit" | "changeRequest") => setActiveModal(modalType)
+  const openModal = (modalType: "edit" | "changeRequest" | "tracking" | "confirmBankTransfer") =>
+    setActiveModal(modalType)
 
   const handleChangeRequestSuccess = () => {
     // Refresh payment details after successful change request
+    if (paymentId) {
+      const id = parseInt(paymentId)
+      if (!isNaN(id)) {
+        dispatch(fetchPaymentById(id))
+      }
+    }
+    closeAllModals()
+  }
+
+  const handleConfirmBankTransferSuccess = () => {
+    // Refresh payment details after successful bank transfer confirmation
     if (paymentId) {
       const id = parseInt(paymentId)
       if (!isNaN(id)) {
@@ -1504,7 +1533,7 @@ const PaymentDetailsPage = () => {
                         className="new-arrow-right rotate-180 transform"
                       >
                         <path
-                          d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308/L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971/L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462/L0.049716 9.43565/L0.0504065 7.33631/L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273/L9.1497 0.80204Z"
+                          d="M9.1497 0.80204C9.26529 3.95101 13.2299 6.51557 16.1451 8.0308L16.1447 9.43036C13.2285 10.7142 9.37889 13.1647 9.37789 16.1971L7.27855 16.1978C7.16304 12.8156 10.6627 10.4818 13.1122 9.66462L0.049716 9.43565L0.0504065 7.33631L13.1129 7.56528C10.5473 6.86634 6.93261 4.18504 7.05036 0.80273L9.1497 0.80204Z"
                           fill="currentColor"
                         ></path>
                       </svg>
@@ -1517,7 +1546,7 @@ const PaymentDetailsPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <ButtonModule
+                    {/* <ButtonModule
                       variant="secondary"
                       size="sm"
                       className="flex items-center gap-2 text-xs md:text-sm"
@@ -1526,6 +1555,36 @@ const PaymentDetailsPage = () => {
                     >
                       <ExportOutlineIcon className="size-3 md:size-4" />
                       {isExporting ? "Exporting..." : "Export PDF"}
+                    </ButtonModule> */}
+
+                    <ButtonModule
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center text-xs md:text-sm"
+                      onClick={() => setActiveModal("receipt")}
+                      icon={<Receipt className="size-3 md:size-4" />}
+                    >
+                      View Receipt
+                    </ButtonModule>
+
+                    <ButtonModule
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center text-xs md:text-sm"
+                      onClick={() => setActiveModal("confirmBankTransfer")}
+                      icon={<Package className="size-3 md:size-4" />}
+                    >
+                      Confirm Bank Transfer
+                    </ButtonModule>
+
+                    <ButtonModule
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center text-xs md:text-sm"
+                      onClick={() => setActiveModal("tracking")}
+                      icon={<Package className="size-3 md:size-4" />}
+                    >
+                      Track Payment
                     </ButtonModule>
 
                     {canUpdate ? (
@@ -1535,7 +1594,7 @@ const PaymentDetailsPage = () => {
                         variant="primary"
                         size="sm"
                         className="flex items-center gap-2 text-xs md:text-sm"
-                        onClick={() => openModal("changeRequest")}
+                        onClick={() => setActiveModal("changeRequest")}
                       >
                         <Edit3 className="size-3 md:size-4" />
                         Change Request
@@ -1893,6 +1952,24 @@ const PaymentDetailsPage = () => {
         paymentId={currentPayment.id}
         paymentReference={currentPayment.reference}
         onSuccess={handleChangeRequestSuccess}
+      />
+      <PaymentReceiptModal
+        isOpen={activeModal === "receipt"}
+        onRequestClose={closeAllModals}
+        payment={currentPayment}
+      />
+      <PaymentTrackingModal
+        isOpen={activeModal === "tracking"}
+        onRequestClose={closeAllModals}
+        paymentId={currentPayment.id}
+      />
+      <ConfirmBankTransferModal
+        isOpen={activeModal === "confirmBankTransfer"}
+        onRequestClose={closeAllModals}
+        paymentId={currentPayment.id}
+        paymentReference={currentPayment.reference}
+        currentAmount={currentPayment.amount}
+        onSuccess={handleConfirmBankTransferSuccess}
       />
     </section>
   )

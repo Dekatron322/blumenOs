@@ -34,6 +34,7 @@ import revenueAnalyticsReducer from "./revenueAnalyticsSlice"
 import consumptionAnalyticsReducer from "./consumptionAnalyticsSlice"
 import billingPeriodsReducer from "./billingPeriodsSlice"
 import performanceAnalyticsReducer from "./performanceAnalyticsSlice"
+import cashRemittanceReducer from "./cashRemittanceSlice"
 
 export const store = configureStore({
   reducer: {
@@ -71,6 +72,7 @@ export const store = configureStore({
     consumptionAnalytics: consumptionAnalyticsReducer,
     performanceAnalytics: performanceAnalyticsReducer,
     billingPeriods: billingPeriodsReducer,
+    cashRemittance: cashRemittanceReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

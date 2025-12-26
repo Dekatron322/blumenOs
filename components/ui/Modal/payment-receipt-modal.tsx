@@ -1,11 +1,13 @@
 "use client"
 
-import React from "react"
+import React, { useRef } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
 import type { Payment } from "lib/redux/paymentSlice"
 import Image from "next/image"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
 
 interface PaymentReceiptModalProps {
   isOpen: boolean
@@ -14,6 +16,8 @@ interface PaymentReceiptModalProps {
 }
 
 const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onRequestClose, payment }) => {
+  const receiptRef = useRef<HTMLDivElement>(null)
+
   if (!isOpen) return null
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -37,6 +41,52 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!receiptRef.current || !payment) return
+
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#EFEFEF",
+      })
+
+      const imgData = canvas.toDataURL("image/png")
+
+      // A5 format: 148 x 210 mm = 420 x 595 points at 72 DPI
+      const pageWidth = 420
+      const pageHeight = 595
+      const margin = 20
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a5",
+      })
+
+      pdf.setFillColor(239, 239, 239) // #EFEFEF background
+      pdf.rect(0, 0, pageWidth, pageHeight, "F")
+
+      // Scale image to fit A5 page with margins
+      const maxWidth = pageWidth - margin * 2
+      const maxHeight = pageHeight - margin * 2
+      const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height)
+      const imgWidth = canvas.width * scale
+      const imgHeight = canvas.height * scale
+      const x = (pageWidth - imgWidth) / 2
+      const y = margin
+
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight)
+
+      const fileName = `Payment-Receipt-${payment.customerAccountNumber}-${payment.reference}.pdf`
+      pdf.save(fileName)
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      alert("Error generating PDF. Please try again.")
+    }
   }
 
   return (
@@ -68,105 +118,117 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
         </div>
 
         {payment ? (
-          <div className="relative space-y-4 px-4 pb-4 text-sm text-gray-800 sm:space-y-6 sm:px-6">
-            {/* Paid Stamp Overlay - responsive size and positioning */}
-            <div className="pointer-events-none absolute top-2 z-10 -translate-x-1/2 opacity-90 max-sm:right-0 sm:-top-6 sm:left-1/2">
-              <Image
-                src="/paid-stamp.svg"
-                alt="Paid stamp"
-                width={190}
-                height={190}
-                className="h-32 w-32 select-none sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
-                priority
-              />
-            </div>
+          <>
+            <div ref={receiptRef} className="relative space-y-4 px-4 pb-4 text-sm text-gray-800 sm:space-y-6 sm:px-6">
+              {/* Paid Stamp Overlay - responsive size and positioning */}
+              <div className="pointer-events-none absolute top-2 z-10 -translate-x-1/2 opacity-90 max-sm:right-0 sm:-top-6 sm:left-1/2">
+                <Image
+                  src="/paid-stamp.svg"
+                  alt="Paid stamp"
+                  width={190}
+                  height={190}
+                  className="h-32 w-32 select-none sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                  priority
+                />
+              </div>
 
-            {/* Top summary */}
-            <div className="relative flex flex-col items-start justify-between rounded-lg bg-white p-4 sm:flex-row sm:items-center">
-              <div className="mb-3 w-full sm:mb-0 sm:w-auto">
-                <p className="text-xs text-gray-500">Customer</p>
-                <p className="break-words font-semibold text-gray-900">{payment.customerName}</p>
-                <p className="text-xs text-gray-500">Account: {payment.customerAccountNumber}</p>
-              </div>
-              <div className="w-full text-left sm:w-auto sm:text-right">
-                <p className="text-xs text-gray-500">Amount Paid</p>
-                <p className="text-xl font-bold text-gray-900 sm:text-2xl">
-                  {formatCurrency(payment.amount, payment.currency)}
-                </p>
-                <p className="break-words text-xs text-gray-500">Paid at: {formatDateTime(payment.paidAtUtc)}</p>
-              </div>
-            </div>
-
-            <div className="gap-4 rounded-lg bg-gray-50 p-4">
-              <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:grid-cols-2 sm:gap-10">
-                <p className="font-semibold text-gray-600">Payment Details</p>
-                <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Bills Summary</p>
-              </div>
-              <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 pt-4 text-xs sm:grid-cols-2 sm:gap-10">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Status: </span>
-                    <span className="break-words font-semibold">{payment.status}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Channel: </span>
-                    <span className="break-words font-semibold">{payment.channel}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Payment Type: </span>
-                    <span className="break-words font-semibold">{payment.paymentTypeName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Recorded By: </span>
-                    <span className="break-words font-semibold">{payment.recordedByName}</span>
-                  </div>
+              {/* Top summary */}
+              <div className="relative flex flex-col items-start justify-between rounded-lg bg-white p-4 sm:flex-row sm:items-center">
+                <div className="mb-3 w-full sm:mb-0 sm:w-auto">
+                  <p className="text-xs text-gray-500">Customer</p>
+                  <p className="break-words font-semibold text-gray-900">{payment.customerName}</p>
+                  <p className="text-xs text-gray-500">Account: {payment.customerAccountNumber}</p>
                 </div>
-                <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:hidden sm:grid-cols-2 sm:gap-10">
+                <div className="w-full text-left sm:w-auto sm:text-right">
+                  <p className="text-xs text-gray-500">Amount Paid</p>
+                  <p className="text-xl font-bold text-gray-900 sm:text-2xl">
+                    {formatCurrency(payment.amount, payment.currency)}
+                  </p>
+                  <p className="break-words text-xs text-gray-500">Paid at: {formatDateTime(payment.paidAtUtc)}</p>
+                </div>
+              </div>
+
+              <div className="gap-4 rounded-lg bg-gray-50 p-4">
+                <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:grid-cols-2 sm:gap-10">
                   <p className="font-semibold text-gray-600">Payment Details</p>
                   <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Bills Summary</p>
                 </div>
-                <div className="space-y-2 sm:mt-0">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Bill Period: </span>
-                    <span className="break-words font-semibold">{payment.postpaidBillPeriod || "N/A"}</span>
+                <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 pt-4 text-xs sm:grid-cols-2 sm:gap-10">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Status: </span>
+                      <span className="break-words font-semibold">{payment.status}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Channel: </span>
+                      <span className="break-words font-semibold">{payment.channel}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Payment Type: </span>
+                      <span className="break-words font-semibold">{payment.paymentTypeName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Recorded By: </span>
+                      <span className="break-words font-semibold">{payment.recordedByName}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Bill Total Due: </span>
-                    <span className="break-words font-semibold">
-                      {formatCurrency(payment.billTotalDue, payment.currency)}
-                    </span>
+                  <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:hidden sm:grid-cols-2 sm:gap-10">
+                    <p className="font-semibold text-gray-600">Payment Details</p>
+                    <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Bills Summary</p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Outstanding Before: </span>
-                    <span className="break-words font-semibold">
-                      {formatCurrency(payment.outstandingBeforePayment, payment.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Outstanding After: </span>
-                    <span className="break-words font-semibold">
-                      {formatCurrency(payment.outstandingAfterPayment, payment.currency)}
-                    </span>
+                  <div className="space-y-2 sm:mt-0">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Bill Period: </span>
+                      <span className="break-words font-semibold">{payment.postpaidBillPeriod || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Bill Total Due: </span>
+                      <span className="break-words font-semibold">
+                        {formatCurrency(payment.billTotalDue, payment.currency)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Outstanding Before: </span>
+                      <span className="break-words font-semibold">
+                        {formatCurrency(payment.outstandingBeforePayment, payment.currency)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Outstanding After: </span>
+                      <span className="break-words font-semibold">
+                        {formatCurrency(payment.outstandingAfterPayment, payment.currency)}
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                {payment.narrative && (
+                  <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
+                    <p className="mb-1 font-medium text-gray-700">Narrative</p>
+                    <p className="break-words text-gray-600">{payment.narrative}</p>
+                  </div>
+                )}
+
+                {payment.externalReference && (
+                  <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
+                    <p className="mb-1 font-medium text-gray-700">External Reference</p>
+                    <p className="break-words text-gray-600">{payment.externalReference}</p>
+                  </div>
+                )}
               </div>
-
-              {payment.narrative && (
-                <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
-                  <p className="mb-1 font-medium text-gray-700">Narrative</p>
-                  <p className="break-words text-gray-600">{payment.narrative}</p>
-                </div>
-              )}
-
-              {payment.externalReference && (
-                <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
-                  <p className="mb-1 font-medium text-gray-700">External Reference</p>
-                  <p className="break-words text-gray-600">{payment.externalReference}</p>
-                </div>
-              )}
+              <p className="text-center text-xs font-medium">Powered by Blumentechnologies</p>
             </div>
-            <p className="text-center text-xs font-medium">Powered by Blumentechnologies</p>
-          </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+              <ButtonModule variant="outline" onClick={handlePrint} className="w-full sm:w-auto">
+                Print
+              </ButtonModule>
+              <ButtonModule variant="primary" onClick={handleDownloadPDF} className="w-full sm:w-auto">
+                Download PDF
+              </ButtonModule>
+            </div>
+          </>
         ) : (
           <div className="flex items-center justify-center px-6 py-10">
             <p className="text-sm text-gray-500">No payment information available.</p>

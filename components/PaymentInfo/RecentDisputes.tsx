@@ -3,73 +3,91 @@
 import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
-import { HiChevronDown, HiChevronUp } from "react-icons/hi"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { HiChevronDown, HiChevronUp, HiFilter, HiRefresh } from "react-icons/hi"
 
-const RecentDisputes = () => {
+import { fetchTopPerformers, clearTopPerformers, TopPerformersRequest } from "lib/redux/paymentSlice"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+
+const PerformingAgents = () => {
+  const dispatch = useAppDispatch()
+  const { topPerformers, topPerformersLoading, topPerformersError, topPerformersSuccess } = useAppSelector(
+    (state) => state.payments
+  )
+
   const [searchText, setSearchText] = useState("")
   const [selectedDispute, setSelectedDispute] = useState<any>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showSidebar, setShowSidebar] = useState(true)
   const [showMobileActions, setShowMobileActions] = useState(false)
+  const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth")
+  const [agentType, setAgentType] = useState("agents") // "agents" or "vendors"
+
+  // Time range options
+  const timeRanges = [
+    { id: "today", label: "Today", value: "today" },
+    { id: "thisWeek", label: "This Week", value: "thisWeek" },
+    { id: "thisMonth", label: "This Month", value: "thisMonth" },
+    { id: "thisYear", label: "This Year", value: "thisYear" },
+    { id: "allTime", label: "All Time", value: "allTime" },
+  ]
+
+  // Build request body based on selected time range
+  const getRequestData = (): TopPerformersRequest => {
+    const baseRequest: TopPerformersRequest = {
+      today: false,
+      thisWeek: false,
+      thisMonth: false,
+      thisYear: false,
+      allTime: false,
+      areaOfficeId: 0,
+      serviceCenterId: 0,
+      distributionSubstationId: 0,
+      feederId: 0,
+    }
+
+    switch (selectedTimeRange) {
+      case "today":
+        baseRequest.today = true
+        break
+      case "thisWeek":
+        baseRequest.thisWeek = true
+        break
+      case "thisMonth":
+        baseRequest.thisMonth = true
+        break
+      case "thisYear":
+        baseRequest.thisYear = true
+        break
+      case "allTime":
+        baseRequest.allTime = true
+        break
+    }
+
+    return baseRequest
+  }
+
+  // Fetch top performers data
+  const loadTopPerformers = () => {
+    const requestData = getRequestData()
+    dispatch(fetchTopPerformers(requestData))
+  }
+
+  // Initial load and on time range change
+  useEffect(() => {
+    loadTopPerformers()
+  }, [selectedTimeRange])
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      dispatch(clearTopPerformers())
+    }
+  }, [])
 
   const handleCancelSearch = () => {
     setSearchText("")
   }
-
-  const disputes = [
-    {
-      id: 1,
-      customerName: "Fatima Hassan",
-      accountNumber: "2301567890",
-      disputeAmount: "₦425",
-      originalAmount: "₦425",
-      status: "pending",
-      disputeType: "double-charge",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN789456123",
-      timestamp: "2024-01-15 16:45",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-23",
-      priority: "medium",
-      assignedTo: "John Adebayo",
-      description: "Customer claims they were charged twice for the same service",
-    },
-    {
-      id: 2,
-      customerName: "Tech Solutions Ltd",
-      accountNumber: "2301789012",
-      disputeAmount: "₦1,250",
-      originalAmount: "₦1,250",
-      status: "under-review",
-      disputeType: "service-not-rendered",
-      paymentMethod: "Bank Transfer",
-      reference: "TXN321654987",
-      timestamp: "2024-01-15 15:45",
-      submittedDate: "2024-01-16",
-      dueDate: "2024-01-25",
-      priority: "high",
-      assignedTo: "Sarah Johnson",
-      description: "Commercial customer claims service was not provided after payment",
-    },
-    {
-      id: 3,
-      customerName: "Michael Johnson",
-      accountNumber: "2301890123",
-      disputeAmount: "₦320",
-      originalAmount: "₦320",
-      status: "resolved",
-      disputeType: "incorrect-amount",
-      paymentMethod: "Card Payment",
-      reference: "CARD123456789",
-      timestamp: "2024-01-15 15:30",
-      submittedDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      priority: "low",
-      assignedTo: "James Okafor",
-      description: "Customer claims incorrect amount was charged",
-      resolution: "Refund processed - system error confirmed",
-    },
-  ]
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -135,91 +153,39 @@ const RecentDisputes = () => {
     }
   }
 
-  const handleDisputeAction = (dispute: any, action: string) => {
-    console.log(`Action: ${action} for dispute:`, dispute.id)
-    setIsDropdownOpen(false)
-    setSelectedDispute(null)
-
-    switch (action) {
-      case "view":
-        break
-      case "update":
-        break
-      case "assign":
-        break
-      case "resolve":
-        break
-      default:
-        break
+  // Get current performers based on selected type
+  const getCurrentPerformers = () => {
+    if (!topPerformers || !topPerformers.windows || topPerformers.windows.length === 0) {
+      return []
     }
-  }
 
-  const ActionDropdown = ({ dispute }: { dispute: any }) => {
-    return (
-      <div className="relative">
-        <button
-          onClick={() => {
-            setSelectedDispute(dispute)
-            setIsDropdownOpen(!isDropdownOpen)
-          }}
-          className="rounded-lg bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 md:px-3 md:py-1 md:text-sm"
-          aria-label="Open actions menu"
-        >
-          <span className="hidden md:inline">Actions</span>
-          <span className="md:hidden">...</span>
-        </button>
-
-        {isDropdownOpen && selectedDispute?.id === dispute.id && (
-          <>
-            <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsDropdownOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-lg border border-gray-200 bg-white shadow-lg md:absolute md:right-0 md:top-full md:mt-1 md:w-48 md:rounded-md md:rounded-t-none"
-            >
-              <div className="p-2 md:p-0 md:py-1">
-                <div className="mb-2 flex items-center justify-between border-b pb-2 md:hidden">
-                  <h3 className="text-sm font-medium text-gray-900">Dispute Actions</h3>
-                  <button
-                    onClick={() => setIsDropdownOpen(false)}
-                    className="rounded-full p-1 hover:bg-gray-100"
-                    aria-label="Close menu"
-                  >
-                    <HiChevronDown className="size-4 text-gray-600" />
-                  </button>
-                </div>
-                <button
-                  onClick={() => handleDisputeAction(dispute, "view")}
-                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
-                >
-                  View Details
-                </button>
-                <button
-                  onClick={() => handleDisputeAction(dispute, "update")}
-                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
-                >
-                  Update Status
-                </button>
-                <button
-                  onClick={() => handleDisputeAction(dispute, "assign")}
-                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
-                >
-                  Assign to Agent
-                </button>
-                <button
-                  onClick={() => handleDisputeAction(dispute, "resolve")}
-                  className="block w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 md:px-4 md:py-2"
-                >
-                  Mark Resolved
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </div>
+    const windowData = topPerformers.windows.find((w) =>
+      w.window.toLowerCase().includes(selectedTimeRange.toLowerCase().replace("this", "").replace("all", ""))
     )
+
+    if (!windowData) return []
+
+    return agentType === "agents" ? windowData.topAgents : windowData.topVendors
   }
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Get time range label
+  const getTimeRangeLabel = () => {
+    const range = timeRanges.find((r) => r.id === selectedTimeRange)
+    return range ? range.label : "This Month"
+  }
+
+  // Get performers for display
+  const performers = getCurrentPerformers()
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -249,92 +215,148 @@ const RecentDisputes = () => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  const DisputeCard = ({ dispute, index }: { dispute: any; index: number }) => (
+  // Loading skeleton for performers
+  const LoadingSkeleton = () => (
+    <div className="space-y-3 md:space-y-4">
+      {[1, 2, 3, 4, 5].map((item) => (
+        <div key={item} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="flex-1">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="size-10 rounded-full bg-gray-300"></div>
+                <div className="flex-1">
+                  <div className="mb-2 h-4 w-32 rounded bg-gray-300"></div>
+                  <div className="h-3 w-24 rounded bg-gray-300"></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="h-3 w-full rounded bg-gray-300"></div>
+                <div className="h-3 w-full rounded bg-gray-300"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  // Error display
+  const ErrorDisplay = () => (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-4 md:p-6">
+      <div className="flex items-start">
+        <div className="ml-3">
+          <h3 className="text-sm font-medium text-red-800 md:text-base">Failed to load top performers</h3>
+          <div className="mt-2 text-sm text-red-700">
+            <p>{topPerformersError}</p>
+            <button
+              onClick={loadTopPerformers}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-200"
+            >
+              <HiRefresh className="size-4" />
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  // Empty state
+  const EmptyState = () => (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+      <div className="mx-auto max-w-md">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-gray-200">
+          <HiFilter className="size-6 text-gray-500" />
+        </div>
+        <h3 className="text-sm font-medium text-gray-900 md:text-base">
+          No {agentType === "agents" ? "agents" : "vendors"} found
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">
+          No {agentType === "agents" ? "agents" : "vendors"} data available for {getTimeRangeLabel().toLowerCase()}.
+        </p>
+        <button
+          onClick={() => setSelectedTimeRange("allTime")}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          View All Time Data
+        </button>
+      </div>
+    </div>
+  )
+
+  const PerformerCard = ({ performer, index, rank }: { performer: any; index: number; rank: number }) => (
     <motion.div
-      key={dispute.id}
+      key={performer.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 transition-all hover:shadow-sm md:p-4"
+      className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-sm md:p-5"
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="flex-1">
-          <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:gap-3">
-            <h4 className="text-sm font-semibold text-gray-900 md:text-base">{dispute.customerName}</h4>
-            <span className="text-xs text-gray-500 md:text-sm">{dispute.accountNumber}</span>
-          </div>
-
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <p className="text-lg font-bold text-gray-900 md:text-xl">{dispute.disputeAmount}</p>
-            <div className="flex flex-wrap gap-1.5">
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(dispute.status)}`}>
-                {dispute.status.replace("-", " ")}
-              </span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getPriorityColor(dispute.priority)}`}>
-                {dispute.priority}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2 md:gap-3 lg:grid-cols-3">
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Dispute Type:</p>
-              <span
-                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getDisputeTypeColor(
-                  dispute.disputeType
-                )}`}
-              >
-                {dispute.disputeType.replace("-", " ")}
-              </span>
-            </div>
-
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Payment Method:</p>
-              <span
-                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getPaymentMethodColor(
-                  dispute.paymentMethod
-                )}`}
-              >
-                {dispute.paymentMethod}
-              </span>
-            </div>
-
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Reference:</p>
-              <p className="truncate text-xs font-medium text-gray-900 md:text-sm">{dispute.reference}</p>
-            </div>
-
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Submitted:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">{dispute.submittedDate}</p>
-            </div>
-
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Due Date:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">{dispute.dueDate}</p>
-            </div>
-
-            <div>
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Assigned To:</p>
-              <p className="text-xs font-medium text-blue-600 md:text-sm">{dispute.assignedTo}</p>
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <p className="mb-1 text-xs text-gray-500 md:text-sm">Description:</p>
-            <p className="text-xs text-gray-700 md:text-sm">{dispute.description}</p>
-          </div>
-
-          {dispute.resolution && (
-            <div className="mt-2">
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Resolution:</p>
-              <p className="text-xs text-green-600 md:text-sm">{dispute.resolution}</p>
-            </div>
-          )}
+      <div className="flex items-start gap-4">
+        {/* Rank Badge */}
+        <div
+          className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold md:size-12 ${
+            rank === 1
+              ? "bg-yellow-100 text-yellow-800"
+              : rank === 2
+              ? "bg-gray-100 text-gray-800"
+              : rank === 3
+              ? "bg-orange-100 text-orange-800"
+              : "bg-blue-100 text-blue-800"
+          }`}
+        >
+          #{rank}
         </div>
 
-        <div className="action-dropdown flex justify-end md:block">
-          <ActionDropdown dispute={dispute} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3">
+            <div className="min-w-0">
+              <h4 className="truncate text-sm font-semibold text-gray-900 md:text-base">{performer.name}</h4>
+              <p className="mt-0.5 text-xs text-gray-500 md:text-sm">ID: {performer.id}</p>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 md:mt-0 md:flex-col md:items-end">
+              <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
+                {performer.count} {performer.count === 1 ? "payment" : "payments"}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Total Amount:</p>
+              <p className="text-lg font-bold text-gray-900 md:text-xl">{formatCurrency(performer.amount)}</p>
+            </div>
+            <div>
+              <p className="mb-1 text-xs text-gray-500 md:text-sm">Average Per Transaction:</p>
+              <p className="text-sm font-medium text-gray-900 md:text-base">
+                {formatCurrency(performer.count > 0 ? Math.round(performer.amount / performer.count) : 0)}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="mb-1 flex justify-between text-xs text-gray-500">
+              <span>Performance Score</span>
+              <span>{Math.round((performer.count / (performers[0]?.count || 1)) * 100)}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className={`h-full rounded-full ${
+                  rank === 1
+                    ? "bg-yellow-500"
+                    : rank === 2
+                    ? "bg-gray-500"
+                    : rank === 3
+                    ? "bg-orange-500"
+                    : "bg-blue-500"
+                }`}
+                style={{
+                  width: `${Math.min(100, Math.round((performer.count / (performers[0]?.count || 1)) * 100))}%`,
+                }}
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -370,13 +392,13 @@ const RecentDisputes = () => {
       <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Quick Actions</h3>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2 md:gap-3">
         <button className="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          New Dispute
+          View All Reports
         </button>
         <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          Export Reports
+          Export Data
         </button>
         <button className="col-span-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:col-span-1 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          View Analytics
+          Analytics Dashboard
         </button>
       </div>
     </div>
@@ -402,18 +424,43 @@ const RecentDisputes = () => {
           className="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
         >
           <button className="mb-1 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
-            New Dispute
+            View All Reports
           </button>
           <button className="mb-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Export Reports
+            Export Data
           </button>
           <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            View Analytics
+            Analytics Dashboard
           </button>
         </motion.div>
       )}
     </div>
   )
+
+  // Summary statistics
+  const getSummaryStats = () => {
+    if (!performers || performers.length === 0) {
+      return {
+        totalAmount: 0,
+        totalTransactions: 0,
+        avgTransaction: 0,
+        topPerformerName: "N/A",
+      }
+    }
+
+    const totalAmount = performers.reduce((sum, p) => sum + p.amount, 0)
+    const totalTransactions = performers.reduce((sum, p) => sum + p.count, 0)
+    const avgTransaction = totalTransactions > 0 ? totalAmount / totalTransactions : 0
+
+    return {
+      totalAmount,
+      totalTransactions,
+      avgTransaction: Math.round(avgTransaction),
+      topPerformerName: performers[0]?.name || "N/A",
+    }
+  }
+
+  const stats = getSummaryStats()
 
   return (
     <motion.div
@@ -422,12 +469,17 @@ const RecentDisputes = () => {
       transition={{ duration: 0.3 }}
       className="flex flex-col gap-4 lg:flex-row lg:gap-6"
     >
-      {/* Left Column - Disputes List */}
+      {/* Left Column - Top Performers List */}
       <div className="flex-1">
         <div className="rounded-lg border bg-white p-3 md:p-4 lg:p-6">
           <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center justify-between md:block">
-              <h3 className="text-base font-semibold md:text-lg">Recent Disputes</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold md:text-lg">Top Performers</h3>
+                <div className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  <span>{getTimeRangeLabel()}</span>
+                </div>
+              </div>
               <button
                 onClick={() => setShowSidebar(!showSidebar)}
                 className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
@@ -437,119 +489,81 @@ const RecentDisputes = () => {
                 {showSidebar ? <HiChevronUp className="size-3" /> : <HiChevronDown className="size-3" />}
               </button>
             </div>
-            <div className="flex-1 md:max-w-md">
-              <SearchModule
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onCancel={handleCancelSearch}
-                placeholder="Search disputes..."
-                className="w-full"
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+              {/* Time Range Filter */}
+              <FormSelectModule
+                name="timeRange"
+                value={selectedTimeRange}
+                onChange={(e) => setSelectedTimeRange(e.target.value)}
+                options={timeRanges}
+                className="w-full sm:w-auto"
+                controlClassName="h-[38px] text-xs md:text-sm"
               />
+
+              {/* Agent/Vendor Toggle */}
+              <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1">
+                <button
+                  onClick={() => setAgentType("agents")}
+                  className={`rounded px-3 py-1.5 text-xs font-medium md:text-sm ${
+                    agentType === "agents" ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Agents
+                </button>
+                <button
+                  onClick={() => setAgentType("vendors")}
+                  className={`rounded px-3 py-1.5 text-xs font-medium md:text-sm ${
+                    agentType === "vendors" ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Vendors
+                </button>
+              </div>
+
+              <div className="flex-1 md:max-w-md">
+                <SearchModule
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  onCancel={handleCancelSearch}
+                  placeholder={`Search ${agentType}...`}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={loadTopPerformers}
+                disabled={topPerformersLoading}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs hover:bg-gray-50 disabled:opacity-50 md:text-sm"
+              >
+                <HiRefresh className={`size-3 md:size-4 ${topPerformersLoading ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </button>
             </div>
           </div>
 
-          {/* Disputes List */}
-          <div className="space-y-3 md:space-y-4">
-            {disputes.map((dispute, index) => (
-              <DisputeCard key={dispute.id} dispute={dispute} index={index} />
-            ))}
-          </div>
+          {/* Loading State */}
+          {topPerformersLoading && <LoadingSkeleton />}
+
+          {/* Error State */}
+          {topPerformersError && <ErrorDisplay />}
+
+          {/* Empty State */}
+          {!topPerformersLoading && !topPerformersError && performers.length === 0 && <EmptyState />}
+
+          {/* Success State - Performers List */}
+          {!topPerformersLoading && !topPerformersError && performers.length > 0 && (
+            <div className="space-y-3 md:space-y-4">
+              {performers.map((performer, index) => (
+                <PerformerCard key={performer.id} performer={performer} index={index} rank={index + 1} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Right Column - Dispute Statistics */}
-      <AnimatePresence>
-        {showSidebar && (
-          <motion.div
-            key="sidebar"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full lg:w-80"
-          >
-            <div className="space-y-4 md:space-y-6">
-              {/* Dispute Summary */}
-              <StatCard
-                title="Dispute Summary"
-                items={[
-                  { label: "Pending", value: "pending", color: "bg-yellow-500", count: 1 },
-                  { label: "Under Review", value: "under-review", color: "bg-blue-500", count: 1 },
-                  { label: "Resolved", value: "resolved", color: "bg-green-500", count: 1 },
-                  { label: "Rejected", value: "rejected", color: "bg-red-500", count: 0 },
-                ]}
-              />
-
-              {/* Priority Distribution */}
-              <StatCard
-                title="Priority Levels"
-                items={[
-                  { label: "Low", value: "low", color: "bg-green-500", count: 1 },
-                  { label: "Medium", value: "medium", color: "bg-yellow-500", count: 1 },
-                  { label: "High", value: "high", color: "bg-orange-500", count: 1 },
-                  { label: "Critical", value: "critical", color: "bg-red-500", count: 0 },
-                ]}
-              />
-
-              {/* Dispute Types */}
-              <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Dispute Types</h3>
-                <div className="space-y-2 md:space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-600 md:text-sm">Double Charge</span>
-                    <span className="text-xs font-semibold text-red-600 md:text-sm">1</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-600 md:text-sm">Service Not Rendered</span>
-                    <span className="text-xs font-semibold text-orange-600 md:text-sm">1</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-600 md:text-sm">Incorrect Amount</span>
-                    <span className="text-xs font-semibold text-blue-600 md:text-sm">1</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-600 md:text-sm">Unauthorized</span>
-                    <span className="text-xs font-semibold text-purple-600 md:text-sm">0</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Recent Activity</h3>
-                <div className="space-y-2 md:space-y-3">
-                  <div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-gray-600 md:text-sm">Last Submitted</span>
-                      <span className="text-xs font-semibold text-blue-600 md:text-sm">16:45</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-gray-500">Fatima Hassan - ₦425</p>
-                  </div>
-                  <div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-gray-600 md:text-sm">Last Resolved</span>
-                      <span className="text-xs font-semibold text-green-600 md:text-sm">15:30</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-gray-500">Michael Johnson - ₦320</p>
-                  </div>
-                  <div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-gray-600 md:text-sm">Total Today</span>
-                      <span className="text-xs font-semibold text-gray-600 md:text-sm">3</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-gray-500">dispute submissions</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions - Desktop */}
-              <div className="hidden md:block">
-                <QuickActionsCard />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Right Column - Statistics */}
 
       {/* Mobile Quick Actions Button */}
       <MobileQuickActions />
@@ -567,4 +581,4 @@ const RecentDisputes = () => {
   )
 }
 
-export default RecentDisputes
+export default PerformingAgents

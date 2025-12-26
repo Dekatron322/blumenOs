@@ -12,7 +12,7 @@ import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { notify } from "components/ui/Notification/Notification"
 import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { clearCreatePayment, createPayment, type VirtualAccount } from "lib/redux/paymentSlice"
+import { clearCreatePayment, createPayment, fetchPaymentChannels, type VirtualAccount } from "lib/redux/paymentSlice"
 import BankTransferDetailsModal from "components/ui/Modal/bank-transfer-details-modal"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
@@ -86,22 +86,26 @@ const reverseChannelMap = {
   VendorWallet: 5,
 }
 
-const channelOptions = [
-  { value: "", label: "Select payment channel" },
-  { value: 1, label: "Cash" },
-  { value: 2, label: "Bank Transfer" },
-  { value: 3, label: "POS" },
-  { value: 4, label: "Card" },
-  { value: 5, label: "Vendor Wallet" },
-]
-
 const AddPaymentPage = () => {
   const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
 
-  const { createPaymentLoading, createPaymentError, createPaymentSuccess, createdPayment } = useSelector(
-    (state: RootState) => state.payments
-  )
+  const {
+    createPaymentLoading,
+    createPaymentError,
+    createPaymentSuccess,
+    createdPayment,
+    paymentChannels,
+    paymentChannelsLoading,
+  } = useSelector((state: RootState) => state.payments)
+
+  const channelOptions = [
+    { value: "", label: paymentChannelsLoading ? "Loading channels..." : "Select payment channel" },
+    ...(paymentChannels || []).map((channel, index) => ({
+      value: index + 1,
+      label: channel,
+    })),
+  ]
 
   const { vendors, loading: vendorsLoading, error: vendorsError } = useSelector((state: RootState) => state.vendors)
   const { agents, loading: agentsLoading } = useSelector((state: RootState) => state.agents)
@@ -123,7 +127,7 @@ const AddPaymentPage = () => {
   const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null)
   const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [amountInput, setAmountInput] = useState("")
 
@@ -201,9 +205,9 @@ const AddPaymentPage = () => {
           duration: 3000,
         })
 
-        // Move to next step on mobile (client-only)
+        // Move to next step on mobile
         if (typeof window !== "undefined" && window.innerWidth < 768) {
-          setCurrentStep(2)
+          nextStep()
         }
       }
     } catch (error: any) {
@@ -277,8 +281,8 @@ const AddPaymentPage = () => {
         })
 
         // Move to next step on mobile
-        if (window.innerWidth < 768) {
-          setCurrentStep(2)
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+          nextStep()
         }
       }
     } catch (error: any) {
@@ -371,76 +375,95 @@ const AddPaymentPage = () => {
     }
   }
 
-  const validateForm = (): boolean => {
+  const validateCurrentStep = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (identifierType === "postpaidBill") {
-      if (!paymentReference.trim()) {
-        errors.paymentReference = "Payment reference is required"
-      } else if (!billInfo) {
-        errors.paymentReference = "Please validate the payment reference first"
-      } else if (formData.postpaidBillId === 0) {
-        errors.paymentReference = "Valid bill ID not found"
-      }
-    } else if (identifierType === "customer") {
-      if (!customerReference.trim()) {
-        errors.customerReference = "Customer reference is required"
-      } else if (!customerInfo) {
-        errors.customerReference = "Please validate the customer reference first"
-      } else if (formData.customerId === 0) {
-        errors.customerReference = "Valid customer ID not found"
-      }
-    }
+    switch (currentStep) {
+      case 1: // Reference Validation
+        if (identifierType === "postpaidBill") {
+          if (!paymentReference.trim()) {
+            errors.paymentReference = "Payment reference is required"
+          } else if (!billInfo) {
+            errors.paymentReference = "Please validate the payment reference first"
+          } else if (formData.postpaidBillId === 0) {
+            errors.paymentReference = "Valid bill ID not found"
+          }
+        } else if (identifierType === "customer") {
+          if (!customerReference.trim()) {
+            errors.customerReference = "Customer reference is required"
+          } else if (!customerInfo) {
+            errors.customerReference = "Please validate the customer reference first"
+          } else if (formData.customerId === 0) {
+            errors.customerReference = "Valid customer ID not found"
+          }
+        }
+        break
 
-    if (identifierType === "customer" && formData.paymentTypeId === 0) {
-      errors.paymentTypeId = "Payment Type is required"
-    }
+      case 2: // Payment Details
+        if (identifierType === "customer" && formData.paymentTypeId === 0) {
+          errors.paymentTypeId = "Payment Type is required"
+        }
 
-    if (formData.amount <= 0) {
-      errors.amount = "Amount must be greater than 0"
-    }
+        if (formData.amount <= 0) {
+          errors.amount = "Amount must be greater than 0"
+        }
 
-    if (!formData.channel) {
-      errors.channel = "Payment channel is required"
-    }
+        if (!formData.channel) {
+          errors.channel = "Payment channel is required"
+        }
 
-    if (!formData.currency) {
-      errors.currency = "Currency is required"
-    }
+        if (!formData.currency) {
+          errors.currency = "Currency is required"
+        }
 
-    if (!formData.collectorType) {
-      errors.collectorType = "Collector type is required"
-    }
+        if (!formData.paidAtUtc) {
+          errors.paidAtUtc = "Payment date and time is required"
+        } else {
+          const paymentDate = new Date(formData.paidAtUtc)
+          const now = new Date()
+          if (paymentDate > now) {
+            errors.paidAtUtc = "Payment date cannot be in the future"
+          }
+        }
+        break
 
-    if (formData.collectorType === "Vendor" && formData.vendorId <= 0) {
-      errors.vendorId = "Vendor is required when collector type is Vendor"
-    }
+      case 3: // Collector Information
+        if (!formData.collectorType) {
+          errors.collectorType = "Collector type is required"
+        }
 
-    if (formData.collectorType === "Agent" && formData.agentId <= 0) {
-      errors.agentId = "Agent is required when collector type is Agent"
-    }
+        if (formData.collectorType === "Vendor" && formData.vendorId <= 0) {
+          errors.vendorId = "Vendor is required when collector type is Vendor"
+        }
 
-    if (!formData.paidAtUtc) {
-      errors.paidAtUtc = "Payment date and time is required"
-    } else {
-      const paymentDate = new Date(formData.paidAtUtc)
-      const now = new Date()
-      if (paymentDate > now) {
-        errors.paidAtUtc = "Payment date cannot be in the future"
-      }
+        if (formData.collectorType === "Agent" && formData.agentId <= 0) {
+          errors.agentId = "Agent is required when collector type is Agent"
+        }
+        break
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await submitPayment()
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3))
+      setIsMobileSidebarOpen(false)
+    } else {
+      notify("error", "Please fix the form errors before continuing", {
+        description: "Some required fields are missing or contain invalid data",
+        duration: 4000,
+      })
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
   const submitPayment = async () => {
-    if (!validateForm()) {
+    if (!validateCurrentStep()) {
       notify("error", "Please fix the form errors before submitting", {
         description: "Some fields are missing or contain invalid data",
         duration: 4000,
@@ -579,21 +602,6 @@ const AddPaymentPage = () => {
       ? !!billInfo && formData.postpaidBillId !== 0
       : !!customerInfo && formData.customerId !== 0
 
-  const isFormValid = (): boolean => {
-    const baseValidation =
-      formData.amount > 0 &&
-      !!formData.channel &&
-      formData.currency !== "" &&
-      !!formData.collectorType &&
-      formData.paidAtUtc !== ""
-
-    if (identifierType === "postpaidBill") {
-      return baseValidation && paymentReference.trim() !== "" && isReferenceVerified
-    } else {
-      return baseValidation && formData.paymentTypeId > 0 && customerReference.trim() !== "" && isReferenceVerified
-    }
-  }
-
   // Automatically set default payment type for postpaid bills when payment types are loaded
   useEffect(() => {
     if (identifierType === "postpaidBill" && energyBillPaymentType && formData.paymentTypeId === 0) {
@@ -617,6 +625,11 @@ const AddPaymentPage = () => {
       })
     }
   }, [createPaymentError])
+
+  // Fetch payment channels
+  useEffect(() => {
+    dispatch(fetchPaymentChannels())
+  }, [dispatch])
 
   // Get status text for display
   const getStatusText = (status: number): string => {
@@ -645,6 +658,51 @@ const AddPaymentPage = () => {
     return reverseChannelMap[channel] || 1
   }
 
+  // Step progress component for desktop
+  const StepProgress = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex size-8 items-center justify-center rounded-full border-2 ${
+                  step === currentStep
+                    ? "border-[#004B23] bg-[#004B23] text-white"
+                    : step < currentStep
+                    ? "border-[#004B23] bg-[#004B23] text-white"
+                    : "border-gray-300 bg-white text-gray-500"
+                }`}
+              >
+                {step < currentStep ? (
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  step
+                )}
+              </div>
+              <span
+                className={`mt-2 hidden text-xs font-medium md:block ${
+                  step === currentStep ? "text-[#004B23]" : "text-gray-500"
+                }`}
+              >
+                {step === 1 && "Reference"}
+                {step === 2 && "Payment"}
+                {step === 3 && "Collector"}
+              </span>
+            </div>
+            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
+
   // Mobile Step Navigation
   const MobileStepNavigation = () => (
     <div className="sticky top-0 z-40 mb-4 rounded-lg bg-white p-3 shadow-sm sm:hidden">
@@ -652,9 +710,9 @@ const AddPaymentPage = () => {
         <button
           type="button"
           className="flex items-center gap-2 text-sm font-medium text-gray-700"
-          onClick={() => setIsMobileMenuOpen(true)}
+          onClick={() => setIsMobileSidebarOpen(true)}
         >
-          <Menu />
+          <Menu className="size-4" />
           <span>Step {currentStep}/3</span>
         </button>
         <div className="text-sm font-medium text-gray-900">
@@ -669,7 +727,7 @@ const AddPaymentPage = () => {
   // Mobile Sidebar Component
   const MobileStepSidebar = () => (
     <AnimatePresence>
-      {isMobileMenuOpen && (
+      {isMobileSidebarOpen && (
         <>
           {/* Backdrop */}
           <motion.div
@@ -678,7 +736,7 @@ const AddPaymentPage = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-50 bg-black/50 sm:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => setIsMobileSidebarOpen(false)}
           />
 
           {/* Sidebar */}
@@ -693,16 +751,16 @@ const AddPaymentPage = () => {
               {/* Header */}
               <div className="border-b bg-white p-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Navigation</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Steps</h3>
                   <button
                     type="button"
                     className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => setIsMobileSidebarOpen(false)}
                   >
-                    <X />
+                    <X className="size-5" />
                   </button>
                 </div>
-                <p className="mt-1 text-sm text-gray-600">Navigate through form sections</p>
+                <p className="mt-1 text-sm text-gray-600">Navigate through form steps</p>
               </div>
 
               {/* Steps List */}
@@ -718,7 +776,7 @@ const AddPaymentPage = () => {
                       type="button"
                       onClick={() => {
                         setCurrentStep(item.step)
-                        setIsMobileMenuOpen(false)
+                        setIsMobileSidebarOpen(false)
                       }}
                       className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
                         item.step === currentStep ? "bg-[#004B23] text-white" : "bg-gray-50 hover:bg-gray-100"
@@ -778,7 +836,7 @@ const AddPaymentPage = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => setIsMobileSidebarOpen(false)}
                     className="w-full rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
                   >
                     Close Menu
@@ -792,6 +850,21 @@ const AddPaymentPage = () => {
     </AnimatePresence>
   )
 
+  const isFormValid = (): boolean => {
+    const baseValidation =
+      formData.amount > 0 &&
+      !!formData.channel &&
+      formData.currency !== "" &&
+      !!formData.collectorType &&
+      formData.paidAtUtc !== ""
+
+    if (identifierType === "postpaidBill") {
+      return baseValidation && paymentReference.trim() !== "" && isReferenceVerified
+    } else {
+      return baseValidation && formData.paymentTypeId > 0 && customerReference.trim() !== "" && isReferenceVerified
+    }
+  }
+
   // Mobile Bottom Navigation Bar
   const MobileBottomNavigation = () => (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-white p-3 shadow-lg sm:hidden">
@@ -800,12 +873,12 @@ const AddPaymentPage = () => {
           {currentStep > 1 && (
             <button
               type="button"
-              onClick={() => setCurrentStep((prev) => prev - 1)}
+              onClick={prevStep}
               disabled={createPaymentLoading}
               className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronLeft className="size-4" />
-              <span>Previous</span>
+              <span className="hidden sm:inline">Previous</span>
             </button>
           )}
           <button
@@ -822,16 +895,7 @@ const AddPaymentPage = () => {
           {currentStep < 3 ? (
             <button
               type="button"
-              onClick={() => {
-                if (currentStep === 1 && !isReferenceVerified) {
-                  notify("error", "Please validate reference first", {
-                    description: "You must validate the bill or customer before proceeding",
-                    duration: 4000,
-                  })
-                  return
-                }
-                setCurrentStep((prev) => prev + 1)
-              }}
+              onClick={nextStep}
               disabled={createPaymentLoading}
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -916,22 +980,37 @@ const AddPaymentPage = () => {
                   <p className="text-sm text-gray-600">Fill in all required fields to record a new payment</p>
                 </div>
 
+                {/* Desktop Step Progress */}
+                <div className="hidden sm:block">
+                  <StepProgress />
+                </div>
+
                 {/* Payment Form */}
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  {/* Section 1: Payment Details */}
+                <form
+                  id="payment-form"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    if (currentStep < 3) {
+                      nextStep()
+                    } else {
+                      submitPayment()
+                    }
+                  }}
+                  className="space-y-6"
+                >
                   <AnimatePresence mode="wait">
                     {/* Step 1: Reference Validation */}
-                    {(currentStep === 1 || (typeof window !== "undefined" && window.innerWidth >= 768)) && (
+                    {currentStep === 1 && (
                       <motion.div
-                        key="reference"
+                        key="step-1"
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
                       >
                         <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Payment Details</h4>
-                          <p className="text-sm text-gray-600">Enter the basic payment information and amount</p>
+                          <h4 className="text-lg font-medium text-gray-900">Reference Validation</h4>
+                          <p className="text-sm text-gray-600">Validate bill or customer reference before proceeding</p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
@@ -973,7 +1052,7 @@ const AddPaymentPage = () => {
                                 error={formErrors.paymentReference}
                                 required
                               />
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap justify-end gap-2">
                                 <ButtonModule
                                   variant="outline"
                                   size="sm"
@@ -982,11 +1061,10 @@ const AddPaymentPage = () => {
                                     !paymentReference.trim() || isValidatingReference || currentBillByReferenceLoading
                                   }
                                   type="button"
-                                  className="flex-1"
                                 >
                                   {isValidatingReference || currentBillByReferenceLoading
                                     ? "Validating..."
-                                    : "Validate Reference"}
+                                    : "Validate Bill"}
                                 </ButtonModule>
                                 {billInfo && (
                                   <ButtonModule
@@ -998,7 +1076,6 @@ const AddPaymentPage = () => {
                                       setFormData((prev) => ({ ...prev, postpaidBillId: 0, amount: 0 }))
                                     }}
                                     type="button"
-                                    className="flex-1"
                                   >
                                     Clear
                                   </ButtonModule>
@@ -1019,14 +1096,13 @@ const AddPaymentPage = () => {
                                 error={formErrors.customerReference}
                                 required
                               />
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap justify-end gap-2">
                                 <ButtonModule
                                   variant="outline"
                                   size="sm"
                                   onClick={validateCustomerReference}
                                   disabled={!customerReference.trim() || isValidatingCustomer || customerLookupLoading}
                                   type="button"
-                                  className="flex-1"
                                 >
                                   {isValidatingCustomer || customerLookupLoading
                                     ? "Validating..."
@@ -1042,7 +1118,6 @@ const AddPaymentPage = () => {
                                       setFormData((prev) => ({ ...prev, customerId: 0 }))
                                     }}
                                     type="button"
-                                    className="flex-1"
                                   >
                                     Clear
                                   </ButtonModule>
@@ -1084,7 +1159,7 @@ const AddPaymentPage = () => {
 
                           {/* Customer Information Display */}
                           {customerInfo && (
-                            <div className="col-span-2 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4">
+                            <div className="col-span-2 grid w-full grid-cols-2 gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4">
                               <div>
                                 <h5 className="text-sm font-medium text-blue-800 sm:text-base">Customer Information</h5>
                                 <div className="mt-2 space-y-1 text-xs text-blue-700 sm:text-sm">
@@ -1130,235 +1205,196 @@ const AddPaymentPage = () => {
                     )}
 
                     {/* Step 2: Payment Details */}
-                    {(currentStep === 2 || (typeof window !== "undefined" && window.innerWidth >= 768)) &&
-                      isReferenceVerified && (
-                        <motion.div
-                          key="payment"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
-                        >
-                          <div className="border-b pb-3">
-                            <h4 className="text-lg font-medium text-gray-900">Payment Amount & Channel</h4>
-                            <p className="text-sm text-gray-600">Specify payment amount, channel, and date</p>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            {identifierType === "customer" && (
-                              <FormSelectModule
-                                label="Payment Type"
-                                name="paymentTypeId"
-                                value={formData.paymentTypeId}
-                                onChange={handleInputChange}
-                                options={[
-                                  {
-                                    value: 0,
-                                    label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
-                                  },
-                                  ...paymentTypeOptions,
-                                ]}
-                                error={formErrors.paymentTypeId}
-                                required
-                              />
-                            )}
-
-                            <FormInputModule
-                              label="Amount"
-                              name="amount"
-                              type="text"
-                              placeholder="Enter payment amount"
-                              value={amountInput}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/,/g, "").trim()
-
-                                if (raw === "") {
-                                  setAmountInput("")
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    amount: 0,
-                                  }))
-                                  return
-                                }
-
-                                // Allow only digits and optional decimal point
-                                if (!/^\d*(\.\d*)?$/.test(raw)) {
-                                  return
-                                }
-
-                                const numeric = Number(raw)
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  amount: Number.isNaN(numeric) ? 0 : numeric,
-                                }))
-
-                                const [intPart, decimalPart] = raw.split(".")
-                                const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
-                                const formatted =
-                                  decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
-                                setAmountInput(formatted)
-                              }}
-                              error={formErrors.amount}
-                              required
-                              min="0.01"
-                              step="0.01"
-                              prefix="₦"
-                            />
-
-                            <FormSelectModule
-                              label="Payment Channel"
-                              name="channel"
-                              value={getChannelNumericValue(formData.channel)}
-                              onChange={handleInputChange}
-                              options={channelOptions}
-                              error={formErrors.channel}
-                              required
-                            />
-
-                            <FormInputModule
-                              label="Payment Date & Time"
-                              name="paidAtUtc"
-                              type="datetime-local"
-                              value={formData.paidAtUtc}
-                              onChange={handleInputChange}
-                              error={formErrors.paidAtUtc}
-                              required
-                              placeholder={""}
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-
-                    {/* Step 3: Collector Information */}
-                    {(currentStep === 3 || (typeof window !== "undefined" && window.innerWidth >= 768)) &&
-                      isReferenceVerified && (
-                        <motion.div
-                          key="collector"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
-                        >
-                          <div className="border-b pb-3">
-                            <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
-                            <p className="text-sm text-gray-600">Specify who collected this payment</p>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            <FormSelectModule
-                              label="Collector Type"
-                              name="collectorType"
-                              value={formData.collectorType}
-                              onChange={handleInputChange}
-                              options={collectorTypeOptions}
-                              error={formErrors.collectorType}
-                              required
-                            />
-
-                            {formData.collectorType === "Agent" && (
-                              <FormSelectModule
-                                label="Agent"
-                                name="agentId"
-                                value={formData.agentId}
-                                onChange={handleInputChange}
-                                options={[
-                                  { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
-                                  ...agentOptions,
-                                ]}
-                                error={formErrors.agentId}
-                                required
-                                disabled={agentsLoading}
-                              />
-                            )}
-
-                            {formData.collectorType === "Vendor" && (
-                              <FormSelectModule
-                                label="Vendor"
-                                name="vendorId"
-                                value={formData.vendorId}
-                                onChange={handleInputChange}
-                                options={[
-                                  { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
-                                  ...vendorOptions,
-                                ]}
-                                error={formErrors.vendorId}
-                                required
-                                disabled={vendorsLoading}
-                              />
-                            )}
-
-                            {/* Additional Information (Desktop only) */}
-                            <div className="col-span-2 hidden sm:block">
-                              <div className="space-y-4">
-                                <h5 className="text-sm font-medium text-gray-700">Additional Information</h5>
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
-                                  <FormInputModule
-                                    label="External Reference (Optional)"
-                                    name="externalReference"
-                                    type="text"
-                                    placeholder="Enter external reference number"
-                                    value={formData.externalReference}
-                                    onChange={handleInputChange}
-                                  />
-
-                                  <FormTextAreaModule
-                                    label="Narrative (Optional)"
-                                    name="narrative"
-                                    placeholder="Enter payment description or notes"
-                                    value={formData.narrative}
-                                    onChange={(e) =>
-                                      handleInputChange({
-                                        target: { name: "narrative", value: e.target.value },
-                                      })
-                                    }
-                                    rows={3}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-
-                    {/* Additional Information (Mobile only) */}
-                    {currentStep === 3 && isReferenceVerified && (
+                    {currentStep === 2 && isReferenceVerified && (
                       <motion.div
-                        key="additional-mobile"
+                        key="step-2"
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:hidden"
+                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
                       >
                         <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                          <p className="text-sm text-gray-600">Provide any additional payment details or references</p>
+                          <h4 className="text-lg font-medium text-gray-900">Payment Details</h4>
+                          <p className="text-sm text-gray-600">Specify payment amount, channel, and date</p>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          {identifierType === "customer" && (
+                            <FormSelectModule
+                              label="Payment Type"
+                              name="paymentTypeId"
+                              value={formData.paymentTypeId}
+                              onChange={handleInputChange}
+                              options={[
+                                {
+                                  value: 0,
+                                  label: paymentTypesLoading ? "Loading payment types..." : "Select payment type",
+                                },
+                                ...paymentTypeOptions,
+                              ]}
+                              error={formErrors.paymentTypeId}
+                              required
+                            />
+                          )}
+
                           <FormInputModule
-                            label="External Reference (Optional)"
-                            name="externalReference"
+                            label="Amount"
+                            name="amount"
                             type="text"
-                            placeholder="Enter external reference number"
-                            value={formData.externalReference}
+                            placeholder="Enter payment amount"
+                            value={amountInput}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "").trim()
+
+                              if (raw === "") {
+                                setAmountInput("")
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  amount: 0,
+                                }))
+                                return
+                              }
+
+                              // Allow only digits and optional decimal point
+                              if (!/^\d*(\.\d*)?$/.test(raw)) {
+                                return
+                              }
+
+                              const numeric = Number(raw)
+                              setFormData((prev) => ({
+                                ...prev,
+                                amount: Number.isNaN(numeric) ? 0 : numeric,
+                              }))
+
+                              const [intPart, decimalPart] = raw.split(".")
+                              const formattedInt = intPart ? Number(intPart).toLocaleString() : ""
+                              const formatted =
+                                decimalPart !== undefined ? `${formattedInt}.${decimalPart}` : formattedInt
+                              setAmountInput(formatted)
+                            }}
+                            error={formErrors.amount}
+                            required
+                            min="0.01"
+                            step="0.01"
+                            prefix="₦"
+                          />
+
+                          <FormSelectModule
+                            label="Payment Channel"
+                            name="channel"
+                            value={getChannelNumericValue(formData.channel)}
                             onChange={handleInputChange}
+                            options={channelOptions}
+                            error={formErrors.channel}
+                            required
                           />
 
                           <FormInputModule
-                            label="Narrative (Optional)"
-                            name="narrative"
-                            type="text"
-                            placeholder="Enter payment description or notes"
-                            value={formData.narrative}
+                            label="Payment Date & Time"
+                            name="paidAtUtc"
+                            type="datetime-local"
+                            value={formData.paidAtUtc}
                             onChange={handleInputChange}
+                            error={formErrors.paidAtUtc}
+                            required
+                            placeholder={""}
+                            max={new Date().toISOString().slice(0, 16)}
                           />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 3: Collector Information */}
+                    {currentStep === 3 && isReferenceVerified && (
+                      <motion.div
+                        key="step-3"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Collector Information</h4>
+                          <p className="text-sm text-gray-600">Specify who collected this payment</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          <FormSelectModule
+                            label="Collector Type"
+                            name="collectorType"
+                            value={formData.collectorType}
+                            onChange={handleInputChange}
+                            options={collectorTypeOptions}
+                            error={formErrors.collectorType}
+                            required
+                          />
+
+                          {formData.collectorType === "Agent" && (
+                            <FormSelectModule
+                              label="Agent"
+                              name="agentId"
+                              value={formData.agentId}
+                              onChange={handleInputChange}
+                              options={[
+                                { value: 0, label: agentsLoading ? "Loading agents..." : "Select agent" },
+                                ...agentOptions,
+                              ]}
+                              error={formErrors.agentId}
+                              required
+                              disabled={agentsLoading}
+                            />
+                          )}
+
+                          {formData.collectorType === "Vendor" && (
+                            <FormSelectModule
+                              label="Vendor"
+                              name="vendorId"
+                              value={formData.vendorId}
+                              onChange={handleInputChange}
+                              options={[
+                                { value: 0, label: vendorsLoading ? "Loading vendors..." : "Select vendor" },
+                                ...vendorOptions,
+                              ]}
+                              error={formErrors.vendorId}
+                              required
+                              disabled={vendorsLoading}
+                            />
+                          )}
+
+                          {/* Additional Information */}
+                          <div className="col-span-2 space-y-4">
+                            <h5 className="text-sm font-medium text-gray-700">Additional Information</h5>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                              <FormInputModule
+                                label="External Reference (Optional)"
+                                name="externalReference"
+                                type="text"
+                                placeholder="Enter external reference number"
+                                value={formData.externalReference}
+                                onChange={handleInputChange}
+                              />
+
+                              <FormTextAreaModule
+                                label="Narrative (Optional)"
+                                name="narrative"
+                                placeholder="Enter payment description or notes"
+                                value={formData.narrative}
+                                onChange={(e) =>
+                                  handleInputChange({
+                                    target: { name: "narrative", value: e.target.value },
+                                  })
+                                }
+                                rows={3}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
                   {/* Error Summary */}
-                  {Object.values(formErrors).some((error) => !!error) && (
+                  {Object.values(formErrors).some((error) => error && error.trim() !== "") && (
                     <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
                       <div className="flex">
                         <div className="shrink-0">
@@ -1417,24 +1453,57 @@ const AddPaymentPage = () => {
                   )}
 
                   {/* Desktop Form Actions */}
-                  <div className="hidden justify-end gap-4 border-t pt-6 sm:flex">
-                    <ButtonModule
-                      variant="dangerSecondary"
-                      size="lg"
-                      onClick={handleReset}
-                      disabled={createPaymentLoading}
-                      type="button"
-                    >
-                      Reset
-                    </ButtonModule>
-                    <ButtonModule
-                      variant="primary"
-                      size="lg"
-                      type="submit"
-                      disabled={!isFormValid() || createPaymentLoading}
-                    >
-                      {createPaymentLoading ? "Recording Payment..." : "Record Payment"}
-                    </ButtonModule>
+                  <div className="hidden justify-between gap-4 border-t pt-6 sm:flex">
+                    <div className="flex gap-4">
+                      {currentStep > 1 && (
+                        <ButtonModule
+                          variant="outline"
+                          size="lg"
+                          onClick={prevStep}
+                          disabled={createPaymentLoading}
+                          type="button"
+                          icon={<ChevronLeft />}
+                          iconPosition="start"
+                        >
+                          Previous
+                        </ButtonModule>
+                      )}
+                    </div>
+
+                    <div className="flex gap-4">
+                      <ButtonModule
+                        variant="dangerSecondary"
+                        size="lg"
+                        onClick={handleReset}
+                        disabled={createPaymentLoading}
+                        type="button"
+                      >
+                        Reset
+                      </ButtonModule>
+
+                      {currentStep < 3 ? (
+                        <ButtonModule
+                          variant="primary"
+                          size="lg"
+                          onClick={nextStep}
+                          type="button"
+                          icon={<ChevronRight />}
+                          iconPosition="end"
+                        >
+                          Next
+                        </ButtonModule>
+                      ) : (
+                        <ButtonModule
+                          variant="primary"
+                          size="lg"
+                          type="button"
+                          onClick={submitPayment}
+                          disabled={!isFormValid() || createPaymentLoading}
+                        >
+                          {createPaymentLoading ? "Recording Payment..." : "Record Payment"}
+                        </ButtonModule>
+                      )}
+                    </div>
                   </div>
                 </form>
               </motion.div>
@@ -1467,7 +1536,7 @@ const AddPaymentPage = () => {
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[1000] flex items-center justify-center px-4"
             >
-              <div className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl">
+              <div className="w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-2xl">
                 <div className="border-b bg-[#F9F9F9] p-6">
                   <h2 className="text-lg font-bold text-gray-900">Payment Recorded Successfully</h2>
                   <p className="mt-1 text-sm text-gray-600">The payment has been recorded in the system.</p>

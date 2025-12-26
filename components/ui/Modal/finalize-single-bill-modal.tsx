@@ -165,7 +165,7 @@ export const FinalizeSingleBillModal: React.FC<FinalizeSingleBillModalProps> = (
                 id="skipLedgerPosting"
                 checked={skipLedgerPosting}
                 onChange={(e) => setSkipLedgerPosting(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 disabled={finalizeSingleBillLoading}
               />
               <label htmlFor="skipLedgerPosting" className="ml-2 block text-sm text-gray-900">

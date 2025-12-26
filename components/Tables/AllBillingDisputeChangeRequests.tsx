@@ -54,7 +54,7 @@ const ChangeRequestCardSkeleton = () => (
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 md:size-12">
-          <div className="h-5 w-5 rounded-full bg-gray-200 md:h-6 md:w-6"></div>
+          <div className="size-5 rounded-full bg-gray-200 md:h-6 md:w-6"></div>
         </div>
         <div className="min-w-0 flex-1">
           <div className="h-5 w-24 rounded bg-gray-200 md:h-6 md:w-32"></div>
@@ -97,7 +97,7 @@ const ChangeRequestListItemSkeleton = () => (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
       <div className="flex items-start gap-3 md:items-center md:gap-4">
         <div className="flex size-8 items-center justify-center rounded-full bg-green-100 max-sm:hidden md:size-10">
-          <div className="h-4 w-4 rounded-full bg-gray-200 md:h-5 md:w-5"></div>
+          <div className="size-4 rounded-full bg-gray-200 md:h-5 md:w-5"></div>
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">

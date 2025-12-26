@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
@@ -18,8 +18,73 @@ import { clearAgents, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
-import { clearPayments, fetchPayments, PaymentsRequestParams } from "lib/redux/paymentSlice"
+import { clearPayments, fetchPayments, PaymentsRequestParams, fetchPaymentChannels } from "lib/redux/paymentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
+import { VscEye } from "react-icons/vsc"
+
+// Dropdown Popover Component
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {children}
+        <svg
+          className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onSelect(option.value)
+                  setIsOpen(false)
+                }}
+                className={`block w-full px-3 py-2 text-left ${
+                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 const CyclesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -337,11 +402,11 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
+            {/* Fixed Header */}
+            <div className="flex shrink-0 items-center justify-between border-b bg-white p-4">
               <div className="flex items-center gap-2">
                 <button
                   onClick={onClose}
@@ -361,222 +426,232 @@ const MobileFilterSidebar = ({
               </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Customer Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
-                <FormSelectModule
-                  name="customerId"
-                  value={localFilters.customerId || ""}
-                  onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
-                  options={customerOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
+            {/* Scrollable Filter Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Customer Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
+                  <FormSelectModule
+                    name="customerId"
+                    value={localFilters.customerId || ""}
+                    onChange={(e) => handleFilterChange("customerId", e.target.value || undefined)}
+                    options={customerOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
 
-              {/* Vendor Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
-                <FormSelectModule
-                  name="vendorId"
-                  value={localFilters.vendorId || ""}
-                  onChange={(e) => handleFilterChange("vendorId", e.target.value || undefined)}
-                  options={vendorOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
+                {/* Vendor Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Vendor</label>
+                  <FormSelectModule
+                    name="vendorId"
+                    value={localFilters.vendorId || ""}
+                    onChange={(e) => handleFilterChange("vendorId", e.target.value || undefined)}
+                    options={vendorOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
 
-              {/* Agent Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                <FormSelectModule
-                  name="agentId"
-                  value={localFilters.agentId || ""}
-                  onChange={(e) => handleFilterChange("agentId", e.target.value || undefined)}
-                  options={agentOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
+                {/* Agent Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                  <FormSelectModule
+                    name="agentId"
+                    value={localFilters.agentId || ""}
+                    onChange={(e) => handleFilterChange("agentId", e.target.value || undefined)}
+                    options={agentOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
 
-              {/* Payment Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {paymentTypeOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const paymentTypeValue = typeof option.value === "number" ? option.value : Number(option.value)
-                      return (
+                {/* Payment Type Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {paymentTypeOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const paymentTypeValue = typeof option.value === "number" ? option.value : Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "paymentTypeId",
+                                localFilters.paymentTypeId === paymentTypeValue ? undefined : paymentTypeValue
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.paymentTypeId === paymentTypeValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Channel Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Channel</label>
+                  <FormSelectModule
+                    name="channel"
+                    value={localFilters.channel || ""}
+                    onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                    options={channelOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
                         <button
                           key={option.value}
                           onClick={() =>
                             handleFilterChange(
-                              "paymentTypeId",
-                              localFilters.paymentTypeId === paymentTypeValue ? undefined : paymentTypeValue
+                              "status",
+                              localFilters.status === option.value ? undefined : option.value
                             )
                           }
                           className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.paymentTypeId === paymentTypeValue
+                            localFilters.status === option.value
                               ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                           }`}
                         >
                           {option.label}
                         </button>
-                      )
-                    })}
-                </div>
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Channel Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Channel</label>
-                <FormSelectModule
-                  name="channel"
-                  value={localFilters.channel || ""}
-                  onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                  options={channelOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === option.value
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Collector Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {collectorTypeOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange(
-                            "collectorType",
-                            localFilters.collectorType === option.value ? undefined : option.value
-                          )
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.collectorType === option.value
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Date Range Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
-                <input
-                  type="date"
-                  value={localFilters.paidFromUtc || ""}
-                  onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
-                <input
-                  type="date"
-                  value={localFilters.paidToUtc || ""}
-                  onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
+                      ))}
                   </div>
-                )}
+                </div>
+
+                {/* Collector Type Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {collectorTypeOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "collectorType",
+                              localFilters.collectorType === option.value ? undefined : option.value
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.collectorType === option.value
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Date Range Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                  <input
+                    type="date"
+                    value={localFilters.paidFromUtc || ""}
+                    onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                  <input
+                    type="date"
+                    value={localFilters.paidToUtc || ""}
+                    onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Fixed Bottom Action Buttons */}
+            <div className="shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
                 >
+                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
@@ -584,8 +659,9 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-outlined flex w-full items-center justify-center gap-2 text-sm md:text-base"
                 >
+                  <X className="size-4" />
                   Reset
                 </button>
               </div>
@@ -605,14 +681,17 @@ const AllPayments: React.FC = () => {
   const { agents } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { paymentChannels, paymentChannelsLoading } = useAppSelector((state) => state.payments)
 
   const router = useRouter()
 
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false)
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
   // Local state for filters to avoid too many Redux dispatches
@@ -670,6 +749,7 @@ const AllPayments: React.FC = () => {
       })
     )
     dispatch(fetchPaymentTypes())
+    dispatch(fetchPaymentChannels())
     dispatch(
       fetchAreaOffices({
         PageNumber: 1,
@@ -710,6 +790,57 @@ const AllPayments: React.FC = () => {
 
     void dispatch(fetchPayments(fetchParams))
   }, [dispatch, currentPage, searchText, appliedFilters])
+
+  const handleRefreshData = useCallback(() => {
+    const fetchParams: PaymentsRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
+      ...(appliedFilters.customerId && { customerId: appliedFilters.customerId }),
+      ...(appliedFilters.vendorId && { vendorId: appliedFilters.vendorId }),
+      ...(appliedFilters.agentId && { agentId: appliedFilters.agentId }),
+      ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.channel && { channel: appliedFilters.channel }),
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
+      ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    void dispatch(fetchPayments(fetchParams))
+  }, [dispatch, currentPage, searchText, appliedFilters, pageSize])
+
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
+  }
+
+  const handlePollingIntervalChange = (interval: number) => {
+    setPollingInterval(interval)
+  }
+
+  // Polling interval options
+  const pollingOptions = [
+    { value: 300000, label: "5m" },
+    { value: 480000, label: "8m" },
+    { value: 660000, label: "11m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
+  // Short polling effect
+  useEffect(() => {
+    if (!isPolling) return
+
+    const interval = setInterval(() => {
+      handleRefreshData()
+    }, pollingInterval)
+
+    return () => clearInterval(interval)
+  }, [dispatch, isPolling, pollingInterval, handleRefreshData])
 
   const getStatusStyle = (status: Payment["status"]) => {
     switch (status) {
@@ -952,13 +1083,10 @@ const AllPayments: React.FC = () => {
     })),
   ]
 
+  // Generate channel options from payment channels endpoint
   const channelOptions = [
     { value: "", label: "All Channels" },
-    { value: "Cash", label: "Cash" },
-    { value: "BankTransfer", label: "Bank Transfer" },
-    { value: "Pos", label: "POS" },
-    { value: "Card", label: "Card" },
-    { value: "VendorWallet", label: "Vendor Wallet" },
+    ...paymentChannels.map((channel) => ({ value: channel, label: channel })),
   ]
 
   const statusOptions = [
@@ -1029,7 +1157,7 @@ const AllPayments: React.FC = () => {
               </div>
 
               <motion.div
-                className="flex items-center justify-end"
+                className="flex items-center justify-end gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
@@ -1040,8 +1168,56 @@ const AllPayments: React.FC = () => {
                   icon={<PlusIcon />}
                   onClick={() => router.push("/payment/record-payment")}
                 >
-                  Process Payment
+                  Record Payment
                 </ButtonModule>
+                {/* Polling Controls */}
+                <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
+                  <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                  <button
+                    onClick={togglePolling}
+                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isPolling
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    {isPolling ? (
+                      <>
+                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                        ON
+                      </>
+                    ) : (
+                      <>
+                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        OFF
+                      </>
+                    )}
+                  </button>
+
+                  {isPolling && (
+                    <DropdownPopover
+                      options={pollingOptions}
+                      selectedValue={pollingInterval}
+                      onSelect={handlePollingIntervalChange}
+                    >
+                      {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                    </DropdownPopover>
+                  )}
+                </div>
               </motion.div>
             </div>
 
@@ -1076,6 +1252,16 @@ const AllPayments: React.FC = () => {
                     <h3 className="text-lg font-semibold sm:text-xl">Payment Directory</h3>
                   </div>
                   <div className="flex items-center gap-2">
+                    <div className="">
+                      <div className="max-w-md">
+                        <SearchModule
+                          placeholder="Search customers or references..."
+                          value={searchText}
+                          onChange={handleSearch}
+                          onCancel={handleCancelSearch}
+                        />
+                      </div>
+                    </div>
                     {/* Hide/Show Filters button - Desktop only (2xl and above) */}
                     <button
                       type="button"
@@ -1089,16 +1275,6 @@ const AllPayments: React.FC = () => {
                 </div>
 
                 {/* Search */}
-                <div className="mb-4 sm:mb-6">
-                  <div className="max-w-md">
-                    <SearchModule
-                      placeholder="Search customers or references..."
-                      value={searchText}
-                      onChange={handleSearch}
-                      onCancel={handleCancelSearch}
-                    />
-                  </div>
-                </div>
 
                 {payments.length === 0 ? (
                   <motion.div
@@ -1151,8 +1327,8 @@ const AllPayments: React.FC = () => {
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Location</div>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                Actions
+                              <th className="sticky right-0 z-10 whitespace-nowrap border-y bg-white  p-4 text-sm font-semibold text-gray-900">
+                                <div className="flex items-center gap-2">Actions</div>
                               </th>
                             </tr>
                           </thead>
@@ -1235,12 +1411,14 @@ const AllPayments: React.FC = () => {
                                     {payment.areaOfficeName}
                                   </div>
                                 </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                <td className="shadow-[ -2px_0_5px_-2px_rgba(0,0,0,0.1) ] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-3 text-sm shadow-md">
                                   <ButtonModule
                                     size="sm"
+                                    variant="outline"
+                                    icon={<VscEye />}
                                     onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
                                   >
-                                    View Details
+                                    View
                                   </ButtonModule>
                                 </td>
                               </motion.tr>

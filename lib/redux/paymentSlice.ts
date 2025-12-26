@@ -48,10 +48,40 @@ export interface Payment {
   recordedByName: string
 }
 
+export interface PaymentTracking {
+  id: number
+  reference: string
+  amount: number
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  clearanceStatus: "Uncleared" | "Clearing" | "Cleared" | "Suspended"
+  isRemitted: boolean
+  paidAtUtc: string
+  location: string
+  agentId: number
+  agentName: string
+  clearedByUserId: number
+  clearedByName: string
+  remittedByUserId: number
+  remittedByName: string
+  remittanceId: number
+  remittanceStatus: string
+  remittanceDepositedAtUtc: string
+  remittanceTellerUrl: string
+  collectionOfficerUserId: number
+  collectionOfficerName: string
+}
+
 export interface PaymentResponse {
   isSuccess: boolean
   message: string
   data: Payment
+}
+
+export interface PaymentTrackingResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentTracking
 }
 
 export interface PaymentsResponse {
@@ -251,6 +281,81 @@ export interface PaymentChannelsResponse {
   data: string[]
 }
 
+// Interface for Cash Holder
+export interface CashHolder {
+  holderType: string
+  holderId: number
+  holderName: string
+  totalAmount: number
+  paymentCount: number
+}
+
+// Interface for Cash Holders Response
+export interface CashHoldersResponse {
+  isSuccess: boolean
+  message: string
+  data: CashHolder[]
+}
+
+// Interface for Cash Holders Request Params
+export interface CashHoldersRequestParams {
+  startUtc?: string
+  endUtc?: string
+  order?: string
+}
+
+// Interfaces for Top Performers
+export interface TopPerformerAgent {
+  id: number
+  name: string
+  amount: number
+  count: number
+}
+
+export interface TopPerformerVendor {
+  id: number
+  name: string
+  amount: number
+  count: number
+}
+
+export interface TopPerformerWindow {
+  window: string
+  topAgents: TopPerformerAgent[]
+  topVendors: TopPerformerVendor[]
+}
+
+export interface TopPerformersData {
+  windows: TopPerformerWindow[]
+}
+
+export interface TopPerformersResponse {
+  isSuccess: boolean
+  message: string
+  data: TopPerformersData
+}
+
+export interface TopPerformersRequest {
+  today?: boolean
+  thisWeek?: boolean
+  thisMonth?: boolean
+  thisYear?: boolean
+  allTime?: boolean
+  areaOfficeId?: number
+  serviceCenterId?: number
+  distributionSubstationId?: number
+  feederId?: number
+}
+
+// Interface for Confirm Payment Request
+export interface ConfirmPaymentRequest {
+  amount: number
+  externalReference: string
+  confirmedAtUtc: string
+  narrative: string
+  skipRecovery: boolean
+}
+
 // Payment State
 interface PaymentState {
   // Payments list state
@@ -338,6 +443,30 @@ interface PaymentState {
   paymentChannelsLoading: boolean
   paymentChannelsError: string | null
   paymentChannelsSuccess: boolean
+
+  // Payment Tracking state
+  paymentTracking: PaymentTracking | null
+  paymentTrackingLoading: boolean
+  paymentTrackingError: string | null
+  paymentTrackingSuccess: boolean
+
+  // Cash Holders state
+  cashHolders: CashHolder[]
+  cashHoldersLoading: boolean
+  cashHoldersError: string | null
+  cashHoldersSuccess: boolean
+
+  // Top Performers state
+  topPerformers: TopPerformersData | null
+  topPerformersLoading: boolean
+  topPerformersError: string | null
+  topPerformersSuccess: boolean
+
+  // Confirm Payment state
+  confirmPaymentLoading: boolean
+  confirmPaymentError: string | null
+  confirmPaymentSuccess: boolean
+  confirmedPayment: Payment | null
 }
 
 // Initial state
@@ -417,6 +546,30 @@ const initialState: PaymentState = {
   paymentChannelsLoading: false,
   paymentChannelsError: null,
   paymentChannelsSuccess: false,
+
+  // Payment Tracking
+  paymentTracking: null,
+  paymentTrackingLoading: false,
+  paymentTrackingError: null,
+  paymentTrackingSuccess: false,
+
+  // Cash Holders
+  cashHolders: [],
+  cashHoldersLoading: false,
+  cashHoldersError: null,
+  cashHoldersSuccess: false,
+
+  // Top Performers
+  topPerformers: null,
+  topPerformersLoading: false,
+  topPerformersError: null,
+  topPerformersSuccess: false,
+
+  // Confirm Payment
+  confirmPaymentLoading: false,
+  confirmPaymentError: null,
+  confirmPaymentSuccess: false,
+  confirmedPayment: null,
 }
 
 // Async thunk for fetching payments
@@ -736,6 +889,115 @@ export const fetchPaymentChannels = createAsyncThunk(
   }
 )
 
+// Async thunk for fetching payment tracking
+export const fetchPaymentTracking = createAsyncThunk(
+  "payments/fetchPaymentTracking",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const url = buildApiUrl(API_ENDPOINTS.PAYMENTS.TRACK_PAYMENT.replace("{id}", id.toString()))
+      const response = await api.get<PaymentTrackingResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment tracking")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment tracking")
+      }
+      return rejectWithValue(error.message || "Network error during payment tracking fetch")
+    }
+  }
+)
+
+// Async thunk for fetching cash holders
+export const fetchCashHolders = createAsyncThunk(
+  "payments/fetchCashHolders",
+  async (params: CashHoldersRequestParams, { rejectWithValue }) => {
+    try {
+      const { startUtc, endUtc, order } = params
+
+      const response = await api.get<CashHoldersResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.CASH_HOLDERS), {
+        params: {
+          ...(startUtc && { startUtc }),
+          ...(endUtc && { endUtc }),
+          ...(order && { order }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch cash holders")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch cash holders")
+      }
+      return rejectWithValue(error.message || "Network error during cash holders fetch")
+    }
+  }
+)
+
+// Async thunk for fetching top performers
+export const fetchTopPerformers = createAsyncThunk(
+  "payments/fetchTopPerformers",
+  async (requestData: TopPerformersRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<TopPerformersResponse>(
+        buildApiUrl(API_ENDPOINTS.PAYMENTS.TOP_PERFORMERS),
+        requestData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch top performers")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Top performers data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch top performers")
+      }
+      return rejectWithValue(error.message || "Network error during top performers fetch")
+    }
+  }
+)
+
+// Async thunk for confirming payment
+export const confirmPayment = createAsyncThunk(
+  "payments/confirmPayment",
+  async ({ id, confirmData }: { id: number; confirmData: ConfirmPaymentRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.PAYMENTS.CONFIRM.replace("{id}", id.toString())
+      const response = await api.post<PaymentResponse>(buildApiUrl(endpoint), confirmData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to confirm payment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Confirmed payment data not found")
+      }
+
+      return {
+        paymentId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to confirm payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment confirmation")
+    }
+  }
+)
+
 // Payment slice
 const paymentSlice = createSlice({
   name: "payments",
@@ -783,6 +1045,8 @@ const paymentSlice = createSlice({
       state.changeRequestDetailsError = null
       state.approveChangeRequestError = null
       state.declineChangeRequestError = null
+      state.topPerformersError = null
+      state.confirmPaymentError = null
     },
 
     // Reset payment state
@@ -847,6 +1111,60 @@ const paymentSlice = createSlice({
       state.declineChangeRequestError = null
       state.declineChangeRequestSuccess = false
       state.declineChangeRequestResponse = null
+      state.paymentChannels = []
+      state.paymentChannelsLoading = false
+      state.paymentChannelsError = null
+      state.paymentChannelsSuccess = false
+      state.paymentTracking = null
+      state.paymentTrackingLoading = false
+      state.paymentTrackingError = null
+      state.paymentTrackingSuccess = false
+      state.cashHolders = []
+      state.cashHoldersLoading = false
+      state.cashHoldersError = null
+      state.cashHoldersSuccess = false
+      state.topPerformers = null
+      state.topPerformersLoading = false
+      state.topPerformersError = null
+      state.topPerformersSuccess = false
+
+      // Confirm Payment
+      state.confirmPaymentLoading = false
+      state.confirmPaymentError = null
+      state.confirmPaymentSuccess = false
+      state.confirmedPayment = null
+    },
+
+    // Clear payment tracking state
+    clearPaymentTracking: (state) => {
+      state.paymentTracking = null
+      state.paymentTrackingLoading = false
+      state.paymentTrackingError = null
+      state.paymentTrackingSuccess = false
+    },
+
+    // Clear cash holders state
+    clearCashHolders: (state) => {
+      state.cashHolders = []
+      state.cashHoldersLoading = false
+      state.cashHoldersError = null
+      state.cashHoldersSuccess = false
+    },
+
+    // Clear top performers state
+    clearTopPerformers: (state) => {
+      state.topPerformers = null
+      state.topPerformersLoading = false
+      state.topPerformersError = null
+      state.topPerformersSuccess = false
+    },
+
+    // Clear confirm payment state
+    clearConfirmPayment: (state) => {
+      state.confirmPaymentLoading = false
+      state.confirmPaymentError = null
+      state.confirmPaymentSuccess = false
+      state.confirmedPayment = null
     },
 
     // Set pagination
@@ -1240,6 +1558,7 @@ const paymentSlice = createSlice({
         state.declineChangeRequestSuccess = false
         state.declineChangeRequestResponse = null
       })
+
       // Fetch payment channels cases
       .addCase(fetchPaymentChannels.pending, (state) => {
         state.paymentChannelsLoading = true
@@ -1257,6 +1576,104 @@ const paymentSlice = createSlice({
         state.paymentChannelsError = (action.payload as string) || "Failed to fetch payment channels"
         state.paymentChannelsSuccess = false
         state.paymentChannels = []
+      })
+
+      // Payment Tracking reducers
+      .addCase(fetchPaymentTracking.pending, (state) => {
+        state.paymentTrackingLoading = true
+        state.paymentTrackingError = null
+        state.paymentTrackingSuccess = false
+      })
+      .addCase(fetchPaymentTracking.fulfilled, (state, action) => {
+        state.paymentTrackingLoading = false
+        state.paymentTrackingSuccess = true
+        state.paymentTrackingError = null
+        state.paymentTracking = action.payload
+      })
+      .addCase(fetchPaymentTracking.rejected, (state, action) => {
+        state.paymentTrackingLoading = false
+        state.paymentTrackingError = (action.payload as string) || "Failed to fetch payment tracking"
+        state.paymentTrackingSuccess = false
+        state.paymentTracking = null
+      })
+
+      // Fetch cash holders cases
+      .addCase(fetchCashHolders.pending, (state) => {
+        state.cashHoldersLoading = true
+        state.cashHoldersError = null
+        state.cashHoldersSuccess = false
+      })
+      .addCase(fetchCashHolders.fulfilled, (state, action: PayloadAction<CashHolder[]>) => {
+        state.cashHoldersLoading = false
+        state.cashHoldersSuccess = true
+        state.cashHoldersError = null
+        state.cashHolders = action.payload
+      })
+      .addCase(fetchCashHolders.rejected, (state, action) => {
+        state.cashHoldersLoading = false
+        state.cashHoldersError = (action.payload as string) || "Failed to fetch cash holders"
+        state.cashHoldersSuccess = false
+        state.cashHolders = []
+      })
+
+      // Fetch top performers cases
+      .addCase(fetchTopPerformers.pending, (state) => {
+        state.topPerformersLoading = true
+        state.topPerformersError = null
+        state.topPerformersSuccess = false
+      })
+      .addCase(fetchTopPerformers.fulfilled, (state, action: PayloadAction<TopPerformersData>) => {
+        state.topPerformersLoading = false
+        state.topPerformersSuccess = true
+        state.topPerformersError = null
+        state.topPerformers = action.payload
+      })
+      .addCase(fetchTopPerformers.rejected, (state, action) => {
+        state.topPerformersLoading = false
+        state.topPerformersError = (action.payload as string) || "Failed to fetch top performers"
+        state.topPerformersSuccess = false
+        state.topPerformers = null
+      })
+
+      // Confirm payment cases
+      .addCase(confirmPayment.pending, (state) => {
+        state.confirmPaymentLoading = true
+        state.confirmPaymentError = null
+        state.confirmPaymentSuccess = false
+        state.confirmedPayment = null
+      })
+      .addCase(
+        confirmPayment.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            paymentId: number
+            data: Payment
+            message: string
+          }>
+        ) => {
+          state.confirmPaymentLoading = false
+          state.confirmPaymentSuccess = true
+          state.confirmPaymentError = null
+          state.confirmedPayment = action.payload.data
+
+          // Update the payment in the payments list if it exists
+          const index = state.payments.findIndex((p) => p.id === action.payload.paymentId)
+          if (index !== -1) {
+            state.payments[index] = action.payload.data
+          }
+
+          // Update the current payment if it's the same one
+          if (state.currentPayment && state.currentPayment.id === action.payload.paymentId) {
+            state.currentPayment = action.payload.data
+          }
+        }
+      )
+      .addCase(confirmPayment.rejected, (state, action) => {
+        state.confirmPaymentLoading = false
+        state.confirmPaymentError = (action.payload as string) || "Failed to confirm payment"
+        state.confirmPaymentSuccess = false
+        state.confirmedPayment = null
       })
   },
 })
@@ -1276,6 +1693,10 @@ export const {
   clearChangeRequestDetails,
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
+  clearPaymentTracking,
+  clearCashHolders,
+  clearTopPerformers,
+  clearConfirmPayment,
 } = paymentSlice.actions
 
 export default paymentSlice.reducer

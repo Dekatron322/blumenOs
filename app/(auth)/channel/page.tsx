@@ -177,7 +177,7 @@ const SelectUserType: React.FC = () => {
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
-                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                      <div className="size-5 animate-spin rounded-full border-b-2 border-white"></div>
                       <span className="ml-2">Processing...</span>
                     </div>
                   ) : (
