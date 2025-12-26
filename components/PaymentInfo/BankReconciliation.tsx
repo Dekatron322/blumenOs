@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { HiOutlineChevronDown, HiOutlineChevronUp } from "react-icons/hi"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchCashHolders, CashHolder } from "lib/redux/paymentSlice"
+import { CashHolder, fetchCashHolders } from "lib/redux/paymentSlice"
 
 const CashHoldersIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

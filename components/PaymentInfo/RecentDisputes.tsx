@@ -6,7 +6,7 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { HiChevronDown, HiChevronUp, HiFilter, HiRefresh } from "react-icons/hi"
 
-import { fetchTopPerformers, clearTopPerformers, TopPerformersRequest } from "lib/redux/paymentSlice"
+import { clearTopPerformers, fetchTopPerformers, TopPerformersRequest } from "lib/redux/paymentSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 
 const PerformingAgents = () => {

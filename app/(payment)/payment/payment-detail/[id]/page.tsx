@@ -3,19 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  AlertCircle,
-  Building,
-  Calendar,
-  CreditCard,
-  Download,
-  Edit3,
-  MapPin,
-  Receipt,
-  User,
-  Zap,
-  Package,
-} from "lucide-react"
+import { AlertCircle, Building, Calendar, CreditCard, Edit3, Package, Receipt, User, Zap } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ExportOutlineIcon } from "components/Icons/Icons"

@@ -2,16 +2,11 @@
 
 import React, { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { AnimatePresence, motion } from "framer-motion"
-import { SearchModule } from "components/ui/Search/search-module"
+import { motion } from "framer-motion"
+
 import { HiChevronDown, HiChevronUp } from "react-icons/hi"
 import { AppDispatch, RootState } from "lib/redux/store"
-import {
-  fetchCashRemittanceRecords,
-  CashRemittanceRecord,
-  CollectionOfficer,
-  CashRemittanceStatus,
-} from "lib/redux/cashRemittanceSlice"
+import { CashRemittanceRecord, CashRemittanceStatus, fetchCashRemittanceRecords } from "lib/redux/cashRemittanceSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import CashRemittanceModal from "components/ui/Modal/cash-remittance-modal"
 import ReceiptUploadModal from "components/ui/Modal/receipt-upload-modal"
