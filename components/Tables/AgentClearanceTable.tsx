@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
@@ -25,6 +25,12 @@ import { FormInputModule } from "components/ui/Input/Input"
 interface ActionDropdownProps {
   clearance: CashClearance
   onViewDetails: (clearance: CashClearance) => void
+}
+
+interface ClearCashFormErrors {
+  collectionOfficerUserId?: string
+  amount?: string
+  notes?: string
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ clearance, onViewDetails }) => {
@@ -219,22 +225,50 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
   const { clearances, clearancesLoading, clearancesError, clearancesPagination, clearCashLoading, clearCashError } =
     useAppSelector((state) => state.agents)
 
+  // Memoize appliedFilters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => appliedFilters, [JSON.stringify(appliedFilters)])
+
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [selectedClearance, setSelectedClearance] = useState<CashClearance | null>(null)
   const [isClearCashPanelOpen, setIsClearCashPanelOpen] = useState(false)
   const [expandedClearanceId, setExpandedClearanceId] = useState<number | null>(null)
+
+  // Clear cash form state
   const [clearCashForm, setClearCashForm] = useState<ClearCashRequest>({
     collectionOfficerUserId: 0,
     amount: 0,
     notes: "",
   })
-  const [clearCashFormErrors, setClearCashFormErrors] = useState<{
-    collectionOfficerUserId?: string
-    amount?: string
-    notes?: string
-  }>({})
+  const [clearCashFormErrors, setClearCashFormErrors] = useState<ClearCashFormErrors>({})
+
+  // Get pagination values from Redux state
+  const currentPage = clearancesPagination?.currentPage || 1
+  const pageSize = clearancesPagination?.pageSize || 10
+  const totalRecords = clearancesPagination?.totalCount || 0
+  const totalPages = clearancesPagination?.totalPages || 1
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  // Single function to fetch clearances data
+  const fetchClearancesData = React.useCallback(() => {
+    const fetchParams: ClearancesRequestParams = {
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      ...(agentId ? { id: agentId } : {}),
+      ...memoizedFilters,
+    }
+
+    dispatch(fetchClearances(fetchParams))
+  }, [dispatch, agentId, currentPage, pageSize, memoizedFilters])
 
   const handleViewClearanceDetails = (clearance: CashClearance) => {
     if (agentId) {
@@ -265,21 +299,6 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     dispatch(clearCashStatus())
   }
 
-  // Get pagination values from Redux state
-  const currentPage = clearancesPagination.currentPage
-  const pageSize = clearancesPagination.pageSize
-  const totalRecords = clearancesPagination.totalCount
-  const totalPages = clearancesPagination.totalPages
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 2,
-    }).format(amount)
-  }
-
   // Format date
   const formatDate = (dateString: string) => {
     try {
@@ -290,16 +309,10 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     }
   }
 
-  // Fetch clearances on component mount and when search/pagination/filters change
+  // Fetch clearances on component mount and when dependencies change
   useEffect(() => {
-    const fetchParams: ClearancesRequestParams = {
-      pageNumber: currentPage,
-      pageSize: pageSize,
-      ...(agentId ? { id: agentId } : {}),
-    }
-
-    dispatch(fetchClearances(fetchParams))
-  }, [dispatch, agentId, currentPage, pageSize, appliedFilters])
+    fetchClearancesData()
+  }, [fetchClearancesData])
 
   // Clear error and clearances when component unmounts
   useEffect(() => {
@@ -311,7 +324,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
   }, [dispatch])
 
   const validateClearCashForm = () => {
-    const errors: typeof clearCashFormErrors = {}
+    const errors: ClearCashFormErrors = {}
 
     if (!clearCashForm.collectionOfficerUserId || clearCashForm.collectionOfficerUserId <= 0) {
       errors.collectionOfficerUserId = "Please enter a valid collection officer user ID"
@@ -339,7 +352,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
       [field]: value,
     }))
 
-    if (clearCashFormErrors[field as keyof typeof clearCashFormErrors]) {
+    if (clearCashFormErrors[field as keyof ClearCashFormErrors]) {
       setClearCashFormErrors((prev) => ({
         ...prev,
         [field]: undefined,
@@ -347,14 +360,8 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     }
   }
 
-  const handleClearCashSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!selectedClearance) {
-      return
-    }
-
-    if (!validateClearCashForm()) return
+  const handleClearCash = async () => {
+    if (!validateClearCashForm() || !selectedClearance) return
 
     try {
       await dispatch(
@@ -364,15 +371,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
         })
       ).unwrap()
 
-      if (agentId) {
-        const fetchParams: ClearancesRequestParams = {
-          id: agentId,
-          pageNumber: currentPage,
-          pageSize: pageSize,
-        }
-        dispatch(fetchClearances(fetchParams))
-      }
-
+      // Data will be automatically refetched by the useEffect due to state changes
       closeClearCashPanel()
     } catch (error) {}
   }

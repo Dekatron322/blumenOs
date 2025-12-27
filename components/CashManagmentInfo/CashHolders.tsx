@@ -64,12 +64,12 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
     )
 
     return {
-      totalAmount: `₦${(totalAmount / 1000000).toFixed(1)}M`,
+      totalAmount: `₦${totalAmount.toLocaleString()}`,
       totalHolders: cashHolders.length,
       totalTransactions,
       topHolder: {
         name: topHolder.holderName,
-        amount: `₦${(topHolder.totalAmount / 1000000).toFixed(1)}M`,
+        amount: `₦${topHolder.totalAmount.toLocaleString()}`,
         transactions: topHolder.paymentCount,
       },
     }
@@ -251,13 +251,11 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
                       label="Average per Holder"
                       value={`₦${
                         cashHolders.length > 0
-                          ? (
-                              cashHolders.reduce((sum, h) => sum + h.totalAmount, 0) /
-                              cashHolders.length /
-                              1000000
-                            ).toFixed(1)
+                          ? Math.round(
+                              cashHolders.reduce((sum, h) => sum + h.totalAmount, 0) / cashHolders.length
+                            ).toLocaleString()
                           : 0
-                      }M`}
+                      }`}
                       color="text-blue-600"
                     />
                     <MetricCard
@@ -308,7 +306,7 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-semibold text-gray-900">
-                            ₦{(holder.totalAmount / 1000000).toFixed(1)}M
+                            ₦{holder.totalAmount.toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500">{holder.paymentCount} transactions</div>
                         </div>

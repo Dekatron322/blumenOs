@@ -64,12 +64,12 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
     )
 
     return {
-      totalAmount: `₦${(totalAmount / 1000000).toFixed(1)}M`,
+      totalAmount: `₦${totalAmount.toLocaleString()}`,
       totalHolders: cashHolders.length,
       totalTransactions,
       topHolder: {
         name: topHolder.holderName,
-        amount: `₦${(topHolder.totalAmount / 1000000).toFixed(1)}M`,
+        amount: `₦${topHolder.totalAmount.toLocaleString()}`,
         transactions: topHolder.paymentCount,
       },
     }
@@ -308,7 +308,7 @@ const CashHolders: React.FC<CashHoldersProps> = ({ onViewDetails, onExportReport
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-semibold text-gray-900">
-                            ₦{(holder.totalAmount / 1000000).toFixed(1)}M
+                            ₦{holder.totalAmount.toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500">{holder.paymentCount} transactions</div>
                         </div>
