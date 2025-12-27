@@ -367,6 +367,7 @@ export const API_ENDPOINTS = {
     EDIT_METER: "/meters/{id}",
     METER_HISTORY: "/meters/{id}/history",
     ADD_METER: "/meters",
+    SUMMARY: "/meters/reports/summary",
   },
 
   METER_BRANDS: {

@@ -1,12 +1,14 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
-import { useState } from "react"
+
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchMetersSummary } from "lib/redux/metersSlice"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -263,24 +265,39 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock meter data
-const generateMeterData = () => {
-  return {
-    smartMeters: 89420,
-    conventionalMeters: 29514,
-    readSuccessRate: 94.2,
-    alerts: 847,
-    totalMeters: 89420 + 29514,
-  }
-}
-
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [meterData, setMeterData] = useState(generateMeterData())
 
-  // Use mock data
-  const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
+  const dispatch = useAppDispatch()
+  const { summary, summaryLoading, summaryError } = useAppSelector((state) => state.meters)
+
+  // Fetch meters summary on component mount
+  useEffect(() => {
+    dispatch(fetchMetersSummary())
+  }, [dispatch])
+
+  // Calculate derived values from summary data
+  const meterData = {
+    smartMeters: summary?.smartMeters || 0,
+    conventionalMeters: summary ? summary.totalMeters - summary.smartMeters : 0,
+    totalMeters: summary?.totalMeters || 0,
+    activeMeters: summary?.activeMeters || 0,
+    deactivatedMeters: summary?.deactivatedMeters || 0,
+    suspendedMeters: summary?.suspendedMeters || 0,
+    retiredMeters: summary?.retiredMeters || 0,
+    prepaidMeters: summary?.prepaidMeters || 0,
+    postpaidMeters: summary?.postpaidMeters || 0,
+    byStatus: summary?.byStatus || [],
+    byState: summary?.byState || [],
+    byType: summary?.byType || [],
+    byServiceBand: summary?.byServiceBand || [],
+  }
+
+  // Calculate percentages
+  const calculatePercentage = (value: number) => {
+    return meterData.totalMeters > 0 ? Math.round((value / meterData.totalMeters) * 100) : 0
+  }
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -290,15 +307,11 @@ export default function MeteringDashboard() {
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
     // Refresh data after adding customer
-    setMeterData(generateMeterData())
+    dispatch(fetchMetersSummary())
   }
 
   const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setMeterData(generateMeterData())
-      setIsLoading(false)
-    }, 1000)
+    dispatch(fetchMetersSummary())
   }
 
   return (
@@ -333,203 +346,390 @@ export default function MeteringDashboard() {
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {isLoading ? (
+                {summaryError ? (
+                  // Error State
+                  <div className="rounded-md border border-red-200 bg-red-50 p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 0 100-16 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Error loading meter data</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>{summaryError}</p>
+                        </div>
+                        <div className="mt-4">
+                          <button
+                            onClick={() => dispatch(fetchMetersSummary())}
+                            className="rounded-md bg-red-100 px-3 py-2 text-sm font-medium text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                          >
+                            Try again
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : summaryLoading || isLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Redesigned Metering Dashboard
+                  // Loaded State - Clean White Card Design
                   <>
+                    {/* Main Metrics Grid */}
                     <motion.div
-                      className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
+                      className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <div className="flex w-full max-sm:flex-col">
-                        <div className="w-full">
-                          <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Smart Meters Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-blue-600">
-                                  <TokenGeneratedIcon />
-                                </div>
-                                <span className="font-medium">Smart Meters</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Installed:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(smartMeters)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalMeters > 0 ? `${Math.round((smartMeters / totalMeters) * 100)}%` : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
+                      {/* Total Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -3, scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Total Meters</p>
+                            <p className="text-3xl font-bold text-gray-800">{formatNumber(meterData.totalMeters)}</p>
+                          </div>
+                          <div className="rounded-full bg-gray-100 p-2">
+                            <div className="flex size-6 items-center justify-center rounded-full bg-gray-600">
+                              <span className="text-xs font-medium text-white">Σ</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-xs text-gray-500">
+                          <p>All installed meters in the system</p>
+                        </div>
+                      </motion.div>
 
-                            {/* Conventional Meters Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <MetersProgrammedIcon />
-                                </div>
-                                <span className="font-medium">Conventional</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Installed:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(conventionalMeters)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Percentage:</p>
-                                  <p className="text-secondary font-medium">
-                                    {totalMeters > 0
-                                      ? `${Math.round((conventionalMeters / totalMeters) * 100)}%`
-                                      : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
+                      {/* Active Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -3, scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Active Meters</p>
+                            <p className="text-3xl font-bold text-gray-800">{formatNumber(meterData.activeMeters)}</p>
+                          </div>
+                          <div className="rounded-full bg-green-50 p-2">
+                            <VendingIcon />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Operational</span>
+                          <span className="text-sm font-semibold text-gray-700">
+                            {calculatePercentage(meterData.activeMeters)}%
+                          </span>
+                        </div>
+                      </motion.div>
 
-                            {/* Read Success Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <VendingIcon />
-                                </div>
-                                <span className="font-medium">Read Success</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Success Rate:</p>
-                                  <p className="text-secondary text-xl font-bold">{readSuccessRate}%</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Status:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div
-                                      className={`size-2 rounded-full ${
-                                        readSuccessRate >= 90
-                                          ? "bg-green-500"
-                                          : readSuccessRate >= 80
-                                          ? "bg-yellow-500"
-                                          : "bg-red-500"
-                                      }`}
-                                    ></div>
-                                    <p className="text-secondary font-medium">
-                                      {readSuccessRate >= 90
-                                        ? "Excellent"
-                                        : readSuccessRate >= 80
-                                        ? "Good"
-                                        : "Needs Attention"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
+                      {/* Deactivated Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -3, scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Deactivated Meters</p>
+                            <p className="text-3xl font-bold text-gray-800">
+                              {formatNumber(meterData.deactivatedMeters)}
+                            </p>
+                          </div>
+                          <div className="rounded-full bg-red-50 p-2">
+                            <TamperIcon />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Non-operational</span>
+                          <span className="text-sm font-semibold text-gray-700">
+                            {calculatePercentage(meterData.deactivatedMeters)}%
+                          </span>
+                        </div>
+                      </motion.div>
 
-                            {/* Alerts Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-red-600">
-                                  <TamperIcon />
+                      {/* Smart Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -3, scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Smart Meters</p>
+                            <p className="text-3xl font-bold text-gray-800">{formatNumber(meterData.smartMeters)}</p>
+                          </div>
+                          <div className="rounded-full bg-blue-50 p-2">
+                            <TokenGeneratedIcon />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-xs text-gray-500">AMI Technology</span>
+                          <span className="text-sm font-semibold text-gray-700">
+                            {calculatePercentage(meterData.smartMeters)}%
+                          </span>
+                        </div>
+                      </motion.div>
+
+                      {/* Prepaid Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -3, scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Prepaid Meters</p>
+                            <p className="text-3xl font-bold text-gray-800">{formatNumber(meterData.prepaidMeters)}</p>
+                          </div>
+                          <div className="rounded-full bg-amber-50 p-2">
+                            <MetersProgrammedIcon />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Pay-as-you-go</span>
+                          <span className="text-sm font-semibold text-gray-700">
+                            {calculatePercentage(meterData.prepaidMeters)}%
+                          </span>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+
+                    {/* Secondary Metrics Row */}
+                    <motion.div
+                      className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      {/* Conventional Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -2 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-full bg-gray-100 p-2">
+                            <div className="size-4 rounded-full bg-gray-600"></div>
+                          </div>
+                          <span className="font-medium text-gray-700">Conventional Meters</span>
+                        </div>
+                        <div className="mt-3 flex items-end justify-between">
+                          <p className="text-2xl font-bold text-gray-800">
+                            {formatNumber(meterData.conventionalMeters)}
+                          </p>
+                          <p className="text-sm font-medium text-gray-600">
+                            {calculatePercentage(meterData.conventionalMeters)}%
+                          </p>
+                        </div>
+                      </motion.div>
+
+                      {/* Suspended Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -2 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-full bg-yellow-50 p-2">
+                            <div className="size-4 rounded-full bg-yellow-600"></div>
+                          </div>
+                          <span className="font-medium text-gray-700">Suspended Meters</span>
+                        </div>
+                        <div className="mt-3 flex items-end justify-between">
+                          <p className="text-2xl font-bold text-gray-800">{formatNumber(meterData.suspendedMeters)}</p>
+                          <p className="text-sm font-medium text-gray-600">
+                            {calculatePercentage(meterData.suspendedMeters)}%
+                          </p>
+                        </div>
+                      </motion.div>
+
+                      {/* Postpaid Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -2 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-full bg-blue-50 p-2">
+                            <div className="size-4 rounded-full bg-blue-600"></div>
+                          </div>
+                          <span className="font-medium text-gray-700">Postpaid Meters</span>
+                        </div>
+                        <div className="mt-3 flex items-end justify-between">
+                          <p className="text-2xl font-bold text-gray-800">{formatNumber(meterData.postpaidMeters)}</p>
+                          <p className="text-sm font-medium text-gray-600">
+                            {calculatePercentage(meterData.postpaidMeters)}%
+                          </p>
+                        </div>
+                      </motion.div>
+
+                      {/* Retired Meters Card */}
+                      <motion.div
+                        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:shadow-md"
+                        whileHover={{ y: -2 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-full bg-gray-200 p-2">
+                            <div className="size-4 rounded-full bg-gray-700"></div>
+                          </div>
+                          <span className="font-medium text-gray-700">Retired Meters</span>
+                        </div>
+                        <div className="mt-3 flex items-end justify-between">
+                          <p className="text-2xl font-bold text-gray-800">{formatNumber(meterData.retiredMeters)}</p>
+                          <p className="text-sm font-medium text-gray-600">
+                            {calculatePercentage(meterData.retiredMeters)}%
+                          </p>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+
+                    {/* Statistics Overview */}
+                    <motion.div
+                      className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      <h3 className="mb-4 text-lg font-semibold text-gray-800">Meter Statistics Overview</h3>
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        {/* Status Distribution */}
+                        <div className="rounded-lg border border-gray-100 bg-white p-4">
+                          <h4 className="mb-3 font-medium text-gray-700">By Status</h4>
+                          <div className="space-y-3">
+                            {meterData.byStatus.map((status) => (
+                              <div key={status.value} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">{status.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-800">{status.count}</span>
+                                  <span className="text-xs text-gray-500">
+                                    ({Math.round((status.count / meterData.totalMeters) * 100)}%)
+                                  </span>
                                 </div>
-                                <span className="font-medium">Alerts</span>
                               </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Active Alerts:</p>
-                                  <div className="flex gap-1">
-                                    <p className="text-secondary text-xl font-bold">{formatNumber(alerts)}</p>
-                                    <ArrowIcon />
-                                  </div>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Trend:</p>
-                                  <p className="text-secondary font-medium">
-                                    <span className="text-red-500">↑ 12%</span> from last week
-                                  </p>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* State Distribution */}
+                        <div className="rounded-lg border border-gray-100 bg-white p-4">
+                          <h4 className="mb-3 font-medium text-gray-700">By State</h4>
+                          <div className="space-y-3">
+                            {meterData.byState.map((state) => (
+                              <div key={state.value} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">{state.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-800">{state.count}</span>
+                                  <span className="text-xs text-gray-500">
+                                    ({Math.round((state.count / meterData.totalMeters) * 100)}%)
+                                  </span>
                                 </div>
                               </div>
-                            </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Type Distribution */}
+                        <div className="rounded-lg border border-gray-100 bg-white p-4">
+                          <h4 className="mb-3 font-medium text-gray-700">By Type</h4>
+                          <div className="space-y-3">
+                            {meterData.byType.map((type) => (
+                              <div key={type.value || "unknown"} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">{type.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-800">{type.count}</span>
+                                  <span className="text-xs text-gray-500">
+                                    ({Math.round((type.count / meterData.totalMeters) * 100)}%)
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Service Band Distribution */}
+                        <div className="rounded-lg border border-gray-100 bg-white p-4">
+                          <h4 className="mb-3 font-medium text-gray-700">By Service Band</h4>
+                          <div className="space-y-3">
+                            {meterData.byServiceBand.map((band) => (
+                              <div key={band.value} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Band {band.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-800">{band.count}</span>
+                                  <span className="text-xs text-gray-500">
+                                    ({Math.round((band.count / meterData.totalMeters) * 100)}%)
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
                     </motion.div>
 
-                    {/* Additional Metrics Summary
-                                      <motion.div
-                                        className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.5, delay: 0.2 }}
-                                      >
-                                        <div className="rounded-lg bg-blue-50 p-4">
-                                          <div className="flex items-center justify-between">
-                                            <div>
-                                              <p className="text-sm font-medium text-blue-800">Total Meters</p>
-                                              <p className="text-2xl font-bold text-blue-900">{formatNumber(totalMeters)}</p>
-                                            </div>
-                                            <div className="rounded-full bg-blue-100 p-2">
-                                              <SmartMeterIcon />
-                                            </div>
-                                          </div>
-                                          <p className="mt-2 text-xs text-blue-600">All installed meters in the system</p>
-                                        </div>
-                  
-                                        <div className="rounded-lg bg-green-50 p-4">
-                                          <div className="flex items-center justify-between">
-                                            <div>
-                                              <p className="text-sm font-medium text-green-800">AMI Coverage</p>
-                                              <p className="text-2xl font-bold text-green-900">
-                                                {totalMeters > 0 ? Math.round((smartMeters / totalMeters) * 100) : 0}%
-                                              </p>
-                                            </div>
-                                            <div className="rounded-full bg-green-100 p-2">
-                                              <SuccessIcon />
-                                            </div>
-                                          </div>
-                                          <p className="mt-2 text-xs text-green-600">Advanced Metering Infrastructure penetration</p>
-                                        </div>
-                  
-                                        <div className="rounded-lg bg-orange-50 p-4">
-                                          <div className="flex items-center justify-between">
-                                            <div>
-                                              <p className="text-sm font-medium text-orange-800">Avg. Daily Reads</p>
-                                              <p className="text-2xl font-bold text-orange-900">
-                                                {formatNumber(Math.round(totalMeters * 0.87))}
-                                              </p>
-                                            </div>
-                                            <div className="rounded-full bg-orange-100 p-2">
-                                              <ConventionalMeterIcon />
-                                            </div>
-                                          </div>
-                                          <p className="mt-2 text-xs text-orange-600">Successful meter readings per day</p>
-                                        </div>
-                                      </motion.div> */}
+                    {/* Performance Metrics */}
+                    <motion.div
+                      className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-full bg-blue-50 p-2">
+                            <div className="size-6 rounded-full bg-blue-600"></div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">AMI Coverage Rate</p>
+                            <p className="text-3xl font-bold text-gray-800">
+                              {calculatePercentage(meterData.smartMeters)}%
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500">Smart meters to total meters ratio</p>
+                      </div>
 
+                      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-full bg-green-50 p-2">
+                            <div className="size-6 rounded-full bg-green-600"></div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Active Rate</p>
+                            <p className="text-3xl font-bold text-gray-800">
+                              {calculatePercentage(meterData.activeMeters)}%
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500">Operational meters in system</p>
+                      </div>
+
+                      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-full bg-amber-50 p-2">
+                            <div className="size-6 rounded-full bg-amber-600"></div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Prepaid Adoption</p>
+                            <p className="text-3xl font-bold text-gray-800">
+                              {calculatePercentage(meterData.prepaidMeters)}%
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500">Prepaid meters to total meters</p>
+                      </div>
+                    </motion.div>
+
+                    {/* Metering Info Component */}
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
                       className="mt-6"
                     >
                       <MeteringInfo />

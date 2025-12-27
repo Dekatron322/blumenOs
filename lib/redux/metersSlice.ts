@@ -94,6 +94,9 @@ export interface MetersState {
   meterHistory: MeterHistoryEntry[]
   historyLoading: boolean
   historyError: string | null
+  summary: MetersSummaryData | null
+  summaryLoading: boolean
+  summaryError: string | null
 }
 
 // Initial state
@@ -113,6 +116,9 @@ const initialState: MetersState = {
   meterHistory: [],
   historyLoading: false,
   historyError: null,
+  summary: null,
+  summaryLoading: false,
+  summaryError: null,
 }
 
 export interface EditMeterRequest {
@@ -225,6 +231,45 @@ export interface MeterHistoryResponse {
   isSuccess: boolean
   message: string
   data: MeterHistoryEntry[]
+}
+
+// Interface for Meters Summary Data
+export interface MetersSummaryData {
+  totalMeters: number
+  activeMeters: number
+  deactivatedMeters: number
+  suspendedMeters: number
+  retiredMeters: number
+  prepaidMeters: number
+  postpaidMeters: number
+  smartMeters: number
+  byStatus: Array<{
+    value: number
+    name: string
+    count: number
+  }>
+  byState: Array<{
+    value: number
+    name: string
+    count: number
+  }>
+  byType: Array<{
+    value: number
+    name: string
+    count: number
+  }>
+  byServiceBand: Array<{
+    value: number
+    name: string
+    count: number
+  }>
+}
+
+// Interface for Meters Summary Response
+export interface MetersSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: MetersSummaryData
 }
 
 // Async Thunk for fetching meters
@@ -346,6 +391,24 @@ export const addMeter = createAsyncThunk("meters/addMeter", async (data: AddMete
   }
 })
 
+// Async Thunk for fetching meters summary
+export const fetchMetersSummary = createAsyncThunk("meters/fetchMetersSummary", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<MetersSummaryResponse>(buildApiUrl(API_ENDPOINTS.METERS.SUMMARY))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch meters summary")
+    }
+
+    return response.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch meters summary")
+    }
+    return rejectWithValue(error.message || "Network error during meters summary fetch")
+  }
+})
+
 // Create slice
 const metersSlice = createSlice({
   name: "meters",
@@ -440,6 +503,19 @@ const metersSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
         state.success = false
+      })
+      // Fetch meters summary
+      .addCase(fetchMetersSummary.pending, (state) => {
+        state.summaryLoading = true
+        state.summaryError = null
+      })
+      .addCase(fetchMetersSummary.fulfilled, (state, action: PayloadAction<MetersSummaryResponse>) => {
+        state.summaryLoading = false
+        state.summary = action.payload.data
+      })
+      .addCase(fetchMetersSummary.rejected, (state, action) => {
+        state.summaryLoading = false
+        state.summaryError = action.payload as string
       })
   },
 })
