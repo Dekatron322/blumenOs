@@ -188,15 +188,14 @@ export interface AddMeterRequest {
   serviceBand: number
   customerClass: string
   injectionSubstationId: number
+  distributionSubstationId: number
+  feederId: number
+  areaOfficeId: number
   state: number
   address: string
   addressTwo: string
   city: string
   apartmentNumber: string
-  latitude: number
-  longitude: number
-  tenantFullName: string
-  tenantPhoneNumber: string
 }
 
 // Interface for Add Meter Response

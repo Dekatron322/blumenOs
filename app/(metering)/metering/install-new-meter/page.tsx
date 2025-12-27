@@ -12,6 +12,9 @@ import { notify } from "components/ui/Notification/Notification"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { addMeter, AddMeterRequest, clearMetersError } from "lib/redux/metersSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
+import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
@@ -47,15 +50,14 @@ interface MeterFormData {
   serviceBand: number
   customerClass: string
   injectionSubstationId: number
+  distributionSubstationId: number
+  feederId: number
+  areaOfficeId: number
   state: number
   address: string
   addressTwo: string
   city: string
   apartmentNumber: string
-  latitude: number
-  longitude: number
-  tenantFullName: string
-  tenantPhoneNumber: string
 }
 
 const InstallNewMeterPage = () => {
@@ -72,6 +74,20 @@ const InstallNewMeterPage = () => {
     loading: distributionSubstationsLoading,
     error: distributionSubstationsError,
   } = useSelector((state: RootState) => state.distributionSubstations)
+
+  const {
+    injectionSubstations,
+    loading: injectionSubstationsLoading,
+    error: injectionSubstationsError,
+  } = useSelector((state: RootState) => state.injectionSubstations)
+
+  const { feeders, loading: feedersLoading, error: feedersError } = useSelector((state: RootState) => state.feeders)
+
+  const {
+    areaOffices,
+    loading: areaOfficesLoading,
+    error: areaOfficesError,
+  } = useSelector((state: RootState) => state.areaOffices)
 
   const {
     serviceStations,
@@ -123,20 +139,22 @@ const InstallNewMeterPage = () => {
     serviceBand: 1,
     customerClass: "",
     injectionSubstationId: 0,
+    distributionSubstationId: 0,
+    feederId: 0,
+    areaOfficeId: 0,
     state: 0,
     address: "",
     addressTwo: "",
     city: "",
     apartmentNumber: "",
-    latitude: 0,
-    longitude: 0,
-    tenantFullName: "",
-    tenantPhoneNumber: "",
   })
 
   // Fetch related data when component mounts
   useEffect(() => {
     dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchInjectionSubstations({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchFeeders({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100 }))
     dispatch(fetchServiceStations({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchEmployees({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchCountries())
@@ -187,31 +205,66 @@ const InstallNewMeterPage = () => {
   ]
 
   const meterTypeOptions = [
-    { value: 1, label: "Residential" },
-    { value: 2, label: "Commercial" },
-    { value: 3, label: "Industrial" },
+    { value: 1, label: "Prepaid" },
+    { value: 2, label: "Postpaid" },
   ]
 
   const statusOptions = [
     { value: 1, label: "Active" },
-    { value: 2, label: "Inactive" },
-    { value: 3, label: "Maintenance" },
+    { value: 2, label: "Deactivated" },
+    { value: 3, label: "Suspended" },
+    { value: 4, label: "Retired" },
+  ]
+
+  const meterStateOptions = [
+    { value: 1, label: "Good" },
+    { value: 2, label: "Tamper" },
+    { value: 3, label: "Suspicious" },
+    { value: 4, label: "Missing" },
+    { value: 5, label: "Unknown" },
   ]
 
   const serviceBandOptions = [
-    { value: 1, label: "Band A" },
-    { value: 2, label: "Band B" },
-    { value: 3, label: "Band C" },
-    { value: 4, label: "Band D" },
-    { value: 5, label: "Band E" },
+    { value: 1, label: "A" },
+    { value: 2, label: "B" },
+    { value: 3, label: "C" },
+    { value: 4, label: "D" },
+    { value: 5, label: "E" },
   ]
 
   // Injection substation options from fetched data
   const injectionSubstationOptions = [
     { value: 0, label: "Select injection substation" },
+    ...injectionSubstations.map((substation) => ({
+      value: substation.id,
+      label: `${substation.injectionSubstationCode} (${substation.nercCode})`,
+    })),
+  ]
+
+  // Distribution substation options from fetched data
+  const distributionSubstationOptions = [
+    { value: 0, label: "Select distribution substation" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
       label: `${substation.dssCode} (${substation.nercCode})`,
+    })),
+  ]
+
+  // Feeder options from fetched data
+  const feederOptions = [
+    { value: 0, label: "Select feeder" },
+    ...feeders.map((feeder) => ({
+      value: feeder.id,
+      label: feeder.name || `Feeder ${feeder.id}`,
+    })),
+  ]
+
+  // Area office options from fetched data
+  const areaOfficeOptions = [
+    { value: 0, label: "Select area office" },
+    ...areaOffices.map((areaOffice) => ({
+      value: areaOffice.id,
+      label: areaOffice.nameOfNewOAreaffice || `Area Office ${areaOffice.id}`,
     })),
   ]
 
@@ -221,9 +274,9 @@ const InstallNewMeterPage = () => {
   )
 
   const stateOptions = [
-    { value: "", label: "Select state" },
+    { value: 0, label: "Select state" },
     ...((nigeria?.provinces ?? []).map((province) => ({
-      value: province.name,
+      value: province.id,
       label: province.name,
     })) || []),
   ]
@@ -309,16 +362,25 @@ const InstallNewMeterPage = () => {
         if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
           errors.injectionSubstationId = "Injection substation is required"
         }
+        if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
+          errors.distributionSubstationId = "Distribution substation is required"
+        }
+        if (!formData.feederId || formData.feederId === 0) {
+          errors.feederId = "Feeder is required"
+        }
+        if (!formData.areaOfficeId || formData.areaOfficeId === 0) {
+          errors.areaOfficeId = "Area office is required"
+        }
         if (!formData.address.trim()) errors.address = "Address is required"
         if (!formData.city.trim()) errors.city = "City is required"
-        if (!formData.state) errors.state = "State is required"
+        if (!formData.state || formData.state === 0) errors.state = "State is required"
         break
 
       case 4: // Technical Details
         // No required fields in technical details
         break
 
-      case 5: // Status + Tenant
+      case 5: // Status + Installation
         if (!formData.status) errors.status = "Status is required"
         if (!formData.meterState) errors.meterState = "Meter state is required"
         if (!formData.installationDate) errors.installationDate = "Installation date is required"
@@ -369,9 +431,18 @@ const InstallNewMeterPage = () => {
     if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
       allErrors.injectionSubstationId = "Injection substation is required"
     }
+    if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
+      allErrors.distributionSubstationId = "Distribution substation is required"
+    }
+    if (!formData.feederId || formData.feederId === 0) {
+      allErrors.feederId = "Feeder is required"
+    }
+    if (!formData.areaOfficeId || formData.areaOfficeId === 0) {
+      allErrors.areaOfficeId = "Area office is required"
+    }
     if (!formData.address.trim()) allErrors.address = "Address is required"
     if (!formData.city.trim()) allErrors.city = "City is required"
-    if (!formData.state) allErrors.state = "State is required"
+    if (!formData.state || formData.state === 0) allErrors.state = "State is required"
     if (!formData.status) allErrors.status = "Status is required"
     if (!formData.meterState) allErrors.meterState = "Meter state is required"
     if (!formData.installationDate) allErrors.installationDate = "Installation date is required"
@@ -415,15 +486,14 @@ const InstallNewMeterPage = () => {
         serviceBand: formData.serviceBand,
         customerClass: formData.customerClass,
         injectionSubstationId: formData.injectionSubstationId,
-        state: formData.state,
+        distributionSubstationId: formData.distributionSubstationId,
+        feederId: formData.feederId,
+        areaOfficeId: formData.areaOfficeId,
+        state: typeof formData.state === "string" ? 0 : formData.state,
         address: formData.address,
         addressTwo: formData.addressTwo,
         city: formData.city,
         apartmentNumber: formData.apartmentNumber,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        tenantFullName: formData.tenantFullName,
-        tenantPhoneNumber: formData.tenantPhoneNumber,
       }
 
       await dispatch(addMeter(meterData)).unwrap()
@@ -461,15 +531,14 @@ const InstallNewMeterPage = () => {
       serviceBand: 1,
       customerClass: "",
       injectionSubstationId: 0,
+      distributionSubstationId: 0,
+      feederId: 0,
+      areaOfficeId: 0,
       state: 0,
       address: "",
       addressTwo: "",
       city: "",
       apartmentNumber: "",
-      latitude: 0,
-      longitude: 0,
-      tenantFullName: "",
-      tenantPhoneNumber: "",
     })
     setCurrentStep(1)
     setFormErrors({})
@@ -493,7 +562,7 @@ const InstallNewMeterPage = () => {
           {currentStep === 2 && "Meter Details"}
           {currentStep === 3 && "Billing & Location"}
           {currentStep === 4 && "Technical Details"}
-          {currentStep === 5 && "Status & Tenant"}
+          {currentStep === 5 && "Status & Installation"}
         </div>
       </div>
     </div>
@@ -593,7 +662,7 @@ const InstallNewMeterPage = () => {
                     { step: 2, title: "Meter Details", description: "Meter specifications and type" },
                     { step: 3, title: "Billing & Location", description: "Tariff and location details" },
                     { step: 4, title: "Technical Details", description: "Technical specifications" },
-                    { step: 5, title: "Status & Tenant", description: "Status and tenant info" },
+                    { step: 5, title: "Status & Installation", description: "Status and installation details" },
                   ].map((item) => (
                     <button
                       key={item.step}
@@ -1030,7 +1099,40 @@ const InstallNewMeterPage = () => {
                             options={injectionSubstationOptions}
                             error={formErrors.injectionSubstationId}
                             required
+                            disabled={injectionSubstationsLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Distribution Substation"
+                            name="distributionSubstationId"
+                            value={formData.distributionSubstationId}
+                            onChange={handleInputChange}
+                            options={distributionSubstationOptions}
+                            error={formErrors.distributionSubstationId}
+                            required
                             disabled={distributionSubstationsLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Feeder"
+                            name="feederId"
+                            value={formData.feederId}
+                            onChange={handleInputChange}
+                            options={feederOptions}
+                            error={formErrors.feederId}
+                            required
+                            disabled={feedersLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Area Office"
+                            name="areaOfficeId"
+                            value={formData.areaOfficeId}
+                            onChange={handleInputChange}
+                            options={areaOfficeOptions}
+                            error={formErrors.areaOfficeId}
+                            required
+                            disabled={areaOfficesLoading}
                           />
 
                           <FormSelectModule
@@ -1164,24 +1266,6 @@ const InstallNewMeterPage = () => {
                             value={formData.mfrCode}
                             onChange={handleInputChange}
                           />
-
-                          <FormInputModule
-                            label="Latitude"
-                            name="latitude"
-                            type="number"
-                            placeholder="Enter latitude"
-                            value={formData.latitude}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Longitude"
-                            name="longitude"
-                            type="number"
-                            placeholder="Enter longitude"
-                            value={formData.longitude}
-                            onChange={handleInputChange}
-                          />
                         </div>
                       </motion.div>
                     )}
@@ -1196,10 +1280,8 @@ const InstallNewMeterPage = () => {
                         className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
                       >
                         <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Status + Tenant</h4>
-                          <p className="text-sm text-gray-600">
-                            Enter operational status, installation details, and tenant information
-                          </p>
+                          <h4 className="text-lg font-medium text-gray-900">Status + Installation</h4>
+                          <p className="text-sm text-gray-600">Enter operational status and installation details</p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
@@ -1218,13 +1300,7 @@ const InstallNewMeterPage = () => {
                             name="meterState"
                             value={formData.meterState}
                             onChange={handleInputChange}
-                            options={[
-                              { value: 1, label: "Good" },
-                              { value: 2, label: "Tamper" },
-                              { value: 3, label: "Suspicious" },
-                              { value: 4, label: "Missing" },
-                              { value: 5, label: "Unknown" },
-                            ]}
+                            options={meterStateOptions}
                             error={formErrors.meterState}
                             required
                           />
@@ -1238,24 +1314,6 @@ const InstallNewMeterPage = () => {
                             error={formErrors.installationDate}
                             required
                             placeholder={""}
-                          />
-
-                          <FormInputModule
-                            label="Tenant Full Name"
-                            name="tenantFullName"
-                            type="text"
-                            placeholder="Enter tenant full name"
-                            value={formData.tenantFullName}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Tenant Phone Number"
-                            name="tenantPhoneNumber"
-                            type="text"
-                            placeholder="Enter tenant phone number"
-                            value={formData.tenantPhoneNumber}
-                            onChange={handleInputChange}
                           />
 
                           <FormInputModule
