@@ -101,10 +101,10 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative w-[90vw] max-w-2xl rounded-lg bg-white shadow-2xl"
+        className="relative flex max-h-[90vh] w-[90vw] max-w-2xl flex-col rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3">
+        <div className="flex flex-shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3">
           <h2 className="text-lg font-semibold text-gray-900 max-sm:text-base">Bank Transfer Payment</h2>
           <button
             onClick={onRequestClose}
@@ -114,7 +114,7 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 max-sm:p-3">
+        <div className="flex-1 overflow-y-auto p-6 max-sm:p-3">
           {/* Payment Status */}
 
           {/* Payment Summary */}
@@ -148,7 +148,7 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
             <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900">
               <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
                 <span className="text-xs font-semibold uppercase tracking-wide text-green-700">Account Number</span>
-                <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-5xl">
+                <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-3xl sm:text-5xl">
                   {virtualAccount.accountNumber}
                 </span>
               </div>
@@ -178,7 +178,9 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
                 {canCheckPayment ? "Payment Ready to Check" : "Wait Before Checking"}
               </div>
               <div
-                className={`text-5xl font-bold tracking-wider ${canCheckPayment ? "text-green-600" : "text-blue-600"}`}
+                className={`text-5xl font-bold tracking-wider max-sm:text-2xl ${
+                  canCheckPayment ? "text-green-600" : "text-blue-600"
+                }`}
               >
                 {timeLeft}
               </div>
@@ -203,14 +205,14 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
           </div> */}
         </div>
 
-        <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 max-sm:px-3 sm:flex-row sm:gap-4">
-          <ButtonModule variant="secondary" className="flex-1" size="md" onClick={handleCopy}>
+        <div className="flex flex-shrink-0  gap-3 border-t bg-white px-6 py-4 max-sm:px-3 sm:flex-row sm:gap-4">
+          <ButtonModule variant="secondary" className="flex w-full" size="sm" onClick={handleCopy}>
             {isCopying ? "Copied!" : "Copy Details"}
           </ButtonModule>
           <ButtonModule
             variant={canCheckPayment ? "primary" : "secondary"}
-            className="flex-1"
-            size="md"
+            className="flex w-full"
+            size="sm"
             onClick={onCheckPayment}
             disabled={!canCheckPayment || isCheckingPayment}
           >
