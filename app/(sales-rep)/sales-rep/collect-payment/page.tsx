@@ -14,14 +14,14 @@ import type { VirtualAccount } from "lib/redux/paymentSlice"
 import {
   clearBillLookup,
   clearCreatePayment,
+  clearCustomerLookup,
   clearPaymentChannels,
   CollectorType,
   createAgentPayment,
   fetchPaymentChannels,
   lookupBill,
-  PaymentChannel,
   lookupCustomer,
-  clearCustomerLookup,
+  PaymentChannel,
 } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 

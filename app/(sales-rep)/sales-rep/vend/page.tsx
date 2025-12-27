@@ -10,7 +10,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import VendTokenModal from "components/ui/Modal/vend-token-modal"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearVend, vend, PaymentChannel, lookupCustomer, clearCustomerLookup } from "lib/redux/agentSlice"
+import { clearCustomerLookup, clearVend, lookupCustomer, PaymentChannel, vend } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 
 const VendPage: React.FC = () => {
