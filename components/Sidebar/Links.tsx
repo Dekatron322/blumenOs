@@ -131,6 +131,28 @@ export const allLinks: LinkItem[] = [
     icon: MeteringIcon,
     privilegeKey: "assets",
     requiredActions: ["R"],
+    children: [
+      { name: "Overview", href: "/metering/overview", privilegeKey: "assets", requiredActions: ["W"] },
+      { name: "All Meters", href: "/metering/all-meters", privilegeKey: "assets", requiredActions: ["R"] },
+      {
+        name: "Install New Meter",
+        href: "/metering/install-new-meter",
+        privilegeKey: "assets",
+        requiredActions: ["W"],
+      },
+      {
+        name: "Verify Meter Tokens",
+        href: "/metering/verify-meter-tokens",
+        privilegeKey: "assets",
+        requiredActions: ["R"],
+      },
+      {
+        name: "Change Request",
+        href: "/metering/change-requests",
+        privilegeKey: "assets",
+        requiredActions: ["E"],
+      },
+    ],
   },
   {
     name: "Prepaid & Tokens",

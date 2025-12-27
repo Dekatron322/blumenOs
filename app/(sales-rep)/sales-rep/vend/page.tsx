@@ -10,7 +10,14 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import VendTokenModal from "components/ui/Modal/vend-token-modal"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearCustomerLookup, clearVend, lookupCustomer, PaymentChannel, vend } from "lib/redux/agentSlice"
+import {
+  clearCustomerLookup,
+  clearVend,
+  fetchPaymentChannels,
+  lookupCustomer,
+  PaymentChannel,
+  vend,
+} from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 
 const VendPage: React.FC = () => {
@@ -25,6 +32,9 @@ const VendPage: React.FC = () => {
     customerLookup,
     customerLookupError,
     customerLookupSuccess,
+    paymentChannels,
+    paymentChannelsLoading,
+    paymentChannelsError,
   } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
 
@@ -46,9 +56,21 @@ const VendPage: React.FC = () => {
   const [channel, setChannel] = useState<PaymentChannel | "">(PaymentChannel.Cash)
   const [narrative, setNarrative] = useState("")
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false)
+  const [availableChannels, setAvailableChannels] = useState<PaymentChannel[]>([])
+  const [isFetchingChannels, setIsFetchingChannels] = useState(false)
+  const [lastFetchedAmount, setLastFetchedAmount] = useState<number | null>(null)
 
-  // Generate channel options
+  // Generate channel options based on available channels
   const channelOptions = [
+    { value: "", label: "Select payment channel" },
+    ...availableChannels.map((channel) => ({
+      value: channel,
+      label: channel.replace(/([A-Z])/g, " $1").trim(),
+    })),
+  ]
+
+  // Default channel options as fallback
+  const defaultChannelOptions = [
     { value: "", label: "Select payment channel" },
     { value: PaymentChannel.Cash, label: "Cash" },
     { value: PaymentChannel.BankTransfer, label: "Bank Transfer" },
@@ -64,6 +86,66 @@ const VendPage: React.FC = () => {
     // Load payment types for payment type selection
     dispatch(fetchPaymentTypes())
   }, [dispatch])
+
+  // Fetch payment channels based on amount
+  useEffect(() => {
+    const fetchChannelsForAmount = async () => {
+      const rawAmount = amountInput.replace(/,/g, "").trim()
+      const amount = Number(rawAmount)
+
+      // Only fetch if we have a valid amount and it's different from the last fetched amount
+      if (rawAmount && !Number.isNaN(amount) && amount > 0 && amount !== lastFetchedAmount) {
+        setIsFetchingChannels(true)
+        try {
+          const result = await dispatch(fetchPaymentChannels({ amount })).unwrap()
+
+          if (result && result.channels && Array.isArray(result.channels)) {
+            setAvailableChannels(result.channels)
+            setLastFetchedAmount(amount)
+
+            // If current selected channel is not in available channels, reset it
+            if (channel && !result.channels.includes(channel as PaymentChannel)) {
+              setChannel(result.channels[0] || "")
+            }
+          } else {
+            // Fallback to default channels if API returns unexpected data
+            setAvailableChannels([
+              PaymentChannel.Cash,
+              PaymentChannel.BankTransfer,
+              PaymentChannel.Pos,
+              PaymentChannel.Card,
+              PaymentChannel.VendorWallet,
+              PaymentChannel.Chaque,
+            ])
+          }
+        } catch (error: any) {
+          console.error("Failed to fetch payment channels:", error)
+          // Fallback to all channels if API fails
+          setAvailableChannels([
+            PaymentChannel.Cash,
+            PaymentChannel.BankTransfer,
+            PaymentChannel.Pos,
+            PaymentChannel.Card,
+            PaymentChannel.VendorWallet,
+            PaymentChannel.Chaque,
+          ])
+        } finally {
+          setIsFetchingChannels(false)
+        }
+      } else if (!rawAmount || amount <= 0) {
+        // Reset available channels when amount is cleared or invalid
+        setAvailableChannels([])
+        setLastFetchedAmount(null)
+      }
+    }
+
+    // Debounce the API call
+    const timeoutId = setTimeout(() => {
+      fetchChannelsForAmount()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [amountInput, dispatch, channel, lastFetchedAmount])
 
   useEffect(() => {
     if (vendSuccess && vendData) {
@@ -120,6 +202,15 @@ const VendPage: React.FC = () => {
   }, [customerLookupSuccess, customerLookup])
 
   useEffect(() => {
+    if (paymentChannelsError) {
+      notify("error", "Failed to load payment channels", {
+        description: paymentChannelsError,
+        duration: 6000,
+      })
+    }
+  }, [paymentChannelsError])
+
+  useEffect(() => {
     if (customerLookupError) {
       notify("error", customerLookupError || "Failed to validate customer", {
         duration: 6000,
@@ -165,8 +256,12 @@ const VendPage: React.FC = () => {
       return
     }
 
-    if (!channel) {
-      notify("error", "Please select a payment channel")
+    // Validate if selected channel is available for this amount
+    if (availableChannels.length > 0 && !availableChannels.includes(channel as PaymentChannel)) {
+      notify("error", "Selected payment channel is not available for this amount", {
+        description: "Please select one of the available channels listed above",
+        duration: 6000,
+      })
       return
     }
 
@@ -293,16 +388,18 @@ const VendPage: React.FC = () => {
                     <ButtonModule
                       type="submit"
                       variant="primary"
+                      size="sm"
                       className="w-full sm:w-auto"
                       disabled={isValidatingCustomer || customerLookupLoading}
                     >
-                      {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Validate Customer"}
+                      {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Validate"}
                     </ButtonModule>
 
                     {customerInfo && (
                       <ButtonModule
                         type="button"
                         variant="secondary"
+                        size="sm"
                         className="w-full sm:w-auto"
                         onClick={() => {
                           setMeterNumber("")
@@ -341,6 +438,8 @@ const VendPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Payment Channels Info - always visible with safe fallbacks */}
               </motion.div>
 
               {/* Vend Form */}
@@ -383,10 +482,71 @@ const VendPage: React.FC = () => {
                         name="channel"
                         value={channel}
                         onChange={handleChannelChange}
-                        options={channelOptions}
+                        options={availableChannels.length > 0 ? channelOptions : defaultChannelOptions}
                         required
+                        disabled={isFetchingChannels || availableChannels.length === 0}
                       />
+                      {availableChannels.length === 0 && amountInput && !isFetchingChannels && (
+                        <p className="mt-1 text-xs text-amber-600">Enter an amount to see available payment channels</p>
+                      )}
+                      {availableChannels.length > 0 && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          {availableChannels.length} channel{availableChannels.length !== 1 ? "s" : ""} available
+                        </p>
+                      )}
+                      {isFetchingChannels && (
+                        <p className="mt-1 text-xs text-blue-600">Checking available payment channels...</p>
+                      )}
+
+                      <div className="col-span-2 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-medium text-blue-800">Payment Limits & Info</span>
+                          {isFetchingChannels && (
+                            <span className="text-xs text-blue-600">Checking availability...</span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                          <div>
+                            <span className="font-medium">Cash at Hand:</span>{" "}
+                            <span>₦{(paymentChannels?.cashAtHand || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Collection Limit:</span>{" "}
+                            <span>₦{(paymentChannels?.cashCollectionLimit || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Max Single Cash Amount:</span>{" "}
+                            <span>₦{(paymentChannels?.maxSingleAllowedCashAmount || 0).toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Available Channels:</span>{" "}
+                            <span>{availableChannels.length}</span>
+                          </div>
+                        </div>
+                        {paymentChannels?.message && (
+                          <p className="mt-2 text-sm font-semibold italic text-orange-600">{paymentChannels.message}</p>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Available Channels Display */}
+                    {availableChannels.length > 0 && (
+                      <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+                        <p className="mb-2 text-sm font-medium text-gray-700">Available Payment Channels:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {availableChannels.map((availableChannel) => (
+                            <span
+                              key={availableChannel}
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                                channel === availableChannel ? "bg-[#004B23] text-white" : "bg-gray-200 text-gray-700"
+                              }`}
+                            >
+                              {availableChannel.replace(/([A-Z])/g, " $1").trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <FormTextAreaModule
                       label="Narrative (optional)"
                       name="narrative"
@@ -396,7 +556,7 @@ const VendPage: React.FC = () => {
                       rows={3}
                     />
 
-                    <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
+                    <div className="flex  gap-3 pt-2  sm:justify-end">
                       <ButtonModule
                         type="button"
                         variant="secondary"

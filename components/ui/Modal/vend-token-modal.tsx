@@ -78,8 +78,8 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
         className="relative w-[90vw] max-w-2xl rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">Vend Successful - Token Information</h2>
+        <div className="flex items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3">
+          <h2 className="text-lg font-semibold text-gray-900 max-sm:text-base">Vend Successful </h2>
           <button
             onClick={onRequestClose}
             className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
@@ -88,8 +88,8 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
           </button>
         </div>
 
-        <div className="p-6">
-          <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+        <div className="p-6 max-sm:p-3">
+          {/* <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
             <div className="flex items-center gap-2 text-green-800">
               <svg className="size-5" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -100,33 +100,37 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
               </svg>
               <span className="font-semibold">Vend completed successfully</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Token Information */}
-          <div className="mb-6">
+          <div className="mb-6 max-sm:mb-4">
             <h3 className="mb-3 text-base font-semibold text-gray-800">Token Details</h3>
             <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
               <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
                 <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Electricity Token</span>
-                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 sm:text-4xl">
+                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-4xl">
                   {tokenData.token}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</span>
-                  <p className="text-lg font-bold text-gray-900">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:text-xs">
+                    Amount
+                  </span>
+                  <p className="text-lg font-bold text-gray-900 max-sm:text-sm">
                     {tokenData.vendedAmount} {tokenData.unit}
                   </p>
                 </div>
                 <div>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:text-xs">
+                    DRN
+                  </span>
+                  <p className="font-mono text-lg font-bold text-gray-900 max-sm:text-sm">{tokenData.drn}</p>
+                </div>
+                {/* <div>
                   <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Description</span>
                   <p className="text-lg font-bold text-gray-900">{tokenData.description}</p>
-                </div>
-              </div>
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">DRN</span>
-                <p className="font-mono text-lg font-bold text-gray-900">{tokenData.drn}</p>
+                </div> */}
               </div>
             </div>
           </div>
@@ -165,11 +169,11 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 sm:flex-row sm:gap-4">
-          <ButtonModule variant="secondary" className="flex-1" size="md" onClick={handleCopyToken}>
+        <div className="flex gap-3  border-t bg-white px-6 py-4 max-sm:px-3  sm:gap-4">
+          <ButtonModule variant="secondary" className="flex w-full" size="sm" onClick={handleCopyToken}>
             {isCopyingToken ? "Copied!" : "Copy Token"}
           </ButtonModule>
-          <ButtonModule variant="primary" className="flex-1" size="md" onClick={handleCopyAll}>
+          <ButtonModule variant="primary" className="flex w-full" size="sm" onClick={handleCopyAll}>
             {isCopyingAll ? "Copied!" : "Copy All Details"}
           </ButtonModule>
         </div>

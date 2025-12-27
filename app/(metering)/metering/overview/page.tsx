@@ -3,20 +3,8 @@
 import DashboardNav from "components/Navbar/DashboardNav"
 import ArrowIcon from "public/arrow-icon"
 import { useState } from "react"
-import AddCustomerModal from "components/ui/Modal/add-customer-modal"
 import { motion } from "framer-motion"
-import {
-  BillingIcon,
-  CustomeraIcon,
-  MetersProgrammedIcon,
-  PlusIcon,
-  PostpaidIcon,
-  RefreshCircleIcon,
-  TamperIcon,
-  TokenGeneratedIcon,
-  VendingIcon,
-} from "components/Icons/Icons"
-import AllCustomers from "components/Tables/AllCustomers"
+import { MetersProgrammedIcon, PlusIcon, TamperIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
 import MeteringInfo from "components/MeteringInfo/MeteringInfo"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 

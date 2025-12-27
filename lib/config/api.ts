@@ -360,6 +360,13 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/decline",
     VENDOR_PAYMENT: "/vendors/{id}/payments",
   },
+
+  METERS: {
+    LIST_METERS: "/meters",
+    EDIT_METER: "/meters/{id}",
+    METER_HISTORY: "/meters/{id}/history",
+    ADD_METER: "/meters",
+  },
 }
 
 // Helper function to build full URL
