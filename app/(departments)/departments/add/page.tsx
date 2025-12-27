@@ -106,7 +106,7 @@ const CreateDepartmentPage = () => {
   const { companies, companiesLoading } = useAppSelector((state: RootState) => state.companies)
 
   const [formData, setFormData] = useState<CreateDepartmentRequest>({
-    companyId: 0,
+    companyId: 1,
     name: "",
     description: "",
     isActive: true,
@@ -276,10 +276,10 @@ const CreateDepartmentPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col ">
             {/* Header */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
+              <div className="mx-auto w-full px-3 py-4 xl:px-16">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -351,7 +351,7 @@ const CreateDepartmentPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-16 py-8">
+            <div className="flex w-full px-3 py-8 xl:px-16">
               <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Main Form Content - 2/3 width */}
                 <div className="space-y-6 md:col-span-2">
@@ -367,18 +367,6 @@ const CreateDepartmentPage = () => {
                     </h2>
 
                     <div className="space-y-6">
-                      {/* Company Selection */}
-                      <FormSelectModule
-                        label="Company"
-                        name="companyId"
-                        value={formData.companyId}
-                        onChange={(e) => handleInputChange("companyId")(e as any)}
-                        options={companyOptions}
-                        required
-                        disabled={isLoading}
-                        error={getError("companyId")}
-                      />
-
                       {/* Department Name */}
                       <FormInputModule
                         label="Department Name"

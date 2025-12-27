@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { changePassword, clearChangePasswordStatus, initializeAuth, resetMustChangePassword } from "lib/redux/authSlice"
 import { motion } from "framer-motion"
+import { allLinks, getFirstPermittedPath, hasPermission, UserPermission } from "components/Sidebar/Links"
 
 const ChangePassword: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("")
@@ -28,6 +29,7 @@ const ChangePassword: React.FC = () => {
     isChangingPassword,
     changePasswordError,
     changePasswordSuccess,
+    isAgentOnly,
   } = useSelector((state: RootState) => state.auth)
 
   useEffect(() => {
@@ -60,15 +62,55 @@ const ChangePassword: React.FC = () => {
   useEffect(() => {
     if (changePasswordSuccess) {
       notify("success", "Password changed successfully!", {
-        description: "Redirecting to dashboard...",
+        description: "Redirecting...",
         duration: 3000,
       })
 
-      // Reset the mustChangePassword flag and redirect
+      // Reset the mustChangePassword flag and redirect with role-based logic
       dispatch(resetMustChangePassword())
-      setTimeout(() => router.push("/dashboard"), 2000)
+
+      // Agent-only users go directly to sales-rep
+      if (isAgentOnly) {
+        setTimeout(() => router.push("/sales-rep/overview"), 2000)
+        return
+      }
+
+      // If user has Sales Representative role, redirect to channel
+      const hasSalesRepRole = user?.roles?.some(
+        (role) => role.roleId === 6 || role.slug === "sales-representative" || role.name === "Sales Representative"
+      )
+
+      if (hasSalesRepRole) {
+        setTimeout(() => router.push("/channel"), 2000)
+        return
+      }
+
+      // Build permissions object from authenticated user
+      const permissions: UserPermission | null =
+        user?.roles && user?.privileges
+          ? {
+              roles: user.roles,
+              privileges: user.privileges,
+            }
+          : null
+
+      let targetPath = "/dashboard"
+
+      if (permissions) {
+        const dashboardLink = allLinks.find((link) => link.href === "/dashboard")
+        const canAccessDashboard = dashboardLink ? hasPermission(dashboardLink, permissions) : false
+
+        if (!canAccessDashboard) {
+          const firstPermitted = getFirstPermittedPath(permissions)
+          if (firstPermitted) {
+            targetPath = firstPermitted
+          }
+        }
+      }
+
+      setTimeout(() => router.push(targetPath), 2000)
     }
-  }, [changePasswordSuccess, router, dispatch])
+  }, [changePasswordSuccess, router, dispatch, user, isAgentOnly])
 
   // Handle change password errors
   useEffect(() => {

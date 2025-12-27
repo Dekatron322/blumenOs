@@ -20,21 +20,30 @@ import {
   fetchPaymentChannels,
   lookupBill,
   PaymentChannel,
+  lookupCustomer,
+  clearCustomerLookup,
 } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
-import { lookupCustomer } from "lib/redux/customerSlice"
 
 const CollectPaymentPage: React.FC = () => {
   const dispatch = useAppDispatch()
 
-  const { billLookup, billLookupLoading, billLookupError } = useAppSelector((state) => state.agents)
+  const {
+    billLookup,
+    billLookupLoading,
+    billLookupError,
+    customerLookupLoading,
+    customerLookup,
+    customerLookupError,
+    customerLookupSuccess,
+  } = useAppSelector((state) => state.agents)
   const { createPaymentLoading, createPaymentError, createPaymentSuccess, createdPayment } = useAppSelector(
     (state) => state.agents
   )
   const { paymentChannels, paymentChannelsLoading, paymentChannelsError, paymentChannelsSuccess } = useAppSelector(
     (state) => state.agents
   )
-  const { customerLookupLoading } = useAppSelector((state) => state.customers)
+
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
 
   const [lookupMode, setLookupMode] = useState<"bill" | "customer">("bill")
@@ -210,6 +219,38 @@ const CollectPaymentPage: React.FC = () => {
     }
   }, [paymentChannelsError])
 
+  // Customer lookup success effect
+  useEffect(() => {
+    if (customerLookupSuccess && customerLookup) {
+      setCustomerInfo({
+        id: customerLookup.id,
+        accountNumber: customerLookup.accountNumber,
+        fullName: customerLookup.fullName,
+        phoneNumber: customerLookup.phoneNumber,
+        email: customerLookup.email,
+        status: customerLookup.status,
+        isSuspended: customerLookup.isSuspended,
+        areaOfficeName: customerLookup.areaOfficeName,
+        feederName: customerLookup.feederName,
+        customerOutstandingDebtBalance: customerLookup.customerOutstandingDebtBalance,
+      })
+
+      notify("success", "Customer validated successfully", {
+        description: `Customer found: ${customerLookup.fullName}`,
+        duration: 3000,
+      })
+    }
+  }, [customerLookupSuccess, customerLookup])
+
+  // Customer lookup error effect
+  useEffect(() => {
+    if (customerLookupError) {
+      notify("error", customerLookupError || "Failed to validate customer", {
+        duration: 6000,
+      })
+    }
+  }, [customerLookupError])
+
   const handleLookupBill = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -231,12 +272,7 @@ const CollectPaymentPage: React.FC = () => {
         try {
           setIsValidatingCustomer(true)
 
-          const customer = await dispatch(
-            lookupCustomer({
-              reference: billNumber.trim(),
-              type: "postpaid",
-            })
-          ).unwrap()
+          const customer = await dispatch(lookupCustomer(billNumber.trim())).unwrap()
 
           if (customer) {
             setLookupMode("customer")
@@ -281,39 +317,14 @@ const CollectPaymentPage: React.FC = () => {
     }
 
     setCustomerInfo(null)
+    dispatch(clearCustomerLookup())
 
     try {
       setIsValidatingCustomer(true)
 
-      const result = await dispatch(
-        lookupCustomer({
-          reference: customerReference.trim(),
-          type: "postpaid",
-        })
-      ).unwrap()
-
-      if (result) {
-        setCustomerInfo({
-          id: result.id,
-          accountNumber: result.accountNumber,
-          fullName: result.fullName,
-          phoneNumber: result.phoneNumber,
-          email: result.email,
-          status: result.status,
-          isSuspended: result.isSuspended,
-          areaOfficeName: result.areaOfficeName,
-          feederName: result.feederName,
-          customerOutstandingDebtBalance: result.customerOutstandingDebtBalance,
-        })
-
-        notify("success", "Customer validated successfully", {
-          description: `Customer found: ${result.fullName}`,
-          duration: 3000,
-        })
-      }
+      await dispatch(lookupCustomer(customerReference.trim())).unwrap()
     } catch (error: any) {
-      notify("error", error || "Invalid customer reference")
-      setCustomerInfo(null)
+      // Error is handled by the useEffect above
     } finally {
       setIsValidatingCustomer(false)
     }

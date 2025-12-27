@@ -268,7 +268,22 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
 
     dispatch(fetchPayments(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, appliedFilters, agentId, customerId])
+  }, [
+    dispatch,
+    currentPage,
+    pageSize,
+    searchText,
+    agentId,
+    customerId,
+    appliedFilters.status,
+    appliedFilters.channel,
+    appliedFilters.collectorType,
+    appliedFilters.paymentTypeId,
+    appliedFilters.paidFromUtc,
+    appliedFilters.paidToUtc,
+    appliedFilters.sortBy,
+    appliedFilters.sortOrder,
+  ])
 
   // Clear error when component unmounts
   useEffect(() => {

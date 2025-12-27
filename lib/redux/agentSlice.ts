@@ -869,6 +869,85 @@ export interface BillLookupRequestParams {
 
 // ========== END BILL LOOKUP INTERFACES ==========
 
+// ========== CUSTOMER LOOKUP INTERFACES ==========
+
+// Interfaces for Customer Lookup
+export interface CustomerLookupDetails {
+  id: number
+  customerNumber: number
+  customerID: string
+  accountNumber: string
+  autoNumber: string
+  isCustomerNew: boolean
+  isPostEnumerated: boolean
+  statusCode: string
+  isReadyforExtraction: boolean
+  fullName: string
+  phoneNumber: string
+  phoneOffice: string
+  gender: string
+  email: string
+  status: string
+  isSuspended: boolean
+  distributionSubstationId: number
+  distributionSubstationCode: string
+  feederName: string
+  areaOfficeName: string
+  companyName: string
+  address: string
+  addressTwo: string
+  city: string
+  provinceId: number
+  provinceName: string
+  lga: string
+  serviceCenterId: number
+  serviceCenterName: string
+  latitude: number
+  longitude: number
+  tariff: number
+  tariffCode: string
+  tariffID: string
+  tariffInddex: string
+  tariffType: string
+  tariffClass: string
+  newRate: number
+  vat: number
+  isVATWaved: boolean
+  meterNumber: string
+  isPPM: boolean
+  isMD: boolean
+  isUrban: boolean
+  isHRB: boolean
+  isCustomerAccGovt: boolean
+  comment: string
+  band: string
+  storedAverage: number
+  totalMonthlyVend: number
+  totalMonthlyDebt: number
+  totalLifetimeDebit: number
+  totalLifetimeCredit: number
+  customerOutstandingDebtBalance: number
+  customerOutstandingCreditBalance: number
+  customerOutstandingBalance: number
+  salesRepUserId: number
+  technicalEngineerUserId: number
+  suspensionReason: string
+  suspendedAt: string
+  lastLoginAt: string
+}
+
+export interface CustomerLookupResponse {
+  isSuccess: boolean
+  message: string
+  data: CustomerLookupDetails
+}
+
+export interface CustomerLookupRequestParams {
+  reference: string
+}
+
+// ========== END CUSTOMER LOOKUP INTERFACES ==========
+
 // ========== AGENT SUMMARY INTERFACES ==========
 
 export enum TimeRange {
@@ -964,6 +1043,96 @@ export interface PaymentChannelsRequestParams {
 
 // ========== END PAYMENT CHANNELS INTERFACES ==========
 
+// ========== VEND INTERFACES ==========
+
+export interface VendRequest {
+  meterNumber: string
+  amount: number
+  paymentTypeId: number
+  channel: string
+  latitude: number
+  longitude: number
+  externalReference: string
+  narrative: string
+}
+
+export interface Token {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+export interface VirtualAccount {
+  accountNumber: string
+  bankName: string
+  reference: string
+  expiresAtUtc: string
+}
+
+export interface VendPayment {
+  id: number
+  reference: string
+  latitude: number
+  longitude: number
+  channel: string
+  status: string
+  collectorType: string
+  amount: number
+  amountApplied: number
+  overPaymentAmount: number
+  outstandingAfterPayment: number
+  outstandingBeforePayment: number
+  currency: string
+  paidAtUtc: string
+  confirmedAtUtc: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  postpaidBillId: number
+  postpaidBillPeriod: string
+  billTotalDue: number
+  vendorId: number
+  vendorName: string
+  agentId: number
+  agentCode: string
+  agentName: string
+  areaOfficeName: string
+  distributionSubstationCode: string
+  feederName: string
+  paymentTypeId: number
+  paymentTypeName: string
+  isManualEntry: boolean
+  isSystemGenerated: boolean
+  evidenceFileUrl: string
+  recoveryApplied: boolean
+  recoveryAmount: number
+  recoveryPolicyId: number
+  recoveryPolicyName: string
+  tokens: Token[]
+  narrative: string
+  externalReference: string
+  virtualAccount: VirtualAccount
+  vendorAccountId: string
+  recordedByName: string
+}
+
+export interface VendData {
+  isPending: boolean
+  payment: VendPayment
+  token: Token
+}
+
+export interface VendResponse {
+  isSuccess: boolean
+  message: string
+  data: VendData
+}
+
+// ========== END VEND INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -989,6 +1158,12 @@ interface AgentState {
   paymentChannelsLoading: boolean
   paymentChannelsError: string | null
   paymentChannelsSuccess: boolean
+
+  // Vend state
+  vendData: VendData | null
+  vendLoading: boolean
+  vendError: string | null
+  vendSuccess: boolean
 
   // Agents list state
   agents: Agent[]
@@ -1120,6 +1295,12 @@ interface AgentState {
   billLookupLoading: boolean
   billLookupError: string | null
   billLookupSuccess: boolean
+
+  // Customer Lookup state
+  customerLookup: CustomerLookupDetails | null
+  customerLookupLoading: boolean
+  customerLookupError: string | null
+  customerLookupSuccess: boolean
 }
 
 // Initial state
@@ -1147,6 +1328,12 @@ const initialState: AgentState = {
   paymentChannelsLoading: false,
   paymentChannelsError: null,
   paymentChannelsSuccess: false,
+
+  // Vend initial state
+  vendData: null,
+  vendLoading: false,
+  vendError: null,
+  vendSuccess: false,
 
   // Rest of the initial state
   agents: [],
@@ -1249,6 +1436,11 @@ const initialState: AgentState = {
   billLookupLoading: false,
   billLookupError: null,
   billLookupSuccess: false,
+  // Customer Lookup initial state
+  customerLookup: null,
+  customerLookupLoading: false,
+  customerLookupError: null,
+  customerLookupSuccess: false,
 }
 
 // Async thunks
@@ -1360,6 +1552,27 @@ export const fetchPaymentChannels = createAsyncThunk(
   }
 )
 
+export const vend = createAsyncThunk("agents/vend", async (vendData: VendRequest, { rejectWithValue }) => {
+  try {
+    const response = await api.post<VendResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.VEND), vendData)
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to vend")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Vend data not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to vend")
+    }
+    return rejectWithValue(error.message || "Network error during vend")
+  }
+})
+
 // ========== BILL LOOKUP ASYNC THUNK ==========
 export const lookupBill = createAsyncThunk("agents/lookupBill", async (billNumber: string, { rejectWithValue }) => {
   try {
@@ -1385,6 +1598,34 @@ export const lookupBill = createAsyncThunk("agents/lookupBill", async (billNumbe
     return rejectWithValue(error.message || "Network error during bill lookup")
   }
 })
+
+export const lookupCustomer = createAsyncThunk(
+  "agents/lookupCustomer",
+  async (reference: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get<CustomerLookupResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.LOOKUP_CUSTOMER), {
+        params: {
+          reference,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to lookup customer")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Customer data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to lookup customer")
+      }
+      return rejectWithValue(error.message || "Network error during customer lookup")
+    }
+  }
+)
 
 export const fetchAgents = createAsyncThunk(
   "agents/fetchAgents",
@@ -1878,6 +2119,14 @@ const agentSlice = createSlice({
       state.paymentChannelsLoading = false
     },
 
+    // Clear vend state
+    clearVend: (state) => {
+      state.vendData = null
+      state.vendError = null
+      state.vendSuccess = false
+      state.vendLoading = false
+    },
+
     // Set agent info (for when we get agent info from other sources)
     setAgentInfo: (state, action: PayloadAction<AgentInfo>) => {
       state.agentInfo = action.payload
@@ -2021,6 +2270,13 @@ const agentSlice = createSlice({
       state.billLookupError = null
       state.billLookupSuccess = false
       state.billLookupLoading = false
+    },
+
+    clearCustomerLookup: (state) => {
+      state.customerLookup = null
+      state.customerLookupError = null
+      state.customerLookupSuccess = false
+      state.customerLookupLoading = false
     },
 
     // Reset agent state
@@ -2585,6 +2841,26 @@ const agentSlice = createSlice({
         state.paymentChannels = null
       })
 
+      // Vend cases
+      .addCase(vend.pending, (state) => {
+        state.vendLoading = true
+        state.vendError = null
+        state.vendSuccess = false
+        state.vendData = null
+      })
+      .addCase(vend.fulfilled, (state, action: PayloadAction<VendData>) => {
+        state.vendLoading = false
+        state.vendSuccess = true
+        state.vendData = action.payload
+        state.vendError = null
+      })
+      .addCase(vend.rejected, (state, action) => {
+        state.vendLoading = false
+        state.vendError = (action.payload as string) || "Failed to vend"
+        state.vendSuccess = false
+        state.vendData = null
+      })
+
       // Bill Lookup cases
       .addCase(lookupBill.pending, (state) => {
         state.billLookupLoading = true
@@ -2603,6 +2879,26 @@ const agentSlice = createSlice({
         state.billLookupError = (action.payload as string) || "Failed to lookup bill"
         state.billLookupSuccess = false
         state.billLookup = null
+      })
+
+      // Customer Lookup cases
+      .addCase(lookupCustomer.pending, (state) => {
+        state.customerLookupLoading = true
+        state.customerLookupError = null
+        state.customerLookupSuccess = false
+        state.customerLookup = null
+      })
+      .addCase(lookupCustomer.fulfilled, (state, action: PayloadAction<CustomerLookupDetails>) => {
+        state.customerLookupLoading = false
+        state.customerLookupSuccess = true
+        state.customerLookup = action.payload
+        state.customerLookupError = null
+      })
+      .addCase(lookupCustomer.rejected, (state, action) => {
+        state.customerLookupLoading = false
+        state.customerLookupError = (action.payload as string) || "Failed to lookup customer"
+        state.customerLookupSuccess = false
+        state.customerLookup = null
       })
 
       // Fetch agents cases
@@ -3254,6 +3550,7 @@ export const {
   clearAgentSummary,
   clearAgentPerformanceDaily,
   clearPaymentChannels,
+  clearVend,
   setAgentInfo,
   setAgentSummary,
   setAgentPerformanceDaily,
@@ -3267,6 +3564,7 @@ export const {
   clearClearances,
   clearPayments,
   clearBillLookup,
+  clearCustomerLookup,
   clearCreatePayment,
   resetAgentState,
   setPagination,
