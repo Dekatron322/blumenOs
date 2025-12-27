@@ -16,11 +16,12 @@ import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchMeterBrands } from "lib/redux/meterBrandsSlice"
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface MeterFormData {
   customerId: number
-  meterIsPPM: boolean
+  serialNumber: string
   drn: string
   sgc: number
   krn: string
@@ -30,24 +31,23 @@ interface MeterFormData {
   ken: number
   mfrCode: number
   installationDate: string
-  meterID: string
   meterAddedBy: string
   meterEditedBy: string
   meterDateCreated: string
-  meterTypeId: string
   meterType: number
+  isSmart: boolean
   meterBrand: string
   meterCategory: string
   isMeterActive: boolean
   status: number
-  state: number
+  meterState: number
   sealNumber: string
   tariffRate: number
   tariffIndex: string
   serviceBand: number
   customerClass: string
   injectionSubstationId: number
-  locationState: string
+  state: number
   address: string
   addressTwo: string
   city: string
@@ -89,9 +89,15 @@ const InstallNewMeterPage = () => {
     error: customersError,
   } = useSelector((state: RootState) => state.customers)
 
+  const {
+    meterBrands,
+    loading: meterBrandsLoading,
+    error: meterBrandsError,
+  } = useSelector((state: RootState) => state.meterBrands)
+
   const [formData, setFormData] = useState<MeterFormData>({
     customerId: 0,
-    meterIsPPM: false,
+    serialNumber: "",
     drn: "",
     sgc: 0,
     krn: "",
@@ -101,24 +107,23 @@ const InstallNewMeterPage = () => {
     ken: 0,
     mfrCode: 0,
     installationDate: new Date().toISOString(),
-    meterID: "",
     meterAddedBy: "",
     meterEditedBy: "",
     meterDateCreated: new Date().toISOString(),
-    meterTypeId: "",
     meterType: 1,
+    isSmart: true,
     meterBrand: "",
     meterCategory: "",
     isMeterActive: true,
     status: 1,
-    state: 1,
+    meterState: 1,
     sealNumber: "",
     tariffRate: 0,
     tariffIndex: "",
     serviceBand: 1,
     customerClass: "",
     injectionSubstationId: 0,
-    locationState: "",
+    state: 0,
     address: "",
     addressTwo: "",
     city: "",
@@ -136,6 +141,7 @@ const InstallNewMeterPage = () => {
     dispatch(fetchEmployees({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchCountries())
     dispatch(fetchCustomers({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchMeterBrands({ pageNumber: 1, pageSize: 100 }))
   }, [dispatch])
 
   // Handle success and error states
@@ -249,7 +255,7 @@ const InstallNewMeterPage = () => {
         "mfrCode",
         "meterType",
         "status",
-        "state",
+        "meterState",
         "tariffRate",
         "serviceBand",
         "injectionSubstationId",
@@ -261,7 +267,7 @@ const InstallNewMeterPage = () => {
     }
 
     // Handle boolean fields
-    if (["meterIsPPM", "isMeterActive"].includes(name)) {
+    if (["isSmart", "isMeterActive"].includes(name)) {
       processedValue = value === "true" || value === true
     }
 
@@ -283,29 +289,39 @@ const InstallNewMeterPage = () => {
     const errors: Record<string, string> = {}
 
     switch (currentStep) {
-      case 1: // Basic Information
+      case 1: // Basic Identity
         if (!formData.customerId || formData.customerId === 0) {
           errors.customerId = "Customer ID is required"
         }
+        if (!formData.serialNumber.trim()) errors.serialNumber = "Serial number is required"
         if (!formData.drn.trim()) errors.drn = "DRN is required"
-        if (!formData.meterID.trim()) errors.meterID = "Meter ID is required"
-        if (!formData.meterAddedBy.trim()) errors.meterAddedBy = "Added by is required"
-        break
-
-      case 2: // Technical Details
-        if (!formData.meterTypeId.trim()) errors.meterTypeId = "Meter type ID is required"
-        if (!formData.meterBrand.trim()) errors.meterBrand = "Meter brand is required"
-        if (!formData.meterCategory.trim()) errors.meterCategory = "Meter category is required"
         if (!formData.sealNumber.trim()) errors.sealNumber = "Seal number is required"
         break
 
-      case 3: // Location Information
-        if (!formData.address.trim()) errors.address = "Address is required"
-        if (!formData.city.trim()) errors.city = "City is required"
-        if (!formData.locationState.trim()) errors.locationState = "State is required"
+      case 2: // Meter Details
+        if (!formData.meterBrand.trim()) errors.meterBrand = "Meter brand is required"
+        if (!formData.meterCategory.trim()) errors.meterCategory = "Meter category is required"
+        break
+
+      case 3: // Billing + Location
+        if (!formData.tariffIndex.trim()) errors.tariffIndex = "Tariff index is required"
+        if (!formData.customerClass.trim()) errors.customerClass = "Customer class is required"
         if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
           errors.injectionSubstationId = "Injection substation is required"
         }
+        if (!formData.address.trim()) errors.address = "Address is required"
+        if (!formData.city.trim()) errors.city = "City is required"
+        if (!formData.state) errors.state = "State is required"
+        break
+
+      case 4: // Technical Details
+        // No required fields in technical details
+        break
+
+      case 5: // Status + Tenant
+        if (!formData.status) errors.status = "Status is required"
+        if (!formData.meterState) errors.meterState = "Meter state is required"
+        if (!formData.installationDate) errors.installationDate = "Installation date is required"
         break
     }
 
@@ -315,7 +331,7 @@ const InstallNewMeterPage = () => {
 
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 4))
+      setCurrentStep((prev) => Math.min(prev + 1, 5))
       setIsMobileSidebarOpen(false)
     } else {
       notify("error", "Please fix the form errors before continuing", {
@@ -338,10 +354,42 @@ const InstallNewMeterPage = () => {
       return
     }
 
+    // Also validate all steps before final submission
+    const allErrors: Record<string, string> = {}
+    if (!formData.customerId || formData.customerId === 0) {
+      allErrors.customerId = "Customer ID is required"
+    }
+    if (!formData.serialNumber.trim()) allErrors.serialNumber = "Serial number is required"
+    if (!formData.drn.trim()) allErrors.drn = "DRN is required"
+    if (!formData.sealNumber.trim()) allErrors.sealNumber = "Seal number is required"
+    if (!formData.meterBrand.trim()) allErrors.meterBrand = "Meter brand is required"
+    if (!formData.meterCategory.trim()) allErrors.meterCategory = "Meter category is required"
+    if (!formData.tariffIndex.trim()) allErrors.tariffIndex = "Tariff index is required"
+    if (!formData.customerClass.trim()) allErrors.customerClass = "Customer class is required"
+    if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
+      allErrors.injectionSubstationId = "Injection substation is required"
+    }
+    if (!formData.address.trim()) allErrors.address = "Address is required"
+    if (!formData.city.trim()) allErrors.city = "City is required"
+    if (!formData.state) allErrors.state = "State is required"
+    if (!formData.status) allErrors.status = "Status is required"
+    if (!formData.meterState) allErrors.meterState = "Meter state is required"
+    if (!formData.installationDate) allErrors.installationDate = "Installation date is required"
+
+    setFormErrors(allErrors)
+
+    if (Object.keys(allErrors).length > 0) {
+      notify("error", "Please fix all form errors before submitting", {
+        description: "Some required fields are missing or contain invalid data",
+        duration: 4000,
+      })
+      return
+    }
+
     try {
       const meterData: AddMeterRequest = {
         customerId: formData.customerId,
-        meterIsPPM: formData.meterIsPPM,
+        serialNumber: formData.serialNumber,
         drn: formData.drn,
         sgc: formData.sgc,
         krn: formData.krn,
@@ -351,24 +399,23 @@ const InstallNewMeterPage = () => {
         ken: formData.ken,
         mfrCode: formData.mfrCode,
         installationDate: formData.installationDate,
-        meterID: formData.meterID,
         meterAddedBy: formData.meterAddedBy,
         meterEditedBy: formData.meterEditedBy,
         meterDateCreated: formData.meterDateCreated,
-        meterTypeId: formData.meterTypeId,
         meterType: formData.meterType,
+        isSmart: formData.isSmart,
         meterBrand: formData.meterBrand,
         meterCategory: formData.meterCategory,
         isMeterActive: formData.isMeterActive,
         status: formData.status,
-        state: formData.state,
+        meterState: formData.meterState,
         sealNumber: formData.sealNumber,
         tariffRate: formData.tariffRate,
         tariffIndex: formData.tariffIndex,
         serviceBand: formData.serviceBand,
         customerClass: formData.customerClass,
         injectionSubstationId: formData.injectionSubstationId,
-        locationState: formData.locationState,
+        state: formData.state,
         address: formData.address,
         addressTwo: formData.addressTwo,
         city: formData.city,
@@ -388,7 +435,7 @@ const InstallNewMeterPage = () => {
   const handleReset = () => {
     setFormData({
       customerId: 0,
-      meterIsPPM: false,
+      serialNumber: "",
       drn: "",
       sgc: 0,
       krn: "",
@@ -398,24 +445,23 @@ const InstallNewMeterPage = () => {
       ken: 0,
       mfrCode: 0,
       installationDate: new Date().toISOString(),
-      meterID: "",
       meterAddedBy: "",
       meterEditedBy: "",
       meterDateCreated: new Date().toISOString(),
-      meterTypeId: "",
       meterType: 1,
+      isSmart: true,
       meterBrand: "",
       meterCategory: "",
       isMeterActive: true,
       status: 1,
-      state: 1,
+      meterState: 1,
       sealNumber: "",
       tariffRate: 0,
       tariffIndex: "",
       serviceBand: 1,
       customerClass: "",
       injectionSubstationId: 0,
-      locationState: "",
+      state: 0,
       address: "",
       addressTwo: "",
       city: "",
@@ -440,13 +486,14 @@ const InstallNewMeterPage = () => {
           onClick={() => setIsMobileSidebarOpen(true)}
         >
           <Menu className="size-4" />
-          <span>Step {currentStep}/4</span>
+          <span>Step {currentStep}/5</span>
         </button>
         <div className="text-sm font-medium text-gray-900">
-          {currentStep === 1 && "Basic Info"}
-          {currentStep === 2 && "Technical"}
-          {currentStep === 3 && "Location"}
-          {currentStep === 4 && "Additional"}
+          {currentStep === 1 && "Basic Identity"}
+          {currentStep === 2 && "Meter Details"}
+          {currentStep === 3 && "Billing & Location"}
+          {currentStep === 4 && "Technical Details"}
+          {currentStep === 5 && "Status & Tenant"}
         </div>
       </div>
     </div>
@@ -456,7 +503,7 @@ const InstallNewMeterPage = () => {
   const StepProgress = () => (
     <div className="mb-8">
       <div className="flex items-center justify-between">
-        {[1, 2, 3, 4].map((step) => (
+        {[1, 2, 3, 4, 5].map((step) => (
           <React.Fragment key={step}>
             <div className="flex flex-col items-center">
               <div
@@ -485,13 +532,14 @@ const InstallNewMeterPage = () => {
                   step === currentStep ? "text-[#004B23]" : "text-gray-500"
                 }`}
               >
-                {step === 1 && "Basic Info"}
-                {step === 2 && "Technical"}
-                {step === 3 && "Location"}
-                {step === 4 && "Additional"}
+                {step === 1 && "Basic Identity"}
+                {step === 2 && "Meter Details"}
+                {step === 3 && "Billing & Location"}
+                {step === 4 && "Technical"}
+                {step === 5 && "Status"}
               </span>
             </div>
-            {step < 4 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
+            {step < 5 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>
@@ -541,10 +589,11 @@ const InstallNewMeterPage = () => {
               <div className="flex-1 overflow-y-auto p-4">
                 <nav className="space-y-2">
                   {[
-                    { step: 1, title: "Basic Information", description: "Customer and meter details" },
-                    { step: 2, title: "Technical Details", description: "Meter technical specifications" },
-                    { step: 3, title: "Location Information", description: "Installation location details" },
-                    { step: 4, title: "Additional Information", description: "Tenant and contact details" },
+                    { step: 1, title: "Basic Identity", description: "Customer and basic meter info" },
+                    { step: 2, title: "Meter Details", description: "Meter specifications and type" },
+                    { step: 3, title: "Billing & Location", description: "Tariff and location details" },
+                    { step: 4, title: "Technical Details", description: "Technical specifications" },
+                    { step: 5, title: "Status & Tenant", description: "Status and tenant info" },
                   ].map((item) => (
                     <button
                       key={item.step}
@@ -628,17 +677,20 @@ const InstallNewMeterPage = () => {
   const isFormValid = (): boolean => {
     return (
       formData.customerId !== 0 &&
+      formData.serialNumber.trim() !== "" &&
       formData.drn.trim() !== "" &&
-      formData.meterID.trim() !== "" &&
-      formData.meterAddedBy.trim() !== "" &&
-      formData.meterTypeId.trim() !== "" &&
+      formData.sealNumber.trim() !== "" &&
       formData.meterBrand.trim() !== "" &&
       formData.meterCategory.trim() !== "" &&
-      formData.sealNumber.trim() !== "" &&
+      formData.tariffIndex.trim() !== "" &&
+      formData.customerClass.trim() !== "" &&
       formData.address.trim() !== "" &&
       formData.city.trim() !== "" &&
-      formData.locationState.trim() !== "" &&
-      formData.injectionSubstationId !== 0
+      formData.state !== 0 &&
+      formData.injectionSubstationId !== 0 &&
+      formData.status !== 0 &&
+      formData.meterState !== 0 &&
+      formData.installationDate !== ""
     )
   }
 
@@ -669,7 +721,7 @@ const InstallNewMeterPage = () => {
         </div>
 
         <div className="flex gap-2">
-          {currentStep < 4 ? (
+          {currentStep < 5 ? (
             <button
               type="button"
               onClick={nextStep}
@@ -782,7 +834,7 @@ const InstallNewMeterPage = () => {
                   className="space-y-6"
                 >
                   <AnimatePresence mode="wait">
-                    {/* Step 1: Basic Information */}
+                    {/* Step 1: Basic Identity */}
                     {currentStep === 1 && (
                       <motion.div
                         key="step-1"
@@ -792,8 +844,8 @@ const InstallNewMeterPage = () => {
                         className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
                       >
                         <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
-                          <p className="text-sm text-gray-600">Enter customer and basic meter details</p>
+                          <h4 className="text-lg font-medium text-gray-900">Basic Identity</h4>
+                          <p className="text-sm text-gray-600">Enter customer and basic meter identity information</p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
@@ -812,6 +864,17 @@ const InstallNewMeterPage = () => {
                           />
 
                           <FormInputModule
+                            label="Serial Number"
+                            name="serialNumber"
+                            type="text"
+                            placeholder="Enter serial number"
+                            value={formData.serialNumber}
+                            onChange={handleInputChange}
+                            error={formErrors.serialNumber}
+                            required
+                          />
+
+                          <FormInputModule
                             label="DRN"
                             name="drn"
                             type="text"
@@ -823,48 +886,20 @@ const InstallNewMeterPage = () => {
                           />
 
                           <FormInputModule
-                            label="Meter ID"
-                            name="meterID"
+                            label="Seal Number"
+                            name="sealNumber"
                             type="text"
-                            placeholder="Enter meter ID"
-                            value={formData.meterID}
+                            placeholder="Enter seal number"
+                            value={formData.sealNumber}
                             onChange={handleInputChange}
-                            error={formErrors.meterID}
+                            error={formErrors.sealNumber}
                             required
-                          />
-
-                          <FormInputModule
-                            label="Added By"
-                            name="meterAddedBy"
-                            type="text"
-                            placeholder="Enter who added this meter"
-                            value={formData.meterAddedBy}
-                            onChange={handleInputChange}
-                            error={formErrors.meterAddedBy}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="Meter is PPM"
-                            name="meterIsPPM"
-                            value={formData.meterIsPPM.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
-                          />
-
-                          <FormInputModule
-                            label="Installation Date"
-                            name="installationDate"
-                            type="datetime-local"
-                            value={formData.installationDate.slice(0, 16)}
-                            onChange={handleInputChange}
-                            placeholder={""}
                           />
                         </div>
                       </motion.div>
                     )}
 
-                    {/* Step 2: Technical Details */}
+                    {/* Step 2: Meter Details */}
                     {currentStep === 2 && (
                       <motion.div
                         key="step-2"
@@ -874,29 +909,39 @@ const InstallNewMeterPage = () => {
                         className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
                       >
                         <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Technical Details</h4>
-                          <p className="text-sm text-gray-600">Enter meter technical specifications</p>
+                          <h4 className="text-lg font-medium text-gray-900">Meter Details</h4>
+                          <p className="text-sm text-gray-600">Enter meter specifications and type information</p>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                          <FormInputModule
-                            label="Meter Type ID"
-                            name="meterTypeId"
-                            type="text"
-                            placeholder="Enter meter type ID"
-                            value={formData.meterTypeId}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          <FormSelectModule
+                            label="Meter Type"
+                            name="meterType"
+                            value={formData.meterType}
                             onChange={handleInputChange}
-                            error={formErrors.meterTypeId}
-                            required
+                            options={meterTypeOptions}
                           />
 
-                          <FormInputModule
+                          <FormSelectModule
+                            label="Is Smart"
+                            name="isSmart"
+                            value={formData.isSmart.toString()}
+                            onChange={handleInputChange}
+                            options={booleanOptions}
+                          />
+
+                          <FormSelectModule
                             label="Meter Brand"
                             name="meterBrand"
-                            type="text"
-                            placeholder="Enter meter brand"
                             value={formData.meterBrand}
                             onChange={handleInputChange}
+                            options={[
+                              { value: "", label: "Select meter brand" },
+                              ...meterBrands.map((brand) => ({
+                                value: brand.name,
+                                label: brand.name,
+                              })),
+                            ]}
                             error={formErrors.meterBrand}
                             required
                           />
@@ -912,23 +957,157 @@ const InstallNewMeterPage = () => {
                             required
                           />
 
-                          <FormInputModule
-                            label="Seal Number"
-                            name="sealNumber"
-                            type="text"
-                            placeholder="Enter seal number"
-                            value={formData.sealNumber}
+                          <FormSelectModule
+                            label="Is Meter Active"
+                            name="isMeterActive"
+                            value={formData.isMeterActive.toString()}
                             onChange={handleInputChange}
-                            error={formErrors.sealNumber}
+                            options={booleanOptions}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 3: Billing + Location */}
+                    {currentStep === 3 && (
+                      <motion.div
+                        key="step-3"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Billing + Location</h4>
+                          <p className="text-sm text-gray-600">Enter billing configuration and location details</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          <FormInputModule
+                            label="Tariff Rate"
+                            name="tariffRate"
+                            type="number"
+                            placeholder="Enter tariff rate"
+                            value={formData.tariffRate}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="Tariff Index"
+                            name="tariffIndex"
+                            type="text"
+                            placeholder="Enter tariff index"
+                            value={formData.tariffIndex}
+                            onChange={handleInputChange}
+                            error={formErrors.tariffIndex}
                             required
                           />
 
+                          <FormSelectModule
+                            label="Service Band"
+                            name="serviceBand"
+                            value={formData.serviceBand}
+                            onChange={handleInputChange}
+                            options={serviceBandOptions}
+                          />
+
+                          <FormInputModule
+                            label="Customer Class"
+                            name="customerClass"
+                            type="text"
+                            placeholder="Enter customer class"
+                            value={formData.customerClass}
+                            onChange={handleInputChange}
+                            error={formErrors.customerClass}
+                            required
+                          />
+
+                          <FormSelectModule
+                            label="Injection Substation"
+                            name="injectionSubstationId"
+                            value={formData.injectionSubstationId}
+                            onChange={handleInputChange}
+                            options={injectionSubstationOptions}
+                            error={formErrors.injectionSubstationId}
+                            required
+                            disabled={distributionSubstationsLoading}
+                          />
+
+                          <FormSelectModule
+                            label="State"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            options={stateOptions}
+                            error={formErrors.state}
+                            required
+                            disabled={countriesLoading}
+                          />
+
+                          <FormInputModule
+                            label="Address"
+                            name="address"
+                            type="text"
+                            placeholder="Enter address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            error={formErrors.address}
+                            required
+                          />
+
+                          <FormInputModule
+                            label="Address Line 2"
+                            name="addressTwo"
+                            type="text"
+                            placeholder="Enter address line 2"
+                            value={formData.addressTwo}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="City"
+                            name="city"
+                            type="text"
+                            placeholder="Enter city"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            error={formErrors.city}
+                            required
+                          />
+
+                          <FormInputModule
+                            label="Apartment Number"
+                            name="apartmentNumber"
+                            type="text"
+                            placeholder="Enter apartment number"
+                            value={formData.apartmentNumber}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 4: Technical Details */}
+                    {currentStep === 4 && (
+                      <motion.div
+                        key="step-4"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
+                      >
+                        <div className="border-b pb-3">
+                          <h4 className="text-lg font-medium text-gray-900">Technical Details</h4>
+                          <p className="text-sm text-gray-600">Enter meter technical specifications and coordinates</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                           <FormInputModule
                             label="SGC"
                             name="sgc"
                             type="number"
                             placeholder="Enter SGC"
-                            value={formData.sgc === 0 ? "" : formData.sgc}
+                            value={formData.sgc}
                             onChange={handleInputChange}
                           />
 
@@ -946,7 +1125,7 @@ const InstallNewMeterPage = () => {
                             name="ti"
                             type="number"
                             placeholder="Enter TI"
-                            value={formData.ti === 0 ? "" : formData.ti}
+                            value={formData.ti}
                             onChange={handleInputChange}
                           />
 
@@ -955,7 +1134,7 @@ const InstallNewMeterPage = () => {
                             name="ea"
                             type="number"
                             placeholder="Enter EA"
-                            value={formData.ea === 0 ? "" : formData.ea}
+                            value={formData.ea}
                             onChange={handleInputChange}
                           />
 
@@ -964,7 +1143,7 @@ const InstallNewMeterPage = () => {
                             name="tct"
                             type="number"
                             placeholder="Enter TCT"
-                            value={formData.tct === 0 ? "" : formData.tct}
+                            value={formData.tct}
                             onChange={handleInputChange}
                           />
 
@@ -973,7 +1152,7 @@ const InstallNewMeterPage = () => {
                             name="ken"
                             type="number"
                             placeholder="Enter KEN"
-                            value={formData.ken === 0 ? "" : formData.ken}
+                            value={formData.ken}
                             onChange={handleInputChange}
                           />
 
@@ -982,96 +1161,8 @@ const InstallNewMeterPage = () => {
                             name="mfrCode"
                             type="number"
                             placeholder="Enter MFR code"
-                            value={formData.mfrCode === 0 ? "" : formData.mfrCode}
+                            value={formData.mfrCode}
                             onChange={handleInputChange}
-                          />
-
-                          <FormSelectModule
-                            label="Meter Type"
-                            name="meterType"
-                            value={formData.meterType}
-                            onChange={handleInputChange}
-                            options={meterTypeOptions}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 3: Location Information */}
-                    {currentStep === 3 && (
-                      <motion.div
-                        key="step-3"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Location Information</h4>
-                          <p className="text-sm text-gray-600">Enter installation location details</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                          <FormInputModule
-                            label="Address"
-                            name="address"
-                            type="text"
-                            placeholder="Enter address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            error={formErrors.address}
-                            required
-                          />
-
-                          <FormInputModule
-                            label="Address Line 2"
-                            name="addressTwo"
-                            type="text"
-                            placeholder="Enter address line 2 (optional)"
-                            value={formData.addressTwo}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="City"
-                            name="city"
-                            type="text"
-                            placeholder="Enter city"
-                            value={formData.city}
-                            onChange={handleInputChange}
-                            error={formErrors.city}
-                            required
-                          />
-
-                          <FormSelectModule
-                            label="State"
-                            name="locationState"
-                            value={formData.locationState}
-                            onChange={handleInputChange}
-                            options={stateOptions}
-                            error={formErrors.locationState}
-                            disabled={countriesLoading}
-                            required
-                          />
-
-                          <FormInputModule
-                            label="Apartment Number"
-                            name="apartmentNumber"
-                            type="text"
-                            placeholder="Enter apartment number (optional)"
-                            value={formData.apartmentNumber}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormSelectModule
-                            label="Injection Substation"
-                            name="injectionSubstationId"
-                            value={formData.injectionSubstationId}
-                            onChange={handleInputChange}
-                            options={injectionSubstationOptions}
-                            error={formErrors.injectionSubstationId}
-                            required
-                            disabled={distributionSubstationsLoading}
                           />
 
                           <FormInputModule
@@ -1079,9 +1170,8 @@ const InstallNewMeterPage = () => {
                             name="latitude"
                             type="number"
                             placeholder="Enter latitude"
-                            value={formData.latitude === 0 ? "" : formData.latitude}
+                            value={formData.latitude}
                             onChange={handleInputChange}
-                            step="0.000001"
                           />
 
                           <FormInputModule
@@ -1089,43 +1179,72 @@ const InstallNewMeterPage = () => {
                             name="longitude"
                             type="number"
                             placeholder="Enter longitude"
-                            value={formData.longitude === 0 ? "" : formData.longitude}
+                            value={formData.longitude}
                             onChange={handleInputChange}
-                            step="0.000001"
                           />
                         </div>
-
-                        {distributionSubstationsLoading && (
-                          <p className="text-sm text-gray-500">Loading injection substations...</p>
-                        )}
-                        {distributionSubstationsError && (
-                          <p className="text-sm text-red-500">
-                            Error loading injection substations: {distributionSubstationsError}
-                          </p>
-                        )}
                       </motion.div>
                     )}
 
-                    {/* Step 4: Additional Information */}
-                    {currentStep === 4 && (
+                    {/* Step 5: Status + Tenant */}
+                    {currentStep === 5 && (
                       <motion.div
-                        key="step-4"
+                        key="step-5"
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
                       >
                         <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                          <p className="text-sm text-gray-600">Enter tenant and additional details</p>
+                          <h4 className="text-lg font-medium text-gray-900">Status + Tenant</h4>
+                          <p className="text-sm text-gray-600">
+                            Enter operational status, installation details, and tenant information
+                          </p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                          <FormSelectModule
+                            label="Status"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleInputChange}
+                            options={statusOptions}
+                            error={formErrors.status}
+                            required
+                          />
+
+                          <FormSelectModule
+                            label="Meter State"
+                            name="meterState"
+                            value={formData.meterState}
+                            onChange={handleInputChange}
+                            options={[
+                              { value: 1, label: "Good" },
+                              { value: 2, label: "Tamper" },
+                              { value: 3, label: "Suspicious" },
+                              { value: 4, label: "Missing" },
+                              { value: 5, label: "Unknown" },
+                            ]}
+                            error={formErrors.meterState}
+                            required
+                          />
+
+                          <FormInputModule
+                            label="Installation Date"
+                            name="installationDate"
+                            type="datetime-local"
+                            value={formData.installationDate.slice(0, 16)}
+                            onChange={handleInputChange}
+                            error={formErrors.installationDate}
+                            required
+                            placeholder={""}
+                          />
+
                           <FormInputModule
                             label="Tenant Full Name"
                             name="tenantFullName"
                             type="text"
-                            placeholder="Enter tenant full name (optional)"
+                            placeholder="Enter tenant full name"
                             value={formData.tenantFullName}
                             onChange={handleInputChange}
                           />
@@ -1134,175 +1253,72 @@ const InstallNewMeterPage = () => {
                             label="Tenant Phone Number"
                             name="tenantPhoneNumber"
                             type="text"
-                            placeholder="Enter tenant phone number (optional)"
+                            placeholder="Enter tenant phone number"
                             value={formData.tenantPhoneNumber}
                             onChange={handleInputChange}
                           />
 
                           <FormInputModule
-                            label="Customer Class"
-                            name="customerClass"
+                            label="Meter Added By"
+                            name="meterAddedBy"
                             type="text"
-                            placeholder="Enter customer class (optional)"
-                            value={formData.customerClass}
+                            placeholder="Enter who added this meter"
+                            value={formData.meterAddedBy}
                             onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Tariff Index"
-                            name="tariffIndex"
-                            type="text"
-                            placeholder="Enter tariff index (optional)"
-                            value={formData.tariffIndex}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Tariff Rate"
-                            name="tariffRate"
-                            type="number"
-                            placeholder="Enter tariff rate"
-                            value={formData.tariffRate === 0 ? "" : formData.tariffRate}
-                            onChange={handleInputChange}
-                            step="0.01"
-                          />
-
-                          <FormSelectModule
-                            label="Service Band"
-                            name="serviceBand"
-                            value={formData.serviceBand}
-                            onChange={handleInputChange}
-                            options={serviceBandOptions}
-                          />
-
-                          <FormSelectModule
-                            label="Status"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleInputChange}
-                            options={statusOptions}
-                          />
-
-                          <FormInputModule
-                            label="State Code"
-                            name="state"
-                            type="number"
-                            placeholder="Enter state code"
-                            value={formData.state === 0 ? "" : formData.state}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormSelectModule
-                            label="Is Meter Active"
-                            name="isMeterActive"
-                            value={formData.isMeterActive.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
                           />
 
                           <FormInputModule
                             label="Meter Edited By"
                             name="meterEditedBy"
                             type="text"
-                            placeholder="Enter who edited this meter (optional)"
+                            placeholder="Enter who edited this meter"
                             value={formData.meterEditedBy}
                             onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Meter Date Created"
-                            name="meterDateCreated"
-                            type="datetime-local"
-                            value={formData.meterDateCreated.slice(0, 16)}
-                            onChange={handleInputChange}
-                            placeholder={""}
                           />
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* Error Summary */}
-                  {Object.keys(formErrors).length > 0 && (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                      <div className="flex">
-                        <div className="shrink-0">
-                          <svg className="size-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                              fillRule="evenodd"
-                              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-amber-800">Form validation errors</h3>
-                          <div className="mt-2 text-sm text-amber-700">
-                            <ul className="list-disc space-y-1 pl-5">
-                              {Object.values(formErrors).map((error, index) => (
-                                <li key={index}>{error}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Desktop Form Actions */}
-                  <div className="hidden justify-between gap-4 border-t pt-6 sm:flex">
-                    <div className="flex gap-4">
-                      {currentStep > 1 && (
-                        <ButtonModule
-                          variant="outline"
-                          size="lg"
-                          onClick={prevStep}
-                          disabled={loading}
-                          type="button"
-                          icon={<ArrowLeft />}
-                          iconPosition="start"
-                        >
-                          Previous
-                        </ButtonModule>
-                      )}
-                    </div>
-
-                    <div className="flex gap-4">
-                      <ButtonModule
-                        variant="dangerSecondary"
-                        size="lg"
-                        onClick={handleReset}
-                        disabled={loading}
-                        type="button"
-                      >
-                        Reset
-                      </ButtonModule>
-
-                      {currentStep < 4 ? (
-                        <ButtonModule
-                          variant="primary"
-                          size="lg"
-                          onClick={nextStep}
-                          type="button"
-                          icon={<ArrowRight />}
-                          iconPosition="end"
-                        >
-                          Next
-                        </ButtonModule>
-                      ) : (
-                        <ButtonModule
-                          variant="primary"
-                          size="lg"
-                          type="button"
-                          onClick={handleSubmit}
-                          disabled={!isFormValid() || loading}
-                        >
-                          {loading ? "Installing Meter..." : "Install Meter"}
-                        </ButtonModule>
-                      )}
-                    </div>
-                  </div>
                 </form>
+
+                {/* Desktop Navigation Buttons */}
+                <div className="mt-6 hidden justify-between sm:flex">
+                  <div>
+                    {currentStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={prevStep}
+                        disabled={loading}
+                        className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <ChevronLeft className="size-4" />
+                        Previous
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {currentStep < 5 ? (
+                      <button
+                        type="button"
+                        onClick={nextStep}
+                        disabled={loading}
+                        className="flex items-center gap-2 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Next
+                        <ChevronRight className="size-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={!isFormValid() || loading}
+                        className="flex items-center gap-2 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {loading ? "Installing..." : "Install Meter"}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </motion.div>
             </div>
           </div>

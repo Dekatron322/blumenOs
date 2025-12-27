@@ -1133,6 +1133,34 @@ export interface VendResponse {
 
 // ========== END VEND INTERFACES ==========
 
+// ========== CHECK PAYMENT INTERFACES ==========
+
+export interface CheckPaymentRequest {
+  reference: string
+}
+
+export interface CheckPaymentData {
+  id: number
+  reference: string
+  status: string
+  amount: number
+  currency: string
+  customerName: string
+  customerAccountNumber: string
+  channel: string
+  paidAtUtc: string
+  confirmedAtUtc: string
+  tokens: Token[]
+}
+
+export interface CheckPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: CheckPaymentData
+}
+
+// ========== END CHECK PAYMENT INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -1164,6 +1192,12 @@ interface AgentState {
   vendLoading: boolean
   vendError: string | null
   vendSuccess: boolean
+
+  // Check Payment state
+  checkPaymentData: CheckPaymentData | null
+  checkPaymentLoading: boolean
+  checkPaymentError: string | null
+  checkPaymentSuccess: boolean
 
   // Agents list state
   agents: Agent[]
@@ -1334,6 +1368,12 @@ const initialState: AgentState = {
   vendLoading: false,
   vendError: null,
   vendSuccess: false,
+
+  // Check Payment initial state
+  checkPaymentData: null,
+  checkPaymentLoading: false,
+  checkPaymentError: null,
+  checkPaymentSuccess: false,
 
   // Rest of the initial state
   agents: [],
@@ -1572,6 +1612,32 @@ export const vend = createAsyncThunk("agents/vend", async (vendData: VendRequest
     return rejectWithValue(error.message || "Network error during vend")
   }
 })
+
+export const checkPayment = createAsyncThunk(
+  "agents/checkPayment",
+  async (checkPaymentData: CheckPaymentRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.get<CheckPaymentResponse>(
+        buildApiUrl(API_ENDPOINTS.AGENTS.CHECK_PAYMENT.replace("{reference}", checkPaymentData.reference))
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to check payment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Payment data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to check payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment check")
+    }
+  }
+)
 
 // ========== BILL LOOKUP ASYNC THUNK ==========
 export const lookupBill = createAsyncThunk("agents/lookupBill", async (billNumber: string, { rejectWithValue }) => {
@@ -2125,6 +2191,14 @@ const agentSlice = createSlice({
       state.vendError = null
       state.vendSuccess = false
       state.vendLoading = false
+    },
+
+    // Clear check payment state
+    clearCheckPayment: (state) => {
+      state.checkPaymentData = null
+      state.checkPaymentError = null
+      state.checkPaymentSuccess = false
+      state.checkPaymentLoading = false
     },
 
     // Set agent info (for when we get agent info from other sources)
@@ -2860,6 +2934,24 @@ const agentSlice = createSlice({
         state.vendSuccess = false
         state.vendData = null
       })
+      .addCase(checkPayment.pending, (state) => {
+        state.checkPaymentLoading = true
+        state.checkPaymentError = null
+        state.checkPaymentSuccess = false
+        state.checkPaymentData = null
+      })
+      .addCase(checkPayment.fulfilled, (state, action: PayloadAction<CheckPaymentData>) => {
+        state.checkPaymentLoading = false
+        state.checkPaymentSuccess = true
+        state.checkPaymentData = action.payload
+        state.checkPaymentError = null
+      })
+      .addCase(checkPayment.rejected, (state, action) => {
+        state.checkPaymentLoading = false
+        state.checkPaymentError = (action.payload as string) || "Failed to check payment"
+        state.checkPaymentSuccess = false
+        state.checkPaymentData = null
+      })
 
       // Bill Lookup cases
       .addCase(lookupBill.pending, (state) => {
@@ -3551,6 +3643,7 @@ export const {
   clearAgentPerformanceDaily,
   clearPaymentChannels,
   clearVend,
+  clearCheckPayment,
   setAgentInfo,
   setAgentSummary,
   setAgentPerformanceDaily,

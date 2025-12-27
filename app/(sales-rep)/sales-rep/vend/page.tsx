@@ -8,9 +8,12 @@ import { FormInputModule } from "components/ui/Input/Input"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import VendTokenModal from "components/ui/Modal/vend-token-modal"
+import VendBankTransferModal from "components/ui/Modal/vend-bank-transfer-modal"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  checkPayment,
+  clearCheckPayment,
   clearCustomerLookup,
   clearVend,
   fetchPaymentChannels,
@@ -35,6 +38,10 @@ const VendPage: React.FC = () => {
     paymentChannels,
     paymentChannelsLoading,
     paymentChannelsError,
+    checkPaymentLoading,
+    checkPaymentError,
+    checkPaymentSuccess,
+    checkPaymentData,
   } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
 
@@ -59,6 +66,8 @@ const VendPage: React.FC = () => {
   const [availableChannels, setAvailableChannels] = useState<PaymentChannel[]>([])
   const [isFetchingChannels, setIsFetchingChannels] = useState(false)
   const [lastFetchedAmount, setLastFetchedAmount] = useState<number | null>(null)
+  const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
+  const [virtualAccount, setVirtualAccount] = useState<any>(null)
 
   // Generate channel options based on available channels
   const channelOptions = [
@@ -149,8 +158,12 @@ const VendPage: React.FC = () => {
 
   useEffect(() => {
     if (vendSuccess && vendData) {
-      // Show token modal if token data is available
-      if (vendData.token) {
+      // Check if payment is pending and has virtual account (bank transfer)
+      if (vendData.isPending && vendData.payment?.virtualAccount) {
+        setVirtualAccount(vendData.payment.virtualAccount)
+        setIsVirtualAccountModalOpen(true)
+      } else if (vendData.token) {
+        // Show token modal if token data is available
         setIsTokenModalOpen(true)
       } else {
         // Fallback to notification for non-token vends
@@ -217,6 +230,54 @@ const VendPage: React.FC = () => {
       })
     }
   }, [customerLookupError])
+
+  useEffect(() => {
+    if (checkPaymentSuccess && checkPaymentData) {
+      // Close the bank transfer modal
+      setIsVirtualAccountModalOpen(false)
+      setVirtualAccount(null)
+
+      // Show success notification
+      notify("success", "Payment confirmed successfully", {
+        description: "Your bank transfer has been confirmed and the vend will be processed.",
+        duration: 5000,
+      })
+
+      // If the confirmed payment has tokens, show the token modal
+      if (checkPaymentData.tokens && checkPaymentData.tokens.length > 0) {
+        // Update vendData with the confirmed payment data to trigger token modal
+        const updatedVendData = {
+          ...vendData,
+          payment: checkPaymentData,
+          token: checkPaymentData.tokens[0],
+          isPending: false,
+        }
+
+        // Manually trigger the vend success flow
+        dispatch({ type: "agents/vend/fulfilled", payload: updatedVendData })
+      } else {
+        // Reset form if no token
+        setMeterNumber("")
+        setAmountInput("")
+        setChannel(PaymentChannel.Cash)
+        setNarrative("")
+        setCustomerInfo(null)
+        dispatch(clearVend())
+      }
+
+      // Clear check payment state
+      dispatch(clearCheckPayment())
+    }
+  }, [checkPaymentSuccess, checkPaymentData, dispatch, vendData])
+
+  useEffect(() => {
+    if (checkPaymentError) {
+      notify("error", "Failed to check payment", {
+        description: checkPaymentError,
+        duration: 6000,
+      })
+    }
+  }, [checkPaymentError])
 
   const handleLookupCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -332,6 +393,36 @@ const VendPage: React.FC = () => {
     setNarrative("")
     setCustomerInfo(null)
     dispatch(clearVend())
+  }
+
+  const handleVirtualAccountModalClose = () => {
+    setIsVirtualAccountModalOpen(false)
+    setVirtualAccount(null)
+    // Reset form after closing modal
+    setMeterNumber("")
+    setAmountInput("")
+    setChannel(PaymentChannel.Cash)
+    setNarrative("")
+    setCustomerInfo(null)
+    dispatch(clearVend())
+  }
+
+  const handleCheckPayment = async () => {
+    if (!vendData?.payment?.reference) {
+      notify("error", "Payment reference not found")
+      return
+    }
+
+    try {
+      await dispatch(
+        checkPayment({
+          reference: vendData.payment.reference,
+        })
+      ).unwrap()
+    } catch (error: any) {
+      console.error("Failed to check payment:", error)
+      // Error is handled by the useEffect above
+    }
   }
 
   const resetForm = () => {
@@ -597,6 +688,37 @@ const VendPage: React.FC = () => {
               }
             : null
         }
+      />
+
+      {/* Bank Transfer Modal */}
+      <VendBankTransferModal
+        isOpen={isVirtualAccountModalOpen}
+        onRequestClose={handleVirtualAccountModalClose}
+        virtualAccount={virtualAccount}
+        paymentData={
+          vendData?.payment
+            ? {
+                reference: vendData.payment.reference,
+                amount: vendData.payment.amount,
+                currency: vendData.payment.currency,
+                customerName: vendData.payment.customerName,
+                customerAccountNumber: vendData.payment.customerAccountNumber,
+              }
+            : null
+        }
+        onCheckPayment={handleCheckPayment}
+        isCheckingPayment={checkPaymentLoading}
+        onConfirm={() => {
+          setIsVirtualAccountModalOpen(false)
+          setVirtualAccount(null)
+          // Reset form after confirmation
+          setMeterNumber("")
+          setAmountInput("")
+          setChannel(PaymentChannel.Cash)
+          setNarrative("")
+          setCustomerInfo(null)
+          dispatch(clearVend())
+        }}
       />
     </section>
   )

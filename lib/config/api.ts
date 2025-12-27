@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
     PERFORMANCE: "/agents/performance/daily",
     PAYMENT_CHANNEL: "/agents/payment-channels",
     VEND: "/agents/prepaid/vend",
+    CHECK_PAYMENT: "/payments/reference/{reference}",
   },
 
   BILLING_DISPUTE: {
@@ -366,6 +367,10 @@ export const API_ENDPOINTS = {
     EDIT_METER: "/meters/{id}",
     METER_HISTORY: "/meters/{id}/history",
     ADD_METER: "/meters",
+  },
+
+  METER_BRANDS: {
+    BRAND_LISTS: "/meter-brands",
   },
 }
 

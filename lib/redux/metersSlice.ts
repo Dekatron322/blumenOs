@@ -162,7 +162,7 @@ export interface EditMeterRequest {
 // Interface for Add Meter Request
 export interface AddMeterRequest {
   customerId: number
-  meterIsPPM: boolean
+  serialNumber: string
   drn: string
   sgc: number
   krn: string
@@ -172,24 +172,23 @@ export interface AddMeterRequest {
   ken: number
   mfrCode: number
   installationDate: string
-  meterID: string
   meterAddedBy: string
   meterEditedBy: string
   meterDateCreated: string
-  meterTypeId: string
   meterType: number
+  isSmart: boolean
   meterBrand: string
   meterCategory: string
   isMeterActive: boolean
   status: number
-  state: number
+  meterState: number
   sealNumber: string
   tariffRate: number
   tariffIndex: string
   serviceBand: number
   customerClass: string
   injectionSubstationId: number
-  locationState: string
+  state: number
   address: string
   addressTwo: string
   city: string
