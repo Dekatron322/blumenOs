@@ -66,6 +66,8 @@ const InstallNewMeterPage = () => {
   const [currentStep, setCurrentStep] = useState(1)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [successNotified, setSuccessNotified] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   const { loading, error, success } = useSelector((state: RootState) => state.meters)
 
@@ -151,6 +153,12 @@ const InstallNewMeterPage = () => {
 
   // Fetch related data when component mounts
   useEffect(() => {
+    // Clear any previous success/error states to prevent stale notifications
+    dispatch(clearMetersError())
+
+    // Mark component as mounted after state is cleared
+    setIsMounted(true)
+
     dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchInjectionSubstations({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchFeeders({ pageNumber: 1, pageSize: 100 }))
@@ -164,11 +172,12 @@ const InstallNewMeterPage = () => {
 
   // Handle success and error states
   useEffect(() => {
-    if (success) {
+    if (success && !successNotified && isMounted) {
       notify("success", "Meter installed successfully", {
         description: `Meter ${formData.drn} has been installed`,
         duration: 5000,
       })
+      setSuccessNotified(true)
       handleReset()
     }
 
@@ -178,7 +187,7 @@ const InstallNewMeterPage = () => {
         duration: 6000,
       })
     }
-  }, [success, error, formData.drn])
+  }, [success, error, formData.drn, successNotified, isMounted])
 
   // Show error notification if customers fail to load
   useEffect(() => {
@@ -542,6 +551,7 @@ const InstallNewMeterPage = () => {
     })
     setCurrentStep(1)
     setFormErrors({})
+    setSuccessNotified(false)
     dispatch(clearMetersError())
   }
 

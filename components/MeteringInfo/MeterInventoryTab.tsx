@@ -8,7 +8,8 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchMeters, Meter } from "lib/redux/metersSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-import { VscEye } from "react-icons/vsc"
+import { VscChevronDown, VscChevronUp, VscEye } from "react-icons/vsc"
+import { useRouter } from "next/navigation"
 import EditMeterModal from "components/ui/Modal/edit-meter-modal"
 import MeterHistoryModal from "components/ui/Modal/meter-history-modal"
 
@@ -319,6 +320,7 @@ const LoadingSkeleton = () => {
 }
 
 const MeterInventoryTable: React.FC = () => {
+  const router = useRouter()
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -589,15 +591,29 @@ const MeterInventoryTable: React.FC = () => {
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           {new Date(meter.installationDate).toLocaleDateString()}
                         </td>
-                        <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
+                        <td className="flex items-center gap-2 whitespace-nowrap border-b px-4 py-1 text-sm">
                           <ButtonModule
                             icon={<VscEye />}
-                            size="sm"
                             variant="outline"
-                            onClick={() => setSelectedMeter(selectedMeter?.id === meter.id ? null : meter)}
+                            size="sm"
+                            onClick={() => router.push(`/metering/all-meters/${meter.id}`)}
                           >
-                            {selectedMeter?.id === meter.id ? "Hide" : "View"}
+                            View
                           </ButtonModule>
+
+                          <motion.button
+                            className="inline-flex items-center justify-center rounded-md border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                            onClick={() => setSelectedMeter(selectedMeter?.id === meter.id ? null : meter)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title={selectedMeter?.id === meter.id ? "Hide details" : "View details"}
+                          >
+                            {selectedMeter?.id === meter.id ? (
+                              <VscChevronUp className="size-4" />
+                            ) : (
+                              <VscChevronDown className="size-4" />
+                            )}
+                          </motion.button>
                         </td>
                       </motion.tr>
 

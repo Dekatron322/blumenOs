@@ -368,6 +368,16 @@ export const API_ENDPOINTS = {
     METER_HISTORY: "/meters/{id}/history",
     ADD_METER: "/meters",
     SUMMARY: "/meters/reports/summary",
+    METER_DETAIL: "/meters/{id}",
+    PREPAID_CREDIT_HISTORY: "/meters/{id}/prepaid/histories/credit",
+    CLEAR_TAMPER_HISTORY: "/meters/{id}/prepaid/histories/clear-tamper",
+    CLEAR_CREDIT_HISTORY: "/meters/{id}/prepaid/histories/clear-credit",
+    KEY_CHANGE_HISTORY: "/meters/{id}/prepaid/histories/key-change",
+    SET_CONTROL_HISTORY: "/meters/{id}/prepaid/histories/set-control",
+    ADD_KEY_CHANGE: "/meters/{id}/prepaid/key-change",
+    CLEAR_TAMPER: "/meters/{id}/prepaid/clear-tamper",
+    CLEAR_CREDIT: "/meters/{id}/prepaid/clear-credit",
+    SET_CONTROL: "/meters/{id}/prepaid/set-control",
   },
 
   METER_BRANDS: {
