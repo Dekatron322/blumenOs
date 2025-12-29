@@ -8,7 +8,7 @@ import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearCredit, clearClearCreditHistory, fetchClearCreditHistory } from "lib/redux/metersSlice"
+import { clearClearCreditHistory, clearCredit, fetchClearCreditHistory } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
 
