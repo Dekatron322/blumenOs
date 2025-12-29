@@ -74,3 +74,5 @@ jobs:
             ansible-playbook -i inventory/hosts.ini playbooks/cicd/app.yml \
               -e nextjs_image=${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }} \
               -e nextjs_image_tag=${{ github.sha }}
+              -e "nextjs_env_file_content=NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL_TEST }}"
+
