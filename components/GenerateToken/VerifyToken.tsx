@@ -4,10 +4,10 @@ import { CardIcon, MobileIcon, NoTokenIcon, UssdIcon, WebPortalIcon } from "comp
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { motion } from "framer-motion"
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { verifyToken, clearVerifyToken } from "lib/redux/metersSlice"
+import { clearVerifyToken, verifyToken } from "lib/redux/metersSlice"
 
 interface TokenData {
   meterNumber: string
