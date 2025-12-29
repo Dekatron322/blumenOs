@@ -7,7 +7,7 @@ import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchPrepaidCreditHistory, clearPrepaidCreditHistory } from "lib/redux/metersSlice"
+import { clearPrepaidCreditHistory, fetchPrepaidCreditHistory } from "lib/redux/metersSlice"
 import type { PrepaidCreditHistoryEntry } from "lib/redux/metersSlice"
 
 interface PrepaidCreditHistoryTabProps {
