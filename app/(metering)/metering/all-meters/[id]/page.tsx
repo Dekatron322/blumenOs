@@ -1127,7 +1127,6 @@ const MeterDetailsPage = () => {
     // Cleanup function to clear meter details when component unmounts
     return () => {
       dispatch(clearCurrentMeter())
-      dispatch(clearMetersError())
     }
   }, [dispatch, meterId])
 

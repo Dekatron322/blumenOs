@@ -14,6 +14,10 @@ interface FormSelectModuleProps {
   error?: string | boolean
   // Optional extra classes for the clickable control (height, padding, etc.)
   controlClassName?: string
+  // Search functionality props
+  searchable?: boolean
+  searchTerm?: string
+  onSearchChange?: (searchTerm: string) => void
 }
 
 export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
@@ -27,15 +31,21 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
   className = "",
   error,
   controlClassName,
+  searchable = false,
+  searchTerm = "",
+  onSearchChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [localSearchTerm, setLocalSearchTerm] = useState("")
   const dropdownRef = useRef<HTMLDivElement>(null)
   const selectedOption = options?.find((option) => String(option.value) === String(value))
 
+  // Use external search term if searchable, otherwise use local search
+  const effectiveSearchTerm = searchable ? searchTerm : localSearchTerm
+
   const filteredOptions =
-    options?.filter((option) => String(option.label).toLowerCase().includes(searchTerm.toLowerCase())) || []
+    options?.filter((option) => String(option.label).toLowerCase().includes(effectiveSearchTerm.toLowerCase())) || []
 
   const handleSelect = (value: string | number) => {
     const syntheticEvent = {
@@ -48,13 +58,19 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
 
     onChange(syntheticEvent)
     setIsOpen(false)
-    setSearchTerm("")
+    // Don't clear search on selection for searchable components with external search
+    if (!searchable || !onSearchChange) {
+      setLocalSearchTerm("")
+    }
   }
 
   const handleClickOutside = (event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setIsOpen(false)
-      setSearchTerm("")
+      // Don't clear search on close for searchable components with external search
+      if (!searchable || !onSearchChange) {
+        setLocalSearchTerm("")
+      }
     }
   }
 
@@ -85,8 +101,9 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
           if (disabled) return
           setIsOpen((prev) => {
             const next = !prev
-            if (!next) {
-              setSearchTerm("")
+            // Don't clear search on close for searchable components with external search
+            if (!next && (!searchable || !onSearchChange)) {
+              setLocalSearchTerm("")
             }
             return next
           })
@@ -113,10 +130,18 @@ export const FormSelectModule: React.FC<FormSelectModuleProps> = ({
           <div className="border-b border-[#E0E0E0] px-3 py-2">
             <input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search..."
+              value={effectiveSearchTerm}
+              onChange={(e) => {
+                const newSearchTerm = e.target.value
+                if (searchable && onSearchChange) {
+                  onSearchChange(newSearchTerm)
+                } else {
+                  setLocalSearchTerm(newSearchTerm)
+                }
+              }}
+              placeholder="Search by ID, code, or name..."
               className="h-8 w-full rounded border border-[#E0E0E0] bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004B23]"
+              autoFocus
             />
           </div>
           <div className="max-h-60 overflow-auto py-1">

@@ -16,15 +16,18 @@ import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsS
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
+import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
+
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 interface CustomerFormData {
   fullName: string
   phoneNumber: string
   phoneOffice: string
   gender: string
-  customerID: string
   autoNumber: string
   isCustomerNew: boolean
   isPostEnumerated: boolean
@@ -33,29 +36,22 @@ interface CustomerFormData {
   email: string
   address: string
   distributionSubstationId: number
+  feederId: number | undefined
   addressTwo: string
+  mapName: string
   city: string
   provinceId: number
   lga: string
   serviceCenterId: number
   latitude: number
   longitude: number
-  tariff: number
-  tariffCode: string
-  tariffID: string
-  tariffInddex: string
-  tariffType: string
-  tariffClass: string
-  newRate: number
-  vat: number
-  isVATWaved: boolean
+  tariffId: number
   isPPM: boolean
   isMD: boolean
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
   comment: string
-  band: string
   storedAverage: number
   salesRepUserId: number
   technicalEngineerUserId: number
@@ -102,12 +98,15 @@ const AddCustomerPage = () => {
     error: countriesError,
   } = useSelector((state: RootState) => state.countries)
 
+  const { feeders, loading: feedersLoading, error: feedersError } = useSelector((state: RootState) => state.feeders)
+
+  const { tariffGroups, tariffGroupsLoading, tariffGroupsError } = useSelector((state: RootState) => state.tariffGroups)
+
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: "",
     phoneNumber: "",
     phoneOffice: "",
     gender: "",
-    customerID: "",
     autoNumber: "",
     isCustomerNew: true,
     isPostEnumerated: false,
@@ -116,34 +115,47 @@ const AddCustomerPage = () => {
     email: "",
     address: "",
     distributionSubstationId: 0,
+    feederId: undefined,
     addressTwo: "",
+    mapName: "",
     city: "",
     provinceId: 0,
     lga: "",
     serviceCenterId: 0,
     latitude: 0,
     longitude: 0,
-    tariff: 0,
-    tariffCode: "",
-    tariffID: "",
-    tariffInddex: "",
-    tariffType: "",
-    tariffClass: "",
-    newRate: 0,
-    vat: 0,
-    isVATWaved: false,
+    tariffId: 0,
     isPPM: false,
     isMD: false,
     isUrban: false,
     isHRB: false,
     isCustomerAccGovt: false,
     comment: "",
-    band: "",
     storedAverage: 0,
     salesRepUserId: 0,
     technicalEngineerUserId: 0,
     customerCategoryId: 0,
     customerSubCategoryId: 0,
+  })
+
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    distributionSubstation: "",
+    serviceStation: "",
+    feeder: "",
+    tariff: "",
+    employee: "",
+    customerCategory: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    distributionSubstation: false,
+    serviceStation: false,
+    feeder: false,
+    tariff: false,
+    employee: false,
+    customerCategory: false,
   })
 
   // Fetch related data when component mounts
@@ -173,6 +185,23 @@ const AddCustomerPage = () => {
 
     // Load countries so we can populate provinces (states) for Nigeria
     dispatch(fetchCountries())
+
+    // Load feeders for selection
+    dispatch(
+      fetchFeeders({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+
+    // Load tariff groups for selection
+    dispatch(
+      fetchTariffGroups({
+        PageNumber: 1,
+        PageSize: 100,
+        IsActive: true,
+      })
+    )
   }, [dispatch])
 
   // Fetch subcategories whenever a customer category is selected
@@ -181,6 +210,92 @@ const AddCustomerPage = () => {
       dispatch(fetchSubCategoriesByCategoryId(formData.customerCategoryId))
     }
   }, [dispatch, formData.customerCategoryId])
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
+
+  const handleDistributionSubstationSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, distributionSubstation: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.distributionSubstation) {
+        clearTimeout(debouncedSearchRef.current.distributionSubstation)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.distributionSubstation = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, distributionSubstation: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchDistributionSubstations({
+              pageNumber: 1,
+              pageSize: 50,
+              search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, distributionSubstation: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          // Don't reload on initial mount or when dropdown closes
+          dispatch(
+            fetchDistributionSubstations({
+              pageNumber: 1,
+              pageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleFeederSearch = React.useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, feeder: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.feeder) {
+        clearTimeout(debouncedSearchRef.current.feeder)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.feeder = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, feeder: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchFeeders({
+              pageNumber: 1,
+              pageSize: 50,
+              search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, feeder: false }))
+          })
+        } else {
+          // Load default data when search is cleared
+          dispatch(
+            fetchFeeders({
+              pageNumber: 1,
+              pageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
 
   // Handle success and error states
   React.useEffect(() => {
@@ -204,6 +319,10 @@ const AddCustomerPage = () => {
   React.useEffect(() => {
     return () => {
       dispatch(clearCreateState())
+      // Clear any pending search timeouts
+      Object.values(debouncedSearchRef.current).forEach((timeout) => {
+        if (timeout) clearTimeout(timeout)
+      })
     }
   }, [dispatch])
 
@@ -212,22 +331,6 @@ const AddCustomerPage = () => {
     { value: "", label: "Select gender" },
     { value: "Male", label: "Male" },
     { value: "Female", label: "Female" },
-  ]
-
-  const bandOptions = [
-    { value: "", label: "Select band" },
-    { value: "Band A", label: "Band A" },
-    { value: "Band B", label: "Band B" },
-    { value: "Band C", label: "Band C" },
-    { value: "Band D", label: "Band D" },
-    { value: "Band E", label: "Band E" },
-  ]
-
-  const tariffTypeOptions = [
-    { value: "", label: "Select tariff type" },
-    { value: "Residential", label: "Residential" },
-    { value: "Commercial", label: "Commercial" },
-    { value: "Industrial", label: "Industrial" },
   ]
 
   const booleanOptions = [
@@ -241,7 +344,25 @@ const AddCustomerPage = () => {
     { value: 0, label: "Select distribution substation" },
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
-      label: `${substation.dssCode} (${substation.nercCode})`,
+      label: `ID: ${substation.id} - ${substation.dssCode} (${substation.nercCode})`,
+    })),
+  ]
+
+  // Feeder options from fetched data
+  const feederOptions = [
+    { value: undefined, label: "Select feeder" },
+    ...feeders.map((feeder) => ({
+      value: feeder.id,
+      label: `${feeder.name} (${feeder.nercCode})`,
+    })),
+  ]
+
+  // Tariff group options from fetched data
+  const tariffGroupOptions = [
+    { value: 0, label: "Select tariff" },
+    ...tariffGroups.map((tariff) => ({
+      value: tariff.id,
+      label: `${tariff.name} (${tariff.tariffCode}) - ${tariff.tariffRate}`,
     })),
   ]
 
@@ -306,9 +427,7 @@ const AddCustomerPage = () => {
         "serviceCenterId",
         "latitude",
         "longitude",
-        "tariff",
-        "newRate",
-        "vat",
+        "tariffId",
         "storedAverage",
         "salesRepUserId",
         "technicalEngineerUserId",
@@ -319,8 +438,13 @@ const AddCustomerPage = () => {
       processedValue = value === "" ? 0 : Number(value)
     }
 
+    // Handle feeder field (can be undefined)
+    if (name === "feederId") {
+      processedValue = value === "" || value === undefined ? undefined : Number(value)
+    }
+
     // Handle boolean fields
-    if (["isVATWaved", "isPPM", "isMD", "isUrban", "isHRB", "isCustomerAccGovt"].includes(name)) {
+    if (["isPPM", "isMD", "isUrban", "isHRB", "isCustomerAccGovt"].includes(name)) {
       processedValue = value === "true" || value === true
     }
 
@@ -368,7 +492,6 @@ const AddCustomerPage = () => {
         if (!formData.serviceCenterId || formData.serviceCenterId === 0) {
           errors.serviceCenterId = "Service center is required"
         }
-        if (!formData.band.trim()) errors.band = "Band is required"
         break
     }
 
@@ -378,7 +501,7 @@ const AddCustomerPage = () => {
 
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 7))
+      setCurrentStep((prev) => Math.min(prev + 1, 3))
       setIsMobileSidebarOpen(false)
     } else {
       notify("error", "Please fix the form errors before continuing", {
@@ -410,7 +533,6 @@ const AddCustomerPage = () => {
         phoneNumber: formData.phoneNumber,
         phoneOffice: formData.phoneOffice,
         gender: formData.gender,
-        customerID: formData.customerID,
         autoNumber: formData.autoNumber || "",
         isCustomerNew: formData.isCustomerNew,
         isPostEnumerated: formData.isPostEnumerated,
@@ -419,29 +541,22 @@ const AddCustomerPage = () => {
         email: formData.email,
         address: formData.address,
         distributionSubstationId: formData.distributionSubstationId,
+        feederId: formData.feederId || undefined,
         addressTwo: formData.addressTwo,
+        mapName: formData.mapName,
         city: formData.city,
-        state: selectedProvince?.name || "",
+        provinceId: formData.provinceId,
         lga: formData.lga,
         serviceCenterId: formData.serviceCenterId,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        tariff: formData.tariff,
-        tariffCode: formData.tariffCode,
-        tariffID: formData.tariffID,
-        tariffInddex: formData.tariffInddex,
-        tariffType: formData.tariffType,
-        tariffClass: formData.tariffClass,
-        newRate: formData.newRate,
-        vat: formData.vat,
-        isVATWaved: formData.isVATWaved,
+        tariffId: formData.tariffId,
         isPPM: formData.isPPM,
         isMD: formData.isMD,
         isUrban: formData.isUrban,
         isHRB: formData.isHRB,
         isCustomerAccGovt: formData.isCustomerAccGovt,
         comment: formData.comment,
-        band: formData.band,
         storedAverage: formData.storedAverage,
         salesRepUserId: formData.salesRepUserId,
         technicalEngineerUserId: formData.technicalEngineerUserId,
@@ -461,7 +576,6 @@ const AddCustomerPage = () => {
       phoneNumber: "",
       phoneOffice: "",
       gender: "",
-      customerID: "",
       autoNumber: "",
       isCustomerNew: true,
       isPostEnumerated: false,
@@ -470,29 +584,22 @@ const AddCustomerPage = () => {
       email: "",
       address: "",
       distributionSubstationId: 0,
+      feederId: undefined,
       addressTwo: "",
+      mapName: "",
       city: "",
       provinceId: 0,
       lga: "",
       serviceCenterId: 0,
       latitude: 0,
       longitude: 0,
-      tariff: 0,
-      tariffCode: "",
-      tariffID: "",
-      tariffInddex: "",
-      tariffType: "",
-      tariffClass: "",
-      newRate: 0,
-      vat: 0,
-      isVATWaved: false,
+      tariffId: 0,
       isPPM: false,
       isMD: false,
       isUrban: false,
       isHRB: false,
       isCustomerAccGovt: false,
       comment: "",
-      band: "",
       storedAverage: 0,
       salesRepUserId: 0,
       technicalEngineerUserId: 0,
@@ -514,16 +621,12 @@ const AddCustomerPage = () => {
           onClick={() => setIsMobileSidebarOpen(true)}
         >
           <Menu className="size-4" />
-          <span>Step {currentStep}/7</span>
+          <span>Step {currentStep}/3</span>
         </button>
         <div className="text-sm font-medium text-gray-900">
           {currentStep === 1 && "Personal"}
           {currentStep === 2 && "Address"}
           {currentStep === 3 && "Service"}
-          {currentStep === 4 && "Tariff"}
-          {currentStep === 5 && "Meter"}
-          {currentStep === 6 && "Financial"}
-          {currentStep === 7 && "Additional"}
         </div>
       </div>
     </div>
@@ -533,7 +636,7 @@ const AddCustomerPage = () => {
   const StepProgress = () => (
     <div className="mb-8">
       <div className="flex items-center justify-between">
-        {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+        {[1, 2, 3].map((step) => (
           <React.Fragment key={step}>
             <div className="flex flex-col items-center">
               <div
@@ -565,13 +668,9 @@ const AddCustomerPage = () => {
                 {step === 1 && "Personal"}
                 {step === 2 && "Address"}
                 {step === 3 && "Service"}
-                {step === 4 && "Tariff"}
-                {step === 5 && "Meter"}
-                {step === 6 && "Financial"}
-                {step === 7 && "Additional"}
               </span>
             </div>
-            {step < 7 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
+            {step < 3 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>
@@ -624,10 +723,6 @@ const AddCustomerPage = () => {
                     { step: 1, title: "Personal Information", description: "Personal and contact details" },
                     { step: 2, title: "Address Information", description: "Address and location details" },
                     { step: 3, title: "Service Information", description: "Service and distribution details" },
-                    { step: 4, title: "Tariff Information", description: "Tariff and billing details" },
-                    { step: 5, title: "Meter and Service Options", description: "Meter and service settings" },
-                    { step: 6, title: "Financial Information", description: "Financial and billing details" },
-                    { step: 7, title: "Additional Information", description: "Additional details and comments" },
                   ].map((item) => (
                     <button
                       key={item.step}
@@ -716,7 +811,6 @@ const AddCustomerPage = () => {
       formData.address.trim() !== "" &&
       formData.distributionSubstationId !== 0 &&
       formData.serviceCenterId !== 0 &&
-      formData.band.trim() !== "" &&
       formData.gender.trim() !== ""
     )
   }
@@ -733,7 +827,7 @@ const AddCustomerPage = () => {
               disabled={createLoading}
               className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <ChevronLeft className="size-4" />
+              <VscArrowLeft className="size-4" />
               <span className="hidden sm:inline">Previous</span>
             </button>
           )}
@@ -748,15 +842,15 @@ const AddCustomerPage = () => {
         </div>
 
         <div className="flex gap-2">
-          {currentStep < 7 ? (
+          {currentStep < 3 ? (
             <button
               type="button"
               onClick={nextStep}
               disabled={createLoading}
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <VscArrowRight className="size-4" />
               <span>Next</span>
-              <ChevronRight className="size-4" />
             </button>
           ) : (
             <button
@@ -931,6 +1025,15 @@ const AddCustomerPage = () => {
                             error={formErrors.email}
                             required
                           />
+
+                          <FormInputModule
+                            label="Auto Number"
+                            name="autoNumber"
+                            type="text"
+                            placeholder="Enter auto number (optional)"
+                            value={formData.autoNumber}
+                            onChange={handleInputChange}
+                          />
                         </div>
                       </motion.div>
                     )}
@@ -1028,7 +1131,10 @@ const AddCustomerPage = () => {
                             options={distributionSubstationOptions}
                             error={formErrors.distributionSubstationId}
                             required
-                            disabled={distributionSubstationsLoading}
+                            disabled={distributionSubstationsLoading || searchLoading.distributionSubstation}
+                            onSearchChange={handleDistributionSubstationSearch}
+                            searchTerm={searchTerms.distributionSubstation}
+                            searchable
                           />
 
                           <FormSelectModule
@@ -1042,24 +1148,70 @@ const AddCustomerPage = () => {
                             disabled={serviceStationsLoading}
                           />
 
-                          <FormInputModule
-                            label="Tariff"
-                            name="tariff"
-                            type="number"
-                            placeholder="Enter tariff"
-                            value={formData.tariff === 0 ? "" : formData.tariff}
+                          {/* <FormSelectModule
+                            label="Feeder"
+                            name="feederId"
+                            value={formData.feederId}
                             onChange={handleInputChange}
-                            step="0.01"
+                            options={feederOptions}
+                            disabled={feedersLoading || searchLoading.feeder}
+                            searchable
+                            onSearchChange={handleFeederSearch}
+                            searchTerm={searchTerms.feeder}
+                          /> */}
+
+                          <FormInputModule
+                            label="Map Name"
+                            name="mapName"
+                            type="text"
+                            placeholder="Enter map name"
+                            value={formData.mapName}
+                            onChange={handleInputChange}
                           />
 
                           <FormSelectModule
-                            label="Band"
-                            name="band"
-                            value={formData.band}
+                            label="Tariff"
+                            name="tariffId"
+                            value={formData.tariffId}
                             onChange={handleInputChange}
-                            options={bandOptions}
-                            error={formErrors.band}
-                            required
+                            options={tariffGroupOptions}
+                            disabled={tariffGroupsLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Customer Category"
+                            name="customerCategoryId"
+                            value={formData.customerCategoryId}
+                            onChange={handleInputChange}
+                            options={customerCategoryOptions}
+                            disabled={customerCategoriesLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Customer Sub-Category"
+                            name="customerSubCategoryId"
+                            value={formData.customerSubCategoryId}
+                            onChange={handleInputChange}
+                            options={customerSubCategoryOptions}
+                            disabled={subCategoriesLoading || !formData.customerCategoryId}
+                          />
+
+                          <FormSelectModule
+                            label="Sales Representative"
+                            name="salesRepUserId"
+                            value={formData.salesRepUserId}
+                            onChange={handleInputChange}
+                            options={employeeOptions}
+                            disabled={employeesLoading}
+                          />
+
+                          <FormSelectModule
+                            label="Technical Engineer"
+                            name="technicalEngineerUserId"
+                            value={formData.technicalEngineerUserId}
+                            onChange={handleInputChange}
+                            options={employeeOptions}
+                            disabled={employeesLoading}
                           />
                         </div>
 
@@ -1075,67 +1227,24 @@ const AddCustomerPage = () => {
                         {serviceStationsError && (
                           <p className="text-sm text-red-500">Error loading service centers: {serviceStationsError}</p>
                         )}
-                      </motion.div>
-                    )}
-
-                    {/* Step 4: Tariff Information */}
-                    {currentStep === 4 && (
-                      <motion.div
-                        key="step-4"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Tariff Information</h4>
-                          <p className="text-sm text-gray-600">Enter the customer&apos;s tariff and billing details</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                          <FormInputModule
-                            label="Tariff Code"
-                            name="tariffCode"
-                            type="text"
-                            placeholder="Enter tariff code"
-                            value={formData.tariffCode}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Tariff Index"
-                            name="tariffInddex"
-                            type="text"
-                            placeholder="Enter tariff index"
-                            value={formData.tariffInddex}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormSelectModule
-                            label="Tariff Type"
-                            name="tariffType"
-                            value={formData.tariffType}
-                            onChange={handleInputChange}
-                            options={tariffTypeOptions}
-                          />
-
-                          <FormInputModule
-                            label="Tariff Class"
-                            name="tariffClass"
-                            type="text"
-                            placeholder="Enter tariff class"
-                            value={formData.tariffClass}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormSelectModule
-                            label="VAT Waved"
-                            name="isVATWaved"
-                            value={formData.isVATWaved.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
-                          />
-                        </div>
+                        {feedersLoading && <p className="text-sm text-gray-500">Loading feeders...</p>}
+                        {feedersError && <p className="text-sm text-red-500">Error loading feeders: {feedersError}</p>}
+                        {tariffGroupsLoading && <p className="text-sm text-gray-500">Loading tariffs...</p>}
+                        {tariffGroupsError && (
+                          <p className="text-sm text-red-500">Error loading tariffs: {tariffGroupsError}</p>
+                        )}
+                        {customerCategoriesLoading && (
+                          <p className="text-sm text-gray-500">Loading customer categories...</p>
+                        )}
+                        {customerCategoriesError && (
+                          <p className="text-sm text-red-500">
+                            Error loading customer categories: {customerCategoriesError}
+                          </p>
+                        )}
+                        {employeesLoading && <p className="text-sm text-gray-500">Loading employees...</p>}
+                        {employeesError && (
+                          <p className="text-sm text-red-500">Error loading employees: {employeesError}</p>
+                        )}
                       </motion.div>
                     )}
 
@@ -1331,11 +1440,11 @@ const AddCustomerPage = () => {
                       {currentStep > 1 && (
                         <ButtonModule
                           variant="outline"
-                          size="lg"
+                          size="md"
                           onClick={prevStep}
                           disabled={createLoading}
                           type="button"
-                          icon={<ArrowLeft />}
+                          icon={<VscArrowLeft />}
                           iconPosition="start"
                         >
                           Previous
@@ -1346,7 +1455,7 @@ const AddCustomerPage = () => {
                     <div className="flex gap-4">
                       <ButtonModule
                         variant="dangerSecondary"
-                        size="lg"
+                        size="md"
                         onClick={handleReset}
                         disabled={createLoading}
                         type="button"
@@ -1354,13 +1463,13 @@ const AddCustomerPage = () => {
                         Reset
                       </ButtonModule>
 
-                      {currentStep < 7 ? (
+                      {currentStep < 3 ? (
                         <ButtonModule
                           variant="primary"
-                          size="lg"
+                          size="md"
                           onClick={nextStep}
                           type="button"
-                          icon={<ArrowRight />}
+                          icon={<VscArrowRight />}
                           iconPosition="end"
                         >
                           Next
@@ -1368,7 +1477,7 @@ const AddCustomerPage = () => {
                       ) : (
                         <ButtonModule
                           variant="primary"
-                          size="lg"
+                          size="md"
                           type="button"
                           onClick={handleSubmit}
                           disabled={!isFormValid() || createLoading}

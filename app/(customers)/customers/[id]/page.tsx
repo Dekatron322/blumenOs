@@ -1343,9 +1343,9 @@ const CustomerDetailsPage = () => {
         customerName={currentCustomer.fullName}
         accountNumber={currentCustomer.accountNumber}
         distributionSubstationId={currentCustomer.distributionSubstationId}
-        feederId={currentCustomer.distributionSubstation.feeder.id}
-        tariffPerKwh={currentCustomer.tariff}
-        vatRate={currentCustomer.vat}
+        feederId={currentCustomer.feederId}
+        tariffPerKwh={currentCustomer.tariff?.tariffRate || 0}
+        vatRate={currentCustomer.currentVatOverride?.vatRateOverride || 0}
       />
 
       <RecordPaymentModal
