@@ -272,6 +272,8 @@ export interface Customer {
   isPPM: boolean
   isMeteredPostpaid: boolean
   isMD: boolean
+  meterNumber: string
+  band: string
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
