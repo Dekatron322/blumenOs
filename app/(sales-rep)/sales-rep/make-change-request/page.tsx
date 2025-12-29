@@ -223,10 +223,10 @@ const MakeCustomerChangeRequestPage: React.FC = () => {
                           <span className="font-medium text-[#004b23]">Status:</span>
                           <span className="text-[#002e16]">{customerLookup.status}</span>
                         </div>
-                        <div className="mb-2 flex justify-between">
+                        {/* <div className="mb-2 flex justify-between">
                           <span className="font-medium text-[#004b23]">Tariff:</span>
                           <span className="text-[#002e16]">{customerLookup.tariffCode}</span>
-                        </div>
+                        </div> */}
                         <div className="mb-2 flex justify-between">
                           <span className="font-medium text-[#004b23]">Feeder:</span>
                           <span className="text-[#002e16]">{customerLookup.feederName}</span>
