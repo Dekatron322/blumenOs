@@ -917,23 +917,6 @@ const AllAgents: React.FC = () => {
                 <h4 className="text-2xl font-semibold">Agent Management</h4>
                 <p>Field agent onboarding, commissions, and performance tracking</p>
               </div>
-
-              <motion.div
-                className="flex items-center justify-end gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  className="mt-2"
-                  icon={<PlusIcon />}
-                  onClick={() => setIsAddAgentModalOpen(true)}
-                >
-                  Add New Agent
-                </ButtonModule>
-              </motion.div>
             </div>
             <div className="flex-3 relative flex flex-col items-start gap-6 2xl:mt-5 2xl:flex-row">
               {/* Main Content - Agent Table */}

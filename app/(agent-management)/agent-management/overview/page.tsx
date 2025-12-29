@@ -273,13 +273,13 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock agent data
+// Generate agent data (returns zeros when no data available)
 const generateAgentData = () => {
   return {
-    activeAgents: 48,
-    collectionsToday: 7200000, // ₦7.2M in kobo
-    targetAchievement: 85.2,
-    lowFloatAlerts: 3,
+    activeAgents: 0,
+    collectionsToday: 0, // ₦0 in kobo
+    targetAchievement: 0,
+    lowFloatAlerts: 0,
   }
 }
 

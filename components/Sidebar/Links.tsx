@@ -141,12 +141,6 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["W"],
       },
       {
-        name: "Verify Meter Tokens",
-        href: "/metering/verify-meter-tokens",
-        privilegeKey: "assets",
-        requiredActions: ["R"],
-      },
-      {
         name: "Change Request",
         href: "/metering/change-requests",
         privilegeKey: "assets",
@@ -160,6 +154,21 @@ export const allLinks: LinkItem[] = [
     icon: TokenIcon,
     privilegeKey: "payments",
     requiredActions: ["R"],
+    children: [
+      { name: "Overview", href: "/tokens/overview", privilegeKey: "payments", requiredActions: ["W"] },
+      {
+        name: "Prepaid History",
+        href: "/tokens/prepaid-history",
+        privilegeKey: "payments",
+        requiredActions: ["W"],
+      },
+      {
+        name: "Verify Meter Tokens",
+        href: "/tokens/verify-meter-tokens",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
+    ],
   },
   {
     name: "Payments",
