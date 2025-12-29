@@ -37,6 +37,7 @@ import performanceAnalyticsReducer from "./performanceAnalyticsSlice"
 import cashRemittanceReducer from "./cashRemittanceSlice"
 import metersReducer from "./metersSlice"
 import meterBrandsReducer from "./meterBrandsSlice"
+import tariffGroupReducer from "./tariffGroupSlice"
 
 export const store = configureStore({
   reducer: {
@@ -77,6 +78,7 @@ export const store = configureStore({
     cashRemittance: cashRemittanceReducer,
     meters: metersReducer,
     meterBrands: meterBrandsReducer,
+    tariffGroups: tariffGroupReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

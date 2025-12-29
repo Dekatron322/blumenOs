@@ -22,6 +22,7 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
     setControlHistory,
     setControlHistoryLoading,
     setControlHistoryError,
+    setControlHistoryPagination,
     setControlLoading,
     setControlError,
     setControlData,
@@ -37,7 +38,7 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
   // Fetch set control history using Redux
   useEffect(() => {
     if (meterId) {
-      dispatch(fetchSetControlHistory(meterId))
+      dispatch(fetchSetControlHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
 
     return () => {
@@ -46,10 +47,10 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
         setControlHistory.length > 0 &&
         dispatch(clearSetControlHistory())
     }
-  }, [meterId, dispatch])
+  }, [meterId, currentPage, pageSize, dispatch])
 
   const handleRefresh = () => {
-    dispatch(fetchSetControlHistory(meterId))
+    dispatch(fetchSetControlHistory({ id: meterId, pageNumber: currentPage, pageSize }))
   }
 
   const handleSetControl = async (controlData: SetControlRequest) => {
@@ -57,7 +58,7 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
     if (!setControlError) {
       setShowSetControlModal(false)
       // Refresh history after successful set control
-      dispatch(fetchSetControlHistory(meterId))
+      dispatch(fetchSetControlHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
   }
 
@@ -106,8 +107,8 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
     return items
   }
 
-  const paginatedData = setControlHistory.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(setControlHistory.length / pageSize)
+  const paginatedData = setControlHistory
+  const totalPages = setControlHistoryPagination.totalPages
 
   const ControlCard = ({ event }: { event: ClearTamperHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful)
@@ -431,7 +432,7 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
               </button>
             </div>
             <p className="text-sm max-sm:hidden sm:text-base">
-              Page {currentPage} of {totalPages} ({setControlHistory.length} total records)
+              Page {currentPage} of {totalPages} ({setControlHistoryPagination.totalCount} total records)
             </p>
           </div>
         </>

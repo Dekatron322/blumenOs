@@ -154,18 +154,58 @@ export interface MetersState {
   prepaidCreditHistory: PrepaidCreditHistoryEntry[]
   prepaidCreditHistoryLoading: boolean
   prepaidCreditHistoryError: string | null
+  prepaidCreditHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   clearTamperHistory: ClearTamperHistoryEntry[]
   clearTamperHistoryLoading: boolean
   clearTamperHistoryError: string | null
+  clearTamperHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   clearCreditHistory: ClearTamperHistoryEntry[]
   clearCreditHistoryLoading: boolean
   clearCreditHistoryError: string | null
+  clearCreditHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   keyChangeHistory: ClearTamperHistoryEntry[]
   keyChangeHistoryLoading: boolean
   keyChangeHistoryError: string | null
+  keyChangeHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   setControlHistory: ClearTamperHistoryEntry[]
   setControlHistoryLoading: boolean
   setControlHistoryError: string | null
+  setControlHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   addKeyChangeData: TokenData | null
   addKeyChangeLoading: boolean
   addKeyChangeError: string | null
@@ -206,18 +246,58 @@ const initialState: MetersState = {
   prepaidCreditHistory: [],
   prepaidCreditHistoryLoading: false,
   prepaidCreditHistoryError: null,
+  prepaidCreditHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   clearTamperHistory: [],
   clearTamperHistoryLoading: false,
   clearTamperHistoryError: null,
+  clearTamperHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   clearCreditHistory: [],
   clearCreditHistoryLoading: false,
   clearCreditHistoryError: null,
+  clearCreditHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   keyChangeHistory: [],
   keyChangeHistoryLoading: false,
   keyChangeHistoryError: null,
+  keyChangeHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   setControlHistory: [],
   setControlHistoryLoading: false,
   setControlHistoryError: null,
+  setControlHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   addKeyChangeData: null,
   addKeyChangeLoading: false,
   addKeyChangeError: null,
@@ -306,19 +386,21 @@ export interface AddMeterRequest {
   status: number
   meterState: number
   sealNumber: string
-  tariffRate: number
-  tariffIndex: string
-  serviceBand: number
-  customerClass: string
+  poleNumber: string
+  tariffId: number
   injectionSubstationId: number
   distributionSubstationId: number
-  feederId: number
+  feederId?: number
   areaOfficeId: number
   state: number
   address: string
   addressTwo: string
   city: string
   apartmentNumber: string
+  latitude: number
+  longitude: number
+  tenantFullName: string
+  tenantPhoneNumber: string
 }
 
 // Interface for Add Meter Response
@@ -410,6 +492,12 @@ export interface PrepaidCreditHistoryResponse {
   isSuccess: boolean
   message: string
   data: PrepaidCreditHistoryEntry[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // Interface for Clear Tamper History entry
@@ -432,6 +520,12 @@ export interface ClearTamperHistoryResponse {
   isSuccess: boolean
   message: string
   data: ClearTamperHistoryEntry[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // Add Key Change interfaces
@@ -712,10 +806,15 @@ export const fetchMetersSummary = createAsyncThunk("meters/fetchMetersSummary", 
 // Async Thunk for fetching prepaid credit history
 export const fetchPrepaidCreditHistory = createAsyncThunk(
   "meters/fetchPrepaidCreditHistory",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
     try {
       const endpoint = API_ENDPOINTS.METERS.PREPAID_CREDIT_HISTORY.replace("{id}", id.toString())
-      const response = await api.get<PrepaidCreditHistoryResponse>(buildApiUrl(endpoint))
+      const response = await api.get<PrepaidCreditHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch prepaid credit history")
@@ -734,10 +833,15 @@ export const fetchPrepaidCreditHistory = createAsyncThunk(
 // Async Thunk for fetching clear tamper history
 export const fetchClearTamperHistory = createAsyncThunk(
   "meters/fetchClearTamperHistory",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
     try {
       const endpoint = API_ENDPOINTS.METERS.CLEAR_TAMPER_HISTORY.replace("{id}", id.toString())
-      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint))
+      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch clear tamper history")
@@ -756,10 +860,15 @@ export const fetchClearTamperHistory = createAsyncThunk(
 // Async Thunk for fetching clear credit history
 export const fetchClearCreditHistory = createAsyncThunk(
   "meters/fetchClearCreditHistory",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
     try {
       const endpoint = API_ENDPOINTS.METERS.CLEAR_CREDIT_HISTORY.replace("{id}", id.toString())
-      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint))
+      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch clear credit history")
@@ -778,10 +887,15 @@ export const fetchClearCreditHistory = createAsyncThunk(
 // Async Thunk for fetching key change history
 export const fetchKeyChangeHistory = createAsyncThunk(
   "meters/fetchKeyChangeHistory",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
     try {
       const endpoint = API_ENDPOINTS.METERS.KEY_CHANGE_HISTORY.replace("{id}", id.toString())
-      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint))
+      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch key change history")
@@ -800,10 +914,15 @@ export const fetchKeyChangeHistory = createAsyncThunk(
 // Async Thunk for fetching set control history
 export const fetchSetControlHistory = createAsyncThunk(
   "meters/fetchSetControlHistory",
-  async (id: number, { rejectWithValue }) => {
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
     try {
       const endpoint = API_ENDPOINTS.METERS.SET_CONTROL_HISTORY.replace("{id}", id.toString())
-      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint))
+      const response = await api.get<ClearTamperHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch set control history")
@@ -931,30 +1050,70 @@ const metersSlice = createSlice({
       state.prepaidCreditHistory = []
       state.prepaidCreditHistoryError = null
       state.prepaidCreditHistoryLoading = false
+      state.prepaidCreditHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
     // Clear clear tamper history
     clearClearTamperHistory: (state) => {
       state.clearTamperHistory = []
       state.clearTamperHistoryError = null
       state.clearTamperHistoryLoading = false
+      state.clearTamperHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
     // Clear clear credit history
     clearClearCreditHistory: (state) => {
       state.clearCreditHistory = []
       state.clearCreditHistoryError = null
       state.clearCreditHistoryLoading = false
+      state.clearCreditHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
     // Clear key change history
     clearKeyChangeHistory: (state) => {
       state.keyChangeHistory = []
       state.keyChangeHistoryError = null
       state.keyChangeHistoryLoading = false
+      state.keyChangeHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
     // Clear set control history
     clearSetControlHistory: (state) => {
       state.setControlHistory = []
       state.setControlHistoryError = null
       state.setControlHistoryLoading = false
+      state.setControlHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
     // Clear add key change data
     clearAddKeyChange: (state) => {
@@ -1094,6 +1253,14 @@ const metersSlice = createSlice({
       .addCase(fetchPrepaidCreditHistory.fulfilled, (state, action: PayloadAction<PrepaidCreditHistoryResponse>) => {
         state.prepaidCreditHistoryLoading = false
         state.prepaidCreditHistory = action.payload.data
+        state.prepaidCreditHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchPrepaidCreditHistory.rejected, (state, action) => {
         state.prepaidCreditHistoryLoading = false
@@ -1107,6 +1274,14 @@ const metersSlice = createSlice({
       .addCase(fetchClearTamperHistory.fulfilled, (state, action: PayloadAction<ClearTamperHistoryResponse>) => {
         state.clearTamperHistoryLoading = false
         state.clearTamperHistory = action.payload.data
+        state.clearTamperHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchClearTamperHistory.rejected, (state, action) => {
         state.clearTamperHistoryLoading = false
@@ -1120,6 +1295,14 @@ const metersSlice = createSlice({
       .addCase(fetchClearCreditHistory.fulfilled, (state, action: PayloadAction<ClearTamperHistoryResponse>) => {
         state.clearCreditHistoryLoading = false
         state.clearCreditHistory = action.payload.data
+        state.clearCreditHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchClearCreditHistory.rejected, (state, action) => {
         state.clearCreditHistoryLoading = false
@@ -1133,6 +1316,14 @@ const metersSlice = createSlice({
       .addCase(fetchKeyChangeHistory.fulfilled, (state, action: PayloadAction<ClearTamperHistoryResponse>) => {
         state.keyChangeHistoryLoading = false
         state.keyChangeHistory = action.payload.data
+        state.keyChangeHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchKeyChangeHistory.rejected, (state, action) => {
         state.keyChangeHistoryLoading = false
@@ -1146,6 +1337,14 @@ const metersSlice = createSlice({
       .addCase(fetchSetControlHistory.fulfilled, (state, action: PayloadAction<ClearTamperHistoryResponse>) => {
         state.setControlHistoryLoading = false
         state.setControlHistory = action.payload.data
+        state.setControlHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchSetControlHistory.rejected, (state, action) => {
         state.setControlHistoryLoading = false

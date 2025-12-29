@@ -18,7 +18,8 @@ interface KeyChangeHistoryTabProps {
 
 const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) => {
   const dispatch = useAppDispatch()
-  const { keyChangeHistory, keyChangeHistoryLoading, keyChangeHistoryError } = useAppSelector((state) => state.meters)
+  const { keyChangeHistory, keyChangeHistoryLoading, keyChangeHistoryError, keyChangeHistoryPagination } =
+    useAppSelector((state) => state.meters)
   const { addKeyChangeData, addKeyChangeLoading, addKeyChangeError } = useAppSelector((state) => state.meters)
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
@@ -32,7 +33,7 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
   // Fetch key change history using Redux
   useEffect(() => {
     if (meterId) {
-      dispatch(fetchKeyChangeHistory(meterId))
+      dispatch(fetchKeyChangeHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
 
     return () => {
@@ -41,10 +42,10 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
         keyChangeHistory.length > 0 &&
         dispatch(clearKeyChangeHistory())
     }
-  }, [meterId, dispatch])
+  }, [meterId, currentPage, pageSize, dispatch])
 
   const handleRefresh = () => {
-    dispatch(fetchKeyChangeHistory(meterId))
+    dispatch(fetchKeyChangeHistory({ id: meterId, pageNumber: currentPage, pageSize }))
   }
 
   const handleAddSuccess = () => {
@@ -55,7 +56,7 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false)
     dispatch(clearAddKeyChange())
-    dispatch(fetchKeyChangeHistory(meterId)) // Refresh the history
+    dispatch(fetchKeyChangeHistory({ id: meterId, pageNumber: currentPage, pageSize })) // Refresh the history
   }
 
   const handleCloseAddModal = () => {
@@ -110,8 +111,8 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
     return items
   }
 
-  const paginatedData = keyChangeHistory.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(keyChangeHistory.length / pageSize)
+  const paginatedData = keyChangeHistory
+  const totalPages = keyChangeHistoryPagination.totalPages
 
   const KeyChangeCard = ({ event }: { event: ClearTamperHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful)
@@ -423,7 +424,7 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
               </button>
             </div>
             <p className="text-sm max-sm:hidden sm:text-base">
-              Page {currentPage} of {totalPages} ({keyChangeHistory.length} total records)
+              Page {currentPage} of {totalPages} ({keyChangeHistoryPagination.totalCount} total records)
             </p>
           </div>
         </>

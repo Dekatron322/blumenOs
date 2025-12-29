@@ -16,9 +16,12 @@ interface PrepaidCreditHistoryTabProps {
 
 const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meterId }) => {
   const dispatch = useAppDispatch()
-  const { prepaidCreditHistory, prepaidCreditHistoryLoading, prepaidCreditHistoryError } = useAppSelector(
-    (state) => state.meters
-  )
+  const {
+    prepaidCreditHistory,
+    prepaidCreditHistoryLoading,
+    prepaidCreditHistoryError,
+    prepaidCreditHistoryPagination,
+  } = useAppSelector((state) => state.meters)
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [currentPage, setCurrentPage] = useState(1)
@@ -29,7 +32,7 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
   // Fetch credit history using Redux
   useEffect(() => {
     if (meterId) {
-      dispatch(fetchPrepaidCreditHistory(meterId))
+      dispatch(fetchPrepaidCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
 
     return () => {
@@ -38,7 +41,7 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
         prepaidCreditHistory.length > 0 &&
         dispatch(clearPrepaidCreditHistory())
     }
-  }, [meterId, dispatch])
+  }, [meterId, currentPage, pageSize, dispatch])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -60,7 +63,7 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
   }
 
   const handleRefresh = () => {
-    dispatch(fetchPrepaidCreditHistory(meterId))
+    dispatch(fetchPrepaidCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
   }
 
   const getStatusConfig = (status: string) => {
@@ -101,8 +104,8 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
     return items
   }
 
-  const paginatedData = prepaidCreditHistory.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(prepaidCreditHistory.length / pageSize)
+  const paginatedData = prepaidCreditHistory
+  const totalPages = prepaidCreditHistoryPagination.totalPages
 
   const CreditCardComponent = ({ event }: { event: PrepaidCreditHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful ? "COMPLETED" : "FAILED")
@@ -410,7 +413,7 @@ const PrepaidCreditHistoryTab: React.FC<PrepaidCreditHistoryTabProps> = ({ meter
               </button>
             </div>
             <p className="text-sm max-sm:hidden sm:text-base">
-              Page {currentPage} of {totalPages} ({prepaidCreditHistory.length} total records)
+              Page {currentPage} of {totalPages} ({prepaidCreditHistoryPagination.totalCount} total records)
             </p>
           </div>
         </>

@@ -333,7 +333,7 @@ const MeterInventoryTable: React.FC = () => {
   const [historyMeterId, setHistoryMeterId] = useState<number | null>(null)
   const [historyMeterDRN, setHistoryMeterDRN] = useState<string>("")
   const dispatch = useAppDispatch()
-  const { meters, error, pagination } = useAppSelector((state) => state.meters)
+  const { meters, error, pagination, loading } = useAppSelector((state) => state.meters)
 
   // Fetch meters on component mount and when search/page changes
   useEffect(() => {
@@ -461,7 +461,9 @@ const MeterInventoryTable: React.FC = () => {
         </div>
       </motion.div>
 
-      {meters.length === 0 ? (
+      {loading && meters.length === 0 ? (
+        <LoadingSkeleton />
+      ) : meters.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
