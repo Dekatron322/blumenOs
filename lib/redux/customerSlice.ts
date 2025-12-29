@@ -607,30 +607,24 @@ export interface UpdateCustomerRequest {
   gender: string
   address: string
   distributionSubstationId: number
+  feederId: number
   status: string
   addressTwo: string
+  mapName: string
   city: string
   provinceId: number
   lga: string
   serviceCenterId: number
   latitude: number
   longitude: number
-  tariff: number
-  tariffCode: string
-  tariffID: string
-  tariffInddex: string
-  tariffType: string
-  tariffClass: string
-  newRate: number
-  vat: number
-  isVATWaved: boolean
+  tariffRate: number
+  tariffId: number
   isPPM: boolean
   isMD: boolean
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
   comment: string
-  band: string
   storedAverage: number
   salesRepUserId: number
   technicalEngineerUserId: number
