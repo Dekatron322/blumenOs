@@ -1,15 +1,14 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, Shield, Calendar, Clock, Download, Eye, Filter, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw, Shield } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { IoMdFunnel } from "react-icons/io"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchClearCreditHistory, clearClearCreditHistory, clearCredit } from "lib/redux/metersSlice"
+import { clearCredit, clearClearCreditHistory, fetchClearCreditHistory } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
 

@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, Settings, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw, Settings } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchSetControlHistory, clearSetControlHistory, setControl } from "lib/redux/metersSlice"
+import { clearSetControlHistory, fetchSetControlHistory, setControl } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry, SetControlRequest } from "lib/redux/metersSlice"
 import SetControlModal from "components/ui/Modal/set-control-modal"
 
