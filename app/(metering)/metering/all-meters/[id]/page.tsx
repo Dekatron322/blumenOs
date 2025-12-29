@@ -7,14 +7,12 @@ import {
   ActivityIcon,
   AlertCircle,
   BuildingIcon,
-  Calendar,
   CheckCircle,
   ChevronDown,
   Clock,
   CreditCard,
   Edit3,
   HistoryIcon,
-  Home,
   HomeIcon,
   Info,
   Key,
@@ -25,8 +23,8 @@ import {
   PowerOff,
   Receipt,
   RefreshCw,
-  Shield,
   Settings,
+  Shield,
   User2Icon,
   Zap,
 } from "lucide-react"
@@ -1129,7 +1127,6 @@ const MeterDetailsPage = () => {
     // Cleanup function to clear meter details when component unmounts
     return () => {
       dispatch(clearCurrentMeter())
-      dispatch(clearMetersError())
     }
   }, [dispatch, meterId])
 

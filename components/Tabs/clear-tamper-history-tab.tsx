@@ -1,15 +1,14 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, Shield, Calendar, Clock, Download, Eye, Filter, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw, Shield } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { IoMdFunnel } from "react-icons/io"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchClearTamperHistory, clearClearTamperHistory, clearTamper } from "lib/redux/metersSlice"
+import { clearClearTamperHistory, clearTamper, fetchClearTamperHistory } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import ClearTamperModal from "components/ui/Modal/clear-tamper-modal"
 
@@ -23,6 +22,7 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
     clearTamperHistory,
     clearTamperHistoryLoading,
     clearTamperHistoryError,
+    clearTamperHistoryPagination,
     clearTamperLoading,
     clearTamperError,
     clearTamperData,
@@ -38,7 +38,7 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
   // Fetch clear tamper history using Redux
   useEffect(() => {
     if (meterId) {
-      dispatch(fetchClearTamperHistory(meterId))
+      dispatch(fetchClearTamperHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
 
     return () => {
@@ -47,17 +47,17 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
         clearTamperHistory.length > 0 &&
         dispatch(clearClearTamperHistory())
     }
-  }, [meterId, dispatch])
+  }, [meterId, currentPage, pageSize, dispatch])
 
   const handleRefresh = () => {
-    dispatch(fetchClearTamperHistory(meterId))
+    dispatch(fetchClearTamperHistory({ id: meterId, pageNumber: currentPage, pageSize }))
   }
 
   const handleClearTamper = async () => {
     try {
       await dispatch(clearTamper(meterId)).unwrap()
       // Refresh history after successful clear
-      dispatch(fetchClearTamperHistory(meterId))
+      dispatch(fetchClearTamperHistory({ id: meterId, pageNumber: currentPage, pageSize }))
       setShowClearTamperModal(false)
     } catch (error) {
       // Error is handled by Redux state
@@ -109,8 +109,8 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
     return items
   }
 
-  const paginatedData = clearTamperHistory.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(clearTamperHistory.length / pageSize)
+  const paginatedData = clearTamperHistory
+  const totalPages = clearTamperHistoryPagination.totalPages
 
   const TamperCard = ({ event }: { event: ClearTamperHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful)
@@ -427,7 +427,7 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
               </button>
             </div>
             <p className="text-sm max-sm:hidden sm:text-base">
-              Page {currentPage} of {totalPages} ({clearTamperHistory.length} total records)
+              Page {currentPage} of {totalPages} ({clearTamperHistoryPagination.totalCount} total records)
             </p>
           </div>
         </>

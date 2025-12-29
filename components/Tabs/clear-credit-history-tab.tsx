@@ -1,15 +1,14 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, Shield, Calendar, Clock, Download, Eye, Filter, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw, Shield } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { IoMdFunnel } from "react-icons/io"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchClearCreditHistory, clearClearCreditHistory, clearCredit } from "lib/redux/metersSlice"
+import { clearClearCreditHistory, clearCredit, fetchClearCreditHistory } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
 
@@ -23,6 +22,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
     clearCreditHistory,
     clearCreditHistoryLoading,
     clearCreditHistoryError,
+    clearCreditHistoryPagination,
     clearCreditLoading,
     clearCreditError,
     clearCreditData,
@@ -38,7 +38,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
   // Fetch clear credit history using Redux
   useEffect(() => {
     if (meterId) {
-      dispatch(fetchClearCreditHistory(meterId))
+      dispatch(fetchClearCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
 
     return () => {
@@ -47,10 +47,10 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
         clearCreditHistory.length > 0 &&
         dispatch(clearClearCreditHistory())
     }
-  }, [meterId, dispatch])
+  }, [meterId, currentPage, pageSize, dispatch])
 
   const handleRefresh = () => {
-    dispatch(fetchClearCreditHistory(meterId))
+    dispatch(fetchClearCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
   }
 
   const handleClearCredit = async () => {
@@ -58,7 +58,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
     if (!clearCreditError) {
       setShowClearCreditModal(false)
       // Refresh history after successful clear
-      dispatch(fetchClearCreditHistory(meterId))
+      dispatch(fetchClearCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
     }
   }
 
@@ -107,8 +107,8 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
     return items
   }
 
-  const paginatedData = clearCreditHistory.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(clearCreditHistory.length / pageSize)
+  const paginatedData = clearCreditHistory
+  const totalPages = clearCreditHistoryPagination.totalPages
 
   const TamperCard = ({ event }: { event: ClearTamperHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful)
@@ -431,7 +431,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
               </button>
             </div>
             <p className="text-sm max-sm:hidden sm:text-base">
-              Page {currentPage} of {totalPages} ({clearCreditHistory.length} total records)
+              Page {currentPage} of {totalPages} ({clearCreditHistoryPagination.totalCount} total records)
             </p>
           </div>
         </>

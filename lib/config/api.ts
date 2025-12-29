@@ -383,6 +383,10 @@ export const API_ENDPOINTS = {
   METER_BRANDS: {
     BRAND_LISTS: "/meter-brands",
   },
+
+  TARIFF_GROUPS: {
+    GET: "/tariff-groups",
+  },
 }
 
 // Helper function to build full URL

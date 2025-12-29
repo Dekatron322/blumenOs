@@ -59,7 +59,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }
     { id: "inventory", label: "Meter Inventory", icon: <InventoryIcon /> },
     { id: "readings", label: "Meter Readings", icon: <ReadingsIcon /> },
     { id: "alerts", label: "System Alerts", icon: <AlertsIcon /> },
-    { id: "queue", label: "Installation Queue", icon: <QueueIcon /> },
+    // { id: "queue", label: "Installation Queue", icon: <QueueIcon /> },
   ]
 
   return (

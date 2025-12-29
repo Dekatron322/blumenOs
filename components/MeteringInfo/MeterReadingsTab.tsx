@@ -369,7 +369,7 @@ const MeterReadingsTable: React.FC = () => {
   // In a real app, you would fetch this data from an API
   const isLoading = false
   const isError = false
-  const readings = mockMeterReadings
+  const readings: MeterReading[] = [] // Empty array to show empty results
   const totalRecords = readings.length
   const totalPages = Math.ceil(totalRecords / pageSize)
 

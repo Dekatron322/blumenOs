@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
@@ -20,6 +20,7 @@ import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
 import { fetchMeterBrands } from "lib/redux/meterBrandsSlice"
+import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface MeterFormData {
@@ -45,19 +46,21 @@ interface MeterFormData {
   status: number
   meterState: number
   sealNumber: string
-  tariffRate: number
-  tariffIndex: string
-  serviceBand: number
-  customerClass: string
+  poleNumber: string
+  tariffId: number
   injectionSubstationId: number
   distributionSubstationId: number
-  feederId: number
+  feederId?: number
   areaOfficeId: number
   state: number
   address: string
   addressTwo: string
   city: string
   apartmentNumber: string
+  latitude: number
+  longitude: number
+  tenantFullName: string
+  tenantPhoneNumber: string
 }
 
 const InstallNewMeterPage = () => {
@@ -68,6 +71,22 @@ const InstallNewMeterPage = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [successNotified, setSuccessNotified] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+
+  // Search states for dropdowns
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({
+    customer: "",
+    distributionSubstation: "",
+    injectionSubstation: "",
+    areaOffice: "",
+  })
+
+  // Search loading states
+  const [searchLoading, setSearchLoading] = useState<Record<string, boolean>>({
+    customer: false,
+    distributionSubstation: false,
+    injectionSubstation: false,
+    areaOffice: false,
+  })
 
   const { loading, error, success } = useSelector((state: RootState) => state.meters)
 
@@ -113,6 +132,8 @@ const InstallNewMeterPage = () => {
     error: meterBrandsError,
   } = useSelector((state: RootState) => state.meterBrands)
 
+  const { tariffGroups, tariffGroupsLoading, tariffGroupsError } = useSelector((state: RootState) => state.tariffGroups)
+
   const [formData, setFormData] = useState<MeterFormData>({
     customerId: 0,
     serialNumber: "",
@@ -136,19 +157,21 @@ const InstallNewMeterPage = () => {
     status: 1,
     meterState: 1,
     sealNumber: "",
-    tariffRate: 0,
-    tariffIndex: "",
-    serviceBand: 1,
-    customerClass: "",
+    poleNumber: "",
+    tariffId: 0,
     injectionSubstationId: 0,
     distributionSubstationId: 0,
-    feederId: 0,
+    feederId: undefined,
     areaOfficeId: 0,
     state: 0,
     address: "",
     addressTwo: "",
     city: "",
     apartmentNumber: "",
+    latitude: 0,
+    longitude: 0,
+    tenantFullName: "",
+    tenantPhoneNumber: "",
   })
 
   // Fetch related data when component mounts
@@ -168,7 +191,175 @@ const InstallNewMeterPage = () => {
     dispatch(fetchCountries())
     dispatch(fetchCustomers({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchMeterBrands({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchTariffGroups({ PageNumber: 1, PageSize: 100 }))
   }, [dispatch])
+
+  // Debounced search handlers
+  const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
+
+  const handleCustomerSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, customer: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.customer) {
+        clearTimeout(debouncedSearchRef.current.customer)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.customer = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, customer: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchCustomers({
+              pageNumber: 1,
+              pageSize: 50,
+              search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, customer: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          dispatch(
+            fetchCustomers({
+              pageNumber: 1,
+              pageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleDistributionSubstationSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, distributionSubstation: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.distributionSubstation) {
+        clearTimeout(debouncedSearchRef.current.distributionSubstation)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.distributionSubstation = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, distributionSubstation: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchDistributionSubstations({
+              pageNumber: 1,
+              pageSize: 50,
+              search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, distributionSubstation: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          dispatch(
+            fetchDistributionSubstations({
+              pageNumber: 1,
+              pageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleInjectionSubstationSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, injectionSubstation: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.injectionSubstation) {
+        clearTimeout(debouncedSearchRef.current.injectionSubstation)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.injectionSubstation = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, injectionSubstation: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchInjectionSubstations({
+              pageNumber: 1,
+              pageSize: 50,
+              search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, injectionSubstation: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          dispatch(
+            fetchInjectionSubstations({
+              pageNumber: 1,
+              pageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
+
+  const handleAreaOfficeSearch = useCallback(
+    (searchTerm: string) => {
+      setSearchTerms((prev) => ({ ...prev, areaOffice: searchTerm }))
+
+      // Clear existing timeout
+      if (debouncedSearchRef.current.areaOffice) {
+        clearTimeout(debouncedSearchRef.current.areaOffice)
+      }
+
+      // Set new timeout for debounced API call
+      debouncedSearchRef.current.areaOffice = setTimeout(() => {
+        if (searchTerm.trim()) {
+          setSearchLoading((prev) => ({ ...prev, areaOffice: true }))
+
+          // Check if search term is a pure number (ID search)
+          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
+          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
+
+          dispatch(
+            fetchAreaOffices({
+              PageNumber: 1,
+              PageSize: 50,
+              Search: searchValue,
+            })
+          ).finally(() => {
+            setSearchLoading((prev) => ({ ...prev, areaOffice: false }))
+          })
+        } else if (searchTerm === "") {
+          // Only reload default data when search is explicitly cleared (empty string)
+          dispatch(
+            fetchAreaOffices({
+              PageNumber: 1,
+              PageSize: 100,
+            })
+          )
+        }
+      }, 500) // 500ms debounce delay
+    },
+    [dispatch]
+  )
 
   // Handle success and error states
   useEffect(() => {
@@ -203,6 +394,10 @@ const InstallNewMeterPage = () => {
   useEffect(() => {
     return () => {
       dispatch(clearMetersError())
+      // Clear any pending search timeouts
+      Object.values(debouncedSearchRef.current).forEach((timeout) => {
+        if (timeout) clearTimeout(timeout)
+      })
     }
   }, [dispatch])
 
@@ -233,14 +428,6 @@ const InstallNewMeterPage = () => {
     { value: 5, label: "Unknown" },
   ]
 
-  const serviceBandOptions = [
-    { value: 1, label: "A" },
-    { value: 2, label: "B" },
-    { value: 3, label: "C" },
-    { value: 4, label: "D" },
-    { value: 5, label: "E" },
-  ]
-
   // Injection substation options from fetched data
   const injectionSubstationOptions = [
     { value: 0, label: "Select injection substation" },
@@ -250,7 +437,14 @@ const InstallNewMeterPage = () => {
     })),
   ]
 
-  // Distribution substation options from fetched data
+  // Tariff group options from fetched data
+  const tariffGroupOptions = [
+    { value: 0, label: "Select tariff" },
+    ...tariffGroups.map((tariff) => ({
+      value: tariff.id,
+      label: `${tariff.name} (${tariff.tariffCode})`,
+    })),
+  ]
   const distributionSubstationOptions = [
     { value: 0, label: "Select distribution substation" },
     ...distributionSubstations.map((substation) => ({
@@ -366,16 +560,14 @@ const InstallNewMeterPage = () => {
         break
 
       case 3: // Billing + Location
-        if (!formData.tariffIndex.trim()) errors.tariffIndex = "Tariff index is required"
-        if (!formData.customerClass.trim()) errors.customerClass = "Customer class is required"
+        if (!formData.tariffId || formData.tariffId === 0) {
+          errors.tariffId = "Tariff is required"
+        }
         if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
           errors.injectionSubstationId = "Injection substation is required"
         }
         if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
           errors.distributionSubstationId = "Distribution substation is required"
-        }
-        if (!formData.feederId || formData.feederId === 0) {
-          errors.feederId = "Feeder is required"
         }
         if (!formData.areaOfficeId || formData.areaOfficeId === 0) {
           errors.areaOfficeId = "Area office is required"
@@ -435,16 +627,14 @@ const InstallNewMeterPage = () => {
     if (!formData.sealNumber.trim()) allErrors.sealNumber = "Seal number is required"
     if (!formData.meterBrand.trim()) allErrors.meterBrand = "Meter brand is required"
     if (!formData.meterCategory.trim()) allErrors.meterCategory = "Meter category is required"
-    if (!formData.tariffIndex.trim()) allErrors.tariffIndex = "Tariff index is required"
-    if (!formData.customerClass.trim()) allErrors.customerClass = "Customer class is required"
+    if (!formData.tariffId || formData.tariffId === 0) {
+      allErrors.tariffId = "Tariff is required"
+    }
     if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
       allErrors.injectionSubstationId = "Injection substation is required"
     }
     if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
       allErrors.distributionSubstationId = "Distribution substation is required"
-    }
-    if (!formData.feederId || formData.feederId === 0) {
-      allErrors.feederId = "Feeder is required"
     }
     if (!formData.areaOfficeId || formData.areaOfficeId === 0) {
       allErrors.areaOfficeId = "Area office is required"
@@ -490,10 +680,8 @@ const InstallNewMeterPage = () => {
         status: formData.status,
         meterState: formData.meterState,
         sealNumber: formData.sealNumber,
-        tariffRate: formData.tariffRate,
-        tariffIndex: formData.tariffIndex,
-        serviceBand: formData.serviceBand,
-        customerClass: formData.customerClass,
+        poleNumber: formData.poleNumber,
+        tariffId: formData.tariffId,
         injectionSubstationId: formData.injectionSubstationId,
         distributionSubstationId: formData.distributionSubstationId,
         feederId: formData.feederId,
@@ -503,6 +691,10 @@ const InstallNewMeterPage = () => {
         addressTwo: formData.addressTwo,
         city: formData.city,
         apartmentNumber: formData.apartmentNumber,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        tenantFullName: formData.tenantFullName,
+        tenantPhoneNumber: formData.tenantPhoneNumber,
       }
 
       await dispatch(addMeter(meterData)).unwrap()
@@ -535,19 +727,21 @@ const InstallNewMeterPage = () => {
       status: 1,
       meterState: 1,
       sealNumber: "",
-      tariffRate: 0,
-      tariffIndex: "",
-      serviceBand: 1,
-      customerClass: "",
+      poleNumber: "",
+      tariffId: 0,
       injectionSubstationId: 0,
       distributionSubstationId: 0,
-      feederId: 0,
+      feederId: undefined,
       areaOfficeId: 0,
       state: 0,
       address: "",
       addressTwo: "",
       city: "",
       apartmentNumber: "",
+      latitude: 0,
+      longitude: 0,
+      tenantFullName: "",
+      tenantPhoneNumber: "",
     })
     setCurrentStep(1)
     setFormErrors({})
@@ -761,8 +955,7 @@ const InstallNewMeterPage = () => {
       formData.sealNumber.trim() !== "" &&
       formData.meterBrand.trim() !== "" &&
       formData.meterCategory.trim() !== "" &&
-      formData.tariffIndex.trim() !== "" &&
-      formData.customerClass.trim() !== "" &&
+      formData.tariffId !== 0 &&
       formData.address.trim() !== "" &&
       formData.city.trim() !== "" &&
       formData.state !== 0 &&
@@ -831,7 +1024,7 @@ const InstallNewMeterPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 xl:container sm:px-4  xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -934,12 +1127,21 @@ const InstallNewMeterPage = () => {
                             value={formData.customerId}
                             onChange={handleInputChange}
                             options={[
-                              { value: 0, label: customersLoading ? "Loading customers..." : "Select customer" },
+                              {
+                                value: 0,
+                                label:
+                                  customersLoading || searchLoading.customer
+                                    ? "Loading customers..."
+                                    : "Select customer",
+                              },
                               ...customerOptions.filter((option) => option.value !== 0),
                             ]}
                             error={formErrors.customerId}
                             required
-                            disabled={customersLoading}
+                            disabled={customersLoading || searchLoading.customer}
+                            searchable
+                            onSearchChange={handleCustomerSearch}
+                            searchTerm={searchTerms.customer}
                           />
 
                           <FormInputModule
@@ -1062,43 +1264,24 @@ const InstallNewMeterPage = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                          <FormInputModule
-                            label="Tariff Rate"
-                            name="tariffRate"
-                            type="number"
-                            placeholder="Enter tariff rate"
-                            value={formData.tariffRate}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Tariff Index"
-                            name="tariffIndex"
-                            type="text"
-                            placeholder="Enter tariff index"
-                            value={formData.tariffIndex}
-                            onChange={handleInputChange}
-                            error={formErrors.tariffIndex}
-                            required
-                          />
-
                           <FormSelectModule
-                            label="Service Band"
-                            name="serviceBand"
-                            value={formData.serviceBand}
+                            label="Tariff"
+                            name="tariffId"
+                            value={formData.tariffId}
                             onChange={handleInputChange}
-                            options={serviceBandOptions}
+                            options={tariffGroupOptions}
+                            error={formErrors.tariffId}
+                            required
+                            disabled={tariffGroupsLoading}
                           />
 
                           <FormInputModule
-                            label="Customer Class"
-                            name="customerClass"
+                            label="Pole Number"
+                            name="poleNumber"
                             type="text"
-                            placeholder="Enter customer class"
-                            value={formData.customerClass}
+                            placeholder="Enter pole number"
+                            value={formData.poleNumber}
                             onChange={handleInputChange}
-                            error={formErrors.customerClass}
-                            required
                           />
 
                           <FormSelectModule
@@ -1109,7 +1292,10 @@ const InstallNewMeterPage = () => {
                             options={injectionSubstationOptions}
                             error={formErrors.injectionSubstationId}
                             required
-                            disabled={injectionSubstationsLoading}
+                            disabled={injectionSubstationsLoading || searchLoading.injectionSubstation}
+                            searchable
+                            onSearchChange={handleInjectionSubstationSearch}
+                            searchTerm={searchTerms.injectionSubstation}
                           />
 
                           <FormSelectModule
@@ -1120,10 +1306,13 @@ const InstallNewMeterPage = () => {
                             options={distributionSubstationOptions}
                             error={formErrors.distributionSubstationId}
                             required
-                            disabled={distributionSubstationsLoading}
+                            disabled={distributionSubstationsLoading || searchLoading.distributionSubstation}
+                            searchable
+                            onSearchChange={handleDistributionSubstationSearch}
+                            searchTerm={searchTerms.distributionSubstation}
                           />
 
-                          <FormSelectModule
+                          {/* <FormSelectModule
                             label="Feeder"
                             name="feederId"
                             value={formData.feederId}
@@ -1132,7 +1321,7 @@ const InstallNewMeterPage = () => {
                             error={formErrors.feederId}
                             required
                             disabled={feedersLoading}
-                          />
+                          /> */}
 
                           <FormSelectModule
                             label="Area Office"
@@ -1142,7 +1331,10 @@ const InstallNewMeterPage = () => {
                             options={areaOfficeOptions}
                             error={formErrors.areaOfficeId}
                             required
-                            disabled={areaOfficesLoading}
+                            disabled={areaOfficesLoading || searchLoading.areaOffice}
+                            searchable
+                            onSearchChange={handleAreaOfficeSearch}
+                            searchTerm={searchTerms.areaOffice}
                           />
 
                           <FormSelectModule
@@ -1193,6 +1385,42 @@ const InstallNewMeterPage = () => {
                             type="text"
                             placeholder="Enter apartment number"
                             value={formData.apartmentNumber}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="Latitude"
+                            name="latitude"
+                            type="number"
+                            placeholder="Enter latitude"
+                            value={formData.latitude}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="Longitude"
+                            name="longitude"
+                            type="number"
+                            placeholder="Enter longitude"
+                            value={formData.longitude}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="Tenant Full Name"
+                            name="tenantFullName"
+                            type="text"
+                            placeholder="Enter tenant full name"
+                            value={formData.tenantFullName}
+                            onChange={handleInputChange}
+                          />
+
+                          <FormInputModule
+                            label="Tenant Phone Number"
+                            name="tenantPhoneNumber"
+                            type="text"
+                            placeholder="Enter tenant phone number"
+                            value={formData.tenantPhoneNumber}
                             onChange={handleInputChange}
                           />
                         </div>

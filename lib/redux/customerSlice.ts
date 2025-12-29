@@ -96,7 +96,7 @@ export interface DistributionSubstation {
   status: string
   technicalEngineerUserId: number
   technicalEngineerUser: TechnicalEngineerUser
-  feeder: Feeder
+  feeder?: Feeder
   numberOfUnit: number
   unitOneCode: string
   unitTwoCode: string
@@ -211,11 +211,8 @@ export interface Meter {
 }
 
 export interface Customer {
-  customerSubCategoryId: number
-  customerCategoryId: number
   id: number
   customerNumber: number
-  customerID: string
   accountNumber: string
   autoNumber: string
   isCustomerNew: boolean
@@ -230,12 +227,14 @@ export interface Customer {
   status: string
   isSuspended: boolean
   distributionSubstationId: number
+  feederId: number
   distributionSubstationCode: string
   feederName: string
   areaOfficeName: string
   companyName: string
   address: string
   addressTwo: string
+  mapName: string
   city: string
   provinceId: number
   provinceName: string
@@ -244,23 +243,41 @@ export interface Customer {
   serviceCenterName: string
   latitude: number
   longitude: number
-  tariff: number
-  tariffCode: string
-  tariffID: string
-  tariffInddex: string
-  tariffType: string
-  tariffClass: string
-  newRate: number
-  vat: number
-  isVATWaved: boolean
-  meterNumber: string
+  tariffRate: number
+  tariffId: number
+  tariff: {
+    id: number
+    tariffIndex: string
+    tariffCode: string
+    name: string
+    serviceBand: number
+    tariffType: string
+    tariffClass: string
+    tariffRate: number
+    currency: string
+    unitOfMeasure: string
+    fixedCharge: number
+    minimumCharge: number
+    description: string
+    isActive: boolean
+    isLocked: boolean
+    effectiveFromUtc: string
+    effectiveToUtc: string
+    publishedAtUtc: string
+    publishedBy: string
+    version: string
+    supersedesTariffGroupId: number
+    sourceDocumentRef: string
+  }
   isPPM: boolean
+  isMeteredPostpaid: boolean
   isMD: boolean
+  meterNumber: string
+  band: string
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
   comment: string
-  band: string
   storedAverage: number
   totalMonthlyVend: number
   totalMonthlyDebt: number
@@ -269,6 +286,7 @@ export interface Customer {
   customerOutstandingDebtBalance: number
   customerOutstandingCreditBalance: number
   customerOutstandingBalance: number
+  customerOutstandingBalanceLabel: string
   salesRepUserId: number
   technicalEngineerUserId: number
   category: Category
@@ -283,6 +301,21 @@ export interface Customer {
   accountNumberHistory: AccountNumberHistory[]
   meterHistory: MeterHistory[]
   meters: Meter[]
+  currentTariffOverride?: {
+    id: number
+    tariffRateOverride: number
+    effectiveFromUtc: string
+    effectiveToUtc: string
+    reason: string
+  }
+  currentVatOverride?: {
+    id: number
+    vatRateOverride: number
+    isVatWaived: boolean
+    effectiveFromUtc: string
+    effectiveToUtc: string
+    reason: string
+  }
   createdAt?: any
 }
 

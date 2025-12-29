@@ -27,48 +27,7 @@ const SystemAlertsTab: React.FC = () => {
     setSelectedAlert(null)
   }
 
-  const alerts = [
-    {
-      id: "ALT001",
-      type: "tamper",
-      severity: "high",
-      meter: "MTR001234569",
-      customer: "Chinedu Okafor",
-      title: "Tamper detection alert",
-      time: "2024-01-15 08:30",
-      color: "red",
-    },
-    {
-      id: "ALT002",
-      type: "battery",
-      severity: "medium",
-      meter: "MTR001234569",
-      customer: "Chinedu Okafor",
-      title: "Low battery warning (15%)",
-      time: "2024-01-15 09:15",
-      color: "yellow",
-    },
-    {
-      id: "ALT003",
-      type: "communication",
-      severity: "high",
-      meter: "MTR001234570",
-      customer: "Alice Johnson",
-      title: "Communication failure",
-      time: "2024-01-14 16:45",
-      color: "red",
-    },
-    {
-      id: "ALT004",
-      type: "reading",
-      severity: "low",
-      meter: "MTR001234571",
-      customer: "Bob Williams",
-      title: "Unusual consumption pattern",
-      time: "2024-01-14 12:20",
-      color: "blue",
-    },
-  ]
+  const alerts: any[] = [] // Empty array to show empty results
 
   return (
     <>
@@ -115,19 +74,19 @@ const SystemAlertsTab: React.FC = () => {
             <h4 className="font-medium text-gray-800">Alert Summary</h4>
             <div className="mt-3 grid grid-cols-2 gap-4 md:grid-cols-4">
               <div className="text-center">
-                <div className="text-xl font-bold text-gray-800">4</div>
+                <div className="text-xl font-bold text-gray-800">0</div>
                 <div className="text-sm text-gray-600">Total Alerts</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-red-600">2</div>
+                <div className="text-xl font-bold text-red-600">0</div>
                 <div className="text-sm text-gray-600">Critical</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-yellow-600">1</div>
+                <div className="text-xl font-bold text-yellow-600">0</div>
                 <div className="text-sm text-gray-600">Warnings</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-blue-600">1</div>
+                <div className="text-xl font-bold text-blue-600">0</div>
                 <div className="text-sm text-gray-600">Info</div>
               </div>
             </div>

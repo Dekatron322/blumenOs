@@ -40,3 +40,37 @@ jobs:
           tags: |
             ${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to test (dev branch)
+        if: github.ref == 'refs/heads/dev'
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DO_REGISTRY_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        with:
+          host: ${{ secrets.TEST_SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: DO_REGISTRY_TOKEN
+          script: |
+            cd /opt/blumenos/ansible
+            ansible-playbook -i inventory/hosts.ini playbooks/cicd/app.yml \
+              -e nextjs_image=${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }} \
+              -e nextjs_image_tag=${{ github.sha }}
+
+      - name: Deploy to prod (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DO_REGISTRY_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: DO_REGISTRY_TOKEN
+          script: |
+            cd /opt/blumenos/ansible
+            ansible-playbook -i inventory/hosts.ini playbooks/cicd/app.yml \
+              -e nextjs_image=${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }} \
+              -e nextjs_image_tag=${{ github.sha }}

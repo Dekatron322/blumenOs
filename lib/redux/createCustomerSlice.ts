@@ -9,7 +9,6 @@ export interface CreateCustomerRequest {
   phoneNumber: string
   phoneOffice: string
   gender: string
-  customerID: string
   autoNumber: string
   isCustomerNew: boolean
   isPostEnumerated: boolean
@@ -18,29 +17,22 @@ export interface CreateCustomerRequest {
   email: string
   address: string
   distributionSubstationId: number
+  feederId?: number
   addressTwo: string
+  mapName: string
   city: string
-  state: string
+  provinceId: number
   lga: string
   serviceCenterId: number
   latitude: number
   longitude: number
-  tariff: number
-  tariffCode: string
-  tariffID: string
-  tariffInddex: string
-  tariffType: string
-  tariffClass: string
-  newRate: number
-  vat: number
-  isVATWaved: boolean
+  tariffId: number
   isPPM: boolean
   isMD: boolean
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
   comment: string
-  band: string
   storedAverage: number
   salesRepUserId: number
   technicalEngineerUserId: number
@@ -56,7 +48,6 @@ export interface CreateCustomerRequestPayload {
 export interface CreatedCustomer {
   id: number
   customerNumber: number
-  customerID: string
   accountNumber: string
   autoNumber: string
   isCustomerNew: boolean
@@ -71,40 +62,64 @@ export interface CreatedCustomer {
   status: string
   isSuspended: boolean
   distributionSubstationId: number
+  feederId: number
   distributionSubstationCode: string
   feederName: string
   areaOfficeName: string
   companyName: string
   address: string
   addressTwo: string
+  mapName: string
   city: string
-  state: string
+  provinceId: number
+  provinceName: string
   lga: string
   serviceCenterId: number
   serviceCenterName: string
   latitude: number
   longitude: number
-  tariff: number
-  tariffCode: string
-  tariffID: string
-  tariffInddex: string
-  tariffType: string
-  tariffClass: string
-  newRate: number
-  vat: number
-  isVATWaved: boolean
-  meterNumber: string
+  tariffRate: number
+  tariffId: number
+  tariff: {
+    id: number
+    tariffIndex: string
+    tariffCode: string
+    name: string
+    serviceBand: number
+    tariffType: string
+    tariffClass: string
+    tariffRate: number
+    currency: string
+    unitOfMeasure: string
+    fixedCharge: number
+    minimumCharge: number
+    description: string
+    isActive: boolean
+    isLocked: boolean
+    effectiveFromUtc: string
+    effectiveToUtc: string
+    publishedAtUtc: string
+    publishedBy: string
+    version: string
+    supersedesTariffGroupId: number
+    sourceDocumentRef: string
+  }
   isPPM: boolean
+  isMeteredPostpaid: boolean
   isMD: boolean
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
   comment: string
-  band: string
   storedAverage: number
   totalMonthlyVend: number
   totalMonthlyDebt: number
+  totalLifetimeDebit: number
+  totalLifetimeCredit: number
   customerOutstandingDebtBalance: number
+  customerOutstandingCreditBalance: number
+  customerOutstandingBalance: number
+  customerOutstandingBalanceLabel: string
   salesRepUserId: number
   technicalEngineerUserId: number
   category: {
@@ -169,6 +184,8 @@ export interface CreatedCustomer {
       name: string
       nercCode: string
       kaedcoFeederCode: string
+      kv11: string
+      kv33: string
       feederVoltage: number
       technicalEngineerUserId: number
       technicalEngineerUser: {
@@ -194,6 +211,7 @@ export interface CreatedCustomer {
       }
       injectionSubstation: {
         id: number
+        name: string
         nercCode: string
         injectionSubstationCode: string
         technicalEngineerUserId: number
@@ -312,13 +330,13 @@ export interface CreatedCustomer {
     oldAddress: string
     oldAddressTwo: string
     oldCity: string
-    oldState: string
+    oldProvinceId: number
     oldLatitude: number
     oldLongitude: number
     newAddress: string
     newAddressTwo: string
     newCity: string
-    newState: string
+    newProvinceId: number
     newLatitude: number
     newLongitude: number
   }>
@@ -331,16 +349,98 @@ export interface CreatedCustomer {
     oldAddress: string
     oldAddressTwo: string
     oldCity: string
-    oldState: string
+    oldProvinceId: number
     oldLatitude: number
     oldLongitude: number
     newAddress: string
     newAddressTwo: string
     newCity: string
-    newState: string
+    newProvinceId: number
     newLatitude: number
     newLongitude: number
   }>
+  meters: Array<{
+    id: number
+    customerId: number
+    customerAccountNumber: string
+    customerFullName: string
+    serialNumber: string
+    drn: string
+    sgc: number
+    krn: string
+    ti: number
+    ea: number
+    tct: number
+    ken: number
+    mfrCode: number
+    installationDate: string
+    meterAddedBy: string
+    meterEditedBy: string
+    meterDateCreated: string
+    meterType: number
+    isSmart: boolean
+    meterBrand: string
+    meterCategory: string
+    isMeterActive: boolean
+    status: number
+    meterState: number
+    sealNumber: string
+    poleNumber: string
+    tariffRate: number
+    tariffId: number
+    tariff: {
+      id: number
+      tariffIndex: string
+      tariffCode: string
+      name: string
+      serviceBand: number
+      tariffType: string
+      tariffClass: string
+      tariffRate: number
+      currency: string
+      unitOfMeasure: string
+      fixedCharge: number
+      minimumCharge: number
+      description: string
+      isActive: boolean
+      isLocked: boolean
+      effectiveFromUtc: string
+      effectiveToUtc: string
+      publishedAtUtc: string
+      publishedBy: string
+      version: string
+      supersedesTariffGroupId: number
+      sourceDocumentRef: string
+    }
+    injectionSubstationId: number
+    distributionSubstationId: number
+    feederId: number
+    areaOfficeId: number
+    state: number
+    address: string
+    addressTwo: string
+    city: string
+    apartmentNumber: string
+    latitude: number
+    longitude: number
+    tenantFullName: string
+    tenantPhoneNumber: string
+  }>
+  currentTariffOverride: {
+    id: number
+    tariffRateOverride: number
+    effectiveFromUtc: string
+    effectiveToUtc: string
+    reason: string
+  }
+  currentVatOverride: {
+    id: number
+    vatRateOverride: number
+    isVatWaived: boolean
+    effectiveFromUtc: string
+    effectiveToUtc: string
+    reason: string
+  }
 }
 
 export interface CreateCustomerResponse {
