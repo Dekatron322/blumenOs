@@ -1,30 +1,19 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useDispatch, useSelector } from "react-redux"
-import { AppDispatch, RootState } from "lib/redux/store"
-
-import { AnimatePresence, motion } from "framer-motion"
-import { MetersProgrammedIcon, OfficeIcon, PlusIcon, TokenGeneratedIcon, VendingIcon } from "components/Icons/Icons"
-import InstallMeterModal from "components/ui/Modal/install-meter-modal"
-import AssetManagementInfo from "components/AssetManagementInfo/AssetManagementInfo"
-import { usePopover } from "components/Navbar/use-popover"
-import {
-  AlertsIcon,
-  DistributionIcon,
-  PoleIcon,
-  ReadingsIcon,
-  ServiceStationIcon,
-} from "components/AssetManagementInfo/TabNavigation"
-import { fetchAssetManagementAnalytics } from "lib/redux/analyticsSlice"
+import ArrowIcon from "public/arrow-icon"
+import { useState } from "react"
+import AddCustomerModal from "components/ui/Modal/add-customer-modal"
+import { motion } from "framer-motion"
+import { BillingIcon, CustomeraIcon, PostpaidIcon, RefreshCircleIcon, VendingIcon } from "components/Icons/Icons"
+import AllCustomers from "components/Tables/AllCustomers"
+import GenerateToken from "components/GenerateToken/GenerateToken"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
   return (
     <div className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1">
-      {[...Array(5)].map((_, index) => (
+      {[...Array(4)].map((_, index) => (
         <motion.div
           key={index}
           className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
@@ -275,90 +264,32 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate mock asset data as fallback
-const generateAssetData = () => {
+// Generate mock utility customer data
+const generateUtilityCustomerData = () => {
   return {
-    totalTransformers: 247,
-    operationalTransformers: 215,
-    activeFeeders: 48,
-    operationalFeeders: 45,
-    injectionSubstations: 8,
-    operationalInjectionSubstations: 8,
-    distributionSubstations: 4,
-    operationalDistributionSubstations: 4,
+    totalCustomers: Math.floor(125000 + Math.random() * 5000),
+    activeCustomers: Math.floor(115000 + Math.random() * 4000),
+    frozenCustomers: Math.floor(1500 + Math.random() * 500),
+    inactiveCustomers: Math.floor(8500 + Math.random() * 2000),
+    prepaidCustomers: Math.floor(85000 + Math.random() * 3000),
+    postpaidCustomers: Math.floor(35000 + Math.random() * 2000),
+    estimatedBillingCustomers: Math.floor(5000 + Math.random() * 1000),
   }
 }
 
-export default function MeteringDashboard() {
-  const router = useRouter()
-  const dispatch = useDispatch<AppDispatch>()
+export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [assetData, setAssetData] = useState(null)
+  const [customerData, setCustomerData] = useState(generateUtilityCustomerData())
 
-  // Get analytics data from Redux store
-  const { assetManagementData, assetManagementLoading, assetManagementError } = useSelector(
-    (state: RootState) => state.analytics
-  )
-
-  const {
-    anchorRef: addAssetButtonRef,
-    open: isAddAssetMenuOpen,
-    handleToggle: toggleAddAssetMenu,
-    handleClose: closeAddAssetMenu,
-  } = usePopover()
-
-  useEffect(() => {
-    // Fetch asset management analytics when component mounts
-    dispatch(fetchAssetManagementAnalytics())
-  }, [dispatch])
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (addAssetButtonRef.current && !addAssetButtonRef.current.contains(target)) {
-        closeAddAssetMenu()
-      }
-    }
-
-    if (isAddAssetMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [addAssetButtonRef, closeAddAssetMenu, isAddAssetMenuOpen])
-
-  // Use real analytics data from Redux
-  const analyticsData = assetManagementData
-
-  // Transform analytics data to match our card structure
-  const transformedAssetData = {
-    totalTransformers: analyticsData?.htPoles || 0,
-    operationalTransformers: analyticsData?.htPoles ? Math.floor(analyticsData.htPoles * 0.87) : 0,
-    activeFeeders: analyticsData?.feeders || 0,
-    operationalFeeders: analyticsData?.feeders ? Math.floor(analyticsData.feeders * 0.94) : 0,
-    injectionSubstations: analyticsData?.injectionSubstations || 0,
-    operationalInjectionSubstations: analyticsData?.injectionSubstations
-      ? Math.floor(analyticsData.injectionSubstations * 1.0)
-      : 0,
-    distributionSubstations: analyticsData?.distributionSubstations || 0,
-    operationalDistributionSubstations: analyticsData?.distributionSubstations
-      ? Math.floor(analyticsData.distributionSubstations * 1.0)
-      : 0,
-  }
-
-  const {
-    totalTransformers,
-    operationalTransformers,
-    activeFeeders,
-    operationalFeeders,
-    injectionSubstations,
-    operationalInjectionSubstations,
-    distributionSubstations,
-    operationalDistributionSubstations,
-  } = transformedAssetData
+  // Use mock data instead of API
+  const totalCustomers = customerData.totalCustomers
+  const activeCustomers = customerData.activeCustomers
+  const frozenCustomers = customerData.frozenCustomers
+  const inactiveCustomers = customerData.inactiveCustomers
+  const prepaidCustomers = customerData.prepaidCustomers
+  const postpaidCustomers = customerData.postpaidCustomers
+  const estimatedBillingCustomers = customerData.estimatedBillingCustomers
 
   // Format numbers with commas
   const formatNumber = (num: number) => {
@@ -368,18 +299,16 @@ export default function MeteringDashboard() {
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
     // Refresh data after adding customer
-    dispatch(fetchAssetManagementAnalytics())
+    setCustomerData(generateUtilityCustomerData())
   }
 
   const handleRefreshData = () => {
     setIsLoading(true)
-    dispatch(fetchAssetManagementAnalytics()).finally(() => {
+    setTimeout(() => {
+      setCustomerData(generateUtilityCustomerData())
       setIsLoading(false)
-    })
+    }, 1000)
   }
-
-  // Show loading state when fetching analytics data
-  const showLoading = isLoading || assetManagementLoading
 
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
@@ -390,124 +319,22 @@ export default function MeteringDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full items-start justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
               <div>
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Asset Management</h4>
-                <p className="text-sm sm:text-base">Network infrastructure and equipment tracking</p>
-                {assetManagementError && (
-                  <div className="mt-2 text-sm text-red-600">Error loading analytics: {assetManagementError}</div>
-                )}
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Prepaid & Token Vending</h4>
+                <p className="text-sm sm:text-base">STS token generation and prepaid meter management</p>
               </div>
-
-              <motion.div
-                className="flex items-center justify-end gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <button
-                  onClick={handleRefreshData}
-                  disabled={showLoading}
-                  className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <span>{showLoading ? "Refreshing..." : "Refresh Data"}</span>
-                </button>
-                <div className="relative" ref={addAssetButtonRef}>
-                  <button
-                    onClick={toggleAddAssetMenu}
-                    className="flex items-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#000000]"
-                  >
-                    <PlusIcon />
-                    Add New Asset
-                  </button>
-
-                  <AnimatePresence>
-                    {isAddAssetMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-md bg-white text-sm shadow-lg ring-1 ring-black ring-opacity-5"
-                      >
-                        <div className="flex flex-col py-1">
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/area-offices/add-area-offices")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <OfficeIcon />
-                            <span>Add Area Office</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/feeders/add-feeders")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <ReadingsIcon />
-                            <span>Add Feeder</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/injection-substations/add-injection-substations")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <AlertsIcon />
-                            <span>Add Injection Substation</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/poles/add-poles")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <PoleIcon />
-                            <span>Add Pole</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/distribution-stations/add-distribution-stations")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <DistributionIcon />
-                            <span>Add Distribution Station</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/service-stations/add-service-stations")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <ServiceStationIcon />
-                            <span>Add Service Station</span>
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
             </div>
 
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
               <div className="w-full">
-                {showLoading ? (
+                {isLoading ? (
                   // Loading State
                   <>
                     <SkeletonLoader />
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Asset Management Dashboard
+                  // Loaded State
                   <>
                     <motion.div
                       className="flex w-full gap-3 max-lg:grid max-lg:grid-cols-2 max-sm:grid-cols-1"
@@ -518,115 +345,99 @@ export default function MeteringDashboard() {
                       <div className="flex w-full max-sm:flex-col">
                         <div className="w-full">
                           <div className="mb-3 flex w-full cursor-pointer gap-3 max-sm:flex-col">
-                            {/* Active Feeders Card */}
                             <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
                               whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                             >
                               <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-green-600">
-                                  <TokenGeneratedIcon />
-                                </div>
-                                <span className="font-medium">Active Feeders</span>
+                                <CustomeraIcon />
+                                Total Customers
                               </div>
                               <div className="flex flex-col items-end justify-between gap-3 pt-4">
                                 <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">{formatNumber(activeFeeders)}</p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Operational:</p>
-                                  <p className="text-secondary font-medium">{formatNumber(operationalFeeders)}</p>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Injection Substations Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-purple-600">
-                                  <VendingIcon />
-                                </div>
-                                <span className="font-medium">Injection Substations</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">
-                                    {formatNumber(injectionSubstations)}
-                                  </p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Operational:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">
-                                      {formatNumber(operationalInjectionSubstations)}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Distribution Substations Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="text-orange-600">
-                                  <MetersProgrammedIcon />
-                                </div>
-                                <span className="font-medium">Distribution Stations</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">
-                                    {formatNumber(distributionSubstations)}
-                                  </p>
-                                </div>
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Operational:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div className="size-2 rounded-full bg-green-500"></div>
-                                    <p className="text-secondary font-medium">
-                                      {formatNumber(operationalDistributionSubstations)}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-
-                            {/* Area Offices Card */}
-                            <motion.div
-                              className="small-card rounded-md bg-white p-4 transition duration-500 md:border"
-                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                            >
-                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
-                                <div className="">
-                                  <OfficeIcon />
-                                </div>
-                                <span className="font-medium">Area Offices</span>
-                              </div>
-                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
-                                <div className="flex w-full justify-between">
-                                  <p className="text-grey-200">Total:</p>
-                                  <p className="text-secondary text-xl font-bold">
-                                    {analyticsData?.areaOffices ? formatNumber(analyticsData.areaOffices) : "0"}
-                                  </p>
+                                  <p className="text-grey-200">All Accounts:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(totalCustomers)}</p>
                                 </div>
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Active:</p>
-                                  <div className="flex items-center gap-1">
-                                    <div className="size-2 rounded-full bg-green-500"></div>
+                                  <p className="text-secondary font-medium">{formatNumber(activeCustomers)}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <VendingIcon />
+                                Prepaid Customers
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Token Meters:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(prepaidCustomers)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Percentage:</p>
+                                  <p className="text-secondary font-medium">
+                                    {totalCustomers > 0
+                                      ? `${Math.round((prepaidCustomers / totalCustomers) * 100)}%`
+                                      : "0%"}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <PostpaidIcon />
+                                Postpaid Customers
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Billed Monthly:</p>
+                                  <p className="text-secondary font-medium">{formatNumber(postpaidCustomers)}</p>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Percentage:</p>
+                                  <p className="text-secondary font-medium">
+                                    {totalCustomers > 0
+                                      ? `${Math.round((postpaidCustomers / totalCustomers) * 100)}%`
+                                      : "0%"}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+
+                            <motion.div
+                              className="small-card rounded-md bg-white p-2 transition duration-500 md:border"
+                              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                            >
+                              <div className="flex items-center gap-2 border-b pb-4 max-sm:mb-2">
+                                <BillingIcon />
+                                Estimated Billing
+                              </div>
+                              <div className="flex flex-col items-end justify-between gap-3 pt-4">
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Unmetered:</p>
+                                  <div className="flex gap-1">
                                     <p className="text-secondary font-medium">
-                                      {analyticsData?.areaOffices ? formatNumber(analyticsData.areaOffices) : "0"}
+                                      {formatNumber(estimatedBillingCustomers)}
                                     </p>
+                                    <ArrowIcon />
                                   </div>
+                                </div>
+                                <div className="flex w-full justify-between">
+                                  <p className="text-grey-200">Percentage:</p>
+                                  <p className="text-secondary font-medium">
+                                    {totalCustomers > 0
+                                      ? `${Math.round((estimatedBillingCustomers / totalCustomers) * 100)}%`
+                                      : "0%"}
+                                  </p>
                                 </div>
                               </div>
                             </motion.div>
@@ -638,10 +449,9 @@ export default function MeteringDashboard() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
+                      transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                      <AssetManagementInfo />
+                      <GenerateToken />
                     </motion.div>
                   </>
                 )}
@@ -650,7 +460,7 @@ export default function MeteringDashboard() {
           </div>
         </div>
       </div>
-      <InstallMeterModal
+      <AddCustomerModal
         isOpen={isAddCustomerModalOpen}
         onRequestClose={() => setIsAddCustomerModalOpen(false)}
         onSuccess={handleAddCustomerSuccess}

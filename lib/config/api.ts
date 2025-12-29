@@ -378,6 +378,7 @@ export const API_ENDPOINTS = {
     CLEAR_TAMPER: "/meters/{id}/prepaid/clear-tamper",
     CLEAR_CREDIT: "/meters/{id}/prepaid/clear-credit",
     SET_CONTROL: "/meters/{id}/prepaid/set-control",
+    VERIFY_TOKEN: "/meters/{id}/prepaid/verify-token",
   },
 
   METER_BRANDS: {

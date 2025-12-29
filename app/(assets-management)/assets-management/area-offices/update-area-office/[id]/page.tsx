@@ -287,12 +287,12 @@ const UpdateAreaOfficePage = () => {
   const isFormValid = (): boolean => {
     return (
       formData.companyId !== 0 &&
-      formData.nameOfNewOAreaffice.trim() !== "" &&
-      formData.newKaedcoCode.trim() !== "" &&
-      formData.newNercCode.trim() !== "" &&
-      formData.nameOfOldOAreaffice.trim() !== "" &&
-      formData.oldKaedcoCode.trim() !== "" &&
-      formData.oldNercCode.trim() !== "" &&
+      formData.nameOfNewOAreaffice?.trim() !== "" &&
+      formData.newKaedcoCode?.trim() !== "" &&
+      formData.newNercCode?.trim() !== "" &&
+      formData.nameOfOldOAreaffice?.trim() !== "" &&
+      formData.oldKaedcoCode?.trim() !== "" &&
+      formData.oldNercCode?.trim() !== "" &&
       formData.latitude !== 0 &&
       formData.longitude !== 0
     )

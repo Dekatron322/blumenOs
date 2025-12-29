@@ -218,6 +218,9 @@ export interface MetersState {
   setControlData: TokenData | null
   setControlLoading: boolean
   setControlError: string | null
+  verifyTokenData: VerifyTokenResult | null
+  verifyTokenLoading: boolean
+  verifyTokenError: string | null
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -310,6 +313,9 @@ const initialState: MetersState = {
   setControlData: null,
   setControlLoading: false,
   setControlError: null,
+  verifyTokenData: null,
+  verifyTokenLoading: false,
+  verifyTokenError: null,
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -639,6 +645,55 @@ export interface SetControlResponse {
   message: string
   data: {
     data: TokenData
+    error: {
+      code: string
+      error: string
+      success: boolean
+    }
+  }
+}
+
+// Verify Token interfaces
+export interface VerifyTokenRequest {
+  tokenDec: string
+}
+
+export interface VerifyTokenResult {
+  meterTestToken: string
+  token: {
+    description: string
+    drn: string
+    ea: number
+    idSm: string
+    isReservedTid: boolean
+    krn: number
+    newConfig: string
+    pan: string
+    scaledAmount: string
+    scaledUnitName: string
+    sgc: number
+    stsUnitName: string
+    subclass: number
+    tct: number
+    ti: number
+    tid: number
+    tokenClass: number
+    tokenDec: string
+    tokenHex: string
+    transferAmount: number
+    vkKcv: string
+  }
+  validationResult: string
+}
+
+export interface VerifyTokenResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    data: {
+      result: VerifyTokenResult
+      success: boolean
+    }
     error: {
       code: string
       error: string
@@ -1018,6 +1073,28 @@ export const setControl = createAsyncThunk(
   }
 )
 
+// Async Thunk for verifying token
+export const verifyToken = createAsyncThunk(
+  "meters/verifyToken",
+  async ({ id, requestData }: { id: number; requestData: VerifyTokenRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.VERIFY_TOKEN.replace("{id}", id.toString())
+      const response = await api.post<VerifyTokenResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to verify token")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to verify token")
+      }
+      return rejectWithValue(error.message || "Network error during token verification")
+    }
+  }
+)
+
 // Create slice
 const metersSlice = createSlice({
   name: "meters",
@@ -1126,6 +1203,12 @@ const metersSlice = createSlice({
       state.clearTamperData = null
       state.clearTamperError = null
       state.clearTamperLoading = false
+    },
+    // Clear verify token data
+    clearVerifyToken: (state) => {
+      state.verifyTokenData = null
+      state.verifyTokenError = null
+      state.verifyTokenLoading = false
     },
   },
   extraReducers: (builder) => {
@@ -1400,6 +1483,19 @@ const metersSlice = createSlice({
         state.setControlLoading = false
         state.setControlError = action.payload as string
       })
+      // Verify token
+      .addCase(verifyToken.pending, (state) => {
+        state.verifyTokenLoading = true
+        state.verifyTokenError = null
+      })
+      .addCase(verifyToken.fulfilled, (state, action: PayloadAction<VerifyTokenResponse>) => {
+        state.verifyTokenLoading = false
+        state.verifyTokenData = action.payload.data.data.result
+      })
+      .addCase(verifyToken.rejected, (state, action) => {
+        state.verifyTokenLoading = false
+        state.verifyTokenError = action.payload as string
+      })
   },
 })
 
@@ -1414,5 +1510,6 @@ export const {
   clearSetControlHistory,
   clearAddKeyChange,
   clearTamperData,
+  clearVerifyToken,
 } = metersSlice.actions
 export default metersSlice.reducer
