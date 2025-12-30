@@ -1,15 +1,16 @@
 name: "Next.js Bundle Analysis"
 
-on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
-  workflow_dispatch:
+# Workflow disabled
+# on:
+#   push:
+#     branches:
+#       - main
+#       - develop
+#   pull_request:
+#     branches:
+#       - main
+#       - develop
+#   workflow_dispatch:
 
 defaults:
   run:
