@@ -1,14 +1,8 @@
 name: Playwright Tests
 
-# Workflow disabled
-# on:
-#   push:
-#     branches:
-#       - main
-#       - master
-#       - develop
-#   pull_request: null
-#   workflow_dispatch: null
+# Manual dispatch only - no automatic triggers
+on:
+  workflow_dispatch:
 
 jobs:
   test:

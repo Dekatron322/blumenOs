@@ -1,14 +1,8 @@
 name: Check
 
-# Workflow disabled
-# on:
-#   push:
-#     branches:
-#       - main
-#       - master
-#       - develop
-#   pull_request:
-#   workflow_dispatch:
+# Manual dispatch only - no automatic triggers
+on:
+  workflow_dispatch:
 
 jobs:
   check:
