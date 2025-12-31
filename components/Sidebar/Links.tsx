@@ -181,6 +181,18 @@ export const allLinks: LinkItem[] = [
       { name: "All Transactions", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Record Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Cash Management", href: "/payment/cash-management", privilegeKey: "payments", requiredActions: ["R"] },
+      {
+        name: "Cash Clearance",
+        href: "/agent-management/clearance",
+        privilegeKey: "payments",
+        requiredActions: ["W"],
+      },
+      {
+        name: "Clear Cash",
+        href: "/agent-management/clear-cash",
+        privilegeKey: "payments",
+        requiredActions: ["W"],
+      },
       { name: "Duning Case", href: "/payment/duning-mgt", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Change Request", href: "/payment/change-request", privilegeKey: "payments", requiredActions: ["E"] },
     ],
@@ -205,18 +217,7 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "agents",
         requiredActions: ["W"],
       },
-      {
-        name: "Cash Clearance",
-        href: "/agent-management/clearance",
-        privilegeKey: "agents",
-        requiredActions: ["W"],
-      },
-      {
-        name: "Clear Cash",
-        href: "/agent-management/clear-cash",
-        privilegeKey: "agents",
-        requiredActions: ["W"],
-      },
+
       {
         name: "Payments",
         href: "/agent-management/payments",
