@@ -45,6 +45,9 @@ export interface Meter {
   longitude: number
   tenantFullName: string
   tenantPhoneNumber: string
+  tariff?: {
+    serviceBand: number
+  }
 }
 
 // Interface for Meter Detail Response Data
@@ -221,6 +224,17 @@ export interface MetersState {
   verifyTokenData: VerifyTokenResult | null
   verifyTokenLoading: boolean
   verifyTokenError: string | null
+  verifyTokenHistory: VerifyTokenHistoryEntry[]
+  verifyTokenHistoryLoading: boolean
+  verifyTokenHistoryError: string | null
+  verifyTokenHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -316,6 +330,17 @@ const initialState: MetersState = {
   verifyTokenData: null,
   verifyTokenLoading: false,
   verifyTokenError: null,
+  verifyTokenHistory: [],
+  verifyTokenHistoryLoading: false,
+  verifyTokenHistoryError: null,
+  verifyTokenHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -700,6 +725,33 @@ export interface VerifyTokenResponse {
       success: boolean
     }
   }
+}
+
+// Verify Token History interfaces
+export interface VerifyTokenHistoryEntry {
+  id: number
+  meterId: number
+  userAccountId: number
+  agentId: number
+  vendorId: number
+  requestPayload: string
+  responsePayload: string
+  isSuccessful: boolean
+  errorCode: string
+  errorMessage: string
+  requestedAtUtc: string
+}
+
+export interface VerifyTokenHistoryResponse {
+  isSuccess: boolean
+  message: string
+  data: VerifyTokenHistoryEntry[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // Async Thunk for fetching meters
@@ -1095,6 +1147,33 @@ export const verifyToken = createAsyncThunk(
   }
 )
 
+// Async Thunk for fetching verify token history
+export const fetchVerifyTokenHistory = createAsyncThunk(
+  "meters/fetchVerifyTokenHistory",
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.VERIFY_TOKEN_HISTORY.replace("{id}", id.toString())
+      const response = await api.get<VerifyTokenHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch verify token history")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch verify token history")
+      }
+      return rejectWithValue(error.message || "Network error during verify token history fetch")
+    }
+  }
+)
+
 // Create slice
 const metersSlice = createSlice({
   name: "meters",
@@ -1209,6 +1288,20 @@ const metersSlice = createSlice({
       state.verifyTokenData = null
       state.verifyTokenError = null
       state.verifyTokenLoading = false
+    },
+    // Clear verify token history
+    clearVerifyTokenHistory: (state) => {
+      state.verifyTokenHistory = []
+      state.verifyTokenHistoryError = null
+      state.verifyTokenHistoryLoading = false
+      state.verifyTokenHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
   },
   extraReducers: (builder) => {
@@ -1496,6 +1589,27 @@ const metersSlice = createSlice({
         state.verifyTokenLoading = false
         state.verifyTokenError = action.payload as string
       })
+      // Fetch verify token history
+      .addCase(fetchVerifyTokenHistory.pending, (state) => {
+        state.verifyTokenHistoryLoading = true
+        state.verifyTokenHistoryError = null
+      })
+      .addCase(fetchVerifyTokenHistory.fulfilled, (state, action: PayloadAction<VerifyTokenHistoryResponse>) => {
+        state.verifyTokenHistoryLoading = false
+        state.verifyTokenHistory = action.payload.data
+        state.verifyTokenHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+      })
+      .addCase(fetchVerifyTokenHistory.rejected, (state, action) => {
+        state.verifyTokenHistoryLoading = false
+        state.verifyTokenHistoryError = action.payload as string
+      })
   },
 })
 
@@ -1511,5 +1625,6 @@ export const {
   clearAddKeyChange,
   clearTamperData,
   clearVerifyToken,
+  clearVerifyTokenHistory,
 } = metersSlice.actions
 export default metersSlice.reducer

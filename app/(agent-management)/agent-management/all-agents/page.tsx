@@ -16,6 +16,70 @@ import { AgentsRequestParams, type Agent as BackendAgent, fetchAgents } from "li
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { formatCurrency } from "utils/formatCurrency"
 
+// Dropdown Popover Component
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {children}
+        <svg
+          className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onSelect(option.value)
+                  setIsOpen(false)
+                }}
+                className={`block w-full px-3 py-2 text-left ${
+                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 interface SortOption {
   label: string
   value: string
@@ -401,196 +465,209 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
                 </button>
+              </div>
+            </div>
+
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Status Filter */}
                 <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "status",
+                              localFilters.status === option.value ? undefined : option.value
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.status === option.value
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Can Collect Cash Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Collect Cash</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {canCollectCashOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "canCollectCash",
+                              localFilters.canCollectCash === (option.value === "true")
+                                ? undefined
+                                : option.value === "true"
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.canCollectCash === (option.value === "true")
+                              ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Cash At Hand Range */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Min Cash At Hand</label>
+                  <input
+                    type="number"
+                    value={localFilters.minCashAtHand || ""}
+                    onChange={(e) =>
+                      handleFilterChange("minCashAtHand", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    placeholder="Enter minimum amount"
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Max Cash At Hand</label>
+                  <input
+                    type="number"
+                    value={localFilters.maxCashAtHand || ""}
+                    onChange={(e) =>
+                      handleFilterChange("maxCashAtHand", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    placeholder="Enter maximum amount"
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Date Range Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                    Last Collection From
+                  </label>
+                  <input
+                    type="date"
+                    value={localFilters.lastCashCollectionDateFrom || ""}
+                    onChange={(e) => handleFilterChange("lastCashCollectionDateFrom", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                    Last Collection To
+                  </label>
+                  <input
+                    type="date"
+                    value={localFilters.lastCashCollectionDateTo || ""}
+                    onChange={(e) => handleFilterChange("lastCashCollectionDateTo", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === option.value
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Can Collect Cash Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Collect Cash</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {canCollectCashOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange(
-                            "canCollectCash",
-                            localFilters.canCollectCash === (option.value === "true")
-                              ? undefined
-                              : option.value === "true"
-                          )
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.canCollectCash === (option.value === "true")
-                            ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Cash At Hand Range */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Min Cash At Hand</label>
-                <input
-                  type="number"
-                  value={localFilters.minCashAtHand || ""}
-                  onChange={(e) =>
-                    handleFilterChange("minCashAtHand", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  placeholder="Enter minimum amount"
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Max Cash At Hand</label>
-                <input
-                  type="number"
-                  value={localFilters.maxCashAtHand || ""}
-                  onChange={(e) =>
-                    handleFilterChange("maxCashAtHand", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  placeholder="Enter maximum amount"
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Date Range Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                  Last Collection From
-                </label>
-                <input
-                  type="date"
-                  value={localFilters.lastCashCollectionDateFrom || ""}
-                  onChange={(e) => handleFilterChange("lastCashCollectionDateFrom", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Last Collection To</label>
-                <input
-                  type="date"
-                  value={localFilters.lastCashCollectionDateTo || ""}
-                  onChange={(e) => handleFilterChange("lastCashCollectionDateTo", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed */}
+            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
                   Apply Filters
                 </button>
@@ -599,9 +676,9 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  Reset All
                 </button>
               </div>
             </div>
@@ -628,6 +705,8 @@ const AllAgents: React.FC = () => {
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
 
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
@@ -884,6 +963,53 @@ const AllAgents: React.FC = () => {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
+  const handleRefreshData = () => {
+    const params: AgentsRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      search: searchText || undefined,
+      status: appliedFilters.status,
+      canCollectCash: appliedFilters.canCollectCash,
+      areaOfficeId: appliedFilters.areaOfficeId,
+      serviceCenterId: appliedFilters.serviceCenterId,
+      minCashAtHand: appliedFilters.minCashAtHand,
+      maxCashAtHand: appliedFilters.maxCashAtHand,
+      lastCashCollectionDateFrom: appliedFilters.lastCashCollectionDateFrom,
+      lastCashCollectionDateTo: appliedFilters.lastCashCollectionDateTo,
+      sortBy: appliedFilters.sortBy,
+      sortOrder: appliedFilters.sortOrder,
+    }
+    dispatch(fetchAgents(params))
+  }
+
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
+  }
+
+  const handlePollingIntervalChange = (interval: number) => {
+    setPollingInterval(interval)
+  }
+
+  // Polling interval options - 8 minutes as default
+  const pollingOptions = [
+    { value: 480000, label: "8m" },
+    { value: 600000, label: "10m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
+  // Short polling effect
+  useEffect(() => {
+    if (!isPolling) return
+
+    const interval = setInterval(() => {
+      handleRefreshData()
+    }, pollingInterval)
+
+    return () => clearInterval(interval)
+  }, [isPolling, pollingInterval, currentPage, searchText, appliedFilters, pageSize])
+
   // Fetch agents based on applied filters
   useEffect(() => {
     const params: AgentsRequestParams = {
@@ -911,14 +1037,65 @@ const AllAgents: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
+          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             <div className="mb-4 flex w-full justify-between max-md:flex-col max-sm:my-4 ">
               <div>
-                <h4 className="text-2xl font-semibold">Agent Management</h4>
-                <p>Field agent onboarding, commissions, and performance tracking</p>
+                <h4 className="text-2xl font-semibold">Sales Rep Management</h4>
+                <p>Field sales reps onboarding, commissions, and performance tracking</p>
+              </div>
+
+              {/* Auto-refresh controls */}
+              <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
+                <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                <button
+                  onClick={togglePolling}
+                  className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isPolling
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {isPolling ? (
+                    <>
+                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      ON
+                    </>
+                  ) : (
+                    <>
+                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      OFF
+                    </>
+                  )}
+                </button>
+
+                {isPolling && (
+                  <DropdownPopover
+                    options={pollingOptions}
+                    selectedValue={pollingInterval}
+                    onSelect={handlePollingIntervalChange}
+                  >
+                    <span className="text-sm font-medium">
+                      {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                    </span>
+                  </DropdownPopover>
+                )}
               </div>
             </div>
-            <div className="flex-3 relative flex flex-col items-start gap-6 2xl:mt-5 2xl:flex-row">
+            <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
               {/* Main Content - Agent Table */}
               <motion.div
                 className={
@@ -952,11 +1129,20 @@ const AllAgents: React.FC = () => {
                       )}
                     </button>
                     <div>
-                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Agent Directory</h3>
+                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Sales Rep Directory</h3>
                       <p className="text-sm text-gray-600">View and manage all field agents</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-3 md:mt-0">
+                    {/* Active filters badge - Desktop only (2xl and above) */}
+                    {getActiveFilterCount() > 0 && (
+                      <div className="hidden items-center gap-2 2xl:flex">
+                        <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                          {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Hide/Show Filters button - Desktop only (2xl and above) */}
                     <button
                       type="button"
@@ -1237,192 +1423,198 @@ const AllAgents: React.FC = () => {
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
-                  className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+                  className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
                 >
-                  <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-                    <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                    <button
-                      onClick={resetFilters}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                    >
-                      <X className="size-3 md:size-4" />
-                      Clear All
-                    </button>
+                  <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+                      <button
+                        onClick={resetFilters}
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+                      >
+                        <X className="size-3 md:size-4" />
+                        Clear All
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    {/* Status Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {statusOptions
-                          .filter((opt) => opt.value !== "")
-                          .map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() =>
-                                handleFilterChange(
-                                  "status",
-                                  localFilters.status === option.value ? undefined : option.value
-                                )
-                              }
-                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                                localFilters.status === option.value
-                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Can Collect Cash Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                        Can Collect Cash
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {canCollectCashOptions
-                          .filter((opt) => opt.value !== "")
-                          .map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() =>
-                                handleFilterChange(
-                                  "canCollectCash",
-                                  localFilters.canCollectCash === (option.value === "true")
-                                    ? undefined
-                                    : option.value === "true"
-                                )
-                              }
-                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                                localFilters.canCollectCash === (option.value === "true")
-                                  ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Area Office Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                      <FormSelectModule
-                        name="areaOfficeId"
-                        value={localFilters.areaOfficeId || ""}
-                        onChange={(e) =>
-                          handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        options={areaOfficeOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-
-                    {/* Cash At Hand Range */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                        Min Cash At Hand
-                      </label>
-                      <input
-                        type="number"
-                        value={localFilters.minCashAtHand || ""}
-                        onChange={(e) =>
-                          handleFilterChange("minCashAtHand", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        placeholder="Enter minimum amount"
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                        Max Cash At Hand
-                      </label>
-                      <input
-                        type="number"
-                        value={localFilters.maxCashAtHand || ""}
-                        onChange={(e) =>
-                          handleFilterChange("maxCashAtHand", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        placeholder="Enter maximum amount"
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    {/* Date Range Filters */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                        Last Collection From
-                      </label>
-                      <input
-                        type="date"
-                        value={localFilters.lastCashCollectionDateFrom || ""}
-                        onChange={(e) => handleFilterChange("lastCashCollectionDateFrom", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                        Last Collection To
-                      </label>
-                      <input
-                        type="date"
-                        value={localFilters.lastCashCollectionDateTo || ""}
-                        onChange={(e) => handleFilterChange("lastCashCollectionDateTo", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    {/* Sort Options */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setIsSortExpanded((prev) => !prev)}
-                        className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                        aria-expanded={isSortExpanded}
-                      >
-                        <span>Sort By</span>
-                        {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                      </button>
-
-                      {isSortExpanded && (
-                        <div className="space-y-2">
-                          {sortOptions.map((option) => (
-                            <button
-                              key={`${option.value}-${option.order}`}
-                              onClick={() => handleSortChange(option)}
-                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                                localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                  ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <span>{option.label}</span>
-                              {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                                <span className="text-purple-600">
-                                  {option.order === "asc" ? (
-                                    <SortAsc className="size-4" />
-                                  ) : (
-                                    <SortDesc className="size-4" />
-                                  )}
-                                </span>
-                              )}
-                            </button>
-                          ))}
+                  <div className="flex-1 overflow-y-auto p-3 md:p-5">
+                    <div className="space-y-4">
+                      {/* Status Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {statusOptions
+                            .filter((opt) => opt.value !== "")
+                            .map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() =>
+                                  handleFilterChange(
+                                    "status",
+                                    localFilters.status === option.value ? undefined : option.value
+                                  )
+                                }
+                                className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                  localFilters.status === option.value
+                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
                         </div>
-                      )}
+                      </div>
+
+                      {/* Can Collect Cash Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Can Collect Cash
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {canCollectCashOptions
+                            .filter((opt) => opt.value !== "")
+                            .map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() =>
+                                  handleFilterChange(
+                                    "canCollectCash",
+                                    localFilters.canCollectCash === (option.value === "true")
+                                      ? undefined
+                                      : option.value === "true"
+                                  )
+                                }
+                                className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                  localFilters.canCollectCash === (option.value === "true")
+                                    ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Area Office Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                        <FormSelectModule
+                          name="areaOfficeId"
+                          value={localFilters.areaOfficeId || ""}
+                          onChange={(e) =>
+                            handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          options={areaOfficeOptions}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Cash At Hand Range */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Min Cash At Hand
+                        </label>
+                        <input
+                          type="number"
+                          value={localFilters.minCashAtHand || ""}
+                          onChange={(e) =>
+                            handleFilterChange("minCashAtHand", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          placeholder="Enter minimum amount"
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Max Cash At Hand
+                        </label>
+                        <input
+                          type="number"
+                          value={localFilters.maxCashAtHand || ""}
+                          onChange={(e) =>
+                            handleFilterChange("maxCashAtHand", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          placeholder="Enter maximum amount"
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      {/* Date Range Filters */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Last Collection From
+                        </label>
+                        <input
+                          type="date"
+                          value={localFilters.lastCashCollectionDateFrom || ""}
+                          onChange={(e) =>
+                            handleFilterChange("lastCashCollectionDateFrom", e.target.value || undefined)
+                          }
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Last Collection To
+                        </label>
+                        <input
+                          type="date"
+                          value={localFilters.lastCashCollectionDateTo || ""}
+                          onChange={(e) => handleFilterChange("lastCashCollectionDateTo", e.target.value || undefined)}
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      {/* Sort Options */}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setIsSortExpanded((prev) => !prev)}
+                          className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                          aria-expanded={isSortExpanded}
+                        >
+                          <span>Sort By</span>
+                          {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                        </button>
+
+                        {isSortExpanded && (
+                          <div className="space-y-2">
+                            {sortOptions.map((option) => (
+                              <button
+                                key={`${option.value}-${option.order}`}
+                                onClick={() => handleSortChange(option)}
+                                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                  localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                    ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                <span>{option.label}</span>
+                                {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                  <span className="text-purple-600">
+                                    {option.order === "asc" ? (
+                                      <SortAsc className="size-4" />
+                                    ) : (
+                                      <SortDesc className="size-4" />
+                                    )}
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+                  <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                     <button
                       onClick={applyFilters}
                       className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1440,7 +1632,7 @@ const AllAgents: React.FC = () => {
                   </div>
 
                   {/* Summary Stats */}
-                  <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+                  <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                     <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                     <div className="space-y-1 text-xs md:text-sm">
                       <div className="flex justify-between">

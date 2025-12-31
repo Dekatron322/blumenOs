@@ -70,192 +70,208 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
                 <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  onClick={resetFilters}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 md:text-sm"
                 >
-                  <ArrowLeft className="size-5" />
+                  <X className="size-3 md:size-4" />
+                  Clear All
                 </button>
+              </div>
+            </div>
+
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Agent Filter */}
                 <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                  <FormSelectModule
+                    name="agentId"
+                    value={localFilters.agentId || ""}
+                    onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
+                    options={agentOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "status",
+                              localFilters.status === option.value ? undefined : option.value
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.status === option.value
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Channel Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
+                  <FormSelectModule
+                    name="channel"
+                    value={localFilters.channel || ""}
+                    onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                    options={channelOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Collector Type Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {collectorTypeOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "collectorType",
+                              localFilters.collectorType === option.value ? undefined : option.value
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.collectorType === option.value
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Payment Type Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
+                  <FormSelectModule
+                    name="paymentTypeId"
+                    value={localFilters.paymentTypeId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("paymentTypeId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={paymentTypeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Date Range Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                  <input
+                    type="date"
+                    value={localFilters.paidFromUtc || ""}
+                    onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                  <input
+                    type="date"
+                    value={localFilters.paidToUtc || ""}
+                    onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Agent Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                <FormSelectModule
-                  name="agentId"
-                  value={localFilters.agentId || ""}
-                  onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
-                  options={agentOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange("status", localFilters.status === option.value ? undefined : option.value)
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.status === option.value
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Channel Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
-                <FormSelectModule
-                  name="channel"
-                  value={localFilters.channel || ""}
-                  onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                  options={channelOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Collector Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Collector Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {collectorTypeOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          handleFilterChange(
-                            "collectorType",
-                            localFilters.collectorType === option.value ? undefined : option.value
-                          )
-                        }
-                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                          localFilters.collectorType === option.value
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Payment Type Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-                <FormSelectModule
-                  name="paymentTypeId"
-                  value={localFilters.paymentTypeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("paymentTypeId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={paymentTypeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Date Range Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
-                <input
-                  type="date"
-                  value={localFilters.paidFromUtc || ""}
-                  onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
-                <input
-                  type="date"
-                  value={localFilters.paidToUtc || ""}
-                  onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed */}
+            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
+                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
@@ -263,9 +279,10 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  <X className="size-4" />
+                  Reset All
                 </button>
               </div>
             </div>
@@ -461,7 +478,7 @@ export default function PaymentsPage() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
+          <div className="mx-auto w-full px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             {/* Header and Statistics Container - At the Top */}
             <motion.div
               className="mb-6 w-full rounded-md border bg-white p-3 md:p-4 lg:p-6"
@@ -472,7 +489,7 @@ export default function PaymentsPage() {
               {/* Header Section */}
               <div className="mb-4">
                 <h4 className="text-2xl font-semibold">Payments</h4>
-                <p className="text-sm text-gray-600">Track and manage agent payments</p>
+                <p className="text-sm text-gray-600">Track and manage sales rep payments</p>
               </div>
 
               {/* Statistics Cards */}
@@ -531,183 +548,191 @@ export default function PaymentsPage() {
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
-                  className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+                  className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
                 >
-                  <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-                    <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                    <button
-                      onClick={resetFilters}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                    >
-                      <X className="size-3 md:size-4" />
-                      Clear All
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Agent Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                      <FormSelectModule
-                        name="agentId"
-                        value={localFilters.agentId || ""}
-                        onChange={(e) =>
-                          handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        options={agentOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-
-                    {/* Status Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {statusOptions
-                          .filter((opt) => opt.value !== "")
-                          .map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() =>
-                                handleFilterChange(
-                                  "status",
-                                  localFilters.status === option.value ? undefined : option.value
-                                )
-                              }
-                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                                localFilters.status === option.value
-                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Channel Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
-                      <FormSelectModule
-                        name="channel"
-                        value={localFilters.channel || ""}
-                        onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
-                        options={channelOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-
-                    {/* Collector Type Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
-                        Collector Type
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {collectorTypeOptions
-                          .filter((opt) => opt.value !== "")
-                          .map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() =>
-                                handleFilterChange(
-                                  "collectorType",
-                                  localFilters.collectorType === option.value ? undefined : option.value
-                                )
-                              }
-                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                                localFilters.collectorType === option.value
-                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Payment Type Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-                      <FormSelectModule
-                        name="paymentTypeId"
-                        value={localFilters.paymentTypeId || ""}
-                        onChange={(e) =>
-                          handleFilterChange("paymentTypeId", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        options={paymentTypeOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-
-                    {/* Date Range Filters */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
-                      <input
-                        type="date"
-                        value={localFilters.paidFromUtc || ""}
-                        onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
-                      <input
-                        type="date"
-                        value={localFilters.paidToUtc || ""}
-                        onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    {/* Sort Options */}
-                    <div>
+                  {/* Header - Fixed */}
+                  <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                       <button
-                        type="button"
-                        onClick={() => setIsSortExpanded((prev) => !prev)}
-                        className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                        aria-expanded={isSortExpanded}
+                        onClick={resetFilters}
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
                       >
-                        <span>Sort By</span>
-                        {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                        <X className="size-3 md:size-4" />
+                        Clear All
                       </button>
-
-                      {isSortExpanded && (
-                        <div className="space-y-2">
-                          {sortOptions.map((option) => (
-                            <button
-                              key={`${option.value}-${option.order}`}
-                              onClick={() => handleSortChange(option)}
-                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                                localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                  ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <span>{option.label}</span>
-                              {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                                <span className="text-purple-600">
-                                  {option.order === "asc" ? (
-                                    <SortAsc className="size-4" />
-                                  ) : (
-                                    <SortDesc className="size-4" />
-                                  )}
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+                  {/* Filter Content - Scrollable */}
+                  <div className="flex-1 overflow-y-auto p-3 md:p-5">
+                    <div className="space-y-4">
+                      {/* Agent Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                        <FormSelectModule
+                          name="agentId"
+                          value={localFilters.agentId || ""}
+                          onChange={(e) =>
+                            handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          options={agentOptions}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Status Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {statusOptions
+                            .filter((opt) => opt.value !== "")
+                            .map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() =>
+                                  handleFilterChange(
+                                    "status",
+                                    localFilters.status === option.value ? undefined : option.value
+                                  )
+                                }
+                                className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                  localFilters.status === option.value
+                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Channel Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
+                        <FormSelectModule
+                          name="channel"
+                          value={localFilters.channel || ""}
+                          onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
+                          options={channelOptions}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Collector Type Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Collector Type
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {collectorTypeOptions
+                            .filter((opt) => opt.value !== "")
+                            .map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() =>
+                                  handleFilterChange(
+                                    "collectorType",
+                                    localFilters.collectorType === option.value ? undefined : option.value
+                                  )
+                                }
+                                className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                  localFilters.collectorType === option.value
+                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Payment Type Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                          Payment Type
+                        </label>
+                        <FormSelectModule
+                          name="paymentTypeId"
+                          value={localFilters.paymentTypeId || ""}
+                          onChange={(e) =>
+                            handleFilterChange("paymentTypeId", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          options={paymentTypeOptions}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Date Range Filters */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                        <input
+                          type="date"
+                          value={localFilters.paidFromUtc || ""}
+                          onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                        <input
+                          type="date"
+                          value={localFilters.paidToUtc || ""}
+                          onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      {/* Sort Options */}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setIsSortExpanded((prev) => !prev)}
+                          className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                          aria-expanded={isSortExpanded}
+                        >
+                          <span>Sort By</span>
+                          {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                        </button>
+
+                        {isSortExpanded && (
+                          <div className="space-y-2">
+                            {sortOptions.map((option) => (
+                              <button
+                                key={`${option.value}-${option.order}`}
+                                onClick={() => handleSortChange(option)}
+                                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                  localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                    ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                <span>{option.label}</span>
+                                {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                  <span className="text-purple-600">
+                                    {option.order === "asc" ? (
+                                      <SortAsc className="size-4" />
+                                    ) : (
+                                      <SortDesc className="size-4" />
+                                    )}
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons - Fixed */}
+                  <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                     <button
                       onClick={applyFilters}
                       className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -724,8 +749,8 @@ export default function PaymentsPage() {
                     </button>
                   </div>
 
-                  {/* Summary Stats */}
-                  <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+                  {/* Summary Stats - Fixed */}
+                  <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                     <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                     <div className="space-y-1 text-xs md:text-sm">
                       <div className="flex justify-between">

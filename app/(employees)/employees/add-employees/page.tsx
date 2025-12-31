@@ -9,14 +9,14 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { AddIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { clearInviteStatus, fetchEmployees, inviteEmployees } from "lib/redux/employeeSlice"
 import { fetchRoles } from "lib/redux/roleSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
 import TempPasswordModal from "components/ui/Modal/temp-password-modal"
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { ChevronRight, Menu, X } from "lucide-react"
+import { VscAdd, VscArrowLeft, VscArrowRight, VscChevronLeft, VscChevronRight } from "react-icons/vsc"
 
 interface EmployeeFormData {
   fullName: string
@@ -963,7 +963,7 @@ const AddEmployeePage = () => {
               disabled={inviteLoading}
               className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <ChevronLeft className="size-4" />
+              <VscChevronLeft className="size-4" />
               <span className="hidden sm:inline">Previous</span>
             </button>
           )}
@@ -986,7 +986,7 @@ const AddEmployeePage = () => {
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span>Next</span>
-              <ChevronRight className="size-4" />
+              <VscChevronRight className="size-4" />
             </button>
           ) : (
             <button
@@ -1009,7 +1009,7 @@ const AddEmployeePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 md:py-4 2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -1075,7 +1075,7 @@ const AddEmployeePage = () => {
                         ? !isFormValid() || inviteLoading
                         : csvData.length === 0 || csvErrors.length > 0 || inviteLoading
                     }
-                    icon={<AddIcon />}
+                    icon={<VscAdd />}
                     iconPosition="start"
                   >
                     {activeTab === "single"
@@ -1405,11 +1405,11 @@ const AddEmployeePage = () => {
                         {currentStep > 1 && (
                           <ButtonModule
                             variant="outline"
-                            size="lg"
+                            size="md"
                             onClick={prevStep}
                             disabled={inviteLoading}
                             type="button"
-                            icon={<ArrowLeft />}
+                            icon={<VscArrowLeft />}
                             iconPosition="start"
                           >
                             Previous
@@ -1420,7 +1420,7 @@ const AddEmployeePage = () => {
                       <div className="flex gap-4">
                         <ButtonModule
                           variant="dangerSecondary"
-                          size="lg"
+                          size="md"
                           onClick={handleReset}
                           disabled={inviteLoading}
                           type="button"
@@ -1431,10 +1431,10 @@ const AddEmployeePage = () => {
                         {currentStep < 3 ? (
                           <ButtonModule
                             variant="primary"
-                            size="lg"
+                            size="md"
                             onClick={nextStep}
                             type="button"
-                            icon={<ArrowRight />}
+                            icon={<VscArrowRight />}
                             iconPosition="end"
                           >
                             Next
@@ -1442,7 +1442,7 @@ const AddEmployeePage = () => {
                         ) : (
                           <ButtonModule
                             variant="primary"
-                            size="lg"
+                            size="md"
                             type="submit"
                             disabled={!isFormValid() || inviteLoading}
                           >

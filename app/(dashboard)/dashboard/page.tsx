@@ -124,7 +124,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
+  const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
   const router = useRouter()
   const dispatch = useAppDispatch()
 
@@ -194,39 +194,6 @@ export default function Dashboard() {
       { id: 3, symbol: "EUR", name: "Euro" },
     ],
   }
-
-  // Generate random utility data based on time filter
-  const generateUtilityData = () => {
-    const baseMultiplier = timeFilter === "day" ? 0.03 : timeFilter === "week" ? 0.2 : timeFilter === "month" ? 1 : 4
-
-    return {
-      // Customer metrics
-      totalCustomers: Math.floor(125000 + Math.random() * 5000),
-      prepaidCustomers: Math.floor(85000 + Math.random() * 3000),
-      postpaidCustomers: Math.floor(35000 + Math.random() * 2000),
-      estimatedBillingCustomers: Math.floor(5000 + Math.random() * 1000),
-
-      // Financial metrics
-      totalRevenue: Math.floor(25000000 + Math.random() * 5000000) * baseMultiplier,
-      collectionEfficiency: 85 + Math.random() * 10, // Percentage
-      outstandingArrears: Math.floor(45000000 + Math.random() * 5000000),
-
-      // Operational metrics
-      newConnectionsMTD: Math.floor(1200 + Math.random() * 300) * baseMultiplier,
-      prepaidVends: Math.floor(50000 + Math.random() * 10000) * baseMultiplier,
-      tokensGenerated: Math.floor(75000 + Math.random() * 15000) * baseMultiplier,
-      metersProgrammed: Math.floor(1800 + Math.random() * 400) * baseMultiplier,
-      pendingMeterProgramming: 425,
-      arrearsCollectedMTD: Math.floor(12000000 + Math.random() * 3000000) * baseMultiplier,
-    }
-  }
-
-  const [utilityData, setUtilityData] = useState(generateUtilityData())
-
-  useEffect(() => {
-    // Refresh utility data when time filter changes
-    setUtilityData(generateUtilityData())
-  }, [timeFilter])
 
   const refreshDashboardData = useCallback(() => {
     const now = new Date()
@@ -488,7 +455,6 @@ export default function Dashboard() {
 
   // Polling interval options
   const pollingOptions = [
-    { value: 300000, label: "5m" },
     { value: 480000, label: "8m" },
     { value: 660000, label: "11m" },
     { value: 840000, label: "14m" },
@@ -568,9 +534,9 @@ export default function Dashboard() {
 
   // Calculate derived metrics
   const collectionEfficiencyColor =
-    utilityData.collectionEfficiency >= 90
+    collectionEfficiencyData && (collectionEfficiencyData.efficiencyPercent || 0) >= 90
       ? "text-green-500"
-      : utilityData.collectionEfficiency >= 80
+      : collectionEfficiencyData && (collectionEfficiencyData.efficiencyPercent || 0) >= 80
       ? "text-yellow-500"
       : "text-red-500"
 
@@ -580,7 +546,7 @@ export default function Dashboard() {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto w-full px-3 py-8 xl:container xl:px-16">
+          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col gap-4">
               <div className="flex w-full items-start justify-between gap-4 max-2xl:flex-col">
                 <div>
@@ -1482,8 +1448,7 @@ export default function Dashboard() {
                         <div className="border-b border-gray-100 pb-4 text-center">
                           <div className="mb-2">
                             <div className="mb-1 text-4xl font-bold text-gray-900">
-                              {customerSegmentsData?.totalCustomers?.toLocaleString() ||
-                                utilityData.totalCustomers.toLocaleString()}
+                              {customerSegmentsData?.totalCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="text-sm font-medium uppercase tracking-wide text-gray-500">
                               Total Active Customers
@@ -1551,8 +1516,7 @@ export default function Dashboard() {
                               Postpaid
                             </div>
                             <div className="text-xl font-bold text-blue-900">
-                              {customerSegmentsData?.postpaidCustomers?.toLocaleString() ||
-                                utilityData.postpaidCustomers.toLocaleString()}
+                              {customerSegmentsData?.postpaidCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="mt-1 text-xs text-blue-600">
                               {customerSegmentsData &&
@@ -1567,8 +1531,7 @@ export default function Dashboard() {
                               Prepaid
                             </div>
                             <div className="text-xl font-bold text-green-900">
-                              {customerSegmentsData?.prepaidCustomers?.toLocaleString() ||
-                                utilityData.prepaidCustomers.toLocaleString()}
+                              {customerSegmentsData?.prepaidCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="mt-1 text-xs text-green-600">
                               {customerSegmentsData &&
@@ -1583,8 +1546,7 @@ export default function Dashboard() {
                               Active
                             </div>
                             <div className="text-xl font-bold text-purple-900">
-                              {customerSegmentsData?.activeCustomers?.toLocaleString() ||
-                                (utilityData.totalCustomers - 2000).toLocaleString()}
+                              {customerSegmentsData?.activeCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="mt-1 text-xs text-purple-600">
                               {customerSegmentsData &&
@@ -1599,7 +1561,7 @@ export default function Dashboard() {
                               Suspended
                             </div>
                             <div className="text-xl font-bold text-orange-900">
-                              {customerSegmentsData?.suspendedCustomers?.toLocaleString() || "2,000"}
+                              {customerSegmentsData?.suspendedCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="mt-1 text-xs text-orange-600">
                               {customerSegmentsData &&
@@ -1614,7 +1576,7 @@ export default function Dashboard() {
                               Unmetered
                             </div>
                             <div className="text-xl font-bold text-cyan-900">
-                              {customerSegmentsData?.unmeteredCustomers?.toLocaleString() || "1,500"}
+                              {customerSegmentsData?.unmeteredCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="mt-1 text-xs text-cyan-600">
                               {customerSegmentsData &&
@@ -1627,7 +1589,7 @@ export default function Dashboard() {
                           <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 p-3 text-center">
                             <div className="mb-1 text-xs font-medium uppercase tracking-wide text-indigo-600">MD</div>
                             <div className="text-xl font-bold text-indigo-900">
-                              {customerSegmentsData?.mdCustomers?.toLocaleString() || "800"}
+                              {customerSegmentsData?.mdCustomers?.toLocaleString() || "0"}
                             </div>
                             <div className="mt-1 text-xs text-indigo-600">
                               {customerSegmentsData &&

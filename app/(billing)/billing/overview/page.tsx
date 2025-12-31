@@ -496,7 +496,7 @@ export default function BillingDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState<number>(300000) // Default 5 minutes (300,000 ms)
+  const [pollingInterval, setPollingInterval] = useState<number>(480000) // Default 8 minutes (480,000 ms)
 
   // Initialize selectedPeriod with a stable value
   const [selectedPeriod, setSelectedPeriod] = useState<string>(() => {
@@ -557,11 +557,10 @@ export default function BillingDashboard() {
     setPollingInterval(interval)
   }
 
-  // Polling interval options - 5 minutes as default
+  // Polling interval options - 8 minutes as default
   const pollingOptions = [
-    { value: 300000, label: "5m" },
     { value: 480000, label: "8m" },
-    { value: 660000, label: "11m" },
+    { value: 600000, label: "10m" },
     { value: 840000, label: "14m" },
     { value: 1020000, label: "17m" },
     { value: 1200000, label: "20m" },

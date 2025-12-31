@@ -318,7 +318,7 @@ export default function MeteringDashboard() {
           <DashboardNav />
           <div className="w-full">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
+            <div className="flex w-full justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-8 md:px-6 2xl:px-16">
               <div>
                 <h4 className="text-2xl font-semibold">Billing Engine</h4>
                 <p>Tariff management, bill generation, and billing cycles</p>

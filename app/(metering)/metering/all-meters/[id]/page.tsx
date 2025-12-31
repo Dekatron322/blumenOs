@@ -18,27 +18,28 @@ import {
   Key,
   MapPin,
   NetworkIcon,
-  Phone,
-  Power,
   PowerOff,
   Receipt,
   RefreshCw,
   Settings,
   Shield,
   User2Icon,
-  Zap,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  clearCredit,
   clearCurrentMeter,
-  clearMetersError,
+  clearTamper,
   fetchMeterDetail,
   fetchMeterHistory,
-  MeterDetailData,
+  setControl,
+  type MeterDetailData,
+  type SetControlRequest,
 } from "lib/redux/metersSlice"
+import { fetchCountries, selectAllProvinces, selectCountriesLoading } from "lib/redux/countriesSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
@@ -48,6 +49,10 @@ import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
 import EditMeterModal from "components/ui/Modal/edit-meter-modal"
 import MeterHistoryModal from "components/ui/Modal/meter-history-modal"
+import ClearTamperModal from "components/ui/Modal/clear-tamper-modal"
+import AddKeyChangeModal from "components/ui/Modal/add-key-change-modal"
+import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
+import SetControlModal from "components/ui/Modal/set-control-modal"
 import {
   CalendarOutlineIcon,
   ExportOutlineIcon,
@@ -545,14 +550,31 @@ const MeterHistorySection = ({ meterId }: { meterId: number }) => {
 
 // Meter Basic Info Tab Component
 const MeterBasicInfoTab = ({
-  currentMeter,
+  meter,
   canUpdate,
   openModal,
 }: {
-  currentMeter: MeterDetailData
+  meter: MeterDetailData
   canUpdate: boolean
-  openModal: (modalType: "edit" | "history" | "change-request") => void
+  openModal: (
+    modalType: "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl"
+  ) => void
 }) => {
+  const dispatch = useAppDispatch()
+  const provinces = useAppSelector(selectAllProvinces)
+  const countriesLoading = useAppSelector(selectCountriesLoading)
+
+  // Fetch countries data on component mount
+  useEffect(() => {
+    dispatch(fetchCountries())
+  }, [dispatch])
+
+  // Get state name by ID
+  const getStateName = (stateId: number) => {
+    const province = provinces.find((p) => p.id === stateId)
+    return province ? province.name : `State ID: ${stateId}`
+  }
+
   const getStatusConfig = (status: number) => {
     const configs = {
       1: {
@@ -628,8 +650,8 @@ const MeterBasicInfoTab = ({
     return phoneNumber
   }
 
-  const statusConfig = getStatusConfig(currentMeter.status || 0)
-  const meterTypeConfig = getMeterTypeConfig(currentMeter.meterType)
+  const statusConfig = getStatusConfig(meter.status || 0)
+  const meterTypeConfig = getMeterTypeConfig(meter.meterType)
   const StatusIcon = statusConfig.icon
 
   return (
@@ -656,8 +678,8 @@ const MeterBasicInfoTab = ({
                 </div>
               </div>
 
-              <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{currentMeter.serialNumber}</h2>
-              <p className="mb-4 text-sm text-gray-600 sm:text-base">DRN: {currentMeter.drn}</p>
+              <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{meter.serialNumber}</h2>
+              <p className="mb-4 text-sm text-gray-600 sm:text-base">DRN: {meter.drn}</p>
 
               <div className="mb-6 flex flex-wrap justify-center gap-2">
                 <div
@@ -670,7 +692,7 @@ const MeterBasicInfoTab = ({
                 >
                   {meterTypeConfig.label}
                 </div>
-                {currentMeter.isSmart && (
+                {meter.isSmart && (
                   <div className="rounded-full bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-600 sm:text-sm">
                     Smart Meter
                   </div>
@@ -680,15 +702,15 @@ const MeterBasicInfoTab = ({
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex items-center gap-3 text-gray-600">
                   <User2Icon size={16} />
-                  {currentMeter.customerFullName}
+                  {meter.customerFullName}
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Receipt size={16} />
-                  {currentMeter.customerAccountNumber}
+                  {meter.customerAccountNumber}
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <MapOutlineIcon className="size-4" />
-                  {currentMeter.city}, {currentMeter.state}
+                  {meter.city}, {meter.state}
                 </div>
               </div>
             </div>
@@ -705,7 +727,7 @@ const MeterBasicInfoTab = ({
                 <SettingsIcon />
                 Quick Actions
               </h3>
-              <div className="flex gap-3 max-sm:flex-col max-sm:gap-3 sm:flex 2xl:flex-col">
+              <div className="flex flex-col gap-3 max-xl:grid max-xl:grid-cols-2 max-sm:flex-col max-sm:gap-3  xl:flex-col">
                 <ButtonModule
                   variant="outline"
                   size="md"
@@ -724,17 +746,53 @@ const MeterBasicInfoTab = ({
                   <Edit3 className="size-4" />
                   Edit Meter
                 </ButtonModule>
-                <ButtonModule
-                  variant={currentMeter.isMeterActive ? "danger" : "primary"}
+                {/* <ButtonModule
+                  variant={meter.isMeterActive ? "danger" : "primary"}
                   size="md"
                   className="w-full justify-start gap-3 text-sm"
                   onClick={() => {
-                    /* TODO: Implement meter activation/deactivation */
+                    
                     console.log("Toggle meter status")
                   }}
                 >
-                  {currentMeter.isMeterActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
-                  {currentMeter.isMeterActive ? "Deactivate" : "Activate"}
+                  {meter.isMeterActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+                  {meter.isMeterActive ? "Deactivate" : "Activate"}
+                </ButtonModule> */}
+                <ButtonModule
+                  variant="secondary"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("clearTamper")}
+                >
+                  <Shield className="size-4" />
+                  Clear Tamper
+                </ButtonModule>
+                <ButtonModule
+                  variant="orange"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("addKeyChange")}
+                >
+                  <Key className="size-4" />
+                  Add Key Change
+                </ButtonModule>
+                <ButtonModule
+                  variant="success"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("clearCredit")}
+                >
+                  <CreditCard className="size-4" />
+                  Clear Credit
+                </ButtonModule>
+                <ButtonModule
+                  variant="blue"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("setControl")}
+                >
+                  <Settings className="size-4" />
+                  Set Control
                 </ButtonModule>
               </div>
             </motion.div>
@@ -754,23 +812,23 @@ const MeterBasicInfoTab = ({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">SGC:</span>
-                <span className="text-sm font-medium sm:text-base">{currentMeter.sgc}</span>
+                <span className="text-sm font-medium sm:text-base">{meter.sgc}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">KRN:</span>
-                <span className="text-sm font-medium sm:text-base">{currentMeter.krn}</span>
+                <span className="text-sm font-medium sm:text-base">{meter.krn}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">TI:</span>
-                <span className="text-sm font-medium sm:text-base">{currentMeter.ti}</span>
+                <span className="text-sm font-medium sm:text-base">{meter.ti}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">EA:</span>
-                <span className="text-sm font-medium sm:text-base">{currentMeter.ea}</span>
+                <span className="text-sm font-medium sm:text-base">{meter.ea}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">TCT:</span>
-                <span className="text-sm font-medium sm:text-base">{currentMeter.tct}</span>
+                <span className="text-sm font-medium sm:text-base">{meter.tct}</span>
               </div>
             </div>
           </motion.div>
@@ -789,59 +847,46 @@ const MeterBasicInfoTab = ({
               Meter Information
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter ID</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.id}</p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Serial Number</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.serialNumber}</p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">DRN</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.drn}</p>
-                </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Number</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.drn}</p>
               </div>
-              <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Type</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    <span className={`inline-flex items-center gap-1 ${meterTypeConfig.color}`}>
-                      {meterTypeConfig.label}
-                    </span>
-                  </p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Brand</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.meterBrand}</p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Category</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.meterCategory}</p>
-                </div>
+
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Type</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                  <span className={`inline-flex items-center gap-1 ${meterTypeConfig.color}`}>
+                    {meterTypeConfig.label}
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Brand</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.meterBrand}</p>
+              </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter Category</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.meterCategory}</p>
+              </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Status</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                  <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
+                    <StatusIcon className="size-4" />
+                    {statusConfig.label}
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Is Smart</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.isSmart ? "Yes" : "No"}</p>
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Status</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    <span className={`inline-flex items-center gap-1 ${statusConfig.color}`}>
-                      <StatusIcon className="size-4" />
-                      {statusConfig.label}
-                    </span>
-                  </p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Is Smart</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {currentMeter.isSmart ? "Yes" : "No"}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                {/* <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Meter State</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.meterState}</p>
-                </div>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.meterState}</p>
+                </div> */}
               </div>
             </div>
           </motion.div>
@@ -865,7 +910,7 @@ const MeterBasicInfoTab = ({
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer Name</label>
-                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.customerFullName}</p>
+                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.customerFullName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
@@ -874,29 +919,18 @@ const MeterBasicInfoTab = ({
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer Account</label>
-                    <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                      {currentMeter.customerAccountNumber}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.customerAccountNumber}</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-purple-100 sm:size-10">
-                    <Shield className="size-4 text-purple-600 sm:size-5" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer ID</label>
-                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.customerId}</p>
-                  </div>
-                </div>
                 <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <div className="flex size-8 items-center justify-center rounded-lg bg-red-100 sm:size-10">
                     <BuildingIcon className="size-4 text-red-600 sm:size-5" />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 sm:text-sm">Customer Class</label>
-                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.customerClass}</p>
+                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.customerClass}</p>
                   </div>
                 </div>
               </div>
@@ -919,33 +953,33 @@ const MeterBasicInfoTab = ({
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Installation Date</label>
                   <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {formatDate(currentMeter.installationDate)}
+                    {formatDate(meter.installationDate)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">MFR Code</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.mfrCode}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.mfrCode}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Seal Number</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.sealNumber || "N/A"}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.sealNumber || "N/A"}</p>
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Rate</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.tariffRate}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tariffRate}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Index</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.tariffIndex}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tariffIndex}</p>
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Service Band</label>
                   <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {getServiceBandConfig(currentMeter.serviceBand).label}
+                    {getServiceBandConfig(meter.serviceBand).label}
                   </p>
                 </div>
               </div>
@@ -963,38 +997,36 @@ const MeterBasicInfoTab = ({
               <MapPin className="size-5" />
               Location Information
             </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Address</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.address}</p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Address 2</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.addressTwo || "N/A"}</p>
-                </div>
-              </div>
+            <div className="mb-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+              <label className="text-xs font-medium text-gray-600 sm:text-sm">Address</label>
+              <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.address}</p>
+            </div>
+            <div className="mb-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+              <label className="text-xs font-medium text-gray-600 sm:text-sm">Address 2</label>
+              <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.addressTwo || "N/A"}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
               <div className="space-y-4">
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">City</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.city}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.city}</p>
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">State</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.state}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {countriesLoading ? "Loading..." : getStateName(meter.state)}
+                  </p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Apartment Number</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {currentMeter.apartmentNumber || "N/A"}
-                  </p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.apartmentNumber || "N/A"}</p>
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Coordinates</label>
                   <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {currentMeter.latitude}, {currentMeter.longitude}
+                    {meter.latitude}, {meter.longitude}
                   </p>
                 </div>
               </div>
@@ -1012,50 +1044,40 @@ const MeterBasicInfoTab = ({
               <NetworkIcon />
               Network & Infrastructure
             </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Injection Substation</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {currentMeter.injectionSubstationId}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Distribution Substation</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {currentMeter.distributionSubstationId || "N/A"}
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Injection Substation</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.injectionSubstationId}</p>
               </div>
-              <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Feeder</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.feederId || "N/A"}</p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {currentMeter.areaOfficeId || "N/A"}
-                  </p>
-                </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Distribution Substation</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                  {meter.distributionSubstationId || "N/A"}
+                </p>
               </div>
-              <div className="space-y-4">
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Added By</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.meterAddedBy}</p>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Date Created</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {formatDate(currentMeter.meterDateCreated)}
-                  </p>
-                </div>
+
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Feeder</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.feederId || "N/A"}</p>
+              </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.areaOfficeId || "N/A"}</p>
+              </div>
+
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Added By</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.meterAddedBy}</p>
+              </div>
+              <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                <label className="text-xs font-medium text-gray-600 sm:text-sm">Date Created</label>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">{formatDate(meter.meterDateCreated)}</p>
               </div>
             </div>
           </motion.div>
 
           {/* Tenant Information */}
-          {currentMeter.tenantFullName && (
+          {meter.tenantFullName && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1070,14 +1092,14 @@ const MeterBasicInfoTab = ({
                 <div className="space-y-4">
                   <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                     <label className="text-xs font-medium text-gray-600 sm:text-sm">Tenant Name</label>
-                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{currentMeter.tenantFullName}</p>
+                    <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tenantFullName}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                     <label className="text-xs font-medium text-gray-600 sm:text-sm">Tenant Phone</label>
                     <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                      {formatPhoneNumber(currentMeter.tenantPhoneNumber)}
+                      {formatPhoneNumber(meter.tenantPhoneNumber)}
                     </p>
                   </div>
                 </div>
@@ -1097,7 +1119,20 @@ const MeterDetailsPage = () => {
   const meterId = params.id as string
 
   // Get meter details from Redux store
-  const { currentMeter, meterLoading, meterError } = useAppSelector((state) => state.meters)
+  const {
+    currentMeter: meter,
+    meterLoading,
+    meterError,
+    clearTamperLoading,
+    clearTamperError,
+    clearTamperData,
+    clearCreditLoading,
+    clearCreditError,
+    clearCreditData,
+    setControlLoading,
+    setControlError,
+    setControlData,
+  } = useAppSelector((state) => state.meters)
 
   // Get current user to check privileges
   const { user } = useAppSelector((state) => state.auth)
@@ -1112,7 +1147,9 @@ const MeterDetailsPage = () => {
     | "set-control-history"
     | "meter-history"
   const [activeTab, setActiveTab] = useState<TabType>("basic-info")
-  const [activeModal, setActiveModal] = useState<"edit" | "history" | "change-request" | null>(null)
+  const [activeModal, setActiveModal] = useState<
+    "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl" | null
+  >(null)
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
@@ -1152,7 +1189,9 @@ const MeterDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "edit" | "history" | "change-request") => setActiveModal(modalType)
+  const openModal = (
+    modalType: "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl"
+  ) => setActiveModal(modalType)
 
   const handleUpdateSuccess = () => {
     // Refresh meter details after successful update
@@ -1165,32 +1204,64 @@ const MeterDetailsPage = () => {
     closeAllModals()
   }
 
+  const handleAddKeyChangeSuccess = () => {
+    // Refresh meter details after successful key change
+    if (meterId) {
+      const id = parseInt(meterId)
+      if (!isNaN(id)) {
+        dispatch(fetchMeterDetail(id))
+      }
+    }
+    closeAllModals()
+  }
+
+  const handleClearTamper = async () => {
+    if (meter) {
+      await dispatch(clearTamper(meter.id)).unwrap()
+      closeAllModals()
+    }
+  }
+
+  const handleClearCredit = async () => {
+    if (meter) {
+      await dispatch(clearCredit(meter.id)).unwrap()
+      closeAllModals()
+    }
+  }
+
+  const handleSetControl = async (controlData: SetControlRequest) => {
+    if (meter) {
+      await dispatch(setControl({ id: meter.id, controlData })).unwrap()
+      closeAllModals()
+    }
+  }
+
   // Render the appropriate content based on active tab
   const renderTabContent = () => {
-    if (!currentMeter) return null
+    if (!meter) return null
 
     switch (activeTab) {
       case "basic-info":
-        return <MeterBasicInfoTab currentMeter={currentMeter} canUpdate={canUpdate} openModal={openModal} />
+        return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} />
       case "prepaid-credit-history":
-        return <PrepaidCreditHistoryTab meterId={currentMeter.id} />
+        return <PrepaidCreditHistoryTab meterId={meter.id} />
       case "clear-tamper-history":
-        return <ClearTamperHistoryTab meterId={currentMeter.id} />
+        return <ClearTamperHistoryTab meterId={meter.id} />
       case "clear-credit-history":
-        return <ClearCreditHistoryTab meterId={currentMeter.id} />
+        return <ClearCreditHistoryTab meterId={meter.id} />
       case "key-change-history":
-        return <KeyChangeHistoryTab meterId={currentMeter.id} />
+        return <KeyChangeHistoryTab meterId={meter.id} />
       case "set-control-history":
-        return <SetControlHistoryTab meterId={currentMeter.id} />
+        return <SetControlHistoryTab meterId={meter.id} />
       case "meter-history":
-        return <MeterHistorySection meterId={currentMeter.id} />
+        return <MeterHistorySection meterId={meter.id} />
       default:
-        return <MeterBasicInfoTab currentMeter={currentMeter} canUpdate={canUpdate} openModal={openModal} />
+        return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} />
     }
   }
 
   const exportToPDF = async () => {
-    if (!currentMeter) return
+    if (!meter) return
 
     setIsExporting(true)
     try {
@@ -1232,13 +1303,13 @@ const MeterDetailsPage = () => {
         startY: yPosition,
         head: [["Field", "Details"]],
         body: [
-          ["Meter ID", currentMeter.id.toString()],
-          ["Serial Number", currentMeter.serialNumber],
-          ["DRN", currentMeter.drn],
-          ["Customer Name", currentMeter.customerFullName],
-          ["Customer Account", currentMeter.customerAccountNumber],
-          ["Customer ID", currentMeter.customerId.toString()],
-          ["Status", currentMeter.isMeterActive ? "ACTIVE" : "INACTIVE"],
+          ["Meter ID", meter.id.toString()],
+          ["Serial Number", meter.serialNumber],
+          ["DRN", meter.drn],
+          ["Customer Name", meter.customerFullName],
+          ["Customer Account", meter.customerAccountNumber],
+          ["Customer ID", meter.customerId.toString()],
+          ["Status", meter.isMeterActive ? "ACTIVE" : "INACTIVE"],
         ],
         theme: "grid",
         headStyles: { fillColor: [59, 130, 246], textColor: 255 },
@@ -1258,18 +1329,18 @@ const MeterDetailsPage = () => {
         startY: yPosition,
         head: [["Parameter", "Value", "Unit"]],
         body: [
-          ["SGC", currentMeter.sgc.toString(), ""],
-          ["KRN", currentMeter.krn, ""],
-          ["TI", currentMeter.ti.toString(), ""],
-          ["EA", currentMeter.ea.toString(), ""],
-          ["TCT", currentMeter.tct.toString(), ""],
-          ["KEN", currentMeter.ken.toString(), ""],
-          ["MFR Code", currentMeter.mfrCode.toString(), ""],
-          ["Meter Type", currentMeter.meterType === 0 ? "Prepaid" : "Postpaid", ""],
-          ["Is Smart", currentMeter.isSmart ? "Yes" : "No", ""],
-          ["Tariff Rate", currentMeter.tariffRate.toString(), "per kWh"],
-          ["Tariff Index", currentMeter.tariffIndex, ""],
-          ["Service Band", getServiceBandConfig(currentMeter.serviceBand).label, ""],
+          ["SGC", meter.sgc.toString(), ""],
+          ["KRN", meter.krn, ""],
+          ["TI", meter.ti.toString(), ""],
+          ["EA", meter.ea.toString(), ""],
+          ["TCT", meter.tct.toString(), ""],
+          ["KEN", meter.ken.toString(), ""],
+          ["MFR Code", meter.mfrCode.toString(), ""],
+          ["Meter Type", meter.meterType === 0 ? "Prepaid" : "Postpaid", ""],
+          ["Is Smart", meter.isSmart ? "Yes" : "No", ""],
+          ["Tariff Rate", meter.tariffRate.toString(), "per kWh"],
+          ["Tariff Index", meter.tariffIndex, ""],
+          ["Service Band", getServiceBandConfig(meter.serviceBand).label, ""],
         ],
         theme: "grid",
         headStyles: { fillColor: [16, 185, 129], textColor: 255 },
@@ -1289,18 +1360,18 @@ const MeterDetailsPage = () => {
         startY: yPosition,
         head: [["Category", "Details"]],
         body: [
-          ["Installation Date", formatDate(currentMeter.installationDate)],
-          ["Injection Substation", currentMeter.injectionSubstationId.toString()],
-          ["Distribution Substation", currentMeter.distributionSubstationId?.toString() || "N/A"],
-          ["Feeder", currentMeter.feederId?.toString() || "N/A"],
-          ["Area Office", currentMeter.areaOfficeId?.toString() || "N/A"],
-          ["State", currentMeter.state.toString()],
-          ["Address", currentMeter.address],
-          ["Address 2", currentMeter.addressTwo || "N/A"],
-          ["City", currentMeter.city],
-          ["Apartment", currentMeter.apartmentNumber || "N/A"],
-          ["Latitude", currentMeter.latitude.toString()],
-          ["Longitude", currentMeter.longitude.toString()],
+          ["Installation Date", formatDate(meter.installationDate)],
+          ["Injection Substation", meter.injectionSubstationId.toString()],
+          ["Distribution Substation", meter.distributionSubstationId?.toString() || "N/A"],
+          ["Feeder", meter.feederId?.toString() || "N/A"],
+          ["Area Office", meter.areaOfficeId?.toString() || "N/A"],
+          ["State", meter.state.toString()],
+          ["Address", meter.address],
+          ["Address 2", meter.addressTwo || "N/A"],
+          ["City", meter.city],
+          ["Apartment", meter.apartmentNumber || "N/A"],
+          ["Latitude", meter.latitude.toString()],
+          ["Longitude", meter.longitude.toString()],
         ],
         theme: "grid",
         headStyles: { fillColor: [139, 92, 246], textColor: 255 },
@@ -1320,16 +1391,16 @@ const MeterDetailsPage = () => {
         startY: yPosition,
         head: [["Field", "Details"]],
         body: [
-          ["Meter Brand", currentMeter.meterBrand],
-          ["Meter Category", currentMeter.meterCategory],
-          ["Customer Class", currentMeter.customerClass],
-          ["Seal Number", currentMeter.sealNumber || "N/A"],
-          ["Tenant Name", currentMeter.tenantFullName || "N/A"],
-          ["Tenant Phone", formatPhoneNumber(currentMeter.tenantPhoneNumber)],
-          ["Added By", currentMeter.meterAddedBy],
-          ["Edited By", currentMeter.meterEditedBy || "N/A"],
-          ["Date Created", formatDate(currentMeter.meterDateCreated)],
-          ["Meter State", currentMeter.meterState.toString()],
+          ["Meter Brand", meter.meterBrand],
+          ["Meter Category", meter.meterCategory],
+          ["Customer Class", meter.customerClass],
+          ["Seal Number", meter.sealNumber || "N/A"],
+          ["Tenant Name", meter.tenantFullName || "N/A"],
+          ["Tenant Phone", formatPhoneNumber(meter.tenantPhoneNumber)],
+          ["Added By", meter.meterAddedBy],
+          ["Edited By", meter.meterEditedBy || "N/A"],
+          ["Date Created", formatDate(meter.meterDateCreated)],
+          ["Meter State", meter.meterState.toString()],
         ],
         theme: "grid",
         headStyles: { fillColor: [245, 158, 11], textColor: 255 },
@@ -1347,7 +1418,7 @@ const MeterDetailsPage = () => {
       }
 
       // Save the PDF
-      doc.save(`meter-record-${currentMeter.drn}-${new Date().toISOString().split("T")[0]}.pdf`)
+      doc.save(`meter-record-${meter.drn}-${new Date().toISOString().split("T")[0]}.pdf`)
     } catch (error) {
       console.error("Error generating PDF:", error)
       alert("Error generating PDF. Please try again.")
@@ -1360,7 +1431,7 @@ const MeterDetailsPage = () => {
     return <LoadingSkeleton />
   }
 
-  if (meterError || !currentMeter) {
+  if (meterError || !meter) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f9f9f9] to-gray-100 p-6">
         <div className="flex flex-col justify-center text-center">
@@ -1460,7 +1531,7 @@ const MeterDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-3 xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -1535,7 +1606,7 @@ const MeterDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6 sm:px-3 sm:py-8 xl:px-16">
+            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 2xl:px-16 ">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Profile & Quick Actions */}
 
@@ -1769,13 +1840,51 @@ const MeterDetailsPage = () => {
         isOpen={activeModal === "edit"}
         onRequestClose={closeAllModals}
         onSuccess={handleUpdateSuccess}
-        meter={currentMeter}
+        meter={meter}
       />
+
       <MeterHistoryModal
         isOpen={activeModal === "history"}
         onRequestClose={closeAllModals}
-        meterId={currentMeter?.id || null}
-        meterDRN={currentMeter?.drn || ""}
+        meterId={meter.id}
+        meterDRN={meter.drn}
+      />
+
+      <ClearTamperModal
+        isOpen={activeModal === "clearTamper"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleClearTamper}
+        loading={clearTamperLoading}
+        meterId={meter.id}
+        errorMessage={clearTamperError || undefined}
+        successMessage={clearTamperData ? "Tamper cleared successfully!" : undefined}
+      />
+
+      <AddKeyChangeModal
+        isOpen={activeModal === "addKeyChange"}
+        onRequestClose={closeAllModals}
+        meterId={meter.id}
+        onSuccess={handleAddKeyChangeSuccess}
+      />
+
+      <ClearCreditModal
+        isOpen={activeModal === "clearCredit"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleClearCredit}
+        loading={clearCreditLoading}
+        meterId={meter.id}
+        errorMessage={clearCreditError || undefined}
+        successMessage={clearCreditData ? "Credit cleared successfully!" : undefined}
+      />
+
+      <SetControlModal
+        isOpen={activeModal === "setControl"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleSetControl}
+        loading={setControlLoading}
+        meterId={meter.id}
+        errorMessage={setControlError || undefined}
+        successMessage={setControlData ? "Control set successfully!" : undefined}
       />
     </section>
   )

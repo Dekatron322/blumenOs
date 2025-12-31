@@ -79,7 +79,7 @@ const CustomerDetailsSkeleton = () => {
           <div className="mx-auto flex w-full flex-col 2xl:container">
             {/* Header Skeleton */}
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
                 <div className="flex w-full justify-between max-sm:flex-col lg:items-center">
                   <div className="flex gap-4 lg:items-center">
                     <div className="size-9 rounded-md bg-gray-200"></div>
@@ -97,7 +97,7 @@ const CustomerDetailsSkeleton = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 2xl:px-16">
+            <div className="flex w-full px-3 py-8 sm:px-4 md:px-6 2xl:px-16">
               <div className="w-full gap-6 2xl:flex">
                 {/* Right Sidebar Skeleton */}
                 <div className="flex w-full flex-col space-y-6 2xl:max-w-[30%]">
@@ -912,7 +912,7 @@ const CustomerDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 2xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 md:px-6 2xl:px-16">
                 <div className="flex w-full justify-between max-sm:flex-col lg:items-center">
                   <div className="flex gap-4 lg:items-center">
                     <motion.button
@@ -978,7 +978,7 @@ const CustomerDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-8 2xl:px-16">
+            <div className="flex w-full px-3 py-8 sm:px-4 md:px-6 2xl:px-16">
               <div className=" w-full gap-6  xl:flex">
                 {/* Right Sidebar - Always Visible */}
                 <div className="flex w-full  space-y-6 max-sm:flex-col sm:flex-col xl:max-w-[30%]">

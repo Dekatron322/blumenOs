@@ -687,7 +687,7 @@ const AllPayments: React.FC = () => {
 
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
+  const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -821,11 +821,10 @@ const AllPayments: React.FC = () => {
     setPollingInterval(interval)
   }
 
-  // Polling interval options
+  // Polling interval options - 8 minutes as default
   const pollingOptions = [
-    { value: 300000, label: "5m" },
     { value: 480000, label: "8m" },
-    { value: 660000, label: "11m" },
+    { value: 600000, label: "10m" },
     { value: 840000, label: "14m" },
     { value: 1020000, label: "17m" },
     { value: 1200000, label: "20m" },
@@ -1149,7 +1148,7 @@ const AllPayments: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-3 xl:px-16">
+          <div className="mx-auto w-full px-3 py-4 2xl:container max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Payment Management</h4>

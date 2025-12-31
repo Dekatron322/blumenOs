@@ -220,7 +220,7 @@ export default function MeteringDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col  px-3 2xl:container max-sm:px-3 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
             <div className="flex w-full gap-6  max-md:flex-col max-md:px-0 max-sm:my-4 ">
               <div className="w-full">
                 {isLoading ? (

@@ -40,6 +40,7 @@ import {
   Users,
   X,
 } from "lucide-react"
+import { VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 // === INTERFACES ===
 
@@ -946,7 +947,7 @@ const AddNewAgent = () => {
       <DashboardNav />
       <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-4 sm:mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -972,15 +973,15 @@ const AddNewAgent = () => {
                     </svg>
                   </button>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Register New Agent</h1>
-                    <p className="text-sm text-gray-600">Add a new agent to the system</p>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Register New Sales Rep</h1>
+                    <p className="text-sm text-gray-600">Add a new sales rep to the system</p>
                   </div>
                 </div>
 
                 <div className="hidden items-center gap-3 sm:flex">
                   <ButtonModule
                     variant="outline"
-                    size="sm"
+                    size="md"
                     onClick={() => {
                       if (activeTab === "new") handleReset()
                       else if (activeTab === "existing") handleResetExistingUserForm()
@@ -993,25 +994,25 @@ const AddNewAgent = () => {
                   {activeTab === "new" && currentStep === 5 && (
                     <ButtonModule
                       variant="primary"
-                      size="sm"
+                      size="md"
                       onClick={() => void submitNewAgent()}
                       disabled={!isNewAgentFormValid() || addAgentLoading}
                       icon={<AddAgentIcon />}
                       iconPosition="start"
                     >
-                      {addAgentLoading ? "Adding Agent..." : "Add Agent"}
+                      {addAgentLoading ? "Adding Sales Rep..." : "Add Sales Rep"}
                     </ButtonModule>
                   )}
                   {activeTab === "existing" && (
                     <ButtonModule
                       variant="primary"
-                      size="sm"
+                      size="md"
                       onClick={() => void submitExistingUserAsAgent()}
                       disabled={!isExistingUserFormValid() || addExistingUserAsAgentLoading}
                       icon={<UserCog />}
                       iconPosition="start"
                     >
-                      {addExistingUserAsAgentLoading ? "Converting User..." : "Convert to Agent"}
+                      {addExistingUserAsAgentLoading ? "Converting User..." : "Convert to Sales Rep"}
                     </ButtonModule>
                   )}
                 </div>
@@ -1025,7 +1026,7 @@ const AddNewAgent = () => {
             {activeTab === "new" && <MobileStepSidebar />}
 
             {/* Tab Navigation */}
-            <div className="mb-6">
+            <div className="">
               <div className="rounded-t-lg border-b border-gray-200 bg-white">
                 <div className="flex overflow-x-auto">
                   <button
@@ -1040,7 +1041,7 @@ const AddNewAgent = () => {
                     }`}
                   >
                     <UserPlus className="size-4" />
-                    <span>New Agent</span>
+                    <span>New Sales Rep</span>
                   </button>
                   <button
                     onClick={() => setActiveTab("existing")}
@@ -1079,8 +1080,10 @@ const AddNewAgent = () => {
                   className="rounded-b-lg bg-white p-4 shadow-sm sm:p-6"
                 >
                   <div className="mb-4 border-b pb-4 sm:mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Create New Agent</h3>
-                    <p className="text-sm text-gray-600">Register a completely new agent with all required details</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Create New Sales Rep</h3>
+                    <p className="text-sm text-gray-600">
+                      Register a completely new sales rep with all required details
+                    </p>
                   </div>
 
                   {/* Desktop Step Progress */}
@@ -1453,7 +1456,7 @@ const AddNewAgent = () => {
                             onClick={prevStep}
                             disabled={addAgentLoading}
                             type="button"
-                            icon={<ArrowLeft />}
+                            icon={<VscArrowLeft />}
                             iconPosition="start"
                           >
                             Previous
@@ -1464,7 +1467,7 @@ const AddNewAgent = () => {
                       <div className="flex gap-4">
                         <ButtonModule
                           variant="dangerSecondary"
-                          size="lg"
+                          size="md"
                           onClick={handleReset}
                           disabled={addAgentLoading}
                           type="button"
@@ -1475,10 +1478,10 @@ const AddNewAgent = () => {
                         {currentStep < 5 ? (
                           <ButtonModule
                             variant="primary"
-                            size="lg"
+                            size="md"
                             onClick={nextStep}
                             type="button"
-                            icon={<ArrowRight />}
+                            icon={<VscArrowRight />}
                             iconPosition="end"
                           >
                             Next
@@ -1486,7 +1489,7 @@ const AddNewAgent = () => {
                         ) : (
                           <ButtonModule
                             variant="primary"
-                            size="lg"
+                            size="md"
                             type="button"
                             onClick={() => void submitNewAgent()}
                             disabled={!isNewAgentFormValid() || addAgentLoading}
@@ -1657,7 +1660,7 @@ const AddNewAgent = () => {
                       <div className="flex flex-col-reverse justify-between gap-4 border-t pt-6 sm:flex-row">
                         <ButtonModule
                           variant="dangerSecondary"
-                          size="lg"
+                          size="md"
                           onClick={handleResetExistingUserForm}
                           disabled={addExistingUserAsAgentLoading}
                           type="button"
@@ -1667,14 +1670,14 @@ const AddNewAgent = () => {
 
                         <ButtonModule
                           variant="primary"
-                          size="lg"
+                          size="md"
                           onClick={() => void submitExistingUserAsAgent()}
                           disabled={!isExistingUserFormValid() || addExistingUserAsAgentLoading}
                           type="button"
                           icon={<UserCog />}
                           iconPosition="end"
                         >
-                          {addExistingUserAsAgentLoading ? "Converting..." : "Convert to Agent"}
+                          {addExistingUserAsAgentLoading ? "Converting..." : "Convert to Sales Rep"}
                         </ButtonModule>
                       </div>
                     </form>

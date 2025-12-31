@@ -458,7 +458,7 @@ const CustomerAnalyticsCards = ({ analyticsData }: { analyticsData: any }) => {
 export default function AllTransactions() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
+  const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
 
   const router = useRouter()
 
@@ -487,7 +487,6 @@ export default function AllTransactions() {
 
   // Polling interval options
   const pollingOptions = [
-    { value: 300000, label: "5m" },
     { value: 480000, label: "8m" },
     { value: 660000, label: "11m" },
     { value: 840000, label: "14m" },
@@ -526,9 +525,9 @@ export default function AllTransactions() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col xl:container">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             {/* Page Header - Always Visible */}
-            <div className="my-4 flex w-full items-start justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 md:my-8 xl:px-16">
+            <div className="my-4 flex w-full items-start justify-between gap-6 px-3 max-md:flex-col max-md:px-3 max-sm:my-4 max-sm:px-3 sm:px-4 md:my-8 md:px-6 2xl:px-16">
               <div>
                 <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Customer Management</h4>
                 <p className="text-sm sm:text-base">Manage customer accounts, KYC, and service connections</p>
@@ -612,7 +611,7 @@ export default function AllTransactions() {
             )}
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 xl:px-16">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 2xl:px-16">
               <div className="w-full">
                 {customerAnalyticsLoading ? (
                   // Loading State

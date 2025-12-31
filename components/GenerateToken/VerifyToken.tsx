@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import React, { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { clearVerifyToken, verifyToken } from "lib/redux/metersSlice"
+import { clearVerifyToken, clearVerifyTokenHistory, fetchVerifyTokenHistory, verifyToken } from "lib/redux/metersSlice"
 
 interface TokenData {
   meterNumber: string
@@ -34,7 +34,15 @@ interface RecentVend {
 
 const VerifyToken = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { verifyTokenData, verifyTokenLoading, verifyTokenError } = useSelector((state: RootState) => state.meters)
+  const {
+    verifyTokenData,
+    verifyTokenLoading,
+    verifyTokenError,
+    verifyTokenHistory,
+    verifyTokenHistoryLoading,
+    verifyTokenHistoryError,
+    verifyTokenHistoryPagination,
+  } = useSelector((state: RootState) => state.meters)
 
   const [formData, setFormData] = useState({
     token: "",
@@ -42,6 +50,8 @@ const VerifyToken = () => {
   })
   const [error, setError] = useState("")
   const [localLoading, setLocalLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(10)
 
   const vendingChannels: VendChannel[] = [
     { name: "Web Portal", vends: 2340, icon: <WebPortalIcon /> },
@@ -168,6 +178,8 @@ const VerifyToken = () => {
     })
     setError("")
     dispatch(clearVerifyToken())
+    dispatch(clearVerifyTokenHistory())
+    setCurrentPage(1)
   }
 
   const handleCopyToken = () => {
@@ -257,6 +269,73 @@ const VerifyToken = () => {
     return groups ? groups.join("-") : token
   }
 
+  // Fetch verify token history
+  const fetchHistory = async (page: number = 1) => {
+    if (!formData.meterId) return
+
+    try {
+      await dispatch(
+        fetchVerifyTokenHistory({
+          id: parseInt(formData.meterId),
+          pageNumber: page,
+          pageSize: pageSize,
+        })
+      ).unwrap()
+    } catch (err: any) {
+      console.error("Failed to fetch verify token history:", err)
+    }
+  }
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    fetchHistory(page)
+  }
+
+  // Load history when meter ID changes
+  React.useEffect(() => {
+    if (formData.meterId) {
+      setCurrentPage(1)
+      fetchHistory(1)
+    } else {
+      dispatch(clearVerifyTokenHistory())
+    }
+  }, [formData.meterId])
+
+  // Format date for history
+  const formatHistoryDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date)
+  }
+
+  // Get status color for history items
+  const getHistoryStatusColor = (isSuccessful: boolean) => {
+    return isSuccessful ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+  }
+
+  // Get status icon for history items
+  const getHistoryStatusIcon = (isSuccessful: boolean) => {
+    if (isSuccessful) {
+      return (
+        <svg className="size-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      )
+    } else {
+      return (
+        <svg className="size-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      )
+    }
+  }
+
   return (
     <div className="mt-6 min-h-screen">
       <div className="max-w-1/2">
@@ -282,7 +361,7 @@ const VerifyToken = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Meter ID Input */}
                     <FormInputModule
-                      label="Meter ID"
+                      label="Meter Number"
                       type="number"
                       name="meterId"
                       placeholder="Enter meter ID"
@@ -492,83 +571,136 @@ const VerifyToken = () => {
 
           {/* Right Column - Stats and Recent Vends */}
           <div className="space-y-8">
-            {/* Vending Channels */}
+            {/* Verify History */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="rounded-lg bg-white p-6 shadow-sm"
             >
-              <h2 className="mb-6 text-xl font-bold text-gray-900">Vending Channels</h2>
-              <div className="space-y-4">
-                {vendingChannels.map((channel, index) => (
-                  <motion.div
-                    key={channel.name}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{channel.icon}</span>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{channel.name}</h3>
-                        <p className="text-sm text-gray-600">{channel.vends.toLocaleString()} vends</p>
-                      </div>
+              <h2 className="mb-6 text-xl font-bold text-gray-900">Verify History</h2>
+
+              {formData.meterId ? (
+                <div className="space-y-4">
+                  {verifyTokenHistoryLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="size-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-blue-600">
-                        {((channel.vends / 10000) * 100).toFixed(1)}%
-                      </div>
-                      <div className="text-xs text-gray-500">of total</div>
+                  ) : verifyTokenHistoryError ? (
+                    <div className="rounded-md bg-red-50 p-4">
+                      <p className="text-sm text-red-800">{verifyTokenHistoryError}</p>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                  ) : verifyTokenHistory.length > 0 ? (
+                    <>
+                      {/* History List */}
+                      <div className="space-y-3">
+                        {verifyTokenHistory.map((history) => (
+                          <motion.div
+                            key={history.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="mb-2 flex items-center gap-2">
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${getHistoryStatusColor(
+                                      history.isSuccessful
+                                    )}`}
+                                  >
+                                    {getHistoryStatusIcon(history.isSuccessful)}
+                                    {history.isSuccessful ? "Success" : "Failed"}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {formatHistoryDate(history.requestedAtUtc)}
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <div className="text-sm">
+                                    <span className="font-medium text-gray-700">Request: </span>
+                                    <span className="break-all font-mono text-xs text-gray-600">
+                                      {history.requestPayload || "N/A"}
+                                    </span>
+                                  </div>
+
+                                  {history.responsePayload && (
+                                    <div className="text-sm">
+                                      <span className="font-medium text-gray-700">Response: </span>
+                                      <span className="break-all font-mono text-xs text-gray-600">
+                                        {history.responsePayload.length > 100
+                                          ? history.responsePayload.substring(0, 100) + "..."
+                                          : history.responsePayload}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {!history.isSuccessful && history.errorMessage && (
+                                    <div className="text-sm">
+                                      <span className="font-medium text-red-700">Error: </span>
+                                      <span className="text-xs text-red-600">{history.errorMessage}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Pagination */}
+                      {verifyTokenHistoryPagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-4">
+                          <div className="text-sm text-gray-600">
+                            Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                            {Math.min(currentPage * pageSize, verifyTokenHistoryPagination.totalCount)} of{" "}
+                            {verifyTokenHistoryPagination.totalCount} results
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              disabled={!verifyTokenHistoryPagination.hasPrevious || verifyTokenHistoryLoading}
+                              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Previous
+                            </button>
+                            <span className="flex items-center px-3 py-1 text-sm text-gray-600">
+                              Page {currentPage} of {verifyTokenHistoryPagination.totalPages}
+                            </span>
+                            <button
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              disabled={!verifyTokenHistoryPagination.hasNext || verifyTokenHistoryLoading}
+                              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="py-8 text-center">
+                      <div className="mb-4 rounded-full bg-gray-100 p-3">
+                        <NoTokenIcon />
+                      </div>
+                      <h3 className="mb-2 text-sm font-medium text-gray-900">No History Found</h3>
+                      <p className="text-xs text-gray-500">No verify token history available for this meter</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <div className="mb-4 rounded-full bg-gray-100 p-3">
+                    <NoTokenIcon />
+                  </div>
+                  <h3 className="mb-2 text-sm font-medium text-gray-900">Enter Meter Number</h3>
+                  <p className="text-xs text-gray-500">Enter a meter number to view verify token history</p>
+                </div>
+              )}
             </motion.div>
 
             {/* Recent Vends */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="rounded-lg bg-white p-6 shadow-sm"
-            >
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Recent Vends</h2>
-                <button className="rounded-md bg-[#f3f4f6] px-2 py-1 text-sm font-medium text-[#004B23] transition-colors duration-200 ease-in-out hover:bg-[#e5e7eb] hover:text-[#000000]">
-                  View All
-                </button>
-              </div>
-              <div className="space-y-4">
-                {recentVends.map((vend, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
-                  >
-                    <div className="mb-3 flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{vend.customerName}</h3>
-                        <p className="text-sm text-gray-600">{vend.meterNumber}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600">{vend.amount}</div>
-                        <div className="text-sm text-gray-600">{vend.units}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#f6f6f6] px-2 py-1 text-[#004B23]">
-                        {vend.channel}
-                      </span>
-                      <span className="text-gray-500">{vend.timestamp}</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>

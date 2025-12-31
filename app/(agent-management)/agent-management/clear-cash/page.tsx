@@ -120,21 +120,21 @@ const ClearCashPage = () => {
                 <span>Back to Agent Management</span>
               </div>
 
-              <h1 className="text-xl font-semibold text-gray-900">Clear Cash for Agent</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Clear Cash for Sales Reps</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Use this form to record a cash clearance for an agent. Select the correct agent, enter the exact amount
-                being cleared, and provide a clear description of the transaction.
+                Use this form to record a cash clearance for an sales rep. Select the correct sales rep, enter the exact
+                amount being cleared, and provide a clear description of the transaction.
               </p>
 
               <div className="mt-3 rounded-md bg-blue-50 p-3 text-xs text-blue-900">
                 <p className="font-medium">Instructions:</p>
                 <ol className="mt-1 list-decimal space-y-1 pl-5">
                   <li>
-                    Select the <span className="font-semibold">Agent</span> whose cash you are clearing.
+                    Select the <span className="font-semibold">Sales Rep</span> whose cash you are clearing.
                   </li>
                   <li>
                     Enter the <span className="font-semibold">Amount</span> being cleared. This should match the cash
-                    physically received or reconciled for this agent.
+                    physically received or reconciled for this sales rep.
                   </li>
                   <li>
                     In <span className="font-semibold">Notes</span>, include sufficient details (e.g. reference number,
@@ -151,7 +151,7 @@ const ClearCashPage = () => {
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <FormSelectModule
-                    label="Select Agent"
+                    label="Select Sales Rep"
                     name="agentId"
                     value={selectedAgentId}
                     onChange={(e) => {
@@ -183,7 +183,7 @@ const ClearCashPage = () => {
                       }
                     }}
                     options={[
-                      { value: 0, label: "Select agent" },
+                      { value: 0, label: "Select Sales Rep" },
                       ...agents.map((agent) => ({
                         value: agent.id,
                         label: `${agent.user.fullName} `,

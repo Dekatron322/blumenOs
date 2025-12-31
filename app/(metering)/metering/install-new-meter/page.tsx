@@ -1024,7 +1024,7 @@ const InstallNewMeterPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 xl:container sm:px-4  xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3  py-4 2xl:container sm:px-4 md:px-6  2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -1156,7 +1156,7 @@ const InstallNewMeterPage = () => {
                           />
 
                           <FormInputModule
-                            label="DRN"
+                            label="Meter Number"
                             name="drn"
                             type="text"
                             placeholder="Enter DRN"

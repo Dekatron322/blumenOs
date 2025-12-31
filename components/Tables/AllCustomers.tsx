@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useState } from "react"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { IoMdFunnel, IoMdSearch } from "react-icons/io"
@@ -363,189 +365,200 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex max-h-screen w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
-                </button>
-                <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
-                  )}
+            {/* Header - Fixed at top */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
                 </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* DSS Filter */}
-              <div>
-                <FormSelectModule
-                  label="Distribution Substation"
-                  name="dss"
-                  value={localFilters.dss}
-                  onChange={(e) => handleFilterChange("dss", e.target.value)}
-                  options={[
-                    { value: "", label: "All DSS" },
-                    ...distributionSubstations.map((dss) => ({
-                      value: dss.id.toString(),
-                      label: `${dss.dssCode} - ${dss.feeder.name}`,
-                    })),
-                  ]}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Service Center Filter */}
-              <div>
-                <FormSelectModule
-                  label="Service Center"
-                  name="serviceCenter"
-                  value={localFilters.serviceCenter}
-                  onChange={(e) => handleFilterChange("serviceCenter", e.target.value)}
-                  options={[
-                    { value: "", label: "All Service Centers" },
-                    ...serviceStations.map((sc) => ({
-                      value: sc.id.toString(),
-                      label: sc.name,
-                    })),
-                  ]}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-2 block text-sm font-medium">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {["ACTIVE", "INACTIVE", "SUSPENDED"].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
-                      className={`rounded-lg px-3 py-2 text-sm ${
-                        localFilters.status === status
-                          ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                          : "bg-gray-50 text-gray-700"
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* DSS Filter */}
+                <div>
+                  <FormSelectModule
+                    label="Distribution Substation"
+                    name="dss"
+                    value={localFilters.dss}
+                    onChange={(e) => handleFilterChange("dss", e.target.value)}
+                    options={[
+                      { value: "", label: "All DSS" },
+                      ...distributionSubstations.map((dss) => ({
+                        value: dss.id.toString(),
+                        label: `${dss.dssCode} - ${dss.feeder.name}`,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
                 </div>
-              </div>
 
-              {/* Customer Type Filter */}
-              <div>
-                <label className="mb-2 block text-sm font-medium">Customer Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {["PREPAID", "POSTPAID"].map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => handleFilterChange("customerType", localFilters.customerType === type ? "" : type)}
-                      className={`rounded-lg px-3 py-2 text-sm ${
-                        localFilters.customerType === type
-                          ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                          : "bg-gray-50 text-gray-700"
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
+                {/* Service Center Filter */}
+                <div>
+                  <FormSelectModule
+                    label="Service Center"
+                    name="serviceCenter"
+                    value={localFilters.serviceCenter}
+                    onChange={(e) => handleFilterChange("serviceCenter", e.target.value)}
+                    options={[
+                      { value: "", label: "All Service Centers" },
+                      ...serviceStations.map((sc) => ({
+                        value: sc.id.toString(),
+                        label: sc.name,
+                      })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
                 </div>
-              </div>
 
-              {/* Tariff Filter */}
-              <div>
-                <FormSelectModule
-                  label="Tariff Band"
-                  name="tariff"
-                  value={localFilters.tariff}
-                  onChange={(e) => handleFilterChange("tariff", e.target.value)}
-                  options={[
-                    { value: "", label: "All Tariffs" },
-                    ...serviceBands.map((band) => ({ value: band, label: band })),
-                  ]}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Region Filter */}
-              <div>
-                <FormSelectModule
-                  label="Region"
-                  name="region"
-                  value={localFilters.region}
-                  onChange={(e) => handleFilterChange("region", e.target.value)}
-                  options={[
-                    { value: "", label: "All Regions" },
-                    ...regions.map((region) => ({ value: region, label: region })),
-                  ]}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-2 flex w-full items-center justify-between text-sm font-medium"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["ACTIVE", "INACTIVE", "SUSPENDED"].map((status) => (
                       <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                        key={status}
+                        onClick={() => handleFilterChange("status", localFilters.status === status ? "" : status)}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          localFilters.status === status
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                             : "bg-gray-50 text-gray-700"
                         }`}
                       >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
+                        {status}
                       </button>
                     ))}
                   </div>
-                )}
+                </div>
+
+                {/* Customer Type Filter */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Customer Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["PREPAID", "POSTPAID"].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() =>
+                          handleFilterChange("customerType", localFilters.customerType === type ? "" : type)
+                        }
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          localFilters.customerType === type
+                            ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                            : "bg-gray-50 text-gray-700"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tariff Filter */}
+                <div>
+                  <FormSelectModule
+                    label="Tariff Band"
+                    name="tariff"
+                    value={localFilters.tariff}
+                    onChange={(e) => handleFilterChange("tariff", e.target.value)}
+                    options={[
+                      { value: "", label: "All Tariffs" },
+                      ...serviceBands.map((band) => ({ value: band, label: band })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Region Filter */}
+                <div>
+                  <FormSelectModule
+                    label="Region"
+                    name="region"
+                    value={localFilters.region}
+                    onChange={(e) => handleFilterChange("region", e.target.value)}
+                    options={[
+                      { value: "", label: "All Regions" },
+                      ...regions.map((region) => ({ value: region, label: region })),
+                    ]}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-2 flex w-full items-center justify-between text-sm font-medium"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Bottom Action Buttons - confined to sidebar width */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed at bottom */}
+            <div className="flex-shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
+                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
@@ -553,9 +566,10 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  <X className="size-4" />
+                  Reset All
                 </button>
               </div>
             </div>

@@ -115,7 +115,7 @@ export default function CashManagementDashboard() {
   const dispatch = useDispatch<AppDispatch>()
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
+  const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [isLoading, setIsLoading] = useState(true)
 
   // Get cash remittance data from Redux store
@@ -183,11 +183,10 @@ export default function CashManagementDashboard() {
     setPollingInterval(interval)
   }
 
-  // Polling interval options
+  // Polling interval options - 8 minutes as default
   const pollingOptions = [
-    { value: 300000, label: "5m" },
     { value: 480000, label: "8m" },
-    { value: 660000, label: "11m" },
+    { value: 600000, label: "10m" },
     { value: 840000, label: "14m" },
     { value: 1020000, label: "17m" },
     { value: 1200000, label: "20m" },
@@ -216,9 +215,9 @@ export default function CashManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full items-start justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="md:m4-8 my-4 flex w-full items-start justify-between  gap-6  max-md:flex-col ">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Cash Management</h1>
                 <p className="mt-2 text-gray-600">Monitor cash remittance and collection data</p>
@@ -280,7 +279,7 @@ export default function CashManagementDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 max-md:flex-col">
               <div className="w-full">
                 {showLoading ? (
                   // Loading State

@@ -63,120 +63,128 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
                 </button>
+              </div>
+            </div>
+
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Agent Filter */}
                 <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                  <FormSelectModule
+                    name="agentId"
+                    value={localFilters.agentId || ""}
+                    onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
+                    options={agentOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Date Range Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Start Date</label>
+                  <input
+                    type="date"
+                    value={localFilters.startDate || ""}
+                    onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">End Date</label>
+                  <input
+                    type="date"
+                    value={localFilters.endDate || ""}
+                    onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Agent Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                <FormSelectModule
-                  name="agentId"
-                  value={localFilters.agentId || ""}
-                  onChange={(e) => handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)}
-                  options={agentOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                  }
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Date Range Filters */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Start Date</label>
-                <input
-                  type="date"
-                  value={localFilters.startDate || ""}
-                  onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">End Date</label>
-                <input
-                  type="date"
-                  value={localFilters.endDate || ""}
-                  onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed */}
+            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -342,7 +350,7 @@ export default function CashClearancesPage() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container xl:px-16">
+          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
               {/* Main Content */}
               <motion.div
@@ -395,114 +403,120 @@ export default function CashClearancesPage() {
                   key="desktop-filters-sidebar"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
-                  className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+                  className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
                 >
-                  <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-                    <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                    <button
-                      onClick={resetFilters}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                    >
-                      <X className="size-3 md:size-4" />
-                      Clear All
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Agent Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
-                      <FormSelectModule
-                        name="agentId"
-                        value={localFilters.agentId || ""}
-                        onChange={(e) =>
-                          handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        options={agentOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-
-                    {/* Area Office Filter */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                      <FormSelectModule
-                        name="areaOfficeId"
-                        value={localFilters.areaOfficeId || ""}
-                        onChange={(e) =>
-                          handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
-                        }
-                        options={areaOfficeOptions}
-                        className="w-full"
-                        controlClassName="h-9 text-sm"
-                      />
-                    </div>
-
-                    {/* Date Range Filters */}
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Start Date</label>
-                      <input
-                        type="date"
-                        value={localFilters.startDate || ""}
-                        onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">End Date</label>
-                      <input
-                        type="date"
-                        value={localFilters.endDate || ""}
-                        onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      />
-                    </div>
-
-                    {/* Sort Options */}
-                    <div>
+                  {/* Header - Fixed */}
+                  <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
                       <button
-                        type="button"
-                        onClick={() => setIsSortExpanded((prev) => !prev)}
-                        className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                        aria-expanded={isSortExpanded}
+                        onClick={resetFilters}
+                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
                       >
-                        <span>Sort By</span>
-                        {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                        <X className="size-3 md:size-4" />
+                        Clear All
                       </button>
-
-                      {isSortExpanded && (
-                        <div className="space-y-2">
-                          {sortOptions.map((option) => (
-                            <button
-                              key={`${option.value}-${option.order}`}
-                              onClick={() => handleSortChange(option)}
-                              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                                localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                  ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <span>{option.label}</span>
-                              {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                                <span className="text-purple-600">
-                                  {option.order === "asc" ? (
-                                    <SortAsc className="size-4" />
-                                  ) : (
-                                    <SortDesc className="size-4" />
-                                  )}
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+                  {/* Filter Content - Scrollable */}
+                  <div className="flex-1 overflow-y-auto p-3 md:p-5">
+                    <div className="space-y-4">
+                      {/* Agent Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Agent</label>
+                        <FormSelectModule
+                          name="agentId"
+                          value={localFilters.agentId || ""}
+                          onChange={(e) =>
+                            handleFilterChange("agentId", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          options={agentOptions}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Area Office Filter */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                        <FormSelectModule
+                          name="areaOfficeId"
+                          value={localFilters.areaOfficeId || ""}
+                          onChange={(e) =>
+                            handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                          }
+                          options={areaOfficeOptions}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Date Range Filters */}
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Start Date</label>
+                        <input
+                          type="date"
+                          value={localFilters.startDate || ""}
+                          onChange={(e) => handleFilterChange("startDate", e.target.value || undefined)}
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">End Date</label>
+                        <input
+                          type="date"
+                          value={localFilters.endDate || ""}
+                          onChange={(e) => handleFilterChange("endDate", e.target.value || undefined)}
+                          className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        />
+                      </div>
+
+                      {/* Sort Options */}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setIsSortExpanded((prev) => !prev)}
+                          className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                          aria-expanded={isSortExpanded}
+                        >
+                          <span>Sort By</span>
+                          {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                        </button>
+
+                        {isSortExpanded && (
+                          <div className="space-y-2">
+                            {sortOptions.map((option) => (
+                              <button
+                                key={`${option.value}-${option.order}`}
+                                onClick={() => handleSortChange(option)}
+                                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                  localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                    ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                <span>{option.label}</span>
+                                {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                  <span className="text-purple-600">
+                                    {option.order === "asc" ? (
+                                      <SortAsc className="size-4" />
+                                    ) : (
+                                      <SortDesc className="size-4" />
+                                    )}
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons - Fixed */}
+                  <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                     <button
                       onClick={applyFilters}
                       className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -519,8 +533,8 @@ export default function CashClearancesPage() {
                     </button>
                   </div>
 
-                  {/* Summary Stats */}
-                  <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+                  {/* Summary Stats - Fixed */}
+                  <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                     <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                     <div className="space-y-1 text-xs md:text-sm">
                       <div className="flex justify-between">

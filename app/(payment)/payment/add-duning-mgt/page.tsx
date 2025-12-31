@@ -20,6 +20,7 @@ import {
 import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
 import { clearCurrentBillByReference, fetchPostpaidBillByReference, fetchPostpaidBills } from "lib/redux/postpaidSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
+import { VscAdd } from "react-icons/vsc"
 
 interface CustomerInfo {
   id: number
@@ -585,9 +586,9 @@ const AddDunningCasePage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header */}
-            <div className="flex w-full flex-col justify-between gap-4  sm:flex-row sm:items-center  md:my-8 ">
+            <div className="flex w-full flex-col justify-between gap-4  sm:flex-row sm:items-center  md:my-4">
               <div className="flex flex-col">
                 <h4 className="text-xl font-semibold sm:text-2xl">Create New Dunning Case</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
@@ -609,7 +610,7 @@ const AddDunningCasePage = () => {
                   size="md"
                   onClick={submitDunningCase}
                   disabled={!isFormValid() || creating}
-                  icon={<AddIcon />}
+                  icon={<VscAdd />}
                   iconPosition="start"
                 >
                   {creating ? "Creating..." : "Create Case"}
