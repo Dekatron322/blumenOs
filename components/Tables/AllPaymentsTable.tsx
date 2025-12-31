@@ -518,16 +518,15 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
               )}
             </button>
           )}
+          <SearchModule
+            value={searchText}
+            onChange={handleSearch}
+            onCancel={handleCancelSearch}
+            placeholder="Search payments..."
+            className="w-full max-w-[380px]"
+            bgClassName="bg-white"
+          />
         </div>
-
-        <SearchModule
-          value={searchText}
-          onChange={handleSearch}
-          onCancel={handleCancelSearch}
-          placeholder="Search payments..."
-          className="w-full max-w-[380px]"
-          bgClassName="bg-white"
-        />
       </div>
 
       {/* Error Message */}

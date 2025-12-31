@@ -10,6 +10,70 @@ import VendorManagement from "components/VendorManagementInfo/VendorManagment"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendorSummaryAnalytics } from "lib/redux/analyticsSlice"
 
+// Dropdown Popover Component
+const DropdownPopover = ({
+  options,
+  selectedValue,
+  onSelect,
+  children,
+}: {
+  options: { value: number; label: string }[]
+  selectedValue: number
+  onSelect: (value: number) => void
+  children: React.ReactNode
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const selectedOption = options.find((opt) => opt.value === selectedValue)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        {children}
+        <svg
+          className={`size-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onSelect(option.value)
+                  setIsOpen(false)
+                }}
+                className={`block w-full px-3 py-2 text-left ${
+                  option.value === selectedValue ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
   return (
@@ -282,6 +346,8 @@ const formatNumber = (num: number) => {
 export default function VendorManagementDashboard() {
   const [isAddVendorModalOpen, setIsAddVendorModalOpen] = useState(false)
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const [isPolling, setIsPolling] = useState(true)
+  const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
 
   const dispatch = useAppDispatch()
   const { vendorSummaryData, vendorSummaryLoading, vendorSummaryError, vendorSummarySuccess } = useAppSelector(
@@ -325,6 +391,34 @@ export default function VendorManagementDashboard() {
     dispatch(fetchVendorSummaryAnalytics({}))
   }
 
+  const togglePolling = () => {
+    setIsPolling(!isPolling)
+  }
+
+  const handlePollingIntervalChange = (interval: number) => {
+    setPollingInterval(interval)
+  }
+
+  // Polling interval options - 8 minutes as default
+  const pollingOptions = [
+    { value: 480000, label: "8m" },
+    { value: 600000, label: "10m" },
+    { value: 840000, label: "14m" },
+    { value: 1020000, label: "17m" },
+    { value: 1200000, label: "20m" },
+  ]
+
+  // Short polling effect
+  useEffect(() => {
+    if (!isPolling) return
+
+    const interval = setInterval(() => {
+      handleRefreshData()
+    }, pollingInterval)
+
+    return () => clearInterval(interval)
+  }, [isPolling, pollingInterval])
+
   // Show loading state
   const isLoading = vendorSummaryLoading
 
@@ -333,16 +427,15 @@ export default function VendorManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 lg:my-8">
+            <div className="my-4 flex w-full flex-col justify-between gap-4 md:flex-row md:gap-6">
               <div className="flex-1">
                 <h4 className="text-xl font-semibold sm:text-2xl">Vendor Management</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   Vendor onboarding, commissions, and performance tracking
                 </p>
               </div>
-
               <motion.div
                 className="flex items-center justify-start gap-3 md:justify-end"
                 initial={{ opacity: 0 }}
@@ -360,6 +453,57 @@ export default function VendorManagementDashboard() {
                   <span className="sm:hidden">Add Vendor</span>
                 </ButtonModule>
               </motion.div>
+
+              {/* Auto-refresh controls */}
+              <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
+                <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                <button
+                  onClick={togglePolling}
+                  className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isPolling
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {isPolling ? (
+                    <>
+                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      ON
+                    </>
+                  ) : (
+                    <>
+                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      OFF
+                    </>
+                  )}
+                </button>
+
+                {isPolling && (
+                  <DropdownPopover
+                    options={pollingOptions}
+                    selectedValue={pollingInterval}
+                    onSelect={handlePollingIntervalChange}
+                  >
+                    <span className="text-sm font-medium">
+                      {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                    </span>
+                  </DropdownPopover>
+                )}
+              </div>
             </div>
 
             {/* Error State */}

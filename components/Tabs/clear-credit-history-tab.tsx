@@ -263,22 +263,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
           <h3 className="text-lg font-semibold text-gray-900">Clear Credit History</h3>
           <p className="text-sm text-gray-500">View all clear credit history and events</p>
         </div>
-        <div className="flex gap-2">
-          <ButtonModule
-            variant="primary"
-            size="sm"
-            onClick={() => setShowClearCreditModal(true)}
-            disabled={clearCreditLoading}
-          >
-            {clearCreditLoading ? (
-              <div className="flex items-center gap-2">
-                <RefreshCw className="size-4 animate-spin" />
-                Clearing...
-              </div>
-            ) : (
-              "Clear Credit"
-            )}
-          </ButtonModule>
+        <div className="flex items-center gap-2">
           <button
             className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
             onClick={() => setViewMode("grid")}
@@ -293,6 +278,21 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
+          <ButtonModule
+            variant="primary"
+            size="sm"
+            onClick={() => setShowClearCreditModal(true)}
+            disabled={clearCreditLoading}
+          >
+            {clearCreditLoading ? (
+              <div className="flex items-center">
+                <RefreshCw className="size-4 animate-spin" />
+                Clearing...
+              </div>
+            ) : (
+              "Clear Credit"
+            )}
+          </ButtonModule>
         </div>
       </div>
 

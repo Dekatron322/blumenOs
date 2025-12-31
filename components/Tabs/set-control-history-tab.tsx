@@ -263,22 +263,7 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
           <h3 className="text-lg font-semibold text-gray-900">Set Control History</h3>
           <p className="text-sm text-gray-500">View all meter control operations and remote commands</p>
         </div>
-        <div className="flex gap-2">
-          <ButtonModule
-            variant="primary"
-            size="sm"
-            onClick={() => setShowSetControlModal(true)}
-            disabled={setControlLoading}
-          >
-            {setControlLoading ? (
-              <div className="flex items-center gap-2">
-                <RefreshCw className="size-4 animate-spin" />
-                Setting...
-              </div>
-            ) : (
-              "Set Control"
-            )}
-          </ButtonModule>
+        <div className="flex items-center gap-2">
           <button
             className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
             onClick={() => setViewMode("grid")}
@@ -293,6 +278,21 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
+          <ButtonModule
+            variant="primary"
+            size="sm"
+            onClick={() => setShowSetControlModal(true)}
+            disabled={setControlLoading}
+          >
+            {setControlLoading ? (
+              <div className="flex items-center">
+                <RefreshCw className="size-4 animate-spin" />
+                Setting...
+              </div>
+            ) : (
+              "Set Control"
+            )}
+          </ButtonModule>
         </div>
       </div>
 

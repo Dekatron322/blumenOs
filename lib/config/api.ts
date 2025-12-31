@@ -379,6 +379,7 @@ export const API_ENDPOINTS = {
     CLEAR_CREDIT: "/meters/{id}/prepaid/clear-credit",
     SET_CONTROL: "/meters/{id}/prepaid/set-control",
     VERIFY_TOKEN: "/meters/{id}/prepaid/verify-token",
+    VERIFY_TOKEN_HISTORY: "/meters/{id}/prepaid/histories/verify-token",
   },
 
   METER_BRANDS: {

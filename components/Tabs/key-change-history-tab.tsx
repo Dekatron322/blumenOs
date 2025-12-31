@@ -11,6 +11,7 @@ import { clearAddKeyChange, clearKeyChangeHistory, fetchKeyChangeHistory } from 
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import AddKeyChangeModal from "components/ui/Modal/add-key-change-modal"
 import KeyChangeSuccessModal from "components/ui/Modal/key-change-success-modal"
+import { ButtonModule } from "components/ui/Button/Button"
 
 interface KeyChangeHistoryTabProps {
   meterId: number
@@ -267,11 +268,7 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
           <h3 className="text-lg font-semibold text-gray-900">Key Change History</h3>
           <p className="text-sm text-gray-500">View all key change history and events</p>
         </div>
-        <div className="flex gap-2">
-          <button className="button-oulined text-sm" onClick={() => setShowAddModal(true)}>
-            <Key className="size-4" />
-            <p className="max-sm:hidden">Add Key Change</p>
-          </button>
+        <div className="flex items-center gap-2">
           <button
             className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
             onClick={() => setViewMode("grid")}
@@ -286,6 +283,10 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
+          <ButtonModule size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
+            <Key className="size-4" />
+            <p className="max-sm:hidden">Add Key Change</p>
+          </ButtonModule>
         </div>
       </div>
 

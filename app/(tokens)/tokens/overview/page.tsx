@@ -315,9 +315,9 @@ export default function AllTransactions() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full items-start justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full items-start justify-between gap-6 max-md:flex-col  md:my-4 ">
               <div>
                 <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Prepaid & Token Vending</h4>
                 <p className="text-sm sm:text-base">STS token generation and prepaid meter management</p>
@@ -325,7 +325,7 @@ export default function AllTransactions() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 ">
               <div className="w-full">
                 {isLoading ? (
                   // Loading State
