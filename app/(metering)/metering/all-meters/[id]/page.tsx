@@ -35,8 +35,8 @@ import {
   clearTamper,
   fetchMeterDetail,
   fetchMeterHistory,
-  setControl,
   type MeterDetailData,
+  setControl,
   type SetControlRequest,
 } from "lib/redux/metersSlice"
 import { fetchCountries, selectAllProvinces, selectCountriesLoading } from "lib/redux/countriesSlice"
@@ -44,7 +44,6 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { IoMdFunnel } from "react-icons/io"
-import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { VscEye } from "react-icons/vsc"
 import { SearchModule } from "components/ui/Search/search-module"
 import EditMeterModal from "components/ui/Modal/edit-meter-modal"
