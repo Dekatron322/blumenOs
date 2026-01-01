@@ -4,7 +4,10 @@
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { editMeter, EditMeterRequest, Meter } from "lib/redux/metersSlice"
+import { editMeter, EditMeterRequest, Meter, MeterDetailData } from "lib/redux/metersSlice"
+import { fetchMeterCategories, MeterCategory } from "lib/redux/meterCategorySlice"
+import { fetchTariffGroups, TariffGroup } from "lib/redux/tariffGroupSlice"
+import { fetchMeterBrands } from "lib/redux/meterBrandsSlice"
 import { FormInputModule } from "../Input/Input"
 import { FormSelectModule } from "../Input/FormSelectModule"
 import { ButtonModule } from "../Button/Button"
@@ -13,55 +16,44 @@ import { notify } from "../Notification/Notification"
 interface EditMeterModalProps {
   isOpen: boolean
   onRequestClose: () => void
-  meter: Meter | null
+  meter: Meter | MeterDetailData | null
   onSuccess?: () => void
 }
 
 const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose, meter, onSuccess }) => {
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.meters)
+  const { meterCategories, loading: categoriesLoading } = useAppSelector((state) => state.meterCategories)
+  const { tariffGroups, tariffGroupsLoading } = useAppSelector((state) => state.tariffGroups)
+  const { meterBrands, loading: meterBrandsLoading } = useAppSelector((state) => state.meterBrands)
 
   const [formData, setFormData] = useState<EditMeterRequest>({
-    id: 0,
-    customerId: 0,
-    customerAccountNumber: "",
-    customerFullName: "",
-    meterIsPPM: false,
+    serialNumber: "",
     drn: "",
-    sgc: 0,
+    sgc: undefined,
     krn: "",
-    ti: 0,
     ea: 0,
     tct: 0,
     ken: 0,
     mfrCode: 0,
     installationDate: "",
-    meterID: "",
-    meterAddedBy: "",
-    meterEditedBy: "",
-    meterDateCreated: "",
-    meterTypeId: "",
     meterType: 1,
+    isSmart: true,
     meterBrand: "",
     meterCategory: "",
     isMeterActive: true,
     status: 1,
-    state: 1,
+    meterState: 1,
     sealNumber: "",
-    tariffRate: 0,
-    tariffIndex: "",
-    serviceBand: 1,
-    customerClass: "",
-    injectionSubstationId: 0,
-    locationState: "",
+    poleNumber: "",
+    tariffId: 0,
+    state: 0,
     address: "",
     addressTwo: "",
     city: "",
     apartmentNumber: "",
     latitude: 0,
     longitude: 0,
-    tenantFullName: "",
-    tenantPhoneNumber: "",
     changeReason: "",
   })
 
@@ -69,50 +61,57 @@ const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose,
   useEffect(() => {
     if (meter) {
       setFormData({
-        id: meter.id,
-        customerId: meter.customerId,
-        customerAccountNumber: meter.customerAccountNumber,
-        customerFullName: meter.customerFullName,
-        meterIsPPM: meter.meterIsPPM,
-        drn: meter.drn,
-        sgc: meter.sgc,
-        krn: meter.krn,
-        ti: meter.ti,
-        ea: meter.ea,
-        tct: meter.tct,
-        ken: meter.ken,
-        mfrCode: meter.mfrCode,
-        installationDate: meter.installationDate,
-        meterID: meter.meterID,
-        meterAddedBy: meter.meterAddedBy || "",
-        meterEditedBy: meter.meterEditedBy || "",
-        meterDateCreated: meter.meterDateCreated,
-        meterTypeId: meter.meterTypeId,
-        meterType: meter.meterType,
+        serialNumber: (meter as any).serialNumber || meter.meterID || "",
+        drn: meter.drn || "",
+        sgc: meter.sgc || 0,
+        krn: meter.krn || "",
+        ea: meter.ea || 0,
+        tct: meter.tct || 0,
+        ken: meter.ken || 0,
+        mfrCode: meter.mfrCode || 0,
+        installationDate: meter.installationDate || "",
+        meterType: meter.meterType || 1,
+        isSmart: (meter as any).isSmart || true,
         meterBrand: meter.meterBrand || "",
         meterCategory: meter.meterCategory || "",
-        isMeterActive: meter.isMeterActive,
-        status: meter.status,
-        state: meter.state,
+        isMeterActive: meter.isMeterActive ?? true,
+        status: meter.status || 1,
+        meterState: (meter as any).meterState || 1,
         sealNumber: meter.sealNumber || "",
-        tariffRate: meter.tariffRate,
-        tariffIndex: meter.tariffIndex || "",
-        serviceBand: meter.serviceBand,
-        customerClass: meter.customerClass || "",
-        injectionSubstationId: meter.injectionSubstationId,
-        locationState: meter.locationState || "",
-        address: meter.address,
+        poleNumber: (meter as any).poleNumber || "",
+        tariffId: (meter as any).tariffId || 0,
+        state: meter.state || 0,
+        address: meter.address || "",
         addressTwo: meter.addressTwo || "",
         city: meter.city || "",
         apartmentNumber: meter.apartmentNumber || "",
-        latitude: meter.latitude,
-        longitude: meter.longitude,
-        tenantFullName: meter.tenantFullName || "",
-        tenantPhoneNumber: meter.tenantPhoneNumber || "",
+        latitude: meter.latitude || 0,
+        longitude: meter.longitude || 0,
         changeReason: "",
       })
     }
   }, [meter])
+
+  // Fetch meter categories when modal opens
+  useEffect(() => {
+    if (isOpen && meterCategories.length === 0) {
+      dispatch(fetchMeterCategories({ pageNumber: 1, pageSize: 100 }))
+    }
+  }, [isOpen, dispatch, meterCategories.length])
+
+  // Fetch tariff groups when modal opens
+  useEffect(() => {
+    if (isOpen && tariffGroups.length === 0) {
+      dispatch(fetchTariffGroups({ PageNumber: 1, PageSize: 100, HasNonZeroTariffIndex: true }))
+    }
+  }, [isOpen, dispatch, tariffGroups.length])
+
+  // Fetch meter brands when modal opens
+  useEffect(() => {
+    if (isOpen && meterBrands.length === 0) {
+      dispatch(fetchMeterBrands({ pageNumber: 1, pageSize: 100 }))
+    }
+  }, [isOpen, dispatch, meterBrands.length])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -153,14 +152,13 @@ const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose,
 
   const isFormValid = () => {
     // For edit mode, only require change reason to be provided
-    // Users can edit specific fields without filling everything
-    return formData.changeReason.trim()
+    return formData.changeReason.trim().length > 0
   }
 
   // Options for dropdowns
   const meterTypeOptions = [
-    { value: "1", label: "Smart Meter" },
-    { value: "2", label: "Basic Meter" },
+    { value: "1", label: "Prepaid" },
+    { value: "2", label: "Postpaid" },
   ]
 
   const statusOptions = [
@@ -224,10 +222,19 @@ const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose,
             <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Basic Information</h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <FormInputModule
-                label="DRN"
+                label="Serial Number"
+                name="serialNumber"
+                type="text"
+                placeholder="Enter serial number"
+                value={formData.serialNumber}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="Meter Number"
                 name="drn"
                 type="text"
-                placeholder="Enter DRN"
+                placeholder="Enter meter number"
                 value={formData.drn}
                 onChange={handleInputChange}
                 disabled
@@ -243,11 +250,56 @@ const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose,
               />
 
               <FormInputModule
-                label="Meter ID"
-                name="meterID"
-                type="text"
-                placeholder="Enter Meter ID"
-                value={formData.meterID}
+                label="SGC"
+                name="sgc"
+                type="number"
+                placeholder="Enter SGC"
+                value={formData.sgc?.toString() || ""}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="EA"
+                name="ea"
+                type="number"
+                placeholder="Enter EA"
+                value={formData.ea?.toString() || ""}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="TCT"
+                name="tct"
+                type="number"
+                placeholder="Enter TCT"
+                value={formData.tct?.toString() || ""}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="KEN"
+                name="ken"
+                type="number"
+                placeholder="Enter KEN"
+                value={formData.ken?.toString() || ""}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="MFR Code"
+                name="mfrCode"
+                type="number"
+                placeholder="Enter MFR Code"
+                value={formData.mfrCode?.toString() || ""}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="Installation Date"
+                name="installationDate"
+                type="date"
+                placeholder="Enter installation date"
+                value={formData.installationDate}
                 onChange={handleInputChange}
               />
 
@@ -259,99 +311,118 @@ const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose,
                 options={meterTypeOptions}
               />
 
-              <FormInputModule
+              <FormSelectModule
                 label="Meter Brand"
                 name="meterBrand"
-                type="text"
-                placeholder="Enter meter brand"
                 value={formData.meterBrand}
                 onChange={handleInputChange}
+                options={[
+                  { value: "", label: "Select meter brand" },
+                  ...meterBrands.map((brand) => ({
+                    value: brand.name,
+                    label: brand.name,
+                  })),
+                ]}
+                disabled={meterBrandsLoading}
+                required
               />
 
-              <FormInputModule
+              <FormSelectModule
                 label="Meter Category"
                 name="meterCategory"
-                type="text"
-                placeholder="Enter meter category"
                 value={formData.meterCategory}
                 onChange={handleInputChange}
+                options={[
+                  { value: "", label: "Select meter category" },
+                  ...meterCategories.map((category) => ({
+                    value: category.name,
+                    label: category.name,
+                  })),
+                ]}
+                disabled={categoriesLoading}
+                required
+              />
+
+              <FormSelectModule
+                label="Is Smart"
+                name="isSmart"
+                value={formData.isSmart?.toString() || "true"}
+                onChange={(e) => setFormData((prev) => ({ ...prev, isSmart: e.target.value === "true" }))}
+                options={[
+                  { value: "true", label: "Yes" },
+                  { value: "false", label: "No" },
+                ]}
+              />
+
+              <FormSelectModule
+                label="Is Meter Active"
+                name="isMeterActive"
+                value={formData.isMeterActive?.toString() || "true"}
+                onChange={(e) => setFormData((prev) => ({ ...prev, isMeterActive: e.target.value === "true" }))}
+                options={[
+                  { value: "true", label: "Yes" },
+                  { value: "false", label: "No" },
+                ]}
+              />
+
+              <FormSelectModule
+                label="Status"
+                name="status"
+                value={formData.status?.toString() || "1"}
+                onChange={(e) => setFormData((prev) => ({ ...prev, status: parseInt(e.target.value) }))}
+                options={statusOptions}
+              />
+
+              <FormSelectModule
+                label="Meter State"
+                name="meterState"
+                value={formData.meterState?.toString() || "1"}
+                onChange={(e) => setFormData((prev) => ({ ...prev, meterState: parseInt(e.target.value) }))}
+                options={stateOptions}
+              />
+
+              <FormInputModule
+                label="Seal Number"
+                name="sealNumber"
+                type="text"
+                placeholder="Enter seal number"
+                value={formData.sealNumber}
+                onChange={handleInputChange}
+              />
+
+              <FormInputModule
+                label="Pole Number"
+                name="poleNumber"
+                type="text"
+                placeholder="Enter pole number"
+                value={formData.poleNumber}
+                onChange={handleInputChange}
+              />
+
+              <FormSelectModule
+                label="Tariff ID"
+                name="tariffId"
+                value={formData.tariffId?.toString() || ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, tariffId: parseInt(e.target.value) || 0 }))}
+                options={[
+                  { value: "", label: "Select tariff" },
+                  ...tariffGroups.map((tariff) => ({
+                    value: tariff.id.toString(),
+                    label: `Band-${String.fromCharCode(64 + tariff.serviceBand)} ${tariff.currency}${
+                      tariff.tariffRate
+                    } tariffIndex-${tariff.tariffIndex}`,
+                  })),
+                ]}
+                disabled={tariffGroupsLoading}
+                required
               />
             </div>
           </div>
 
-          {/* Technical Specifications */}
+          {/* Location Information */}
           <div className="space-y-4">
-            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Technical Specifications</h3>
+            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Location Information</h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <FormInputModule
-                label="SGC"
-                name="sgc"
-                type="number"
-                placeholder="Enter SGC"
-                value={formData.sgc}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="TI"
-                name="ti"
-                type="number"
-                placeholder="Enter TI"
-                value={formData.ti}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="EA"
-                name="ea"
-                type="number"
-                placeholder="Enter EA"
-                value={formData.ea}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="TCT"
-                name="tct"
-                type="number"
-                placeholder="Enter TCT"
-                value={formData.tct}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="KEN"
-                name="ken"
-                type="number"
-                placeholder="Enter KEN"
-                value={formData.ken}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="MFR Code"
-                name="mfrCode"
-                type="number"
-                placeholder="Enter MFR Code"
-                value={formData.mfrCode}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          {/* Location & Installation */}
-          <div className="space-y-4">
-            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Location & Installation</h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <FormInputModule
-                label="Installation Date"
-                name="installationDate"
-                type="datetime-local"
-                value={formData.installationDate ? new Date(formData.installationDate).toISOString().slice(0, 16) : ""}
-                onChange={handleInputChange}
-                placeholder={""}
-              />
-
               <FormInputModule
                 label="Address"
                 name="address"
@@ -389,186 +460,68 @@ const EditMeterModal: React.FC<EditMeterModalProps> = ({ isOpen, onRequestClose,
               />
 
               <FormInputModule
-                label="Location State"
-                name="locationState"
-                type="text"
-                placeholder="Enter state"
-                value={formData.locationState}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          {/* Tariff & Service Information */}
-          <div className="space-y-4">
-            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Tariff & Service Information</h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <FormInputModule
-                label="Tariff Rate"
-                name="tariffRate"
+                label="Latitude"
+                name="latitude"
                 type="number"
-                placeholder="Enter tariff rate"
-                value={formData.tariffRate}
+                placeholder="Enter latitude"
+                value={formData.latitude?.toString() || ""}
                 onChange={handleInputChange}
-                step="0.01"
+                step="0.000001"
               />
 
               <FormInputModule
-                label="Tariff Index"
-                name="tariffIndex"
-                type="text"
-                placeholder="Enter tariff index"
-                value={formData.tariffIndex}
-                onChange={handleInputChange}
-              />
-
-              <FormSelectModule
-                label="Service Band"
-                name="serviceBand"
-                value={formData.serviceBand?.toString() || "1"}
-                onChange={(e) => setFormData((prev) => ({ ...prev, serviceBand: parseInt(e.target.value) }))}
-                options={serviceBandOptions}
-              />
-
-              <FormInputModule
-                label="Customer Class"
-                name="customerClass"
-                type="text"
-                placeholder="Enter customer class"
-                value={formData.customerClass}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="Injection Substation ID"
-                name="injectionSubstationId"
+                label="Longitude"
+                name="longitude"
                 type="number"
-                placeholder="Enter substation ID"
-                value={formData.injectionSubstationId}
+                placeholder="Enter longitude"
+                value={formData.longitude?.toString() || ""}
                 onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          {/* Status & Configuration */}
-          <div className="space-y-4">
-            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Status & Configuration</h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="meterIsPPM"
-                  name="meterIsPPM"
-                  checked={formData.meterIsPPM}
-                  onChange={handleInputChange}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="meterIsPPM" className="text-sm font-medium text-gray-700">
-                  Is PPM (Prepaid Meter)
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isMeterActive"
-                  name="isMeterActive"
-                  checked={formData.isMeterActive}
-                  onChange={handleInputChange}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="isMeterActive" className="text-sm font-medium text-gray-700">
-                  Is Meter Active
-                </label>
-              </div>
-
-              <FormSelectModule
-                label="Status"
-                name="status"
-                value={formData.status?.toString() || "1"}
-                onChange={(e) => setFormData((prev) => ({ ...prev, status: parseInt(e.target.value) }))}
-                options={statusOptions}
+                step="0.000001"
               />
 
               <FormSelectModule
                 label="State"
                 name="state"
-                value={formData.state?.toString() || "1"}
+                value={formData.state?.toString() || "0"}
                 onChange={(e) => setFormData((prev) => ({ ...prev, state: parseInt(e.target.value) }))}
-                options={stateOptions}
-              />
-
-              <FormInputModule
-                label="Seal Number"
-                name="sealNumber"
-                type="text"
-                placeholder="Enter seal number"
-                value={formData.sealNumber}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          {/* Tenant Information */}
-          <div className="space-y-4">
-            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Tenant Information</h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <FormInputModule
-                label="Tenant Full Name"
-                name="tenantFullName"
-                type="text"
-                placeholder="Enter tenant name"
-                value={formData.tenantFullName}
-                onChange={handleInputChange}
-              />
-
-              <FormInputModule
-                label="Tenant Phone Number"
-                name="tenantPhoneNumber"
-                type="tel"
-                placeholder="Enter tenant phone"
-                value={formData.tenantPhoneNumber}
-                onChange={handleInputChange}
+                options={[
+                  { value: "0", label: "Inactive" },
+                  { value: "1", label: "Active" },
+                ]}
               />
             </div>
           </div>
 
           {/* Change Reason */}
           <div className="space-y-4">
-            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Change Details</h3>
+            <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">Change Reason</h3>
             <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Change Reason <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="changeReason"
-                  value={formData.changeReason}
-                  onChange={handleInputChange}
-                  placeholder="Please provide a reason for editing this meter..."
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                  rows={3}
-                  required
-                />
-              </div>
+              <textarea
+                name="changeReason"
+                placeholder="Please provide a reason for these changes..."
+                value={formData.changeReason}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                rows={4}
+                required
+              />
             </div>
           </div>
-        </div>
 
-        <div className="sticky bottom-0 flex gap-4 border-t bg-white p-6">
-          <ButtonModule variant="dangerSecondary" className="flex-1" size="lg" onClick={onRequestClose}>
-            Cancel
-          </ButtonModule>
-          <ButtonModule
-            variant="primary"
-            className="flex-1"
-            size="lg"
-            onClick={handleSubmit}
-            disabled={loading}
-            loading={loading}
-          >
-            Save Changes
-          </ButtonModule>
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3 border-t pt-6">
+            <ButtonModule type="button" onClick={onRequestClose} variant="outline" className="px-4 py-2">
+              Cancel
+            </ButtonModule>
+            <ButtonModule
+              type="button"
+              onClick={handleSubmit}
+              disabled={!isFormValid() || loading}
+              className="px-4 py-2"
+            >
+              {loading ? "Updating..." : "Update Meter"}
+            </ButtonModule>
+          </div>
         </div>
       </motion.div>
     </motion.div>

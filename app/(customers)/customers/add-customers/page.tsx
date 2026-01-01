@@ -200,6 +200,7 @@ const AddCustomerPage = () => {
         PageNumber: 1,
         PageSize: 100,
         IsActive: true,
+        HasNonZeroTariffIndex: false,
       })
     )
   }, [dispatch])
@@ -360,10 +361,13 @@ const AddCustomerPage = () => {
   // Tariff group options from fetched data
   const tariffGroupOptions = [
     { value: 0, label: "Select tariff" },
-    ...tariffGroups.map((tariff) => ({
-      value: tariff.id,
-      label: `${tariff.name} (${tariff.tariffCode}) - ${tariff.tariffRate}`,
-    })),
+    ...tariffGroups.map((tariff) => {
+      const bandLetter = String.fromCharCode(64 + tariff.serviceBand) // Convert 1->A, 2->B, etc.
+      return {
+        value: tariff.id,
+        label: `Band-${bandLetter}  ₦${tariff.tariffRate}`,
+      }
+    }),
   ]
 
   // Customer category options from fetched data

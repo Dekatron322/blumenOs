@@ -18,7 +18,6 @@ import {
   clearAddAgent,
   clearAddExistingUserAsAgent,
 } from "lib/redux/agentSlice"
-import { fetchRoles } from "lib/redux/roleSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
@@ -49,7 +48,6 @@ interface AgentFormData {
   fullName: string
   phoneNumber: string
   email: string
-  roleIds: number[]
   areaOfficeId: number
   serviceCenterId: number | null
   departmentId: number
@@ -79,7 +77,6 @@ interface CSVAgent {
   fullName: string
   phoneNumber: string
   email: string
-  roleIds: number[]
   areaOfficeId: number
   serviceCenterId: number | null
   departmentId: number
@@ -141,12 +138,10 @@ const AddNewAgent = () => {
   const [currentStep, setCurrentStep] = useState(1)
 
   // Form data state
-  const [selectedRoles, setSelectedRoles] = useState<number[]>([])
   const [newAgentFormData, setNewAgentFormData] = useState<AgentFormData>({
     fullName: "",
     phoneNumber: "",
     email: "",
-    roleIds: [],
     areaOfficeId: 0,
     serviceCenterId: null,
     departmentId: 0,
@@ -178,7 +173,6 @@ const AddNewAgent = () => {
   const [csvErrors, setCsvErrors] = useState<string[]>([])
 
   // Redux selectors
-  const { roles, loading: rolesLoading, error: rolesError } = useAppSelector((state) => state.roles)
   const { employees, employeesLoading, employeesError } = useAppSelector((state) => state.employee)
   const {
     departments,
@@ -244,7 +238,6 @@ const AddNewAgent = () => {
 
   // Fetch data on mount
   useEffect(() => {
-    dispatch(fetchRoles({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchEmployees({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchDepartments({ pageNumber: 1, pageSize: 100, isActive: true }))
     dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100 }))
@@ -259,10 +252,6 @@ const AddNewAgent = () => {
   // === HELPER FUNCTIONS ===
 
   // Format dropdown options
-  const roleSelectOptions = roles.map((role) => ({
-    value: role.id.toString(),
-    label: role.name,
-  }))
 
   const departmentOptions = [
     {
@@ -346,29 +335,6 @@ const AddNewAgent = () => {
     }
   }
 
-  const handleRoleChange = (
-    e: React.ChangeEvent<HTMLSelectElement> | { target: { name: string; value: string | number } }
-  ) => {
-    const roleId = parseInt(e.target.value as string)
-    if (roleId && !selectedRoles.includes(roleId)) {
-      const newRoles = [...selectedRoles, roleId]
-      setSelectedRoles(newRoles)
-      setNewAgentFormData((prev) => ({
-        ...prev,
-        roleIds: newRoles,
-      }))
-    }
-  }
-
-  const removeRole = (roleId: number) => {
-    const newRoles = selectedRoles.filter((id) => id !== roleId)
-    setSelectedRoles(newRoles)
-    setNewAgentFormData((prev) => ({
-      ...prev,
-      roleIds: newRoles,
-    }))
-  }
-
   // Existing User Handlers
   const handleExistingUserInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
@@ -430,9 +396,6 @@ const AddNewAgent = () => {
           }
           if (!newAgentFormData.employmentType) {
             errors.employmentType = "Employment type is required"
-          }
-          if (!newAgentFormData.roleIds.length) {
-            errors.roleIds = "At least one role is required"
           }
           break
 
@@ -518,7 +481,6 @@ const AddNewAgent = () => {
       fullName: newAgentFormData.fullName,
       email: newAgentFormData.email,
       phoneNumber: newAgentFormData.phoneNumber,
-      roleIds: newAgentFormData.roleIds,
       areaOfficeId: newAgentFormData.areaOfficeId,
       departmentId: newAgentFormData.departmentId,
       employeeId: newAgentFormData.employeeId,
@@ -563,7 +525,6 @@ const AddNewAgent = () => {
       fullName: "",
       phoneNumber: "",
       email: "",
-      roleIds: [],
       areaOfficeId: 0,
       serviceCenterId: null,
       departmentId: 0,
@@ -577,7 +538,6 @@ const AddNewAgent = () => {
       canCollectCash: false,
       status: "",
     })
-    setSelectedRoles([])
     setFormErrors({})
     setCurrentStep(1)
   }
@@ -641,7 +601,6 @@ const AddNewAgent = () => {
       newAgentFormData.fullName.trim() !== "" &&
       newAgentFormData.email.trim() !== "" &&
       newAgentFormData.phoneNumber.trim() !== "" &&
-      newAgentFormData.roleIds.length > 0 &&
       newAgentFormData.areaOfficeId > 0 &&
       newAgentFormData.departmentId > 0 &&
       newAgentFormData.employeeId.trim() !== "" &&
@@ -731,7 +690,7 @@ const AddNewAgent = () => {
                 <nav className="space-y-2">
                   {[
                     { step: 1, title: "Personal Information", description: "Personal and contact details" },
-                    { step: 2, title: "Employment Information", description: "Employment and role details" },
+                    { step: 2, title: "Employment Information", description: "Employment details" },
                     { step: 3, title: "Department & Office", description: "Department and office assignment" },
                     { step: 4, title: "Cash & Status", description: "Cash collection and agent status" },
                     { step: 5, title: "Additional Information", description: "Additional agent details" },
@@ -1206,7 +1165,7 @@ const AddNewAgent = () => {
                               required
                             />
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                               <label className="block text-sm font-medium text-gray-700">Roles</label>
                               <div className="mb-2 flex flex-wrap gap-2">
                                 {selectedRoles.map((roleId) => {
@@ -1227,8 +1186,8 @@ const AddNewAgent = () => {
                                     </span>
                                   )
                                 })}
-                              </div>
-                              <FormSelectModule
+                              </div> */}
+                            {/* <FormSelectModule
                                 name="role"
                                 value=""
                                 onChange={handleRoleChange}
@@ -1242,8 +1201,8 @@ const AddNewAgent = () => {
                                 label=""
                                 disabled={rolesLoading}
                               />
-                              {formErrors.roleIds && <p className="text-sm text-red-600">{formErrors.roleIds}</p>}
-                            </div>
+                              {formErrors.roleIds && <p className="text-sm text-red-600">{formErrors.roleIds}</p>} */}
+                            {/* </div> */}
                           </div>
                         </motion.div>
                       )}
@@ -1511,7 +1470,7 @@ const AddNewAgent = () => {
                 >
                   <div className="mb-4 border-b pb-4 sm:mb-6">
                     <h3 className="text-lg font-semibold text-gray-900">Convert Existing User to Agent</h3>
-                    <p className="text-sm text-gray-600">Convert an existing system user to an agent role</p>
+                    <p className="text-sm text-gray-600">Convert an existing system user to an agent</p>
                   </div>
 
                   <div className="space-y-8">

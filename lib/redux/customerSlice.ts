@@ -211,6 +211,7 @@ export interface Meter {
 }
 
 export interface Customer {
+  type: string
   id: number
   customerNumber: number
   accountNumber: string
@@ -222,6 +223,8 @@ export interface Customer {
   fullName: string
   phoneNumber: string
   phoneOffice: string
+  employeeNo: string
+  salesRepPhone: string
   gender: string
   email: string
   status: string
@@ -597,17 +600,18 @@ export interface UpdateCustomerRequest {
   fullName: string
   phoneNumber: string
   email: string
-  customerID: string
   autoNumber: string
   isCustomerNew: boolean
   isPostEnumerated: boolean
   statusCode: string
   isReadyforExtraction: boolean
   phoneOffice: string
+  employeeNo: string
+  salesRepPhone: string
   gender: string
   address: string
   distributionSubstationId: number
-  feederId: number
+  feederId: number | undefined
   status: string
   addressTwo: string
   mapName: string

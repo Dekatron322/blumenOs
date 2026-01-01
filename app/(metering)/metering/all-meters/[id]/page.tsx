@@ -678,7 +678,7 @@ const MeterBasicInfoTab = ({
               </div>
 
               <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{meter.serialNumber}</h2>
-              <p className="mb-4 text-sm text-gray-600 sm:text-base">DRN: {meter.drn}</p>
+              <p className="mb-4 text-sm text-gray-600 sm:text-base">Meter Number: {meter.drn}</p>
 
               <div className="mb-6 flex flex-wrap justify-center gap-2">
                 <div
