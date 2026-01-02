@@ -40,6 +40,10 @@ import {
   type SetControlRequest,
 } from "lib/redux/metersSlice"
 import { fetchCountries, selectAllProvinces, selectCountriesLoading } from "lib/redux/countriesSlice"
+import { fetchInjectionSubstationById } from "lib/redux/injectionSubstationSlice"
+import { fetchDistributionSubstationById } from "lib/redux/distributionSubstationsSlice"
+import { fetchFeederById } from "lib/redux/feedersSlice"
+import { fetchAreaOfficeById } from "lib/redux/areaOfficeSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
@@ -563,10 +567,58 @@ const MeterBasicInfoTab = ({
   const provinces = useAppSelector(selectAllProvinces)
   const countriesLoading = useAppSelector(selectCountriesLoading)
 
+  // Redux selectors for injection substation
+  const injectionSubstationsState = useAppSelector((state) => state.injectionSubstations)
+  const currentInjectionSubstation = injectionSubstationsState.currentInjectionSubstation
+  const currentInjectionSubstationLoading = injectionSubstationsState.currentInjectionSubstationLoading
+
+  // Redux selectors for distribution substation
+  const distributionSubstationsState = useAppSelector((state) => state.distributionSubstations)
+  const currentDistributionSubstation = distributionSubstationsState.currentDistributionSubstation
+  const currentDistributionSubstationLoading = distributionSubstationsState.currentDistributionSubstationLoading
+
+  // Redux selectors for feeder
+  const feedersState = useAppSelector((state) => state.feeders)
+  const currentFeeder = feedersState.currentFeeder
+  const currentFeederLoading = feedersState.currentFeederLoading
+
+  // Redux selectors for area office
+  const areaOfficesState = useAppSelector((state) => state.areaOffices)
+  const currentAreaOffice = areaOfficesState.currentAreaOffice
+  const currentAreaOfficeLoading = areaOfficesState.currentAreaOfficeLoading
+
   // Fetch countries data on component mount
   useEffect(() => {
     dispatch(fetchCountries())
   }, [dispatch])
+
+  // Fetch injection substation data when meter has injectionSubstationId
+  useEffect(() => {
+    if (meter?.injectionSubstationId && meter.injectionSubstationId > 0) {
+      dispatch(fetchInjectionSubstationById(meter.injectionSubstationId))
+    }
+  }, [dispatch, meter?.injectionSubstationId])
+
+  // Fetch distribution substation data when meter has distributionSubstationId
+  useEffect(() => {
+    if (meter?.distributionSubstationId && meter.distributionSubstationId > 0) {
+      dispatch(fetchDistributionSubstationById(meter.distributionSubstationId))
+    }
+  }, [dispatch, meter?.distributionSubstationId])
+
+  // Fetch feeder data when meter has feederId
+  useEffect(() => {
+    if (meter?.feederId && meter.feederId > 0) {
+      dispatch(fetchFeederById(meter.feederId))
+    }
+  }, [dispatch, meter?.feederId])
+
+  // Fetch area office data when meter has areaOfficeId
+  useEffect(() => {
+    if (meter?.areaOfficeId && meter.areaOfficeId > 0) {
+      dispatch(fetchAreaOfficeById(meter.areaOfficeId))
+    }
+  }, [dispatch, meter?.areaOfficeId])
 
   // Get state name by ID
   const getStateName = (stateId: number) => {
@@ -817,10 +869,10 @@ const MeterBasicInfoTab = ({
                 <span className="text-xs text-gray-600 sm:text-sm">KRN:</span>
                 <span className="text-sm font-medium sm:text-base">{meter.krn}</span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">TI:</span>
                 <span className="text-sm font-medium sm:text-base">{meter.ti}</span>
-              </div>
+              </div> */}
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">EA:</span>
                 <span className="text-sm font-medium sm:text-base">{meter.ea}</span>
@@ -1046,22 +1098,34 @@ const MeterBasicInfoTab = ({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
               <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                 <label className="text-xs font-medium text-gray-600 sm:text-sm">Injection Substation</label>
-                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.injectionSubstationId}</p>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                  {currentInjectionSubstationLoading
+                    ? "Loading..."
+                    : currentInjectionSubstation?.injectionSubstationCode || meter.injectionSubstationId}
+                </p>
               </div>
               <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                 <label className="text-xs font-medium text-gray-600 sm:text-sm">Distribution Substation</label>
                 <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                  {meter.distributionSubstationId || "N/A"}
+                  {currentDistributionSubstationLoading
+                    ? "Loading..."
+                    : currentDistributionSubstation?.dssCode || meter.distributionSubstationId || "N/A"}
                 </p>
               </div>
 
               <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                 <label className="text-xs font-medium text-gray-600 sm:text-sm">Feeder</label>
-                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.feederId || "N/A"}</p>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                  {currentFeederLoading ? "Loading..." : currentFeeder?.name || meter.feederId || "N/A"}
+                </p>
               </div>
               <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                 <label className="text-xs font-medium text-gray-600 sm:text-sm">Area Office</label>
-                <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.areaOfficeId || "N/A"}</p>
+                <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                  {currentAreaOfficeLoading
+                    ? "Loading..."
+                    : currentAreaOffice?.nameOfNewOAreaffice || meter.areaOfficeId || "N/A"}
+                </p>
               </div>
 
               <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
@@ -1137,6 +1201,11 @@ const MeterDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
+  // Redux selectors for injection substation
+  const injectionSubstationsState = useAppSelector((state) => state.injectionSubstations)
+  const currentInjectionSubstation = injectionSubstationsState.currentInjectionSubstation
+  const currentInjectionSubstationLoading = injectionSubstationsState.currentInjectionSubstationLoading
+
   type TabType =
     | "basic-info"
     | "prepaid-credit-history"
@@ -1165,6 +1234,13 @@ const MeterDetailsPage = () => {
       dispatch(clearCurrentMeter())
     }
   }, [dispatch, meterId])
+
+  // Fetch injection substation when meter data is available
+  useEffect(() => {
+    if (meter?.injectionSubstationId) {
+      dispatch(fetchInjectionSubstationById(meter.injectionSubstationId))
+    }
+  }, [dispatch, meter?.injectionSubstationId])
 
   const getTabLabel = (tab: TabType) => {
     switch (tab) {
@@ -1360,7 +1436,10 @@ const MeterDetailsPage = () => {
         head: [["Category", "Details"]],
         body: [
           ["Installation Date", formatDate(meter.installationDate)],
-          ["Injection Substation", meter.injectionSubstationId.toString()],
+          [
+            "Injection Substation",
+            currentInjectionSubstation?.injectionSubstationCode || meter.injectionSubstationId.toString(),
+          ],
           ["Distribution Substation", meter.distributionSubstationId?.toString() || "N/A"],
           ["Feeder", meter.feederId?.toString() || "N/A"],
           ["Area Office", meter.areaOfficeId?.toString() || "N/A"],
