@@ -386,6 +386,10 @@ export const API_ENDPOINTS = {
     BRAND_LISTS: "/meter-brands",
   },
 
+  METER_CATEGORIES: {
+    CATEGORY_LISTS: "/meter-categories",
+  },
+
   TARIFF_GROUPS: {
     GET: "/tariff-groups",
   },

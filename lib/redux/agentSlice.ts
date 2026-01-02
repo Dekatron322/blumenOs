@@ -187,7 +187,6 @@ export interface AddAgentRequest {
   fullName: string
   email: string
   phoneNumber: string
-  roleIds: number[]
   areaOfficeId: number
   serviceCenterId?: number
   departmentId: number

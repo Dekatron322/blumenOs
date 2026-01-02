@@ -28,8 +28,9 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 interface CustomerFormData {
   fullName: string
   phoneNumber: string
+  employeeNo: string
+  salesRepPhone: string
   email: string
-  customerID: string | undefined
   autoNumber: string
   isCustomerNew: boolean
   isPostEnumerated: boolean
@@ -39,10 +40,11 @@ interface CustomerFormData {
   gender: string
   address: string
   distributionSubstationId: number
-  feederId: number
+  feederId: number | undefined
   status: string
   addressTwo: string
   mapName: string
+  type: string
   city: string
   provinceId: number
   lga: string
@@ -106,8 +108,9 @@ const UpdateCustomerPage = () => {
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: "",
     phoneNumber: "",
+    employeeNo: "",
+    salesRepPhone: "",
     email: "",
-    customerID: undefined,
     autoNumber: "",
     isCustomerNew: false,
     isPostEnumerated: false,
@@ -117,10 +120,11 @@ const UpdateCustomerPage = () => {
     gender: "",
     address: "",
     distributionSubstationId: 0,
-    feederId: 0,
+    feederId: undefined,
     status: "",
     addressTwo: "",
     mapName: "",
+    type: "",
     city: "",
     provinceId: 0,
     lga: "",
@@ -214,8 +218,9 @@ const UpdateCustomerPage = () => {
       setFormData({
         fullName: currentCustomer.fullName || "",
         phoneNumber: currentCustomer.phoneNumber || "",
+        employeeNo: currentCustomer.employeeNo || "",
+        salesRepPhone: currentCustomer.salesRepPhone || "",
         email: currentCustomer.email || "",
-        customerID: currentCustomer.id ? currentCustomer.id.toString() : undefined,
         autoNumber: currentCustomer.autoNumber || "",
         isCustomerNew: currentCustomer.isCustomerNew || false,
         isPostEnumerated: currentCustomer.isPostEnumerated || false,
@@ -229,6 +234,7 @@ const UpdateCustomerPage = () => {
         status: currentCustomer.status || "",
         addressTwo: currentCustomer.addressTwo || "",
         mapName: currentCustomer.mapName || "",
+        type: currentCustomer.type || "",
         city: currentCustomer.city || "",
         provinceId: currentCustomer.provinceId || 0,
         lga: currentCustomer.lga || "",
@@ -453,8 +459,9 @@ const UpdateCustomerPage = () => {
       const updateData: UpdateCustomerRequest = {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
+        employeeNo: formData.employeeNo,
+        salesRepPhone: formData.salesRepPhone,
         email: formData.email,
-        customerID: formData.customerID || "",
         autoNumber: formData.autoNumber,
         isCustomerNew: formData.isCustomerNew,
         isPostEnumerated: formData.isPostEnumerated,
@@ -504,8 +511,9 @@ const UpdateCustomerPage = () => {
       setFormData({
         fullName: currentCustomer.fullName || "",
         phoneNumber: currentCustomer.phoneNumber || "",
+        employeeNo: currentCustomer.employeeNo || "",
+        salesRepPhone: currentCustomer.salesRepPhone || "",
         email: currentCustomer.email || "",
-        customerID: currentCustomer.id ? currentCustomer.id.toString() : undefined,
         autoNumber: currentCustomer.autoNumber || "",
         isCustomerNew: currentCustomer.isCustomerNew || false,
         isPostEnumerated: currentCustomer.isPostEnumerated || false,
@@ -515,10 +523,11 @@ const UpdateCustomerPage = () => {
         gender: currentCustomer.gender || "",
         address: currentCustomer.address || "",
         distributionSubstationId: currentCustomer.distributionSubstationId || 0,
-        feederId: currentCustomer.feederId || 0,
+        feederId: currentCustomer.feederId ?? undefined,
         status: currentCustomer.status || "",
         addressTwo: currentCustomer.addressTwo || "",
         mapName: currentCustomer.mapName || "",
+        type: currentCustomer.type || "",
         city: currentCustomer.city || "",
         provinceId: currentCustomer.provinceId || 0,
         lga: currentCustomer.lga || "",

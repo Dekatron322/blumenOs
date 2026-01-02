@@ -1263,7 +1263,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                                             <h4 className="text-sm font-semibold text-gray-900">Meter Information</h4>
                                             <div className="mt-2 space-y-2">
                                               <div className="flex justify-between text-sm">
-                                                <span className="text-gray-500">DRN:</span>
+                                                <span className="text-gray-500">Meter Number:</span>
                                                 <span className="font-medium">{selectedMeter.drn}</span>
                                               </div>
                                               <div className="flex justify-between text-sm">

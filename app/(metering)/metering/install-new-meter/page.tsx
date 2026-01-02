@@ -20,6 +20,7 @@ import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 import { fetchCustomers } from "lib/redux/customerSlice"
 import { fetchMeterBrands } from "lib/redux/meterBrandsSlice"
+import { fetchMeterCategories } from "lib/redux/meterCategorySlice"
 import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
@@ -27,13 +28,13 @@ interface MeterFormData {
   customerId: number
   serialNumber: string
   drn: string
-  sgc: number
+  sgc?: number
   krn: string
-  ti: number
-  ea: number
-  tct: number
-  ken: number
-  mfrCode: number
+  ti?: number
+  ea?: number
+  tct?: number
+  ken?: number
+  mfrCode?: number
   installationDate: string
   meterAddedBy: string
   meterEditedBy: string
@@ -132,25 +133,31 @@ const InstallNewMeterPage = () => {
     error: meterBrandsError,
   } = useSelector((state: RootState) => state.meterBrands)
 
+  const {
+    meterCategories,
+    loading: meterCategoriesLoading,
+    error: meterCategoriesError,
+  } = useSelector((state: RootState) => state.meterCategories)
+
   const { tariffGroups, tariffGroupsLoading, tariffGroupsError } = useSelector((state: RootState) => state.tariffGroups)
 
   const [formData, setFormData] = useState<MeterFormData>({
     customerId: 0,
     serialNumber: "",
     drn: "",
-    sgc: 0,
+    sgc: undefined,
     krn: "",
-    ti: 0,
-    ea: 0,
-    tct: 0,
-    ken: 0,
-    mfrCode: 0,
+    ti: undefined,
+    ea: undefined,
+    tct: undefined,
+    ken: undefined,
+    mfrCode: undefined,
     installationDate: new Date().toISOString(),
     meterAddedBy: "",
     meterEditedBy: "",
     meterDateCreated: new Date().toISOString(),
     meterType: 1,
-    isSmart: true,
+    isSmart: false,
     meterBrand: "",
     meterCategory: "",
     isMeterActive: true,
@@ -191,7 +198,8 @@ const InstallNewMeterPage = () => {
     dispatch(fetchCountries())
     dispatch(fetchCustomers({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchMeterBrands({ pageNumber: 1, pageSize: 100 }))
-    dispatch(fetchTariffGroups({ PageNumber: 1, PageSize: 100 }))
+    dispatch(fetchMeterCategories({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchTariffGroups({ PageNumber: 1, PageSize: 100, HasNonZeroTariffIndex: true }))
   }, [dispatch])
 
   // Debounced search handlers
@@ -442,7 +450,9 @@ const InstallNewMeterPage = () => {
     { value: 0, label: "Select tariff" },
     ...tariffGroups.map((tariff) => ({
       value: tariff.id,
-      label: `${tariff.name} (${tariff.tariffCode})`,
+      label: `Band-${String.fromCharCode(64 + tariff.serviceBand)} ${tariff.currency}${tariff.tariffRate} tariffIndex-${
+        tariff.tariffIndex
+      }`,
     })),
   ]
   const distributionSubstationOptions = [
@@ -503,23 +513,22 @@ const InstallNewMeterPage = () => {
     if (
       [
         "customerId",
-        "sgc",
-        "ti",
-        "ea",
-        "tct",
-        "ken",
-        "mfrCode",
         "meterType",
         "status",
         "meterState",
         "tariffRate",
         "serviceBand",
         "injectionSubstationId",
+        "distributionSubstationId",
+        "areaOfficeId",
+        "state",
         "latitude",
         "longitude",
       ].includes(name)
     ) {
       processedValue = value === "" ? 0 : Number(value)
+    } else if (["sgc", "ti", "ea", "tct", "ken", "mfrCode"].includes(name)) {
+      processedValue = value === "" ? undefined : Number(value)
     }
 
     // Handle boolean fields
@@ -578,7 +587,8 @@ const InstallNewMeterPage = () => {
         break
 
       case 4: // Technical Details
-        // No required fields in technical details
+        if (!formData.sgc) errors.sgc = "SGC is required"
+        if (!formData.krn.trim()) errors.krn = "KRN is required"
         break
 
       case 5: // Status + Installation
@@ -625,6 +635,8 @@ const InstallNewMeterPage = () => {
     if (!formData.serialNumber.trim()) allErrors.serialNumber = "Serial number is required"
     if (!formData.drn.trim()) allErrors.drn = "DRN is required"
     if (!formData.sealNumber.trim()) allErrors.sealNumber = "Seal number is required"
+    if (!formData.sgc) allErrors.sgc = "SGC is required"
+    if (!formData.krn.trim()) allErrors.krn = "KRN is required"
     if (!formData.meterBrand.trim()) allErrors.meterBrand = "Meter brand is required"
     if (!formData.meterCategory.trim()) allErrors.meterCategory = "Meter category is required"
     if (!formData.tariffId || formData.tariffId === 0) {
@@ -669,9 +681,6 @@ const InstallNewMeterPage = () => {
         ken: formData.ken,
         mfrCode: formData.mfrCode,
         installationDate: formData.installationDate,
-        meterAddedBy: formData.meterAddedBy,
-        meterEditedBy: formData.meterEditedBy,
-        meterDateCreated: formData.meterDateCreated,
         meterType: formData.meterType,
         isSmart: formData.isSmart,
         meterBrand: formData.meterBrand,
@@ -684,8 +693,6 @@ const InstallNewMeterPage = () => {
         tariffId: formData.tariffId,
         injectionSubstationId: formData.injectionSubstationId,
         distributionSubstationId: formData.distributionSubstationId,
-        feederId: formData.feederId,
-        areaOfficeId: formData.areaOfficeId,
         state: typeof formData.state === "string" ? 0 : formData.state,
         address: formData.address,
         addressTwo: formData.addressTwo,
@@ -693,8 +700,6 @@ const InstallNewMeterPage = () => {
         apartmentNumber: formData.apartmentNumber,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        tenantFullName: formData.tenantFullName,
-        tenantPhoneNumber: formData.tenantPhoneNumber,
       }
 
       await dispatch(addMeter(meterData)).unwrap()
@@ -708,13 +713,13 @@ const InstallNewMeterPage = () => {
       customerId: 0,
       serialNumber: "",
       drn: "",
-      sgc: 0,
+      sgc: undefined,
       krn: "",
-      ti: 0,
-      ea: 0,
-      tct: 0,
-      ken: 0,
-      mfrCode: 0,
+      ti: undefined,
+      ea: undefined,
+      tct: undefined,
+      ken: undefined,
+      mfrCode: undefined,
       installationDate: new Date().toISOString(),
       meterAddedBy: "",
       meterEditedBy: "",
@@ -1159,7 +1164,7 @@ const InstallNewMeterPage = () => {
                             label="Meter Number"
                             name="drn"
                             type="text"
-                            placeholder="Enter DRN"
+                            placeholder="Enter meter number"
                             value={formData.drn}
                             onChange={handleInputChange}
                             error={formErrors.drn}
@@ -1227,13 +1232,18 @@ const InstallNewMeterPage = () => {
                             required
                           />
 
-                          <FormInputModule
+                          <FormSelectModule
                             label="Meter Category"
                             name="meterCategory"
-                            type="text"
-                            placeholder="Enter meter category"
                             value={formData.meterCategory}
                             onChange={handleInputChange}
+                            options={[
+                              { value: "", label: "Select meter category" },
+                              ...meterCategories.map((category) => ({
+                                value: category.name,
+                                label: category.name,
+                              })),
+                            ]}
                             error={formErrors.meterCategory}
                             required
                           />
@@ -1447,8 +1457,10 @@ const InstallNewMeterPage = () => {
                             name="sgc"
                             type="number"
                             placeholder="Enter SGC"
-                            value={formData.sgc}
+                            value={formData.sgc ?? ""}
                             onChange={handleInputChange}
+                            error={formErrors.sgc}
+                            required
                           />
 
                           <FormInputModule
@@ -1458,23 +1470,25 @@ const InstallNewMeterPage = () => {
                             placeholder="Enter KRN"
                             value={formData.krn}
                             onChange={handleInputChange}
+                            error={formErrors.krn}
+                            required
                           />
 
-                          <FormInputModule
+                          {/* <FormInputModule
                             label="TI"
                             name="ti"
                             type="number"
                             placeholder="Enter TI"
-                            value={formData.ti}
+                            value={formData.ti ?? ""}
                             onChange={handleInputChange}
-                          />
+                          /> */}
 
                           <FormInputModule
                             label="EA"
                             name="ea"
                             type="number"
                             placeholder="Enter EA"
-                            value={formData.ea}
+                            value={formData.ea ?? ""}
                             onChange={handleInputChange}
                           />
 
@@ -1483,7 +1497,7 @@ const InstallNewMeterPage = () => {
                             name="tct"
                             type="number"
                             placeholder="Enter TCT"
-                            value={formData.tct}
+                            value={formData.tct ?? ""}
                             onChange={handleInputChange}
                           />
 
@@ -1492,7 +1506,7 @@ const InstallNewMeterPage = () => {
                             name="ken"
                             type="number"
                             placeholder="Enter KEN"
-                            value={formData.ken}
+                            value={formData.ken ?? ""}
                             onChange={handleInputChange}
                           />
 
@@ -1501,7 +1515,7 @@ const InstallNewMeterPage = () => {
                             name="mfrCode"
                             type="number"
                             placeholder="Enter MFR code"
-                            value={formData.mfrCode}
+                            value={formData.mfrCode ?? ""}
                             onChange={handleInputChange}
                           />
                         </div>
