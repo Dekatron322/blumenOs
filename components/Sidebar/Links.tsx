@@ -140,12 +140,12 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "assets",
         requiredActions: ["W"],
       },
-      {
-        name: "Change Request",
-        href: "/metering/change-requests",
-        privilegeKey: "assets",
-        requiredActions: ["E"],
-      },
+      // {
+      //   name: "Change Request",
+      //   href: "/metering/change-requests",
+      //   privilegeKey: "assets",
+      //   requiredActions: ["E"],
+      // },
     ],
   },
   {
