@@ -424,7 +424,7 @@ export default function EmployeeChangeRequestManagement() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
+                {/* <ButtonModule
                   variant="primary"
                   size="sm"
                   onClick={handleRefreshData}
@@ -433,7 +433,7 @@ export default function EmployeeChangeRequestManagement() {
                 >
                   <span className="max-sm:hidden">Refresh Data</span>
                   <span className="sm:hidden">Refresh</span>
-                </ButtonModule>
+                </ButtonModule> */}
                 {/* Polling Controls */}
                 <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                   <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>

@@ -18,6 +18,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { useRouter } from "next/navigation"
+import { VscAdd } from "react-icons/vsc"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -540,10 +541,10 @@ export default function AllTransactions() {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <ButtonModule
-                  variant="outline"
+                  variant="primary"
                   size="md"
                   onClick={handleOpenAddCustomerModal}
-                  icon={<AddCustomerIcon />}
+                  icon={<VscAdd />}
                   iconPosition="start"
                 >
                   Add Customer

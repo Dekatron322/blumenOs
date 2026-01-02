@@ -21,7 +21,7 @@ import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
-import { VscArrowLeft, VscArrowRight } from "react-icons/vsc"
+import { VscAdd, VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 interface CustomerFormData {
   fullName: string
@@ -918,7 +918,7 @@ const AddCustomerPage = () => {
                     type="button"
                     onClick={handleSubmit}
                     disabled={!isFormValid() || createLoading}
-                    icon={<AddCustomerIcon />}
+                    icon={<VscAdd />}
                     iconPosition="start"
                   >
                     {createLoading ? "Adding..." : "Add Customer"}
