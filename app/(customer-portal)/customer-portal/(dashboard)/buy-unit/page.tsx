@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { customerLookup, getToken, vend, VendToken } from "lib/redux/customersDashboardSlice"
 import { useSearchParams } from "next/navigation"
 
-const BuyUnit: React.FC = () => {
+function BuyUnitContent() {
   // Redux hooks
   const dispatch = useAppDispatch()
   const searchParams = useSearchParams()
@@ -1182,4 +1182,10 @@ const BuyUnit: React.FC = () => {
   )
 }
 
-export default BuyUnit
+export default function BuyUnit() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BuyUnitContent />
+    </Suspense>
+  )
+}
