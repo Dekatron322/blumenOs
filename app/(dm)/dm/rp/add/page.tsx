@@ -15,7 +15,7 @@ import {
   createRecoveryPolicy,
   CreateRecoveryPolicyRequest,
 } from "lib/redux/debtManagementSlice"
-import { fetchCustomers, Customer } from "lib/redux/customerSlice"
+import { Customer, fetchCustomers } from "lib/redux/customerSlice"
 
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 import { VscAdd, VscArrowLeft, VscArrowRight } from "react-icons/vsc"

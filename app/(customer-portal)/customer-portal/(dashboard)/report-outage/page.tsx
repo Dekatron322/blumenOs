@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useSelector } from "react-redux"
 import { useAppDispatch } from "lib/hooks/useRedux"
@@ -15,14 +15,14 @@ import {
   clearReportOutageStatus,
   getRecentOutages,
   reportOutage,
-  selectReportOutageLoading,
-  selectReportOutageError,
-  selectReportOutageResponseData,
-  selectReportOutageSuccess,
+  selectRecentOutagesError,
   selectRecentOutagesList,
   selectRecentOutagesLoading,
-  selectRecentOutagesError,
   selectRecentOutagesPagination,
+  selectReportOutageError,
+  selectReportOutageLoading,
+  selectReportOutageResponseData,
+  selectReportOutageSuccess,
 } from "lib/redux/customersDashboardSlice"
 
 // Customer Outage Reason Enum

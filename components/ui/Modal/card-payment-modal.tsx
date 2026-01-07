@@ -245,7 +245,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
                         </p>
                         <ul className="mt-1 space-y-1 text-xs text-yellow-700">
                           <li>1. Enter the token on your prepaid meter</li>
-                          <li>2. Press the "Enter" button on your meter</li>
+                          <li>2. Press the &ldquo;Enter&ldquo; button on your meter</li>
                           <li>3. Wait for confirmation on your meter display</li>
                           <li>4. Save this token for your records</li>
                         </ul>
@@ -299,8 +299,8 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
               </div>
               <div className="ml-3">
                 <p className="text-xs text-amber-800">
-                  <strong>Please don't close this window</strong> while we confirm your payment. Your electricity tokens
-                  will be displayed here once payment is confirmed.
+                  <strong>Please don&apos;t close this window</strong> while we confirm your payment. Your electricity
+                  tokens will be displayed here once payment is confirmed.
                 </p>
               </div>
             </div>
