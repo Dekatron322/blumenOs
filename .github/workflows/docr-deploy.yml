@@ -37,6 +37,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ github.ref == 'refs/heads/main' && secrets.NEXT_PUBLIC_API_BASE_URL_PROD || secrets.NEXT_PUBLIC_API_BASE_URL_TEST }}
           tags: |
             ${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
