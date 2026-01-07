@@ -1142,9 +1142,9 @@ const EmployeeDetailsPage = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col xl:container">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 sm:px-3 xl:px-16">
+              <div className="mx-auto w-full px-3 py-4  sm:px-4 md:px-6 2xl:px-16">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
                     <motion.button
@@ -1219,7 +1219,7 @@ const EmployeeDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6 sm:px-3 sm:py-8 xl:px-16">
+            <div className="flex w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 2xl:px-16">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Profile & Quick Actions */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[30%]">

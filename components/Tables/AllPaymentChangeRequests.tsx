@@ -227,6 +227,8 @@ const MobileFilterSidebar = ({
   statusOptions,
   sourceOptions,
   sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -239,9 +241,9 @@ const MobileFilterSidebar = ({
   statusOptions: Array<{ value: string | number; label: string }>
   sourceOptions: Array<{ value: string | number; label: string }>
   sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
-  const [isSortExpanded, setIsSortExpanded] = useState(true)
-
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
@@ -259,132 +261,143 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
-                </button>
-                <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
-                  )}
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
                 </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const statusValue = Number(option.value)
-                      return (
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const statusValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "status",
+                                localFilters.status === statusValue ? undefined : statusValue
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.status === statusValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Source Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                  <FormSelectModule
+                    name="source"
+                    value={localFilters.source !== undefined ? localFilters.source.toString() : ""}
+                    onChange={(e) =>
+                      handleFilterChange("source", e.target.value === "" ? undefined : Number(e.target.value))
+                    }
+                    options={sourceOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Public ID Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Public ID</label>
+                  <input
+                    type="text"
+                    value={localFilters.publicId || ""}
+                    onChange={(e) => handleFilterChange("publicId", e.target.value || undefined)}
+                    placeholder="Enter public ID"
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
                         <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.status === statusValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                           }`}
                         >
-                          {option.label}
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
                         </button>
-                      )
-                    })}
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              {/* Source Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
-                <FormSelectModule
-                  name="source"
-                  value={localFilters.source !== undefined ? localFilters.source.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("source", e.target.value === "" ? undefined : Number(e.target.value))
-                  }
-                  options={sourceOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Public ID Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Public ID</label>
-                <input
-                  type="text"
-                  value={localFilters.publicId || ""}
-                  onChange={(e) => handleFilterChange("publicId", e.target.value || undefined)}
-                  placeholder="Enter public ID"
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed */}
+            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
                   Apply Filters
                 </button>
@@ -393,9 +406,9 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  Reset All
                 </button>
               </div>
             </div>
@@ -843,7 +856,7 @@ const AllPaymentChangeRequests = () => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
         {/* Main Content - Change Requests List/Grid */}
         <motion.div
           className={
@@ -861,7 +874,7 @@ const AllPaymentChangeRequests = () => {
               {/* Filter Button for ALL screens up to 2xl */}
               <button
                 onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white  px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
               >
                 <Filter className="size-4" />
                 Filters
@@ -907,11 +920,20 @@ const AllPaymentChangeRequests = () => {
                 <p className="text-sm text-[#2563EB]">Export CSV</p>
               </button>
 
+              {/* Active filters badge - Desktop only (2xl and above) */}
+              {getActiveFilterCount() > 0 && (
+                <div className="hidden items-center gap-2 2xl:flex">
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
                 type="button"
                 onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white  px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
               >
                 {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
@@ -1096,113 +1118,124 @@ const AllPaymentChangeRequests = () => {
             key="desktop-filters-sidebar"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+            className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
           >
-            <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-              <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-              >
-                <X className="size-3 md:size-4" />
-                Clear All
-              </button>
+            <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+                >
+                  <X className="size-3 md:size-4" />
+                  Clear All
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const statusValue = Number(option.value)
-                      return (
+            <div className="flex-1 overflow-y-auto p-3 md:p-5">
+              <div className="space-y-4">
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const statusValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "status",
+                                localFilters.status === statusValue ? undefined : statusValue
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.status === statusValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Source Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
+                  <FormSelectModule
+                    name="source"
+                    value={localFilters.source !== undefined ? localFilters.source.toString() : ""}
+                    onChange={(e) =>
+                      handleFilterChange("source", e.target.value === "" ? undefined : Number(e.target.value))
+                    }
+                    options={sourceSelectOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Public ID Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Public ID</label>
+                  <input
+                    type="text"
+                    value={localFilters.publicId || ""}
+                    onChange={(e) => handleFilterChange("publicId", e.target.value || undefined)}
+                    placeholder="Enter public ID"
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
                         <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.status === statusValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                           }`}
                         >
-                          {option.label}
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
                         </button>
-                      )
-                    })}
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              {/* Source Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Source</label>
-                <FormSelectModule
-                  name="source"
-                  value={localFilters.source !== undefined ? localFilters.source.toString() : ""}
-                  onChange={(e) =>
-                    handleFilterChange("source", e.target.value === "" ? undefined : Number(e.target.value))
-                  }
-                  options={sourceSelectOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Public ID Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Public ID</label>
-                <input
-                  type="text"
-                  value={localFilters.publicId || ""}
-                  onChange={(e) => handleFilterChange("publicId", e.target.value || undefined)}
-                  placeholder="Enter public ID"
-                  className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 shrink-0 space-y-3 border-t pt-4">
+            <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
               <button
                 onClick={applyFilters}
                 className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1220,7 +1253,7 @@ const AllPaymentChangeRequests = () => {
             </div>
 
             {/* Summary Stats */}
-            <div className="mt-4 shrink-0 rounded-lg bg-gray-50 p-3 md:mt-6">
+            <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
               <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
               <div className="space-y-1 text-xs md:text-sm">
                 <div className="flex justify-between">
@@ -1262,6 +1295,8 @@ const AllPaymentChangeRequests = () => {
         statusOptions={statusSelectOptions}
         sourceOptions={sourceSelectOptions}
         sortOptions={sortOptions}
+        isSortExpanded={isSortExpanded}
+        setIsSortExpanded={setIsSortExpanded}
       />
     </>
   )

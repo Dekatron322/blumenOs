@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
@@ -283,135 +284,146 @@ const MobileFilterSidebar = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
-                </button>
-                <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
-                  )}
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
                 </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Period Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
-                <FormSelectModule
-                  name="billingPeriodId"
-                  value={localFilters.billingPeriodId?.toString() || ""}
-                  onChange={(e) =>
-                    handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
-                  }
-                  options={periodOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Period Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                  <FormSelectModule
+                    name="billingPeriodId"
+                    value={localFilters.billingPeriodId?.toString() || ""}
+                    onChange={(e) =>
+                      handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
+                    }
+                    options={periodOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
 
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) =>
-                    handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
-                  }
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("areaOfficeId", e.target.value === "" ? undefined : Number(e.target.value))
+                    }
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
 
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const statusValue = Number(option.value)
-                      return (
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const statusValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "status",
+                                localFilters.status === statusValue ? undefined : statusValue
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.status === statusValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
                         <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.status === statusValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
                               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                           }`}
                         >
-                          {option.label}
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
                         </button>
-                      )
-                    })}
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed */}
+            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
                   Apply Filters
                 </button>
@@ -420,9 +432,9 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  Reset All
                 </button>
               </div>
             </div>
@@ -971,7 +983,7 @@ const BillingJobs: React.FC = () => {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-3 2xl:px-16">
+          <div className="mx-auto w-full px-3 py-4 2xl:container max-sm:px-3 sm:px-4 md:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
                 <h4 className="text-2xl font-semibold">Billing Jobs</h4>
@@ -1002,360 +1014,362 @@ const BillingJobs: React.FC = () => {
               className="w-full"
             >
               {/* Jobs Table Container */}
-              <div className="flex-3 relative flex flex-col-reverse items-start gap-6 max-md:px-3 2xl:mt-5 2xl:flex-row">
+              <div className="relative flex flex-col gap-6 2xl:flex-row">
                 {/* Main Content - Billing Jobs Table */}
-                <motion.div
+                <div
                   className={
-                    showDesktopFilters
-                      ? "w-full rounded-lg border bg-white p-4 lg:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
-                      : "w-full rounded-lg border bg-white p-4 lg:p-6 2xl:flex-1"
+                    showDesktopFilters ? "w-full 2xl:max-w-[calc(100%-356px)] 2xl:flex-1" : "w-full 2xl:flex-1"
                   }
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4 }}
                 >
-                  <div className="mb-6">
-                    <div className="mb-3 flex items-center gap-3">
-                      {/* Filter Button for ALL screens up to 2xl */}
-                      <button
-                        onClick={() => setShowMobileFilters(true)}
-                        className="flex items-center gap-2 rounded-lg border border-gray-300  bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-                      >
-                        <Filter className="size-4" />
-                        Filters
-                        {getActiveFilterCount() > 0 && (
-                          <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                            {getActiveFilterCount()}
-                          </span>
-                        )}
-                      </button>
+                  <motion.div
+                    className="rounded-lg border bg-white p-4 lg:p-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <div className="mb-6">
+                      <div className="mb-3 flex items-center gap-3">
+                        {/* Filter Button for ALL screens up to 2xl */}
+                        <button
+                          onClick={() => setShowMobileFilters(true)}
+                          className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                        >
+                          <Filter className="size-4" />
+                          Filters
+                          {getActiveFilterCount() > 0 && (
+                            <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                              {getActiveFilterCount()}
+                            </span>
+                          )}
+                        </button>
 
-                      <h3 className="text-lg font-semibold">Job Queue</h3>
-                    </div>
-                    <div className="flex w-full items-center justify-between gap-3 sm:gap-4">
-                      <div className="w-full sm:w-64 md:max-w-md">
-                        <SearchModule
-                          placeholder="Search by period (e.g., 2024-01)..."
-                          value={searchText}
-                          onChange={handleSearch}
-                          onCancel={handleCancelSearch}
-                          className="w-full"
-                        />
+                        <h3 className="text-lg font-semibold">Job Queue</h3>
                       </div>
+                      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="w-full sm:w-64 md:max-w-md">
+                          <SearchModule
+                            placeholder="Search by period (e.g., 2024-01)..."
+                            value={searchText}
+                            onChange={handleSearch}
+                            onCancel={handleCancelSearch}
+                            className="w-full"
+                          />
+                        </div>
 
-                      {/* Active filters badge - Desktop only (2xl and above) */}
-
-                      {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                      <button
-                        type="button"
-                        onClick={() => setShowDesktopFilters((prev) => !prev)}
-                        className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white  px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                      >
-                        {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                        {showDesktopFilters ? "Hide filters" : "Show filters"}
+                        {/* Active filters badge - Desktop only (2xl and above) */}
                         {getActiveFilterCount() > 0 && (
                           <div className="hidden items-center gap-2 2xl:flex">
                             <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                              {getActiveFilterCount()}
+                              {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
                             </span>
                           </div>
                         )}
-                      </button>
-                    </div>
-                  </div>
 
-                  {billingJobs.length === 0 ? (
-                    <motion.div
-                      className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <motion.p
-                        className="text-base font-bold text-[#202B3C]"
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                      >
-                        {searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"}
-                      </motion.p>
-                    </motion.div>
-                  ) : (
-                    <>
-                      {/* Table Container with Max Width and Scroll */}
-                      <div className="w-full overflow-hidden rounded-lg border border-gray-200">
-                        <div className="max-w-full overflow-x-auto">
-                          <table className="w-full min-w-[1400px] border-separate border-spacing-0 text-left">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
-                                  <div className="flex items-center gap-2">
-                                    <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
-                                    Period
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("areaOfficeName")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Area Office <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("status")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Status <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("draftedCount")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Drafted <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("finalizedCount")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Finalized <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("progress")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Progress <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("requestedByName")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Requested By <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("requestedAtUtc")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Requested At <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th
-                                  className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
-                                  onClick={() => toggleSort("completedAtUtc")}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    Completed At <RxCaretSort className="text-gray-400" />
-                                  </div>
-                                </th>
-                                <th className="shadow-[ -2px_0_4px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-y  bg-gray-50 p-4 text-sm font-semibold text-gray-900">
-                                  Actions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white">
-                              {billingJobs.map((job, index) => (
-                                <tr key={job.id} className="hover:bg-gray-50">
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
-                                    <div className="flex items-center gap-2">
-                                      <CycleIcon />
-                                      <div>
-                                        <div className="font-medium text-gray-900">{job.period}</div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                    {job.areaOfficeName || "General Bill"}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                    <motion.div
-                                      style={getStatusStyle(job.status)}
-                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                      whileHover={{ scale: 1.05 }}
-                                      transition={{ duration: 0.1 }}
-                                    >
-                                      <span
-                                        className="size-2 rounded-full"
-                                        style={{
-                                          backgroundColor:
-                                            job.status === 0
-                                              ? "#D97706"
-                                              : job.status === 1
-                                              ? "#2563EB"
-                                              : job.status === 2
-                                              ? "#589E67"
-                                              : job.status === 3
-                                              ? "#AF4B4B"
-                                              : "#6B7280",
-                                        }}
-                                      ></span>
-                                      {getStatusText(job.status)}
-                                    </motion.div>
-                                    {job.lastError && (
-                                      <div
-                                        className="mt-1 max-w-xs truncate text-xs text-red-500"
-                                        title={job.lastError}
-                                      >
-                                        Error: {job.lastError}
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                    {job.draftedCount.toLocaleString()}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                    {job.finalizedCount.toLocaleString()}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <div className="h-2 w-20 rounded-full bg-gray-200">
-                                        <div
-                                          className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                                          style={{ width: `${calculateProgress(job)}%` }}
-                                        />
-                                      </div>
-                                      <span className="text-xs font-medium text-gray-700">
-                                        {calculateProgress(job)}%
-                                      </span>
-                                    </div>
-                                    <div className="mt-1 text-xs text-gray-500">
-                                      {job.processedCustomers.toLocaleString()} / {job.totalCustomers.toLocaleString()}{" "}
-                                      customers
-                                    </div>
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                    {job.requestedByName}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                    {formatDate(job.requestedAtUtc)}
-                                  </td>
-                                  <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
-                                    {job.completedAtUtc ? formatDate(job.completedAtUtc) : "In Progress"}
-                                  </td>
-                                  <td className="shadow-[ -2px_0_4px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-3 text-sm shadow-md">
-                                    <ButtonModule
-                                      size="sm"
-                                      variant="outline"
-                                      icon={<VscEye />}
-                                      onClick={() => router.push(`/billing/jobs/jobs-detail/${job.id}`)}
-                                    >
-                                      View
-                                    </ButtonModule>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                        {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                        <button
+                          type="button"
+                          onClick={() => setShowDesktopFilters((prev) => !prev)}
+                          className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                        >
+                          {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                          {showDesktopFilters ? "Hide filters" : "Show filters"}
+                        </button>
                       </div>
+                    </div>
 
-                      {/* Pagination */}
-                      <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
-                        <div className="flex items-center gap-1 max-sm:hidden">
-                          <p className="text-xs sm:text-sm">Show rows</p>
-                          <select
-                            value={billingJobsPagination.pageSize}
-                            onChange={handleRowsChange}
-                            className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
-                          >
-                            <option value={5}>5</option>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                          </select>
+                    {billingJobs.length === 0 ? (
+                      <motion.div
+                        className="flex h-60 flex-col items-center justify-center gap-2 rounded-lg bg-[#F6F6F9]"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        <motion.p
+                          className="text-base font-bold text-[#202B3C]"
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
+                        >
+                          {searchText || getActiveFilterCount() > 0 ? "No matching jobs found" : "No jobs available"}
+                        </motion.p>
+                      </motion.div>
+                    ) : (
+                      <>
+                        {/* Table Container with Max Width and Scroll */}
+                        <div className="w-full overflow-hidden rounded-lg border border-gray-200">
+                          <div className="max-w-full overflow-x-auto">
+                            <table className="w-full min-w-[1400px] border-separate border-spacing-0 text-left">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                                    <div className="flex items-center gap-2">
+                                      <MdOutlineCheckBoxOutlineBlank className="text-lg text-gray-400" />
+                                      Period
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("areaOfficeName")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Area Office <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("status")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Status <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("draftedCount")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Drafted <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("finalizedCount")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Finalized <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("progress")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Progress <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("requestedByName")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Requested By <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("requestedAtUtc")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Requested At <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th
+                                    className="cursor-pointer whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                                    onClick={() => toggleSort("completedAtUtc")}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      Completed At <RxCaretSort className="text-gray-400" />
+                                    </div>
+                                  </th>
+                                  <th className="shadow-[ -2px_0_4px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-y  bg-gray-50 p-4 text-sm font-semibold text-gray-900">
+                                    Actions
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white">
+                                {billingJobs.map((job, index) => (
+                                  <tr key={job.id} className="hover:bg-gray-50">
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-medium">
+                                      <div className="flex items-center gap-2">
+                                        <CycleIcon />
+                                        <div>
+                                          <div className="font-medium text-gray-900">{job.period}</div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.areaOfficeName || "General Bill"}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                      <motion.div
+                                        style={getStatusStyle(job.status)}
+                                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                        whileHover={{ scale: 1.05 }}
+                                        transition={{ duration: 0.1 }}
+                                      >
+                                        <span
+                                          className="size-2 rounded-full"
+                                          style={{
+                                            backgroundColor:
+                                              job.status === 0
+                                                ? "#D97706"
+                                                : job.status === 1
+                                                ? "#2563EB"
+                                                : job.status === 2
+                                                ? "#589E67"
+                                                : job.status === 3
+                                                ? "#AF4B4B"
+                                                : "#6B7280",
+                                          }}
+                                        ></span>
+                                        {getStatusText(job.status)}
+                                      </motion.div>
+                                      {job.lastError && (
+                                        <div
+                                          className="mt-1 max-w-xs truncate text-xs text-red-500"
+                                          title={job.lastError}
+                                        >
+                                          Error: {job.lastError}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.draftedCount.toLocaleString()}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.finalizedCount.toLocaleString()}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-2 w-20 rounded-full bg-gray-200">
+                                          <div
+                                            className="h-2 rounded-full bg-green-500 transition-all duration-300"
+                                            style={{ width: `${calculateProgress(job)}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-700">
+                                          {calculateProgress(job)}%
+                                        </span>
+                                      </div>
+                                      <div className="mt-1 text-xs text-gray-500">
+                                        {job.processedCustomers.toLocaleString()} /{" "}
+                                        {job.totalCustomers.toLocaleString()} customers
+                                      </div>
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.requestedByName}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {formatDate(job.requestedAtUtc)}
+                                    </td>
+                                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                      {job.completedAtUtc ? formatDate(job.completedAtUtc) : "In Progress"}
+                                    </td>
+                                    <td className="shadow-[ -2px_0_4px_-2px_rgba(0,0,0,0.1)] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-3 text-sm shadow-md">
+                                      <ButtonModule
+                                        size="sm"
+                                        variant="outline"
+                                        icon={<VscEye />}
+                                        onClick={() => router.push(`/billing/jobs/jobs-detail/${job.id}`)}
+                                      >
+                                        View
+                                      </ButtonModule>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                          <button
-                            className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                              billingJobsPagination.currentPage === 1
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-[#000000]"
-                            }`}
-                            onClick={() => changePage(billingJobsPagination.currentPage - 1)}
-                            disabled={billingJobsPagination.currentPage === 1}
-                          >
-                            <BiSolidLeftArrow className="size-4 sm:size-5" />
-                          </button>
-
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <div className="hidden items-center gap-1 sm:flex sm:gap-2">
-                              {getPageItems().map((item, index) =>
-                                typeof item === "number" ? (
-                                  <button
-                                    key={item}
-                                    className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
-                                      billingJobsPagination.currentPage === item
-                                        ? "bg-[#000000] text-white"
-                                        : "bg-gray-200 text-gray-800"
-                                    }`}
-                                    onClick={() => changePage(item)}
-                                  >
-                                    {item}
-                                  </button>
-                                ) : (
-                                  <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
-                                    {item}
-                                  </span>
-                                )
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-1 sm:hidden">
-                              {getMobilePageItems().map((item, index) =>
-                                typeof item === "number" ? (
-                                  <button
-                                    key={item}
-                                    className={`flex size-6 items-center justify-center rounded-md text-xs ${
-                                      billingJobsPagination.currentPage === item
-                                        ? "bg-[#000000] text-white"
-                                        : "bg-gray-200 text-gray-800"
-                                    }`}
-                                    onClick={() => changePage(item)}
-                                  >
-                                    {item}
-                                  </button>
-                                ) : (
-                                  <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
-                                    {item}
-                                  </span>
-                                )
-                              )}
-                            </div>
+                        {/* Pagination */}
+                        <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                          <div className="flex items-center gap-1 max-sm:hidden">
+                            <p className="text-xs sm:text-sm">Show rows</p>
+                            <select
+                              value={billingJobsPagination.pageSize}
+                              onChange={handleRowsChange}
+                              className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                            >
+                              <option value={5}>5</option>
+                              <option value={10}>10</option>
+                              <option value={20}>20</option>
+                              <option value={50}>50</option>
+                            </select>
                           </div>
 
-                          <button
-                            className={`px-2 py-1 sm:px-3 sm:py-2 ${
-                              billingJobsPagination.currentPage === totalPages || totalPages === 0
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-[#000000]"
-                            }`}
-                            onClick={() => changePage(billingJobsPagination.currentPage + 1)}
-                            disabled={billingJobsPagination.currentPage === totalPages || totalPages === 0}
-                          >
-                            <BiSolidRightArrow className="size-4 sm:size-5" />
-                          </button>
-                        </div>
+                          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                            <button
+                              className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                                billingJobsPagination.currentPage === 1
+                                  ? "cursor-not-allowed text-gray-400"
+                                  : "text-[#000000]"
+                              }`}
+                              onClick={() => changePage(billingJobsPagination.currentPage - 1)}
+                              disabled={billingJobsPagination.currentPage === 1}
+                            >
+                              <BiSolidLeftArrow className="size-4 sm:size-5" />
+                            </button>
 
-                        <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-                          Page {billingJobsPagination.currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()}{" "}
-                          total jobs)
-                          {searchText.trim() && " - filtered"}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                                {getPageItems().map((item, index) =>
+                                  typeof item === "number" ? (
+                                    <button
+                                      key={item}
+                                      className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                                        billingJobsPagination.currentPage === item
+                                          ? "bg-[#000000] text-white"
+                                          : "bg-gray-200 text-gray-800"
+                                      }`}
+                                      onClick={() => changePage(item)}
+                                    >
+                                      {item}
+                                    </button>
+                                  ) : (
+                                    <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                                      {item}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-1 sm:hidden">
+                                {getMobilePageItems().map((item, index) =>
+                                  typeof item === "number" ? (
+                                    <button
+                                      key={item}
+                                      className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                                        billingJobsPagination.currentPage === item
+                                          ? "bg-[#000000] text-white"
+                                          : "bg-gray-200 text-gray-800"
+                                      }`}
+                                      onClick={() => changePage(item)}
+                                    >
+                                      {item}
+                                    </button>
+                                  ) : (
+                                    <span key={`ellipsis-${index}`} className="px-1 text-xs text-gray-500">
+                                      {item}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+
+                            <button
+                              className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                                billingJobsPagination.currentPage === totalPages || totalPages === 0
+                                  ? "cursor-not-allowed text-gray-400"
+                                  : "text-[#000000]"
+                              }`}
+                              onClick={() => changePage(billingJobsPagination.currentPage + 1)}
+                              disabled={billingJobsPagination.currentPage === totalPages || totalPages === 0}
+                            >
+                              <BiSolidRightArrow className="size-4 sm:size-5" />
+                            </button>
+                          </div>
+
+                          <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                            Page {billingJobsPagination.currentPage} of {totalPages || 1} (
+                            {totalRecords.toLocaleString()} total jobs)
+                            {searchText.trim() && " - filtered"}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                </div>
 
                 {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
                 {showDesktopFilters && (
@@ -1363,126 +1377,135 @@ const BillingJobs: React.FC = () => {
                     key="desktop-filters-sidebar"
                     initial={{ opacity: 1 }}
                     animate={{ opacity: 1 }}
-                    className="hidden w-full flex-col rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:flex 2xl:w-80 2xl:self-start"
+                    className="hidden w-full flex-col rounded-md border bg-white 2xl:flex 2xl:w-80 2xl:self-start"
                   >
-                    <div className="mb-4 flex shrink-0 items-center justify-between border-b pb-3 md:pb-4">
-                      <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
-                      <button
-                        onClick={resetFilters}
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
-                      >
-                        <X className="size-3 md:size-4" />
-                        Clear All
-                      </button>
+                    <div className="flex-shrink-0 border-b bg-white p-3 md:p-5">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-base font-semibold text-gray-900 md:text-lg">Filters & Sorting</h2>
+                        <button
+                          onClick={resetFilters}
+                          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 md:text-sm"
+                        >
+                          <X className="size-3 md:size-4" />
+                          Clear All
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
-                      {/* Period Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
-                        <FormSelectModule
-                          name="billingPeriodId"
-                          value={localFilters.billingPeriodId?.toString() || ""}
-                          onChange={(e) =>
-                            handleFilterChange("billingPeriodId", e.target.value ? parseInt(e.target.value) : undefined)
-                          }
-                          options={periodOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      </div>
+                    <div className="flex-1 overflow-y-auto p-3 md:p-5">
+                      <div className="space-y-4">
+                        {/* Period Filter */}
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                          <FormSelectModule
+                            name="billingPeriodId"
+                            value={localFilters.billingPeriodId?.toString() || ""}
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "billingPeriodId",
+                                e.target.value ? parseInt(e.target.value) : undefined
+                              )
+                            }
+                            options={periodOptions}
+                            className="w-full"
+                            controlClassName="h-9 text-sm"
+                          />
+                        </div>
 
-                      {/* Area Office Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                        <FormSelectModule
-                          name="areaOfficeId"
-                          value={localFilters.areaOfficeId || ""}
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "areaOfficeId",
-                              e.target.value === "" ? undefined : Number(e.target.value)
-                            )
-                          }
-                          options={areaOfficeOptions}
-                          className="w-full"
-                          controlClassName="h-9 text-sm"
-                        />
-                      </div>
+                        {/* Area Office Filter */}
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                            Area Office
+                          </label>
+                          <FormSelectModule
+                            name="areaOfficeId"
+                            value={localFilters.areaOfficeId || ""}
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "areaOfficeId",
+                                e.target.value === "" ? undefined : Number(e.target.value)
+                              )
+                            }
+                            options={areaOfficeOptions}
+                            className="w-full"
+                            controlClassName="h-9 text-sm"
+                          />
+                        </div>
 
-                      {/* Status Filter */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {statusOptions
-                            .filter((opt) => opt.value !== "")
-                            .map((option) => {
-                              const statusValue = parseInt(String(option.value))
-                              return (
+                        {/* Status Filter */}
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {statusOptions
+                              .filter((opt) => opt.value !== "")
+                              .map((option) => {
+                                const statusValue = parseInt(String(option.value))
+                                return (
+                                  <button
+                                    key={option.value}
+                                    onClick={() =>
+                                      handleFilterChange(
+                                        "status",
+                                        localFilters.status === statusValue ? undefined : statusValue
+                                      )
+                                    }
+                                    className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                      localFilters.status === statusValue
+                                        ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                    }`}
+                                  >
+                                    {option.label}
+                                  </button>
+                                )
+                              })}
+                          </div>
+                        </div>
+
+                        {/* Sort Options */}
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setIsSortExpanded((prev) => !prev)}
+                            className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                            aria-expanded={isSortExpanded}
+                          >
+                            <span>Sort By</span>
+                            {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                          </button>
+
+                          {isSortExpanded && (
+                            <div className="space-y-2">
+                              {sortOptions.map((option) => (
                                 <button
-                                  key={option.value}
-                                  onClick={() =>
-                                    handleFilterChange(
-                                      "status",
-                                      localFilters.status === statusValue ? undefined : statusValue
-                                    )
-                                  }
-                                  className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                                    localFilters.status === statusValue
-                                      ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  key={`${option.value}-${option.order}`}
+                                  onClick={() => handleSortChange(option)}
+                                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                                    localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                                      ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
                                       : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                                   }`}
                                 >
-                                  {option.label}
+                                  <span>{option.label}</span>
+                                  {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                                    <span className="text-purple-600">
+                                      {option.order === "asc" ? (
+                                        <SortAsc className="size-4" />
+                                      ) : (
+                                        <SortDesc className="size-4" />
+                                      )}
+                                    </span>
+                                  )}
                                 </button>
-                              )
-                            })}
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </div>
-
-                      {/* Sort Options */}
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => setIsSortExpanded((prev) => !prev)}
-                          className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                          aria-expanded={isSortExpanded}
-                        >
-                          <span>Sort By</span>
-                          {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                        </button>
-
-                        {isSortExpanded && (
-                          <div className="space-y-2">
-                            {sortOptions.map((option) => (
-                              <button
-                                key={`${option.value}-${option.order}`}
-                                onClick={() => handleSortChange(option)}
-                                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                                  localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                                    ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                <span>{option.label}</span>
-                                {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                                  <span className="text-purple-600">
-                                    {option.order === "asc" ? (
-                                      <SortAsc className="size-4" />
-                                    ) : (
-                                      <SortDesc className="size-4" />
-                                    )}
-                                  </span>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="mt-6 space-y-3 border-t pt-4">
+                    <div className="flex-shrink-0 space-y-3 border-t bg-white p-3 md:p-5">
                       <button
                         onClick={applyFilters}
                         className="button-filled flex w-full items-center justify-center gap-2 text-sm md:text-base"
@@ -1500,7 +1523,7 @@ const BillingJobs: React.FC = () => {
                     </div>
 
                     {/* Summary Stats */}
-                    <div className="mt-4 rounded-lg bg-gray-50 p-3 md:mt-6">
+                    <div className="flex-shrink-0 rounded-lg bg-gray-50 p-3 md:p-4">
                       <h3 className="mb-2 text-sm font-medium text-gray-900 md:text-base">Summary</h3>
                       <div className="space-y-1 text-xs md:text-sm">
                         <div className="flex justify-between">

@@ -1,7 +1,7 @@
 // API Configuration
 
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL as string,
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://sandbox-api.blumenos.com",
 }
 
 export const API_ENDPOINTS = {
@@ -378,10 +378,16 @@ export const API_ENDPOINTS = {
     CLEAR_TAMPER: "/meters/{id}/prepaid/clear-tamper",
     CLEAR_CREDIT: "/meters/{id}/prepaid/clear-credit",
     SET_CONTROL: "/meters/{id}/prepaid/set-control",
+    VERIFY_TOKEN: "/meters/{id}/prepaid/verify-token",
+    VERIFY_TOKEN_HISTORY: "/meters/{id}/prepaid/histories/verify-token",
   },
 
   METER_BRANDS: {
     BRAND_LISTS: "/meter-brands",
+  },
+
+  METER_CATEGORIES: {
+    CATEGORY_LISTS: "/meter-categories",
   },
 
   TARIFF_GROUPS: {

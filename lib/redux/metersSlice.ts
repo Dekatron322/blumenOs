@@ -45,6 +45,9 @@ export interface Meter {
   longitude: number
   tenantFullName: string
   tenantPhoneNumber: string
+  tariff?: {
+    serviceBand: number
+  }
 }
 
 // Interface for Meter Detail Response Data
@@ -218,6 +221,20 @@ export interface MetersState {
   setControlData: TokenData | null
   setControlLoading: boolean
   setControlError: string | null
+  verifyTokenData: VerifyTokenResult | null
+  verifyTokenLoading: boolean
+  verifyTokenError: string | null
+  verifyTokenHistory: VerifyTokenHistoryEntry[]
+  verifyTokenHistoryLoading: boolean
+  verifyTokenHistoryError: string | null
+  verifyTokenHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -310,6 +327,20 @@ const initialState: MetersState = {
   setControlData: null,
   setControlLoading: false,
   setControlError: null,
+  verifyTokenData: null,
+  verifyTokenLoading: false,
+  verifyTokenError: null,
+  verifyTokenHistory: [],
+  verifyTokenHistoryLoading: false,
+  verifyTokenHistoryError: null,
+  verifyTokenHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -319,46 +350,32 @@ const initialState: MetersState = {
 }
 
 export interface EditMeterRequest {
-  id: number
-  customerId: number
-  customerAccountNumber: string
-  customerFullName: string
-  meterIsPPM: boolean
+  serialNumber: string
   drn: string
-  sgc: number
+  sgc?: number
   krn: string
-  ti: number
   ea: number
   tct: number
   ken: number
   mfrCode: number
   installationDate: string
-  meterID: string
-  meterAddedBy: string
-  meterEditedBy: string
-  meterDateCreated: string
-  meterTypeId: string
   meterType: number
+  isSmart: boolean
   meterBrand: string
   meterCategory: string
   isMeterActive: boolean
   status: number
-  state: number
+  meterState: number
   sealNumber: string
-  tariffRate: number
-  tariffIndex: string
-  serviceBand: number
-  customerClass: string
-  injectionSubstationId: number
-  locationState: string
+  poleNumber: string
+  tariffId: number
+  state: number
   address: string
   addressTwo: string
   city: string
   apartmentNumber: string
   latitude: number
   longitude: number
-  tenantFullName: string
-  tenantPhoneNumber: string
   changeReason: string
 }
 
@@ -367,17 +384,14 @@ export interface AddMeterRequest {
   customerId: number
   serialNumber: string
   drn: string
-  sgc: number
+  sgc?: number
   krn: string
-  ti: number
-  ea: number
-  tct: number
-  ken: number
-  mfrCode: number
+  ti?: number
+  ea?: number
+  tct?: number
+  ken?: number
+  mfrCode?: number
   installationDate: string
-  meterAddedBy: string
-  meterEditedBy: string
-  meterDateCreated: string
   meterType: number
   isSmart: boolean
   meterBrand: string
@@ -390,8 +404,6 @@ export interface AddMeterRequest {
   tariffId: number
   injectionSubstationId: number
   distributionSubstationId: number
-  feederId?: number
-  areaOfficeId: number
   state: number
   address: string
   addressTwo: string
@@ -399,8 +411,6 @@ export interface AddMeterRequest {
   apartmentNumber: string
   latitude: number
   longitude: number
-  tenantFullName: string
-  tenantPhoneNumber: string
 }
 
 // Interface for Add Meter Response
@@ -645,6 +655,82 @@ export interface SetControlResponse {
       success: boolean
     }
   }
+}
+
+// Verify Token interfaces
+export interface VerifyTokenRequest {
+  tokenDec: string
+}
+
+export interface VerifyTokenResult {
+  meterTestToken: string
+  token: {
+    description: string
+    drn: string
+    ea: number
+    idSm: string
+    isReservedTid: boolean
+    krn: number
+    newConfig: string
+    pan: string
+    scaledAmount: string
+    scaledUnitName: string
+    sgc: number
+    stsUnitName: string
+    subclass: number
+    tct: number
+    ti: number
+    tid: number
+    tokenClass: number
+    tokenDec: string
+    tokenHex: string
+    transferAmount: number
+    vkKcv: string
+  }
+  validationResult: string
+}
+
+export interface VerifyTokenResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    data: {
+      result: VerifyTokenResult
+      success: boolean
+    }
+    error: {
+      code: string
+      error: string
+      success: boolean
+    }
+  }
+}
+
+// Verify Token History interfaces
+export interface VerifyTokenHistoryEntry {
+  id: number
+  meterId: number
+  userAccountId: number
+  agentId: number
+  vendorId: number
+  requestPayload: string
+  responsePayload: string
+  isSuccessful: boolean
+  errorCode: string
+  errorMessage: string
+  requestedAtUtc: string
+}
+
+export interface VerifyTokenHistoryResponse {
+  isSuccess: boolean
+  message: string
+  data: VerifyTokenHistoryEntry[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // Async Thunk for fetching meters
@@ -1018,6 +1104,55 @@ export const setControl = createAsyncThunk(
   }
 )
 
+// Async Thunk for verifying token
+export const verifyToken = createAsyncThunk(
+  "meters/verifyToken",
+  async ({ id, requestData }: { id: number; requestData: VerifyTokenRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.VERIFY_TOKEN.replace("{id}", id.toString())
+      const response = await api.post<VerifyTokenResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to verify token")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to verify token")
+      }
+      return rejectWithValue(error.message || "Network error during token verification")
+    }
+  }
+)
+
+// Async Thunk for fetching verify token history
+export const fetchVerifyTokenHistory = createAsyncThunk(
+  "meters/fetchVerifyTokenHistory",
+  async ({ id, pageNumber, pageSize }: { id: number; pageNumber: number; pageSize: number }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.VERIFY_TOKEN_HISTORY.replace("{id}", id.toString())
+      const response = await api.get<VerifyTokenHistoryResponse>(buildApiUrl(endpoint), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch verify token history")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch verify token history")
+      }
+      return rejectWithValue(error.message || "Network error during verify token history fetch")
+    }
+  }
+)
+
 // Create slice
 const metersSlice = createSlice({
   name: "meters",
@@ -1127,6 +1262,26 @@ const metersSlice = createSlice({
       state.clearTamperError = null
       state.clearTamperLoading = false
     },
+    // Clear verify token data
+    clearVerifyToken: (state) => {
+      state.verifyTokenData = null
+      state.verifyTokenError = null
+      state.verifyTokenLoading = false
+    },
+    // Clear verify token history
+    clearVerifyTokenHistory: (state) => {
+      state.verifyTokenHistory = []
+      state.verifyTokenHistoryError = null
+      state.verifyTokenHistoryLoading = false
+      state.verifyTokenHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
   },
   extraReducers: (builder) => {
     // Fetch meters
@@ -1180,13 +1335,25 @@ const metersSlice = createSlice({
         const index = state.meters.findIndex((meter) => meter.id === action.meta.arg.id)
         if (index !== -1) {
           const updateData = action.meta.arg.data
-          state.meters[index] = { ...state.meters[index], ...updateData }
+          // state.meters[index] = {
+          //   ...state.meters[index],
+          //   ...updateData,
+          //   id: state.meters[index].id, // Ensure id is always preserved as a number
+          //   customerId: state.meters[index].customerId, // Preserve customerId
+          //   customerAccountNumber: state.meters[index].customerAccountNumber, // Preserve customerAccountNumber
+          //   customerFullName: state.meters[index].customerFullName, // Preserve customerFullName
+          // }
         }
         // Also update the currentMeter if it's the same meter
         if (state.currentMeter && state.currentMeter.id === action.meta.arg.id) {
+          const updateData = action.meta.arg.data
           state.currentMeter = {
             ...state.currentMeter,
-            ...action.meta.arg.data,
+            ...updateData,
+            id: state.currentMeter.id, // Ensure id is always preserved as a number
+            customerId: state.currentMeter.customerId, // Preserve customerId
+            customerAccountNumber: state.currentMeter.customerAccountNumber, // Preserve customerAccountNumber
+            customerFullName: state.currentMeter.customerFullName, // Preserve customerFullName
             // Preserve fields that might not be in EditMeterRequest
             serialNumber: state.currentMeter.serialNumber,
             isSmart: state.currentMeter.isSmart,
@@ -1400,6 +1567,40 @@ const metersSlice = createSlice({
         state.setControlLoading = false
         state.setControlError = action.payload as string
       })
+      // Verify token
+      .addCase(verifyToken.pending, (state) => {
+        state.verifyTokenLoading = true
+        state.verifyTokenError = null
+      })
+      .addCase(verifyToken.fulfilled, (state, action: PayloadAction<VerifyTokenResponse>) => {
+        state.verifyTokenLoading = false
+        state.verifyTokenData = action.payload.data.data.result
+      })
+      .addCase(verifyToken.rejected, (state, action) => {
+        state.verifyTokenLoading = false
+        state.verifyTokenError = action.payload as string
+      })
+      // Fetch verify token history
+      .addCase(fetchVerifyTokenHistory.pending, (state) => {
+        state.verifyTokenHistoryLoading = true
+        state.verifyTokenHistoryError = null
+      })
+      .addCase(fetchVerifyTokenHistory.fulfilled, (state, action: PayloadAction<VerifyTokenHistoryResponse>) => {
+        state.verifyTokenHistoryLoading = false
+        state.verifyTokenHistory = action.payload.data
+        state.verifyTokenHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+      })
+      .addCase(fetchVerifyTokenHistory.rejected, (state, action) => {
+        state.verifyTokenHistoryLoading = false
+        state.verifyTokenHistoryError = action.payload as string
+      })
   },
 })
 
@@ -1414,5 +1615,7 @@ export const {
   clearSetControlHistory,
   clearAddKeyChange,
   clearTamperData,
+  clearVerifyToken,
+  clearVerifyTokenHistory,
 } = metersSlice.actions
 export default metersSlice.reducer

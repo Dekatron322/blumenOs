@@ -15,6 +15,7 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import Image from "next/image"
 
 interface SortOption {
   label: string
@@ -143,7 +144,7 @@ const HeaderSkeleton = () => (
       },
     }}
   >
-    <div className="h-7 w-32 rounded bg-gray-200 sm:w-40"></div>
+    <div className="h-7 w-40 rounded bg-gray-200 sm:w-48"></div>
     <div className="flex gap-2">
       <div className="h-9 w-20 rounded bg-gray-200 sm:w-24"></div>
       <div className="h-9 w-28 rounded bg-gray-200 sm:w-32"></div>
@@ -166,7 +167,7 @@ const SearchSkeleton = () => (
   ></motion.div>
 )
 
-// Mobile Filter Sidebar Component
+// Mobile & All Screens Filter Sidebar Component (up to 2xl)
 const MobileFilterSidebar = ({
   isOpen,
   onClose,
@@ -203,10 +204,9 @@ const MobileFilterSidebar = ({
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {isOpen && (
         <motion.div
-          key="mobile-filter-sidebar"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -214,180 +214,191 @@ const MobileFilterSidebar = ({
           onClick={onClose}
         >
           <motion.div
-            key="mobile-filter-content"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex max-h-screen w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
+            {/* Header - Fixed at top */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
                 </button>
+              </div>
+            </div>
+
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Period Filter */}
                 <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                  <FormSelectModule
+                    name="period"
+                    value={localFilters.period || ""}
+                    onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                    options={periodOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const statusValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "status",
+                                localFilters.status === statusValue ? undefined : statusValue
+                              )
+                            }
+                            className={`rounded-lg px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.status === statusValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Category</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {categoryOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => {
+                        const categoryValue = Number(option.value)
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "category",
+                                localFilters.category === categoryValue ? undefined : categoryValue
+                              )
+                            }
+                            className={`rounded-lg px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.category === categoryValue
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Feeder Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                  <FormSelectModule
+                    name="feederId"
+                    value={localFilters.feederId || ""}
+                    onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                    options={feederOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Period Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
-                <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
-                  options={periodOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {statusOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const statusValue = Number(option.value)
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.status === statusValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      )
-                    })}
-                </div>
-              </div>
-
-              {/* Category Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Category</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {categoryOptions
-                    .filter((opt) => opt.value !== "")
-                    .map((option) => {
-                      const categoryValue = Number(option.value)
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() =>
-                            handleFilterChange(
-                              "category",
-                              localFilters.category === categoryValue ? undefined : categoryValue
-                            )
-                          }
-                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
-                            localFilters.category === categoryValue
-                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      )
-                    })}
-                </div>
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Feeder Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
-                <FormSelectModule
-                  name="feederId"
-                  value={localFilters.feederId || ""}
-                  onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
-                  options={feederOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed at bottom */}
+            <div className="flex-shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
+                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
@@ -395,9 +406,10 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  <X className="size-4" />
+                  Reset All
                 </button>
               </div>
             </div>
@@ -422,7 +434,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
-  const [isSortExpanded, setIsSortExpanded] = useState(false)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
 
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
@@ -988,62 +1000,143 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     )
   }
 
+  if (loading) {
+    return (
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
+        {/* Main Content Skeleton */}
+        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
+          <HeaderSkeleton />
+
+          {/* Bill Display Area Skeleton */}
+          <div className="space-y-3 sm:space-y-4">
+            {isMobileView ? (
+              <>
+                <MobileBillCardSkeleton />
+                <MobileBillCardSkeleton />
+                <MobileBillCardSkeleton />
+              </>
+            ) : (
+              <>
+                <BillCardSkeleton />
+                <BillCardSkeleton />
+                <BillCardSkeleton />
+              </>
+            )}
+          </div>
+
+          {/* Pagination Skeleton */}
+          <motion.div
+            className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row"
+            initial={{ opacity: 0.6 }}
+            animate={{
+              opacity: [0.6, 1, 0.6],
+              transition: {
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
+            }}
+          >
+            <div className="order-2 h-4 w-40 rounded bg-gray-200 sm:order-1"></div>
+            <div className="order-1 flex items-center gap-2 sm:order-2">
+              <div className="size-8 rounded bg-gray-200"></div>
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="size-7 rounded bg-gray-200"></div>
+                ))}
+              </div>
+              <div className="size-8 rounded bg-gray-200"></div>
+            </div>
+            <div className="order-3 hidden h-4 w-24 rounded bg-gray-200 sm:block"></div>
+          </motion.div>
+        </div>
+
+        {/* Desktop Filters Sidebar Skeleton (2xl and above) */}
+        <motion.div
+          className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          initial={{ opacity: 0.6 }}
+          animate={{
+            opacity: [0.6, 1, 0.6],
+            transition: {
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            },
+          }}
+        >
+          <div className="border-b pb-3 md:pb-4">
+            <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 w-20 rounded bg-gray-200 md:w-24"></div>
+                <div className="h-9 w-full rounded bg-gray-200"></div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-3 border-t pt-4">
+            <div className="h-10 w-full rounded bg-gray-200"></div>
+            <div className="h-10 w-full rounded bg-gray-200"></div>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Recent Bills */}
-        <motion.div
+        <div
           className={
             showDesktopFilters
               ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
               : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
           }
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
         >
-          {/* Header */}
-          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              {/* Filter Button for ALL screens up to 2xl */}
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-              >
-                <Filter className="size-4" />
-                Filters
+          <div className="flex flex-col py-2">
+            <div className="mb-3 flex w-full items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {/* Filter Button for ALL screens up to 2xl */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Recent Bills</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Active filters badge - Desktop only (2xl and above) */}
                 {getActiveFilterCount() > 0 && (
-                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                    {getActiveFilterCount()}
-                  </span>
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                    </span>
+                  </div>
                 )}
-              </button>
-              <h3 className="text-lg font-semibold sm:text-xl">Recent Bills</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <ButtonModule
-                icon={<PdfFile />}
-                variant="outline"
-                size="sm"
-                className="text-xs sm:text-sm"
-                onClick={onExport}
-              >
-                <span className="hidden sm:inline">Export</span>
-                <span className="sm:hidden">Export</span>
-              </ButtonModule>
-              <ButtonModule variant="primary" size="sm" className="text-xs sm:text-sm" onClick={onGenerateBills}>
-                <span className="hidden sm:inline">Generate Bills</span>
-                <span className="sm:hidden">Generate</span>
-              </ButtonModule>
-              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-              <button
-                type="button"
-                onClick={() => setShowDesktopFilters((prev) => !prev)}
-                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-              >
-                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                {showDesktopFilters ? "Hide filters" : "Show filters"}
-              </button>
+
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1203,9 +1296,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
               </div>
             </>
           )}
-        </motion.div>
+        </div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
         {showDesktopFilters && (
           <motion.div
             key="desktop-filters-sidebar"
@@ -1419,13 +1512,6 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
       />
-
-      {/* Bill Details Modal */}
-      {/* <BillDetailsModal
-        isOpen={isModalOpen}
-        onRequestClose={handleCloseModal}
-        bill={selectedBill}
-      /> */}
     </>
   )
 }

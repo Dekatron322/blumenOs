@@ -20,6 +20,7 @@ import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { clearCurrentBillByReference, fetchPostpaidBillByReference } from "lib/redux/postpaidSlice"
 import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
 import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { VscChevronLeft, VscChevronRight } from "react-icons/vsc"
 
 interface PaymentFormData {
   postpaidBillId: number
@@ -923,7 +924,7 @@ const AddPaymentPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -1458,11 +1459,11 @@ const AddPaymentPage = () => {
                       {currentStep > 1 && (
                         <ButtonModule
                           variant="outline"
-                          size="lg"
+                          size="md"
                           onClick={prevStep}
                           disabled={createPaymentLoading}
                           type="button"
-                          icon={<ChevronLeft />}
+                          icon={<VscChevronLeft />}
                           iconPosition="start"
                         >
                           Previous
@@ -1473,7 +1474,7 @@ const AddPaymentPage = () => {
                     <div className="flex gap-4">
                       <ButtonModule
                         variant="dangerSecondary"
-                        size="lg"
+                        size="md"
                         onClick={handleReset}
                         disabled={createPaymentLoading}
                         type="button"
@@ -1484,10 +1485,10 @@ const AddPaymentPage = () => {
                       {currentStep < 3 ? (
                         <ButtonModule
                           variant="primary"
-                          size="lg"
+                          size="md"
                           onClick={nextStep}
                           type="button"
-                          icon={<ChevronRight />}
+                          icon={<VscChevronRight />}
                           iconPosition="end"
                         >
                           Next
@@ -1495,7 +1496,7 @@ const AddPaymentPage = () => {
                       ) : (
                         <ButtonModule
                           variant="primary"
-                          size="lg"
+                          size="md"
                           type="button"
                           onClick={submitPayment}
                           disabled={!isFormValid() || createPaymentLoading}

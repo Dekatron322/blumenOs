@@ -292,7 +292,7 @@ interface TimeFilterTab {
 // Generate payment channels data from API response
 const generatePaymentChannelsFromData = (paymentData: any): PaymentChannel[] => {
   if (!paymentData?.windows || paymentData.windows.length === 0) {
-    return generateDefaultPaymentChannels()
+    return []
   }
 
   const currentWindow = paymentData.windows[0]
@@ -354,52 +354,16 @@ const getChannelIcon = (channelName: string): JSX.Element => {
   return icons[channelName] || <AlertIcon />
 }
 
-// Generate default payment channels (fallback)
-const generateDefaultPaymentChannels = (): PaymentChannel[] => {
-  return [
-    {
-      name: "Bank Transfer",
-      status: "active",
-      amount: 895000,
-      transactions: 3420,
-      share: 35.8,
-      color: "bg-blue-500",
-      icon: <BankIcon />,
-    },
-    {
-      name: "Mobile Money",
-      status: "active",
-      amount: 678000,
-      transactions: 5680,
-      share: 27.1,
-      color: "bg-green-500",
-      icon: <MobileMoneyIcon />,
-    },
-    {
-      name: "POS/Agent",
-      status: "active",
-      amount: 524000,
-      transactions: 2890,
-      share: 21,
-      color: "bg-purple-500",
-      icon: <PosIcon />,
-    },
-    {
-      name: "Online Cards",
-      status: "active",
-      amount: 402000,
-      transactions: 1640,
-      share: 16.1,
-      color: "bg-orange-500",
-      icon: <AlertIcon />,
-    },
-  ]
-}
-
 // Calculate metrics from payment summary data
 const calculateMetricsFromData = (paymentData: any, timeFilter: TimeFilter) => {
   if (!paymentData?.windows || paymentData.windows.length === 0) {
-    return generateDefaultMetrics(timeFilter)
+    return {
+      todaysCollections: 0,
+      collectionEfficiency: 0,
+      outstandingDebt: 0,
+      paymentsToday: 0,
+      trend: 0,
+    }
   }
 
   const currentWindow = paymentData.windows[0]
@@ -437,34 +401,6 @@ const calculateTrend = (timeFilter: TimeFilter, currentAmount: number): number =
 
   const baseAmount = baseAmounts[timeFilter]
   return baseAmount > 0 ? ((currentAmount - baseAmount) / baseAmount) * 100 : 0
-}
-
-// Generate default metrics (fallback)
-const generateDefaultMetrics = (timeFilter: TimeFilter) => {
-  const baseAmount =
-    timeFilter === "today"
-      ? 52675
-      : timeFilter === "yesterday"
-      ? 48000
-      : timeFilter === "thisWeek"
-      ? 185000
-      : timeFilter === "lastWeek"
-      ? 168000
-      : timeFilter === "thisMonth"
-      ? 750000
-      : timeFilter === "lastMonth"
-      ? 680000
-      : timeFilter === "thisYear"
-      ? 8500000
-      : 52675
-
-  return {
-    todaysCollections: baseAmount,
-    collectionEfficiency: 82.5,
-    outstandingDebt: 447325,
-    paymentsToday: 13,
-    trend: 5.3,
-  }
 }
 
 // Time filter tabs configuration
@@ -698,7 +634,7 @@ export default function BillingDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
-  const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
+  const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [activeTimeFilter, setActiveTimeFilter] = useState<TimeFilter>("today")
   const [tabs, setTabs] = useState<TimeFilterTab[]>(timeFilterTabs)
   const [selectedPeriod, setSelectedPeriod] = useState<string>(() => {
@@ -721,17 +657,21 @@ export default function BillingDashboard() {
     postpaidBillingAnalyticsParams,
   } = useAppSelector((state) => state.analytics)
 
-  // Calculate metrics from API data or use defaults
+  // Calculate metrics from API data
   const metrics = paymentSummaryData
     ? calculateMetricsFromData(paymentSummaryData, activeTimeFilter)
-    : generateDefaultMetrics(activeTimeFilter)
+    : {
+        todaysCollections: 0,
+        collectionEfficiency: 0,
+        outstandingDebt: 0,
+        paymentsToday: 0,
+        trend: 0,
+      }
 
   const { todaysCollections, collectionEfficiency, outstandingDebt, paymentsToday, trend } = metrics
 
   // Generate payment channels from API data
-  const paymentChannels = paymentSummaryData
-    ? generatePaymentChannelsFromData(paymentSummaryData)
-    : generateDefaultPaymentChannels()
+  const paymentChannels = paymentSummaryData ? generatePaymentChannelsFromData(paymentSummaryData) : []
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -866,11 +806,10 @@ export default function BillingDashboard() {
     setPollingInterval(interval)
   }
 
-  // Polling interval options
+  // Polling interval options - 8 minutes as default
   const pollingOptions = [
-    { value: 300000, label: "5m" },
     { value: 480000, label: "8m" },
-    { value: 660000, label: "11m" },
+    { value: 600000, label: "10m" },
     { value: 840000, label: "14m" },
     { value: 1020000, label: "17m" },
     { value: 1200000, label: "20m" },
@@ -895,7 +834,7 @@ export default function BillingDashboard() {
       <div className="flex min-h-screen w-full pb-20">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-16 ">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-8 xl:flex-row xl:items-start">
               <div className="flex-1">

@@ -1038,7 +1038,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   if (loading)
     return (
-      <div className="container flex items-center justify-center px-3 xl:px-16">
+      <div className="flex items-center justify-center px-3 2xl:container sm:px-4 md:px-6 2xl:px-16">
         <LoadingSkeleton />
       </div>
     )
@@ -1046,7 +1046,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
 
   return (
     <>
-      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 xl:px-16 2xl:mt-5 2xl:flex-row">
+      <div className="flex-3 relative flex flex-col-reverse items-start gap-6 px-3 sm:px-4 md:px-6 2xl:mt-5 2xl:flex-row 2xl:px-16">
         {/* Main Content - Bills Table */}
         <motion.div
           className={

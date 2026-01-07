@@ -21,7 +21,7 @@ import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
-import { VscArrowLeft, VscArrowRight } from "react-icons/vsc"
+import { VscAdd, VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 interface CustomerFormData {
   fullName: string
@@ -200,6 +200,7 @@ const AddCustomerPage = () => {
         PageNumber: 1,
         PageSize: 100,
         IsActive: true,
+        HasNonZeroTariffIndex: false,
       })
     )
   }, [dispatch])
@@ -360,10 +361,13 @@ const AddCustomerPage = () => {
   // Tariff group options from fetched data
   const tariffGroupOptions = [
     { value: 0, label: "Select tariff" },
-    ...tariffGroups.map((tariff) => ({
-      value: tariff.id,
-      label: `${tariff.name} (${tariff.tariffCode}) - ${tariff.tariffRate}`,
-    })),
+    ...tariffGroups.map((tariff) => {
+      const bandLetter = String.fromCharCode(64 + tariff.serviceBand) // Convert 1->A, 2->B, etc.
+      return {
+        value: tariff.id,
+        label: `Band-${bandLetter}  ₦${tariff.tariffRate}`,
+      }
+    }),
   ]
 
   // Customer category options from fetched data
@@ -873,7 +877,7 @@ const AddCustomerPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -914,7 +918,7 @@ const AddCustomerPage = () => {
                     type="button"
                     onClick={handleSubmit}
                     disabled={!isFormValid() || createLoading}
-                    icon={<AddCustomerIcon />}
+                    icon={<VscAdd />}
                     iconPosition="start"
                   >
                     {createLoading ? "Adding..." : "Add Customer"}

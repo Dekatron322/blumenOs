@@ -1,13 +1,8 @@
 name: Playwright Tests
 
+# Manual dispatch only - no automatic triggers
 on:
-  push:
-    branches:
-      - main
-      - master
-      - develop
-  pull_request: null
-  workflow_dispatch: null
+  workflow_dispatch:
 
 jobs:
   test:

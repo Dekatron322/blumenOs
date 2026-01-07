@@ -37,6 +37,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ github.ref == 'refs/heads/main' && secrets.NEXT_PUBLIC_API_BASE_URL_PROD || secrets.NEXT_PUBLIC_API_BASE_URL_TEST }}
           tags: |
             ${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -56,7 +58,9 @@ jobs:
             cd /opt/blumenos/ansible
             ansible-playbook -i inventory/hosts.ini playbooks/cicd/app.yml \
               -e nextjs_image=${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }} \
-              -e nextjs_image_tag=${{ github.sha }}
+              -e nextjs_image_tag=${{ github.sha }} \
+              -e nextjs_host_port=3000 \
+              -e nextjs_container_port=3000
 
       - name: Deploy to prod (main branch)
         if: github.ref == 'refs/heads/main'
@@ -73,6 +77,9 @@ jobs:
             cd /opt/blumenos/ansible
             ansible-playbook -i inventory/hosts.ini playbooks/cicd/app.yml \
               -e nextjs_image=${{ env.REGISTRY_HOST }}/${{ secrets.DOCR_REGISTRY }}/${{ env.IMAGE_NAME }} \
+              -e nextjs_image_tag=${{ github.sha }} \
+              -e nextjs_host_port=3000 \
+              -e nextjs_container_port=3000
               -e nextjs_image_tag=${{ github.sha }}
               -e "nextjs_env_file_content=NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL_TEST }}"
 

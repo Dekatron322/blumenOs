@@ -15,6 +15,7 @@ import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearCompanies, fetchCompanies } from "lib/redux/companySlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import Image from "next/image"
 
 interface SortOption {
   label: string
@@ -187,7 +188,7 @@ const HeaderSkeleton = () => (
   </motion.div>
 )
 
-// Mobile Filter Sidebar Component
+// Mobile & All Screens Filter Sidebar Component (up to 2xl)
 const MobileFilterSidebar = ({
   isOpen,
   onClose,
@@ -222,10 +223,9 @@ const MobileFilterSidebar = ({
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
 }) => {
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {isOpen && (
         <motion.div
-          key="mobile-filter-sidebar"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -233,136 +233,144 @@ const MobileFilterSidebar = ({
           onClick={onClose}
         >
           <motion.div
-            key="mobile-filter-content"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="flex h-full w-full max-w-sm flex-col bg-white p-4 shadow-xl"
+            className="flex max-h-screen w-full max-w-sm flex-col bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
-                >
-                  <ArrowLeft className="size-5" />
+            {/* Header - Fixed at top */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
                 </button>
+              </div>
+            </div>
+
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Period Filter */}
                 <div>
-                  <h2 className="text-lg font-semibold">Filters & Sorting</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
+                  <FormSelectModule
+                    name="period"
+                    value={localFilters.period || ""}
+                    onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
+                    options={periodOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Feeder Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                  <FormSelectModule
+                    name="feederId"
+                    value={localFilters.feederId || ""}
+                    onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
+                    options={feederOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Company Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
+                  <FormSelectModule
+                    name="companyId"
+                    value={localFilters.companyId || ""}
+                    onChange={(e) => handleFilterChange("companyId", e.target.value || undefined)}
+                    options={companyOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-              <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
-                Clear All
-              </button>
             </div>
 
-            {/* Filter Content */}
-            <div className="flex-1 space-y-4">
-              {/* Period Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Period</label>
-                <FormSelectModule
-                  name="period"
-                  value={localFilters.period || ""}
-                  onChange={(e) => handleFilterChange("period", e.target.value || undefined)}
-                  options={periodOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Area Office Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
-                <FormSelectModule
-                  name="areaOfficeId"
-                  value={localFilters.areaOfficeId || ""}
-                  onChange={(e) => handleFilterChange("areaOfficeId", e.target.value || undefined)}
-                  options={areaOfficeOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Feeder Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
-                <FormSelectModule
-                  name="feederId"
-                  value={localFilters.feederId || ""}
-                  onChange={(e) => handleFilterChange("feederId", e.target.value || undefined)}
-                  options={feederOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Company Filter */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Company</label>
-                <FormSelectModule
-                  name="companyId"
-                  value={localFilters.companyId || ""}
-                  onChange={(e) => handleFilterChange("companyId", e.target.value || undefined)}
-                  options={companyOptions}
-                  className="w-full"
-                  controlClassName="h-9 text-sm"
-                />
-              </div>
-
-              {/* Sort Options */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsSortExpanded((prev) => !prev)}
-                  className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
-                  aria-expanded={isSortExpanded}
-                >
-                  <span>Sort By</span>
-                  {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </button>
-
-                {isSortExpanded && (
-                  <div className="space-y-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={`${option.value}-${option.order}`}
-                        onClick={() => handleSortChange(option)}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
-                          localFilters.sortBy === option.value && localFilters.sortOrder === option.order
-                            ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
-                          <span className="text-purple-600">
-                            {option.order === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Action Buttons */}
-            <div className="mt-6 border-t bg-white p-4 2xl:hidden">
+            {/* Bottom Action Buttons - Fixed at bottom */}
+            <div className="flex-shrink-0 border-t bg-white p-4">
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     applyFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                  className="button-filled flex-1"
                 >
+                  <Filter className="size-4" />
                   Apply Filters
                 </button>
                 <button
@@ -370,9 +378,10 @@ const MobileFilterSidebar = ({
                     resetFilters()
                     onClose()
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="button-oulined flex-1"
                 >
-                  Reset
+                  <X className="size-4" />
+                  Reset All
                 </button>
               </div>
             </div>
@@ -388,7 +397,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
-  const [isSortExpanded, setIsSortExpanded] = useState(false)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
   const dispatch = useAppDispatch()
   const router = useRouter()
 
@@ -737,45 +746,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
 
   const energyCapCycles = transformCapsToCycles()
 
-  // Only show fallback if no data and not loading
-  const shouldShowFallback = !feederEnergyCapsLoading && energyCapCycles.length === 0
-
-  // Fallback data if no API data
-  const fallbackCycles: EnergyCapCycle[] = [
-    {
-      id: 1,
-      name: "January 2024 Energy Caps",
-      status: "Active",
-      period: "2024-01",
-      feedersCount: "1,250",
-      totalEnergyCap: isMobileView ? "45M" : "45.2M kWh",
-      averageTariff: isMobileView ? "₦53" : "₦52.75",
-      appliedBy: "Energy Manager",
-      appliedAt: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: 2,
-      name: "February 2024 Energy Caps",
-      status: "Pending",
-      period: "2024-02",
-      feedersCount: "0",
-      totalEnergyCap: "Pending",
-      averageTariff: "Pending",
-    },
-    {
-      id: 3,
-      name: "December 2023 Energy Caps",
-      status: "Expired",
-      period: "2023-12",
-      feedersCount: "1,180",
-      totalEnergyCap: isMobileView ? "43M" : "42.8M kWh",
-      averageTariff: isMobileView ? "₦50" : "₦50.25",
-      appliedBy: "Energy Manager",
-      appliedAt: "2023-12-01T00:00:00Z",
-    },
-  ]
-
-  const displayCycles = shouldShowFallback ? fallbackCycles : energyCapCycles
+  const displayCycles = energyCapCycles
 
   const totalPages = pagination.totalPages || 1
   const totalRecords = pagination.totalCount || displayCycles.length || 0
@@ -1097,15 +1068,12 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
 
   if (feederEnergyCapsLoading && energyCapCycles.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full"
-      >
-        <div className="rounded-lg border bg-white p-4 sm:p-6">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
+        {/* Main Content Skeleton */}
+        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
           <HeaderSkeleton />
 
+          {/* Energy Cap Display Area Skeleton */}
           <div className="space-y-3 sm:space-y-4">
             {isMobileView ? (
               <>
@@ -1124,7 +1092,39 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
 
           <PaginationSkeleton />
         </div>
-      </motion.div>
+
+        {/* Desktop Filters Sidebar Skeleton (2xl and above) */}
+        <motion.div
+          className="hidden w-full rounded-md border bg-white p-3 md:p-5 2xl:mt-0 2xl:block 2xl:w-80"
+          initial={{ opacity: 0.6 }}
+          animate={{
+            opacity: [0.6, 1, 0.6],
+            transition: {
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            },
+          }}
+        >
+          <div className="border-b pb-3 md:pb-4">
+            <div className="h-6 w-32 rounded bg-gray-200 md:w-40"></div>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 w-20 rounded bg-gray-200 md:w-24"></div>
+                <div className="h-9 w-full rounded bg-gray-200"></div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-3 border-t pt-4">
+            <div className="h-10 w-full rounded bg-gray-200"></div>
+            <div className="h-10 w-full rounded bg-gray-200"></div>
+          </div>
+        </motion.div>
+      </div>
     )
   }
 
@@ -1132,19 +1132,15 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     <>
       <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
         {/* Main Content - Energy Cap Cycles */}
-        <motion.div
+        <div
           className={
             showDesktopFilters
               ? "w-full rounded-md border bg-white p-3 md:p-5 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
               : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
           }
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
         >
-          <div className="mb-4 sm:mb-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold sm:text-xl">Feeder Energy Caps</h3>
+          <div className="flex flex-col py-2">
+            <div className="mb-3 flex w-full items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {/* Filter Button for ALL screens up to 2xl */}
                 <button
@@ -1160,6 +1156,19 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                   )}
                 </button>
 
+                <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Feeder Energy Caps</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Active filters badge - Desktop only (2xl and above) */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+
                 {/* Hide/Show Filters button - Desktop only (2xl and above) */}
                 <button
                   type="button"
@@ -1171,6 +1180,10 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Search */}
+          <div className="mb-4 sm:mb-6">
             <div className="w-full sm:w-96">
               <SearchModule
                 value={searchText}
@@ -1183,11 +1196,6 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
             {feederEnergyCapsError && (
               <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
                 <p className="text-xs text-red-600 sm:text-sm">Error loading energy caps: {feederEnergyCapsError}</p>
-              </div>
-            )}
-            {shouldShowFallback && (
-              <div className="mt-2 rounded-lg bg-yellow-50 p-2 sm:p-3">
-                <p className="text-xs text-yellow-600 sm:text-sm">Showing sample data - no energy caps found</p>
               </div>
             )}
           </div>
@@ -1309,9 +1317,9 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
               </p>
             </div>
           )}
-        </motion.div>
+        </div>
 
-        {/* Desktop Filters Sidebar (2xl and above) - Toggleable */}
+        {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
         {showDesktopFilters && (
           <motion.div
             key="desktop-filters-sidebar"

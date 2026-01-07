@@ -294,7 +294,7 @@ export default function MeteringDashboard() {
   const dispatch = useDispatch<AppDispatch>()
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [assetData, setAssetData] = useState(generateAssetData())
+  const [assetData, setAssetData] = useState(null)
 
   // Get analytics data from Redux store
   const { assetManagementData, assetManagementLoading, assetManagementError } = useSelector(
@@ -330,30 +330,23 @@ export default function MeteringDashboard() {
     }
   }, [addAssetButtonRef, closeAddAssetMenu, isAddAssetMenuOpen])
 
-  // Use real analytics data from Redux or fallback to mock data
-  const analyticsData = assetManagementData || {
-    companies: 0,
-    areaOffices: 0,
-    injectionSubstations: 0,
-    feeders: 0,
-    distributionSubstations: 0,
-    htPoles: 0,
-  }
+  // Use real analytics data from Redux
+  const analyticsData = assetManagementData
 
   // Transform analytics data to match our card structure
   const transformedAssetData = {
-    totalTransformers: analyticsData.htPoles || assetData.totalTransformers,
-    operationalTransformers: Math.floor((analyticsData.htPoles || assetData.operationalTransformers) * 0.87),
-    activeFeeders: analyticsData.feeders || assetData.activeFeeders,
-    operationalFeeders: Math.floor((analyticsData.feeders || assetData.operationalFeeders) * 0.94),
-    injectionSubstations: analyticsData.injectionSubstations || assetData.injectionSubstations,
-    operationalInjectionSubstations: Math.floor(
-      (analyticsData.injectionSubstations || assetData.operationalInjectionSubstations) * 1.0
-    ),
-    distributionSubstations: analyticsData.distributionSubstations || assetData.distributionSubstations,
-    operationalDistributionSubstations: Math.floor(
-      (analyticsData.distributionSubstations || assetData.operationalDistributionSubstations) * 1.0
-    ),
+    totalTransformers: analyticsData?.htPoles || 0,
+    operationalTransformers: analyticsData?.htPoles ? Math.floor(analyticsData.htPoles * 0.87) : 0,
+    activeFeeders: analyticsData?.feeders || 0,
+    operationalFeeders: analyticsData?.feeders ? Math.floor(analyticsData.feeders * 0.94) : 0,
+    injectionSubstations: analyticsData?.injectionSubstations || 0,
+    operationalInjectionSubstations: analyticsData?.injectionSubstations
+      ? Math.floor(analyticsData.injectionSubstations * 1.0)
+      : 0,
+    distributionSubstations: analyticsData?.distributionSubstations || 0,
+    operationalDistributionSubstations: analyticsData?.distributionSubstations
+      ? Math.floor(analyticsData.distributionSubstations * 1.0)
+      : 0,
   }
 
   const {
@@ -623,7 +616,7 @@ export default function MeteringDashboard() {
                                 <div className="flex w-full justify-between">
                                   <p className="text-grey-200">Total:</p>
                                   <p className="text-secondary text-xl font-bold">
-                                    {formatNumber(analyticsData.areaOffices || 15)}
+                                    {analyticsData?.areaOffices ? formatNumber(analyticsData.areaOffices) : "0"}
                                   </p>
                                 </div>
                                 <div className="flex w-full justify-between">
@@ -631,7 +624,7 @@ export default function MeteringDashboard() {
                                   <div className="flex items-center gap-1">
                                     <div className="size-2 rounded-full bg-green-500"></div>
                                     <p className="text-secondary font-medium">
-                                      {formatNumber(analyticsData.areaOffices || 15)}
+                                      {analyticsData?.areaOffices ? formatNumber(analyticsData.areaOffices) : "0"}
                                     </p>
                                   </div>
                                 </div>

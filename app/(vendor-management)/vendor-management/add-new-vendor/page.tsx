@@ -12,6 +12,7 @@ import { createBulkVendors } from "lib/redux/vendorSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { ArrowLeftIcon, ArrowRightIcon, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 interface VendorFormData {
   blumenpayId: string
@@ -916,7 +917,7 @@ const AddNewVendor = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4  xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 lg:px-6  2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -986,8 +987,8 @@ const AddNewVendor = () => {
             </div>
 
             {/* Tab Navigation - Mobile Optimized */}
-            <div className="mb-4">
-              <div className="rounded-lg border border-gray-200 bg-white sm:rounded-t-lg">
+            <div className="">
+              <div className=" border border-gray-200 bg-white sm:rounded-t-lg">
                 <div className="flex">
                   <button
                     onClick={() => setActiveTab("single")}
@@ -1027,7 +1028,7 @@ const AddNewVendor = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="rounded-lg bg-white p-4 shadow-sm sm:rounded-b-lg sm:p-6"
+                  className=" bg-white p-4 shadow-sm sm:rounded-b-lg sm:p-6"
                 >
                   {/* Form Header */}
                   <div className="mb-6 border-b pb-4">
@@ -1257,11 +1258,11 @@ const AddNewVendor = () => {
                         {currentStep > 1 && (
                           <ButtonModule
                             variant="outline"
-                            size="lg"
+                            size="md"
                             onClick={prevStep}
                             disabled={isSubmitting || bulkCreateLoading}
                             type="button"
-                            icon={<ArrowLeftIcon />}
+                            icon={<VscArrowLeft />}
                             iconPosition="start"
                           >
                             Previous
@@ -1272,7 +1273,7 @@ const AddNewVendor = () => {
                       <div className="flex gap-4">
                         <ButtonModule
                           variant="dangerSecondary"
-                          size="lg"
+                          size="md"
                           onClick={handleReset}
                           disabled={isSubmitting || bulkCreateLoading}
                           type="button"
@@ -1283,10 +1284,10 @@ const AddNewVendor = () => {
                         {currentStep < 3 ? (
                           <ButtonModule
                             variant="primary"
-                            size="lg"
+                            size="md"
                             onClick={nextStep}
                             type="button"
-                            icon={<ArrowRightIcon />}
+                            icon={<VscArrowRight />}
                             iconPosition="end"
                           >
                             Next
@@ -1294,7 +1295,7 @@ const AddNewVendor = () => {
                         ) : (
                           <ButtonModule
                             variant="primary"
-                            size="lg"
+                            size="md"
                             type="submit"
                             disabled={!isFormValid() || isSubmitting || bulkCreateLoading}
                           >

@@ -697,8 +697,24 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
         <div className="w-full rounded-md border bg-white p-3 md:p-5">
           <div className="flex w-full flex-col py-2">
             <div className="mb-3 flex w-full items-center justify-between gap-3">
-              <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Agent Change Requests</p>
-
+              <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <MdGridView className="size-4 md:size-5" />
+                    <p className="text-sm md:text-base">Grid</p>
+                  </button>
+                  <button
+                    className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
+                    onClick={() => setViewMode("list")}
+                  >
+                    <MdFormatListBulleted className="size-4 md:size-5" />
+                    <p className="text-sm md:text-base">List</p>
+                  </button>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 {/* Mobile search icon button */}
                 <button
@@ -763,25 +779,6 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
                 </button>
               </div>
             )}
-
-            <div className="mt-2 flex flex-wrap gap-2 md:flex-nowrap md:gap-4">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  className={`button-oulined ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  <MdGridView className="size-4 md:size-5" />
-                  <p className="text-sm md:text-base">Grid</p>
-                </button>
-                <button
-                  className={`button-oulined ${viewMode === "list" ? "bg-[#f9f9f9]" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  <MdFormatListBulleted className="size-4 md:size-5" />
-                  <p className="text-sm md:text-base">List</p>
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Error Message */}

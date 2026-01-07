@@ -22,13 +22,15 @@ import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
+import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
 
 interface CustomerFormData {
   fullName: string
   phoneNumber: string
+  employeeNo: string
+  salesRepPhone: string
   email: string
-  customerID: string | undefined
   autoNumber: string
   isCustomerNew: boolean
   isPostEnumerated: boolean
@@ -38,39 +40,30 @@ interface CustomerFormData {
   gender: string
   address: string
   distributionSubstationId: number
+  feederId: number | undefined
   status: string
   addressTwo: string
+  mapName: string
+  type: string
   city: string
   provinceId: number
   lga: string
   serviceCenterId: number
   latitude: number
   longitude: number
-  tariff: number
-  tariffCode: string
-  tariffID: string
-  tariffInddex: string
-  tariffType: string
-  tariffClass: string
-  newRate: number
-  vat: number
-  isVATWaved: boolean
+  tariffRate: number
+  tariffId: number
   isPPM: boolean
   isMD: boolean
   isUrban: boolean
   isHRB: boolean
   isCustomerAccGovt: boolean
   comment: string
-  band: string
   storedAverage: number
   salesRepUserId: number
   technicalEngineerUserId: number
   customerCategoryId: number
   customerSubCategoryId: number
-  meterNumber: string
-  totalMonthlyVend: number
-  totalMonthlyDebt: number
-  customerOutstandingDebtBalance: number
 }
 
 const UpdateCustomerPage = () => {
@@ -110,11 +103,14 @@ const UpdateCustomerPage = () => {
 
   const { subCategories, subCategoriesLoading } = useSelector((state: RootState) => state.customerCategories)
 
+  const { tariffGroups, tariffGroupsLoading, tariffGroupsError } = useSelector((state: RootState) => state.tariffGroups)
+
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: "",
     phoneNumber: "",
+    employeeNo: "",
+    salesRepPhone: "",
     email: "",
-    customerID: undefined,
     autoNumber: "",
     isCustomerNew: false,
     isPostEnumerated: false,
@@ -124,39 +120,30 @@ const UpdateCustomerPage = () => {
     gender: "",
     address: "",
     distributionSubstationId: 0,
+    feederId: undefined,
     status: "",
     addressTwo: "",
+    mapName: "",
+    type: "",
     city: "",
     provinceId: 0,
     lga: "",
     serviceCenterId: 0,
     latitude: 0,
     longitude: 0,
-    tariff: 0,
-    tariffCode: "",
-    tariffID: "",
-    tariffInddex: "",
-    tariffType: "",
-    tariffClass: "",
-    newRate: 0,
-    vat: 0,
-    isVATWaved: false,
+    tariffRate: 0,
+    tariffId: 0,
     isPPM: false,
     isMD: false,
     isUrban: false,
     isHRB: false,
     isCustomerAccGovt: false,
     comment: "",
-    band: "",
     storedAverage: 0,
     salesRepUserId: 0,
     technicalEngineerUserId: 0,
     customerCategoryId: 0,
     customerSubCategoryId: 0,
-    meterNumber: "",
-    totalMonthlyVend: 0,
-    totalMonthlyDebt: 0,
-    customerOutstandingDebtBalance: 0,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -213,6 +200,15 @@ const UpdateCustomerPage = () => {
 
     // Fetch customer categories for the dropdown
     dispatch(fetchCustomerCategories())
+
+    // Load tariff groups for selection
+    dispatch(
+      fetchTariffGroups({
+        PageNumber: 1,
+        PageSize: 100,
+        IsActive: true,
+      })
+    )
   }, [dispatch, id, router])
 
   // Populate form when current customer data is loaded
@@ -222,8 +218,9 @@ const UpdateCustomerPage = () => {
       setFormData({
         fullName: currentCustomer.fullName || "",
         phoneNumber: currentCustomer.phoneNumber || "",
+        employeeNo: currentCustomer.employeeNo || "",
+        salesRepPhone: currentCustomer.salesRepPhone || "",
         email: currentCustomer.email || "",
-        customerID: currentCustomer.customerID || undefined,
         autoNumber: currentCustomer.autoNumber || "",
         isCustomerNew: currentCustomer.isCustomerNew || false,
         isPostEnumerated: currentCustomer.isPostEnumerated || false,
@@ -233,39 +230,30 @@ const UpdateCustomerPage = () => {
         gender: currentCustomer.gender || "",
         address: currentCustomer.address || "",
         distributionSubstationId: currentCustomer.distributionSubstationId || 0,
+        feederId: currentCustomer.feederId || 0,
         status: currentCustomer.status || "",
         addressTwo: currentCustomer.addressTwo || "",
+        mapName: currentCustomer.mapName || "",
+        type: currentCustomer.type || "",
         city: currentCustomer.city || "",
         provinceId: currentCustomer.provinceId || 0,
         lga: currentCustomer.lga || "",
         serviceCenterId: currentCustomer.serviceCenterId || 0,
         latitude: currentCustomer.latitude || 0,
         longitude: currentCustomer.longitude || 0,
-        tariff: currentCustomer.tariff || 0,
-        tariffCode: currentCustomer.tariffCode || "",
-        tariffID: currentCustomer.tariffID || "",
-        tariffInddex: currentCustomer.tariffInddex || "",
-        tariffType: currentCustomer.tariffType || "",
-        tariffClass: currentCustomer.tariffClass || "",
-        newRate: currentCustomer.newRate || 0,
-        vat: currentCustomer.vat || 0,
-        isVATWaved: currentCustomer.isVATWaved || false,
+        tariffRate: currentCustomer.tariffRate || 0,
+        tariffId: currentCustomer.tariffId || 0,
         isPPM: currentCustomer.isPPM || false,
         isMD: currentCustomer.isMD || false,
         isUrban: currentCustomer.isUrban || false,
         isHRB: currentCustomer.isHRB || false,
         isCustomerAccGovt: currentCustomer.isCustomerAccGovt || false,
         comment: currentCustomer.comment || "",
-        band: currentCustomer.band || "",
         storedAverage: currentCustomer.storedAverage || 0,
         salesRepUserId: currentCustomer.salesRepUserId || 0,
         technicalEngineerUserId: currentCustomer.technicalEngineerUserId || 0,
         customerCategoryId: categoryId,
         customerSubCategoryId: currentCustomer.subCategory?.id || 0,
-        meterNumber: currentCustomer.meterNumber || "",
-        totalMonthlyVend: currentCustomer.totalMonthlyVend || 0,
-        totalMonthlyDebt: currentCustomer.totalMonthlyDebt || 0,
-        customerOutstandingDebtBalance: currentCustomer.customerOutstandingDebtBalance || 0,
       })
 
       // Fetch subcategories for the existing customer category
@@ -345,16 +333,6 @@ const UpdateCustomerPage = () => {
     { value: "SUSPENDED", label: "Suspended" },
   ]
 
-  // Band options
-  const bandOptions = [
-    { value: "", label: "Select band" },
-    { value: "Band A", label: "Band A" },
-    { value: "Band B", label: "Band B" },
-    { value: "Band C", label: "Band C" },
-    { value: "Band D", label: "Band D" },
-    { value: "Band E", label: "Band E" },
-  ]
-
   // Province (state) options from countries endpoint (Nigeria only)
   const nigeria = countries.find(
     (country) => country.name.toLowerCase() === "nigeria" || country.abbreviation.toUpperCase() === "NG"
@@ -381,6 +359,15 @@ const UpdateCustomerPage = () => {
     ...customerCategories.map((category) => ({
       value: category.id,
       label: category.name,
+    })),
+  ]
+
+  // Tariff group options from fetched data
+  const tariffGroupOptions = [
+    { value: 0, label: "Select tariff" },
+    ...tariffGroups.map((tariff) => ({
+      value: tariff.id,
+      label: `${tariff.name} (${tariff.tariffCode}) - ${tariff.tariffRate}`,
     })),
   ]
 
@@ -472,8 +459,9 @@ const UpdateCustomerPage = () => {
       const updateData: UpdateCustomerRequest = {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
+        employeeNo: formData.employeeNo,
+        salesRepPhone: formData.salesRepPhone,
         email: formData.email,
-        customerID: formData.customerID || "",
         autoNumber: formData.autoNumber,
         isCustomerNew: formData.isCustomerNew,
         isPostEnumerated: formData.isPostEnumerated,
@@ -483,30 +471,24 @@ const UpdateCustomerPage = () => {
         gender: formData.gender,
         address: formData.address,
         distributionSubstationId: formData.distributionSubstationId,
+        feederId: formData.feederId,
         status: formData.status,
         addressTwo: formData.addressTwo,
+        mapName: formData.mapName,
         city: formData.city,
         provinceId: formData.provinceId,
         lga: formData.lga,
         serviceCenterId: formData.serviceCenterId,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        tariff: formData.tariff,
-        tariffCode: formData.tariffCode,
-        tariffID: formData.tariffID,
-        tariffInddex: formData.tariffInddex,
-        tariffType: formData.tariffType,
-        tariffClass: formData.tariffClass,
-        newRate: formData.newRate,
-        vat: formData.vat,
-        isVATWaved: formData.isVATWaved,
+        tariffRate: formData.tariffRate,
+        tariffId: formData.tariffId,
         isPPM: formData.isPPM,
         isMD: formData.isMD,
         isUrban: formData.isUrban,
         isHRB: formData.isHRB,
         isCustomerAccGovt: formData.isCustomerAccGovt,
         comment: formData.comment,
-        band: formData.band,
         storedAverage: formData.storedAverage,
         salesRepUserId: formData.salesRepUserId,
         technicalEngineerUserId: formData.technicalEngineerUserId,
@@ -525,11 +507,13 @@ const UpdateCustomerPage = () => {
 
   const handleReset = () => {
     if (currentCustomer) {
+      const categoryId = currentCustomer.category?.id || 0
       setFormData({
         fullName: currentCustomer.fullName || "",
         phoneNumber: currentCustomer.phoneNumber || "",
+        employeeNo: currentCustomer.employeeNo || "",
+        salesRepPhone: currentCustomer.salesRepPhone || "",
         email: currentCustomer.email || "",
-        customerID: currentCustomer.customerID || undefined,
         autoNumber: currentCustomer.autoNumber || "",
         isCustomerNew: currentCustomer.isCustomerNew || false,
         isPostEnumerated: currentCustomer.isPostEnumerated || false,
@@ -539,39 +523,30 @@ const UpdateCustomerPage = () => {
         gender: currentCustomer.gender || "",
         address: currentCustomer.address || "",
         distributionSubstationId: currentCustomer.distributionSubstationId || 0,
+        feederId: currentCustomer.feederId ?? undefined,
         status: currentCustomer.status || "",
         addressTwo: currentCustomer.addressTwo || "",
+        mapName: currentCustomer.mapName || "",
+        type: currentCustomer.type || "",
         city: currentCustomer.city || "",
         provinceId: currentCustomer.provinceId || 0,
         lga: currentCustomer.lga || "",
         serviceCenterId: currentCustomer.serviceCenterId || 0,
         latitude: currentCustomer.latitude || 0,
         longitude: currentCustomer.longitude || 0,
-        tariff: currentCustomer.tariff || 0,
-        tariffCode: currentCustomer.tariffCode || "",
-        tariffID: currentCustomer.tariffID || "",
-        tariffInddex: currentCustomer.tariffInddex || "",
-        tariffType: currentCustomer.tariffType || "",
-        tariffClass: currentCustomer.tariffClass || "",
-        newRate: currentCustomer.newRate || 0,
-        vat: currentCustomer.vat || 0,
-        isVATWaved: currentCustomer.isVATWaved || false,
-        meterNumber: currentCustomer.meterNumber || "",
+        tariffRate: currentCustomer.tariffRate || 0,
+        tariffId: currentCustomer.tariffId || 0,
         isPPM: currentCustomer.isPPM || false,
         isMD: currentCustomer.isMD || false,
         isUrban: currentCustomer.isUrban || false,
         isHRB: currentCustomer.isHRB || false,
         isCustomerAccGovt: currentCustomer.isCustomerAccGovt || false,
         comment: currentCustomer.comment || "",
-        band: currentCustomer.band || "",
         storedAverage: currentCustomer.storedAverage || 0,
-        totalMonthlyVend: currentCustomer.totalMonthlyVend || 0,
-        totalMonthlyDebt: currentCustomer.totalMonthlyDebt || 0,
-        customerOutstandingDebtBalance: currentCustomer.customerOutstandingDebtBalance || 0,
         salesRepUserId: currentCustomer.salesRepUserId || 0,
         technicalEngineerUserId: currentCustomer.technicalEngineerUserId || 0,
-        customerCategoryId: currentCustomer.customerCategoryId || 0,
-        customerSubCategoryId: currentCustomer.customerSubCategoryId || 0,
+        customerCategoryId: categoryId,
+        customerSubCategoryId: currentCustomer.subCategory?.id || 0,
       })
     }
     setFormErrors({})
@@ -784,7 +759,7 @@ const UpdateCustomerPage = () => {
         <div className="flex w-full flex-col">
           <DashboardNav />
 
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 2xl:px-16">
             {/* Page Header - Mobile Optimized */}
             <div className="mb-6">
               <div className="flex items-center justify-between gap-3">
@@ -998,24 +973,13 @@ const UpdateCustomerPage = () => {
                         disabled={serviceStationsLoading}
                       />
 
-                      <FormInputModule
-                        label="Tariff"
-                        name="tariff"
-                        type="number"
-                        placeholder="Enter tariff"
-                        value={formData.tariff}
-                        onChange={handleInputChange}
-                        step="0.01"
-                      />
-
                       <FormSelectModule
-                        label="Band"
-                        name="band"
-                        value={formData.band}
+                        label="Tariff"
+                        name="tariffId"
+                        value={formData.tariffId}
                         onChange={handleInputChange}
-                        options={bandOptions}
-                        error={formErrors.band}
-                        required
+                        options={tariffGroupOptions}
+                        disabled={tariffGroupsLoading}
                       />
 
                       <FormSelectModule

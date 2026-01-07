@@ -10,6 +10,7 @@ export interface TariffGroupsRequest {
   Search?: string
   ServiceBand?: number // Available values : 1, 2, 3, 4, 5
   IsActive?: boolean
+  HasNonZeroTariffIndex?: boolean
 }
 
 // Tariff group interface
@@ -104,6 +105,10 @@ export const fetchTariffGroups = createAsyncThunk(
 
       if (params.IsActive !== undefined) {
         queryParams.append("IsActive", params.IsActive.toString())
+      }
+
+      if (params.HasNonZeroTariffIndex !== undefined) {
+        queryParams.append("HasNonZeroTariffIndex", params.HasNonZeroTariffIndex.toString())
       }
 
       const url = `${buildApiUrl(API_ENDPOINTS.TARIFF_GROUPS.GET)}?${queryParams.toString()}`

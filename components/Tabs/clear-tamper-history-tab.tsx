@@ -265,7 +265,7 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
           <h3 className="text-lg font-semibold text-gray-900">Clear Tamper History</h3>
           <p className="text-sm text-gray-500">View all clear tamper history and events</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button
             className={`button-oulined text-sm ${viewMode === "grid" ? "bg-[#f9f9f9]" : ""}`}
             onClick={() => setViewMode("grid")}
@@ -284,7 +284,7 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
             variant="primary"
             size="sm"
             onClick={() => setShowClearTamperModal(true)}
-            className="flex items-center gap-2"
+            className="flex items-center"
           >
             <Shield className="size-4" />
             Clear Tamper
