@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
+import { selectMyBillsList } from "lib/redux/customersDashboardSlice"
 import { DashboardIcon, OutageIcon, PaymentIcon } from "./Icons"
 import {
   CashClearanceIcon,
@@ -36,8 +37,18 @@ const allLinks: NavLink[] = [
     icon: VendingIconOutline,
   },
   {
-    name: "Support Ticket",
-    href: "/customer-portal/support-ticket",
+    name: "My Meters",
+    href: "/customer-portal/meters",
+    icon: PaymentIcon,
+  },
+  // {
+  //   name: "Support Ticket",
+  //   href: "/customer-portal/support-ticket",
+  //   icon: RaiseTicketIcon,
+  // },
+  {
+    name: "My Bills",
+    href: "/customer-portal/bills",
     icon: RaiseTicketIcon,
   },
   {
@@ -55,11 +66,6 @@ const allLinks: NavLink[] = [
     href: "/customer-portal/payment-history",
     icon: CashClearanceIcon,
   },
-  {
-    name: "View Vending History",
-    href: "/customer-portal/vending-history",
-    icon: PaymentIcon,
-  },
 ]
 
 interface CustomerLinksProps {
@@ -71,6 +77,7 @@ export function CustomerLinks({ isCollapsed }: CustomerLinksProps) {
   const [permissions, setPermissions] = useState<string[]>([])
   const [links, setLinks] = useState<NavLink[]>(allLinks)
   const { agent } = useSelector((state: RootState) => state.auth)
+  const myBillsList = useSelector(selectMyBillsList)
 
   useEffect(() => {
     // Get auth data from localStorage
@@ -127,6 +134,9 @@ export function CustomerLinks({ isCollapsed }: CustomerLinksProps) {
         const LinkIcon = link.icon
         const isActive = pathname.startsWith(link.href)
 
+        // Calculate notification count for My Bills
+        const notificationCount = link.name === "My Bills" && myBillsList ? myBillsList.length : 0
+
         return (
           <div key={link.name} className="group">
             <Link
@@ -139,13 +149,20 @@ export function CustomerLinks({ isCollapsed }: CustomerLinksProps) {
                 }
               )}
             >
-              <div
-                className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
-                  "bg-white text-[#004B23] shadow-lg": isActive,
-                  "bg-gray-100 text-[#004B23] group-hover:bg-white group-hover:text-[#004B23]": !isActive,
-                })}
-              >
-                <LinkIcon isActive={isActive} />
+              <div className="relative">
+                <div
+                  className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
+                    "bg-white text-[#004B23] shadow-lg": isActive,
+                    "bg-gray-100 text-[#004B23] group-hover:bg-white group-hover:text-[#004B23]": !isActive,
+                  })}
+                >
+                  <LinkIcon isActive={isActive} />
+                </div>
+                {notificationCount > 0 && (
+                  <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </div>
+                )}
               </div>
 
               <p

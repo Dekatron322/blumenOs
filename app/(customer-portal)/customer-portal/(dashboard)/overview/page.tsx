@@ -1,23 +1,30 @@
 "use client"
 
-import DashboardNav from "components/Navbar/DashboardNav"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
+import { useAppDispatch } from "lib/hooks/useRedux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
-import { CollectCash, MetersProgrammedIcon, TamperIcon, VendingIcon, VendingIconOutline } from "components/Icons/Icons"
-import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import {
+  AlertIcon,
+  CollectCash,
+  CollectionIcon,
+  PerformanceIcon,
+  TargetIcon,
+  VendingIcon,
+  VendingIconOutline,
+} from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
-import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
 import { AgentDailyPerformance, TimeRange } from "lib/redux/agentSlice"
+import { getPaymentsSummary } from "lib/redux/customersDashboardSlice"
 
 // Chart Component for Agent Performance
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import CustomerTable from "components/Tables/CustomerPaymentHistoryTable"
 import CustomerPaymentHistoryTable from "components/Tables/CustomerPaymentHistoryTable"
-import CustomerVending from "components/Tables/CustomerVending"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 
 // Date utilities
@@ -51,6 +58,28 @@ const getStartAndEndOfYear = () => {
     endUtc: endOfYear.toISOString(),
   }
 }
+
+// Payment summary range options
+type PaymentSummaryRange =
+  | "today"
+  | "yesterday"
+  | "this_week"
+  | "last_week"
+  | "this_month"
+  | "last_month"
+  | "this_year"
+  | "all_time"
+
+const paymentSummaryRanges: { value: PaymentSummaryRange; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "this_week", label: "This Week" },
+  { value: "last_week", label: "Last Week" },
+  { value: "this_month", label: "This Month" },
+  { value: "last_month", label: "Last Month" },
+  { value: "this_year", label: "This Year" },
+  { value: "all_time", label: "All Time" },
+]
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -245,6 +274,112 @@ const TableSkeleton = () => {
         </div>
 
         <div className="h-4 w-24 animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]"></div>
+      </div>
+    </div>
+  )
+}
+
+// Skeleton for Customer Payment History Table
+const CustomerPaymentHistoryTableSkeleton = () => {
+  return (
+    <div className="w-full rounded-lg border bg-white p-4 shadow-sm">
+      {/* Header Skeleton */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="h-6 w-48 animate-pulse rounded bg-gray-200"></div>
+        <div className="flex gap-2">
+          <div className="h-10 w-32 animate-pulse rounded bg-gray-200"></div>
+          <div className="h-10 w-32 animate-pulse rounded bg-gray-200"></div>
+        </div>
+      </div>
+
+      {/* Table Header Skeleton */}
+      <div className="mb-4 grid grid-cols-6 gap-4 border-b pb-2">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
+        ))}
+      </div>
+
+      {/* Table Rows Skeleton */}
+      <div className="space-y-3">
+        {[...Array(5)].map((_, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-6 gap-4 border-b pb-3">
+            {[...Array(6)].map((_, colIndex) => (
+              <div key={colIndex} className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination Skeleton */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
+        <div className="flex gap-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-8 w-8 animate-pulse rounded bg-gray-200"></div>
+          ))}
+        </div>
+        <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
+      </div>
+    </div>
+  )
+}
+
+// Skeleton for Customer Vending Table
+const CustomerVendingSkeleton = () => {
+  return (
+    <div className="w-full rounded-lg border bg-white p-4 shadow-sm">
+      {/* Header Skeleton */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="h-6 w-40 animate-pulse rounded bg-gray-200"></div>
+        <div className="flex gap-2">
+          <div className="h-10 w-32 animate-pulse rounded bg-gray-200"></div>
+          <div className="h-10 w-32 animate-pulse rounded bg-gray-200"></div>
+        </div>
+      </div>
+
+      {/* Table Header Skeleton */}
+      <div className="mb-4 grid grid-cols-7 gap-4 border-b pb-2">
+        {[...Array(7)].map((_, i) => (
+          <div key={i} className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
+        ))}
+      </div>
+
+      {/* Table Rows Skeleton */}
+      <div className="space-y-3">
+        {[...Array(5)].map((_, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-7 gap-4 border-b pb-3">
+            {[...Array(7)].map((_, colIndex) => (
+              <div key={colIndex} className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination Skeleton */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
+        <div className="flex gap-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-8 w-8 animate-pulse rounded bg-gray-200"></div>
+          ))}
+        </div>
+        <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
+      </div>
+    </div>
+  )
+}
+
+// Skeleton for Payment Summary Section
+const PaymentSummarySkeleton = () => {
+  return (
+    <div className="mt-4 rounded-lg border border-gray-200 p-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, index) => (
+          <div key={index} className="space-y-2">
+            <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
+            <div className="h-6 w-32 animate-pulse rounded bg-gray-200"></div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -481,9 +616,21 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data }) => {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Average Score Card */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-600">Average Score</h3>
+      <div className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:border-blue-200 hover:shadow-lg">
+        <div className="absolute -right-2 -top-2 size-16 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 opacity-50 transition-opacity group-hover:opacity-75"></div>
+        <div className="relative flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-100 p-2">
+                <PerformanceIcon />
+              </div>
+              <h3 className="text-sm font-medium text-gray-600">Average Score</h3>
+            </div>
+            <div className="mt-3 flex items-baseline">
+              <p className="text-2xl font-bold text-gray-900">{averageScore.toFixed(1)}</p>
+              <p className="ml-2 text-sm text-gray-500">/100</p>
+            </div>
+          </div>
           <div
             className={`rounded-full px-2 py-1 text-xs font-medium ${
               averageScore >= 80
@@ -504,14 +651,10 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data }) => {
               : "Needs Improvement"}
           </div>
         </div>
-        <div className="mt-2 flex items-baseline">
-          <p className="text-2xl font-bold text-gray-900">{averageScore.toFixed(1)}</p>
-          <p className="ml-2 text-sm text-gray-500">/100</p>
-        </div>
-        <div className="mt-2">
+        <div className="mt-3">
           <div className="h-2 w-full rounded-full bg-gray-200">
             <div
-              className="h-2 rounded-full"
+              className="h-2 rounded-full transition-all duration-500 ease-out"
               style={{
                 width: `${Math.min(Math.max(averageScore, 0), 100)}%`,
                 backgroundColor: getScoreColor(averageScore),
@@ -522,75 +665,122 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data }) => {
       </div>
 
       {/* Total Collections Card */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-600">Total Collections</h3>
+      <div className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg">
+        <div className="absolute -right-2 -top-2 size-16 rounded-full bg-gradient-to-br from-green-50 to-green-100 opacity-50 transition-opacity group-hover:opacity-75"></div>
+        <div className="relative flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-green-100 p-2">
+                <CollectionIcon />
+              </div>
+              <h3 className="text-sm font-medium text-gray-600">Total Collections</h3>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-gray-900">
+              {new Intl.NumberFormat("en-NG", {
+                style: "currency",
+                currency: "NGN",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(totalCollections)}
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Avg:{" "}
+              {new Intl.NumberFormat("en-NG", {
+                style: "currency",
+                currency: "NGN",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(totalCollections / (totalDays || 1))}
+              /day
+            </p>
+          </div>
           <div className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">{totalDays} days</div>
         </div>
-        <p className="mt-2 text-2xl font-bold text-gray-900">
-          {new Intl.NumberFormat("en-NG", {
-            style: "currency",
-            currency: "NGN",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }).format(totalCollections)}
-        </p>
-        <p className="mt-1 text-sm text-gray-500">
-          Avg:{" "}
-          {new Intl.NumberFormat("en-NG", {
-            style: "currency",
-            currency: "NGN",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }).format(totalCollections / (totalDays || 1))}
-          /day
-        </p>
       </div>
 
       {/* Issues Summary Card */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-600">Issues Summary</h3>
+      <div className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:border-red-200 hover:shadow-lg">
+        <div className="absolute -right-2 -top-2 size-16 rounded-full bg-gradient-to-br from-red-50 to-red-100 opacity-50 transition-opacity group-hover:opacity-75"></div>
+        <div className="relative flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-red-100 p-2">
+                <AlertIcon />
+              </div>
+              <h3 className="text-sm font-medium text-gray-600">Issues Summary</h3>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-gray-900">{totalIssues}</p>
+            <p className="mt-1 text-sm text-gray-500">
+              {totalIssues} total issues • {daysWithIssues} days with issues
+            </p>
+            <div className="mt-3 flex space-x-2">
+              <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+                {data.reduce((sum, item) => sum + item.conditionalClearances, 0)} conditional
+              </span>
+              <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                {data.reduce((sum, item) => sum + item.declinedClearances, 0)} declined
+              </span>
+            </div>
+          </div>
           <div className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
             {daysWithIssues} days
           </div>
         </div>
-        <p className="mt-2 text-2xl font-bold text-gray-900">{totalIssues}</p>
-        <p className="mt-1 text-sm text-gray-500">
-          {totalIssues} total issues • {daysWithIssues} days with issues
-        </p>
-        <div className="mt-2 flex space-x-2">
-          <span className="text-xs text-amber-600">
-            {data.reduce((sum, item) => sum + item.conditionalClearances, 0)} conditional
-          </span>
-          <span className="text-xs text-red-600">
-            {data.reduce((sum, item) => sum + item.declinedClearances, 0)} declined
-          </span>
-        </div>
       </div>
 
       {/* Performance Trend Card */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-600">7-Day Trend</h3>
-          <div
-            className={`rounded-full px-2 py-1 text-xs font-medium ${
-              trend > 0
-                ? "bg-green-100 text-green-800"
-                : trend < 0
-                ? "bg-red-100 text-red-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {trend > 0 ? `+${trend.toFixed(1)}` : trend.toFixed(1)}
+      <div className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-lg">
+        <div className="absolute -right-2 -top-2 size-16 rounded-full bg-gradient-to-br from-purple-50 to-purple-100 opacity-50 transition-opacity group-hover:opacity-75"></div>
+        <div className="relative flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-purple-100 p-2">
+                <TargetIcon />
+              </div>
+              <h3 className="text-sm font-medium text-gray-600">7-Day Trend</h3>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <p className="text-2xl font-bold text-gray-900">{last7DaysAvg.toFixed(1)}</p>
+              <div
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                  trend > 0
+                    ? "bg-green-100 text-green-800"
+                    : trend < 0
+                    ? "bg-red-100 text-red-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {trend > 0 ? (
+                  <svg className="mr-1 size-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : trend < 0 ? (
+                  <svg className="mr-1 size-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="mr-1 size-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {trend > 0 ? `+${trend.toFixed(1)}` : trend.toFixed(1)}
+              </div>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              {trend > 0 ? "Improving" : trend < 0 ? "Declining" : "Stable"} vs previous week
+            </p>
+            <div className="mt-3 text-xs text-gray-500">
+              Best: {bestDay ? formatDate(bestDay.date) : "N/A"} ({bestDay?.score || 0})
+            </div>
           </div>
-        </div>
-        <p className="mt-2 text-2xl font-bold text-gray-900">{last7DaysAvg.toFixed(1)}</p>
-        <p className="mt-1 text-sm text-gray-500">
-          {trend > 0 ? "Improving" : trend < 0 ? "Declining" : "Stable"} vs previous week
-        </p>
-        <div className="mt-2 text-xs text-gray-500">
-          Best: {bestDay ? formatDate(bestDay.date) : "N/A"} ({bestDay?.score || 0})
         </div>
       </div>
     </div>
@@ -604,6 +794,7 @@ export default function AgentManagementDashboard() {
   const [activeTimeRange, setActiveTimeRange] = useState<TimeRange>(TimeRange.Today)
   const [chartType, setChartType] = useState<"score" | "collections" | "clearances">("score")
   const [performanceChartType, setPerformanceChartType] = useState<"year" | "month" | "week">("year")
+  const [paymentSummaryRange, setPaymentSummaryRange] = useState<PaymentSummaryRange>("today")
 
   const { user } = useSelector((state: RootState) => state.auth)
   const {
@@ -617,6 +808,17 @@ export default function AgentManagementDashboard() {
     agentPerformanceDailyLoading,
     agentPerformanceDailyError,
   } = useSelector((state: RootState) => state.agents)
+
+  const { paymentsSummary, isLoadingSummary, summaryError } = useSelector(
+    (state: RootState) => state.customersDashboard
+  )
+
+  const dispatch = useAppDispatch()
+
+  // Fetch payment summary when range changes
+  useEffect(() => {
+    dispatch(getPaymentsSummary({ range: paymentSummaryRange }))
+  }, [dispatch, paymentSummaryRange])
 
   // Get the active period from agent summary based on the selected time range
   const activePeriod = agentSummary?.periods?.find((period) => period.range === activeTimeRange)
@@ -716,8 +918,7 @@ export default function AgentManagementDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Welcome {agentLastName}</h4>
-                <p className="text-sm text-gray-600 sm:text-base">Overview of your monthly collections</p>
+                <h4 className="text-xl font-semibold sm:text-2xl">Welcome {agentLastName}!</h4>
               </div>
 
               <motion.div
@@ -858,6 +1059,136 @@ export default function AgentManagementDashboard() {
 
             {/* Main Content Area */}
             <div className="mt-6">
+              {/* Payment Summary Section */}
+              <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
+                <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Payment Summary</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600">Range:</span>
+                    <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                      {paymentSummaryRanges.map((range) => (
+                        <button
+                          key={range.value}
+                          onClick={() => setPaymentSummaryRange(range.value as PaymentSummaryRange)}
+                          className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
+                            paymentSummaryRange === range.value
+                              ? "bg-[#004b23] text-white shadow-sm"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {range.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {isLoadingSummary ? (
+                  <PaymentSummarySkeleton />
+                ) : summaryError ? (
+                  <div className="mt-4 rounded-lg bg-red-50 p-4">
+                    <p className="text-sm text-red-600">Error: {summaryError}</p>
+                  </div>
+                ) : paymentsSummary?.windows && paymentsSummary.windows.length > 0 ? (
+                  <div className="mt-4">
+                    {(() => {
+                      // Find the window that matches the selected range
+                      const selectedWindow =
+                        paymentsSummary.windows.find((window) => {
+                          // Map the range value to expected window names
+                          const rangeMap: Record<string, string> = {
+                            today: "Today",
+                            yesterday: "Yesterday",
+                            this_week: "This Week",
+                            last_week: "Last Week",
+                            this_month: "This Month",
+                            last_month: "Last Month",
+                            this_year: "This Year",
+                            all_time: "All Time",
+                          }
+                          return window.window === rangeMap[paymentSummaryRange]
+                        }) || paymentsSummary.windows[0] // Fallback to first window if no match found
+
+                      return (
+                        <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-blue-50 to-white p-3 transition-all duration-300 hover:border-blue-200 hover:shadow-md">
+                              <div className="flex items-center gap-2">
+                                <div className="rounded-lg bg-blue-100 p-1.5">
+                                  <VendingIcon size={16} color="#3B82F6" />
+                                </div>
+                                <p className="text-sm font-medium text-gray-700">Total Amount Vend</p>
+                              </div>
+                              <p className="mt-2 text-lg font-bold text-gray-900">
+                                {selectedWindow?.amount ? formatCurrency(selectedWindow.amount) : "N/A"}
+                              </p>
+                            </div>
+                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-green-50 to-white p-3 transition-all duration-300 hover:border-green-200 hover:shadow-md">
+                              <div className="flex items-center gap-2">
+                                <div className="rounded-lg bg-green-100 p-1.5">
+                                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                    />
+                                  </svg>
+                                </div>
+                                <p className="text-sm font-medium text-gray-700">Total Vend Count</p>
+                              </div>
+                              <p className="mt-2 text-lg font-bold text-gray-900">
+                                {selectedWindow?.count?.toLocaleString() || "N/A"}
+                              </p>
+                            </div>
+                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-purple-50 to-white p-3 transition-all duration-300 hover:border-purple-200 hover:shadow-md">
+                              <div className="flex items-center gap-2">
+                                <div className="rounded-lg bg-purple-100 p-1.5">
+                                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                                    />
+                                  </svg>
+                                </div>
+                                <p className="text-sm font-medium text-gray-700">Vend Channels</p>
+                              </div>
+                              <p className="mt-2 text-lg font-bold text-gray-900">
+                                {selectedWindow?.byChannel?.length || 0}
+                              </p>
+                            </div>
+                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-amber-50 to-white p-3 transition-all duration-300 hover:border-amber-200 hover:shadow-md">
+                              <div className="flex items-center gap-2">
+                                <div className="rounded-lg bg-amber-100 p-1.5">
+                                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                    />
+                                  </svg>
+                                </div>
+                                <p className="text-sm font-medium text-gray-700">Payment Types</p>
+                              </div>
+                              <p className="mt-2 text-lg font-bold text-gray-900">
+                                {selectedWindow?.byPaymentType?.length || 0}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                ) : (
+                  <div className="mt-4 py-8 text-center">
+                    <p className="text-sm text-gray-500">No payment data available for the selected range</p>
+                  </div>
+                )}
+              </div>
+
               {/* Time Range Filters for Performance Summary */}
 
               {/* Main KPI Cards */}
@@ -869,282 +1200,7 @@ export default function AgentManagementDashboard() {
               ) : (
                 // Loaded State - Updated Agent Management Dashboard
                 <>
-                  <motion.div
-                    className="w-full"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      {/* Desktop: inline buttons */}
-                      <div className="hidden rounded-lg bg-white p-2 shadow-sm sm:block">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-500">Performance Range:</span>
-                          <div className="flex items-center gap-2">
-                            {timeRanges.map((range) => (
-                              <button
-                                key={range.value}
-                                onClick={() => setActiveTimeRange(range.value)}
-                                className={`shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
-                                  activeTimeRange === range.value
-                                    ? "bg-[#004B23] text-white"
-                                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                                }`}
-                              >
-                                {range.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Mobile: dropdown selector */}
-                      <div className="w-full sm:hidden">
-                        <div className="rounded-lg bg-white p-3 shadow-sm">
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-medium text-gray-500">Performance Range:</span>
-                            <div className="relative">
-                              <select
-                                value={activeTimeRange}
-                                onChange={(e) => setActiveTimeRange(e.target.value as TimeRange)}
-                                className="block w-40 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              >
-                                {timeRanges.map((range) => (
-                                  <option key={range.value} value={range.value}>
-                                    {range.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        {/* Collections Summary Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center justify-between gap-2 border-b pb-4">
-                            <div className="flex items-center gap-2">
-                              <div className="text-blue-600">
-                                <MetersProgrammedIcon />
-                              </div>
-                              <span className="text-sm font-medium sm:text-base">Collections Summary</span>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 sm:text-xs">
-                                {getTimeRangeLabel(activeTimeRange)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Amount Collected:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatSummaryCurrency(summary.collectedAmount)}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Collections Count:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatNumber(summary.collectedCount)}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Channels Used:</p>
-                              <p className="text-secondary text-sm font-medium sm:text-base">
-                                {formatNumber(summary.collectionsByChannel?.length ?? 0)}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* Pending Collections Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-amber-600">
-                              <MetersProgrammedIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Pending Collections</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Pending Amount:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatSummaryCurrency(summary.pendingAmount)}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Pending Count:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatNumber(summary.pendingCount)}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Outstanding Cash Est.:</p>
-                              <p className="text-secondary text-sm font-medium sm:text-base">
-                                {formatSummaryCurrency(summary.outstandingCashEstimate)}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* Cash Clearance Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-green-600">
-                              <VendingIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Cash Clearance</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Cash Cleared Amount:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatSummaryCurrency(summary.cashClearedAmount)}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Clearance Count:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatNumber(summary.cashClearanceCount)}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* Billing & Change Requests Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-red-600">
-                              <TamperIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Disputes & Changes</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Billing Disputes:</p>
-                              <p className="text-secondary text-right text-sm font-medium sm:text-base">
-                                {`${formatNumber(summary.billingDisputesRaised)} raised / ${formatNumber(
-                                  summary.billingDisputesResolved
-                                )} resolved`}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Change Requests:</p>
-                              <p className="text-secondary text-right text-sm font-medium sm:text-base">
-                                {`${formatNumber(summary.changeRequestsRaised)} raised / ${formatNumber(
-                                  summary.changeRequestsResolved
-                                )} resolved`}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      </div>
-                    </div>
-                  </motion.div>
-
                   {/* Performance Charts Section */}
-                  <motion.div
-                    className="my-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                  >
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-                      <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Performance Overview</h3>
-                          <p className="text-sm text-gray-600">Daily performance metrics and trends</p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                            {["year", "month", "week"].map((range) => (
-                              <button
-                                key={range}
-                                onClick={() => handlePerformanceTimeRangeChange(range as "year" | "month" | "week")}
-                                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
-                                  performanceChartType === range
-                                    ? "bg-white text-gray-900 shadow-sm"
-                                    : "text-gray-600 hover:bg-gray-100"
-                                }`}
-                              >
-                                {range.charAt(0).toUpperCase() + range.slice(1)}
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                            {[
-                              { key: "score", label: "Score" },
-                              { key: "collections", label: "Collections" },
-                              { key: "clearances", label: "Clearances" },
-                            ].map((type) => (
-                              <button
-                                key={type.key}
-                                onClick={() => setChartType(type.key as "score" | "collections" | "clearances")}
-                                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
-                                  chartType === type.key
-                                    ? "bg-white text-gray-900 shadow-sm"
-                                    : "text-gray-600 hover:bg-gray-100"
-                                }`}
-                              >
-                                {type.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {agentPerformanceDailyLoading ? (
-                        <ChartSkeleton />
-                      ) : agentPerformanceDailyError ? (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-                          <p className="text-red-600">Error loading performance data: {agentPerformanceDailyError}</p>
-                          <button
-                            onClick={handleRefreshData}
-                            className="mt-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                          >
-                            Retry
-                          </button>
-                        </div>
-                      ) : agentPerformanceDaily && agentPerformanceDaily.length > 0 ? (
-                        <>
-                          <PerformanceSummary data={agentPerformanceDaily} />
-                          <div className="mt-6">
-                            <PerformanceChart
-                              data={agentPerformanceDaily}
-                              chartType={chartType}
-                              timeRange={performanceChartType}
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
-                          <p className="text-gray-500">No performance data available for the selected period</p>
-                          <button
-                            onClick={handleRefreshData}
-                            className="mt-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-                          >
-                            Refresh Data
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
 
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -1152,16 +1208,11 @@ export default function AgentManagementDashboard() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="mt-4"
                   >
-                    <CustomerPaymentHistoryTable />
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="mt-4"
-                  >
-                    <CustomerVending />
+                    {agentPerformanceDailyLoading ? (
+                      <CustomerPaymentHistoryTableSkeleton />
+                    ) : (
+                      <CustomerPaymentHistoryTable />
+                    )}
                   </motion.div>
                 </>
               )}

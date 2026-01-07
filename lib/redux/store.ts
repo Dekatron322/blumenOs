@@ -39,6 +39,9 @@ import metersReducer from "./metersSlice"
 import meterBrandsReducer from "./meterBrandsSlice"
 import meterCategoryReducer from "./meterCategorySlice"
 import tariffGroupReducer from "./tariffGroupSlice"
+import debtManagementReducer from "./debtManagementSlice"
+import customerAuthReducer from "./customerAuthSlice"
+import customersDashboardReducer from "./customersDashboardSlice"
 
 export const store = configureStore({
   reducer: {
@@ -81,6 +84,9 @@ export const store = configureStore({
     meterBrands: meterBrandsReducer,
     meterCategories: meterCategoryReducer,
     tariffGroups: tariffGroupReducer,
+    debtManagement: debtManagementReducer,
+    customerAuth: customerAuthReducer,
+    customersDashboard: customersDashboardReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),

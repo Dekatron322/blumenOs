@@ -2,39 +2,96 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/EmailInput"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { clearOtpRequestStatus, requestCustomerOtp } from "lib/redux/customerAuthSlice"
+import { notify } from "components/ui/Notification/Notification"
 
 const SignIn: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [accountNumber, setAccountNumber] = useState("")
+  const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
+
+  const { isRequestingOtp, otpRequestError, otpRequestSuccess, lastOtpRequestMessage } = useSelector(
+    (state: RootState) => state.customerAuth
+  )
+
+  // Generate a simple fingerprint for demo purposes
+  const generateFingerprint = () => {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setLoading(true)
-    setError(null)
 
     if (!phoneNumber.trim()) {
-      setError("Please enter your phone number")
-      setLoading(false)
       return
     }
 
-    // No API call here; implement integration as needed.
-    // After basic validation, redirect to the verify page.
-    router.push("/customer-portal/verify")
+    if (!accountNumber.trim()) {
+      return
+    }
+
+    const otpData = {
+      accountNumber: accountNumber.trim(),
+      phoneNumber: phoneNumber.trim(),
+      fingerprint: generateFingerprint(),
+    }
+
+    dispatch(requestCustomerOtp(otpData))
   }
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(event.target.value)
-    if (error) setError(null)
+    if (otpRequestError) {
+      dispatch(clearOtpRequestStatus())
+    }
   }
 
-  const isButtonDisabled = loading || phoneNumber.trim() === ""
+  const handleAccountNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAccountNumber(event.target.value)
+    if (otpRequestError) {
+      dispatch(clearOtpRequestStatus())
+    }
+  }
+
+  // Redirect to verify page on successful OTP request
+  React.useEffect(() => {
+    if (otpRequestSuccess && lastOtpRequestMessage) {
+      // Show success notification
+      notify("success", "OTP sent successfully!", {
+        title: lastOtpRequestMessage,
+        description: "Redirecting...",
+        duration: 3000,
+      })
+
+      // Store phone number for verification page
+      localStorage.setItem("customerPhoneNumber", phoneNumber)
+      localStorage.setItem("customerAccountNumber", accountNumber)
+
+      // Redirect after a short delay to allow notification to be seen
+      setTimeout(() => {
+        router.push("/customer-portal/verify")
+      }, 1000)
+    }
+  }, [otpRequestSuccess, lastOtpRequestMessage, phoneNumber, accountNumber, router])
+
+  // Show error notification when OTP request fails
+  React.useEffect(() => {
+    if (otpRequestError) {
+      notify("error", "OTP Request Failed", {
+        title: otpRequestError,
+        duration: 5000,
+      })
+    }
+  }, [otpRequestError])
+
+  const isButtonDisabled = isRequestingOtp || phoneNumber.trim() === "" || accountNumber.trim() === ""
 
   return (
     <div className="relative flex min-h-screen flex-col  bg-gradient-to-br from-[#ffffff] lg:flex-row">
@@ -60,6 +117,17 @@ const SignIn: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }}>
+                <FormInputModule
+                  label="Account Number"
+                  type="text"
+                  placeholder="Enter your account number"
+                  value={accountNumber}
+                  onChange={handleAccountNumberChange}
+                  required
+                />
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.5 }}>
                 <FormInputModule
                   label="Phone Number"
                   type="tel"
@@ -93,16 +161,6 @@ const SignIn: React.FC = () => {
                 </Link>
               </motion.div>
 
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-md bg-red-50 p-3 text-sm text-red-600"
-                >
-                  {error}
-                </motion.div>
-              )}
-
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.7 }}>
                 <ButtonModule
                   type="submit"
@@ -113,7 +171,7 @@ const SignIn: React.FC = () => {
                   whileHover={!isButtonDisabled ? { scale: 1.01 } : {}}
                   whileTap={!isButtonDisabled ? { scale: 0.99 } : {}}
                 >
-                  {loading ? (
+                  {isRequestingOtp ? (
                     <div className="flex items-center justify-center">
                       <svg
                         className="mr-2 size-5 animate-spin"
@@ -135,10 +193,10 @@ const SignIn: React.FC = () => {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      Verifying...
+                      Requesting OTP...
                     </div>
                   ) : (
-                    "Verify"
+                    "Request OTP"
                   )}
                 </ButtonModule>
               </motion.div>

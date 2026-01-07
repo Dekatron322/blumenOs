@@ -1,5 +1,7 @@
 // API Configuration
 
+import { GET } from "app/api/health/route"
+
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://sandbox-api.blumenos.com",
 }
@@ -392,6 +394,42 @@ export const API_ENDPOINTS = {
 
   TARIFF_GROUPS: {
     GET: "/tariff-groups",
+  },
+
+  DEBT_MANAGEMENT: {
+    SUMMARY: "/debt-management/recovery-summary",
+    GET: "/debt-management/customers",
+    AGING: "/debt-management/aging",
+    ENTRIES: "/debt-management/entries",
+    ALL_ENTRIES: "/debt-management/entries",
+    ENTRY_DETAIL: "/debt-management/entries/{entryId}",
+    APPROVE_ENTRY: "/debt-management/entries/{entryId}/approve",
+    RECOVERY_POLICIES: "/debt-management/recovery-policies",
+    ADD_RECOVERY_POLICY: "/debt-management/recovery-policies",
+    PAUSE: "/debt-management/recovery-policies/{id}/pause",
+    RESUME: "/debt-management/recovery-policies/{id}/resume",
+  },
+
+  CUSTOMER_AUTH: {
+    REQUEST_OTP: "/customers/auth/request-otp",
+    VERIFY_OTP: "/customers/auth/verify-otp",
+    REFRESH_TOKEN: "/customers/auth/refresh",
+  },
+
+  CUSTOMERS_DASHBOARD: {
+    SUMMARY: "/customer-dashboard/payments/summary",
+    PAYMENTS: "/customer-dashboard/payments",
+    PAYMENT_DETAIL: "/customer-dashboard/payments/{id}",
+    CUSTOMER_LOOKUP: "/self-service/customers/lookup",
+    VEND: "/self-service/vend",
+    GET_TOKEN: "/self-service/get-token",
+    RECENT_OUTAGES: "/customer-dashboard/outages/recent",
+    REPORT_OUTAGE: "/customer-dashboard/outages/report",
+    CUSTOMER_METERS: "/customer-dashboard/meters",
+    PAYMENT_TYPES: "/customer-dashboard/payments/types",
+    MAKE_PAYMENT: "/customer-dashboard/payments",
+    MY_BILLS: "/customer-dashboard/bills",
+    BILLS_DETAILS: "/customer-dashboard/bills/{id}",
   },
 }
 
