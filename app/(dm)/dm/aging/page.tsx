@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import {
   clearAgingState,
   clearRecoverySummaryState,
+  fetchAgingData,
   fetchRecoverySummary,
   selectAging,
   selectAgingError,
@@ -15,7 +16,6 @@ import {
   selectRecoverySummaryError,
   selectRecoverySummaryLoading,
   selectRecoverySummarySuccess,
-  fetchAgingData,
 } from "lib/redux/debtManagementSlice"
 import type {
   AgingDataItem,

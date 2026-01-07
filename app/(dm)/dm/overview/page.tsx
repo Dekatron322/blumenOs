@@ -28,8 +28,8 @@ import type {
   AllDebtEntriesRequest,
   DebtEntryData,
   DebtManagementCustomersRequest,
-  RecoverySummaryRequest,
   RecoverySummaryItem,
+  RecoverySummaryRequest,
 } from "lib/redux/debtManagementSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { ButtonModule } from "components/ui/Button/Button"

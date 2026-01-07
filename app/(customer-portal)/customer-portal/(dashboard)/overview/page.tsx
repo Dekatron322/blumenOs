@@ -1,20 +1,20 @@
 "use client"
 
-import { useState } from "react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { useAppDispatch } from "lib/hooks/useRedux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
 import {
+  AlertIcon,
   CollectCash,
+  CollectionIcon,
+  PerformanceIcon,
+  TargetIcon,
   VendingIcon,
   VendingIconOutline,
-  PerformanceIcon,
-  CollectionIcon,
-  AlertIcon,
-  TargetIcon,
 } from "components/Icons/Icons"
 import { ButtonModule } from "components/ui/Button/Button"
 import { formatCurrency } from "utils/formatCurrency"

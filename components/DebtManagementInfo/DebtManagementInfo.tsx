@@ -1,9 +1,9 @@
 import React, { useState } from "react"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import Dropdown from "components/Dropdown/Dropdown"
 import DebtManagementTabNavigation from "./DebtManagementTabNavigation"
-import type { DebtManagementCustomer, DebtEntryData } from "lib/redux/debtManagementSlice"
+import type { DebtEntryData, DebtManagementCustomer } from "lib/redux/debtManagementSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 

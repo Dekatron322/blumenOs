@@ -1,31 +1,31 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import { notify, NotificationProvider } from "components/ui/Notification/Notification"
+import { NotificationProvider, notify } from "components/ui/Notification/Notification"
 import {
   BillingIcon,
   CashClearanceIcon,
+  MeterOutlineIcon,
   RevenueIcon,
   SettingOutlineIcon,
-  MeterOutlineIcon,
 } from "components/Icons/Icons"
 import {
+  clearMakePaymentStatus,
+  clearPaymentTypesStatus,
   getPaymentTypes,
   makePayment,
+  selectMakePaymentError,
+  selectMakePaymentLoading,
+  selectMakePaymentResponseData,
+  selectMakePaymentSuccess,
+  selectPaymentTypesError,
   selectPaymentTypesList,
   selectPaymentTypesLoading,
-  selectPaymentTypesError,
   selectPaymentTypesSuccess,
-  selectMakePaymentResponseData,
-  selectMakePaymentLoading,
-  selectMakePaymentError,
-  selectMakePaymentSuccess,
-  clearPaymentTypesStatus,
-  clearMakePaymentStatus,
 } from "lib/redux/customersDashboardSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
@@ -684,7 +684,7 @@ const CustomerPaymentPage: React.FC = () => {
                           <span className="text-sm font-medium text-white">Bank Transfer</span>
                         </div>
                         <p className="mt-3 text-xs text-gray-600">
-                          You'll receive a unique account number to transfer to after submission.
+                          You&apos;ll receive a unique account number to transfer to after submission.
                         </p>
                       </div>
 
