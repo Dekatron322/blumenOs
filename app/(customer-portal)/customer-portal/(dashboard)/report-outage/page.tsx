@@ -1,15 +1,58 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useSelector } from "react-redux"
+import { useAppDispatch } from "lib/hooks/useRedux"
 import { ButtonModule } from "components/ui/Button/Button"
-import { FormInputModule } from "components/ui/Input/Input"
-import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { BsCalendar, BsClock, BsExclamationTriangle, BsLightning, BsPhone } from "react-icons/bs"
-import { FaCheckCircle, FaRegClock, FaTools, FaWifi } from "react-icons/fa"
+import { FaCheckCircle, FaRegClock, FaTools } from "react-icons/fa"
 import { MdElectricalServices, MdOutlineSupportAgent, MdReport } from "react-icons/md"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
+import { notify } from "components/ui/Notification/Notification"
+import {
+  clearReportOutageStatus,
+  getRecentOutages,
+  reportOutage,
+  selectReportOutageLoading,
+  selectReportOutageError,
+  selectReportOutageResponseData,
+  selectReportOutageSuccess,
+  selectRecentOutagesList,
+  selectRecentOutagesLoading,
+  selectRecentOutagesError,
+  selectRecentOutagesPagination,
+} from "lib/redux/customersDashboardSlice"
+
+// Customer Outage Reason Enum
+enum CustomerOutageReason {
+  Unknown = 0,
+  TransformerBlowing = 1,
+  Vandalization = 2,
+  CableFault = 3,
+  LoadShedding = 4,
+  PlannedMaintenance = 5,
+  MeterFault = 6,
+  Other = 50,
+}
+
+// Outage Status Enum
+enum OutageStatus {
+  Reported = 1,
+  Investigating = 2,
+  Resolved = 3,
+  Closed = 4,
+}
+
+// Outage Scope Enum
+enum OutageScope {
+  SingleBuilding = 1,
+  Street = 2,
+  Neighborhood = 3,
+  Area = 4,
+  District = 5,
+}
 
 // Mock data for outage types and areas
 interface OutageType {
@@ -28,54 +71,78 @@ interface AreaAffected {
 
 interface RecentOutage {
   id: number
-  area: string
+  referenceCode: string
+  title: string
+  priority: number
+  status: number
+  scope: number
+  distributionSubstationId: number
+  feederId: number
+  distributionSubstationName: string
+  feederName: string
+  isCustomerGenerated: boolean
+  affectedCustomerCount: number
+  customerReportCount: number
   reportedAt: string
-  status: "reported" | "investigating" | "restored"
-  estimatedRestoration: string
+  durationHours: number
 }
 
 const outageTypes: OutageType[] = [
   {
-    id: 1,
-    name: "Complete Power Loss",
-    description: "No electricity at all in your premises",
+    id: CustomerOutageReason.Unknown,
+    name: "Unknown Issue",
+    description: "Not sure what's causing the outage",
+    icon: <BsExclamationTriangle className="text-gray-500" />,
+    severity: "medium",
+  },
+  {
+    id: CustomerOutageReason.TransformerBlowing,
+    name: "Transformer Issue",
+    description: "Transformer problems or complete power loss",
     icon: <BsLightning className="text-red-500" />,
     severity: "high",
   },
   {
-    id: 2,
-    name: "Partial Outage",
-    description: "Some areas have power, others don't",
+    id: CustomerOutageReason.Vandalization,
+    name: "Vandalism",
+    description: "Damage to power equipment or infrastructure",
+    icon: <FaTools className="text-red-700" />,
+    severity: "high",
+  },
+  {
+    id: CustomerOutageReason.CableFault,
+    name: "Cable Fault",
+    description: "Power cable issues or partial outages",
     icon: <MdElectricalServices className="text-amber-500" />,
     severity: "medium",
   },
   {
-    id: 3,
-    name: "Intermittent Power",
-    description: "Power keeps going on and off",
-    icon: <FaWifi className="text-blue-500" />,
+    id: CustomerOutageReason.LoadShedding,
+    name: "Load Shedding",
+    description: "Planned power reduction due to high demand",
+    icon: <FaRegClock className="text-orange-500" />,
+    severity: "low",
+  },
+  {
+    id: CustomerOutageReason.PlannedMaintenance,
+    name: "Planned Maintenance",
+    description: "Scheduled power maintenance work",
+    icon: <FaRegClock className="text-blue-500" />,
+    severity: "low",
+  },
+  {
+    id: CustomerOutageReason.MeterFault,
+    name: "Meter Fault",
+    description: "Issues with electricity meter or low voltage",
+    icon: <BsExclamationTriangle className="text-orange-500" />,
     severity: "medium",
   },
   {
-    id: 4,
-    name: "Low Voltage",
-    description: "Power is very weak, appliances not working properly",
-    icon: <BsExclamationTriangle className="text-orange-500" />,
-    severity: "low",
-  },
-  {
-    id: 5,
-    name: "Flickering Lights",
-    description: "Lights are dimming or flickering",
-    icon: <FaRegClock className="text-purple-500" />,
-    severity: "low",
-  },
-  {
-    id: 6,
-    name: "Equipment Damage",
-    description: "Damaged transformer, pole, or power lines",
-    icon: <FaTools className="text-red-700" />,
-    severity: "high",
+    id: CustomerOutageReason.Other,
+    name: "Other Issue",
+    description: "Any other type of power outage",
+    icon: <BsExclamationTriangle className="text-purple-500" />,
+    severity: "medium",
   },
 ]
 
@@ -90,41 +157,61 @@ const affectedAreas: AreaAffected[] = [
   { id: 8, name: "Kakuri", code: "KKR-KD" },
 ]
 
-const recentOutages: RecentOutage[] = [
-  {
-    id: 1,
-    area: "Barnawa",
-    reportedAt: "2024-01-15 14:30",
-    status: "restored",
-    estimatedRestoration: "2024-01-15 16:45",
-  },
-  {
-    id: 2,
-    area: "Kawo",
-    reportedAt: "2024-01-14 10:15",
-    status: "investigating",
-    estimatedRestoration: "2024-01-15 18:00",
-  },
-  {
-    id: 3,
-    area: "Kaduna South",
-    reportedAt: "2024-01-13 19:45",
-    status: "restored",
-    estimatedRestoration: "2024-01-14 02:30",
-  },
-]
-
-const getStatusStyle = (status: string) => {
+const getStatusStyle = (status: number) => {
   switch (status) {
-    case "reported":
+    case OutageStatus.Reported:
       return { backgroundColor: "#FEF3C7", color: "#92400E", icon: <MdReport className="size-4" /> }
-    case "investigating":
+    case OutageStatus.Investigating:
       return { backgroundColor: "#E0F2FE", color: "#0C4A6E", icon: <MdOutlineSupportAgent className="size-4" /> }
-    case "restored":
+    case OutageStatus.Resolved:
       return { backgroundColor: "#D1FAE5", color: "#065F46", icon: <FaCheckCircle className="size-4" /> }
+    case OutageStatus.Closed:
+      return { backgroundColor: "#F3F4F6", color: "#374151", icon: <FaCheckCircle className="size-4" /> }
     default:
       return { backgroundColor: "#F3F4F6", color: "#374151", icon: <MdReport className="size-4" /> }
   }
+}
+
+const getStatusText = (status: number) => {
+  switch (status) {
+    case OutageStatus.Reported:
+      return "Reported"
+    case OutageStatus.Investigating:
+      return "Investigating"
+    case OutageStatus.Resolved:
+      return "Resolved"
+    case OutageStatus.Closed:
+      return "Closed"
+    default:
+      return "Unknown"
+  }
+}
+
+const getPriorityText = (priority: number) => {
+  switch (priority) {
+    case 1:
+      return "Low"
+    case 2:
+      return "Medium"
+    case 3:
+      return "High"
+    case 4:
+      return "Critical"
+    default:
+      return "Unknown"
+  }
+}
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 }
 
 const getSeverityStyle = (severity: string) => {
@@ -141,6 +228,20 @@ const getSeverityStyle = (severity: string) => {
 }
 
 const OutageReport: React.FC = () => {
+  const dispatch = useAppDispatch()
+
+  // Redux state for recent outages
+  const recentOutages = useSelector(selectRecentOutagesList) || []
+  const isLoadingOutages = useSelector(selectRecentOutagesLoading)
+  const outagesError = useSelector(selectRecentOutagesError)
+  const outagesPagination = useSelector(selectRecentOutagesPagination)
+
+  // Redux state for report outage
+  const reportOutageResponseData = useSelector(selectReportOutageResponseData)
+  const isReportingOutage = useSelector(selectReportOutageLoading)
+  const reportOutageError = useSelector(selectReportOutageError)
+  const reportOutageSuccess = useSelector(selectReportOutageSuccess)
+
   // Form state
   const [selectedOutageType, setSelectedOutageType] = useState<number | null>(null)
   const [selectedArea, setSelectedArea] = useState<number | null>(null)
@@ -162,6 +263,11 @@ const OutageReport: React.FC = () => {
     address: "123 Main Street, Ikeja, Lagos",
     phoneNumber: "+2348012345678",
   }
+
+  // Fetch recent outages on component mount
+  useEffect(() => {
+    dispatch(getRecentOutages({ pageNumber: 1, pageSize: 10, days: 7 }))
+  }, [dispatch])
 
   const generateReportNumber = () => {
     const timestamp = Date.now()
@@ -187,38 +293,48 @@ const OutageReport: React.FC = () => {
     e.preventDefault()
 
     if (!selectedOutageType) {
-      alert("Please select an outage type")
-      return
-    }
-
-    if (!selectedArea) {
-      alert("Please select an affected area")
-      return
-    }
-
-    if (!address.trim()) {
-      alert("Please enter your address")
+      notify("warning", "Please select an outage type")
       return
     }
 
     if (!description.trim()) {
-      alert("Please describe the outage")
+      notify("warning", "Please describe the outage")
       return
     }
 
+    // Clear any previous report outage status
+    dispatch(clearReportOutageStatus())
+
+    // Set submitting state
     setIsSubmitting(true)
 
-    // Simulate API delay
-    setTimeout(() => {
-      const newReportNumber = generateReportNumber()
-      const newEstimatedTime = generateEstimatedRestoration()
+    // Dispatch the report outage action
+    dispatch(
+      reportOutage({
+        reason: selectedOutageType,
+        additionalNotes: description,
+      })
+    )
+  }
 
-      setReportNumber(newReportNumber)
-      setEstimatedRestorationTime(newEstimatedTime)
+  // Handle report outage response
+  useEffect(() => {
+    if (reportOutageSuccess && reportOutageResponseData) {
+      setReportNumber(reportOutageResponseData.referenceCode)
+      setEstimatedRestorationTime(generateEstimatedRestoration())
       setIsSubmitted(true)
       setIsSubmitting(false)
-    }, 2000)
-  }
+      notify("success", "Outage reported successfully! We'll investigate and restore power as soon as possible.")
+    }
+  }, [reportOutageSuccess, reportOutageResponseData])
+
+  // Handle report outage error
+  useEffect(() => {
+    if (reportOutageError) {
+      setIsSubmitting(false)
+      notify("error", reportOutageError)
+    }
+  }, [reportOutageError])
 
   const resetForm = () => {
     setSelectedOutageType(null)
@@ -231,6 +347,7 @@ const OutageReport: React.FC = () => {
     setReportNumber(null)
     setIsSubmitted(false)
     setEstimatedRestorationTime(null)
+    dispatch(clearReportOutageStatus())
   }
 
   const renderOutageTypes = () => (
@@ -286,70 +403,6 @@ const OutageReport: React.FC = () => {
       </h2>
 
       <form onSubmit={handleSubmitReport} className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <FormSelectModule
-              label="Affected Area"
-              name="affectedArea"
-              value={selectedArea || ""}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setSelectedArea(e.target.value ? Number(e.target.value) : null)
-              }
-              options={[
-                { value: "", label: "Select area" },
-                ...affectedAreas.map((area) => ({
-                  value: area.id,
-                  label: `${area.name} (${area.code})`,
-                })),
-              ]}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <FormInputModule
-              label="Outage Start Time"
-              name="startTime"
-              type="datetime-local"
-              placeholder="Select when the outage started"
-              value={startTime}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartTime(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <FormInputModule
-              label="Landmark (Optional)"
-              name="landmark"
-              type="text"
-              placeholder="e.g., near bank, opposite school"
-              value={landmark}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLandmark(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <FormInputModule
-              label="Contact Phone"
-              name="phone"
-              type="tel"
-              placeholder="Alternative phone number"
-              value={phoneNumber}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <FormInputModule
-            label="Address"
-            name="address"
-            type="text"
-            placeholder="Enter your current address"
-            value={address}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
-            required
-          />
-        </div>
         <div className="space-y-2">
           <FormTextAreaModule
             label="Description"
@@ -377,7 +430,7 @@ const OutageReport: React.FC = () => {
             variant="secondary"
             className="w-full sm:w-auto"
             onClick={resetForm}
-            disabled={isSubmitting}
+            disabled={isReportingOutage}
           >
             Reset
           </ButtonModule>
@@ -386,9 +439,9 @@ const OutageReport: React.FC = () => {
             type="submit"
             variant="primary"
             className="w-full sm:w-auto"
-            disabled={isSubmitting || !selectedOutageType || !selectedArea || !address || !description}
+            disabled={isReportingOutage || !selectedOutageType || !description}
           >
-            {isSubmitting ? "Submitting..." : "Submit Report"}
+            {isReportingOutage ? "Submitting..." : "Submit Report"}
           </ButtonModule>
         </div>
       </form>
@@ -458,52 +511,109 @@ const OutageReport: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
     >
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-800">
-        <BsCalendar className="text-purple-500" />
-        Recent Outages in Your Area
-      </h2>
-
-      <div className="space-y-3">
-        {recentOutages.map((outage) => {
-          const statusStyle = getStatusStyle(outage.status)
-          return (
-            <div key={outage.id} className="rounded-md border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {statusStyle.icon}
-                  <span className="font-medium text-gray-800">{outage.area}</span>
-                </div>
-                <span
-                  className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                  style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}
-                >
-                  {statusStyle.icon}
-                  {outage.status.charAt(0).toUpperCase() + outage.status.slice(1)}
-                </span>
-              </div>
-
-              <div className="mt-2 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-                <div>
-                  <span className="text-gray-600">Reported:</span>
-                  <span className="ml-2 font-medium">{outage.reportedAt}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Restored:</span>
-                  <span className="ml-2 font-medium">{outage.estimatedRestoration}</span>
-                </div>
-              </div>
-
-              {outage.status === "restored" && (
-                <div className="mt-2 rounded-md bg-green-50 p-2">
-                  <p className="text-xs text-green-700">
-                    ✓ Power restored in this area. If you&apos;re still experiencing issues, please report.
-                  </p>
-                </div>
-              )}
-            </div>
-          )
-        })}
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+          <BsCalendar className="text-purple-500" />
+          Recent Outages in Your Area
+        </h2>
+        {outagesPagination && <span className="text-xs text-gray-500">{outagesPagination.totalCount} total</span>}
       </div>
+
+      {isLoadingOutages ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+          <span className="ml-2 text-sm text-gray-600">Loading recent outages...</span>
+        </div>
+      ) : outagesError ? (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">Failed to load recent outages. Please try again later.</p>
+          <button
+            onClick={() => dispatch(getRecentOutages({ pageNumber: 1, pageSize: 10, days: 7 }))}
+            className="mt-2 text-sm text-red-700 underline hover:text-red-800"
+          >
+            Retry
+          </button>
+        </div>
+      ) : recentOutages.length === 0 ? (
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-center">
+          <p className="text-sm text-gray-600">No recent outages reported in your area.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {recentOutages.map((outage) => {
+            const statusStyle = getStatusStyle(outage.status)
+            const statusText = getStatusText(outage.status)
+
+            return (
+              <div key={outage.id} className="rounded-md border border-gray-200 p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {statusStyle.icon}
+                    <span className="text-sm font-medium text-gray-800">{outage.distributionSubstationName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
+                      style={{ backgroundColor: statusStyle.backgroundColor, color: statusStyle.color }}
+                    >
+                      {statusStyle.icon}
+                      {statusText}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-1 flex items-center justify-between text-xs text-gray-600">
+                  <span>{formatDate(outage.reportedAt)}</span>
+                  <button
+                    onClick={() => {
+                      const detailsElement = document.getElementById(`details-${outage.id}`)
+                      detailsElement?.classList.toggle("hidden")
+                    }}
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    Show Details
+                  </button>
+                </div>
+
+                <div id={`details-${outage.id}`} className="mt-3 hidden border-t pt-3">
+                  <div className="grid grid-cols-1 gap-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Reference:</span>
+                      <span className="font-mono">{outage.referenceCode}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Area:</span>
+                      <span>{outage.distributionSubstationName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Duration:</span>
+                      <span>{outage.durationHours} hours</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Affected:</span>
+                      <span>{outage.affectedCustomerCount} customers</span>
+                    </div>
+                  </div>
+
+                  {outage.status === OutageStatus.Resolved && (
+                    <div className="mt-2 rounded-md bg-green-50 p-2">
+                      <p className="text-xs text-green-700">
+                        ✓ Power restored in this area. If you&apos;re still experiencing issues, please report.
+                      </p>
+                    </div>
+                  )}
+
+                  {outage.isCustomerGenerated && (
+                    <div className="mt-2 rounded-md bg-blue-50 p-2">
+                      <p className="text-xs text-blue-700">ℹ️ This outage was reported by customers like you.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </motion.div>
   )
 
@@ -613,54 +723,6 @@ const OutageReport: React.FC = () => {
             </div>
 
             {/* Information Section */}
-            <div className="mt-8 rounded-md border bg-white p-5 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-gray-800">Outage Reporting Process</h2>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <div className="rounded-md border border-blue-100 bg-blue-50 p-4 text-center">
-                  <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                    <span className="font-bold">1</span>
-                  </div>
-                  <h3 className="mb-1 font-medium text-blue-800">Report</h3>
-                  <p className="text-xs text-blue-700">Fill out the outage report form with details</p>
-                </div>
-
-                <div className="rounded-md border border-amber-100 bg-amber-50 p-4 text-center">
-                  <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                    <span className="font-bold">2</span>
-                  </div>
-                  <h3 className="mb-1 font-medium text-amber-800">Acknowledge</h3>
-                  <p className="text-xs text-amber-700">Receive confirmation and report number</p>
-                </div>
-
-                <div className="rounded-md border border-purple-100 bg-purple-50 p-4 text-center">
-                  <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                    <span className="font-bold">3</span>
-                  </div>
-                  <h3 className="mb-1 font-medium text-purple-800">Investigate</h3>
-                  <p className="text-xs text-purple-700">Our team investigates the reported issue</p>
-                </div>
-
-                <div className="rounded-md border border-green-100 bg-green-50 p-4 text-center">
-                  <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <span className="font-bold">4</span>
-                  </div>
-                  <h3 className="mb-1 font-medium text-green-800">Restore</h3>
-                  <p className="text-xs text-green-700">Power is restored and you&apos;re notified</p>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-medium text-gray-800">What Happens After You Report:</p>
-                <ul className="ml-5 mt-2 list-disc space-y-1 text-sm text-gray-600">
-                  <li>You&apos;ll receive an SMS confirmation with your report number</li>
-                  <li>Our team will investigate within 30 minutes of receiving your report</li>
-                  <li>You&apos;ll receive updates via SMS at key stages of the restoration process</li>
-                  <li>Once resolved, you&apos;ll get a confirmation message when power is restored</li>
-                  <li>You can track your report status using the report number</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       </div>

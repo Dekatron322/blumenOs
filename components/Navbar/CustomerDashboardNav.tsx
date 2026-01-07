@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft"
 import { RxCross2 } from "react-icons/rx"
 import { Links } from "components/Sidebar/Links"
@@ -13,6 +14,8 @@ import { FiUser } from "react-icons/fi"
 import LogoutModal from "components/ui/Modal/logout-modal"
 import LogoutIcon from "public/logout-icon"
 import { SearchModule } from "components/ui/Search/search-module"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { resetCustomerAuth } from "lib/redux/customerAuthSlice"
 
 const CustomerDashboardNav = () => {
   const [isNavOpen, setIsNavOpen] = useState(false)
@@ -24,16 +27,10 @@ const CustomerDashboardNav = () => {
   const [loading, setLoading] = useState(false)
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
 
-  // Hard-coded user info for customer dashboard
-  const user = {
-    fullName: "John Smith",
-    email: "john.smith@example.com",
-    accountId: "CUST-001234",
-    roles: [{ name: "Customer" }],
-  }
-
-  const isAuthenticated = true
+  // Get customer data from Redux store
+  const { isAuthenticated, customer } = useSelector((state: RootState) => state.customerAuth)
 
   const toggleNav = () => {
     setIsNavOpen(!isNavOpen)
@@ -42,9 +39,9 @@ const CustomerDashboardNav = () => {
   const handleConfirmLogout = () => {
     setLoading(true)
     try {
-      // In this hard-coded version we just simulate logout and redirect to home
-      console.log("Logging out hard-coded customer user")
-      router.push("/")
+      // Clear customer authentication state
+      dispatch(resetCustomerAuth())
+      router.push("/customer-portal/auth")
     } finally {
       setLoading(false)
       setIsLogoutModalOpen(false)
@@ -74,7 +71,7 @@ const CustomerDashboardNav = () => {
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    const fullName = user.fullName?.trim()
+    const fullName = customer?.fullName?.trim()
     if (fullName) {
       const names = fullName.split(/\s+/).filter(Boolean)
       const first = names[0]
@@ -82,24 +79,20 @@ const CustomerDashboardNav = () => {
       if (first && second) {
         return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase()
       }
-      return first?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "A"
+      return first?.charAt(0).toUpperCase() || customer?.email?.charAt(0).toUpperCase() || "C"
     }
-    return user.email?.charAt(0).toUpperCase() || "A"
+    return customer?.email?.charAt(0).toUpperCase() || "C"
   }
 
-  // Get primary role name
+  // Get primary role name (always Customer for customer portal)
   const getPrimaryRole = () => {
-    if (user.roles && user.roles.length > 0) {
-      const roleName = user.roles[0]?.name
-      return roleName ?? "Customer"
-    }
     return "Customer"
   }
 
-  // In this hard-coded version we assume the user is always authenticated
+  // Redirect to auth page if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/")
+      router.push("/customer-portal/auth")
     }
   }, [isAuthenticated, router])
 
@@ -125,7 +118,7 @@ const CustomerDashboardNav = () => {
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-sm font-medium text-gray-900">
-                    {user.fullName || user.email || "Customer User"}
+                    {customer?.fullName || customer?.email || "Customer User"}
                   </span>
                   <span className="text-xs text-gray-500">{getPrimaryRole()}</span>
                 </div>
@@ -139,9 +132,9 @@ const CustomerDashboardNav = () => {
                   <div className="pt-1">
                     {/* User Info Section */}
                     <div className="overflow-hidden border-b border-gray-100 px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900">{user.fullName || "Customer User"}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                      <p className="mt-1 text-xs text-gray-400">Account ID: {user.accountId || "N/A"}</p>
+                      <p className="text-sm font-medium text-gray-900">{customer?.fullName || "Customer User"}</p>
+                      <p className="text-sm text-gray-500">{customer?.email}</p>
+                      <p className="mt-1 text-xs text-gray-400">Account: {customer?.accountNumber || "N/A"}</p>
                     </div>
 
                     {/* Profile Link */}
@@ -204,7 +197,7 @@ const CustomerDashboardNav = () => {
                 {getUserInitials()}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{user.fullName || "Customer User"}</p>
+                <p className="text-sm font-medium text-gray-900">{customer?.fullName || "Customer User"}</p>
                 <p className="text-xs text-gray-500">{getPrimaryRole()}</p>
               </div>
             </div>

@@ -2,39 +2,83 @@
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
 import { ButtonModule } from "components/ui/Button/Button"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { AppDispatch, RootState } from "lib/redux/store"
+import { clearOtpVerificationStatus, verifyCustomerOtp } from "lib/redux/customerAuthSlice"
+import { notify } from "components/ui/Notification/Notification"
 
 const Verify: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
+  const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
 
+  const {
+    isVerifyingOtp,
+    otpVerificationError,
+    otpVerificationSuccess,
+    lastOtpVerificationMessage,
+    isAuthenticated,
+    customer,
+  } = useSelector((state: RootState) => state.customerAuth)
+
+  // Get customer data from localStorage (stored during OTP request)
+  const [customerData, setCustomerData] = useState({
+    accountNumber: "",
+    phoneNumber: "",
+  })
+
+  // Generate fingerprint for demo purposes
+  const generateFingerprint = () => {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  }
+
   useEffect(() => {
+    // Load customer data from localStorage
+    const storedAccountNumber = localStorage.getItem("customerAccountNumber")
+    const storedPhoneNumber = localStorage.getItem("customerPhoneNumber")
+
+    if (storedAccountNumber && storedPhoneNumber) {
+      setCustomerData({
+        accountNumber: storedAccountNumber,
+        phoneNumber: storedPhoneNumber,
+      })
+    } else {
+      // If no data found, redirect back to auth page
+      router.push("/customer-portal/auth")
+      return
+    }
+
+    // Focus first input
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus()
     }
-  }, [])
+  }, [router])
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setLoading(true)
-    setError(null)
 
     const code = otp.join("")
 
     if (code.length !== 6) {
-      setError("Please enter the 6-digit verification code")
-      setLoading(false)
       return
     }
 
-    // No API call here; implement integration as needed.
-    // After basic validation, redirect to the customer overview page.
-    router.push("/customer-portal/overview")
+    if (!customerData.accountNumber || !customerData.phoneNumber) {
+      return
+    }
+
+    const verifyData = {
+      accountNumber: customerData.accountNumber,
+      phoneNumber: customerData.phoneNumber,
+      fingerprint: generateFingerprint(),
+      otp: code,
+    }
+
+    dispatch(verifyCustomerOtp(verifyData))
   }
 
   const handleOtpChange = (index: number, value: string) => {
@@ -46,7 +90,9 @@ const Verify: React.FC = () => {
       const nextInput = inputRefs.current[index + 1]
       if (nextInput) nextInput.focus()
     }
-    if (error) setError(null)
+    if (otpVerificationError) {
+      dispatch(clearOtpVerificationStatus())
+    }
   }
 
   const handleOtpKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -58,7 +104,37 @@ const Verify: React.FC = () => {
     }
   }
 
-  const isButtonDisabled = loading || otp.join("").length !== 6
+  // Redirect to customer overview on successful verification
+  useEffect(() => {
+    if (otpVerificationSuccess && isAuthenticated) {
+      // Show success notification
+      notify("success", "OTP verified successfully!", {
+        title: lastOtpVerificationMessage || "Welcome back!",
+        duration: 3000,
+      })
+
+      // Clear localStorage data
+      localStorage.removeItem("customerPhoneNumber")
+      localStorage.removeItem("customerAccountNumber")
+
+      // Redirect after a short delay to allow notification to be seen
+      setTimeout(() => {
+        router.push("/customer-portal/overview")
+      }, 1000)
+    }
+  }, [otpVerificationSuccess, isAuthenticated, lastOtpVerificationMessage, router])
+
+  // Show error notification when verification fails
+  useEffect(() => {
+    if (otpVerificationError) {
+      notify("error", "OTP Verification Failed", {
+        title: otpVerificationError,
+        duration: 5000,
+      })
+    }
+  }, [otpVerificationError])
+
+  const isButtonDisabled = isVerifyingOtp || otp.join("").length !== 6
 
   return (
     <div className="relative flex min-h-screen flex-col  bg-gradient-to-br from-[#ffffff] lg:flex-row">
@@ -108,16 +184,6 @@ const Verify: React.FC = () => {
                 </div>
               </motion.div>
 
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-md bg-red-50 p-3 text-sm text-red-600"
-                >
-                  {error}
-                </motion.div>
-              )}
-
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -133,7 +199,7 @@ const Verify: React.FC = () => {
                   whileHover={!isButtonDisabled ? { scale: 1.01 } : {}}
                   whileTap={!isButtonDisabled ? { scale: 0.99 } : {}}
                 >
-                  {loading ? (
+                  {isVerifyingOtp ? (
                     <div className="flex items-center justify-center">
                       <svg
                         className="mr-2 size-5 animate-spin"

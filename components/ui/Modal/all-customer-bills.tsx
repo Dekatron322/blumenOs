@@ -11,93 +11,115 @@ import { ChevronDown } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { clearPaymentsStatus, getPaymentsList } from "lib/redux/customersDashboardSlice"
-import Image from "next/image"
+import { clearMyBillsStatus, getMyBills } from "lib/redux/customersDashboardSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 
-// Payment status enum matching API
-enum PaymentStatus {
-  Pending = "Pending",
-  Confirmed = "Confirmed",
-  Failed = "Failed",
-  Reversed = "Reversed",
+enum BillStatus {
+  Draft = 0,
+  Generated = 1,
+  Finalized = 2,
 }
 
-// Payment channel enum matching API
-enum PaymentChannel {
-  Cash = "Cash",
-  BankTransfer = "BankTransfer",
-  Pos = "Pos",
-  Card = "Card",
-  VendorWallet = "VendorWallet",
-  Chaque = "Chaque",
+enum AdjustmentStatus {
+  None = 0,
+  Pending = 1,
+  Approved = 2,
 }
 
-// Collector type enum matching API
-enum CollectorType {
-  Customer = "Customer",
-  SalesRep = "SalesRep",
-  Vendor = "Vendor",
-  Staff = "Staff",
+enum BillCategory {
+  Residential = 1,
+  Commercial = 2,
 }
 
-// Payment interface matching API response
-interface Payment {
+// Bill interface matching API response
+interface Bill {
   id: number
-  reference: string
-  latitude: number
-  longitude: number
-  channel: string
-  status: string
-  collectorType: string
-  amount: number
-  amountApplied: number
-  vatAmount: number
-  overPaymentAmount: number
-  outstandingAfterPayment: number
-  outstandingBeforePayment: number
-  currency: string
-  paidAtUtc: string
-  confirmedAtUtc: string | null
+  name: string
+  period: string
+  billingPeriodId: number
+  billingPeriod: {
+    id: number
+    year: number
+    month: number
+    periodKey: string
+    displayName: string
+    status: number
+    latestGeneratedBillHistory: {
+      id: number
+      billingPeriodId: number
+      generatedBillCount: number
+      finalizedBillCount: number
+      generatedAtUtc: string
+    }
+    createdAt: string
+    lastUpdated: string
+  }
+  category: number
+  status: number
+  adjustmentStatus: number
   customerId: number
   customerName: string
   customerAccountNumber: string
-  postpaidBillId: number | null
-  postpaidBillPeriod: string | null
-  billTotalDue: number | null
-  vendorId: number | null
-  vendorName: string | null
-  agentId: number | null
-  agentCode: string | null
-  agentName: string | null
-  areaOfficeName: string | null
-  distributionSubstationCode: string | null
-  feederName: string | null
-  paymentTypeId: number
-  paymentTypeName: string
-  isManualEntry: boolean
-  isSystemGenerated: boolean
-  evidenceFileUrl: string | null
-  recoveryApplied: boolean
-  recoveryAmount: number
-  recoveryPolicyId: number | null
-  recoveryPolicyName: string | null
-  tokens: Array<{
-    token: string
-    tokenDec: string
-    vendedAmount: string
-    unit: string
-    description: string
-    drn: string
+  publicReference: string
+  distributionSubstationId: number
+  distributionSubstationCode: string
+  feederId: number
+  feederName: string
+  areaOfficeId: number
+  areaOfficeName: string
+  meterReadingId: number
+  feederEnergyCapId: number
+  tariffPerKwh: number
+  vatRate: number
+  openingBalance: number
+  paymentsPrevMonth: number
+  consumptionKwh: number
+  chargeBeforeVat: number
+  vatAmount: number
+  currentBillAmount: number
+  adjustedOpeningBalance: number
+  totalDue: number
+  forecastConsumptionKwh: number
+  forecastChargeBeforeVat: number
+  forecastVatAmount: number
+  forecastBillAmount: number
+  forecastTotalDue: number
+  isEstimated: boolean
+  estimatedConsumptionKwh: number
+  estimatedBillAmount: number
+  actualConsumptionKwh: number
+  actualBillAmount: number
+  consumptionVarianceKwh: number
+  billingVarianceAmount: number
+  isMeterReadingFlagged: boolean
+  meterReadingValidationStatus: number
+  openDisputeCount: number
+  activeDispute: {
+    id: number
+    status: number
+    reason: string
+    raisedAtUtc: string
+  } | null
+  customer: any
+  createdAt: string
+  lastUpdated: string
+  ledgerEntries: Array<{
+    id: number
+    type: number
+    amount: number
+    code: string
+    memo: string
+    effectiveAtUtc: string
+    referenceId: number
   }>
 }
 
 interface ActionDropdownProps {
-  payment: Payment
-  onViewDetails: (payment: Payment) => void
+  bill: Bill
+  onViewDetails: (bill: Bill) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ bill, onViewDetails }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -138,7 +160,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails 
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
-    onViewDetails(payment)
+    onViewDetails(bill)
     setIsOpen(false)
   }
 
@@ -193,13 +215,13 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails 
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Update payment:", payment.id)
+                  console.log("Update bill:", bill.id)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Update Payment
+                Update Bill
               </motion.button>
             </div>
           </motion.div>
@@ -265,33 +287,49 @@ const LoadingSkeleton = () => {
   )
 }
 
-interface AllPaymentsTableProps {
-  agentId?: number
+interface AllBillsProps {
   customerId?: number
-  vendorId?: number
+  billingPeriodId?: number
+  customerName?: string
+  accountNumber?: string
+  status?: number
+  adjustmentStatus?: number
+  category?: number
   areaOfficeId?: number
-  distributionSubstationId?: number
   feederId?: number
+  distributionSubstationId?: number
   serviceCenterId?: number
+  feederEnergyCapId?: number
+  customerIsMD?: boolean
+  customerIsUrban?: boolean
+  customerProvinceId?: number
 }
 
-const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
-  agentId,
+const AllBills: React.FC<AllBillsProps> = ({
   customerId,
-  vendorId,
+  billingPeriodId,
+  customerName,
+  accountNumber,
+  status,
+  adjustmentStatus,
+  category,
   areaOfficeId,
-  distributionSubstationId,
   feederId,
+  distributionSubstationId,
   serviceCenterId,
+  feederEnergyCapId,
+  customerIsMD,
+  customerIsUrban,
+  customerProvinceId,
 }) => {
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
 
   // Redux state
-  const paymentsList = useSelector((state: RootState) => state.customersDashboard.paymentsList)
-  const paymentsPagination = useSelector((state: RootState) => state.customersDashboard.paymentsPagination)
-  const isLoadingPayments = useSelector((state: RootState) => state.customersDashboard.isLoadingPayments)
-  const paymentsError = useSelector((state: RootState) => state.customersDashboard.paymentsError)
+  const myBillsList = useSelector((state: RootState) => state.customersDashboard.myBillsList)
+  const myBillsPagination = useSelector((state: RootState) => state.customersDashboard.myBillsPagination)
+  const isLoadingMyBills = useSelector((state: RootState) => state.customersDashboard.isLoadingMyBills)
+  const myBillsError = useSelector((state: RootState) => state.customersDashboard.myBillsError)
 
   // Local state
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -301,15 +339,14 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   // Filter dropdown states
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
-  const [isChannelFilterOpen, setIsChannelFilterOpen] = useState(false)
-  const [isCollectorTypeFilterOpen, setIsCollectorTypeFilterOpen] = useState(false)
+  const [isAdjustmentStatusFilterOpen, setIsAdjustmentStatusFilterOpen] = useState(false)
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false)
 
   // Filter values
   const [filters, setFilters] = useState({
     status: "",
-    channel: "",
-    collectorType: "",
-    paymentTypeId: "",
+    adjustmentStatus: "",
+    category: "",
   })
 
   // Pagination state
@@ -320,32 +357,26 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   const statusOptions = [
     { value: "", label: "All Status" },
-    { value: PaymentStatus.Pending, label: "Pending" },
-    { value: PaymentStatus.Confirmed, label: "Confirmed" },
-    { value: PaymentStatus.Failed, label: "Failed" },
-    { value: PaymentStatus.Reversed, label: "Reversed" },
+    { value: BillStatus.Draft.toString(), label: "Draft" },
+    { value: BillStatus.Generated.toString(), label: "Generated" },
+    { value: BillStatus.Finalized.toString(), label: "Finalized" },
   ]
 
-  const channelOptions = [
-    { value: "", label: "All Channels" },
-    { value: PaymentChannel.Cash, label: "Cash" },
-    { value: PaymentChannel.BankTransfer, label: "Bank Transfer" },
-    { value: PaymentChannel.Pos, label: "POS" },
-    { value: PaymentChannel.Card, label: "Card" },
-    { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
-    { value: PaymentChannel.Chaque, label: "Cheque" },
+  const adjustmentStatusOptions = [
+    { value: "", label: "All Adjustment Status" },
+    { value: AdjustmentStatus.None.toString(), label: "None" },
+    { value: AdjustmentStatus.Pending.toString(), label: "Pending" },
+    { value: AdjustmentStatus.Approved.toString(), label: "Approved" },
   ]
 
-  const collectorOptions = [
-    { value: "", label: "All Collectors" },
-    { value: CollectorType.Customer, label: "Customer" },
-    { value: CollectorType.SalesRep, label: "Sales Rep" },
-    { value: CollectorType.Vendor, label: "Vendor" },
-    { value: CollectorType.Staff, label: "Staff" },
+  const categoryOptions = [
+    { value: "", label: "All Categories" },
+    { value: BillCategory.Residential.toString(), label: "Residential" },
+    { value: BillCategory.Commercial.toString(), label: "Commercial" },
   ]
 
-  const handleViewPaymentDetails = (payment: Payment) => {
-    router.push(`/customer-dashboard/payments/payment-details/${payment.id}`)
+  const handleViewBillDetails = (bill: Bill) => {
+    router.push(`/customer-dashboard/bills/bill-details/${bill.id}`)
   }
 
   // Close dropdowns when clicking outside
@@ -357,12 +388,12 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         setIsStatusFilterOpen(false)
       }
 
-      if (!target.closest('[data-dropdown-root="channel-filter"]')) {
-        setIsChannelFilterOpen(false)
+      if (!target.closest('[data-dropdown-root="adjustment-status-filter"]')) {
+        setIsAdjustmentStatusFilterOpen(false)
       }
 
-      if (!target.closest('[data-dropdown-root="collector-type-filter"]')) {
-        setIsCollectorTypeFilterOpen(false)
+      if (!target.closest('[data-dropdown-root="category-filter"]')) {
+        setIsCategoryFilterOpen(false)
       }
     }
 
@@ -370,83 +401,84 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [])
 
-  // Fetch payments when filters, search, or pagination changes
+  // Fetch bills when filters, search, or pagination changes
   useEffect(() => {
-    const fetchPayments = () => {
+    const fetchBills = () => {
       const requestParams = {
         pageNumber: pagination.currentPage,
         pageSize: pagination.pageSize,
         customerId,
-        vendorId,
-        agentId,
+        billingPeriodId,
+        customerName,
+        accountNumber,
+        status: filters.status ? parseInt(filters.status) : undefined,
+        adjustmentStatus: filters.adjustmentStatus ? parseInt(filters.adjustmentStatus) : undefined,
+        category: filters.category ? parseInt(filters.category) : undefined,
         areaOfficeId,
-        distributionSubstationId,
         feederId,
+        distributionSubstationId,
         serviceCenterId,
-        status: filters.status || undefined,
-        channel: filters.channel || undefined,
-        collectorType: filters.collectorType || undefined,
-        paymentTypeId: filters.paymentTypeId ? parseInt(filters.paymentTypeId) : undefined,
-        search: searchText || undefined,
+        feederEnergyCapId,
+        customerIsMD,
+        customerIsUrban,
+        customerProvinceId,
       }
 
       // Remove undefined values
       const cleanParams = Object.fromEntries(Object.entries(requestParams).filter(([_, value]) => value !== undefined))
 
-      dispatch(getPaymentsList(cleanParams as any))
+      dispatch(getMyBills(cleanParams as any))
     }
 
-    fetchPayments()
+    fetchBills()
   }, [
     dispatch,
     pagination.currentPage,
     pagination.pageSize,
     searchText,
     filters.status,
-    filters.channel,
-    filters.collectorType,
-    filters.paymentTypeId,
-    agentId,
+    filters.adjustmentStatus,
+    filters.category,
     customerId,
-    vendorId,
+    billingPeriodId,
+    customerName,
+    accountNumber,
     areaOfficeId,
-    distributionSubstationId,
     feederId,
+    distributionSubstationId,
     serviceCenterId,
+    feederEnergyCapId,
+    customerIsMD,
+    customerIsUrban,
+    customerProvinceId,
   ])
 
   // Clear error when component unmounts
   useEffect(() => {
     return () => {
-      dispatch(clearPaymentsStatus())
+      dispatch(clearMyBillsStatus())
     }
   }, [dispatch])
 
-  const getStatusStyle = (status: string) => {
+  const getStatusStyle = (status: number) => {
     switch (status) {
-      case PaymentStatus.Confirmed:
+      case BillStatus.Finalized:
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
           dotColor: "#589E67",
         }
-      case PaymentStatus.Pending:
+      case BillStatus.Generated:
         return {
           backgroundColor: "#FEF6E6",
           color: "#D97706",
           dotColor: "#D97706",
         }
-      case PaymentStatus.Failed:
+      case BillStatus.Draft:
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
           dotColor: "#AF4B4B",
-        }
-      case PaymentStatus.Reversed:
-        return {
-          backgroundColor: "#EFF6FF",
-          color: "#3B82F6",
-          dotColor: "#3B82F6",
         }
       default:
         return {
@@ -457,37 +489,22 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
   }
 
-  const getChannelStyle = (channel: string) => {
-    switch (channel) {
-      case PaymentChannel.Cash:
+  const getAdjustmentStatusStyle = (adjustmentStatus: number) => {
+    switch (adjustmentStatus) {
+      case AdjustmentStatus.Approved:
         return {
-          backgroundColor: "#F3E8FF",
-          color: "#7C3AED",
+          backgroundColor: "#EEF5F0",
+          color: "#589E67",
         }
-      case PaymentChannel.BankTransfer:
+      case AdjustmentStatus.Pending:
         return {
-          backgroundColor: "#E0F2FE",
-          color: "#0284C7",
-        }
-      case PaymentChannel.Pos:
-        return {
-          backgroundColor: "#FEF3C7",
+          backgroundColor: "#FEF6E6",
           color: "#D97706",
         }
-      case PaymentChannel.Card:
+      case AdjustmentStatus.None:
         return {
-          backgroundColor: "#FCE7F3",
-          color: "#DB2777",
-        }
-      case PaymentChannel.VendorWallet:
-        return {
-          backgroundColor: "#DCFCE7",
-          color: "#16A34A",
-        }
-      case PaymentChannel.Chaque:
-        return {
-          backgroundColor: "#FFEDD5",
-          color: "#EA580C",
+          backgroundColor: "#F3F4F6",
+          color: "#6B7280",
         }
       default:
         return {
@@ -497,27 +514,17 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
   }
 
-  const getCollectorTypeStyle = (collectorType: string) => {
-    switch (collectorType) {
-      case CollectorType.Customer:
+  const getCategoryStyle = (category: number) => {
+    switch (category) {
+      case BillCategory.Residential:
         return {
           backgroundColor: "#F0F9FF",
           color: "#0C4A6E",
         }
-      case CollectorType.SalesRep:
+      case BillCategory.Commercial:
         return {
           backgroundColor: "#FEF3C7",
           color: "#92400E",
-        }
-      case CollectorType.Vendor:
-        return {
-          backgroundColor: "#F3E8FF",
-          color: "#5B21B6",
-        }
-      case CollectorType.Staff:
-        return {
-          backgroundColor: "#F0FDF4",
-          color: "#166534",
         }
       default:
         return {
@@ -570,24 +577,23 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
-  const handleChannelFilterChange = (channel: string) => {
-    setFilters((prev) => ({ ...prev, channel }))
-    setIsChannelFilterOpen(false)
+  const handleAdjustmentStatusFilterChange = (adjustmentStatus: string) => {
+    setFilters((prev) => ({ ...prev, adjustmentStatus }))
+    setIsAdjustmentStatusFilterOpen(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
-  const handleCollectorTypeFilterChange = (collectorType: string) => {
-    setFilters((prev) => ({ ...prev, collectorType }))
-    setIsCollectorTypeFilterOpen(false)
+  const handleCategoryFilterChange = (category: string) => {
+    setFilters((prev) => ({ ...prev, category }))
+    setIsCategoryFilterOpen(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
   const clearFilters = () => {
     setFilters({
       status: "",
-      channel: "",
-      collectorType: "",
-      paymentTypeId: "",
+      adjustmentStatus: "",
+      category: "",
     })
     setSearchText("")
     setShowMobileSearch(false)
@@ -604,7 +610,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const getPageItems = (): (number | string)[] => {
-    const total = paymentsPagination?.totalPages || 1
+    const total = myBillsPagination?.totalPages || 1
     const current = pagination.currentPage
     const items: (number | string)[] = []
 
@@ -641,7 +647,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const getMobilePageItems = (): (number | string)[] => {
-    const total = paymentsPagination?.totalPages || 1
+    const total = myBillsPagination?.totalPages || 1
     const current = pagination.currentPage
     const items: (number | string)[] = []
 
@@ -670,16 +676,16 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const changePage = (page: number) => {
-    if (page > 0 && page <= (paymentsPagination?.totalPages || 1)) {
+    if (page > 0 && page <= (myBillsPagination?.totalPages || 1)) {
       setPagination((prev) => ({ ...prev, currentPage: page }))
     }
   }
 
-  if (isLoadingPayments) return <LoadingSkeleton />
+  if (isLoadingMyBills) return <LoadingSkeleton />
 
-  const currentPayments = paymentsList || []
-  const totalRecords = paymentsPagination?.totalCount || 0
-  const totalPages = paymentsPagination?.totalPages || 1
+  const currentBills = myBillsList || []
+  const totalRecords = myBillsPagination?.totalCount || 0
+  const totalPages = myBillsPagination?.totalPages || 1
   const currentPage = pagination.currentPage
   const pageSize = pagination.pageSize
 
@@ -692,8 +698,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payments</p>
-          <p className="text-sm text-gray-600">View and manage all payment transactions</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Bills</p>
+          <p className="text-sm text-gray-600">View and manage all customer bills</p>
         </div>
       </motion.div>
 
@@ -704,33 +710,6 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="mb-3 flex w-full items-center justify-between gap-3">
-          <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">All Payments</p>
-
-          <div className="flex items-center gap-2">
-            {/* Mobile search icon button */}
-            <button
-              type="button"
-              className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 sm:hidden md:size-9"
-              onClick={() => setShowMobileSearch((prev) => !prev)}
-              aria-label="Toggle search"
-            >
-              <Image src="/DashboardImages/Search.svg" width={16} height={16} alt="Search Icon" />
-            </button>
-
-            {/* Desktop/Tablet search input */}
-            <div className="hidden sm:block">
-              <SearchModule
-                value={searchText}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onCancel={handleCancelSearch}
-                placeholder="Search by reference, customer name or account number"
-                className="w-full max-w-full md:max-w-[300px]"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Mobile search input revealed when icon is tapped */}
         {showMobileSearch && (
           <div className="mb-3 sm:hidden">
@@ -752,241 +731,128 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           transition={{ duration: 0.3 }}
         >
           {/* Status Filter Dropdown */}
-          <div className="relative" data-dropdown-root="status-filter">
+          <div className="hidden sm:block">
+            <SearchModule
+              value={searchText}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleCancelSearch}
+              placeholder="Search by reference, customer name or account number"
+              className="w-full max-w-full md:max-w-[300px]"
+            />
+          </div>
+
+          {/* Adjustment Status Filter Dropdown */}
+          <div className="relative" data-dropdown-root="adjustment-status-filter">
             <button
               type="button"
               className="button-oulined flex items-center gap-2 text-sm md:text-base"
-              onClick={() => setIsStatusFilterOpen((open) => !open)}
+              onClick={() => setIsAdjustmentStatusFilterOpen((open) => !open)}
             >
               <IoMdFunnel className="size-4 md:size-5" />
               <span>
-                {filters.status === PaymentStatus.Confirmed
-                  ? "Confirmed"
-                  : filters.status === PaymentStatus.Pending
+                {filters.adjustmentStatus === AdjustmentStatus.None.toString()
+                  ? "None"
+                  : filters.adjustmentStatus === AdjustmentStatus.Pending.toString()
                   ? "Pending"
-                  : filters.status === PaymentStatus.Failed
-                  ? "Failed"
-                  : filters.status === PaymentStatus.Reversed
-                  ? "Reversed"
-                  : "All Status"}
+                  : filters.adjustmentStatus === AdjustmentStatus.Approved.toString()
+                  ? "Approved"
+                  : "All Adjustment Status"}
               </span>
               <ChevronDown
                 className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                  isStatusFilterOpen ? "rotate-180" : ""
+                  isAdjustmentStatusFilterOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
-            {isStatusFilterOpen && (
+            {isAdjustmentStatusFilterOpen && (
               <div className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
                 <div className="py-1">
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === "" ? "bg-gray-50" : ""
+                      filters.adjustmentStatus === "" ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange("")}
+                    onClick={() => handleAdjustmentStatusFilterChange("")}
                   >
-                    All Status
+                    All Adjustment Status
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Confirmed ? "bg-gray-50" : ""
+                      filters.adjustmentStatus === AdjustmentStatus.None.toString() ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Confirmed)}
+                    onClick={() => handleAdjustmentStatusFilterChange(AdjustmentStatus.None.toString())}
                   >
-                    Confirmed
+                    None
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Pending ? "bg-gray-50" : ""
+                      filters.adjustmentStatus === AdjustmentStatus.Pending.toString() ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Pending)}
+                    onClick={() => handleAdjustmentStatusFilterChange(AdjustmentStatus.Pending.toString())}
                   >
                     Pending
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Failed ? "bg-gray-50" : ""
+                      filters.adjustmentStatus === AdjustmentStatus.Approved.toString() ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Failed)}
+                    onClick={() => handleAdjustmentStatusFilterChange(AdjustmentStatus.Approved.toString())}
                   >
-                    Failed
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Reversed ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Reversed)}
-                  >
-                    Reversed
+                    Approved
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Channel Filter Dropdown */}
-          <div className="relative" data-dropdown-root="channel-filter">
+          {/* Category Filter Dropdown */}
+          <div className="relative" data-dropdown-root="category-filter">
             <button
               type="button"
               className="button-oulined flex items-center gap-2 text-sm md:text-base"
-              onClick={() => setIsChannelFilterOpen((open) => !open)}
+              onClick={() => setIsCategoryFilterOpen((open) => !open)}
             >
               <IoMdFunnel className="size-4 md:size-5" />
               <span>
-                {filters.channel === PaymentChannel.Cash
-                  ? "Cash"
-                  : filters.channel === PaymentChannel.BankTransfer
-                  ? "Bank Transfer"
-                  : filters.channel === PaymentChannel.Pos
-                  ? "POS"
-                  : filters.channel === PaymentChannel.Card
-                  ? "Card"
-                  : filters.channel === PaymentChannel.VendorWallet
-                  ? "Vendor Wallet"
-                  : filters.channel === PaymentChannel.Chaque
-                  ? "Cheque"
-                  : "All Channels"}
+                {filters.category === BillCategory.Residential.toString()
+                  ? "Residential"
+                  : filters.category === BillCategory.Commercial.toString()
+                  ? "Commercial"
+                  : "All Categories"}
               </span>
               <ChevronDown
                 className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                  isChannelFilterOpen ? "rotate-180" : ""
+                  isCategoryFilterOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
-            {isChannelFilterOpen && (
+            {isCategoryFilterOpen && (
               <div className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
                 <div className="py-1">
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === "" ? "bg-gray-50" : ""
+                      filters.category === "" ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleChannelFilterChange("")}
+                    onClick={() => handleCategoryFilterChange("")}
                   >
-                    All Channels
+                    All Categories
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Cash ? "bg-gray-50" : ""
+                      filters.category === BillCategory.Residential.toString() ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Cash)}
+                    onClick={() => handleCategoryFilterChange(BillCategory.Residential.toString())}
                   >
-                    Cash
+                    Residential
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.BankTransfer ? "bg-gray-50" : ""
+                      filters.category === BillCategory.Commercial.toString() ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.BankTransfer)}
+                    onClick={() => handleCategoryFilterChange(BillCategory.Commercial.toString())}
                   >
-                    Bank Transfer
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Pos ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Pos)}
-                  >
-                    POS
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Card ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Card)}
-                  >
-                    Card
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.VendorWallet ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.VendorWallet)}
-                  >
-                    Vendor Wallet
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Chaque ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Chaque)}
-                  >
-                    Cheque
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Collector Type Filter Dropdown */}
-          <div className="relative" data-dropdown-root="collector-type-filter">
-            <button
-              type="button"
-              className="button-oulined flex items-center gap-2 text-sm md:text-base"
-              onClick={() => setIsCollectorTypeFilterOpen((open) => !open)}
-            >
-              <IoMdFunnel className="size-4 md:size-5" />
-              <span>
-                {filters.collectorType === CollectorType.Customer
-                  ? "Customer"
-                  : filters.collectorType === CollectorType.SalesRep
-                  ? "Sales Rep"
-                  : filters.collectorType === CollectorType.Vendor
-                  ? "Vendor"
-                  : filters.collectorType === CollectorType.Staff
-                  ? "Staff"
-                  : "All Collectors"}
-              </span>
-              <ChevronDown
-                className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                  isCollectorTypeFilterOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {isCollectorTypeFilterOpen && (
-              <div className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                <div className="py-1">
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === "" ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleCollectorTypeFilterChange("")}
-                  >
-                    All Collectors
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.Customer ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.Customer)}
-                  >
-                    Customer
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.SalesRep ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.SalesRep)}
-                  >
-                    Sales Rep
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.Vendor ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.Vendor)}
-                  >
-                    Vendor
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.Staff ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.Staff)}
-                  >
-                    Staff
+                    Commercial
                   </button>
                 </div>
               </div>
@@ -1004,7 +870,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           </div>
 
           {/* Clear Filters Button */}
-          {(filters.status || filters.channel || filters.collectorType || filters.paymentTypeId || searchText) && (
+          {(filters.status || filters.adjustmentStatus || filters.category || searchText) && (
             <motion.button
               onClick={clearFilters}
               className="button-oulined text-sm md:text-base"
@@ -1018,13 +884,13 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       </motion.div>
 
       {/* Error Message */}
-      {paymentsError && (
+      {myBillsError && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
-          <p>Error loading payments: {paymentsError}</p>
+          <p>Error loading bills: {myBillsError}</p>
         </div>
       )}
 
-      {currentPayments.length === 0 ? (
+      {currentBills.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -1037,9 +903,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "No matching payments found"
-              : "No payments available"}
+            {searchText || filters.status || filters.adjustmentStatus || filters.category
+              ? "No matching bills found"
+              : "No bills available"}
           </motion.p>
           <motion.p
             className="text-sm text-gray-600"
@@ -1047,9 +913,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            {searchText || filters.status || filters.channel || filters.collectorType
+            {searchText || filters.status || filters.adjustmentStatus || filters.category
               ? "Try adjusting your search or filters"
-              : "Payments will appear here once transactions are processed"}
+              : "Bills will appear here once they are generated"}
           </motion.p>
         </motion.div>
       ) : (
@@ -1066,12 +932,12 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   <th className="whitespace-nowrap border-b p-4 text-sm">
                     <div className="flex items-center gap-2">
                       <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                      Ref
+                      Reference
                     </div>
                   </th>
                   <th
                     className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("amount")}
+                    onClick={() => toggleSort("totalDue")}
                   >
                     <div className="flex items-center gap-2">
                       Amount <RxCaretSort />
@@ -1087,26 +953,18 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("agentName")}
+                    onClick={() => toggleSort("period")}
                   >
                     <div className="flex items-center gap-2">
-                      Agent <RxCaretSort />
+                      Period <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("paymentTypeName")}
+                    onClick={() => toggleSort("category")}
                   >
                     <div className="flex items-center gap-2">
-                      Payment Type <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("channel")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Channel <RxCaretSort />
+                      Category <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -1119,18 +977,26 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("collectorType")}
+                    onClick={() => toggleSort("adjustmentStatus")}
                   >
                     <div className="flex items-center gap-2">
-                      Collector <RxCaretSort />
+                      Adj. Status <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("paidAtUtc")}
+                    onClick={() => toggleSort("consumptionKwh")}
                   >
                     <div className="flex items-center gap-2">
-                      Date/Time <RxCaretSort />
+                      Consumption (kWh) <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("createdAt")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Created Date <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -1148,48 +1014,49 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {currentPayments.map((payment, index) => (
+                  {currentBills.map((bill, index) => (
                     <motion.tr
-                      key={payment.id}
+                      key={bill.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                        {payment.reference || `PAY-${payment.id}`}
+                        {bill.publicReference || `BILL-${bill.id}`}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-semibold">
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency(bill.totalDue)}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <div>
-                          <div className="font-medium">{payment.customerName || "-"}</div>
-                          <div className="text-xs text-gray-500">{payment.customerAccountNumber || ""}</div>
+                          <div className="font-medium">{bill.customerName || "-"}</div>
+                          <div className="text-xs text-gray-500">{bill.customerAccountNumber || ""}</div>
                         </div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <div>
-                          <div className="font-medium">{payment.agentName || "-"}</div>
-                          <div className="text-xs text-gray-500">
-                            {payment.agentCode ? `Code: ${payment.agentCode}` : ""}
-                          </div>
+                          <div className="font-medium">{bill.period || "-"}</div>
+                          <div className="text-xs text-gray-500">{bill.billingPeriod?.displayName || ""}</div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.paymentTypeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getChannelStyle(payment.channel)}
+                          style={getCategoryStyle(bill.category)}
                           className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
-                          {payment.channel}
+                          {bill.category === BillCategory.Residential
+                            ? "Residential"
+                            : bill.category === BillCategory.Commercial
+                            ? "Commercial"
+                            : "Unknown"}
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getStatusStyle(payment.status)}
+                          style={getStatusStyle(bill.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
@@ -1197,30 +1064,45 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                           <span
                             className="size-2 rounded-full"
                             style={{
-                              backgroundColor: getStatusStyle(payment.status).dotColor,
+                              backgroundColor: getStatusStyle(bill.status).dotColor,
                             }}
                           ></span>
-                          {payment.status}
+                          {bill.status === BillStatus.Draft
+                            ? "Draft"
+                            : bill.status === BillStatus.Generated
+                            ? "Generated"
+                            : bill.status === BillStatus.Finalized
+                            ? "Finalized"
+                            : "Unknown"}
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getCollectorTypeStyle(payment.collectorType)}
+                          style={getAdjustmentStatusStyle(bill.adjustmentStatus)}
                           className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
-                          {payment.collectorType}
+                          {bill.adjustmentStatus === AdjustmentStatus.None
+                            ? "None"
+                            : bill.adjustmentStatus === AdjustmentStatus.Pending
+                            ? "Pending"
+                            : bill.adjustmentStatus === AdjustmentStatus.Approved
+                            ? "Approved"
+                            : "Unknown"}
                         </motion.div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{formatDate(payment.paidAtUtc)}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {bill.consumptionKwh?.toLocaleString() || "-"}
+                      </td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{formatDate(bill.createdAt)}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{bill.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         <ButtonModule
                           size="sm"
                           variant="outline"
                           icon={<VscEye />}
-                          onClick={() => router.push(`/customer-portal/payment-history/${payment.id}`)}
+                          onClick={() => router.push(`/customer-portal/bills/${bill.id}`)}
                         >
                           View
                         </ButtonModule>
@@ -1326,4 +1208,4 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   )
 }
 
-export default AllPaymentsTable
+export default AllBills

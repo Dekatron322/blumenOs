@@ -197,6 +197,22 @@ export const allLinks: LinkItem[] = [
       { name: "Change Request", href: "/payment/change-request", privilegeKey: "payments", requiredActions: ["E"] },
     ],
   },
+
+  {
+    name: "Debt Management",
+    href: "/dm",
+    icon: PaymentIcon,
+    privilegeKey: "payments",
+    requiredActions: ["R"],
+    children: [
+      { name: "Overview", href: "/dm/overview", privilegeKey: "payments", requiredActions: ["W"] },
+      { name: "All Debts Entries", href: "/dm/ade", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "All Debts", href: "/dm/all-debts", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Debt Aging", href: "/dm/aging", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Recovery Policies", href: "/dm/rp", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Add Debt", href: "/dm/add-debt", privilegeKey: "payments", requiredActions: ["W"] },
+    ],
+  },
   {
     name: "Sales Rep",
     href: "/agent-management",

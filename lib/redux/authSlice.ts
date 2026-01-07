@@ -167,8 +167,9 @@ const isTokenExpired = (token: string): boolean => {
 // Refresh token function
 export const refreshAccessToken = createAsyncThunk("auth/refreshToken", async (_, { getState, rejectWithValue }) => {
   try {
-    const state = getState() as { auth: AuthState }
-    const refreshToken = state.auth.tokens?.refreshToken
+    // Use localStorage directly to avoid stale refresh tokens from Redux state
+    const authState = loadAuthState()
+    const refreshToken = authState?.tokens?.refreshToken
 
     if (!refreshToken) {
       return rejectWithValue("No refresh token available")
@@ -408,17 +409,18 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.fulfilled, (state, action: PayloadAction<RefreshTokenResponse>) => {
         state.isRefreshing = false
-        if (state.tokens) {
-          state.tokens.accessToken = action.payload.data.accessToken
-          state.tokens.refreshToken = action.payload.data.refreshToken
-          state.tokens.expiresAt = action.payload.data.expiresAt
-          state.mustChangePassword = action.payload.data.mustChangePassword
-          state.isAgentOnly = action.payload.data.isAgentOnly
-          // Prefer refreshed agent if provided, otherwise keep existing
-          state.agent = action.payload.data.agent ?? state.agent
-          state.error = null
-          saveAuthState(state)
+        // Always update tokens, even if they were null
+        state.tokens = {
+          accessToken: action.payload.data.accessToken,
+          refreshToken: action.payload.data.refreshToken,
+          expiresAt: action.payload.data.expiresAt,
         }
+        state.mustChangePassword = action.payload.data.mustChangePassword
+        state.isAgentOnly = action.payload.data.isAgentOnly
+        // Prefer refreshed agent if provided, otherwise keep existing
+        state.agent = action.payload.data.agent ?? state.agent
+        state.error = null
+        saveAuthState(state)
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.isRefreshing = false
