@@ -430,6 +430,10 @@ export const API_ENDPOINTS = {
     MAKE_PAYMENT: "/customer-dashboard/payments",
     MY_BILLS: "/customer-dashboard/bills",
     BILLS_DETAILS: "/customer-dashboard/bills/{id}",
+    SUPPORT_CATEGORIES: "/customers/support-tickets/categories",
+    RAISE_TICKET: "/customers/support-tickets",
+    SUPPORT_TICKETS: "/customers/support-tickets",
+    TICKET_DETAIL: "/customers/support-tickets/{id}",
   },
 }
 

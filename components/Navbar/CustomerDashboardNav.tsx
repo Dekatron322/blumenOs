@@ -9,6 +9,7 @@ import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft"
 import { RxCross2 } from "react-icons/rx"
 import { Links } from "components/Sidebar/Links"
 import { SalesRepLinks } from "components/Sidebar/SalesRepLinks"
+import { CustomerLinks } from "components/Sidebar/CustomerLinks"
 import { ChevronDown } from "lucide-react"
 import { FiUser } from "react-icons/fi"
 import LogoutModal from "components/ui/Modal/logout-modal"
@@ -205,7 +206,7 @@ const CustomerDashboardNav = () => {
           </div>
 
           <div className="mt-2 flex flex-col items-start space-y-2">
-            {pathname.startsWith("/sales-rep") ? <SalesRepLinks isCollapsed={false} /> : <Links isCollapsed={false} />}
+            <CustomerLinks isCollapsed={false} />
 
             {/* Mobile Logout */}
             <button
