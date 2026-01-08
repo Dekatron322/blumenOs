@@ -1004,10 +1004,10 @@ const AllCustomers = () => {
         <div className="flex items-center justify-between">
           <span className="text-xs md:text-sm">Outstanding Arrears:</span>
           <div
-            style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
+            style={getArrearsStyle((customer.customerOutstandingDebtBalance || 0).toString())}
             className="rounded-full px-2 py-1 text-xs font-medium"
           >
-            ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
+            ₦{(customer.customerOutstandingDebtBalance || 0).toLocaleString()}
           </div>
         </div>
       </div>
@@ -1062,10 +1062,10 @@ const AllCustomers = () => {
                   <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">Urban</div>
                 )}
                 <div
-                  style={getArrearsStyle(customer.customerOutstandingDebtBalance.toString())}
+                  style={getArrearsStyle((customer.customerOutstandingDebtBalance || 0).toString())}
                   className="rounded-full px-2 py-1 text-xs font-medium"
                 >
-                  ₦{customer.customerOutstandingDebtBalance.toLocaleString()}
+                  ₦{(customer.customerOutstandingDebtBalance || 0).toLocaleString()}
                 </div>
               </div>
             </div>

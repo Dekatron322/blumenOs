@@ -64,7 +64,7 @@ const CustomerSidebar = () => {
         </div>
       </div>
 
-      {!isAgentOnly && (
+      {/* {!isAgentOnly && (
         <div className="my-4 mt-auto flex h-auto items-center justify-between border-t px-6">
           <div className="flex w-full items-center justify-between pt-5">
             <button
@@ -79,7 +79,7 @@ const CustomerSidebar = () => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

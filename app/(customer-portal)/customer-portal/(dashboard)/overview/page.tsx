@@ -797,6 +797,7 @@ export default function AgentManagementDashboard() {
   const [paymentSummaryRange, setPaymentSummaryRange] = useState<PaymentSummaryRange>("today")
 
   const { user } = useSelector((state: RootState) => state.auth)
+  const { customer } = useSelector((state: RootState) => state.customerAuth)
   const {
     agentInfo,
     agentInfoLoading,
@@ -886,13 +887,7 @@ export default function AgentManagementDashboard() {
     setPerformanceChartType(range)
   }
 
-  const agentLastName = user?.fullName
-    ? user.fullName
-        .trim()
-        .split(" ")
-        .filter((part) => part.length > 0)
-        .slice(-1)[0]
-    : "Agent"
+  const customerName = customer?.fullName || "Customer"
 
   const timeRanges = [
     { value: TimeRange.Today, label: "Today" },
@@ -918,7 +913,7 @@ export default function AgentManagementDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Welcome {agentLastName}!</h4>
+                <h4 className="text-xl font-semibold sm:text-2xl">Welcome {customerName}!</h4>
               </div>
 
               <motion.div
@@ -943,7 +938,7 @@ export default function AgentManagementDashboard() {
                   size="md"
                   className="w-full sm:w-auto"
                   icon={<VendingIconOutline color="white" />}
-                  onClick={() => router.push("/customer-portal/vend")}
+                  onClick={() => router.push("/customer-portal/buy-unit")}
                 >
                   <span className="hidden sm:inline">Buy Unit</span>
                 </ButtonModule>

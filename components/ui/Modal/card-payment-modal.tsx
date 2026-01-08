@@ -203,7 +203,7 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
                               </span>
                             </div>
                             <div className="mt-1 text-xs text-gray-600">
-                              {token.unit} kWh • ₦{token.amount}
+                              ₦{token.amount} {token.unit}
                             </div>
                           </div>
                           <button
