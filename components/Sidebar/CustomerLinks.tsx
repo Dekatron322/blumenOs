@@ -11,6 +11,7 @@ import {
   CashClearanceIcon,
   CollectCash,
   MakeChangeRequestIcon,
+  MeterOutlineIcon,
   RaiseTicketIcon,
   ReportOutageIcon,
   VendingIcon,
@@ -39,28 +40,28 @@ const allLinks: NavLink[] = [
   {
     name: "My Meters",
     href: "/customer-portal/meters",
-    icon: PaymentIcon,
+    icon: MeterOutlineIcon,
   },
-  // {
-  //   name: "Support Ticket",
-  //   href: "/customer-portal/support-ticket",
-  //   icon: RaiseTicketIcon,
-  // },
+  {
+    name: "Support Ticket",
+    href: "/customer-portal/support-ticket",
+    icon: RaiseTicketIcon,
+  },
   {
     name: "My Bills",
     href: "/customer-portal/bills",
-    icon: RaiseTicketIcon,
+    icon: PaymentIcon,
   },
   {
     name: "Report Outage",
     href: "/customer-portal/report-outage",
     icon: ReportOutageIcon,
   },
-  {
-    name: "Make Change Request",
-    href: "/customer-portal/make-change-request",
-    icon: MakeChangeRequestIcon,
-  },
+  // {
+  //   name: "Make Change Request",
+  //   href: "/customer-portal/make-change-request",
+  //   icon: MakeChangeRequestIcon,
+  // },
   {
     name: "View Payment History",
     href: "/customer-portal/payment-history",

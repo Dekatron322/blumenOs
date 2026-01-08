@@ -43,6 +43,7 @@ function BuyUnitContent() {
   const [isValidatingMeter, setIsValidatingMeter] = useState(false)
   const [meterInfo, setMeterInfo] = useState<any>(null)
   const [meterValidationError, setMeterValidationError] = useState<string | null>(null)
+  const [selectedMeter, setSelectedMeter] = useState<any>(null)
 
   // Step 3: Payment details
   const [amountInput, setAmountInput] = useState("")
@@ -68,7 +69,7 @@ function BuyUnitContent() {
 
   // Current logged in customer info (for self vend)
   const customerAccountNumber = customer?.accountNumber || ""
-  const customerDRN = customer?.meters?.find((meter: any) => meter.id === 1)?.drn || ""
+  const customerDRN = customer?.meters?.[0]?.drn || ""
   const customerType = customer?.isMeteredPostpaid ? "postpaid" : "prepaid"
 
   // Clean up polling on unmount
@@ -78,16 +79,49 @@ function BuyUnitContent() {
     }
   }, [])
 
-  // Auto-lookup customer when component mounts for self vend
-  useEffect(() => {
-    if (vendType === "self" && customer && customerDRN && !meterInfo && !isLookingUpCustomer) {
+  // Handle meter selection for self vend
+  const handleMeterSelection = (meter: any) => {
+    setSelectedMeter(meter)
+    setMeterValidationError(null)
+
+    if (meter?.drn) {
       setIsValidatingMeter(true)
       dispatch(
         customerLookup({
-          reference: customerDRN,
+          reference: meter.drn,
           type: customerType,
         })
       )
+    } else {
+      setMeterValidationError("Selected meter has no DRN. Please contact support.")
+    }
+  }
+
+  // Auto-lookup customer when component mounts for self vend
+  useEffect(() => {
+    if (vendType === "self" && customer && !meterInfo && !isLookingUpCustomer) {
+      // Check if customer has meters
+      if (!customer.meters || customer.meters.length === 0) {
+        setMeterValidationError(
+          customerType === "postpaid"
+            ? "No meter found for your postpaid account. Please request a meter installation or contact support."
+            : "No meter found for your prepaid account. Please request a meter installation or contact support."
+        )
+        return
+      }
+
+      // If customer has only one meter, proceed with lookup automatically
+      if (customer.meters.length === 1 && customerDRN) {
+        setSelectedMeter(customer.meters[0])
+        setIsValidatingMeter(true)
+        dispatch(
+          customerLookup({
+            reference: customerDRN,
+            type: customerType,
+          })
+        )
+      }
+      // If multiple meters, show selection UI (handled in renderSelfMeterSelection)
     }
   }, [vendType, customer, customerDRN, customerType, meterInfo, isLookingUpCustomer, dispatch])
 
@@ -159,13 +193,13 @@ function BuyUnitContent() {
       setIsValidatingMeter(false)
       setMeterValidationError(null)
 
-      const meterWithIdOne = customerLookupData.meters?.find((meter: any) => meter.id === 1)
-      const meterDRN = meterWithIdOne?.drn
-      const meterTariff = meterWithIdOne?.tariffRate
+      const firstMeter = customerLookupData.meters?.[0]
+      const meterDRN = firstMeter?.drn
+      const meterTariff = firstMeter?.tariffRate
 
       console.log("Customer lookup response:", {
         customerLookupData,
-        meterWithIdOne,
+        firstMeter,
         meterDRN,
         meterTariff,
       })
@@ -176,7 +210,7 @@ function BuyUnitContent() {
         tariff: meterTariff?.toString() || "R2",
         serviceCenter: customerLookupData.serviceCenterName || "Default Service Center",
         outstandingBalance: customerLookupData.customerOutstandingDebtBalance || 0,
-        isActive: meterWithIdOne?.isMeterActive || true,
+        isActive: firstMeter?.isMeterActive || true,
       })
 
       if (vendType === "self") {
@@ -527,10 +561,8 @@ function BuyUnitContent() {
       return
     }
 
-    if (!meterType) {
-      setMeterValidationError("Please select meter type")
-      return
-    }
+    // Default to prepaid for third party
+    const prepaidMeterType = "prepaid"
 
     setIsValidatingMeter(true)
     setMeterInfo(null)
@@ -540,7 +572,7 @@ function BuyUnitContent() {
       await dispatch(
         customerLookup({
           reference: meterNumber.trim(),
-          type: meterType,
+          type: prepaidMeterType,
         })
       ).unwrap()
     } catch (error) {
@@ -785,7 +817,7 @@ function BuyUnitContent() {
 
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Enter the meter number and select the meter type of the customer you want to purchase units for.
+          Enter the meter number of the prepaid customer you want to purchase units for.
         </p>
 
         <form onSubmit={validateThirdPartyMeter} className="space-y-4">
@@ -800,40 +832,6 @@ function BuyUnitContent() {
             required
             error={meterValidationError || undefined}
           />
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Meter Type</label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setMeterType("prepaid")}
-                className={`flex-1 rounded-lg border p-3 transition-colors ${
-                  meterType === "prepaid"
-                    ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                    : "border-gray-300 bg-gray-50 text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                <div className="text-center">
-                  <div className="text-sm font-medium">Prepaid Meter</div>
-                  <div className="text-xs text-gray-500">Pay before use</div>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMeterType("postpaid")}
-                className={`flex-1 rounded-lg border p-3 transition-colors ${
-                  meterType === "postpaid"
-                    ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                    : "border-gray-300 bg-gray-50 text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                <div className="text-center">
-                  <div className="text-sm font-medium">Postpaid Meter</div>
-                  <div className="text-xs text-gray-500">Use now, pay later</div>
-                </div>
-              </button>
-            </div>
-          </div>
 
           <div className="flex gap-3">
             <ButtonModule type="submit" variant="primary" className="w-full" disabled={isValidatingMeter}>
@@ -875,6 +873,109 @@ function BuyUnitContent() {
     </motion.div>
   )
 
+  const renderSelfMeterSelection = () => (
+    <motion.div
+      className="rounded-md border bg-white p-5 shadow-sm"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-gray-800">Select Your Meter</h2>
+        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">Self Purchase</span>
+      </div>
+
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          You have multiple meters. Please select the meter you want to purchase electricity units for.
+        </p>
+
+        {meterValidationError && (
+          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {meterValidationError}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {customer?.meters?.map((meter: any, index: number) => (
+            <div
+              key={meter.id || index}
+              className={`cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${
+                selectedMeter?.id === meter.id
+                  ? "border-[#004B23] bg-[#004B23]/5"
+                  : "border-gray-200 bg-gray-50 hover:border-[#004B23] hover:bg-[#004B23]/5"
+              }`}
+              onClick={() => handleMeterSelection(meter)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="mb-2 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-gray-800">Meter #{index + 1}</h3>
+                    {meter.isMeterActive && (
+                      <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                        <FaCheckCircle className="size-3" /> Active
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
+                    <div>
+                      <span className="font-medium">DRN:</span> {meter.drn || "N/A"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Serial Number:</span> {meter.serialNumber || "N/A"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Address:</span> {meter.address || "N/A"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Meter Type:</span> {meter.isSmart ? "Smart" : "Regular"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Category:</span> {meter.meterCategory || "N/A"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Tariff Rate:</span> ₦{meter.tariffRate?.toFixed(2) || "N/A"}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedMeter?.id === meter.id && (
+                  <div className="ml-4">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-[#004B23]">
+                      <svg className="size-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3">
+          <ButtonModule
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={() => {
+              setSelectedMeter(null)
+              setVendType(null)
+              setMeterValidationError(null)
+            }}
+          >
+            Back
+          </ButtonModule>
+        </div>
+      </div>
+    </motion.div>
+  )
+
   const renderPurchaseForm = () => (
     <>
       <motion.div
@@ -910,7 +1011,7 @@ function BuyUnitContent() {
             </div>
             <div>
               <span className="font-medium text-[#004B23]">Meter Number:</span>
-              <p className="text-base font-bold text-[#004B23]">{meterInfo?.meterNumber}</p>
+              <p className="text-base font-bold text-[#004B23]">{selectedMeter?.drn || meterInfo?.meterNumber}</p>
             </div>
           </div>
 
@@ -985,7 +1086,7 @@ function BuyUnitContent() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-1">
             <div>
               <FormInputModule
                 label="Amount to Pay"
@@ -1001,7 +1102,7 @@ function BuyUnitContent() {
               <p className="mt-1 text-xs text-gray-500">Minimum amount: ₦500</p>
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Estimated Units</label>
               <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
                 {amountInput ? (
@@ -1015,7 +1116,7 @@ function BuyUnitContent() {
                   <span className="text-gray-400">Enter amount to see estimated units</span>
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
@@ -1097,6 +1198,14 @@ function BuyUnitContent() {
               {!vendType && renderStep1()}
 
               {vendType === "self" && isValidatingMeter && renderLoadingState()}
+
+              {vendType === "self" &&
+                !isValidatingMeter &&
+                !meterInfo &&
+                customer?.meters &&
+                customer.meters.length > 1 &&
+                !selectedMeter &&
+                renderSelfMeterSelection()}
 
               {vendType === "third-party" && !meterInfo && renderStep2ThirdParty()}
 
