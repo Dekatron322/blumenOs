@@ -5,17 +5,7 @@ import ArrowIcon from "public/arrow-icon"
 import { useCallback, useEffect, useState } from "react"
 import AddCustomerModal from "components/ui/Modal/add-customer-modal"
 import { motion } from "framer-motion"
-import {
-  AddCustomerIcon,
-  BillingIcon,
-  CustomeraIcon,
-  PostpaidIcon,
-  RefreshCircleIcon,
-  VendingIcon,
-} from "components/Icons/Icons"
-
 import { ButtonModule } from "components/ui/Button/Button"
-import { clearCustomerAnalytics, fetchCustomerAnalytics } from "lib/redux/analyticsSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { useRouter } from "next/navigation"
 import AllCustomers from "components/Tables/AllCustomers"
@@ -359,19 +349,10 @@ export default function AllTransactions() {
 
   // Redux hooks
   const dispatch = useAppDispatch()
-  const { customerAnalyticsData, customerAnalyticsLoading, customerAnalyticsError, customerAnalyticsSuccess } =
-    useAppSelector((state) => state.analytics)
   const { customers, loading: customersLoading } = useAppSelector((state) => state.customers)
 
-  // Fetch customer analytics on component mount
-  useEffect(() => {
-    dispatch(fetchCustomerAnalytics())
-  }, [dispatch])
-
   const handleRefreshData = useCallback(() => {
-    dispatch(clearCustomerAnalytics())
-    dispatch(fetchCustomerAnalytics())
-    // Also refresh customer data
+    // Refresh customer data
     dispatch(
       fetchCustomers({
         pageNumber: 1,
@@ -416,8 +397,6 @@ export default function AllTransactions() {
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
-    // Refresh customer analytics after adding customer
-    dispatch(fetchCustomerAnalytics())
   }
 
   const handleOpenAddCustomerModal = () => {
@@ -454,9 +433,9 @@ export default function AllTransactions() {
                   onClick={handleRefreshData}
                   icon={<RefreshCircleIcon />}
                   iconPosition="start"
-                  disabled={customerAnalyticsLoading}
+                  disabled={false}
                 >
-                  {customerAnalyticsLoading ? "Refreshing..." : "Refresh Data"}
+                  Refresh Data
                 </ButtonModule> */}
                 {/* Polling Controls */}
                 <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
@@ -509,69 +488,16 @@ export default function AllTransactions() {
               </motion.div>
             </div>
 
-            {/* Error Message */}
-            {customerAnalyticsError && (
-              <motion.div
-                className="mx-16 mb-4 rounded-md bg-red-50 p-4 text-red-700"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <p>Error loading customer analytics: {customerAnalyticsError}</p>
-              </motion.div>
-            )}
-
             {/* Main Content Area */}
             <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 2xl:px-16">
               <div className="w-full">
-                {customerAnalyticsLoading ? (
-                  // Loading State
-                  <>
-                    <SkeletonLoader />
-                    <LoadingState showCategories={true} />
-                  </>
-                ) : (
-                  // Loaded State
-                  <>
-                    {customerAnalyticsData && (
-                      <>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.2 }}
-                        >
-                          <AllCustomers />
-                        </motion.div>
-                      </>
-                    )}
-
-                    {/* Empty State */}
-                    {!customerAnalyticsData && !customerAnalyticsLoading && !customerAnalyticsError && (
-                      <motion.div
-                        className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-12"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <div className="text-center">
-                          <CustomeraIcon />
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No Customer Data</h3>
-                          <p className="mt-2 text-sm text-gray-500">
-                            No customer analytics data available. Try refreshing the data.
-                          </p>
-                          <ButtonModule
-                            variant="primary"
-                            size="md"
-                            onClick={handleRefreshData}
-                            className="mt-4"
-                            icon={<RefreshCircleIcon />}
-                            iconPosition="start"
-                          >
-                            Refresh Data
-                          </ButtonModule>
-                        </div>
-                      </motion.div>
-                    )}
-                  </>
-                )}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <AllCustomers />
+                </motion.div>
               </div>
             </div>
           </div>
