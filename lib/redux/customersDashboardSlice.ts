@@ -1109,6 +1109,140 @@ interface BillDetailsResponse {
   data: BillDetails
 }
 
+// Support Category Interface
+interface SupportCategory {
+  id: number
+  name: string
+  description: string
+  isActive: boolean
+}
+
+// Support Categories Response Interface
+interface SupportCategoriesResponse {
+  isSuccess: boolean
+  message: string
+  data: SupportCategory[]
+}
+
+// Raise Ticket Request Interface
+interface RaiseTicketRequest {
+  categoryId: number
+  title: string
+  message: string
+  fileUrls: string[]
+}
+
+// Ticket Message Interface
+interface TicketMessage {
+  id: number
+  senderType: "Customer" | "Agent" | "System"
+  senderCustomerId?: number
+  senderUserId?: number
+  senderName: string
+  message: string
+  fileUrls: string[]
+  sentAtUtc: string
+}
+
+// Raised Ticket Data Interface
+interface RaisedTicketData {
+  id: number
+  reference: string
+  title: string
+  status: "Open" | "In-Progress" | "Resolved" | "Closed"
+  categoryId: number
+  categoryName: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  createdAtUtc: string
+  lastMessageAtUtc: string
+  messages: TicketMessage[]
+}
+
+// Raise Ticket Response Interface
+interface RaiseTicketResponse {
+  isSuccess: boolean
+  message: string
+  data: RaisedTicketData
+}
+
+// Support Ticket Item Interface
+interface SupportTicketItem {
+  id: number
+  reference: string
+  title: string
+  status: "Open" | "In-Progress" | "Resolved" | "Closed"
+  categoryId: number
+  categoryName: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  lastMessageAtUtc: string
+  createdAtUtc: string
+}
+
+// Support Tickets Response Interface
+interface SupportTicketsResponse {
+  isSuccess: boolean
+  message: string
+  data: SupportTicketItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+// Ticket Detail Message Interface
+interface TicketDetailMessage {
+  id: number
+  senderType: "Customer" | "User"
+  senderCustomerId?: number
+  senderUserId?: number
+  senderName: string
+  message: string
+  fileUrls: string[]
+  sentAtUtc: string
+}
+
+// Ticket Detail Data Interface
+interface TicketDetailData {
+  id: number
+  reference: string
+  title: string
+  status: "Open" | "Closed" | "In Progress" | string
+  categoryId: number
+  categoryName: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  createdAtUtc: string
+  lastMessageAtUtc: string
+  messages: TicketDetailMessage[]
+}
+
+// Ticket Detail Response Interface
+interface TicketDetailResponse {
+  isSuccess: boolean
+  message: string
+  data: TicketDetailData
+}
+
+// Get Support Tickets Request Interface
+interface GetSupportTicketsRequest {
+  pageNumber: number
+  pageSize: number
+  customerId?: number
+  categoryId?: number
+  status?: string
+  reference?: string
+  search?: string
+  startDateUtc?: string
+  endDateUtc?: string
+}
+
 interface CustomersDashboardState {
   isLoadingSummary: boolean
   isLoadingPayments: boolean
@@ -1123,6 +1257,10 @@ interface CustomersDashboardState {
   isMakingPayment: boolean
   isLoadingMyBills: boolean
   isLoadingBillDetails: boolean
+  isLoadingSupportCategories: boolean
+  isRaisingTicket: boolean
+  isLoadingSupportTickets: boolean
+  isLoadingTicketDetail: boolean
   summaryError: string | null
   paymentsError: string | null
   paymentDetailError: string | null
@@ -1136,6 +1274,10 @@ interface CustomersDashboardState {
   makePaymentError: string | null
   myBillsError: string | null
   billDetailsError: string | null
+  supportCategoriesError: string | null
+  raiseTicketError: string | null
+  supportTicketsError: string | null
+  ticketDetailError: string | null
   summarySuccess: boolean
   paymentsSuccess: boolean
   paymentDetailSuccess: boolean
@@ -1149,6 +1291,10 @@ interface CustomersDashboardState {
   makePaymentSuccess: boolean
   myBillsSuccess: boolean
   billDetailsSuccess: boolean
+  supportCategoriesSuccess: boolean
+  raiseTicketSuccess: boolean
+  supportTicketsSuccess: boolean
+  ticketDetailSuccess: boolean
   lastSummaryMessage: string | null
   lastPaymentsMessage: string | null
   lastPaymentDetailMessage: string | null
@@ -1162,6 +1308,10 @@ interface CustomersDashboardState {
   lastMakePaymentMessage: string | null
   lastMyBillsMessage: string | null
   lastBillDetailsMessage: string | null
+  lastSupportCategoriesMessage: string | null
+  lastRaiseTicketMessage: string | null
+  lastSupportTicketsMessage: string | null
+  lastTicketDetailMessage: string | null
   paymentsSummary: PaymentsSummaryData | null
   paymentsList: PaymentItem[] | null
   paymentDetail: PaymentDetail | null
@@ -1175,6 +1325,10 @@ interface CustomersDashboardState {
   makePaymentResponseData: MakePaymentResponseData | null
   myBillsList: BillItem[] | null
   billDetails: BillDetails | null
+  supportCategoriesList: SupportCategory[] | null
+  raisedTicketData: RaisedTicketData | null
+  supportTicketsList: SupportTicketItem[] | null
+  ticketDetailData: TicketDetailData | null
   paymentsPagination: {
     totalCount: number
     totalPages: number
@@ -1207,6 +1361,14 @@ interface CustomersDashboardState {
     hasNext: boolean
     hasPrevious: boolean
   } | null
+  supportTicketsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  } | null
 }
 
 const initialState: CustomersDashboardState = {
@@ -1223,6 +1385,10 @@ const initialState: CustomersDashboardState = {
   isMakingPayment: false,
   isLoadingMyBills: false,
   isLoadingBillDetails: false,
+  isLoadingSupportCategories: false,
+  isRaisingTicket: false,
+  isLoadingSupportTickets: false,
+  isLoadingTicketDetail: false,
   summaryError: null,
   paymentsError: null,
   paymentDetailError: null,
@@ -1236,6 +1402,10 @@ const initialState: CustomersDashboardState = {
   makePaymentError: null,
   myBillsError: null,
   billDetailsError: null,
+  supportCategoriesError: null,
+  raiseTicketError: null,
+  supportTicketsError: null,
+  ticketDetailError: null,
   summarySuccess: false,
   paymentsSuccess: false,
   paymentDetailSuccess: false,
@@ -1249,6 +1419,10 @@ const initialState: CustomersDashboardState = {
   makePaymentSuccess: false,
   myBillsSuccess: false,
   billDetailsSuccess: false,
+  supportCategoriesSuccess: false,
+  raiseTicketSuccess: false,
+  supportTicketsSuccess: false,
+  ticketDetailSuccess: false,
   lastSummaryMessage: null,
   lastPaymentsMessage: null,
   lastPaymentDetailMessage: null,
@@ -1262,6 +1436,10 @@ const initialState: CustomersDashboardState = {
   lastMakePaymentMessage: null,
   lastMyBillsMessage: null,
   lastBillDetailsMessage: null,
+  lastSupportCategoriesMessage: null,
+  lastRaiseTicketMessage: null,
+  lastSupportTicketsMessage: null,
+  lastTicketDetailMessage: null,
   paymentsSummary: null,
   paymentsList: null,
   paymentDetail: null,
@@ -1275,10 +1453,15 @@ const initialState: CustomersDashboardState = {
   makePaymentResponseData: null,
   myBillsList: null,
   billDetails: null,
+  supportCategoriesList: null,
+  raisedTicketData: null,
+  supportTicketsList: null,
+  ticketDetailData: null,
   paymentsPagination: null,
   recentOutagesPagination: null,
   customerMetersPagination: null,
   myBillsPagination: null,
+  supportTicketsPagination: null,
 }
 
 // Get payments summary thunk
@@ -1696,6 +1879,114 @@ export const getBillDetails = createAsyncThunk(
   }
 )
 
+// Get support categories thunk
+export const getSupportCategories = createAsyncThunk(
+  "customersDashboard/getSupportCategories",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await customerApi.get<SupportCategoriesResponse>(
+        buildApiUrl(API_ENDPOINTS.CUSTOMERS_DASHBOARD.SUPPORT_CATEGORIES)
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch support categories")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch support categories")
+      }
+      return rejectWithValue(error.message || "Network error while fetching support categories")
+    }
+  }
+)
+
+// Raise ticket thunk
+export const raiseTicket = createAsyncThunk(
+  "customersDashboard/raiseTicket",
+  async (ticketData: RaiseTicketRequest, { rejectWithValue }) => {
+    try {
+      const response = await customerApi.post<RaiseTicketResponse>(
+        buildApiUrl(API_ENDPOINTS.CUSTOMERS_DASHBOARD.RAISE_TICKET),
+        ticketData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to raise ticket")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to raise ticket")
+      }
+      return rejectWithValue(error.message || "Network error while raising ticket")
+    }
+  }
+)
+
+// Get support tickets thunk
+export const getSupportTickets = createAsyncThunk(
+  "customersDashboard/getSupportTickets",
+  async (request: GetSupportTicketsRequest, { rejectWithValue }) => {
+    try {
+      const params = new URLSearchParams()
+
+      // Required parameters
+      params.append("PageNumber", request.pageNumber.toString())
+      params.append("PageSize", request.pageSize.toString())
+
+      // Optional parameters - only append if they exist
+      if (request.customerId !== undefined) params.append("CustomerId", request.customerId.toString())
+      if (request.categoryId !== undefined) params.append("CategoryId", request.categoryId.toString())
+      if (request.status) params.append("Status", request.status)
+      if (request.reference) params.append("Reference", request.reference)
+      if (request.search) params.append("Search", request.search)
+      if (request.startDateUtc) params.append("StartDateUtc", request.startDateUtc)
+      if (request.endDateUtc) params.append("EndDateUtc", request.endDateUtc)
+
+      const response = await customerApi.get<SupportTicketsResponse>(
+        `${buildApiUrl(API_ENDPOINTS.CUSTOMERS_DASHBOARD.SUPPORT_TICKETS)}?${params.toString()}`
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch support tickets")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch support tickets")
+      }
+      return rejectWithValue(error.message || "Network error while fetching support tickets")
+    }
+  }
+)
+
+// Get ticket detail thunk
+export const getTicketDetail = createAsyncThunk(
+  "customersDashboard/getTicketDetail",
+  async ({ id }: { id: number }, { rejectWithValue }) => {
+    try {
+      const response = await customerApi.get<TicketDetailResponse>(
+        buildApiUrl(API_ENDPOINTS.CUSTOMERS_DASHBOARD.TICKET_DETAIL.replace("{id}", id.toString()))
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch ticket detail")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch ticket detail")
+      }
+      return rejectWithValue(error.message || "Network error while fetching ticket detail")
+    }
+  }
+)
+
 const customersDashboardSlice = createSlice({
   name: "customersDashboard",
   initialState,
@@ -1709,6 +2000,11 @@ const customersDashboardSlice = createSlice({
       state.paymentsError = null
       state.paymentsSuccess = false
       state.lastPaymentsMessage = null
+    },
+    clearSupportTicketsStatus: (state) => {
+      state.supportTicketsError = null
+      state.supportTicketsSuccess = false
+      state.lastSupportTicketsMessage = null
     },
     clearPaymentDetailStatus: (state) => {
       state.paymentDetailError = null
@@ -1772,6 +2068,21 @@ const customersDashboardSlice = createSlice({
       state.billDetailsSuccess = false
       state.lastBillDetailsMessage = null
     },
+    clearSupportCategoriesStatus: (state) => {
+      state.supportCategoriesError = null
+      state.supportCategoriesSuccess = false
+      state.lastSupportCategoriesMessage = null
+    },
+    clearRaiseTicketStatus: (state) => {
+      state.raiseTicketError = null
+      state.raiseTicketSuccess = false
+      state.lastRaiseTicketMessage = null
+    },
+    clearTicketDetailStatus: (state) => {
+      state.ticketDetailError = null
+      state.ticketDetailSuccess = false
+      state.lastTicketDetailMessage = null
+    },
     clearBillDetails: (state) => {
       state.billDetails = null
       state.billDetailsError = null
@@ -1793,6 +2104,10 @@ const customersDashboardSlice = createSlice({
       state.isMakingPayment = false
       state.isLoadingMyBills = false
       state.isLoadingBillDetails = false
+      state.isLoadingSupportCategories = false
+      state.isRaisingTicket = false
+      state.isLoadingSupportTickets = false
+      state.isLoadingTicketDetail = false
       state.summaryError = null
       state.paymentsError = null
       state.paymentDetailError = null
@@ -1806,6 +2121,10 @@ const customersDashboardSlice = createSlice({
       state.makePaymentError = null
       state.myBillsError = null
       state.billDetailsError = null
+      state.supportCategoriesError = null
+      state.raiseTicketError = null
+      state.supportTicketsError = null
+      state.ticketDetailError = null
       state.summarySuccess = false
       state.paymentsSuccess = false
       state.paymentDetailSuccess = false
@@ -1819,6 +2138,10 @@ const customersDashboardSlice = createSlice({
       state.makePaymentSuccess = false
       state.myBillsSuccess = false
       state.billDetailsSuccess = false
+      state.supportCategoriesSuccess = false
+      state.raiseTicketSuccess = false
+      state.supportTicketsSuccess = false
+      state.ticketDetailSuccess = false
       state.lastSummaryMessage = null
       state.lastPaymentsMessage = null
       state.lastPaymentDetailMessage = null
@@ -1832,6 +2155,10 @@ const customersDashboardSlice = createSlice({
       state.lastMakePaymentMessage = null
       state.lastMyBillsMessage = null
       state.lastBillDetailsMessage = null
+      state.lastSupportCategoriesMessage = null
+      state.lastRaiseTicketMessage = null
+      state.lastSupportTicketsMessage = null
+      state.lastTicketDetailMessage = null
       state.paymentsSummary = null
       state.paymentsList = null
       state.paymentDetail = null
@@ -1845,6 +2172,10 @@ const customersDashboardSlice = createSlice({
       state.makePaymentResponseData = null
       state.myBillsList = null
       state.billDetails = null
+      state.supportCategoriesList = null
+      state.raisedTicketData = null
+      state.supportTicketsList = null
+      state.ticketDetailData = null
       state.paymentsPagination = null
       state.recentOutagesPagination = null
       state.customerMetersPagination = null
@@ -2162,12 +2493,104 @@ const customersDashboardSlice = createSlice({
         state.lastBillDetailsMessage = null
         state.billDetails = null
       })
+      // Get support categories cases
+      .addCase(getSupportCategories.pending, (state) => {
+        state.isLoadingSupportCategories = true
+        state.supportCategoriesError = null
+        state.supportCategoriesSuccess = false
+        state.lastSupportCategoriesMessage = null
+      })
+      .addCase(getSupportCategories.fulfilled, (state, action: PayloadAction<SupportCategoriesResponse>) => {
+        state.isLoadingSupportCategories = false
+        state.supportCategoriesSuccess = true
+        state.supportCategoriesError = null
+        state.lastSupportCategoriesMessage = action.payload.message
+        state.supportCategoriesList = action.payload.data
+      })
+      .addCase(getSupportCategories.rejected, (state, action) => {
+        state.isLoadingSupportCategories = false
+        state.supportCategoriesError = (action.payload as string) || "Failed to fetch support categories"
+        state.supportCategoriesSuccess = false
+        state.lastSupportCategoriesMessage = (action.payload as string) || "Failed to fetch support categories"
+      })
+      // Raise ticket cases
+      .addCase(raiseTicket.pending, (state) => {
+        state.isRaisingTicket = true
+        state.raiseTicketError = null
+        state.raiseTicketSuccess = false
+        state.lastRaiseTicketMessage = null
+      })
+      .addCase(raiseTicket.fulfilled, (state, action: PayloadAction<RaiseTicketResponse>) => {
+        state.isRaisingTicket = false
+        state.raiseTicketSuccess = true
+        state.raiseTicketError = null
+        state.lastRaiseTicketMessage = action.payload.message
+        state.raisedTicketData = action.payload.data
+      })
+      .addCase(raiseTicket.rejected, (state, action) => {
+        state.isRaisingTicket = false
+        state.raiseTicketError = (action.payload as string) || "Failed to raise ticket"
+        state.raiseTicketSuccess = false
+        state.lastRaiseTicketMessage = (action.payload as string) || "Failed to raise ticket"
+      })
+      // Get support tickets cases
+      .addCase(getSupportTickets.pending, (state) => {
+        state.isLoadingSupportTickets = true
+        state.supportTicketsError = null
+        state.supportTicketsSuccess = false
+        state.lastSupportTicketsMessage = null
+      })
+      .addCase(getSupportTickets.fulfilled, (state, action: PayloadAction<SupportTicketsResponse>) => {
+        state.isLoadingSupportTickets = false
+        state.supportTicketsSuccess = true
+        state.supportTicketsError = null
+        state.lastSupportTicketsMessage = action.payload.message
+        state.supportTicketsList = action.payload.data
+        state.supportTicketsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+      })
+      .addCase(getSupportTickets.rejected, (state, action) => {
+        state.isLoadingSupportTickets = false
+        state.supportTicketsError = (action.payload as string) || "Failed to fetch support tickets"
+        state.supportTicketsSuccess = false
+        state.lastSupportTicketsMessage = (action.payload as string) || "Failed to fetch support tickets"
+        state.supportTicketsList = null
+        state.supportTicketsPagination = null
+      })
+      // Get ticket detail cases
+      .addCase(getTicketDetail.pending, (state) => {
+        state.isLoadingTicketDetail = true
+        state.ticketDetailError = null
+        state.ticketDetailSuccess = false
+        state.lastTicketDetailMessage = null
+      })
+      .addCase(getTicketDetail.fulfilled, (state, action: PayloadAction<TicketDetailResponse>) => {
+        state.isLoadingTicketDetail = false
+        state.ticketDetailSuccess = true
+        state.ticketDetailError = null
+        state.lastTicketDetailMessage = action.payload.message
+        state.ticketDetailData = action.payload.data
+      })
+      .addCase(getTicketDetail.rejected, (state, action) => {
+        state.isLoadingTicketDetail = false
+        state.ticketDetailError = (action.payload as string) || "Failed to fetch ticket detail"
+        state.ticketDetailSuccess = false
+        state.lastTicketDetailMessage = (action.payload as string) || "Failed to fetch ticket detail"
+        state.ticketDetailData = null
+      })
   },
 })
 
 export const {
   clearSummaryStatus,
   clearPaymentsStatus,
+  clearSupportTicketsStatus,
   clearPaymentDetailStatus,
   clearPaymentDetail,
   clearCustomerLookupStatus,
@@ -2180,7 +2603,9 @@ export const {
   clearMakePaymentStatus,
   clearMyBillsStatus,
   clearBillDetailsStatus,
-  clearBillDetails,
+  clearSupportCategoriesStatus,
+  clearRaiseTicketStatus,
+  clearTicketDetailStatus,
   resetCustomersDashboard,
 } = customersDashboardSlice.actions
 
@@ -2261,6 +2686,33 @@ export const selectBillDetails = (state: RootState) => state.customersDashboard.
 export const selectBillDetailsLoading = (state: RootState) => state.customersDashboard.isLoadingBillDetails
 export const selectBillDetailsError = (state: RootState) => state.customersDashboard.billDetailsError
 export const selectBillDetailsSuccess = (state: RootState) => state.customersDashboard.billDetailsSuccess
+
+// Support categories selectors
+export const selectSupportCategoriesList = (state: RootState) => state.customersDashboard.supportCategoriesList
+export const selectSupportCategoriesLoading = (state: RootState) => state.customersDashboard.isLoadingSupportCategories
+export const selectSupportCategoriesError = (state: RootState) => state.customersDashboard.supportCategoriesError
+export const selectSupportCategoriesSuccess = (state: RootState) => state.customersDashboard.supportCategoriesSuccess
+
+// Raise ticket selectors
+export const selectRaisedTicketData = (state: RootState) => state.customersDashboard.raisedTicketData
+export const selectRaiseTicketLoading = (state: RootState) => state.customersDashboard.isRaisingTicket
+export const selectRaiseTicketError = (state: RootState) => state.customersDashboard.raiseTicketError
+export const selectRaiseTicketSuccess = (state: RootState) => state.customersDashboard.raiseTicketSuccess
+export const selectRaiseTicketMessage = (state: RootState) => state.customersDashboard.lastRaiseTicketMessage
+
+// Support tickets selectors
+export const selectSupportTicketsList = (state: RootState) => state.customersDashboard.supportTicketsList
+export const selectSupportTicketsPagination = (state: RootState) => state.customersDashboard.supportTicketsPagination
+export const selectSupportTicketsLoading = (state: RootState) => state.customersDashboard.isLoadingSupportTickets
+export const selectSupportTicketsError = (state: RootState) => state.customersDashboard.supportTicketsError
+export const selectSupportTicketsSuccess = (state: RootState) => state.customersDashboard.supportTicketsSuccess
+
+// Ticket detail selectors
+export const selectTicketDetailData = (state: RootState) => state.customersDashboard.ticketDetailData
+export const selectTicketDetailLoading = (state: RootState) => state.customersDashboard.isLoadingTicketDetail
+export const selectTicketDetailError = (state: RootState) => state.customersDashboard.ticketDetailError
+export const selectTicketDetailSuccess = (state: RootState) => state.customersDashboard.ticketDetailSuccess
+export const selectTicketDetailMessage = (state: RootState) => state.customersDashboard.lastTicketDetailMessage
 
 // Export the customer API instance for use in other customer portal components
 export { customerApi }

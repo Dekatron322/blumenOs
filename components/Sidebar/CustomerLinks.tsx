@@ -43,7 +43,7 @@ const allLinks: NavLink[] = [
     icon: MeterOutlineIcon,
   },
   {
-    name: "Support Ticket",
+    name: "Raise Support Ticket",
     href: "/customer-portal/support-ticket",
     icon: RaiseTicketIcon,
   },
@@ -57,11 +57,11 @@ const allLinks: NavLink[] = [
     href: "/customer-portal/report-outage",
     icon: ReportOutageIcon,
   },
-  // {
-  //   name: "Make Change Request",
-  //   href: "/customer-portal/make-change-request",
-  //   icon: MakeChangeRequestIcon,
-  // },
+  {
+    name: "All Support Ticket",
+    href: "/customer-portal/all-support-ticket",
+    icon: RaiseTicketIcon,
+  },
   {
     name: "View Payment History",
     href: "/customer-portal/payment-history",

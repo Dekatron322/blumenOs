@@ -11,93 +11,55 @@ import { ChevronDown } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { clearPaymentsStatus, getPaymentsList } from "lib/redux/customersDashboardSlice"
+import { clearSupportTicketsStatus, getSupportTickets } from "lib/redux/customersDashboardSlice"
 import Image from "next/image"
 import { ButtonModule } from "components/ui/Button/Button"
 
-// Payment status enum matching API
-enum PaymentStatus {
-  Pending = "Pending",
-  Confirmed = "Confirmed",
-  Failed = "Failed",
-  Reversed = "Reversed",
+// Support ticket status enum matching API
+enum TicketStatus {
+  Open = "Open",
+  InProgress = "In-Progress",
+  Resolved = "Resolved",
+  Closed = "Closed",
 }
 
-// Payment channel enum matching API
-enum PaymentChannel {
-  Cash = "Cash",
-  BankTransfer = "BankTransfer",
-  Pos = "Pos",
-  Card = "Card",
-  VendorWallet = "VendorWallet",
-  Chaque = "Chaque",
+// Support ticket priority enum matching API
+enum TicketPriority {
+  Low = "Low",
+  Medium = "Medium",
+  High = "High",
+  Critical = "Critical",
 }
 
-// Collector type enum matching API
-enum CollectorType {
-  Customer = "Customer",
-  SalesRep = "SalesRep",
-  Vendor = "Vendor",
-  Staff = "Staff",
-}
-
-// Payment interface matching API response
-interface Payment {
+// Support ticket interface matching API response
+interface SupportTicket {
   id: number
   reference: string
-  latitude: number
-  longitude: number
-  channel: string
+  title: string
+  description: string
   status: string
-  collectorType: string
-  amount: number
-  amountApplied: number
-  vatAmount: number
-  overPaymentAmount: number
-  outstandingAfterPayment: number
-  outstandingBeforePayment: number
-  currency: string
-  paidAtUtc: string
-  confirmedAtUtc: string | null
+  priority: string
+  categoryId: number
+  categoryName: string
   customerId: number
   customerName: string
   customerAccountNumber: string
-  postpaidBillId: number | null
-  postpaidBillPeriod: string | null
-  billTotalDue: number | null
-  vendorId: number | null
-  vendorName: string | null
-  agentId: number | null
-  agentCode: string | null
-  agentName: string | null
-  areaOfficeName: string | null
-  distributionSubstationCode: string | null
-  feederName: string | null
-  paymentTypeId: number
-  paymentTypeName: string
-  isManualEntry: boolean
-  isSystemGenerated: boolean
-  evidenceFileUrl: string | null
-  recoveryApplied: boolean
-  recoveryAmount: number
-  recoveryPolicyId: number | null
-  recoveryPolicyName: string | null
-  tokens: Array<{
-    token: string
-    tokenDec: string
-    vendedAmount: string
-    unit: string
-    description: string
-    drn: string
-  }>
+  createdAtUtc: string
+  lastMessageAtUtc: string
+  resolvedAtUtc: string | null
+  closedAtUtc: string | null
+  assignedToId: number | null
+  assignedToName: string | null
+  fileUrls: string[]
+  messageCount: number
 }
 
 interface ActionDropdownProps {
-  payment: Payment
-  onViewDetails: (payment: Payment) => void
+  ticket: SupportTicket
+  onViewDetails: (ticket: SupportTicket) => void
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ ticket, onViewDetails }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -138,7 +100,7 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails 
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.preventDefault()
-    onViewDetails(payment)
+    onViewDetails(ticket)
     setIsOpen(false)
   }
 
@@ -193,13 +155,13 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails 
               <motion.button
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
-                  console.log("Update payment:", payment.id)
+                  console.log("Update ticket:", ticket.id)
                   setIsOpen(false)
                 }}
                 whileHover={{ backgroundColor: "#f3f4f6" }}
                 transition={{ duration: 0.1 }}
               >
-                Update Payment
+                Update Ticket
               </motion.button>
             </div>
           </motion.div>
@@ -265,7 +227,7 @@ const LoadingSkeleton = () => {
   )
 }
 
-interface AllPaymentsTableProps {
+interface AllSupportTicketProps {
   agentId?: number
   customerId?: number
   vendorId?: number
@@ -275,7 +237,7 @@ interface AllPaymentsTableProps {
   serviceCenterId?: number
 }
 
-const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
+const AllSupportTicket: React.FC<AllSupportTicketProps> = ({
   agentId,
   customerId,
   vendorId,
@@ -288,10 +250,10 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const dispatch = useDispatch<AppDispatch>()
 
   // Redux state
-  const paymentsList = useSelector((state: RootState) => state.customersDashboard.paymentsList)
-  const paymentsPagination = useSelector((state: RootState) => state.customersDashboard.paymentsPagination)
-  const isLoadingPayments = useSelector((state: RootState) => state.customersDashboard.isLoadingPayments)
-  const paymentsError = useSelector((state: RootState) => state.customersDashboard.paymentsError)
+  const supportTicketsList = useSelector((state: RootState) => state.customersDashboard.supportTicketsList)
+  const supportTicketsPagination = useSelector((state: RootState) => state.customersDashboard.supportTicketsPagination)
+  const isLoadingSupportTickets = useSelector((state: RootState) => state.customersDashboard.isLoadingSupportTickets)
+  const supportTicketsError = useSelector((state: RootState) => state.customersDashboard.supportTicketsError)
 
   // Local state
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -301,15 +263,14 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   // Filter dropdown states
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false)
-  const [isChannelFilterOpen, setIsChannelFilterOpen] = useState(false)
-  const [isCollectorTypeFilterOpen, setIsCollectorTypeFilterOpen] = useState(false)
+  const [isPriorityFilterOpen, setIsPriorityFilterOpen] = useState(false)
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false)
 
   // Filter values
   const [filters, setFilters] = useState({
     status: "",
-    channel: "",
-    collectorType: "",
-    paymentTypeId: "",
+    priority: "",
+    categoryId: "",
   })
 
   // Pagination state
@@ -320,32 +281,31 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   const statusOptions = [
     { value: "", label: "All Status" },
-    { value: PaymentStatus.Pending, label: "Pending" },
-    { value: PaymentStatus.Confirmed, label: "Confirmed" },
-    { value: PaymentStatus.Failed, label: "Failed" },
-    { value: PaymentStatus.Reversed, label: "Reversed" },
+    { value: TicketStatus.Open, label: "Open" },
+    { value: TicketStatus.InProgress, label: "In Progress" },
+    { value: TicketStatus.Resolved, label: "Resolved" },
+    { value: TicketStatus.Closed, label: "Closed" },
   ]
 
-  const channelOptions = [
-    { value: "", label: "All Channels" },
-    { value: PaymentChannel.Cash, label: "Cash" },
-    { value: PaymentChannel.BankTransfer, label: "Bank Transfer" },
-    { value: PaymentChannel.Pos, label: "POS" },
-    { value: PaymentChannel.Card, label: "Card" },
-    { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
-    { value: PaymentChannel.Chaque, label: "Cheque" },
+  const priorityOptions = [
+    { value: "", label: "All Priority" },
+    { value: TicketPriority.Low, label: "Low" },
+    { value: TicketPriority.Medium, label: "Medium" },
+    { value: TicketPriority.High, label: "High" },
+    { value: TicketPriority.Critical, label: "Critical" },
   ]
 
-  const collectorOptions = [
-    { value: "", label: "All Collectors" },
-    { value: CollectorType.Customer, label: "Customer" },
-    { value: CollectorType.SalesRep, label: "Sales Rep" },
-    { value: CollectorType.Vendor, label: "Vendor" },
-    { value: CollectorType.Staff, label: "Staff" },
+  const categoryOptions = [
+    { value: "", label: "All Categories" },
+    { value: "1", label: "Billing & Payments" },
+    { value: "2", label: "Meter Issues" },
+    { value: "3", label: "Account Management" },
+    { value: "4", label: "Technical Support" },
+    { value: "5", label: "Service Requests" },
   ]
 
-  const handleViewPaymentDetails = (payment: Payment) => {
-    router.push(`/customer-dashboard/payments/payment-details/${payment.id}`)
+  const handleViewTicketDetails = (ticket: SupportTicket) => {
+    router.push(`/customer-portal/all-support-ticket/${ticket.id}`)
   }
 
   // Close dropdowns when clicking outside
@@ -357,12 +317,12 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         setIsStatusFilterOpen(false)
       }
 
-      if (!target.closest('[data-dropdown-root="channel-filter"]')) {
-        setIsChannelFilterOpen(false)
+      if (!target.closest('[data-dropdown-root="priority-filter"]')) {
+        setIsPriorityFilterOpen(false)
       }
 
-      if (!target.closest('[data-dropdown-root="collector-type-filter"]')) {
-        setIsCollectorTypeFilterOpen(false)
+      if (!target.closest('[data-dropdown-root="category-filter"]')) {
+        setIsCategoryFilterOpen(false)
       }
     }
 
@@ -370,79 +330,65 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [])
 
-  // Fetch payments when filters, search, or pagination changes
+  // Fetch support tickets when filters, search, or pagination changes
   useEffect(() => {
-    const fetchPayments = () => {
+    const fetchSupportTickets = () => {
       const requestParams = {
         pageNumber: pagination.currentPage,
         pageSize: pagination.pageSize,
         customerId,
-        vendorId,
-        agentId,
-        areaOfficeId,
-        distributionSubstationId,
-        feederId,
-        serviceCenterId,
         status: filters.status || undefined,
-        channel: filters.channel || undefined,
-        collectorType: filters.collectorType || undefined,
-        paymentTypeId: filters.paymentTypeId ? parseInt(filters.paymentTypeId) : undefined,
+        categoryId: filters.categoryId ? parseInt(filters.categoryId) : undefined,
+        priority: filters.priority || undefined,
         search: searchText || undefined,
       }
 
       // Remove undefined values
       const cleanParams = Object.fromEntries(Object.entries(requestParams).filter(([_, value]) => value !== undefined))
 
-      dispatch(getPaymentsList(cleanParams as any))
+      dispatch(getSupportTickets(cleanParams as any))
     }
 
-    fetchPayments()
+    fetchSupportTickets()
   }, [
     dispatch,
     pagination.currentPage,
     pagination.pageSize,
     searchText,
     filters.status,
-    filters.channel,
-    filters.collectorType,
-    filters.paymentTypeId,
-    agentId,
+    filters.priority,
+    filters.categoryId,
     customerId,
-    vendorId,
-    areaOfficeId,
-    distributionSubstationId,
-    feederId,
-    serviceCenterId,
   ])
 
   // Clear error when component unmounts
   useEffect(() => {
     return () => {
-      dispatch(clearPaymentsStatus())
+      dispatch(clearSupportTicketsStatus())
     }
   }, [dispatch])
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case PaymentStatus.Confirmed:
+      case TicketStatus.Resolved:
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
           dotColor: "#589E67",
         }
-      case PaymentStatus.Pending:
+      case TicketStatus.InProgress:
         return {
           backgroundColor: "#FEF6E6",
           color: "#D97706",
           dotColor: "#D97706",
         }
-      case PaymentStatus.Failed:
+      case TicketStatus.Open:
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
           dotColor: "#AF4B4B",
         }
-      case PaymentStatus.Reversed:
+      case TicketStatus.Closed:
         return {
           backgroundColor: "#EFF6FF",
           color: "#3B82F6",
@@ -457,82 +403,34 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
   }
 
-  const getChannelStyle = (channel: string) => {
-    switch (channel) {
-      case PaymentChannel.Cash:
+  const getPriorityStyle = (priority: string) => {
+    switch (priority) {
+      case TicketPriority.Critical:
         return {
           backgroundColor: "#F3E8FF",
           color: "#7C3AED",
         }
-      case PaymentChannel.BankTransfer:
+      case TicketPriority.High:
         return {
           backgroundColor: "#E0F2FE",
           color: "#0284C7",
         }
-      case PaymentChannel.Pos:
+      case TicketPriority.Medium:
         return {
           backgroundColor: "#FEF3C7",
           color: "#D97706",
         }
-      case PaymentChannel.Card:
-        return {
-          backgroundColor: "#FCE7F3",
-          color: "#DB2777",
-        }
-      case PaymentChannel.VendorWallet:
+      case TicketPriority.Low:
         return {
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Chaque:
-        return {
-          backgroundColor: "#FFEDD5",
-          color: "#EA580C",
-        }
       default:
         return {
           backgroundColor: "#F3F4F6",
           color: "#6B7280",
         }
     }
-  }
-
-  const getCollectorTypeStyle = (collectorType: string) => {
-    switch (collectorType) {
-      case CollectorType.Customer:
-        return {
-          backgroundColor: "#F0F9FF",
-          color: "#0C4A6E",
-        }
-      case CollectorType.SalesRep:
-        return {
-          backgroundColor: "#FEF3C7",
-          color: "#92400E",
-        }
-      case CollectorType.Vendor:
-        return {
-          backgroundColor: "#F3E8FF",
-          color: "#5B21B6",
-        }
-      case CollectorType.Staff:
-        return {
-          backgroundColor: "#F0FDF4",
-          color: "#166534",
-        }
-      default:
-        return {
-          backgroundColor: "#F3F4F6",
-          color: "#6B7280",
-        }
-    }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 2,
-    }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
@@ -570,24 +468,23 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
-  const handleChannelFilterChange = (channel: string) => {
-    setFilters((prev) => ({ ...prev, channel }))
-    setIsChannelFilterOpen(false)
+  const handlePriorityFilterChange = (priority: string) => {
+    setFilters((prev) => ({ ...prev, priority }))
+    setIsPriorityFilterOpen(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
-  const handleCollectorTypeFilterChange = (collectorType: string) => {
-    setFilters((prev) => ({ ...prev, collectorType }))
-    setIsCollectorTypeFilterOpen(false)
+  const handleCategoryFilterChange = (categoryId: string) => {
+    setFilters((prev) => ({ ...prev, categoryId }))
+    setIsCategoryFilterOpen(false)
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }
 
   const clearFilters = () => {
     setFilters({
       status: "",
-      channel: "",
-      collectorType: "",
-      paymentTypeId: "",
+      priority: "",
+      categoryId: "",
     })
     setSearchText("")
     setShowMobileSearch(false)
@@ -604,7 +501,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const getPageItems = (): (number | string)[] => {
-    const total = paymentsPagination?.totalPages || 1
+    const total = supportTicketsPagination?.totalPages || 1
     const current = pagination.currentPage
     const items: (number | string)[] = []
 
@@ -641,7 +538,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const getMobilePageItems = (): (number | string)[] => {
-    const total = paymentsPagination?.totalPages || 1
+    const total = supportTicketsPagination?.totalPages || 1
     const current = pagination.currentPage
     const items: (number | string)[] = []
 
@@ -670,16 +567,16 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const changePage = (page: number) => {
-    if (page > 0 && page <= (paymentsPagination?.totalPages || 1)) {
+    if (page > 0 && page <= (supportTicketsPagination?.totalPages || 1)) {
       setPagination((prev) => ({ ...prev, currentPage: page }))
     }
   }
 
-  if (isLoadingPayments) return <LoadingSkeleton />
+  if (isLoadingSupportTickets) return <LoadingSkeleton />
 
-  const currentPayments = paymentsList || []
-  const totalRecords = paymentsPagination?.totalCount || 0
-  const totalPages = paymentsPagination?.totalPages || 1
+  const currentTickets = supportTicketsList || []
+  const totalRecords = supportTicketsPagination?.totalCount || 0
+  const totalPages = supportTicketsPagination?.totalPages || 1
   const currentPage = pagination.currentPage
   const pageSize = pagination.pageSize
 
@@ -692,8 +589,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         transition={{ duration: 0.3 }}
       >
         <div>
-          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Payments</p>
-          <p className="text-sm text-gray-600">View and manage all payment transactions</p>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Support Tickets</p>
+          <p className="text-sm text-gray-600">View and manage all support tickets</p>
         </div>
       </motion.div>
 
@@ -711,7 +608,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
               value={searchText}
               onChange={(e) => handleSearchChange(e.target.value)}
               onCancel={handleCancelSearch}
-              placeholder="Search by reference, customer name or account number"
+              placeholder="Search by reference, title or customer name"
               className="w-full"
             />
           </div>
@@ -733,14 +630,14 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             >
               <IoMdFunnel className="size-4 md:size-5" />
               <span>
-                {filters.status === PaymentStatus.Confirmed
-                  ? "Confirmed"
-                  : filters.status === PaymentStatus.Pending
-                  ? "Pending"
-                  : filters.status === PaymentStatus.Failed
-                  ? "Failed"
-                  : filters.status === PaymentStatus.Reversed
-                  ? "Reversed"
+                {filters.status === TicketStatus.Open
+                  ? "Open"
+                  : filters.status === TicketStatus.InProgress
+                  ? "In Progress"
+                  : filters.status === TicketStatus.Resolved
+                  ? "Resolved"
+                  : filters.status === TicketStatus.Closed
+                  ? "Closed"
                   : "All Status"}
               </span>
               <ChevronDown
@@ -763,203 +660,193 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Confirmed ? "bg-gray-50" : ""
+                      filters.status === TicketStatus.Open ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Confirmed)}
+                    onClick={() => handleStatusFilterChange(TicketStatus.Open)}
                   >
-                    Confirmed
+                    Open
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Pending ? "bg-gray-50" : ""
+                      filters.status === TicketStatus.InProgress ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Pending)}
+                    onClick={() => handleStatusFilterChange(TicketStatus.InProgress)}
                   >
-                    Pending
+                    In Progress
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Failed ? "bg-gray-50" : ""
+                      filters.status === TicketStatus.Resolved ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Failed)}
+                    onClick={() => handleStatusFilterChange(TicketStatus.Resolved)}
                   >
-                    Failed
+                    Resolved
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.status === PaymentStatus.Reversed ? "bg-gray-50" : ""
+                      filters.status === TicketStatus.Closed ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleStatusFilterChange(PaymentStatus.Reversed)}
+                    onClick={() => handleStatusFilterChange(TicketStatus.Closed)}
                   >
-                    Reversed
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Channel Filter Dropdown */}
-          <div className="relative" data-dropdown-root="channel-filter">
-            <button
-              type="button"
-              className="button-oulined flex items-center gap-2 text-sm md:text-base"
-              onClick={() => setIsChannelFilterOpen((open) => !open)}
-            >
-              <IoMdFunnel className="size-4 md:size-5" />
-              <span>
-                {filters.channel === PaymentChannel.Cash
-                  ? "Cash"
-                  : filters.channel === PaymentChannel.BankTransfer
-                  ? "Bank Transfer"
-                  : filters.channel === PaymentChannel.Pos
-                  ? "POS"
-                  : filters.channel === PaymentChannel.Card
-                  ? "Card"
-                  : filters.channel === PaymentChannel.VendorWallet
-                  ? "Vendor Wallet"
-                  : filters.channel === PaymentChannel.Chaque
-                  ? "Cheque"
-                  : "All Channels"}
-              </span>
-              <ChevronDown
-                className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                  isChannelFilterOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {isChannelFilterOpen && (
-              <div className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
-                <div className="py-1">
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === "" ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange("")}
-                  >
-                    All Channels
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Cash ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Cash)}
-                  >
-                    Cash
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.BankTransfer ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.BankTransfer)}
-                  >
-                    Bank Transfer
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Pos ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Pos)}
-                  >
-                    POS
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Card ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Card)}
-                  >
-                    Card
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.VendorWallet ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.VendorWallet)}
-                  >
-                    Vendor Wallet
-                  </button>
-                  <button
-                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Chaque ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Chaque)}
-                  >
-                    Cheque
+                    Closed
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Collector Type Filter Dropdown */}
-          <div className="relative" data-dropdown-root="collector-type-filter">
+          {/* Priority Filter Dropdown */}
+          <div className="relative" data-dropdown-root="priority-filter">
             <button
               type="button"
               className="button-oulined flex items-center gap-2 text-sm md:text-base"
-              onClick={() => setIsCollectorTypeFilterOpen((open) => !open)}
+              onClick={() => setIsPriorityFilterOpen((open) => !open)}
             >
               <IoMdFunnel className="size-4 md:size-5" />
               <span>
-                {filters.collectorType === CollectorType.Customer
-                  ? "Customer"
-                  : filters.collectorType === CollectorType.SalesRep
-                  ? "Sales Rep"
-                  : filters.collectorType === CollectorType.Vendor
-                  ? "Vendor"
-                  : filters.collectorType === CollectorType.Staff
-                  ? "Staff"
-                  : "All Collectors"}
+                {filters.priority === TicketPriority.Low
+                  ? "Low"
+                  : filters.priority === TicketPriority.Medium
+                  ? "Medium"
+                  : filters.priority === TicketPriority.High
+                  ? "High"
+                  : filters.priority === TicketPriority.Critical
+                  ? "Critical"
+                  : "All Priority"}
               </span>
               <ChevronDown
                 className={`size-3 text-gray-500 transition-transform md:size-4 ${
-                  isCollectorTypeFilterOpen ? "rotate-180" : ""
+                  isPriorityFilterOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
-            {isCollectorTypeFilterOpen && (
+            {isPriorityFilterOpen && (
               <div className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
                 <div className="py-1">
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === "" ? "bg-gray-50" : ""
+                      filters.priority === "" ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleCollectorTypeFilterChange("")}
+                    onClick={() => handlePriorityFilterChange("")}
                   >
-                    All Collectors
+                    All Priority
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.Customer ? "bg-gray-50" : ""
+                      filters.priority === TicketPriority.Low ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.Customer)}
+                    onClick={() => handlePriorityFilterChange(TicketPriority.Low)}
                   >
-                    Customer
+                    Low
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.SalesRep ? "bg-gray-50" : ""
+                      filters.priority === TicketPriority.Medium ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.SalesRep)}
+                    onClick={() => handlePriorityFilterChange(TicketPriority.Medium)}
                   >
-                    Sales Rep
+                    Medium
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.Vendor ? "bg-gray-50" : ""
+                      filters.priority === TicketPriority.High ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.Vendor)}
+                    onClick={() => handlePriorityFilterChange(TicketPriority.High)}
                   >
-                    Vendor
+                    High
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.collectorType === CollectorType.Staff ? "bg-gray-50" : ""
+                      filters.priority === TicketPriority.Critical ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleCollectorTypeFilterChange(CollectorType.Staff)}
+                    onClick={() => handlePriorityFilterChange(TicketPriority.Critical)}
                   >
-                    Staff
+                    Critical
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Category Filter Dropdown */}
+          <div className="relative" data-dropdown-root="category-filter">
+            <button
+              type="button"
+              className="button-oulined flex items-center gap-2 text-sm md:text-base"
+              onClick={() => setIsCategoryFilterOpen((open) => !open)}
+            >
+              <IoMdFunnel className="size-4 md:size-5" />
+              <span>
+                {filters.categoryId === "1"
+                  ? "Billing & Payments"
+                  : filters.categoryId === "2"
+                  ? "Meter Issues"
+                  : filters.categoryId === "3"
+                  ? "Account Management"
+                  : filters.categoryId === "4"
+                  ? "Technical Support"
+                  : filters.categoryId === "5"
+                  ? "Service Requests"
+                  : "All Categories"}
+              </span>
+              <ChevronDown
+                className={`size-3 text-gray-500 transition-transform md:size-4 ${
+                  isCategoryFilterOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isCategoryFilterOpen && (
+              <div className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 md:w-48">
+                <div className="py-1">
+                  <button
+                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
+                      filters.categoryId === "" ? "bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCategoryFilterChange("")}
+                  >
+                    All Categories
+                  </button>
+                  <button
+                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
+                      filters.categoryId === "1" ? "bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCategoryFilterChange("1")}
+                  >
+                    Billing & Payments
+                  </button>
+                  <button
+                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
+                      filters.categoryId === "2" ? "bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCategoryFilterChange("2")}
+                  >
+                    Meter Issues
+                  </button>
+                  <button
+                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
+                      filters.categoryId === "3" ? "bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCategoryFilterChange("3")}
+                  >
+                    Account Management
+                  </button>
+                  <button
+                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
+                      filters.categoryId === "4" ? "bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCategoryFilterChange("4")}
+                  >
+                    Technical Support
+                  </button>
+                  <button
+                    className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
+                      filters.categoryId === "5" ? "bg-gray-50" : ""
+                    }`}
+                    onClick={() => handleCategoryFilterChange("5")}
+                  >
+                    Service Requests
                   </button>
                 </div>
               </div>
@@ -977,7 +864,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           </div>
 
           {/* Clear Filters Button */}
-          {(filters.status || filters.channel || filters.collectorType || filters.paymentTypeId || searchText) && (
+          {(filters.status || filters.priority || filters.categoryId || searchText) && (
             <motion.button
               onClick={clearFilters}
               className="button-oulined text-sm md:text-base"
@@ -991,13 +878,13 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       </motion.div>
 
       {/* Error Message */}
-      {paymentsError && (
+      {supportTicketsError && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
-          <p>Error loading payments: {paymentsError}</p>
+          <p>Error loading support tickets: {supportTicketsError}</p>
         </div>
       )}
 
-      {currentPayments.length === 0 ? (
+      {currentTickets.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -1010,9 +897,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {searchText || filters.status || filters.channel || filters.collectorType
-              ? "No matching payments found"
-              : "No payments available"}
+            {searchText || filters.status || filters.priority || filters.categoryId
+              ? "No matching support tickets found"
+              : "No support tickets available"}
           </motion.p>
           <motion.p
             className="text-sm text-gray-600"
@@ -1020,9 +907,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            {searchText || filters.status || filters.channel || filters.collectorType
+            {searchText || filters.status || filters.priority || filters.categoryId
               ? "Try adjusting your search or filters"
-              : "Payments will appear here once transactions are processed"}
+              : "Support tickets will appear here once they are created"}
           </motion.p>
         </motion.div>
       ) : (
@@ -1044,10 +931,10 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </th>
                   <th
                     className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("amount")}
+                    onClick={() => toggleSort("title")}
                   >
                     <div className="flex items-center gap-2">
-                      Amount <RxCaretSort />
+                      Title <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -1060,28 +947,13 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("agentName")}
+                    onClick={() => toggleSort("categoryName")}
                   >
                     <div className="flex items-center gap-2">
-                      Agent <RxCaretSort />
+                      Category <RxCaretSort />
                     </div>
                   </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("paymentTypeName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Payment Type <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("channel")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Channel <RxCaretSort />
-                    </div>
-                  </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
                     onClick={() => toggleSort("status")}
@@ -1090,28 +962,21 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       Status <RxCaretSort />
                     </div>
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("collectorType")}
+                    onClick={() => toggleSort("createdAtUtc")}
                   >
                     <div className="flex items-center gap-2">
-                      Collector <RxCaretSort />
+                      Created <RxCaretSort />
                     </div>
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("paidAtUtc")}
+                    onClick={() => toggleSort("lastMessageAtUtc")}
                   >
                     <div className="flex items-center gap-2">
-                      Date/Time <RxCaretSort />
-                    </div>
-                  </th>
-                  <th
-                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("areaOfficeName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Area Office <RxCaretSort />
+                      Last Activity <RxCaretSort />
                     </div>
                   </th>
                   <th className="whitespace-nowrap border-b p-4 text-sm">
@@ -1121,48 +986,31 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {currentPayments.map((payment, index) => (
+                  {currentTickets.map((ticket, index) => (
                     <motion.tr
-                      key={payment.id}
+                      key={ticket.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
-                        {payment.reference || `PAY-${payment.id}`}
+                        {ticket.reference || `TKT-${ticket.id}`}
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-semibold">
-                        {formatCurrency(payment.amount)}
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        <div className="max-w-xs truncate font-medium">{ticket.title}</div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <div>
-                          <div className="font-medium">{payment.customerName || "-"}</div>
-                          <div className="text-xs text-gray-500">{payment.customerAccountNumber || ""}</div>
+                          <div className="font-medium">{ticket.customerName || "-"}</div>
+                          <div className="text-xs text-gray-500">{ticket.customerAccountNumber || ""}</div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <div>
-                          <div className="font-medium">{payment.agentName || "-"}</div>
-                          <div className="text-xs text-gray-500">
-                            {payment.agentCode ? `Code: ${payment.agentCode}` : ""}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.paymentTypeName || "-"}</td>
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{ticket.categoryName || "-"}</td>
+
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div
-                          style={getChannelStyle(payment.channel)}
-                          className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {payment.channel}
-                        </motion.div>
-                      </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getStatusStyle(payment.status)}
+                          style={getStatusStyle(ticket.status)}
                           className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
@@ -1170,30 +1018,26 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                           <span
                             className="size-2 rounded-full"
                             style={{
-                              backgroundColor: getStatusStyle(payment.status).dotColor,
+                              backgroundColor: getStatusStyle(ticket.status).dotColor,
                             }}
                           ></span>
-                          {payment.status}
+                          {ticket.status}
                         </motion.div>
+                      </td>
+
+                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                        {formatDate(ticket.createdAtUtc)}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                        <motion.div
-                          style={getCollectorTypeStyle(payment.collectorType)}
-                          className="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {payment.collectorType}
-                        </motion.div>
+                        {formatDate(ticket.lastMessageAtUtc)}
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{formatDate(payment.paidAtUtc)}</td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
+
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         <ButtonModule
                           size="sm"
                           variant="outline"
                           icon={<VscEye />}
-                          onClick={() => router.push(`/customer-portal/payment-history/${payment.id}`)}
+                          onClick={() => router.push(`/customer-portal/all-support-ticket/${ticket.id}`)}
                         >
                           View
                         </ButtonModule>
@@ -1299,4 +1143,4 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   )
 }
 
-export default AllPaymentsTable
+export default AllSupportTicket
