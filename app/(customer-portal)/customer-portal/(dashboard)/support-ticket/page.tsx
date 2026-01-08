@@ -1,12 +1,12 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { ArrowLeft, ArrowRight, Check } from "lucide-react"
-import { BsCheckCircle, BsClock, BsExclamationCircle, BsHeadset, BsPaperclip, BsEye } from "react-icons/bs"
+import { BsCheckCircle, BsClock, BsExclamationCircle, BsEye, BsHeadset, BsPaperclip } from "react-icons/bs"
 import { FaLightbulb, FaRegEnvelope, FaTicketAlt, FaUser } from "react-icons/fa"
 import { MdOutlineAttachFile, MdOutlineCategory, MdOutlineSupportAgent } from "react-icons/md"
 import { HiOutlineDocumentText } from "react-icons/hi"
@@ -646,7 +646,7 @@ const SupportTicket: React.FC = () => {
       <div className="mt-6 space-y-3">
         <div className="rounded-md border border-blue-100 bg-blue-50 p-3">
           <p className="text-sm text-blue-700">
-            ✉️ You'll receive a confirmation email with your ticket details. Keep your ticket number for reference.
+            ✉️ You&apos;ll receive a confirmation email with your ticket details. Keep your ticket number for reference.
           </p>
         </div>
 
@@ -890,7 +890,7 @@ const SupportTicket: React.FC = () => {
                     <span className="font-bold">1</span>
                   </div>
                   <h3 className="mb-1 font-medium text-blue-800">Category</h3>
-                  <p className="text-xs text-blue-700">Select the type of issue you're experiencing</p>
+                  <p className="text-xs text-blue-700">Select the type of issue you&apos;re experiencing</p>
                 </div>
 
                 <div className="rounded-md border border-amber-100 bg-amber-50 p-4 text-center">
