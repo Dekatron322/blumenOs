@@ -5,6 +5,10 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -80,6 +84,3 @@ jobs:
               -e nextjs_image_tag=${{ github.sha }} \
               -e nextjs_host_port=3000 \
               -e nextjs_container_port=3000
-              -e nextjs_image_tag=${{ github.sha }}
-              -e "nextjs_env_file_content=NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL_TEST }}"
-
