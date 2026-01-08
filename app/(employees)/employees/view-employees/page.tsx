@@ -7,7 +7,6 @@ import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearEmployeeReport, fetchEmployeeReport } from "lib/redux/employeeSlice"
 import AllEmployees from "components/Tables/AllEmployees"
 import { VscAdd } from "react-icons/vsc"
 
@@ -287,39 +286,21 @@ export default function EmployeeManagement() {
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
 
-  // Get employee report data from Redux store
-  const { employeeReport, employeeReportLoading, employeeReportError, employeeReportSuccess } = useAppSelector(
-    (state) => state.employee
-  )
-
   // Permissions: show Add Employee only if user has 'W'
   const { user } = useAppSelector((state) => state.auth)
   const canWrite = !!user?.privileges?.some((p) => p.actions?.includes("W"))
 
-  // Fetch employee report on component mount
-  useEffect(() => {
-    dispatch(fetchEmployeeReport())
-
-    // Cleanup function to clear report data when component unmounts
-    return () => {
-      dispatch(clearEmployeeReport())
-    }
-  }, [dispatch])
-
   const handleAddEmployeeSuccess = async () => {
     setIsAddEmployeeModalOpen(false)
-    handleRefreshData()
   }
 
   const handleRefreshData = useCallback(() => {
     setIsLoading(true)
-    dispatch(clearEmployeeReport())
-    dispatch(fetchEmployeeReport())
     // Simulate loading state for better UX
     setTimeout(() => {
       setIsLoading(false)
     }, 1000)
-  }, [dispatch])
+  }, [])
 
   const togglePolling = () => {
     setIsPolling(!isPolling)
@@ -392,10 +373,10 @@ export default function EmployeeManagement() {
                   onClick={handleRefreshData}
                   icon={<RefreshCircleIcon />}
                   iconPosition="start"
-                  loading={employeeReportLoading || isLoading}
+                  loading={false}
                   className="text-sm md:text-base"
                 >
-                  {employeeReportLoading || isLoading ? "Refreshing..." : "Refresh Data"}
+                  Refresh Data
                 </ButtonModule> */}
                 {/* Auto-refresh Controls */}
                 <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
@@ -451,54 +432,13 @@ export default function EmployeeManagement() {
             {/* Main Content Area */}
             <div className="flex w-full flex-col-reverse gap-6 px-3 max-md:px-0 max-sm:my-4 sm:px-4 md:px-6 xl:flex-row 2xl:px-16 ">
               <div className="w-full">
-                {isLoading ? (
-                  // Loading State
-                  <>
-                    <LoadingState />
-                  </>
-                ) : (
-                  // Loaded State
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <AllEmployees />
-                    </motion.div>
-
-                    {/* Empty State - Optional if you want to show when there are no employees */}
-                    {/* {!employeesData && !isLoading && (
-                      <motion.div
-                        className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-8 md:p-12"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <div className="text-center">
-                          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
-                            <AddIcon />
-                          </div>
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No Employees Found</h3>
-                          <p className="mt-2 text-sm text-gray-500">
-                            Get started by adding your first employee.
-                          </p>
-                          {canWrite && (
-                            <ButtonModule
-                              variant="primary"
-                              size="md"
-                              onClick={handleOpenAddEmployeeModal}
-                              className="mt-4"
-                              icon={<AddIcon />}
-                              iconPosition="start"
-                            >
-                              Add Employee
-                            </ButtonModule>
-                          )}
-                        </div>
-                      </motion.div>
-                    )} */}
-                  </>
-                )}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <AllEmployees />
+                </motion.div>
               </div>
             </div>
           </div>
