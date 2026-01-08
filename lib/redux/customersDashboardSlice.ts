@@ -2603,6 +2603,7 @@ export const {
   clearMakePaymentStatus,
   clearMyBillsStatus,
   clearBillDetailsStatus,
+  clearBillDetails,
   clearSupportCategoriesStatus,
   clearRaiseTicketStatus,
   clearTicketDetailStatus,
