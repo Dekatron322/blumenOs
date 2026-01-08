@@ -1,24 +1,16 @@
 "use client"
 
-import DashboardNav from "components/Navbar/DashboardNav"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
-import { CollectCash, MetersProgrammedIcon, TamperIcon, VendingIcon, VendingIconOutline } from "components/Icons/Icons"
-import AddAgentModal from "components/ui/Modal/add-agent-modal"
-import { ButtonModule } from "components/ui/Button/Button"
-import AllPaymentsTable from "components/Tables/AllPaymentsTable"
-import { formatCurrency } from "utils/formatCurrency"
 import { AgentDailyPerformance, TimeRange } from "lib/redux/agentSlice"
 
 // Chart Component for Agent Performance
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import CustomerTable from "components/Tables/CustomerPaymentHistoryTable"
-import CustomerPaymentHistoryTable from "components/Tables/CustomerPaymentHistoryTable"
-import CustomerVending from "components/Tables/CustomerVending"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
+import AllSupportTicket from "components/Tables/AllSupportTicket"
 
 // Date utilities
 const formatDate = (dateString: string) => {
@@ -731,7 +723,7 @@ export default function AgentManagementDashboard() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
-                    <CustomerPaymentHistoryTable />
+                    <AllSupportTicket />
                   </motion.div>
                 </>
               )}
