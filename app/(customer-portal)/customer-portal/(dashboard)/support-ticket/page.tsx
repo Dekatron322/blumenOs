@@ -13,6 +13,7 @@ import { HiOutlineDocumentText } from "react-icons/hi"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useDispatch, useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
 import type { AppDispatch } from "lib/redux/store"
 import {
   getSupportCategories,
@@ -93,6 +94,7 @@ const getStatusStyle = (status: string) => {
 
 const SupportTicket: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const router = useRouter()
 
   // Redux state for support categories
   const supportCategories = useSelector(selectSupportCategoriesList)
@@ -674,10 +676,9 @@ const SupportTicket: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">{supportTickets ? supportTickets.length : 0}</span>
           <button
-            onClick={refreshTickets}
-            disabled={isLoadingTickets}
-            className="rounded p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-            title="Refresh"
+            onClick={() => router.push("/customer-portal/all-support-ticket")}
+            className="rounded p-1 text-gray-400 hover:text-gray-600"
+            title="View All Tickets"
           >
             <ArrowLeft className="size-3 rotate-180" />
           </button>
@@ -697,7 +698,11 @@ const SupportTicket: React.FC = () => {
       ) : (
         <div className="space-y-2">
           {supportTickets.map((ticket) => (
-            <div key={ticket.id} className="border-b border-gray-100 pb-2 last:border-b-0">
+            <div
+              key={ticket.id}
+              className="cursor-pointer rounded-md border-b border-gray-100 p-2 pb-2 transition-colors last:border-b-0 hover:bg-gray-50"
+              onClick={() => router.push(`/customer-portal/all-support-ticket/${ticket.id}`)}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-xs font-medium text-gray-900">{ticket.reference}</p>
