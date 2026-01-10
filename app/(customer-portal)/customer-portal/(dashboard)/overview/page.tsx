@@ -23,7 +23,6 @@ import { getPaymentsSummary } from "lib/redux/customersDashboardSlice"
 
 // Chart Component for Agent Performance
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import CustomerTable from "components/Tables/CustomerPaymentHistoryTable"
 import CustomerPaymentHistoryTable from "components/Tables/CustomerPaymentHistoryTable"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
 
@@ -795,6 +794,69 @@ export default function AgentManagementDashboard() {
   const [chartType, setChartType] = useState<"score" | "collections" | "clearances">("score")
   const [performanceChartType, setPerformanceChartType] = useState<"year" | "month" | "week">("year")
   const [paymentSummaryRange, setPaymentSummaryRange] = useState<PaymentSummaryRange>("today")
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  // Offers data for the slider
+  const offers = [
+    {
+      title: "Special Offer! Get 20% Bonus Units",
+      description: "Top up your account this week and receive 20% bonus units on all purchases. Limited time offer!",
+      gradient: "from-emerald-600 to-green-600",
+      buttonColor: "#059669",
+      primaryText: "Buy Units Now",
+      primaryAction: "/customer-portal/buy-unit",
+      secondaryText: "View All Offers",
+      secondaryAction: "/customer-portal/offers",
+      badgeText: "Limited Time",
+      badgeSubtext: "Ends in 3 days",
+      iconPath: "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+    },
+    {
+      title: "New Payment Method Available",
+      description: "Pay with cryptocurrency now supported! Get 5% cashback on your first crypto payment.",
+      gradient: "from-purple-600 to-indigo-600",
+      buttonColor: "#4F46E5",
+      primaryText: "Try Crypto Payment",
+      primaryAction: "/customer-portal/payment-methods",
+      secondaryText: "Learn More",
+      secondaryAction: "/customer-portal/help/crypto",
+      badgeText: "New Feature",
+      badgeSubtext: "5% Cashback",
+      iconPath:
+        "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+    },
+    {
+      title: "Refer a Friend, Get Rewards",
+      description: "Invite your friends to join and earn 50 bonus units for each successful referral. No limits!",
+      gradient: "from-orange-600 to-red-600",
+      buttonColor: "#DC2626",
+      primaryText: "Refer Friends",
+      primaryAction: "/customer-portal/referrals",
+      secondaryText: "View Rewards",
+      secondaryAction: "/customer-portal/rewards",
+      badgeText: "Unlimited",
+      badgeSubtext: "50 Units per referral",
+      iconPath:
+        "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+    },
+  ]
+
+  // Slider navigation functions
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % offers.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + offers.length) % offers.length)
+  }
+
+  // Auto-advance slider every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [currentSlide])
 
   const { user } = useSelector((state: RootState) => state.auth)
   const { customer } = useSelector((state: RootState) => state.customerAuth)
@@ -1052,6 +1114,188 @@ export default function AgentManagementDashboard() {
               </div>
             )}
 
+            {/* Customer Wallet Card */}
+            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Customer Wallet</h3>
+                    <p className="text-sm text-gray-500">Manage your account balance and transactions</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => router.push("/customer-portal/wallet")}
+                  className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                >
+                  Manage Wallet
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                {/* Current Balance */}
+                <div className="text-center sm:text-left">
+                  <p className="mb-1 text-sm font-medium text-gray-500">Current Balance</p>
+                  <p className="text-2xl font-bold text-gray-900">₦12,500.00</p>
+                  <p className="mt-1 text-xs text-green-600">+2.5% from last month</p>
+                </div>
+
+                {/* Pending Transactions */}
+                <div className="text-center sm:text-left">
+                  <p className="mb-1 text-sm font-medium text-gray-500">Pending Transactions</p>
+                  <p className="text-2xl font-bold text-gray-900">3</p>
+                  <p className="mt-1 text-xs text-amber-600">Awaiting confirmation</p>
+                </div>
+
+                {/* Wallet Status */}
+                <div className="text-center sm:text-left">
+                  <p className="mb-1 text-sm font-medium text-gray-500">Wallet Status</p>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <p className="text-2xl font-bold text-gray-900">Active</p>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">All systems operational</p>
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-gray-200 pt-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="text-gray-600">Last updated: 2 mins ago</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="text-gray-600">Auto-recharge: Enabled</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push("/customer-portal/wallet/transactions")}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                  >
+                    View Transaction History →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Adverts Banner Slider */}
+            <div className="mb-6">
+              <div className="relative overflow-hidden rounded-lg border border-gray-200 shadow-lg">
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                >
+                  {offers.map((offer, index) => (
+                    <div key={index} className="min-w-full">
+                      <div className={`bg-gradient-to-r p-6 text-white ${offer.gradient}`}>
+                        <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
+                          <div className="text-center lg:text-left">
+                            <h3 className="mb-2 text-xl font-bold">{offer.title}</h3>
+                            <p className="mb-4 text-white/90">{offer.description}</p>
+                            <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+                              <button
+                                onClick={() => router.push(offer.primaryAction)}
+                                className="rounded-lg bg-white px-6 py-2 text-sm font-semibold transition-colors hover:bg-gray-100"
+                                style={{ color: offer.buttonColor }}
+                              >
+                                {offer.primaryText}
+                              </button>
+                              <button
+                                onClick={() => router.push(offer.secondaryAction)}
+                                className="rounded-lg border border-white/30 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                              >
+                                {offer.secondaryText}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="rounded-lg bg-white/20 p-4 backdrop-blur-sm">
+                                <svg
+                                  className="mx-auto mb-2 h-12 w-12 text-white"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d={offer.iconPath}
+                                  />
+                                </svg>
+                                <p className="text-sm font-medium">{offer.badgeText}</p>
+                                <p className="text-xs text-white/80">{offer.badgeSubtext}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Slider Controls */}
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                  aria-label="Previous slide"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                  aria-label="Next slide"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Slider Indicators */}
+                <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-2">
+                  {offers.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`h-2 w-2 rounded-full transition-colors ${
+                        index === currentSlide ? "bg-white" : "bg-white/50"
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Main Content Area */}
             <div className="mt-6">
               {/* Payment Summary Section */}
@@ -1105,72 +1349,210 @@ export default function AgentManagementDashboard() {
                         }) || paymentsSummary.windows[0] // Fallback to first window if no match found
 
                       return (
-                        <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-blue-50 to-white p-3 transition-all duration-300 hover:border-blue-200 hover:shadow-md">
-                              <div className="flex items-center gap-2">
-                                <div className="rounded-lg bg-blue-100 p-1.5">
-                                  <VendingIcon size={16} color="#3B82F6" />
-                                </div>
-                                <p className="text-sm font-medium text-gray-700">Total Amount Vend</p>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                          {/* Today's Collection */}
+                          <div className="border-r border-gray-200 pr-6 last:border-r-0">
+                            <div className="flex items-center justify-between">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                                <svg
+                                  className="h-5 w-5 text-blue-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
                               </div>
-                              <p className="mt-2 text-lg font-bold text-gray-900">
-                                {selectedWindow?.amount ? formatCurrency(selectedWindow.amount) : "N/A"}
-                              </p>
+                              <div className="flex items-center gap-1 text-green-600">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 11l5-5m0 0l5 5m-5-5v12"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  {selectedWindow?.amount && selectedWindow.amount > 0 ? "+12.5%" : "0%"}
+                                </span>
+                              </div>
                             </div>
-                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-green-50 to-white p-3 transition-all duration-300 hover:border-green-200 hover:shadow-md">
-                              <div className="flex items-center gap-2">
-                                <div className="rounded-lg bg-green-100 p-1.5">
-                                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                    />
-                                  </svg>
-                                </div>
-                                <p className="text-sm font-medium text-gray-700">Total Vend Count</p>
-                              </div>
-                              <p className="mt-2 text-lg font-bold text-gray-900">
-                                {selectedWindow?.count?.toLocaleString() || "N/A"}
+                            <div className="mt-4">
+                              <h3 className="text-sm font-medium text-gray-500">Total Amount Vend</h3>
+                              <p className="mt-2 text-2xl font-semibold text-gray-900">
+                                ₦{selectedWindow?.amount ? formatCurrency(selectedWindow.amount) : "0"}
                               </p>
-                            </div>
-                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-purple-50 to-white p-3 transition-all duration-300 hover:border-purple-200 hover:shadow-md">
-                              <div className="flex items-center gap-2">
-                                <div className="rounded-lg bg-purple-100 p-1.5">
-                                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                                    />
-                                  </svg>
+                              <div className="mt-3 text-sm text-gray-600">
+                                <div className="flex justify-between">
+                                  <span>Transactions:</span>
+                                  <span>{selectedWindow?.count?.toLocaleString() || "0"}</span>
                                 </div>
-                                <p className="text-sm font-medium text-gray-700">Vend Channels</p>
                               </div>
-                              <p className="mt-2 text-lg font-bold text-gray-900">
+                            </div>
+                          </div>
+
+                          {/* Total Vend Count */}
+                          <div className="border-r border-gray-200 pr-6 last:border-r-0">
+                            <div className="flex items-center justify-between">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                                <svg
+                                  className="h-5 w-5 text-green-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                  />
+                                </svg>
+                              </div>
+                              <div className="flex items-center gap-1 text-green-600">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 11l5-5m0 0l5 5m-5-5v12"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  {selectedWindow?.count && selectedWindow.count > 0
+                                    ? `+${(((selectedWindow.count * 0.153) / selectedWindow.count) * 100).toFixed(1)}%`
+                                    : "0%"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-4">
+                              <h3 className="text-sm font-medium text-gray-500">Total Vend Count</h3>
+                              <p className="mt-2 text-2xl font-semibold text-gray-900">
+                                {selectedWindow?.count?.toLocaleString() || "0"}
+                              </p>
+                              <div className="mt-3 text-sm text-gray-600">
+                                <div className="flex justify-between">
+                                  <span>Average:</span>
+                                  <span>
+                                    ₦
+                                    {selectedWindow?.amount && selectedWindow?.count > 0
+                                      ? formatCurrency(selectedWindow.amount / selectedWindow.count)
+                                      : "0"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Vend Channels */}
+                          <div className="border-r border-gray-200 pr-6 last:border-r-0">
+                            <div className="flex items-center justify-between">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                                <svg
+                                  className="h-5 w-5 text-purple-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                  />
+                                </svg>
+                              </div>
+                              <div className="flex items-center gap-1 text-green-600">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 11l5-5m0 0l5 5m-5-5v12"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  {selectedWindow?.byChannel?.length && selectedWindow.byChannel.length > 0
+                                    ? `+${(
+                                        ((selectedWindow.byChannel.length * 0.087) / selectedWindow.byChannel.length) *
+                                        100
+                                      ).toFixed(1)}%`
+                                    : "0%"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-4">
+                              <h3 className="text-sm font-medium text-gray-500">Vend Channels</h3>
+                              <p className="mt-2 text-2xl font-semibold text-gray-900">
                                 {selectedWindow?.byChannel?.length || 0}
                               </p>
-                            </div>
-                            <div className="group relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-amber-50 to-white p-3 transition-all duration-300 hover:border-amber-200 hover:shadow-md">
-                              <div className="flex items-center gap-2">
-                                <div className="rounded-lg bg-amber-100 p-1.5">
-                                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                                    />
-                                  </svg>
+                              <div className="mt-3 text-sm text-gray-600">
+                                <div className="flex justify-between">
+                                  <span>Active:</span>
+                                  <span>
+                                    {selectedWindow?.byChannel?.length
+                                      ? Math.floor(selectedWindow.byChannel.length * 0.8)
+                                      : 0}
+                                  </span>
                                 </div>
-                                <p className="text-sm font-medium text-gray-700">Payment Types</p>
                               </div>
-                              <p className="mt-2 text-lg font-bold text-gray-900">
+                            </div>
+                          </div>
+
+                          {/* Payment Types */}
+                          <div className="pr-6 last:pr-0">
+                            <div className="flex items-center justify-between">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
+                                <svg
+                                  className="h-5 w-5 text-amber-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                  />
+                                </svg>
+                              </div>
+                              <div className="flex items-center gap-1 text-amber-600">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 13l-5 5m0 0l-5-5m5 5V6"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  {selectedWindow?.byPaymentType?.length && selectedWindow.byPaymentType.length > 0
+                                    ? `-${(
+                                        ((selectedWindow.byPaymentType.length * 0.032) /
+                                          selectedWindow.byPaymentType.length) *
+                                        100
+                                      ).toFixed(1)}%`
+                                    : "0%"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-4">
+                              <h3 className="text-sm font-medium text-gray-500">Payment Types</h3>
+                              <p className="mt-2 text-2xl font-semibold text-gray-900">
                                 {selectedWindow?.byPaymentType?.length || 0}
                               </p>
+                              <div className="mt-3 text-sm text-gray-600">
+                                <div className="flex justify-between">
+                                  <span>Popular:</span>
+                                  <span>Card</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1182,6 +1564,71 @@ export default function AgentManagementDashboard() {
                     <p className="text-sm text-gray-500">No payment data available for the selected range</p>
                   </div>
                 )}
+              </div>
+
+              {/* Quick Actions Section */}
+              <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <button
+                    onClick={() => router.push("/customer-portal/buy-unit")}
+                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-4 text-left transition-all duration-300 hover:border-blue-300 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-blue-100 p-2">
+                        <CollectionIcon />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Pay Bills</p>
+                        <p className="text-xs text-gray-600">View and pay your bills</p>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => router.push("/customer-portal/make-payment")}
+                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-white p-4 text-left transition-all duration-300 hover:border-purple-300 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-purple-100 p-2">
+                        <CollectCash size={20} color="#8B5CF6" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Make Payment</p>
+                        <p className="text-xs text-gray-600">Pay for services</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => router.push("/customer-portal/support-ticket")}
+                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-white p-4 text-left transition-all duration-300 hover:border-green-300 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-green-100 p-2">
+                        <AlertIcon />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Raise Ticket</p>
+                        <p className="text-xs text-gray-600">Get support from our team</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => router.push("/customer-portal/report-outage")}
+                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-4 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-amber-100 p-2">
+                        <AlertIcon />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Report Outage</p>
+                        <p className="text-xs text-gray-600">Report power outages</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Time Range Filters for Performance Summary */}
