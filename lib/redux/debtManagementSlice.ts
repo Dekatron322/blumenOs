@@ -194,6 +194,54 @@ export interface ResumeRecoveryPolicyResponse {
   data: RecoveryPolicy
 }
 
+// Request parameters interface for fetching debt recovery data
+export interface DebtRecoveryRequest {
+  PageNumber: number
+  PageSize: number
+  CustomerId?: number
+  PolicyId?: number
+  FromUtc?: string
+  ToUtc?: string
+}
+
+// Debt recovery data item interface
+export interface DebtRecoveryItem {
+  id: number
+  customerId: number
+  customerName: string
+  accountNumber: string
+  paymentTransactionId: number
+  paymentReference: string
+  policyId: number
+  policyName: string
+  bucketName: string
+  ageDays: number
+  incomingAmount: number
+  recoveryAmount: number
+  outstandingBefore: number
+  outstandingAfter: number
+  recoveryPeriodKey: string
+  recoveryType: number
+  recoveryValue: number
+  triggerThresholdAmount: number
+  appliedBeforeBill: boolean
+  ledgerEntryId: number
+  createdAt: string
+}
+
+// Response interface for debt recovery
+export interface DebtRecoveryResponse {
+  isSuccess: boolean
+  message: string
+  data: DebtRecoveryItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
 // Request interface for creating debt entry
 export interface CreateDebtEntryRequest {
   customerId: number
@@ -373,6 +421,21 @@ interface DebtManagementState {
   resumeRecoveryPolicyError: string | null
   resumeRecoveryPolicySuccess: boolean
   resumedRecoveryPolicy: RecoveryPolicy | null
+
+  // Debt recovery state
+  debtRecoveryLoading: boolean
+  debtRecoveryError: string | null
+  debtRecoverySuccess: boolean
+  debtRecovery: DebtRecoveryItem[]
+  debtRecoveryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+  debtRecoveryRequestParams: DebtRecoveryRequest | null
 }
 
 // Initial state
@@ -468,6 +531,20 @@ const initialState: DebtManagementState = {
   resumeRecoveryPolicyError: null,
   resumeRecoveryPolicySuccess: false,
   resumedRecoveryPolicy: null,
+
+  debtRecoveryLoading: false,
+  debtRecoveryError: null,
+  debtRecoverySuccess: false,
+  debtRecovery: [],
+  debtRecoveryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  debtRecoveryRequestParams: null,
 }
 
 // Async thunk for fetching recovery summary
@@ -852,6 +929,49 @@ export const approveDebtEntry = createAsyncThunk(
   }
 )
 
+// Async thunk for fetching debt recovery data
+export const fetchDebtRecovery = createAsyncThunk(
+  "debtManagement/fetchDebtRecovery",
+  async (params: DebtRecoveryRequest, { rejectWithValue }) => {
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams()
+      queryParams.append("PageNumber", params.PageNumber.toString())
+      queryParams.append("PageSize", params.PageSize.toString())
+
+      if (params.CustomerId !== undefined && params.CustomerId !== null) {
+        queryParams.append("CustomerId", params.CustomerId.toString())
+      }
+      if (params.PolicyId !== undefined && params.PolicyId !== null) {
+        queryParams.append("PolicyId", params.PolicyId.toString())
+      }
+      if (params.FromUtc !== undefined && params.FromUtc !== null) {
+        queryParams.append("FromUtc", params.FromUtc)
+      }
+      if (params.ToUtc !== undefined && params.ToUtc !== null) {
+        queryParams.append("ToUtc", params.ToUtc)
+      }
+
+      const url = `${buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.DEBT_RECOVERY)}?${queryParams.toString()}`
+      const response = await api.get<DebtRecoveryResponse>(url)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch debt recovery data")
+      }
+
+      return {
+        data: response.data,
+        requestParams: params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch debt recovery data")
+      }
+      return rejectWithValue(error.message || "Network error during debt recovery data fetch")
+    }
+  }
+)
+
 // Debt Management slice
 const debtManagementSlice = createSlice({
   name: "debtManagement",
@@ -1040,6 +1160,34 @@ const debtManagementSlice = createSlice({
       state.approveDebtEntryError = null
       state.approveDebtEntrySuccess = false
       state.approvedDebtEntry = null
+    },
+
+    // Clear debt recovery state
+    clearDebtRecoveryState: (state) => {
+      state.debtRecoveryLoading = false
+      state.debtRecoveryError = null
+      state.debtRecoverySuccess = false
+      state.debtRecovery = []
+      state.debtRecoveryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.debtRecoveryRequestParams = null
+    },
+
+    // Set debt recovery data manually (if needed for caching or testing)
+    setDebtRecovery: (state, action: PayloadAction<DebtRecoveryItem[]>) => {
+      state.debtRecovery = action.payload
+      state.debtRecoverySuccess = true
+    },
+
+    // Update debt recovery request parameters
+    setDebtRecoveryRequestParams: (state, action: PayloadAction<DebtRecoveryRequest>) => {
+      state.debtRecoveryRequestParams = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -1426,6 +1574,51 @@ const debtManagementSlice = createSlice({
         state.approveDebtEntrySuccess = false
         state.approvedDebtEntry = null
       })
+      // Fetch debt recovery cases
+      .addCase(fetchDebtRecovery.pending, (state) => {
+        state.debtRecoveryLoading = true
+        state.debtRecoveryError = null
+        state.debtRecoverySuccess = false
+      })
+      .addCase(
+        fetchDebtRecovery.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: DebtRecoveryResponse
+            requestParams: DebtRecoveryRequest
+          }>
+        ) => {
+          state.debtRecoveryLoading = false
+          state.debtRecoverySuccess = true
+          state.debtRecoveryError = null
+          state.debtRecovery = action.payload.data.data
+          state.debtRecoveryPagination = {
+            totalCount: action.payload.data.totalCount,
+            totalPages: action.payload.data.totalPages,
+            currentPage: action.payload.data.currentPage,
+            pageSize: action.payload.data.pageSize,
+            hasNext: action.payload.data.hasNext,
+            hasPrevious: action.payload.data.hasPrevious,
+          }
+          state.debtRecoveryRequestParams = action.payload.requestParams
+        }
+      )
+      .addCase(fetchDebtRecovery.rejected, (state, action) => {
+        state.debtRecoveryLoading = false
+        state.debtRecoveryError = (action.payload as string) || "Failed to fetch debt recovery data"
+        state.debtRecoverySuccess = false
+        state.debtRecovery = []
+        state.debtRecoveryPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 0,
+          hasNext: false,
+          hasPrevious: false,
+        }
+        state.debtRecoveryRequestParams = null
+      })
   },
 })
 
@@ -1452,6 +1645,9 @@ export const {
   setAllDebtEntriesRequestParams,
   clearDebtEntryDetailState,
   clearApproveDebtEntryState,
+  clearDebtRecoveryState,
+  setDebtRecovery,
+  setDebtRecoveryRequestParams,
 } = debtManagementSlice.actions
 
 // Redux selectors
@@ -1618,5 +1814,23 @@ export const selectApproveDebtEntrySuccess = (state: { debtManagement: DebtManag
 
 export const selectApprovedDebtEntry = (state: { debtManagement: DebtManagementState }) =>
   state.debtManagement.approvedDebtEntry
+
+// Debt recovery selectors
+export const selectDebtRecovery = (state: { debtManagement: DebtManagementState }) => state.debtManagement.debtRecovery
+
+export const selectDebtRecoveryLoading = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.debtRecoveryLoading
+
+export const selectDebtRecoveryError = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.debtRecoveryError
+
+export const selectDebtRecoverySuccess = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.debtRecoverySuccess
+
+export const selectDebtRecoveryPagination = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.debtRecoveryPagination
+
+export const selectDebtRecoveryRequestParams = (state: { debtManagement: DebtManagementState }) =>
+  state.debtManagement.debtRecoveryRequestParams
 
 export default debtManagementSlice.reducer

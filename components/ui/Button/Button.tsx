@@ -8,6 +8,17 @@ type ButtonVariant =
   | "black"
   | "secondary"
   | "outline"
+  | "outlineGray"
+  | "outlineBlue"
+  | "outlineGreen"
+  | "outlineRed"
+  | "outlineYellow"
+  | "outlinePurple"
+  | "outlineOrange"
+  | "outlinePink"
+  | "outlineIndigo"
+  | "outlineTeal"
+  | "outlineCyan"
   | "ghost"
   | "success"
   | "danger"
@@ -53,6 +64,17 @@ export const ButtonModule: React.FC<ButtonProps> = ({
     black: "bg-[#131319] text-[#ffffff] hover:bg-[#000000] focus:ring-[#131319]",
     secondary: "bg-[#E6F0FF] text-[#003F9F] hover:bg-[#C4DBFF] focus:ring-[#003F9F]",
     outline: "border border-[#004B23] text-[#004B23] hover:bg-[#F3f4f6] focus:ring-[#004B23]",
+    outlineGray: "border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300",
+    outlineBlue: "border border-blue-500 text-blue-600 hover:bg-blue-50 focus:ring-blue-500",
+    outlineGreen: "border border-green-500 text-green-600 hover:bg-green-50 focus:ring-green-500",
+    outlineRed: "border border-red-500 text-red-600 hover:bg-red-50 focus:ring-red-500",
+    outlineYellow: "border border-yellow-500 text-yellow-600 hover:bg-yellow-50 focus:ring-yellow-500",
+    outlinePurple: "border border-purple-500 text-purple-600 hover:bg-purple-50 focus:ring-purple-500",
+    outlineOrange: "border border-orange-500 text-orange-600 hover:bg-orange-50 focus:ring-orange-500",
+    outlinePink: "border border-pink-500 text-pink-600 hover:bg-pink-50 focus:ring-pink-500",
+    outlineIndigo: "border border-indigo-500 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500",
+    outlineTeal: "border border-teal-500 text-teal-600 hover:bg-teal-50 focus:ring-teal-500",
+    outlineCyan: "border border-cyan-500 text-cyan-600 hover:bg-cyan-50 focus:ring-cyan-500",
     success: "bg-[#16A34A] text-white hover:bg-[#15803D] focus:ring-[#16A34A]",
     outlineDanger: "border border-[#D82E2E] text-[#D82E2E] hover:bg-[#FDF3F3] focus:ring-[#D82E2E]",
     ghost: "text-[#003F9F] hover:bg-[#E6F0FF] focus:ring-[#003F9F]",

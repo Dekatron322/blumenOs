@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearClearCreditHistory, clearCredit, fetchClearCreditHistory } from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
+import ClearCreditDetailsModal from "components/ui/Modal/clear-credit-details-modal"
 
 interface ClearCreditHistoryTabProps {
   meterId: number
@@ -34,6 +35,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
   const [showFilters, setShowFilters] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<ClearTamperHistoryEntry | null>(null)
   const [showClearCreditModal, setShowClearCreditModal] = useState(false)
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
   // Fetch clear credit history using Redux
   useEffect(() => {
@@ -51,6 +53,16 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
 
   const handleRefresh = () => {
     dispatch(fetchClearCreditHistory({ id: meterId, pageNumber: currentPage, pageSize }))
+  }
+
+  const handleCopyToken = async (token: string) => {
+    try {
+      await navigator.clipboard.writeText(token)
+      setCopiedToken(token)
+      setTimeout(() => setCopiedToken(null), 2000)
+    } catch (error) {
+      console.error("Failed to copy token:", error)
+    }
   }
 
   const handleClearCredit = async () => {
@@ -113,6 +125,40 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
   const TamperCard = ({ event }: { event: ClearTamperHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful)
 
+    // Type definition for parsed response payload
+    interface TokenInfo {
+      tokenDec?: string
+      drn?: string
+      description?: string
+      transferAmount?: number
+      scaledAmount?: string
+      scaledUnitName?: string
+    }
+
+    interface ParsedResponse {
+      tokens?: TokenInfo[]
+    }
+
+    // Extract info from response payload
+    const getResponseInfo = () => {
+      try {
+        const parsed = JSON.parse(event.responsePayload || "{}") as ParsedResponse
+        const token = parsed.tokens?.[0]
+        return {
+          tokenDec: token?.tokenDec,
+          drn: token?.drn,
+          description: token?.description,
+          transferAmount: token?.transferAmount,
+          scaledAmount: token?.scaledAmount,
+          scaledUnitName: token?.scaledUnitName,
+        }
+      } catch {
+        return {}
+      }
+    }
+
+    const responseInfo = getResponseInfo()
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -136,26 +182,84 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
         </div>
 
         <div className="mt-4 space-y-2 text-xs text-gray-600 sm:text-sm">
+          {responseInfo.tokenDec && (
+            <div className="flex justify-between">
+              <span>Token:</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-medium">
+                  {responseInfo.tokenDec.length >= 16
+                    ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
+                    : responseInfo.tokenDec}
+                </span>
+                <button
+                  onClick={() => handleCopyToken(responseInfo.tokenDec!)}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                >
+                  {copiedToken === responseInfo.tokenDec ? (
+                    <>
+                      <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {responseInfo.transferAmount && (
+            <div className="flex justify-between">
+              <span>Amount:</span>
+              <span className="font-medium">
+                {new Intl.NumberFormat("en-NG", {
+                  style: "currency",
+                  currency: "NGN",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                }).format(responseInfo.transferAmount)}
+              </span>
+            </div>
+          )}
+
+          {responseInfo.scaledAmount && (
+            <div className="flex justify-between">
+              <span>Units:</span>
+              <span className="font-medium">
+                {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-between">
-            <span>Meter ID:</span>
-            <span className="font-medium">{event.meterId}</span>
+            <span>Meter Number:</span>
+            <span className="font-medium">{responseInfo.drn || event.meterId}</span>
           </div>
-          <div className="flex justify-between">
-            <span>User Account ID:</span>
-            <span className="font-medium">{event.userAccountId}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Agent ID:</span>
-            <span className="font-medium">{event.agentId}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Vendor ID:</span>
-            <span className="font-medium">{event.vendorId}</span>
-          </div>
+
+          {responseInfo.description && (
+            <div className="flex justify-between">
+              <span>Type:</span>
+              <span className="font-medium">{responseInfo.description}</span>
+            </div>
+          )}
+
           <div className="flex justify-between">
             <span>Requested At:</span>
             <span className="font-medium">{formatDateTime(event.requestedAtUtc)}</span>
           </div>
+
           {event.errorMessage && (
             <div className="flex justify-between">
               <span>Error Message:</span>
@@ -180,6 +284,40 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
   const TamperListItem = ({ event }: { event: ClearTamperHistoryEntry }) => {
     const statusConfig = getStatusConfig(event.isSuccessful)
 
+    // Type definition for parsed response payload
+    interface TokenInfo {
+      tokenDec?: string
+      drn?: string
+      description?: string
+      transferAmount?: number
+      scaledAmount?: string
+      scaledUnitName?: string
+    }
+
+    interface ParsedResponse {
+      tokens?: TokenInfo[]
+    }
+
+    // Extract info from response payload
+    const getResponseInfo = () => {
+      try {
+        const parsed = JSON.parse(event.responsePayload || "{}") as ParsedResponse
+        const token = parsed.tokens?.[0]
+        return {
+          tokenDec: token?.tokenDec,
+          drn: token?.drn,
+          description: token?.description,
+          transferAmount: token?.transferAmount,
+          scaledAmount: token?.scaledAmount,
+          scaledUnitName: token?.scaledUnitName,
+        }
+      } catch {
+        return {}
+      }
+    }
+
+    const responseInfo = getResponseInfo()
+
     return (
       <div className="border-b bg-white p-4 transition-all hover:bg-gray-50">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -189,7 +327,6 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <h3 className="truncate text-sm font-semibold text-gray-900 sm:text-base">#{event.id}</h3>
                 <div className="flex flex-wrap gap-2">
                   <div className={`rounded-full px-2 py-1 text-xs ${statusConfig.bg} ${statusConfig.color}`}>
                     {statusConfig.label}
@@ -197,14 +334,62 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 sm:gap-4 sm:text-sm">
+                {responseInfo.tokenDec && (
+                  <span className="flex items-center gap-1">
+                    <strong>Token:</strong>{" "}
+                    <span className="font-mono">
+                      {responseInfo.tokenDec.length >= 16
+                        ? responseInfo.tokenDec.match(/.{1,4}/g)?.join("-") || responseInfo.tokenDec
+                        : responseInfo.tokenDec}
+                    </span>
+                    <button
+                      onClick={() => handleCopyToken(responseInfo.tokenDec!)}
+                      className="flex items-center gap-1 rounded-md px-1 py-0.5 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                    >
+                      {copiedToken === responseInfo.tokenDec ? (
+                        <>
+                          <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="max-sm:hidden">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          <span className="max-sm:hidden">Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </span>
+                )}
+
+                {responseInfo.transferAmount && (
+                  <span>
+                    <strong>Amount:</strong>{" "}
+                    {new Intl.NumberFormat("en-NG", {
+                      style: "currency",
+                      currency: "NGN",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    }).format(responseInfo.transferAmount)}
+                  </span>
+                )}
+
+                {responseInfo.scaledAmount && (
+                  <span>
+                    <strong>Units:</strong> {responseInfo.scaledAmount} {responseInfo.scaledUnitName || ""}
+                  </span>
+                )}
+
                 <span>
-                  <strong>Meter ID:</strong> {event.meterId}
-                </span>
-                <span>
-                  <strong>User Account:</strong> {event.userAccountId}
-                </span>
-                <span>
-                  <strong>Date:</strong> {formatDateTime(event.requestedAtUtc)}
+                  <strong>Meter:</strong> {responseInfo.drn || event.meterId}
                 </span>
               </div>
             </div>
@@ -212,7 +397,6 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
 
           <div className="flex items-center justify-between gap-3 sm:justify-end">
             <div className="hidden text-right text-sm sm:block">
-              <div className="font-medium text-gray-900">ID: #{event.id}</div>
               <div className="mt-1 text-xs text-gray-500">{formatDateTime(event.requestedAtUtc)}</div>
             </div>
             <div className="flex items-center gap-2">
@@ -256,7 +440,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
   }
 
   return (
-    <div className="space-y-4">
+    <div className="">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -437,78 +621,16 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
         </>
       )}
 
-      {/* Details Modal */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="mx-4 max-w-lg rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-lg font-semibold">Clear Credit Event Details</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">ID:</span>
-                <span className="font-medium">#{selectedEvent.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Meter ID:</span>
-                <span className="font-medium">{selectedEvent.meterId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">User Account ID:</span>
-                <span className="font-medium">{selectedEvent.userAccountId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Agent ID:</span>
-                <span className="font-medium">{selectedEvent.agentId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Vendor ID:</span>
-                <span className="font-medium">{selectedEvent.vendorId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Status:</span>
-                <span className={`font-medium ${selectedEvent.isSuccessful ? "text-green-600" : "text-red-600"}`}>
-                  {selectedEvent.isSuccessful ? "Successful" : "Failed"}
-                </span>
-              </div>
-              {selectedEvent.errorCode && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Error Code:</span>
-                  <span className="font-medium text-red-600">{selectedEvent.errorCode}</span>
-                </div>
-              )}
-              {selectedEvent.errorMessage && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Error Message:</span>
-                  <span className="font-medium text-red-600">{selectedEvent.errorMessage}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-600">Requested At:</span>
-                <span className="font-medium">{formatDateTime(selectedEvent.requestedAtUtc)}</span>
-              </div>
-              {selectedEvent.requestPayload && (
-                <div>
-                  <span className="text-gray-600">Request Payload:</span>
-                  <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-xs">{selectedEvent.requestPayload}</div>
-                </div>
-              )}
-              {selectedEvent.responsePayload && (
-                <div>
-                  <span className="text-gray-600">Response Payload:</span>
-                  <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-xs">{selectedEvent.responsePayload}</div>
-                </div>
-              )}
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={() => setSelectedEvent(null)} className="button-oulined">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Clear Credit Details Modal */}
+      <ClearCreditDetailsModal
+        isOpen={!!selectedEvent}
+        onRequestClose={() => setSelectedEvent(null)}
+        selectedEvent={selectedEvent}
+        formatDateTime={formatDateTime}
+      />
 
       {/* Clear Credit Modal */}
-      <ClearCreditModal
+      {/* <ClearCreditModal
         isOpen={showClearCreditModal}
         onRequestClose={() => setShowClearCreditModal(false)}
         onConfirm={handleClearCredit}
@@ -516,7 +638,7 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
         meterId={meterId}
         errorMessage={clearCreditError || undefined}
         successMessage={clearCreditData ? "Credit cleared successfully!" : undefined}
-      />
+      /> */}
     </div>
   )
 }

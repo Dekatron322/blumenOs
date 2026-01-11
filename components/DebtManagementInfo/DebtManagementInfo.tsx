@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from 
 import { AnimatePresence, motion } from "framer-motion"
 import Dropdown from "components/Dropdown/Dropdown"
 import DebtManagementTabNavigation from "./DebtManagementTabNavigation"
+import AllDebtRecovery from "components/BillingInfo/AllDebtRecovery"
 import type { DebtEntryData, DebtManagementCustomer } from "lib/redux/debtManagementSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
@@ -1632,6 +1633,8 @@ const DebtManagementInfo: React.FC<DebtManagementInfoProps> = ({
             onViewDetails={onViewEntryDetails}
           />
         )
+      case "DebtRecovery":
+        return <AllDebtRecovery />
       default:
         return (
           <DebtManagementCustomers

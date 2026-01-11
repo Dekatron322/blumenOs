@@ -2,18 +2,6 @@ import { ChevronDown } from "lucide-react"
 import React, { useState } from "react"
 
 // Tab Icons
-const DebtSummaryIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
 const CustomersIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -29,7 +17,19 @@ const CustomersIcon = () => (
 const DebtEntriesIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
-      d="M9 14h6m-6-4h6m2 8h.01M9 18h.01M12 2v4m0 12v4M4.93 4.93l2.83 2.83m11.32 11.32l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m11.32-11.32l2.83-2.83"
+      d="M9 12h6m-6-4h6m-6 8h6m6-12v16a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2 2 0 012-2h14z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+const DebtRecoveryIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
@@ -54,6 +54,11 @@ const DebtManagementTabNavigation: React.FC<DebtManagementTabNavigationProps> = 
       id: "DebtEntries",
       label: "All Debt Entries",
       icon: <DebtEntriesIcon />,
+    },
+    {
+      id: "DebtRecovery",
+      label: "Debt Recovery",
+      icon: <DebtRecoveryIcon />,
     },
   ]
 
@@ -116,7 +121,7 @@ const DebtManagementTabNavigation: React.FC<DebtManagementTabNavigationProps> = 
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+              className={`flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ease-in-out ${
                 activeTab === tab.id
                   ? " bg-[#004B23]  text-[#FFFFFF]"
                   : " border-transparent  text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700 "

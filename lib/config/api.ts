@@ -242,6 +242,7 @@ export const API_ENDPOINTS = {
     GET: "/billing/postpaid/meter-readings",
     GET_BY_ID: "/billing/postpaid/meter-readings/{id}",
     ADD: "/billing/postpaid/meter-readings",
+    PREPAID_TRANSACTION: "/prepaid/transactions",
   },
 
   FEEDER_ENERGY_CAP: {
@@ -260,6 +261,8 @@ export const API_ENDPOINTS = {
     MAINTENANCE_SUMMARY: "/maintenance/report/summary",
     VENDOR_SUMMARY: "/vendors/reports/summary",
     SALES_REP: "/agents/reports/summary",
+    PREPAID_SUMMARY: "/prepaid/reports/summary",
+    PREPAID_STATS: "/prepaid/queue/stats",
   },
 
   OUTAGE_MANAGEMENT: {
@@ -408,6 +411,7 @@ export const API_ENDPOINTS = {
     ADD_RECOVERY_POLICY: "/debt-management/recovery-policies",
     PAUSE: "/debt-management/recovery-policies/{id}/pause",
     RESUME: "/debt-management/recovery-policies/{id}/resume",
+    DEBT_RECOVERY: "/debt-management/recovery-records",
   },
 
   CUSTOMER_AUTH: {
