@@ -19,9 +19,11 @@ import {
   clearAddExistingUserAsAgent,
 } from "lib/redux/agentSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
+import { fetchAgents } from "lib/redux/agentSlice"
 import { clearDepartments, fetchDepartments } from "lib/redux/departmentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import {
   ArrowLeft,
   ArrowRight,
@@ -43,14 +45,25 @@ import { VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 // === INTERFACES ===
 
+// Agent Type enum
+enum AgentType {
+  SalesRep = 1,
+  Cashier = 2,
+  ClearingCashier = 3,
+  Supervisor = 4,
+}
+
 // For adding new agent
 interface AgentFormData {
+  agentType: string
   fullName: string
   phoneNumber: string
   email: string
   areaOfficeId: number
   serviceCenterId: number | null
+  distributionSubstationId: number | null
   departmentId: number
+  managerAgentId: number | null
   employeeId: string
   position: string
   emergencyContact: string
@@ -58,6 +71,8 @@ interface AgentFormData {
   supervisorId: number | null
   employmentType: string
   cashCollectionLimit: string
+  maxSingleAllowedCashAmount: string
+  enforceJurisdiction: boolean
   canCollectCash: boolean
   status: string
 }
@@ -67,19 +82,27 @@ interface ExistingUserFormData {
   userAccountId: number | null
   areaOfficeId: number
   serviceCenterId: number | null
+  distributionSubstationId: number | null
+  managerAgentId: number | null
+  agentType: string
+  enforceJurisdiction: boolean
   status: string
   cashCollectionLimit: string
+  maxSingleAllowedCashAmount: string
   canCollectCash: boolean
 }
 
 // For CSV bulk upload
 interface CSVAgent {
+  agentType: string
   fullName: string
   phoneNumber: string
   email: string
   areaOfficeId: number
   serviceCenterId: number | null
+  distributionSubstationId: number | null
   departmentId: number
+  managerAgentId: number | null
   employeeId: string
   position: string
   emergencyContact: string
@@ -87,9 +110,20 @@ interface CSVAgent {
   supervisorId: number | null
   employmentType: string
   cashCollectionLimit: string
+  maxSingleAllowedCashAmount: string
+  enforceJurisdiction: boolean
   canCollectCash: boolean
   status: string
 }
+
+// Agent type options
+const agentTypeOptions = [
+  { value: "", label: "Select agent type" },
+  { value: "SalesRep", label: "Sales Representative" },
+  { value: "Cashier", label: "Cashier" },
+  { value: "ClearingCashier", label: "Clearing Cashier" },
+  { value: "Supervisor", label: "Supervisor" },
+]
 
 // Mock data for dropdowns
 const employmentTypeOptions = [
@@ -139,12 +173,15 @@ const AddNewAgent = () => {
 
   // Form data state
   const [newAgentFormData, setNewAgentFormData] = useState<AgentFormData>({
+    agentType: "",
     fullName: "",
     phoneNumber: "",
     email: "",
     areaOfficeId: 0,
     serviceCenterId: null,
+    distributionSubstationId: null,
     departmentId: 0,
+    managerAgentId: null,
     employeeId: "",
     position: "",
     emergencyContact: "",
@@ -152,6 +189,8 @@ const AddNewAgent = () => {
     supervisorId: null,
     employmentType: "",
     cashCollectionLimit: "",
+    maxSingleAllowedCashAmount: "",
+    enforceJurisdiction: true,
     canCollectCash: false,
     status: "",
   })
@@ -160,8 +199,13 @@ const AddNewAgent = () => {
     userAccountId: null,
     areaOfficeId: 0,
     serviceCenterId: null,
+    distributionSubstationId: null,
+    managerAgentId: null,
+    agentType: "",
+    enforceJurisdiction: true,
     status: "ACTIVE",
     cashCollectionLimit: "",
+    maxSingleAllowedCashAmount: "",
     canCollectCash: false,
   })
 
@@ -174,6 +218,7 @@ const AddNewAgent = () => {
 
   // Redux selectors
   const { employees, employeesLoading, employeesError } = useAppSelector((state) => state.employee)
+  const { agents, loading: agentsLoading, error: agentsError } = useAppSelector((state) => state.agents)
   const {
     departments,
     loading: departmentsLoading,
@@ -189,6 +234,11 @@ const AddNewAgent = () => {
     loading: serviceStationsLoading,
     error: serviceStationsError,
   } = useAppSelector((state) => state.serviceStations)
+  const {
+    distributionSubstations,
+    loading: distributionSubstationsLoading,
+    error: distributionSubstationsError,
+  } = useAppSelector((state) => state.distributionSubstations)
 
   // === EFFECTS ===
 
@@ -239,9 +289,11 @@ const AddNewAgent = () => {
   // Fetch data on mount
   useEffect(() => {
     dispatch(fetchEmployees({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchAgents({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchDepartments({ pageNumber: 1, pageSize: 100, isActive: true }))
     dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100 }))
     dispatch(fetchServiceStations({ pageNumber: 1, pageSize: 100 }))
+    dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
 
     return () => {
       dispatch(clearDepartments())
@@ -267,13 +319,13 @@ const AddNewAgent = () => {
   const supervisorOptions = [
     {
       value: "",
-      label: employeesLoading ? "Loading supervisors..." : "Select supervisor (optional)",
+      label: agentsLoading ? "Loading supervisors..." : "Select supervisor (optional)",
     },
-    ...employees
-      .filter((employee) => employee.isActive)
-      .map((employee) => ({
-        value: employee.id.toString(),
-        label: `${employee.fullName} (${employee.email})`,
+    ...agents
+      .filter((agent) => agent.status === "ACTIVE")
+      .map((agent) => ({
+        value: agent.id.toString(),
+        label: `${agent.user.fullName} (${agent.user.email}) - ${agent.agentCode}`,
       })),
   ]
 
@@ -297,6 +349,43 @@ const AddNewAgent = () => {
       value: serviceStation.id.toString(),
       label: `${serviceStation.name} (${serviceStation.code})`,
     })),
+  ]
+
+  const distributionSubstationOptions = [
+    {
+      value: "",
+      label: distributionSubstationsLoading
+        ? "Loading distribution substations..."
+        : "Select distribution substation (optional)",
+    },
+    ...distributionSubstations.map((substation) => ({
+      value: substation.id.toString(),
+      label: `${substation.dssCode} - ${substation.nercCode}`,
+    })),
+  ]
+
+  const managerAgentOptions = [
+    {
+      value: "",
+      label: agentsLoading ? "Loading manager agents..." : "Select manager agent (optional)",
+    },
+    ...agents
+      .filter((agent) => {
+        if (agent.status !== "ACTIVE") return false
+
+        // Filter based on selected agent type
+        if (newAgentFormData.agentType === "SalesRep" || newAgentFormData.agentType === "Cashier") {
+          return agent.user.position === "ClearingCashier"
+        } else if (newAgentFormData.agentType === "ClearingCashier") {
+          return agent.user.position === "Supervisor"
+        }
+
+        return false // Don't show any options if no agent type is selected
+      })
+      .map((agent) => ({
+        value: agent.id.toString(),
+        label: `${agent.user.fullName} (${agent.user.email})`,
+      })),
   ]
 
   // Filter employees for existing users (non-agents)
@@ -368,10 +457,14 @@ const AddNewAgent = () => {
   // Validation
   const validateCurrentStep = (): boolean => {
     const errors: Record<string, string> = {}
+    const agentType = newAgentFormData.agentType
 
     if (activeTab === "new") {
       switch (currentStep) {
-        case 1: // Personal Information
+        case 1: // Agent Type and Personal Information
+          if (!agentType) {
+            errors.agentType = "Agent type is required"
+          }
           if (!newAgentFormData.fullName.trim()) {
             errors.fullName = "Full name is required"
           }
@@ -387,36 +480,53 @@ const AddNewAgent = () => {
           }
           break
 
-        case 2: // Employment Information
-          if (!newAgentFormData.employeeId.trim()) {
-            errors.employeeId = "Employee ID is required"
-          }
-          if (!newAgentFormData.position.trim()) {
-            errors.position = "Position is required"
-          }
-          if (!newAgentFormData.employmentType) {
-            errors.employmentType = "Employment type is required"
-          }
+        case 2: // Employment Information (optional for all agent types)
+          // All fields in this step are optional
           break
 
-        case 3: // Department & Office
-          if (!newAgentFormData.departmentId) {
-            errors.departmentId = "Department is required"
-          }
+        case 3: // Department & Office Information
+          // Required fields based on agent type
           if (!newAgentFormData.areaOfficeId) {
             errors.areaOfficeId = "Area office is required"
           }
+
+          // SalesRep requires distribution substation
+          if (agentType === "SalesRep" && !newAgentFormData.distributionSubstationId) {
+            errors.distributionSubstationId = "Distribution substation is required for Sales Rep"
+          }
+
+          // SalesRep and Cashier require manager agent
+          if ((agentType === "SalesRep" || agentType === "Cashier") && !newAgentFormData.managerAgentId) {
+            errors.managerAgentId = "Manager agent is required for this agent type"
+          }
           break
 
-        case 4: // Cash & Status
-          if (!newAgentFormData.cashCollectionLimit.trim()) {
-            errors.cashCollectionLimit = "Cash collection limit is required"
-          } else if (parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
-            errors.cashCollectionLimit = "Cash collection limit must be greater than 0"
+        case 4: // Cash & Status Information
+          // Cash collection limit based on agent type
+          if (agentType === "SalesRep" || agentType === "Cashier") {
+            if (!newAgentFormData.cashCollectionLimit.trim()) {
+              errors.cashCollectionLimit = "Cash collection limit is required"
+            } else if (parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
+              errors.cashCollectionLimit = "Cash collection limit must be greater than 0"
+            }
           }
-          if (newAgentFormData.canCollectCash === undefined || newAgentFormData.canCollectCash === null) {
-            errors.canCollectCash = "Cash collection permission is required"
+
+          // Max single cash amount for Cashier and ClearingCashier
+          if (agentType === "Cashier" || agentType === "ClearingCashier") {
+            if (!newAgentFormData.maxSingleAllowedCashAmount.trim()) {
+              errors.maxSingleAllowedCashAmount = "Max single allowed cash amount is required"
+            } else if (parseFloat(newAgentFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) <= 0) {
+              errors.maxSingleAllowedCashAmount = "Max single allowed cash amount must be greater than 0"
+            }
           }
+
+          // Can collect cash for SalesRep and Cashier
+          if (agentType === "SalesRep" || agentType === "Cashier") {
+            if (newAgentFormData.canCollectCash === undefined || newAgentFormData.canCollectCash === null) {
+              errors.canCollectCash = "Cash collection permission is required"
+            }
+          }
+
           if (!newAgentFormData.status) {
             errors.status = "Status is required"
           }
@@ -434,14 +544,39 @@ const AddNewAgent = () => {
       if (!existingUserFormData.areaOfficeId) {
         errors.areaOfficeId = "Area office is required"
       }
-      if (!existingUserFormData.cashCollectionLimit.trim()) {
-        errors.cashCollectionLimit = "Cash collection limit is required"
-      } else if (parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
-        errors.cashCollectionLimit = "Cash collection limit must be greater than 0"
+      if (!existingUserFormData.agentType) {
+        errors.agentType = "Agent type is required"
       }
-      if (existingUserFormData.canCollectCash === undefined || existingUserFormData.canCollectCash === null) {
-        errors.canCollectCash = "Cash collection permission is required"
+
+      // Conditional validation based on agent type
+      const agentType = existingUserFormData.agentType
+
+      // SalesRep requires distribution substation
+      if (agentType === "SalesRep" && !existingUserFormData.distributionSubstationId) {
+        errors.distributionSubstationId = "Distribution substation is required for Sales Rep"
       }
+
+      // SalesRep and Cashier require manager agent
+      if ((agentType === "SalesRep" || agentType === "Cashier") && !existingUserFormData.managerAgentId) {
+        errors.managerAgentId = "Manager agent is required for this agent type"
+      }
+
+      // Cash collection limit based on agent type
+      if (agentType === "SalesRep" || agentType === "Cashier") {
+        if (!existingUserFormData.cashCollectionLimit.trim()) {
+          errors.cashCollectionLimit = "Cash collection limit is required"
+        } else if (parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
+          errors.cashCollectionLimit = "Cash collection limit must be greater than 0"
+        }
+      }
+
+      // Can collect cash for SalesRep and Cashier
+      if (agentType === "SalesRep" || agentType === "Cashier") {
+        if (existingUserFormData.canCollectCash === undefined || existingUserFormData.canCollectCash === null) {
+          errors.canCollectCash = "Cash collection permission is required"
+        }
+      }
+
       if (!existingUserFormData.status) {
         errors.status = "Status is required"
       }
@@ -477,22 +612,33 @@ const AddNewAgent = () => {
       return
     }
 
+    const agentType = newAgentFormData.agentType
+
+    // Complete payload structure as per endpoint requirements
     const agentData: AddAgentRequest = {
       fullName: newAgentFormData.fullName,
       email: newAgentFormData.email,
       phoneNumber: newAgentFormData.phoneNumber,
       areaOfficeId: newAgentFormData.areaOfficeId,
-      departmentId: newAgentFormData.departmentId,
-      employeeId: newAgentFormData.employeeId,
-      position: newAgentFormData.position,
-      employmentType: newAgentFormData.employmentType,
-      cashCollectionLimit: parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, "")),
+      serviceCenterId: newAgentFormData.serviceCenterId || 0,
+      distributionSubstationId: newAgentFormData.distributionSubstationId || 0,
+      departmentId: newAgentFormData.departmentId || 0,
+      managerAgentId: newAgentFormData.managerAgentId || 0,
+      agentType: agentType,
+      enforceJurisdiction: newAgentFormData.enforceJurisdiction,
+      employeeId: newAgentFormData.employeeId || "",
+      position: newAgentFormData.position || "",
+      emergencyContact: newAgentFormData.emergencyContact || "",
+      address: newAgentFormData.address || "",
+      employmentType: newAgentFormData.employmentType || "",
+      cashCollectionLimit: newAgentFormData.cashCollectionLimit
+        ? parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, ""))
+        : 0,
+      maxSingleAllowedCashAmount: newAgentFormData.maxSingleAllowedCashAmount
+        ? parseFloat(newAgentFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, ""))
+        : 0,
       canCollectCash: newAgentFormData.canCollectCash,
       status: newAgentFormData.status,
-      ...(newAgentFormData.serviceCenterId && { serviceCenterId: newAgentFormData.serviceCenterId }),
-      ...(newAgentFormData.emergencyContact && { emergencyContact: newAgentFormData.emergencyContact }),
-      ...(newAgentFormData.address && { address: newAgentFormData.address }),
-      ...(newAgentFormData.supervisorId && { supervisorId: newAgentFormData.supervisorId }),
     }
 
     dispatch(addAgent(agentData))
@@ -510,10 +656,15 @@ const AddNewAgent = () => {
     const agentData: AddExistingUserAsAgentRequest = {
       userAccountId: existingUserFormData.userAccountId!,
       areaOfficeId: existingUserFormData.areaOfficeId,
+      serviceCenterId: existingUserFormData.serviceCenterId || 0,
+      distributionSubstationId: existingUserFormData.distributionSubstationId || 0,
+      managerAgentId: existingUserFormData.managerAgentId || 0,
+      agentType: existingUserFormData.agentType,
+      enforceJurisdiction: existingUserFormData.enforceJurisdiction,
       status: existingUserFormData.status,
       cashCollectionLimit: parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")),
+      maxSingleAllowedCashAmount: parseFloat(existingUserFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) || 0,
       canCollectCash: existingUserFormData.canCollectCash,
-      ...(existingUserFormData.serviceCenterId && { serviceCenterId: existingUserFormData.serviceCenterId }),
     }
 
     dispatch(addExistingUserAsAgent(agentData))
@@ -522,12 +673,15 @@ const AddNewAgent = () => {
   // Reset Functions
   const handleReset = () => {
     setNewAgentFormData({
+      agentType: "",
       fullName: "",
       phoneNumber: "",
       email: "",
       areaOfficeId: 0,
       serviceCenterId: null,
+      distributionSubstationId: null,
       departmentId: 0,
+      managerAgentId: null,
       employeeId: "",
       position: "",
       emergencyContact: "",
@@ -535,6 +689,8 @@ const AddNewAgent = () => {
       supervisorId: null,
       employmentType: "",
       cashCollectionLimit: "",
+      maxSingleAllowedCashAmount: "",
+      enforceJurisdiction: true,
       canCollectCash: false,
       status: "",
     })
@@ -547,8 +703,13 @@ const AddNewAgent = () => {
       userAccountId: null,
       areaOfficeId: 0,
       serviceCenterId: null,
+      distributionSubstationId: null,
+      managerAgentId: null,
+      agentType: "",
+      enforceJurisdiction: true,
       status: "ACTIVE",
       cashCollectionLimit: "",
+      maxSingleAllowedCashAmount: "",
       canCollectCash: false,
     })
     setFormErrors({})
@@ -597,30 +758,88 @@ const AddNewAgent = () => {
   }
 
   const isNewAgentFormValid = (): boolean => {
-    return (
+    const agentType = newAgentFormData.agentType
+
+    // Base validation for all agent types
+    const baseValid =
+      newAgentFormData.agentType.trim() !== "" &&
       newAgentFormData.fullName.trim() !== "" &&
       newAgentFormData.email.trim() !== "" &&
       newAgentFormData.phoneNumber.trim() !== "" &&
       newAgentFormData.areaOfficeId > 0 &&
-      newAgentFormData.departmentId > 0 &&
-      newAgentFormData.employeeId.trim() !== "" &&
-      newAgentFormData.position.trim() !== "" &&
-      newAgentFormData.employmentType.trim() !== "" &&
-      newAgentFormData.cashCollectionLimit.trim() !== "" &&
-      newAgentFormData.status.trim() !== "" &&
-      newAgentFormData.canCollectCash !== undefined
-    )
+      newAgentFormData.status.trim() !== ""
+
+    if (!baseValid) return false
+
+    // Agent type-specific validation
+    switch (agentType) {
+      case "SalesRep":
+        return (
+          newAgentFormData.distributionSubstationId !== null &&
+          newAgentFormData.managerAgentId !== null &&
+          newAgentFormData.cashCollectionLimit.trim() !== "" &&
+          newAgentFormData.canCollectCash !== undefined
+        )
+
+      case "Cashier":
+        return (
+          newAgentFormData.managerAgentId !== null &&
+          newAgentFormData.cashCollectionLimit.trim() !== "" &&
+          newAgentFormData.maxSingleAllowedCashAmount.trim() !== "" &&
+          newAgentFormData.canCollectCash !== undefined
+        )
+
+      case "ClearingCashier":
+        return newAgentFormData.managerAgentId !== null && newAgentFormData.maxSingleAllowedCashAmount.trim() !== ""
+
+      case "Supervisor":
+        return true // Only base fields required
+
+      default:
+        return false
+    }
   }
 
   const isExistingUserFormValid = (): boolean => {
-    return (
+    const agentType = existingUserFormData.agentType
+
+    // Base validation for all agent types
+    const baseValidation =
       existingUserFormData.userAccountId !== null &&
       existingUserFormData.userAccountId > 0 &&
       existingUserFormData.areaOfficeId > 0 &&
-      existingUserFormData.cashCollectionLimit.trim() !== "" &&
-      (existingUserFormData.status || "").trim() !== "" &&
-      existingUserFormData.canCollectCash !== undefined
-    )
+      agentType.trim() !== "" &&
+      (existingUserFormData.status || "").trim() !== ""
+
+    if (!baseValidation) return false
+
+    // Conditional validation based on agent type
+    switch (agentType) {
+      case "SalesRep":
+        return (
+          existingUserFormData.distributionSubstationId !== null &&
+          existingUserFormData.managerAgentId !== null &&
+          existingUserFormData.cashCollectionLimit.trim() !== "" &&
+          existingUserFormData.canCollectCash !== undefined
+        )
+
+      case "Cashier":
+        return (
+          existingUserFormData.managerAgentId !== null &&
+          existingUserFormData.cashCollectionLimit.trim() !== "" &&
+          existingUserFormData.maxSingleAllowedCashAmount.trim() !== "" &&
+          existingUserFormData.canCollectCash !== undefined
+        )
+
+      case "ClearingCashier":
+        return true // Only basic fields required
+
+      case "Supervisor":
+        return true // Only basic fields required
+
+      default:
+        return false
+    }
   }
 
   // Mobile Step Navigation
@@ -861,11 +1080,21 @@ const AddNewAgent = () => {
           ) : (
             <button
               type="button"
-              onClick={submitNewAgent}
+              onClick={() => void submitNewAgent()}
               disabled={!isNewAgentFormValid() || addAgentLoading}
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {addAgentLoading ? "Adding..." : "Add Agent"}
+              {addAgentLoading
+                ? `Adding ${
+                    newAgentFormData.agentType
+                      ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label || "Agent"
+                      : "Agent"
+                  }...`
+                : `Add ${
+                    newAgentFormData.agentType
+                      ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label || "Agent"
+                      : "Agent"
+                  }`}
             </button>
           )}
         </div>
@@ -932,8 +1161,22 @@ const AddNewAgent = () => {
                     </svg>
                   </button>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Register New Sales Rep</h1>
-                    <p className="text-sm text-gray-600">Add a new sales rep to the system</p>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
+                      {newAgentFormData.agentType
+                        ? `Register New ${
+                            agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label || "Agent"
+                          }`
+                        : "Register New Agent"}
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                      {newAgentFormData.agentType
+                        ? `Add a new ${
+                            agentTypeOptions
+                              .find((opt) => opt.value === newAgentFormData.agentType)
+                              ?.label?.toLowerCase() || "agent"
+                          } to the system`
+                        : "Select cash officer type and add a cash officer to the system"}
+                    </p>
                   </div>
                 </div>
 
@@ -959,7 +1202,19 @@ const AddNewAgent = () => {
                       icon={<AddAgentIcon />}
                       iconPosition="start"
                     >
-                      {addAgentLoading ? "Adding Sales Rep..." : "Add Sales Rep"}
+                      {addAgentLoading
+                        ? `Adding ${
+                            newAgentFormData.agentType
+                              ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label ||
+                                "Agent"
+                              : "Agent"
+                          }...`
+                        : `Add ${
+                            newAgentFormData.agentType
+                              ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label ||
+                                "Agent"
+                              : "Agent"
+                          }`}
                     </ButtonModule>
                   )}
                   {activeTab === "existing" && (
@@ -971,7 +1226,7 @@ const AddNewAgent = () => {
                       icon={<UserCog />}
                       iconPosition="start"
                     >
-                      {addExistingUserAsAgentLoading ? "Converting User..." : "Convert to Sales Rep"}
+                      {addExistingUserAsAgentLoading ? "Converting User..." : "Convert to Agent"}
                     </ButtonModule>
                   )}
                 </div>
@@ -1000,7 +1255,7 @@ const AddNewAgent = () => {
                     }`}
                   >
                     <UserPlus className="size-4" />
-                    <span>New Sales Rep</span>
+                    <span>New Cash Officer</span>
                   </button>
                   <button
                     onClick={() => setActiveTab("existing")}
@@ -1039,9 +1294,21 @@ const AddNewAgent = () => {
                   className="rounded-b-lg bg-white p-4 shadow-sm sm:p-6"
                 >
                   <div className="mb-4 border-b pb-4 sm:mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Create New Sales Rep</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Create New{" "}
+                      {newAgentFormData.agentType
+                        ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label ||
+                          "Cash Officer"
+                        : "Cash Officer"}
+                    </h3>
                     <p className="text-sm text-gray-600">
-                      Register a completely new sales rep with all required details
+                      {newAgentFormData.agentType
+                        ? `Register a new ${
+                            agentTypeOptions
+                              .find((opt) => opt.value === newAgentFormData.agentType)
+                              ?.label?.toLowerCase() || "agent"
+                          } with all required details`
+                        : "Select Cash Officer type and register a cash officer with all required details"}
                     </p>
                   </div>
 
@@ -1052,7 +1319,7 @@ const AddNewAgent = () => {
 
                   <form id="new-agent-form" className="space-y-8">
                     <AnimatePresence mode="wait">
-                      {/* Step 1: Personal Information */}
+                      {/* Step 1: Agent Type and Personal Information */}
                       {currentStep === 1 && (
                         <motion.div
                           key="step-1"
@@ -1064,12 +1331,24 @@ const AddNewAgent = () => {
                           <div className="border-b pb-3 sm:pb-4">
                             <div className="flex items-center gap-2">
                               <User className="size-5" />
-                              <h4 className="text-lg font-medium text-gray-900">Personal Information</h4>
+                              <h4 className="text-lg font-medium text-gray-900">
+                                Cash Officer Type & Personal Information
+                              </h4>
                             </div>
-                            <p className="text-sm text-gray-600">Enter the agent&apos;s personal and contact details</p>
+                            <p className="text-sm text-gray-600">Select cash officer type and enter personal details</p>
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            <FormSelectModule
+                              label="Cash Officer Type"
+                              name="agentType"
+                              value={newAgentFormData.agentType}
+                              onChange={handleNewAgentInputChange}
+                              options={agentTypeOptions}
+                              error={formErrors.agentType}
+                              required
+                            />
+
                             <FormInputModule
                               label="Full Name"
                               name="fullName"
@@ -1104,7 +1383,7 @@ const AddNewAgent = () => {
                             />
 
                             <FormInputModule
-                              label="Emergency Contact (Optional)"
+                              label="Emergency Contact"
                               name="emergencyContact"
                               type="tel"
                               placeholder="Emergency contact number"
@@ -1227,6 +1506,7 @@ const AddNewAgent = () => {
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            {/* Common optional fields */}
                             <FormSelectModule
                               label="Department"
                               name="departmentId"
@@ -1238,10 +1518,24 @@ const AddNewAgent = () => {
                               }
                               options={departmentOptions}
                               error={formErrors.departmentId}
-                              required
                               disabled={departmentsLoading}
                             />
 
+                            <FormSelectModule
+                              label="Service Center"
+                              name="serviceCenterId"
+                              value={newAgentFormData.serviceCenterId?.toString() || ""}
+                              onChange={(e) =>
+                                setNewAgentFormData((prev) => ({
+                                  ...prev,
+                                  serviceCenterId: e.target.value ? Number(e.target.value) : null,
+                                }))
+                              }
+                              options={serviceCenterOptions}
+                              disabled={serviceStationsLoading}
+                            />
+
+                            {/* Required for all agent types */}
                             <FormSelectModule
                               label="Area Office"
                               name="areaOfficeId"
@@ -1257,19 +1551,63 @@ const AddNewAgent = () => {
                               disabled={areaOfficesLoading}
                             />
 
-                            <FormSelectModule
-                              label="Service Center (Optional)"
-                              name="serviceCenterId"
-                              value={newAgentFormData.serviceCenterId?.toString() || ""}
-                              onChange={(e) =>
-                                setNewAgentFormData((prev) => ({
-                                  ...prev,
-                                  serviceCenterId: e.target.value ? Number(e.target.value) : null,
-                                }))
-                              }
-                              options={serviceCenterOptions}
-                              disabled={serviceStationsLoading}
-                            />
+                            {/* Required for SalesRep */}
+                            {newAgentFormData.agentType === "SalesRep" && (
+                              <FormSelectModule
+                                label="Distribution Substation"
+                                name="distributionSubstationId"
+                                value={newAgentFormData.distributionSubstationId?.toString() || ""}
+                                onChange={(e) =>
+                                  setNewAgentFormData((prev) => ({
+                                    ...prev,
+                                    distributionSubstationId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={distributionSubstationOptions}
+                                error={formErrors.distributionSubstationId}
+                                required
+                                disabled={distributionSubstationsLoading}
+                              />
+                            )}
+
+                            {/* Required for SalesRep and Cashier */}
+                            {(newAgentFormData.agentType === "SalesRep" ||
+                              newAgentFormData.agentType === "Cashier") && (
+                              <FormSelectModule
+                                label="Manager Agent"
+                                name="managerAgentId"
+                                value={newAgentFormData.managerAgentId?.toString() || ""}
+                                onChange={(e) =>
+                                  setNewAgentFormData((prev) => ({
+                                    ...prev,
+                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={managerAgentOptions}
+                                error={formErrors.managerAgentId}
+                                required
+                                disabled={agentsLoading}
+                              />
+                            )}
+
+                            {/* Required for ClearingCashier */}
+                            {newAgentFormData.agentType === "ClearingCashier" && (
+                              <FormSelectModule
+                                label="Manager Agent"
+                                name="managerAgentId"
+                                value={newAgentFormData.managerAgentId?.toString() || ""}
+                                onChange={(e) =>
+                                  setNewAgentFormData((prev) => ({
+                                    ...prev,
+                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={managerAgentOptions}
+                                error={formErrors.managerAgentId}
+                                required
+                                disabled={agentsLoading}
+                              />
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -1294,32 +1632,75 @@ const AddNewAgent = () => {
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            <FormInputModule
-                              label="Cash Collection Limit (₦)"
-                              name="cashCollectionLimit"
-                              type="text"
-                              placeholder="Maximum cash collection amount"
-                              value={newAgentFormData.cashCollectionLimit}
-                              onChange={(e) => handleCurrencyInput(e, "new")}
-                              error={formErrors.cashCollectionLimit}
-                              required
-                            />
+                            {/* Cash Collection Limit - Required for SalesRep and Cashier */}
+                            {(newAgentFormData.agentType === "SalesRep" ||
+                              newAgentFormData.agentType === "Cashier") && (
+                              <FormInputModule
+                                label="Cash Collection Limit (₦)"
+                                name="cashCollectionLimit"
+                                type="text"
+                                placeholder="Maximum cash collection amount"
+                                value={newAgentFormData.cashCollectionLimit}
+                                onChange={(e) => handleCurrencyInput(e, "new")}
+                                error={formErrors.cashCollectionLimit}
+                                required
+                              />
+                            )}
 
-                            <FormSelectModule
-                              label="Can Collect Cash?"
-                              name="canCollectCash"
-                              value={newAgentFormData.canCollectCash.toString()}
-                              onChange={(e) =>
-                                setNewAgentFormData((prev) => ({
-                                  ...prev,
-                                  canCollectCash: e.target.value === "true",
-                                }))
-                              }
-                              options={canCollectCashOptions}
-                              error={formErrors.canCollectCash}
-                              required
-                            />
+                            {/* Max Single Allowed Cash Amount - Required for Cashier and ClearingCashier */}
+                            {(newAgentFormData.agentType === "Cashier" ||
+                              newAgentFormData.agentType === "ClearingCashier") && (
+                              <FormInputModule
+                                label="Max Single Allowed Cash Amount (₦)"
+                                name="maxSingleAllowedCashAmount"
+                                type="text"
+                                placeholder="Maximum single cash transaction amount"
+                                value={newAgentFormData.maxSingleAllowedCashAmount}
+                                onChange={(e) => handleCurrencyInput(e, "new")}
+                                error={formErrors.maxSingleAllowedCashAmount}
+                                required
+                              />
+                            )}
 
+                            {/* Can Collect Cash - Required for SalesRep and Cashier */}
+                            {(newAgentFormData.agentType === "SalesRep" ||
+                              newAgentFormData.agentType === "Cashier") && (
+                              <FormSelectModule
+                                label="Can Collect Cash?"
+                                name="canCollectCash"
+                                value={newAgentFormData.canCollectCash.toString()}
+                                onChange={(e) =>
+                                  setNewAgentFormData((prev) => ({
+                                    ...prev,
+                                    canCollectCash: e.target.value === "true",
+                                  }))
+                                }
+                                options={canCollectCashOptions}
+                                error={formErrors.canCollectCash}
+                                required
+                              />
+                            )}
+
+                            {/* Enforce Jurisdiction - Only for SalesRep */}
+                            {newAgentFormData.agentType === "SalesRep" && (
+                              <FormSelectModule
+                                label="Enforce Jurisdiction?"
+                                name="enforceJurisdiction"
+                                value={newAgentFormData.enforceJurisdiction.toString()}
+                                onChange={(e) =>
+                                  setNewAgentFormData((prev) => ({
+                                    ...prev,
+                                    enforceJurisdiction: e.target.value === "true",
+                                  }))
+                                }
+                                options={[
+                                  { value: "true", label: "Yes" },
+                                  { value: "false", label: "No" },
+                                ]}
+                              />
+                            )}
+
+                            {/* Status - Required for all agent types */}
                             <FormSelectModule
                               label="Status"
                               name="status"
@@ -1330,7 +1711,8 @@ const AddNewAgent = () => {
                               required
                             />
 
-                            <FormSelectModule
+                            {/* Supervisor - Optional for all agent types */}
+                            {/* <FormSelectModule
                               label="Supervisor (Optional)"
                               name="supervisorId"
                               value={newAgentFormData.supervisorId?.toString() || ""}
@@ -1341,8 +1723,8 @@ const AddNewAgent = () => {
                                 }))
                               }
                               options={supervisorOptions}
-                              disabled={employeesLoading}
-                            />
+                              disabled={agentsLoading}
+                            /> */}
                           </div>
                         </motion.div>
                       )}
@@ -1361,12 +1743,38 @@ const AddNewAgent = () => {
                               <Home className="size-5" />
                               <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
                             </div>
-                            <p className="text-sm text-gray-600">Enter additional agent information</p>
+                            <p className="text-sm text-gray-600">Enter additional agent information (optional)</p>
                           </div>
 
-                          <div className="space-y-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                             <FormInputModule
-                              label="Address (Optional)"
+                              label="Employee ID"
+                              name="employeeId"
+                              type="text"
+                              placeholder="Employee identification number"
+                              value={newAgentFormData.employeeId}
+                              onChange={handleNewAgentInputChange}
+                            />
+
+                            <FormInputModule
+                              label="Position"
+                              name="position"
+                              type="text"
+                              placeholder="Job position/title"
+                              value={newAgentFormData.position}
+                              onChange={handleNewAgentInputChange}
+                            />
+
+                            <FormSelectModule
+                              label="Employment Type"
+                              name="employmentType"
+                              value={newAgentFormData.employmentType}
+                              onChange={handleNewAgentInputChange}
+                              options={employmentTypeOptions}
+                            />
+
+                            <FormInputModule
+                              label="Address"
                               name="address"
                               type="text"
                               placeholder="Enter complete address"
@@ -1453,7 +1861,19 @@ const AddNewAgent = () => {
                             onClick={() => void submitNewAgent()}
                             disabled={!isNewAgentFormValid() || addAgentLoading}
                           >
-                            {addAgentLoading ? "Adding Agent..." : "Add Agent"}
+                            {addAgentLoading
+                              ? `Adding ${
+                                  newAgentFormData.agentType
+                                    ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label ||
+                                      "Agent"
+                                    : "Agent"
+                                }...`
+                              : `Add ${
+                                  newAgentFormData.agentType
+                                    ? agentTypeOptions.find((opt) => opt.value === newAgentFormData.agentType)?.label ||
+                                      "Agent"
+                                    : "Agent"
+                                }`}
                           </ButtonModule>
                         )}
                       </div>
@@ -1469,8 +1889,8 @@ const AddNewAgent = () => {
                   className="rounded-b-lg bg-white p-4 shadow-sm sm:p-6"
                 >
                   <div className="mb-4 border-b pb-4 sm:mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Convert Existing User to Agent</h3>
-                    <p className="text-sm text-gray-600">Convert an existing system user to an agent</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Convert Existing User to Cash Officer</h3>
+                    <p className="text-sm text-gray-600">Convert an existing system user to an cash officer</p>
                   </div>
 
                   <div className="space-y-8">
@@ -1480,8 +1900,9 @@ const AddNewAgent = () => {
                         <div>
                           <h4 className="text-sm font-medium text-blue-800">About this feature</h4>
                           <p className="text-sm text-blue-600">
-                            Convert existing users (employees, admins, etc.) to agents. This will add agent-specific
-                            capabilities like cash collection while preserving their existing account information.
+                            Convert existing users (employees, admins, etc.) to cash officers. This will add cash
+                            officer specific capabilities like cash collection while preserving their existing account
+                            information.
                           </p>
                         </div>
                       </div>
@@ -1513,80 +1934,183 @@ const AddNewAgent = () => {
                                     ?.label?.split(" - ")[0] || "Selected User"}
                                 </h5>
                                 <p className="text-sm text-gray-600">
-                                  This user will gain agent capabilities including cash collection permissions.
+                                  This user will gain cash officer capabilities including cash collection permissions.
                                 </p>
                               </div>
                             </div>
                           </div>
                         )}
+
+                        {/* Agent Type Selection - Show immediately after user selection */}
+                        {existingUserFormData.userAccountId && (
+                          <FormSelectModule
+                            label="Cash Officer Type"
+                            name="agentType"
+                            value={existingUserFormData.agentType}
+                            onChange={handleExistingUserInputChange}
+                            options={agentTypeOptions}
+                            error={formErrors.agentType}
+                            required
+                            disabled={agentsLoading}
+                          />
+                        )}
                       </div>
 
-                      {/* Agent Configuration */}
-                      <div className="space-y-4">
-                        <h4 className="text-lg font-medium text-gray-900">Agent Configuration</h4>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                          <FormSelectModule
-                            label="Area Office"
-                            name="areaOfficeId"
-                            value={existingUserFormData.areaOfficeId.toString()}
-                            onChange={handleExistingUserInputChange}
-                            options={areaOfficeSelectOptions}
-                            error={formErrors.areaOfficeId}
-                            required
-                            disabled={areaOfficesLoading}
-                          />
+                      {/* Agent Configuration - Show only after agent type is selected */}
+                      {existingUserFormData.userAccountId && existingUserFormData.agentType && (
+                        <div className="space-y-4">
+                          <h4 className="text-lg font-medium text-gray-900">Cash Officer Configuration</h4>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                            <FormSelectModule
+                              label="Area Office"
+                              name="areaOfficeId"
+                              value={existingUserFormData.areaOfficeId.toString()}
+                              onChange={handleExistingUserInputChange}
+                              options={areaOfficeSelectOptions}
+                              error={formErrors.areaOfficeId}
+                              required
+                              disabled={areaOfficesLoading}
+                            />
 
-                          <FormSelectModule
-                            label="Service Center (Optional)"
-                            name="serviceCenterId"
-                            value={existingUserFormData.serviceCenterId?.toString() || ""}
-                            onChange={(e) =>
-                              setExistingUserFormData((prev) => ({
-                                ...prev,
-                                serviceCenterId: e.target.value ? Number(e.target.value) : null,
-                              }))
-                            }
-                            options={serviceCenterOptions}
-                            disabled={serviceStationsLoading}
-                          />
+                            <FormSelectModule
+                              label="Service Center (Optional)"
+                              name="serviceCenterId"
+                              value={existingUserFormData.serviceCenterId?.toString() || ""}
+                              onChange={(e) =>
+                                setExistingUserFormData((prev) => ({
+                                  ...prev,
+                                  serviceCenterId: e.target.value ? Number(e.target.value) : null,
+                                }))
+                              }
+                              options={serviceCenterOptions}
+                              disabled={serviceStationsLoading}
+                            />
 
-                          <FormInputModule
-                            label="Cash Collection Limit (₦)"
-                            name="cashCollectionLimit"
-                            type="text"
-                            placeholder="Maximum cash collection amount"
-                            value={existingUserFormData.cashCollectionLimit}
-                            onChange={(e) => handleCurrencyInput(e, "existing")}
-                            error={formErrors.cashCollectionLimit}
-                            required
-                          />
+                            {/* Required for SalesRep */}
+                            {existingUserFormData.agentType === "SalesRep" && (
+                              <FormSelectModule
+                                label="Distribution Substation"
+                                name="distributionSubstationId"
+                                value={existingUserFormData.distributionSubstationId?.toString() || ""}
+                                onChange={(e) =>
+                                  setExistingUserFormData((prev) => ({
+                                    ...prev,
+                                    distributionSubstationId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={distributionSubstationOptions}
+                                error={formErrors.distributionSubstationId}
+                                required
+                                disabled={distributionSubstationsLoading}
+                              />
+                            )}
 
-                          <FormSelectModule
-                            label="Can Collect Cash?"
-                            name="canCollectCash"
-                            value={existingUserFormData.canCollectCash.toString()}
-                            onChange={(e) =>
-                              setExistingUserFormData((prev) => ({
-                                ...prev,
-                                canCollectCash: e.target.value === "true",
-                              }))
-                            }
-                            options={canCollectCashOptions}
-                            error={formErrors.canCollectCash}
-                            required
-                          />
+                            {/* Required for SalesRep and Cashier */}
+                            {(existingUserFormData.agentType === "SalesRep" ||
+                              existingUserFormData.agentType === "Cashier") && (
+                              <FormSelectModule
+                                label="Manager Agent"
+                                name="managerAgentId"
+                                value={existingUserFormData.managerAgentId?.toString() || ""}
+                                onChange={(e) =>
+                                  setExistingUserFormData((prev) => ({
+                                    ...prev,
+                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={managerAgentOptions}
+                                error={formErrors.managerAgentId}
+                                required
+                                disabled={agentsLoading}
+                              />
+                            )}
 
-                          <FormSelectModule
-                            label="Status"
-                            name="status"
-                            value={existingUserFormData.status}
-                            onChange={handleExistingUserInputChange}
-                            options={statusOptions}
-                            error={formErrors.status}
-                            required
-                          />
+                            {/* Cash Collection Limit - Required for SalesRep and Cashier */}
+                            {(existingUserFormData.agentType === "SalesRep" ||
+                              existingUserFormData.agentType === "Cashier") && (
+                              <FormInputModule
+                                label="Cash Collection Limit (₦)"
+                                name="cashCollectionLimit"
+                                type="text"
+                                placeholder="Maximum cash collection amount"
+                                value={existingUserFormData.cashCollectionLimit}
+                                onChange={(e) => handleCurrencyInput(e, "existing")}
+                                error={formErrors.cashCollectionLimit}
+                                required
+                              />
+                            )}
+
+                            {/* Max Single Allowed Cash Amount - Required for SalesRep and Cashier */}
+                            {(existingUserFormData.agentType === "SalesRep" ||
+                              existingUserFormData.agentType === "Cashier") && (
+                              <FormInputModule
+                                label="Max Single Allowed Cash Amount (₦)"
+                                name="maxSingleAllowedCashAmount"
+                                type="text"
+                                placeholder="Maximum amount for single transaction"
+                                value={existingUserFormData.maxSingleAllowedCashAmount}
+                                onChange={(e) => handleCurrencyInput(e, "existing")}
+                                error={formErrors.maxSingleAllowedCashAmount}
+                              />
+                            )}
+
+                            {/* Can Collect Cash - Required for SalesRep and Cashier */}
+                            {(existingUserFormData.agentType === "SalesRep" ||
+                              existingUserFormData.agentType === "Cashier") && (
+                              <FormSelectModule
+                                label="Can Collect Cash?"
+                                name="canCollectCash"
+                                value={existingUserFormData.canCollectCash.toString()}
+                                onChange={(e) =>
+                                  setExistingUserFormData((prev) => ({
+                                    ...prev,
+                                    canCollectCash: e.target.value === "true",
+                                  }))
+                                }
+                                options={canCollectCashOptions}
+                                error={formErrors.canCollectCash}
+                                required
+                              />
+                            )}
+
+                            <FormSelectModule
+                              label="Status"
+                              name="status"
+                              value={existingUserFormData.status}
+                              onChange={handleExistingUserInputChange}
+                              options={statusOptions}
+                              error={formErrors.status}
+                              required
+                            />
+
+                            {/* Enforce Jurisdiction - Only for SalesRep */}
+                            {existingUserFormData.agentType === "SalesRep" && (
+                              <div className="col-span-full">
+                                <label className="flex items-center space-x-3">
+                                  <input
+                                    type="checkbox"
+                                    name="enforceJurisdiction"
+                                    checked={existingUserFormData.enforceJurisdiction}
+                                    onChange={(e) =>
+                                      setExistingUserFormData((prev) => ({
+                                        ...prev,
+                                        enforceJurisdiction: e.target.checked,
+                                      }))
+                                    }
+                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm font-medium text-gray-900">
+                                    Enforce Jurisdiction Restrictions
+                                  </span>
+                                </label>
+                                <p className="mt-1 text-xs text-gray-500">
+                                  Limit agent operations to their assigned area of jurisdiction
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Error Summary */}
                       {Object.keys(formErrors).length > 0 && (
