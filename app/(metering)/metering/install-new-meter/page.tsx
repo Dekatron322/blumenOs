@@ -36,8 +36,6 @@ interface MeterFormData {
   ken?: number
   mfrCode?: number
   installationDate: string
-  meterAddedBy: string
-  meterEditedBy: string
   meterDateCreated: string
   meterType: number
   isSmart: boolean
@@ -49,7 +47,6 @@ interface MeterFormData {
   sealNumber: string
   poleNumber: string
   tariffId: number
-  injectionSubstationId: number
   distributionSubstationId: number
   feederId?: number
   areaOfficeId: number
@@ -153,8 +150,6 @@ const InstallNewMeterPage = () => {
     ken: undefined,
     mfrCode: undefined,
     installationDate: new Date().toISOString(),
-    meterAddedBy: "",
-    meterEditedBy: "",
     meterDateCreated: new Date().toISOString(),
     meterType: 1,
     isSmart: false,
@@ -166,7 +161,6 @@ const InstallNewMeterPage = () => {
     sealNumber: "",
     poleNumber: "",
     tariffId: 0,
-    injectionSubstationId: 0,
     distributionSubstationId: 0,
     feederId: undefined,
     areaOfficeId: 0,
@@ -436,15 +430,6 @@ const InstallNewMeterPage = () => {
     { value: 5, label: "Unknown" },
   ]
 
-  // Injection substation options from fetched data
-  const injectionSubstationOptions = [
-    { value: 0, label: "Select injection substation" },
-    ...injectionSubstations.map((substation) => ({
-      value: substation.id,
-      label: `${substation.injectionSubstationCode} (${substation.nercCode})`,
-    })),
-  ]
-
   // Tariff group options from fetched data
   const tariffGroupOptions = [
     { value: 0, label: "Select tariff" },
@@ -518,7 +503,6 @@ const InstallNewMeterPage = () => {
         "meterState",
         "tariffRate",
         "serviceBand",
-        "injectionSubstationId",
         "distributionSubstationId",
         "areaOfficeId",
         "state",
@@ -571,9 +555,6 @@ const InstallNewMeterPage = () => {
       case 3: // Billing + Location
         if (!formData.tariffId || formData.tariffId === 0) {
           errors.tariffId = "Tariff is required"
-        }
-        if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
-          errors.injectionSubstationId = "Injection substation is required"
         }
         if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
           errors.distributionSubstationId = "Distribution substation is required"
@@ -642,9 +623,6 @@ const InstallNewMeterPage = () => {
     if (!formData.tariffId || formData.tariffId === 0) {
       allErrors.tariffId = "Tariff is required"
     }
-    if (!formData.injectionSubstationId || formData.injectionSubstationId === 0) {
-      allErrors.injectionSubstationId = "Injection substation is required"
-    }
     if (!formData.distributionSubstationId || formData.distributionSubstationId === 0) {
       allErrors.distributionSubstationId = "Distribution substation is required"
     }
@@ -691,7 +669,6 @@ const InstallNewMeterPage = () => {
         sealNumber: formData.sealNumber,
         poleNumber: formData.poleNumber,
         tariffId: formData.tariffId,
-        injectionSubstationId: formData.injectionSubstationId,
         distributionSubstationId: formData.distributionSubstationId,
         state: typeof formData.state === "string" ? 0 : formData.state,
         address: formData.address,
@@ -721,8 +698,6 @@ const InstallNewMeterPage = () => {
       ken: undefined,
       mfrCode: undefined,
       installationDate: new Date().toISOString(),
-      meterAddedBy: "",
-      meterEditedBy: "",
       meterDateCreated: new Date().toISOString(),
       meterType: 1,
       isSmart: true,
@@ -734,7 +709,6 @@ const InstallNewMeterPage = () => {
       sealNumber: "",
       poleNumber: "",
       tariffId: 0,
-      injectionSubstationId: 0,
       distributionSubstationId: 0,
       feederId: undefined,
       areaOfficeId: 0,
@@ -964,7 +938,6 @@ const InstallNewMeterPage = () => {
       formData.address.trim() !== "" &&
       formData.city.trim() !== "" &&
       formData.state !== 0 &&
-      formData.injectionSubstationId !== 0 &&
       formData.status !== 0 &&
       formData.meterState !== 0 &&
       formData.installationDate !== ""
@@ -1295,20 +1268,6 @@ const InstallNewMeterPage = () => {
                           />
 
                           <FormSelectModule
-                            label="Injection Substation"
-                            name="injectionSubstationId"
-                            value={formData.injectionSubstationId}
-                            onChange={handleInputChange}
-                            options={injectionSubstationOptions}
-                            error={formErrors.injectionSubstationId}
-                            required
-                            disabled={injectionSubstationsLoading || searchLoading.injectionSubstation}
-                            searchable
-                            onSearchChange={handleInjectionSubstationSearch}
-                            searchTerm={searchTerms.injectionSubstation}
-                          />
-
-                          <FormSelectModule
                             label="Distribution Substation"
                             name="distributionSubstationId"
                             value={formData.distributionSubstationId}
@@ -1416,7 +1375,7 @@ const InstallNewMeterPage = () => {
                             onChange={handleInputChange}
                           />
 
-                          <FormInputModule
+                          {/* <FormInputModule
                             label="Tenant Full Name"
                             name="tenantFullName"
                             type="text"
@@ -1432,7 +1391,7 @@ const InstallNewMeterPage = () => {
                             placeholder="Enter tenant phone number"
                             value={formData.tenantPhoneNumber}
                             onChange={handleInputChange}
-                          />
+                          /> */}
                         </div>
                       </motion.div>
                     )}
@@ -1566,24 +1525,6 @@ const InstallNewMeterPage = () => {
                             error={formErrors.installationDate}
                             required
                             placeholder={""}
-                          />
-
-                          <FormInputModule
-                            label="Meter Added By"
-                            name="meterAddedBy"
-                            type="text"
-                            placeholder="Enter who added this meter"
-                            value={formData.meterAddedBy}
-                            onChange={handleInputChange}
-                          />
-
-                          <FormInputModule
-                            label="Meter Edited By"
-                            name="meterEditedBy"
-                            type="text"
-                            placeholder="Enter who edited this meter"
-                            value={formData.meterEditedBy}
-                            onChange={handleInputChange}
                           />
                         </div>
                       </motion.div>

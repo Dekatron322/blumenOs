@@ -281,6 +281,108 @@ export interface SalesRepAnalyticsParams {
   topCount?: number
 }
 
+// Interfaces for Prepaid Summary Analytics
+export interface PrepaidSummaryTotals {
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  successRatePercent: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+  averageTransferAmountPerVend: number
+  averageKwhPerVend: number
+  averagePaymentAmount: number
+}
+
+export interface PrepaidSummaryByChannel {
+  channel: string
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+}
+
+export interface PrepaidSummaryByCollectorType {
+  collectorType: string
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+}
+
+export interface PrepaidSummaryByPaymentType {
+  paymentTypeId: number
+  paymentTypeName: string
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+}
+
+export interface PrepaidSummaryByAgent {
+  agentId: number
+  agentName: string
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+}
+
+export interface PrepaidSummaryByVendor {
+  vendorId: number
+  vendorName: string
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+}
+
+export interface PrepaidSummaryDaily {
+  bucketDate: string
+  totalVends: number
+  successfulVends: number
+  failedVends: number
+  totalTransferAmount: number
+  totalKwh: number
+  totalTokens: number
+  totalPaymentAmount: number
+}
+
+export interface PrepaidSummaryData {
+  windowStartUtc: string
+  windowEndUtc: string
+  generatedAtUtc: string
+  totals: PrepaidSummaryTotals
+  byChannel: PrepaidSummaryByChannel[]
+  byCollectorType: PrepaidSummaryByCollectorType[]
+  byPaymentType: PrepaidSummaryByPaymentType[]
+  byAgent: PrepaidSummaryByAgent[]
+  byVendor: PrepaidSummaryByVendor[]
+  daily: PrepaidSummaryDaily[]
+}
+
+export interface PrepaidSummaryParams {
+  StartDateUtc: string
+  EndDateUtc: string
+}
+
 export interface AssetManagementResponse {
   isSuccess: boolean
   message: string
@@ -327,6 +429,30 @@ export interface SalesRepAnalyticsResponse {
   isSuccess: boolean
   message: string
   data: SalesRepAnalyticsData
+}
+
+export interface PrepaidSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: PrepaidSummaryData
+}
+
+// Interfaces for Prepaid Stats
+export interface PrepaidStatsData {
+  pendingPayments: number
+  processingPayments: number
+  retryPending: number
+  retryProcessing: number
+  retryCompleted: number
+  retryFailed: number
+  retryDisputed: number
+  retryRedisLength: number
+}
+
+export interface PrepaidStatsResponse {
+  isSuccess: boolean
+  message: string
+  data: PrepaidStatsData
 }
 
 // Analytics State
@@ -385,6 +511,19 @@ interface AnalyticsState {
   salesRepAnalyticsSuccess: boolean
   salesRepAnalyticsParams: SalesRepAnalyticsParams | null
 
+  // Prepaid Summary Analytics state
+  prepaidSummaryData: PrepaidSummaryData | null
+  prepaidSummaryLoading: boolean
+  prepaidSummaryError: string | null
+  prepaidSummarySuccess: boolean
+  prepaidSummaryParams: PrepaidSummaryParams | null
+
+  // Prepaid Stats state
+  prepaidStatsData: PrepaidStatsData | null
+  prepaidStatsLoading: boolean
+  prepaidStatsError: string | null
+  prepaidStatsSuccess: boolean
+
   // General analytics state
   loading: boolean
   error: string | null
@@ -437,6 +576,17 @@ const initialState: AnalyticsState = {
   salesRepAnalyticsError: null,
   salesRepAnalyticsSuccess: false,
   salesRepAnalyticsParams: null,
+
+  prepaidSummaryData: null,
+  prepaidSummaryLoading: false,
+  prepaidSummaryError: null,
+  prepaidSummarySuccess: false,
+  prepaidSummaryParams: null,
+
+  prepaidStatsData: null,
+  prepaidStatsLoading: false,
+  prepaidStatsError: null,
+  prepaidStatsSuccess: false,
 
   loading: false,
   error: null,
@@ -679,6 +829,58 @@ export const fetchSalesRepAnalytics = createAsyncThunk(
   }
 )
 
+export const fetchPrepaidSummaryAnalytics = createAsyncThunk(
+  "analytics/fetchPrepaidSummaryAnalytics",
+  async (params: PrepaidSummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<PrepaidSummaryResponse>(buildApiUrl(API_ENDPOINTS.ANALYTICS.PREPAID_SUMMARY), {
+        params,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch prepaid summary analytics")
+      }
+
+      // Ensure data exists
+      if (!response.data.data) {
+        return rejectWithValue("Prepaid summary analytics data not found")
+      }
+
+      return {
+        data: response.data.data,
+        params,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch prepaid summary analytics")
+      }
+      return rejectWithValue(error.message || "Network error during prepaid summary analytics fetch")
+    }
+  }
+)
+
+export const fetchPrepaidStats = createAsyncThunk("analytics/fetchPrepaidStats", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<PrepaidStatsResponse>(buildApiUrl(API_ENDPOINTS.ANALYTICS.PREPAID_STATS))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch prepaid stats")
+    }
+
+    // Ensure data exists
+    if (!response.data.data) {
+      return rejectWithValue("Prepaid stats data not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch prepaid stats")
+    }
+    return rejectWithValue(error.message || "Network error during prepaid stats fetch")
+  }
+})
+
 // Analytics slice
 const analyticsSlice = createSlice({
   name: "analytics",
@@ -754,6 +956,23 @@ const analyticsSlice = createSlice({
       state.salesRepAnalyticsParams = null
     },
 
+    // Clear prepaid summary analytics state
+    clearPrepaidSummaryAnalytics: (state) => {
+      state.prepaidSummaryData = null
+      state.prepaidSummaryError = null
+      state.prepaidSummarySuccess = false
+      state.prepaidSummaryLoading = false
+      state.prepaidSummaryParams = null
+    },
+
+    // Clear prepaid stats state
+    clearPrepaidStats: (state) => {
+      state.prepaidStatsData = null
+      state.prepaidStatsError = null
+      state.prepaidStatsSuccess = false
+      state.prepaidStatsLoading = false
+    },
+
     // Set postpaid billing analytics parameters
     setPostpaidBillingAnalyticsParams: (state, action: PayloadAction<PostpaidBillingAnalyticsParams>) => {
       state.postpaidBillingAnalyticsParams = action.payload
@@ -784,6 +1003,11 @@ const analyticsSlice = createSlice({
       state.salesRepAnalyticsParams = action.payload
     },
 
+    // Set prepaid summary analytics parameters
+    setPrepaidSummaryAnalyticsParams: (state, action: PayloadAction<PrepaidSummaryParams>) => {
+      state.prepaidSummaryParams = action.payload
+    },
+
     // Clear all errors
     clearError: (state) => {
       state.error = null
@@ -795,6 +1019,8 @@ const analyticsSlice = createSlice({
       state.maintenanceSummaryError = null
       state.vendorSummaryError = null
       state.salesRepAnalyticsError = null
+      state.prepaidSummaryError = null
+      state.prepaidStatsError = null
     },
 
     // Reset analytics state
@@ -844,6 +1070,17 @@ const analyticsSlice = createSlice({
       state.salesRepAnalyticsError = null
       state.salesRepAnalyticsSuccess = false
       state.salesRepAnalyticsParams = null
+
+      state.prepaidSummaryData = null
+      state.prepaidSummaryLoading = false
+      state.prepaidSummaryError = null
+      state.prepaidSummarySuccess = false
+      state.prepaidSummaryParams = null
+
+      state.prepaidStatsData = null
+      state.prepaidStatsLoading = false
+      state.prepaidStatsError = null
+      state.prepaidStatsSuccess = false
 
       state.loading = false
       state.error = null
@@ -1062,6 +1299,54 @@ const analyticsSlice = createSlice({
         state.salesRepAnalyticsSuccess = false
         state.salesRepAnalyticsData = null
       })
+
+      // Fetch prepaid summary analytics cases
+      .addCase(fetchPrepaidSummaryAnalytics.pending, (state) => {
+        state.prepaidSummaryLoading = true
+        state.prepaidSummaryError = null
+        state.prepaidSummarySuccess = false
+      })
+      .addCase(
+        fetchPrepaidSummaryAnalytics.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: PrepaidSummaryData
+            params: PrepaidSummaryParams
+          }>
+        ) => {
+          state.prepaidSummaryLoading = false
+          state.prepaidSummarySuccess = true
+          state.prepaidSummaryData = action.payload.data
+          state.prepaidSummaryParams = action.payload.params
+          state.prepaidSummaryError = null
+        }
+      )
+      .addCase(fetchPrepaidSummaryAnalytics.rejected, (state, action) => {
+        state.prepaidSummaryLoading = false
+        state.prepaidSummaryError = (action.payload as string) || "Failed to fetch prepaid summary analytics"
+        state.prepaidSummarySuccess = false
+        state.prepaidSummaryData = null
+      })
+
+      // Fetch prepaid stats cases
+      .addCase(fetchPrepaidStats.pending, (state) => {
+        state.prepaidStatsLoading = true
+        state.prepaidStatsError = null
+        state.prepaidStatsSuccess = false
+      })
+      .addCase(fetchPrepaidStats.fulfilled, (state, action: PayloadAction<PrepaidStatsData>) => {
+        state.prepaidStatsLoading = false
+        state.prepaidStatsSuccess = true
+        state.prepaidStatsData = action.payload
+        state.prepaidStatsError = null
+      })
+      .addCase(fetchPrepaidStats.rejected, (state, action) => {
+        state.prepaidStatsLoading = false
+        state.prepaidStatsError = (action.payload as string) || "Failed to fetch prepaid stats"
+        state.prepaidStatsSuccess = false
+        state.prepaidStatsData = null
+      })
   },
 })
 
@@ -1074,12 +1359,15 @@ export const {
   clearMaintenanceSummaryAnalytics,
   clearVendorSummaryAnalytics,
   clearSalesRepAnalytics,
+  clearPrepaidSummaryAnalytics,
+  clearPrepaidStats,
   setPostpaidBillingAnalyticsParams,
   setPaymentSummaryAnalyticsParams,
   setOutageSummaryAnalyticsParams,
   setMaintenanceSummaryAnalyticsParams,
   setVendorSummaryAnalyticsParams,
   setSalesRepAnalyticsParams,
+  setPrepaidSummaryAnalyticsParams,
   clearError,
   resetAnalyticsState,
 } = analyticsSlice.actions

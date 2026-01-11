@@ -1058,14 +1058,14 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       Customer <RxCaretSort />
                     </div>
                   </th>
-                  <th
+                  {/* <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
                     onClick={() => toggleSort("agentName")}
                   >
                     <div className="flex items-center gap-2">
                       Agent <RxCaretSort />
                     </div>
-                  </th>
+                  </th> */}
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
                     onClick={() => toggleSort("paymentTypeName")}
@@ -1141,14 +1141,14 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                           <div className="text-xs text-gray-500">{payment.customerAccountNumber || ""}</div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                      {/* <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <div>
                           <div className="font-medium">{payment.agentName || "-"}</div>
                           <div className="text-xs text-gray-500">
                             {payment.agentCode ? `Code: ${payment.agentCode}` : ""}
                           </div>
                         </div>
-                      </td>
+                      </td> */}
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.paymentTypeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                         <motion.div

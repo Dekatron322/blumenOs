@@ -1055,7 +1055,7 @@ const CustomerDetailsPage = () => {
                       </h3>
                       <div className="space-y-3">
                         <ButtonModule
-                          variant="primary"
+                          variant="outlineBlue"
                           className="w-full justify-start gap-3"
                           onClick={() => openModal("recordPayment")}
                         >
@@ -1063,7 +1063,7 @@ const CustomerDetailsPage = () => {
                           Record Payment
                         </ButtonModule>
                         <ButtonModule
-                          variant="outline"
+                          variant="outlinePurple"
                           className="w-full justify-start gap-3"
                           onClick={() => openModal("manualBill")}
                         >
@@ -1071,21 +1071,14 @@ const CustomerDetailsPage = () => {
                           Generate Bill
                         </ButtonModule>
                         <ButtonModule
-                          variant="outline"
+                          variant="outlineTeal"
                           className="w-full justify-start gap-3"
                           onClick={() => openModal("meterReading")}
                         >
                           <MeterOutlineIcon className="size-4" />
                           Record Meter Reading
                         </ButtonModule>
-                        <ButtonModule
-                          variant="secondary"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("reminder")}
-                        >
-                          <NotificationOutlineIcon />
-                          Send Reminder
-                        </ButtonModule>
+
                         <ButtonModule
                           variant="outline"
                           className="w-full justify-start gap-3"

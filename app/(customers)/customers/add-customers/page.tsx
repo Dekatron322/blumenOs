@@ -1030,14 +1030,14 @@ const AddCustomerPage = () => {
                             required
                           />
 
-                          <FormInputModule
+                          {/* <FormInputModule
                             label="Auto Number"
                             name="autoNumber"
                             type="text"
                             placeholder="Enter auto number (optional)"
                             value={formData.autoNumber}
                             onChange={handleInputChange}
-                          />
+                          /> */}
                         </div>
                       </motion.div>
                     )}
@@ -1200,23 +1200,23 @@ const AddCustomerPage = () => {
                             disabled={subCategoriesLoading || !formData.customerCategoryId}
                           />
 
-                          <FormSelectModule
+                          {/* <FormSelectModule
                             label="Sales Representative"
                             name="salesRepUserId"
                             value={formData.salesRepUserId}
                             onChange={handleInputChange}
                             options={employeeOptions}
                             disabled={employeesLoading}
-                          />
+                          /> */}
 
-                          <FormSelectModule
+                          {/* <FormSelectModule
                             label="Technical Engineer"
                             name="technicalEngineerUserId"
                             value={formData.technicalEngineerUserId}
                             onChange={handleInputChange}
                             options={employeeOptions}
                             disabled={employeesLoading}
-                          />
+                          /> */}
                         </div>
 
                         {distributionSubstationsLoading && (
