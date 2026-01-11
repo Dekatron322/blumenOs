@@ -189,7 +189,11 @@ export interface AddAgentRequest {
   phoneNumber: string
   areaOfficeId: number
   serviceCenterId?: number
+  distributionSubstationId?: number
   departmentId: number
+  managerAgentId?: number
+  agentType: string
+  enforceJurisdiction: boolean
   employeeId: string
   position: string
   emergencyContact?: string
@@ -197,6 +201,7 @@ export interface AddAgentRequest {
   supervisorId?: number
   employmentType: string
   cashCollectionLimit: number
+  maxSingleAllowedCashAmount?: number
   canCollectCash: boolean
   status: string
 }
@@ -212,9 +217,14 @@ export interface AddAgentResponse {
 export interface AddExistingUserAsAgentRequest {
   userAccountId: number
   areaOfficeId: number
-  serviceCenterId?: number
+  serviceCenterId: number
+  distributionSubstationId: number
+  managerAgentId: number
+  agentType: string
+  enforceJurisdiction: boolean
   status: string
   cashCollectionLimit: number
+  maxSingleAllowedCashAmount: number
   canCollectCash: boolean
 }
 
