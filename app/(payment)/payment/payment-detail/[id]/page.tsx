@@ -1555,15 +1555,17 @@ const PaymentDetailsPage = () => {
                       View Receipt
                     </ButtonModule>
 
-                    <ButtonModule
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center text-xs md:text-sm"
-                      onClick={() => setActiveModal("confirmBankTransfer")}
-                      icon={<Package className="size-3 md:size-4" />}
-                    >
-                      Confirm Bank Transfer
-                    </ButtonModule>
+                    {currentPayment.status === "Pending" && (
+                      <ButtonModule
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-xs md:text-sm"
+                        onClick={() => setActiveModal("confirmBankTransfer")}
+                        icon={<Package className="size-3 md:size-4" />}
+                      >
+                        Confirm Bank Transfer
+                      </ButtonModule>
+                    )}
 
                     <ButtonModule
                       variant="primary"

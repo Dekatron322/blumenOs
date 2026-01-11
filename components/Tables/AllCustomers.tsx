@@ -999,7 +999,7 @@ const AllCustomers = () => {
         </div>
         <div className="flex justify-between">
           <span className="text-xs md:text-sm">Tariff:</span>
-          <span className="text-xs font-medium md:text-sm">{customer.band}</span>
+          <span className="text-xs font-medium md:text-sm">₦{customer.tariffRate}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs md:text-sm">Outstanding Arrears:</span>
@@ -1081,7 +1081,7 @@ const AllCustomers = () => {
                 <strong>Service Center:</strong> {customer.serviceCenterName}
               </span>
               <span>
-                <strong>Tariff:</strong> {customer.band}
+                <strong>Tariff:</strong> ₦{customer.tariffRate}
               </span>
             </div>
             <p className="mt-2 hidden text-xs text-gray-500 md:block md:text-sm">{customer.address}</p>

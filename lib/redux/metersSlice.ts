@@ -235,6 +235,17 @@ export interface MetersState {
     hasNext: boolean
     hasPrevious: boolean
   }
+  prepaidTransactions: PrepaidTransaction[]
+  prepaidTransactionsLoading: boolean
+  prepaidTransactionsError: string | null
+  prepaidTransactionsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -341,6 +352,17 @@ const initialState: MetersState = {
     hasNext: false,
     hasPrevious: false,
   },
+  prepaidTransactions: [],
+  prepaidTransactionsLoading: false,
+  prepaidTransactionsError: null,
+  prepaidTransactionsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -402,7 +424,6 @@ export interface AddMeterRequest {
   sealNumber: string
   poleNumber: string
   tariffId: number
-  injectionSubstationId: number
   distributionSubstationId: number
   state: number
   address: string
@@ -704,6 +725,113 @@ export interface VerifyTokenResponse {
       success: boolean
     }
   }
+}
+
+// Interface for Prepaid Transaction entry
+export interface PrepaidTransaction {
+  id: number
+  reference: string
+  latitude: number
+  longitude: number
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  collectorType: "Customer" | "SalesRep" | "Vendor" | "Staff"
+  clearanceStatus: "Uncleared" | "Cleared" | "ClearedWithCondition"
+  amount: number
+  amountApplied: number
+  vatAmount: number
+  overPaymentAmount: number
+  outstandingAfterPayment: number
+  outstandingBeforePayment: number
+  vendorCommissionRatePercent: number
+  vendorCommissionAmount: number
+  vendorDebitAmount: number
+  currency: string
+  paidAtUtc: string
+  confirmedAtUtc: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  postpaidBillId: number
+  postpaidBillPeriod: string
+  billTotalDue: number
+  vendorId: number
+  vendorName: string
+  agentId: number
+  agentCode: string
+  agentName: string
+  areaOfficeName: string
+  distributionSubstationCode: string
+  feederName: string
+  paymentTypeId: number
+  paymentTypeName: string
+  isManualEntry: boolean
+  isSystemGenerated: boolean
+  evidenceFileUrl: string
+  recoveryApplied: boolean
+  recoveryAmount: number
+  recoveryPolicyId: number
+  recoveryPolicyName: string
+  isCleared: boolean
+  isRemitted: boolean
+  customerIsPPM: boolean
+  customerIsMD: boolean
+  customerIsUrban: boolean
+  customerProvinceId: number
+  tokens: PrepaidTransactionToken[]
+}
+
+// Interface for Prepaid Transaction Token
+export interface PrepaidTransactionToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+// Interface for Prepaid Transaction Request Parameters
+export interface PrepaidTransactionParams {
+  pageNumber: number
+  pageSize: number
+  customerId?: number
+  vendorId?: number
+  agentId?: number
+  areaOfficeId?: number
+  distributionSubstationId?: number
+  feederId?: number
+  serviceCenterId?: number
+  postpaidBillId?: number
+  paymentTypeId?: number
+  prepaidOnly?: boolean
+  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  status?: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
+  clearanceStatus?: "Uncleared" | "Cleared" | "ClearedWithCondition"
+  paidFromUtc?: string
+  paidToUtc?: string
+  search?: string
+  isCleared?: boolean
+  isRemitted?: boolean
+  customerIsPPM?: boolean
+  customerIsMD?: boolean
+  customerIsUrban?: boolean
+  customerProvinceId?: number
+  isMeterActive?: boolean
+}
+
+// Interface for Prepaid Transaction Response
+export interface PrepaidTransactionResponse {
+  isSuccess: boolean
+  message: string
+  data: PrepaidTransaction[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // Verify Token History interfaces
@@ -1126,6 +1254,90 @@ export const verifyToken = createAsyncThunk(
   }
 )
 
+// Async Thunk for fetching prepaid transactions
+export const fetchPrepaidTransactions = createAsyncThunk(
+  "meters/fetchPrepaidTransactions",
+  async (params: PrepaidTransactionParams, { rejectWithValue }) => {
+    try {
+      const {
+        pageNumber,
+        pageSize,
+        customerId,
+        vendorId,
+        agentId,
+        areaOfficeId,
+        distributionSubstationId,
+        feederId,
+        serviceCenterId,
+        postpaidBillId,
+        paymentTypeId,
+        prepaidOnly,
+        channel,
+        status,
+        collectorType,
+        clearanceStatus,
+        paidFromUtc,
+        paidToUtc,
+        search,
+        isCleared,
+        isRemitted,
+        customerIsPPM,
+        customerIsMD,
+        customerIsUrban,
+        customerProvinceId,
+      } = params
+
+      const requestParams: any = {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      }
+
+      // Add optional parameters only if they are provided
+      if (customerId !== undefined) requestParams.CustomerId = customerId
+      if (vendorId !== undefined) requestParams.VendorId = vendorId
+      if (agentId !== undefined) requestParams.AgentId = agentId
+      if (areaOfficeId !== undefined) requestParams.AreaOfficeId = areaOfficeId
+      if (distributionSubstationId !== undefined) requestParams.DistributionSubstationId = distributionSubstationId
+      if (feederId !== undefined) requestParams.FeederId = feederId
+      if (serviceCenterId !== undefined) requestParams.ServiceCenterId = serviceCenterId
+      if (postpaidBillId !== undefined) requestParams.PostpaidBillId = postpaidBillId
+      if (paymentTypeId !== undefined) requestParams.PaymentTypeId = paymentTypeId
+      if (prepaidOnly !== undefined) requestParams.PrepaidOnly = prepaidOnly
+      if (channel !== undefined) requestParams.Channel = channel
+      if (status !== undefined) requestParams.Status = status
+      if (collectorType !== undefined) requestParams.CollectorType = collectorType
+      if (clearanceStatus !== undefined) requestParams.ClearanceStatus = clearanceStatus
+      if (paidFromUtc !== undefined) requestParams.PaidFromUtc = paidFromUtc
+      if (paidToUtc !== undefined) requestParams.PaidToUtc = paidToUtc
+      if (search !== undefined) requestParams.Search = search
+      if (isCleared !== undefined) requestParams.IsCleared = isCleared
+      if (isRemitted !== undefined) requestParams.IsRemitted = isRemitted
+      if (customerIsPPM !== undefined) requestParams.CustomerIsPPM = customerIsPPM
+      if (customerIsMD !== undefined) requestParams.CustomerIsMD = customerIsMD
+      if (customerIsUrban !== undefined) requestParams.CustomerIsUrban = customerIsUrban
+      if (customerProvinceId !== undefined) requestParams.CustomerProvinceId = customerProvinceId
+
+      const response = await api.get<PrepaidTransactionResponse>(
+        buildApiUrl(API_ENDPOINTS.METER_READINGS.PREPAID_TRANSACTION),
+        {
+          params: requestParams,
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch prepaid transactions")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch prepaid transactions")
+      }
+      return rejectWithValue(error.message || "Network error during prepaid transactions fetch")
+    }
+  }
+)
+
 // Async Thunk for fetching verify token history
 export const fetchVerifyTokenHistory = createAsyncThunk(
   "meters/fetchVerifyTokenHistory",
@@ -1274,6 +1486,20 @@ const metersSlice = createSlice({
       state.verifyTokenHistoryError = null
       state.verifyTokenHistoryLoading = false
       state.verifyTokenHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 0,
+        pageSize: 0,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+    // Clear prepaid transactions
+    clearPrepaidTransactions: (state) => {
+      state.prepaidTransactions = []
+      state.prepaidTransactionsError = null
+      state.prepaidTransactionsLoading = false
+      state.prepaidTransactionsPagination = {
         totalCount: 0,
         totalPages: 0,
         currentPage: 0,
@@ -1601,6 +1827,27 @@ const metersSlice = createSlice({
         state.verifyTokenHistoryLoading = false
         state.verifyTokenHistoryError = action.payload as string
       })
+      // Fetch prepaid transactions
+      .addCase(fetchPrepaidTransactions.pending, (state) => {
+        state.prepaidTransactionsLoading = true
+        state.prepaidTransactionsError = null
+      })
+      .addCase(fetchPrepaidTransactions.fulfilled, (state, action: PayloadAction<PrepaidTransactionResponse>) => {
+        state.prepaidTransactionsLoading = false
+        state.prepaidTransactions = action.payload.data
+        state.prepaidTransactionsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+      })
+      .addCase(fetchPrepaidTransactions.rejected, (state, action) => {
+        state.prepaidTransactionsLoading = false
+        state.prepaidTransactionsError = action.payload as string
+      })
   },
 })
 
@@ -1617,5 +1864,6 @@ export const {
   clearTamperData,
   clearVerifyToken,
   clearVerifyTokenHistory,
+  clearPrepaidTransactions,
 } = metersSlice.actions
 export default metersSlice.reducer

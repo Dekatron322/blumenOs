@@ -162,12 +162,12 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "payments",
         requiredActions: ["W"],
       },
-      {
-        name: "Verify Meter Tokens",
-        href: "/tokens/verify-meter-tokens",
-        privilegeKey: "payments",
-        requiredActions: ["R"],
-      },
+      // {
+      //   name: "Verify Meter Tokens",
+      //   href: "/tokens/verify-meter-tokens",
+      //   privilegeKey: "payments",
+      //   requiredActions: ["R"],
+      // },
     ],
   },
   {
@@ -207,7 +207,8 @@ export const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/dm/overview", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "All Debts Entries", href: "/dm/ade", privilegeKey: "payments", requiredActions: ["R"] },
-      { name: "All Debts", href: "/dm/all-debts", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "All Customer Debts", href: "/dm/all-debts", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "All Debt Recovery", href: "/dm/adr", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Debt Aging", href: "/dm/aging", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Recovery Policies", href: "/dm/rp", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Add Debt", href: "/dm/add-debt", privilegeKey: "payments", requiredActions: ["W"] },

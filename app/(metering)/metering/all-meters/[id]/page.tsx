@@ -662,11 +662,10 @@ const MeterBasicInfoTab = ({
 
   const getMeterTypeConfig = (type: number) => {
     const configs = {
-      0: { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" },
-      1: { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" },
-      2: { color: "text-orange-600", bg: "bg-orange-50", label: "HYBRID" },
+      1: { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" },
+      2: { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" },
     }
-    return configs[type as keyof typeof configs] || configs[0]
+    return configs[type as keyof typeof configs] || { color: "text-gray-600", bg: "bg-gray-50", label: "UNKNOWN" }
   }
 
   const getServiceBandConfig = (band: number) => {
@@ -789,7 +788,7 @@ const MeterBasicInfoTab = ({
                   View History
                 </ButtonModule>
                 <ButtonModule
-                  variant="primary"
+                  variant="outlinePurple"
                   size="md"
                   className="w-full justify-start gap-3 text-sm"
                   onClick={() => openModal("edit")}
@@ -810,7 +809,7 @@ const MeterBasicInfoTab = ({
                   {meter.isMeterActive ? "Deactivate" : "Activate"}
                 </ButtonModule> */}
                 <ButtonModule
-                  variant="secondary"
+                  variant="outlineBlue"
                   size="md"
                   className="w-full justify-start gap-3 text-sm"
                   onClick={() => openModal("clearTamper")}
@@ -819,7 +818,7 @@ const MeterBasicInfoTab = ({
                   Clear Tamper
                 </ButtonModule>
                 <ButtonModule
-                  variant="orange"
+                  variant="outlineOrange"
                   size="md"
                   className="w-full justify-start gap-3 text-sm"
                   onClick={() => openModal("addKeyChange")}
@@ -828,7 +827,7 @@ const MeterBasicInfoTab = ({
                   Add Key Change
                 </ButtonModule>
                 <ButtonModule
-                  variant="success"
+                  variant="outlineCyan"
                   size="md"
                   className="w-full justify-start gap-3 text-sm"
                   onClick={() => openModal("clearCredit")}
@@ -837,7 +836,7 @@ const MeterBasicInfoTab = ({
                   Clear Credit
                 </ButtonModule>
                 <ButtonModule
-                  variant="blue"
+                  variant="outlineIndigo"
                   size="md"
                   className="w-full justify-start gap-3 text-sm"
                   onClick={() => openModal("setControl")}
@@ -1564,11 +1563,10 @@ const MeterDetailsPage = () => {
 
   const getMeterTypeConfig = (type: number) => {
     const configs = {
-      0: { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" },
-      1: { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" },
-      2: { color: "text-orange-600", bg: "bg-orange-50", label: "HYBRID" },
+      1: { color: "text-blue-600", bg: "bg-blue-50", label: "PREPAID" },
+      2: { color: "text-purple-600", bg: "bg-purple-50", label: "POSTPAID" },
     }
-    return configs[type as keyof typeof configs] || configs[0]
+    return configs[type as keyof typeof configs] || { color: "text-gray-600", bg: "bg-gray-50", label: "UNKNOWN" }
   }
 
   const getServiceBandConfig = (band: number) => {
