@@ -892,7 +892,7 @@ const PolesTab: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <AnimatePresence>
                     {filteredPoles.map((pole, index) => (
                       <motion.div
@@ -903,18 +903,7 @@ const PolesTab: React.FC = () => {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                       >
-                        <div className="absolute right-2 top-2">
-                          <ActionDropdown
-                            pole={pole}
-                            onViewDetails={(selectedPole) => {
-                              router.push(`/assets-management/poles/pole-details/${selectedPole.id}`)
-                            }}
-                          />
-                        </div>
-
-                        <div className="text-base font-semibold">PL-{pole.id}</div>
-
-                        <div className="mt-4 text-sm text-gray-500">HT Pole Number</div>
+                        <div className="text-sm text-gray-500">HT Pole Number</div>
                         <div className="text-sm">{pole.htPoleNumber}</div>
                       </motion.div>
                     ))}

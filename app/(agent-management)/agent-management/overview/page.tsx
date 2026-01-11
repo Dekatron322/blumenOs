@@ -495,8 +495,8 @@ export default function AgentManagementDashboard() {
                   icon={<PlusIcon />}
                   onClick={() => router.push("/agent-management/add-new-agent")}
                 >
-                  <span className="hidden sm:inline">Add New Agent</span>
-                  <span className="sm:hidden">Add Agent</span>
+                  <span className="hidden sm:inline">Add New Officer</span>
+                  <span className="sm:hidden">Add New Officer</span>
                 </ButtonModule>
               </motion.div>
             </div>

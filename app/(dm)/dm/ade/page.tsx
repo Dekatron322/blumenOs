@@ -17,6 +17,9 @@ import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ArrowLeft, ChevronDown, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { RxCaretSort } from "react-icons/rx"
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
+import { UserIcon } from "components/Icons/Icons"
 import { AnimatePresence } from "framer-motion"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
@@ -369,6 +372,9 @@ const AllDebtEntriesTable = ({
   onStatusFilterChange: (status: number | undefined) => void
   onPaymentTypeIdFilterChange: (paymentTypeId: number | undefined) => void
 }) => {
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -379,7 +385,16 @@ const AllDebtEntriesTable = ({
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    } catch {
+      return "Invalid Date"
+    }
   }
 
   const getStatusBadge = (status: number) => {
@@ -390,29 +405,95 @@ const AllDebtEntriesTable = ({
     }
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig[1]
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.className}`}>
+      <motion.div
+        className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ${config.className}`}
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.1 }}
+      >
+        <span
+          className="size-2 rounded-full"
+          style={{
+            backgroundColor: config.className.includes("yellow")
+              ? "#D97706"
+              : config.className.includes("green")
+              ? "#059669"
+              : "#DC2626",
+          }}
+        ></span>
         {config.label}
-      </span>
+      </motion.div>
     )
+  }
+
+  const toggleSort = (column: string) => {
+    const isAscending = sortColumn === column && sortOrder === "asc"
+    setSortOrder(isAscending ? "desc" : "asc")
+    setSortColumn(column)
   }
 
   if (allDebtEntriesLoading) {
     return (
       <motion.div
-        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        className="container mt-5 flex w-full flex-col rounded-md border bg-white p-3 sm:p-5"
+        initial={{ opacity: 0.6 }}
+        animate={{
+          opacity: [0.6, 1, 0.6],
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
       >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">All Debt Entries</h3>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+        {/* Header Section Skeleton */}
+        <div className="items-center justify-between border-b py-2 md:flex md:py-4">
+          <div className="mb-3 md:mb-0">
+            <div className="mb-2 h-8 w-40 rounded bg-gray-200 sm:w-48"></div>
+            <div className="h-4 w-56 rounded bg-gray-200 sm:w-64"></div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <div className="h-10 w-full rounded bg-gray-200 sm:w-48"></div>
+            <div className="h-10 w-24 rounded bg-gray-200 sm:w-28"></div>
+          </div>
         </div>
-        <div className="mt-4 space-y-3">
-          {[...Array(5)].map((_, index) => (
-            <div key={index} className="animate-pulse">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-          ))}
+
+        {/* Table Skeleton */}
+        <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
+          <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+            <thead>
+              <tr>
+                {[...Array(6)].map((_, i) => (
+                  <th key={i} className="whitespace-nowrap border-b p-3 sm:p-4">
+                    <div className="h-4 w-24 rounded bg-gray-200"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(5)].map((_, rowIndex) => (
+                <tr key={rowIndex}>
+                  {[...Array(6)].map((_, cellIndex) => (
+                    <td key={cellIndex} className="whitespace-nowrap border-b px-3 py-2 sm:px-4 sm:py-3">
+                      <div className="h-4 w-full rounded bg-gray-200"></div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Section Skeleton */}
+        <div className="flex flex-col items-center justify-between gap-3 border-t py-3 sm:flex-row">
+          <div className="h-6 w-48 rounded bg-gray-200"></div>
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded bg-gray-200"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-8 rounded bg-gray-200"></div>
+            ))}
+            <div className="size-8 rounded bg-gray-200"></div>
+          </div>
+          <div className="h-6 w-32 rounded bg-gray-200"></div>
         </div>
       </motion.div>
     )
@@ -442,14 +523,18 @@ const AllDebtEntriesTable = ({
   }
 
   return (
-    <motion.div
-      className="rounded-lg border border-gray-200 bg-white shadow-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <div className="border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">All Debt Entries</h3>
+    <>
+      <motion.div
+        className="items-center justify-between border-b py-2 md:flex md:py-4"
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div>
+          <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Debt Entries</p>
+          <p className="text-sm text-gray-600">View and manage all debt entries</p>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={onRefresh}
             className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
@@ -465,92 +550,203 @@ const AllDebtEntriesTable = ({
             </svg>
           </button>
         </div>
+      </motion.div>
 
-        {/* Quick Filters */}
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Customer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Payment Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Created
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Effective Date
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {allDebtEntries.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
-                  No debt entries found
-                </td>
-              </tr>
-            ) : (
-              allDebtEntries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{entry.customerName}</div>
-                      <div className="text-xs text-gray-500">{entry.customerAccountNumber}</div>
+      {allDebtEntries.length === 0 ? (
+        <motion.div
+          className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.p
+            className="text-base font-bold text-[#202B3C]"
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            No debt entries found
+          </motion.p>
+        </motion.div>
+      ) : (
+        <>
+          <motion.div
+            className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+              <thead>
+                <tr>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("customerName")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Customer <RxCaretSort />
                     </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{formatCurrency(entry.amount)}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{entry.paymentTypeName}</td>
-                  <td className="whitespace-nowrap px-6 py-4">{getStatusBadge(entry.status)}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{formatDate(entry.createdAt)}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {formatDate(entry.effectiveAtUtc)}
-                  </td>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("amount")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Amount <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("paymentTypeName")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Payment Type <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("status")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Status <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("createdAt")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Created <RxCaretSort />
+                    </div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("effectiveAtUtc")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Effective Date <RxCaretSort />
+                    </div>
+                  </th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {allDebtEntries.map((entry: DebtEntryData, index: number) => (
+                  <motion.tr
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="whitespace-nowrap border-b px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
+                          <UserIcon />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{entry.customerName}</div>
+                          <div className="text-xs text-gray-500">{entry.customerAccountNumber}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                      {formatCurrency(entry.amount)}
+                    </td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-900">
+                      {entry.paymentTypeName}
+                    </td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm">{getStatusBadge(entry.status)}</td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                      {formatDate(entry.createdAt)}
+                    </td>
+                    <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                      {formatDate(entry.effectiveAtUtc)}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="border-t border-gray-200 px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
-              {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}{" "}
-              results
+          <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+            <div className="flex items-center gap-1 max-sm:hidden">
+              <p className="text-xs sm:text-sm">Show rows</p>
+              <select
+                value={pagination.pageSize}
+                onChange={(e) => {
+                  // Handle page size change if needed
+                }}
+                className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
               <button
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                  pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                }`}
                 onClick={() => onPageChange(pagination.currentPage - 1)}
-                disabled={!pagination.hasPrevious}
-                className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={pagination.currentPage === 1}
               >
-                Previous
+                <BiSolidLeftArrow className="size-4 sm:size-5" />
               </button>
-              <span className="text-sm text-gray-700">
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </span>
+
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                  {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                        pagination.currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                      }`}
+                      onClick={() => onPageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 sm:hidden">
+                  {Array.from({ length: Math.min(pagination.totalPages, 4) }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                        pagination.currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                      }`}
+                      onClick={() => onPageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <button
+                className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                  pagination.currentPage === pagination.totalPages || pagination.totalPages === 0
+                    ? "cursor-not-allowed text-gray-400"
+                    : "text-[#000000]"
+                }`}
                 onClick={() => onPageChange(pagination.currentPage + 1)}
-                disabled={!pagination.hasNext}
-                className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={pagination.currentPage === pagination.totalPages || pagination.totalPages === 0}
               >
-                Next
+                <BiSolidRightArrow className="size-4 sm:size-5" />
               </button>
             </div>
+
+            <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+              Page {pagination.currentPage} of {pagination.totalPages || 1} ({pagination.totalCount.toLocaleString()}{" "}
+              total entries)
+            </p>
           </div>
-        </div>
+        </>
       )}
-    </motion.div>
+    </>
   )
 }
 

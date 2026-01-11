@@ -16,8 +16,8 @@ const MeteringInfo = () => {
     switch (activeTab) {
       case "BillingCycles":
         return <BillingCycles />
-      case "MeterReadings":
-        return <MeterReadings />
+      // case "MeterReadings":
+      //   return <MeterReadings />
       case "FeederEnergyCaps":
         return <FeederEnergyCaps />
       case "RecentBills":

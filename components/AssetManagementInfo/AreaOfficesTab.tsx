@@ -727,12 +727,6 @@ const AreaOfficesTab: React.FC = () => {
                   <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                     <thead>
                       <tr>
-                        <th className="whitespace-nowrap border-b p-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                            ID
-                          </div>
-                        </th>
                         <th className="text-500 whitespace-nowrap border-b p-4 text-sm">
                           <div className="flex items-center gap-2">Office Name</div>
                         </th>
@@ -769,7 +763,6 @@ const AreaOfficesTab: React.FC = () => {
                             transition={{ duration: 0.3, delay: index * 0.05 }}
                             exit={{ opacity: 0, y: -10 }}
                           >
-                            <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">AO-{office.id}</td>
                             <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                               {office.nameOfNewOAreaffice || "-"}
                             </td>
