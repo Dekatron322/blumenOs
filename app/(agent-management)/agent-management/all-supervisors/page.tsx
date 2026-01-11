@@ -698,7 +698,7 @@ const generateAgentData = () => {
   }
 }
 
-const AllAgents: React.FC = () => {
+const AllSupervisors: React.FC = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { agents: backendAgents, loading, error, pagination } = useAppSelector((state) => state.agents)
@@ -978,7 +978,7 @@ const AllAgents: React.FC = () => {
       lastCashCollectionDateTo: appliedFilters.lastCashCollectionDateTo,
       sortBy: appliedFilters.sortBy,
       sortOrder: appliedFilters.sortOrder,
-      agentType: "SalesRep",
+      agentType: "Supervisor",
     }
     dispatch(fetchAgents(params))
   }
@@ -1042,8 +1042,8 @@ const AllAgents: React.FC = () => {
           <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             <div className="mb-4 flex w-full justify-between max-md:flex-col max-sm:my-4 ">
               <div>
-                <h4 className="text-2xl font-semibold">Sales Rep Management</h4>
-                <p>Field sales reps onboarding, commissions, and performance tracking</p>
+                <h4 className="text-2xl font-semibold">Supervisors Management</h4>
+                <p>Supervisors onboarding, commissions, and performance tracking</p>
               </div>
 
               {/* Auto-refresh controls */}
@@ -1131,8 +1131,8 @@ const AllAgents: React.FC = () => {
                       )}
                     </button>
                     <div>
-                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Sales Rep Directory</h3>
-                      <p className="text-sm text-gray-600">View and manage all field agents</p>
+                      <h3 className="text-lg font-medium max-sm:pb-2 md:text-2xl">Supervisors Directory</h3>
+                      <p className="text-sm text-gray-600">View and manage all supervisors</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-3 md:mt-0">
@@ -1178,7 +1178,7 @@ const AllAgents: React.FC = () => {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.4, delay: 0.2 }}
                     >
-                      {searchText ? "No matching agents found" : "No agents available"}
+                      {searchText ? "No matching supervisors found" : "No supervisors available"}
                     </motion.p>
                   </motion.div>
                 ) : (
@@ -1196,7 +1196,7 @@ const AllAgents: React.FC = () => {
                             <th className="whitespace-nowrap border-y p-4 text-sm">
                               <div className="flex items-center gap-2">
                                 <MdOutlineCheckBoxOutlineBlank className="text-lg" />
-                                Agent Name
+                                Cashier Name
                               </div>
                             </th>
                             <th className="whitespace-nowrap border-y p-4 text-sm">
@@ -1335,7 +1335,7 @@ const AllAgents: React.FC = () => {
                     >
                       <div className="text-sm text-gray-700">
                         Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalRecords)}{" "}
-                        of {totalRecords} agents
+                        of {totalRecords} supervisors
                         {getActiveFilterCount() > 0 && " - filtered"}
                       </div>
                       <div className="flex items-center gap-2">
@@ -1686,4 +1686,4 @@ const AllAgents: React.FC = () => {
   )
 }
 
-export default AllAgents
+export default AllSupervisors

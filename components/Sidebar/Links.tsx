@@ -215,7 +215,7 @@ export const allLinks: LinkItem[] = [
     ],
   },
   {
-    name: "Sales Rep",
+    name: "Cash Officers",
     href: "/agent-management",
     icon: AgentIcon,
     privilegeKey: "agents",
@@ -229,7 +229,25 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["R"],
       },
       {
-        name: "Add New Sales Rep",
+        name: "View All Cashiers",
+        href: "/agent-management/all-cashiers",
+        privilegeKey: "agents",
+        requiredActions: ["R"],
+      },
+      {
+        name: "View All Clearing Cashiers",
+        href: "/agent-management/all-clearing-cashiers",
+        privilegeKey: "agents",
+        requiredActions: ["R"],
+      },
+      {
+        name: "View All Supervisors",
+        href: "/agent-management/all-supervisors",
+        privilegeKey: "agents",
+        requiredActions: ["R"],
+      },
+      {
+        name: "Add New Officer",
         href: "/agent-management/add-new-agent",
         privilegeKey: "agents",
         requiredActions: ["W"],
@@ -710,7 +728,7 @@ export function Links({ isCollapsed }: LinksProps) {
               <div
                 className={clsx(" overflow-hidden transition-all duration-500 ease-in-out", {
                   "max-h-0 opacity-0": !isExpanded,
-                  "max-h-72 opacity-100": isExpanded,
+                  "max-h-96 opacity-100": isExpanded,
                 })}
               >
                 <div className="ml-6 border-l-2 border-gray-200 py-2 pl-3">

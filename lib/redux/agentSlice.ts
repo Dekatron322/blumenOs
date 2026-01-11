@@ -231,6 +231,7 @@ export interface AgentsRequestParams {
   pageSize: number
   search?: string
   status?: string
+  agentType?: string
   canCollectCash?: boolean
   minCashAtHand?: number
   maxCashAtHand?: number
