@@ -122,9 +122,9 @@ interface TabNavigationProps {
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: "AgentDirectory", label: "Sales Rep Directory", icon: <InventoryIcon /> },
-    { id: "Performance", label: "Performance", icon: <ReadingsIcon /> },
-    { id: "RouteManagement", label: "Route Management", icon: <AlertsIcon /> },
-    { id: "Commissions", label: "Commissions", icon: <QueueIcon /> },
+    { id: "CashierDirectory", label: "Cashier Directory", icon: <ReadingsIcon /> },
+    { id: "ClearingCashierDirectory", label: "Clearing Cashier Directory", icon: <AlertsIcon /> },
+    { id: "SupervisorsDirectory", label: "Supervisors Directory", icon: <QueueIcon /> },
   ]
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 

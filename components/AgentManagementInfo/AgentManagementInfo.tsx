@@ -1,11 +1,11 @@
 import React, { useState } from "react"
 import TabNavigation from "./TabNavigation"
 import AgentDirectory from "./AgentDirectory"
-import Performance from "./Performance"
-import RouteManagement from "./RouteManagement"
-import Commissions from "./Commissions"
+import CashierDirectory from "./CashierDirectory"
+import ClearingCashierDirectory from "./ClearingCashierDirectory"
+import SupervisorsDirectory from "./SupervisorsDirectory"
 
-const MeteringInfo = () => {
+const AgentManagementInfo = () => {
   const [activeTab, setActiveTab] = useState("AgentDirectory")
 
   // Render active tab content
@@ -13,12 +13,12 @@ const MeteringInfo = () => {
     switch (activeTab) {
       case "AgentDirectory":
         return <AgentDirectory />
-      case "Performance":
-        return <Performance />
-      case "RouteManagement":
-        return <RouteManagement />
-      case "Commissions":
-        return <Commissions />
+      case "CashierDirectory":
+        return <CashierDirectory />
+      case "ClearingCashierDirectory":
+        return <ClearingCashierDirectory />
+      case "SupervisorsDirectory":
+        return <SupervisorsDirectory />
       default:
         return <AgentDirectory />
     }
@@ -35,4 +35,4 @@ const MeteringInfo = () => {
   )
 }
 
-export default MeteringInfo
+export default AgentManagementInfo

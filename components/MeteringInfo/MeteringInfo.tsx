@@ -4,6 +4,7 @@ import MeterReadingsTab from "./MeterReadingsTab"
 import SystemAlertsTab from "./SystemAlertsTab"
 import InstallationQueueTab from "./InstallationQueueTab"
 import TabNavigation from "./TabNavigation"
+import MeterReadings from "components/BillingInfo/MeterReadings"
 
 const MeteringInfo = () => {
   const [activeTab, setActiveTab] = useState("inventory")
@@ -14,7 +15,7 @@ const MeteringInfo = () => {
       case "inventory":
         return <MeterInventoryTab />
       case "readings":
-        return <MeterReadingsTab />
+        return <MeterReadings />
       case "alerts":
         return <SystemAlertsTab />
       case "queue":

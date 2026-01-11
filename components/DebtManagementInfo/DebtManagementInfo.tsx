@@ -1,12 +1,15 @@
 import React, { useState } from "react"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
+import { RxCaretSort } from "react-icons/rx"
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import Dropdown from "components/Dropdown/Dropdown"
 import DebtManagementTabNavigation from "./DebtManagementTabNavigation"
 import AllDebtRecovery from "components/BillingInfo/AllDebtRecovery"
 import type { DebtEntryData, DebtManagementCustomer } from "lib/redux/debtManagementSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
+import { UserIcon } from "components/Icons/Icons"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -543,68 +546,87 @@ const DebtManagementCustomers = ({
 
   if (customersLoading) {
     return (
-      <div className="flex flex-col items-start gap-6 2xl:flex-row">
-        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="h-6 w-40 animate-pulse rounded bg-gray-200"></div>
-              <div className="h-8 w-20 animate-pulse rounded bg-gray-200"></div>
-            </div>
-            <div className="mt-4 space-y-3">
-              {[...Array(5)].map((_, index) => (
-                <div key={index} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200"></div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-1 text-right">
-                    <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
-                    <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <motion.div
+        className="container mt-5 flex w-full flex-col rounded-md border bg-white p-3 sm:p-5"
+        initial={{ opacity: 0.6 }}
+        animate={{
+          opacity: [0.6, 1, 0.6],
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+      >
+        {/* Header Section Skeleton */}
+        <div className="items-center justify-between border-b py-2 md:flex md:py-4">
+          <div className="mb-3 md:mb-0">
+            <div className="mb-2 h-8 w-40 rounded bg-gray-200 sm:w-48"></div>
+            <div className="h-4 w-56 rounded bg-gray-200 sm:w-64"></div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <div className="h-10 w-full rounded bg-gray-200 sm:w-48"></div>
+            <div className="h-10 w-24 rounded bg-gray-200 sm:w-28"></div>
           </div>
         </div>
-      </div>
+
+        {/* Customer List Skeleton */}
+        <div className="w-full border-x bg-[#f9f9f9]">
+          {[...Array(5)].map((_, rowIndex) => (
+            <div key={rowIndex} className="border-b p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 animate-pulse rounded-full bg-gray-200"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
+                    <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
+                  </div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-200"></div>
+                  <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination Section Skeleton */}
+        <div className="flex flex-col items-center justify-between gap-3 border-t py-3 sm:flex-row">
+          <div className="h-6 w-48 rounded bg-gray-200"></div>
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded bg-gray-200"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-8 rounded bg-gray-200"></div>
+            ))}
+            <div className="size-8 rounded bg-gray-200"></div>
+          </div>
+          <div className="h-6 w-32 rounded bg-gray-200"></div>
+        </div>
+      </motion.div>
     )
   }
 
   if (customersError) {
     return (
-      <div className="flex flex-col items-start gap-6 2xl:flex-row">
-        <div className="w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-red-100 p-2">
-                  <svg className="size-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h5 className="text-sm font-medium text-red-800">Customers Error</h5>
-                  <p className="text-xs text-red-600">{customersError}</p>
-                </div>
-              </div>
-              <button
-                onClick={onRefresh}
-                className="rounded-md bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
+      <motion.div
+        className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-red-900">Error Loading Customers</h3>
+          <button
+            onClick={onRefresh}
+            className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+          >
+            Retry
+          </button>
         </div>
-      </div>
+        <div className="mt-2">
+          <p className="text-sm text-red-600">{customersError}</p>
+        </div>
+      </motion.div>
     )
   }
 
@@ -618,188 +640,242 @@ const DebtManagementCustomers = ({
             : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
         }
       >
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="flex flex-col border-b p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-indigo-100 p-2">
-                  <svg className="size-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h5 className="text-sm font-semibold text-gray-900">Debt Management Customers</h5>
-                  <p className="text-xs text-gray-500">Customers with outstanding balances</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* Filter Button for ALL screens */}
-                  <button
-                    onClick={() => setShowMobileFilters(true)}
-                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50"
-                  >
-                    <Filter className="size-4" />
-                    Filters
-                    {getActiveFilterCount() > 0 && (
-                      <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                        {getActiveFilterCount()}
-                      </span>
-                    )}
-                  </button>
+        <>
+          <motion.div
+            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-center gap-3">
+              {/* Filter Button for ALL screens up to 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
 
-                  {/* Active filters badge */}
-                  {getActiveFilterCount() > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                        {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                      </span>
-                      <button onClick={resetFilters} className="text-xs text-blue-600 hover:text-blue-800">
-                        Clear all
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                  <button
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                  >
-                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                    {showDesktopFilters ? "Hide filters" : "Show filters"}
-                  </button>
-                </div>
-                <span className="text-sm text-gray-500">{pagination.totalCount} total customers</span>
-                <button
-                  onClick={onRefresh}
-                  className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
-                  title="Refresh customers"
-                >
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                </button>
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Debt Management Customers</p>
+                <p className="text-sm text-gray-600">Customers with outstanding balances</p>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">{pagination.totalCount} total customers</span>
+              <button
+                onClick={onRefresh}
+                className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+                title="Refresh customers"
+              >
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
 
-            {/* Search Input */}
-            <div className="mb-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={localFilters.search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Search by customer name or account number..."
-                  className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                {localFilters.search && (
-                  <button
-                    onClick={handleSearchCancel}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100"
-                  >
-                    <X className="size-4 text-gray-500" />
-                  </button>
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()}
+                  </span>
                 )}
-              </div>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Search Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <input
+                type="text"
+                value={localFilters.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search by customer name or account number..."
+                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              {localFilters.search && (
+                <button
+                  onClick={handleSearchCancel}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100"
+                >
+                  <X className="size-4 text-gray-500" />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="divide-y">
-            {customers.length === 0 ? (
-              <div className="p-8 text-center">
-                <div className="mx-auto size-12 text-gray-400">
-                  <svg className="size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mt-4 text-sm font-medium text-gray-900">No customers found</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  {localFilters.search
-                    ? "No customers match your search criteria."
-                    : "No customers with outstanding balances in the current period."}
-                </p>
-              </div>
-            ) : (
-              customers.map((customer) => (
-                <div key={customer.customerId} className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-indigo-100">
-                        <span className="text-sm font-medium text-indigo-600">
-                          {customer.customerName.charAt(0).toUpperCase()}
-                        </span>
+          {customers.length === 0 ? (
+            <motion.div
+              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                {localFilters.search ? "No matching customers found" : "No customers found"}
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="w-full border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {customers.map((customer, index) => (
+                  <motion.div
+                    key={customer.customerId}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="border-b p-4 hover:bg-gray-50"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-10 items-center justify-center rounded-full bg-indigo-100">
+                          <UserIcon />
+                        </div>
+                        <div>
+                          <h6 className="text-sm font-medium text-gray-900">{customer.customerName}</h6>
+                          <p className="text-xs text-gray-500">Account: {customer.accountNumber}</p>
+                          {customer.lastLedgerAtUtc && (
+                            <p className="text-xs text-gray-400">
+                              Last activity: {formatDate(customer.lastLedgerAtUtc)}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h6 className="text-sm font-medium text-gray-900">{customer.customerName}</h6>
-                        <p className="text-xs text-gray-500">Account: {customer.accountNumber}</p>
-                        {customer.lastLedgerAtUtc && (
-                          <p className="text-xs text-gray-400">Last activity: {formatDate(customer.lastLedgerAtUtc)}</p>
-                        )}
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-red-600">
+                          {formatCurrency(customer.outstandingBalance)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Debits: {formatCurrency(customer.totalDebits)} / Credits:{" "}
+                          {formatCurrency(customer.totalCredits)}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-red-600">
-                        {formatCurrency(customer.outstandingBalance)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Debits: {formatCurrency(customer.totalDebits)} / Credits:{" "}
-                        {formatCurrency(customer.totalCredits)}
-                      </p>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={(e) => {
+                      // Handle page size change if needed
+                    }}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => onPageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                            pagination.currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => onPageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {Array.from({ length: Math.min(pagination.totalPages, 4) }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                            pagination.currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => onPageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
 
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="border-t border-gray-200 px-6 py-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
-                  {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of{" "}
-                  {pagination.totalCount} results
-                </div>
-                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onPageChange(pagination.currentPage - 1)}
-                    disabled={!pagination.hasPrevious}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-500">
-                    Page {pagination.currentPage} of {pagination.totalPages}
-                  </span>
-                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === pagination.totalPages || pagination.totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
                     onClick={() => onPageChange(pagination.currentPage + 1)}
-                    disabled={!pagination.hasNext}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={pagination.currentPage === pagination.totalPages || pagination.totalPages === 0}
                   >
-                    Next
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
                   </button>
                 </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {pagination.currentPage} of {pagination.totalPages || 1} (
+                  {pagination.totalCount.toLocaleString()} total customers)
+                </p>
               </div>
-            </div>
+            </>
           )}
-        </div>
+
+          {/* Mobile Filter Sidebar */}
+          <FilterSidebar
+            isOpen={showMobileFilters}
+            onClose={() => setShowMobileFilters(false)}
+            localFilters={localFilters}
+            handleFilterChange={handleFilterChange}
+            handleSortChange={handleSortChange}
+            applyFilters={applyFilters}
+            resetFilters={resetFilters}
+            getActiveFilterCount={getActiveFilterCount}
+            sortOptions={[...sortOptions]}
+            amountRange={amountRange}
+          />
+        </>
       </div>
 
       {/* Desktop Filters Sidebar (2xl and above) */}
@@ -943,20 +1019,6 @@ const DebtManagementCustomers = ({
           </div>
         </motion.div>
       )}
-
-      {/* Mobile Filter Sidebar */}
-      <FilterSidebar
-        isOpen={showMobileFilters}
-        onClose={() => setShowMobileFilters(false)}
-        localFilters={localFilters}
-        handleFilterChange={handleFilterChange}
-        handleSortChange={handleSortChange}
-        applyFilters={applyFilters}
-        resetFilters={resetFilters}
-        getActiveFilterCount={getActiveFilterCount}
-        sortOptions={[...sortOptions]}
-        amountRange={amountRange}
-      />
     </div>
   )
 }
@@ -1119,27 +1181,91 @@ const AllDebtEntriesTable = ({
     }
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig[1]
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.className}`}>
+      <motion.div
+        className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ${config.className}`}
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.1 }}
+      >
+        <span
+          className="size-2 rounded-full"
+          style={{
+            backgroundColor: config.className.includes("yellow")
+              ? "#D97706"
+              : config.className.includes("green")
+              ? "#059669"
+              : "#DC2626",
+          }}
+        ></span>
         {config.label}
-      </span>
+      </motion.div>
     )
   }
 
   if (allDebtEntriesLoading) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">All Debt Entries</h3>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+      <motion.div
+        className="container mt-5 flex w-full flex-col rounded-md border bg-white p-3 sm:p-5"
+        initial={{ opacity: 0.6 }}
+        animate={{
+          opacity: [0.6, 1, 0.6],
+          transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+      >
+        {/* Header Section Skeleton */}
+        <div className="items-center justify-between border-b py-2 md:flex md:py-4">
+          <div className="mb-3 md:mb-0">
+            <div className="mb-2 h-8 w-40 rounded bg-gray-200 sm:w-48"></div>
+            <div className="h-4 w-56 rounded bg-gray-200 sm:w-64"></div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <div className="h-10 w-full rounded bg-gray-200 sm:w-48"></div>
+            <div className="h-10 w-24 rounded bg-gray-200 sm:w-28"></div>
+          </div>
         </div>
-        <div className="mt-4 space-y-3">
-          {[...Array(5)].map((_, index) => (
-            <div key={index} className="animate-pulse">
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-            </div>
-          ))}
+
+        {/* Table Skeleton */}
+        <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
+          <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
+            <thead>
+              <tr>
+                {[...Array(7)].map((_, i) => (
+                  <th key={i} className="whitespace-nowrap border-b p-3 sm:p-4">
+                    <div className="h-4 w-24 rounded bg-gray-200"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(5)].map((_, rowIndex) => (
+                <tr key={rowIndex}>
+                  {[...Array(7)].map((_, cellIndex) => (
+                    <td key={cellIndex} className="whitespace-nowrap border-b px-3 py-2 sm:px-4 sm:py-3">
+                      <div className="h-4 w-full rounded bg-gray-200"></div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+
+        {/* Pagination Section Skeleton */}
+        <div className="flex flex-col items-center justify-between gap-3 border-t py-3 sm:flex-row">
+          <div className="h-6 w-48 rounded bg-gray-200"></div>
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded bg-gray-200"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="size-8 rounded bg-gray-200"></div>
+            ))}
+            <div className="size-8 rounded bg-gray-200"></div>
+          </div>
+          <div className="h-6 w-32 rounded bg-gray-200"></div>
+        </div>
+      </motion.div>
     )
   }
 
@@ -1172,172 +1298,271 @@ const AllDebtEntriesTable = ({
             : "w-full rounded-md border bg-white p-3 md:p-5 2xl:flex-1"
         }
       >
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">All Debt Entries</h3>
-              <div className="flex items-center gap-2">
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* Filter Button for ALL screens */}
-                  <button
-                    onClick={() => setShowMobileFilters(true)}
-                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50"
-                  >
-                    <Filter className="size-4" />
-                    Filters
-                    {getActiveFilterCount() > 0 && (
-                      <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                        {getActiveFilterCount()}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Active filters badge */}
-                  {getActiveFilterCount() > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                        {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
-                      </span>
-                      <button onClick={resetFilters} className="text-xs text-blue-600 hover:text-blue-800">
-                        Clear all
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                  <button
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                  >
-                    {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                    {showDesktopFilters ? "Hide filters" : "Show filters"}
-                  </button>
-                </div>
-                <button
-                  onClick={onRefresh}
-                  className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
-                  title="Refresh debt entries"
-                >
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Enhanced Filter Controls */}
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Payment Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Effective Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {allDebtEntries.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
-                      No debt entries found
-                    </td>
-                  </tr>
-                ) : (
-                  allDebtEntries.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-gray-50">
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{entry.customerName}</div>
-                          <div className="text-xs text-gray-500">{entry.customerAccountNumber}</div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                        {formatCurrency(entry.amount)}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{entry.paymentTypeName}</td>
-                      <td className="whitespace-nowrap px-6 py-4">{getStatusBadge(entry.status)}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {formatDate(entry.createdAt)}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {formatDate(entry.effectiveAtUtc)}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <ButtonModule
-                          size="sm"
-                          variant="outline"
-                          icon={<VscEye />}
-                          onClick={() => onViewDetails(entry)}
-                          className="flex items-center gap-1 rounded-md border text-sm font-medium transition-colors"
-                        >
-                          View Details
-                        </ButtonModule>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="border-t border-gray-200 px-6 py-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Showing {(pagination.currentPage - 1) * pagination.pageSize + 1} to{" "}
-                  {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)} of{" "}
-                  {pagination.totalCount} results
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onPageChange(pagination.currentPage - 1)}
-                    disabled={!pagination.hasPrevious}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-500">
-                    Page {pagination.currentPage} of {pagination.totalPages}
+        <>
+          <motion.div
+            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-center gap-3">
+              {/* Filter Button for ALL screens up to 2xl */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                    {getActiveFilterCount()}
                   </span>
-                  <button
-                    onClick={() => onPageChange(pagination.currentPage + 1)}
-                    disabled={!pagination.hasNext}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
+                )}
+              </button>
+
+              <div>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Debt Entries</p>
+                <p className="text-sm text-gray-600">View and manage all debt entries</p>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onRefresh}
+                className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+                title="Refresh debt entries"
+              >
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+
+              {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+              <button
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide filters" : "Show filters"}
+                {getActiveFilterCount() > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+            </div>
+          </motion.div>
+
+          {allDebtEntries.length === 0 ? (
+            <motion.div
+              className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.p
+                className="text-base font-bold text-[#202B3C]"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                No debt entries found
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="w-full overflow-x-auto border-x bg-[#FFFFFF]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <table className="w-full min-w-[1000px] border-separate border-spacing-0 text-left">
+                  <thead>
+                    <tr>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          Customer <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          Amount <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          Payment Type <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          Status <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          Created <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          Effective Date <RxCaretSort />
+                        </div>
+                      </th>
+                      <th className="cursor-pointer whitespace-nowrap border-b p-4 text-sm">
+                        <div className="flex items-center gap-2">Actions</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allDebtEntries.map((entry: DebtEntryData, index: number) => (
+                      <motion.tr
+                        key={entry.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="whitespace-nowrap border-b px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
+                              <UserIcon />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{entry.customerName}</div>
+                              <div className="text-xs text-gray-500">{entry.customerAccountNumber}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
+                          {formatCurrency(entry.amount)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-900">
+                          {entry.paymentTypeName}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm">{getStatusBadge(entry.status)}</td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {formatDate(entry.createdAt)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                          {formatDate(entry.effectiveAtUtc)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-3">
+                          <ButtonModule
+                            size="sm"
+                            variant="outline"
+                            icon={<VscEye />}
+                            onClick={() => onViewDetails(entry)}
+                            className="flex items-center gap-1 rounded-md border text-sm font-medium transition-colors"
+                          >
+                            View Details
+                          </ButtonModule>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+
+              <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+                <div className="flex items-center gap-1 max-sm:hidden">
+                  <p className="text-xs sm:text-sm">Show rows</p>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={(e) => {
+                      // Handle page size change if needed
+                    }}
+                    className="bg-[#F2F2F2] p-1 text-xs sm:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                    }`}
+                    onClick={() => onPageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <BiSolidLeftArrow className="size-4 sm:size-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden items-center gap-1 sm:flex sm:gap-2">
+                      {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs sm:h-7 sm:w-8 sm:text-sm ${
+                            pagination.currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => onPageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-1 sm:hidden">
+                      {Array.from({ length: Math.min(pagination.totalPages, 4) }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          className={`flex size-6 items-center justify-center rounded-md text-xs ${
+                            pagination.currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                          }`}
+                          onClick={() => onPageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    className={`px-2 py-1 sm:px-3 sm:py-2 ${
+                      pagination.currentPage === pagination.totalPages || pagination.totalPages === 0
+                        ? "cursor-not-allowed text-gray-400"
+                        : "text-[#000000]"
+                    }`}
+                    onClick={() => onPageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages || pagination.totalPages === 0}
+                  >
+                    <BiSolidRightArrow className="size-4 sm:size-5" />
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
+                  Page {pagination.currentPage} of {pagination.totalPages || 1} (
+                  {pagination.totalCount.toLocaleString()} total entries)
+                </p>
+              </div>
+            </>
           )}
-        </div>
+
+          {/* Mobile Filter Sidebar */}
+          <FilterSidebar
+            isOpen={showMobileFilters}
+            onClose={() => setShowMobileFilters(false)}
+            localFilters={localFilters}
+            handleFilterChange={handleFilterChange}
+            handleSortChange={handleSortChange}
+            applyFilters={applyFilters}
+            resetFilters={resetFilters}
+            getActiveFilterCount={getActiveFilterCount}
+            sortOptions={sortOptions}
+            amountRange={amountRange}
+          />
+        </>
       </div>
 
       {/* Desktop Filters Sidebar (2xl and above) */}
@@ -1363,14 +1588,13 @@ const AllDebtEntriesTable = ({
             {/* Customer Filter */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
-              <select
+              <input
+                type="text"
                 value={localFilters.customerId || ""}
                 onChange={(e) => handleFilterChange("customerId", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">All Customers</option>
-                {/* Options would be populated dynamically */}
-              </select>
+                placeholder="Enter customer ID"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
             </div>
 
             {/* Status Filter */}
@@ -1400,14 +1624,13 @@ const AllDebtEntriesTable = ({
             {/* Payment Type Filter */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Type</label>
-              <select
+              <input
+                type="text"
                 value={localFilters.paymentTypeId || ""}
                 onChange={(e) => handleFilterChange("paymentTypeId", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">All Payment Types</option>
-                {/* Options would be populated dynamically */}
-              </select>
+                placeholder="Enter payment type ID"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
             </div>
 
             {/* Amount Range Filter */}
@@ -1435,25 +1658,6 @@ const AllDebtEntriesTable = ({
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Date Range Filters */}
-            <div className="space-y-4">
-              <DateRangeFilter
-                label="Created Date"
-                startDate={localFilters.createdStartDate || ""}
-                endDate={localFilters.createdEndDate || ""}
-                onStartDateChange={(date) => handleFilterChange("createdStartDate", date)}
-                onEndDateChange={(date) => handleFilterChange("createdEndDate", date)}
-              />
-
-              <DateRangeFilter
-                label="Effective Date"
-                startDate={localFilters.effectiveStartDate || ""}
-                endDate={localFilters.effectiveEndDate || ""}
-                onStartDateChange={(date) => handleFilterChange("effectiveStartDate", date)}
-                onEndDateChange={(date) => handleFilterChange("effectiveEndDate", date)}
-              />
             </div>
 
             {/* Sort Options */}
@@ -1486,9 +1690,7 @@ const AllDebtEntriesTable = ({
           <div className="border-t pt-4">
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  applyFilters()
-                }}
+                onClick={applyFilters}
                 className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <div className="flex items-center justify-center gap-2">
@@ -1500,26 +1702,15 @@ const AllDebtEntriesTable = ({
                 onClick={resetFilters}
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
-                Clear All
+                <div className="flex items-center justify-center gap-2">
+                  <X className="size-4" />
+                  Reset All
+                </div>
               </button>
             </div>
           </div>
         </motion.div>
       )}
-
-      {/* Mobile Filter Sidebar */}
-      <FilterSidebar
-        isOpen={showMobileFilters}
-        onClose={() => setShowMobileFilters(false)}
-        localFilters={localFilters}
-        handleFilterChange={handleFilterChange}
-        handleSortChange={handleSortChange}
-        applyFilters={applyFilters}
-        resetFilters={resetFilters}
-        getActiveFilterCount={getActiveFilterCount}
-        sortOptions={[...sortOptions]}
-        amountRange={amountRange}
-      />
     </div>
   )
 }

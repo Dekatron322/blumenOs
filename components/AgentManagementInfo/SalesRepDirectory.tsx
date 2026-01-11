@@ -1,0 +1,674 @@
+"use client"
+
+import React, { useEffect, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { SearchModule } from "components/ui/Search/search-module"
+import {
+  AddAgentIcon,
+  BillsIcon,
+  FloatIcon,
+  MapIcon,
+  PerformanceIcon,
+  PhoneIcon,
+  RateIcon,
+  RouteIcon,
+  TargetIcon,
+  UserIcon,
+} from "components/Icons/Icons"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { type Agent, AgentsRequestParams, fetchAgents, setPagination } from "lib/redux/agentSlice"
+import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { ButtonModule } from "components/ui/Button/Button"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { VscEye } from "react-icons/vsc"
+
+interface SortOption {
+  label: string
+  value: string
+  order: "asc" | "desc"
+}
+
+// Mobile Filter Sidebar Component
+const MobileFilterSidebar = ({
+  isOpen,
+  onClose,
+  localFilters,
+  handleFilterChange,
+  handleSortChange,
+  applyFilters,
+  resetFilters,
+  getActiveFilterCount,
+  statusOptions,
+  canCollectCashOptions,
+  areaOfficeOptions,
+  sortOptions,
+  isSortExpanded,
+  setIsSortExpanded,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  localFilters: any
+  handleFilterChange: (key: string, value: string | number | boolean | undefined) => void
+  handleSortChange: (option: SortOption) => void
+  applyFilters: () => void
+  resetFilters: () => void
+  getActiveFilterCount: () => number
+  statusOptions: Array<{ value: string; label: string }>
+  canCollectCashOptions: Array<{ value: string; label: string }>
+  areaOfficeOptions: Array<{ value: string | number; label: string }>
+  sortOptions: SortOption[]
+  isSortExpanded: boolean
+  setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
+}) => {
+  return (
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          key="mobile-filter-sidebar"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-stretch justify-end bg-black/30 backdrop-blur-sm 2xl:hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            key="mobile-filter-content"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="flex h-full w-full max-w-sm flex-col bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 border-b bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onClose}
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-lg font-semibold">Filters & Sorting</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <p className="text-xs text-gray-500">{getActiveFilterCount()} active filter(s)</p>
+                    )}
+                  </div>
+                </div>
+                <button onClick={resetFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {/* Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Active", "Inactive", "LowFloat"].map((statusValue) => {
+                      const statusLabel = statusOptions.find((opt) => opt.value === statusValue)?.label || statusValue
+                      return (
+                        <button
+                          key={statusValue}
+                          onClick={() =>
+                            handleFilterChange("status", localFilters.status === statusValue ? undefined : statusValue)
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.status === statusValue
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {statusLabel}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Can Collect Cash Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Can Collect Cash</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["true", "false"].map((cashValue) => {
+                      const cashLabel = canCollectCashOptions.find((opt) => opt.value === cashValue)?.label || cashValue
+                      return (
+                        <button
+                          key={cashValue}
+                          onClick={() =>
+                            handleFilterChange(
+                              "canCollectCash",
+                              localFilters.canCollectCash === (cashValue === "true") ? undefined : cashValue === "true"
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.canCollectCash === (cashValue === "true")
+                              ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {cashLabel}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Area Office Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Area Office</label>
+                  <FormSelectModule
+                    name="areaOfficeId"
+                    value={localFilters.areaOfficeId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("areaOfficeId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    options={areaOfficeOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortExpanded((prev) => !prev)}
+                    className="mb-1.5 flex w-full items-center justify-between text-xs font-medium text-gray-700 md:text-sm"
+                    aria-expanded={isSortExpanded}
+                  >
+                    <span>Sort By</span>
+                    {isSortExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </button>
+
+                  {isSortExpanded && (
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.order}`}
+                          onClick={() => handleSortChange(option)}
+                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors md:text-sm ${
+                            localFilters.sortBy === option.value && localFilters.sortOrder === option.order
+                              ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {localFilters.sortBy === option.value && localFilters.sortOrder === option.order && (
+                            <span className="text-purple-600">
+                              {option.order === "asc" ? (
+                                <SortAsc className="size-4" />
+                              ) : (
+                                <SortDesc className="size-4" />
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Buttons - Fixed */}
+            <div className="flex-shrink-0 border-t bg-white p-4 2xl:hidden">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    applyFilters()
+                    onClose()
+                  }}
+                  className="button-filled flex-1"
+                >
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    resetFilters()
+                    onClose()
+                  }}
+                  className="button-oulined flex-1"
+                >
+                  Reset All
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+const SalesRepDirectory: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { agents, loading, error, pagination } = useAppSelector((state) => state.agents)
+  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+
+  const [searchText, setSearchText] = useState("")
+  const [isMobileView, setIsMobileView] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
+  const [isSortExpanded, setIsSortExpanded] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+
+  // Filter state
+  const [localFilters, setLocalFilters] = useState<{
+    status?: string
+    canCollectCash?: boolean
+    areaOfficeId?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }>({
+    sortBy: "",
+    sortOrder: "asc",
+  })
+
+  const [appliedFilters, setAppliedFilters] = useState<{
+    status?: string
+    canCollectCash?: boolean
+    areaOfficeId?: number
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  }>({})
+
+  // Check for mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 640)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Fetch area offices for filter options
+  useEffect(() => {
+    dispatch(
+      fetchAreaOffices({
+        PageNumber: 1,
+        PageSize: 100,
+      })
+    )
+
+    return () => {
+      dispatch(clearAreaOffices())
+    }
+  }, [dispatch])
+
+  // Filter options
+  const statusOptions = [
+    { value: "", label: "All Status" },
+    { value: "Active", label: "Active" },
+    { value: "Inactive", label: "Inactive" },
+    { value: "LowFloat", label: "Low Float" },
+  ]
+
+  const canCollectCashOptions = [
+    { value: "", label: "All" },
+    { value: "true", label: "Yes" },
+    { value: "false", label: "No" },
+  ]
+
+  const areaOfficeOptions = [
+    { value: "", label: "All Area Offices" },
+    ...areaOffices.map((office) => ({
+      value: office.id,
+      label: office.nameOfNewOAreaffice || `Area Office ${office.id}`,
+    })),
+  ]
+
+  const sortOptions: SortOption[] = [
+    { label: "Name (A-Z)", value: "name", order: "asc" },
+    { label: "Name (Z-A)", value: "name", order: "desc" },
+    { label: "Status (A-Z)", value: "status", order: "asc" },
+    { label: "Status (Z-A)", value: "status", order: "desc" },
+    { label: "Cash At Hand (Low to High)", value: "cashAtHand", order: "asc" },
+    { label: "Cash At Hand (High to Low)", value: "cashAtHand", order: "desc" },
+  ]
+
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string | number | boolean | undefined) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value === "" ? undefined : value,
+    }))
+  }
+
+  // Handle sort changes
+  const handleSortChange = (option: SortOption) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      sortBy: option.value,
+      sortOrder: option.order,
+    }))
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    setAppliedFilters({
+      status: localFilters.status,
+      canCollectCash: localFilters.canCollectCash,
+      areaOfficeId: localFilters.areaOfficeId,
+      sortBy: localFilters.sortBy || undefined,
+      sortOrder: localFilters.sortOrder || undefined,
+    })
+    dispatch(setPagination({ page: 1, pageSize }))
+    setCurrentPage(1)
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setLocalFilters({
+      sortBy: "",
+      sortOrder: "asc",
+    })
+    setAppliedFilters({})
+    dispatch(setPagination({ page: 1, pageSize }))
+    setCurrentPage(1)
+  }
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (appliedFilters.status) count++
+    if (appliedFilters.canCollectCash !== undefined) count++
+    if (appliedFilters.areaOfficeId) count++
+    if (appliedFilters.sortBy) count++
+    return count
+  }
+
+  const handleCancelSearch = () => {
+    setSearchText("")
+    dispatch(setPagination({ page: 1, pageSize }))
+    setCurrentPage(1)
+  }
+
+  // Fetch agents with filters
+  useEffect(() => {
+    const params: AgentsRequestParams = {
+      pageNumber: currentPage,
+      pageSize,
+      ...(searchText && { search: searchText }),
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.canCollectCash !== undefined && { canCollectCash: appliedFilters.canCollectCash }),
+      ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+
+    dispatch(fetchAgents(params))
+
+    return () => {
+      // Don't clear agents on unmount to preserve data
+    }
+  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  const getStatusConfig = (status: string, canCollectCash: boolean) => {
+    const normalized = status.toLowerCase()
+    if (normalized === "active") {
+      return { label: "Active", bg: "bg-green-100", text: "text-green-800" }
+    }
+    if (normalized === "inactive") {
+      return { label: "Inactive", bg: "bg-gray-100", text: "text-gray-800" }
+    }
+    return canCollectCash
+      ? { label: "Active", bg: "bg-green-100", text: "text-green-800" }
+      : { label: "Inactive", bg: "bg-gray-100", text: "text-gray-800" }
+  }
+
+  if (loading && agents.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full"
+      >
+        <div className="rounded-lg border bg-white p-4 sm:p-6">
+          <div className="mb-6">
+            <div className="mb-2 h-7 w-40 rounded bg-gray-200 sm:h-8"></div>
+            <div className="h-12 w-full rounded-lg bg-gray-200 sm:w-96"></div>
+          </div>
+          <div className="space-y-3 sm:space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4">
+                <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
+                  <div className="flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <div className="size-5 rounded-full bg-gray-200"></div>
+                      <div className="h-5 w-40 rounded bg-gray-200 sm:w-48"></div>
+                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-4 w-32 rounded bg-gray-200"></div>
+                      <div className="h-4 w-40 rounded bg-gray-200"></div>
+                    </div>
+                  </div>
+                  <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
+                    <div className="h-5 w-24 rounded bg-gray-200"></div>
+                    <div className="h-3 w-16 rounded bg-gray-200"></div>
+                    <div className="h-9 w-24 rounded bg-gray-200"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <div className="flex-3 relative mt-5 flex flex-col items-start gap-6 2xl:flex-row">
+        {/* Main Content */}
+        <motion.div
+          className={
+            showDesktopFilters
+              ? "w-full rounded-lg border bg-white p-3 sm:p-4 md:p-6 2xl:max-w-[calc(100%-356px)] 2xl:flex-1"
+              : "w-full rounded-lg border bg-white p-3 sm:p-4 md:p-6 2xl:flex-1"
+          }
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-4 sm:mb-6">
+            <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
+              <h3 className="text-lg font-semibold sm:text-xl">Sales Rep Directory</h3>
+
+              <div className="flex items-center gap-3">
+                {/* Mobile Filter Button */}
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                  {getActiveFilterCount() > 0 && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Active filters badge - Desktop only (2xl and above) */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="hidden items-center gap-2 2xl:flex">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+
+                {/* Hide/Show Filters button - Desktop only (2xl and above) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDesktopFilters((prev) => !prev)}
+                  className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
+                >
+                  {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                  {showDesktopFilters ? "Hide filters" : "Show filters"}
+                </button>
+              </div>
+            </div>
+
+            <div className="w-full sm:w-96">
+              <SearchModule
+                placeholder="Search sales reps..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onCancel={handleCancelSearch}
+                className="w-full"
+              />
+            </div>
+            {error && (
+              <div className="mt-2 rounded-lg bg-red-50 p-2 sm:p-3">
+                <p className="text-xs text-red-600 sm:text-sm">Error loading sales reps: {error}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Agents List */}
+          <div className="space-y-3 sm:space-y-4">
+            {agents.map((agent) => {
+              const statusConfig = getStatusConfig(agent.status, agent.canCollectCash)
+              const phone = agent.user.phoneNumber
+              const location = agent.areaOfficeName || agent.serviceCenterName || "N/A"
+
+              return (
+                <div
+                  key={agent.id}
+                  className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-4 transition-shadow duration-200 hover:shadow-sm"
+                >
+                  <div className="flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
+                    <div className="flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <div className="text-gray-600">
+                          <UserIcon />
+                        </div>
+                        <h4 className="text-sm font-semibold text-gray-900 sm:text-base">{agent.user.fullName}</h4>
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
+                        >
+                          {statusConfig.label}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <PhoneIcon />
+                          <p className="text-sm text-gray-600">{phone}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapIcon />
+                          <p className="text-sm text-gray-600">{location}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
+                      <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                        {formatCurrency(agent.cashAtHand)}
+                      </p>
+                      <p className="text-xs text-gray-500 sm:text-sm">Cash at hand</p>
+                      <ButtonModule
+                        variant="outline"
+                        type="button"
+                        size="sm"
+                        onClick={() => router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)}
+                        className="mt-1 bg-white text-xs sm:text-sm"
+                        icon={<VscEye className="size-3 sm:size-4" />}
+                        iconPosition="start"
+                      >
+                        <span className="hidden sm:inline">View Details</span>
+                        <span className="sm:hidden">View</span>
+                      </ButtonModule>
+                    </div>
+                  </div>
+
+                  {/* Status Indicators */}
+                  <div className="mt-3 flex flex-wrap justify-between gap-3 border-t pt-3 text-xs sm:gap-4 sm:text-sm">
+                    <div className="flex items-center gap-2">
+                      <BillsIcon />
+                      <div>
+                        <p className="text-gray-500">Collection limit</p>
+                        <p className="font-medium text-green-600">{formatCurrency(agent.cashCollectionLimit)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RateIcon />
+                      <div>
+                        <p className="text-gray-500">Status</p>
+                        <p className="font-medium text-green-600">{agent.status}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <PerformanceIcon />
+                      <div>
+                        <p className="text-gray-500">Last collection</p>
+                        <p className="font-medium text-green-600">
+                          {agent.lastCashCollectionDate
+                            ? new Date(agent.lastCashCollectionDate).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {agents.length === 0 && !loading && (
+            <div className="py-8 text-center">
+              <p className="text-gray-500">No sales reps found</p>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Mobile Filter Sidebar */}
+        <MobileFilterSidebar
+          isOpen={showMobileFilters}
+          onClose={() => setShowMobileFilters(false)}
+          localFilters={localFilters}
+          handleFilterChange={handleFilterChange}
+          handleSortChange={handleSortChange}
+          applyFilters={applyFilters}
+          resetFilters={resetFilters}
+          getActiveFilterCount={getActiveFilterCount}
+          statusOptions={statusOptions}
+          canCollectCashOptions={canCollectCashOptions}
+          areaOfficeOptions={areaOfficeOptions}
+          sortOptions={sortOptions}
+          isSortExpanded={isSortExpanded}
+          setIsSortExpanded={setIsSortExpanded}
+        />
+      </div>
+    </div>
+  )
+}
+
+export default SalesRepDirectory
