@@ -685,7 +685,6 @@ const AddFeederEnergyCapPage = () => {
                           value={singleFormData.tariffOverridePerKwh}
                           onChange={handleSingleFormChange}
                           placeholder="Enter tariff override"
-                          required
                           error={singleFormErrors.tariffOverridePerKwh}
                           min="0"
                           step="0.01"

@@ -135,6 +135,12 @@ export const allLinks: LinkItem[] = [
       { name: "Overview", href: "/metering/overview", privilegeKey: "assets", requiredActions: ["W"] },
       { name: "All Meters", href: "/metering/all-meters", privilegeKey: "assets", requiredActions: ["R"] },
       {
+        name: "Postpaid Meter Readings",
+        href: "/metering/meter-readings",
+        privilegeKey: "assets",
+        requiredActions: ["R"],
+      },
+      {
         name: "Install New Meter",
         href: "/metering/install-new-meter",
         privilegeKey: "assets",

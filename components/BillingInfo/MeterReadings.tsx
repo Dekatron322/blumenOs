@@ -677,7 +677,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
   const handleViewDetails = (reading: MeterReading) => {
     // Navigate to the meter reading details page
-    router.push(`/billing/meter-readings/details/${reading.id}`)
+    router.push(`/metering/meter-readings/details/${reading.id}`)
     onViewDetails?.(reading)
   }
 
@@ -978,10 +978,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
                 <span className="hidden sm:inline">Export</span>
                 <span className="sm:hidden">Export</span>
               </ButtonModule>
-              <ButtonModule variant="primary" size="sm" className="text-xs sm:text-sm" onClick={onGenerateBills}>
-                <span className="hidden sm:inline">Generate Bills</span>
-                <span className="sm:hidden">Generate</span>
-              </ButtonModule>
+
               {/* Hide/Show Filters button - Desktop only (2xl and above) */}
               <button
                 type="button"

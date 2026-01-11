@@ -832,7 +832,7 @@ const MeterReadings: React.FC = () => {
   }
 
   const handleViewReadingDetails = (reading: MeterReading) => {
-    router.push(`/billing/meter-readings/details/${reading.id}`)
+    router.push(`/metering/meter-readings/details/${reading.id}`)
   }
 
   const handleValidateReading = (readingId: number) => {
@@ -1049,7 +1049,7 @@ const MeterReadings: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => router.push("/billing/meter-readings/add")}
+                onClick={() => router.push("/metering/meter-readings/add")}
                 className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
               >
                 <PlusCircle className="size-4 sm:hidden" />
