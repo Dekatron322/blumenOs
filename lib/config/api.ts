@@ -40,6 +40,8 @@ export const API_ENDPOINTS = {
     PAYMENT_CHANNEL: "/agents/payment-channels",
     VEND: "/agents/prepaid/vend",
     CHECK_PAYMENT: "/payments/reference/{reference}",
+    AGENT_CLEAR_CASH: "/agents/me/clear-cash",
+    APPROVE_CLEARANCE: "/agents/cash-clearances/{clearanceId}/approve",
   },
 
   BILLING_DISPUTE: {
