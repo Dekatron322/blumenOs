@@ -99,12 +99,12 @@ export const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["W"] },
       { name: "Postpaid Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
-      {
-        name: "Postpaid Meter Readings",
-        href: "/billing/meter-readings",
-        privilegeKey: "billing-postpaid",
-        requiredActions: ["R"],
-      },
+      // {
+      //   name: "Postpaid Meter Readings",
+      //   href: "/billing/meter-readings",
+      //   privilegeKey: "billing-postpaid",
+      //   requiredActions: ["R"],
+      // },
       {
         name: "Feeder Energy Caps",
         href: "/billing/feeder-energy-caps",

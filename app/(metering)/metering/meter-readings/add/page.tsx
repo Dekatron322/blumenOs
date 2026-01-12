@@ -705,7 +705,7 @@ const AddMeterReadingPage = () => {
                     <ChevronLeft className="size-4" />
                   </button>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Add Meter Reading</h1>
+                    <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Add Postpaid Meter Reading</h1>
                     <p className="text-sm text-gray-600">Record new meter readings for customers</p>
                   </div>
                 </div>

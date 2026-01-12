@@ -978,7 +978,7 @@ const AllCashiers: React.FC = () => {
       lastCashCollectionDateTo: appliedFilters.lastCashCollectionDateTo,
       sortBy: appliedFilters.sortBy,
       sortOrder: appliedFilters.sortOrder,
-      agentType: "Cashier",
+      AgentType: "Cashier",
     }
     dispatch(fetchAgents(params))
   }
@@ -1025,7 +1025,7 @@ const AllCashiers: React.FC = () => {
       maxCashAtHand: appliedFilters.maxCashAtHand,
       lastCashCollectionDateFrom: appliedFilters.lastCashCollectionDateFrom,
       lastCashCollectionDateTo: appliedFilters.lastCashCollectionDateTo,
-      agentType: "SalesRep",
+      AgentType: "Cashier",
     }
 
     dispatch(fetchAgents(params))
