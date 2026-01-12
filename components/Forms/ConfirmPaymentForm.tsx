@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { confirmPayment } from "lib/redux/agentSlice"
