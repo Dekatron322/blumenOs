@@ -195,7 +195,7 @@ export interface AddAgentRequest {
   agentType: string
   enforceJurisdiction: boolean
   employeeId: string
-  position: string
+  position?: string
   emergencyContact?: string
   address?: string
   supervisorId?: number
@@ -241,7 +241,7 @@ export interface AgentsRequestParams {
   pageSize: number
   search?: string
   status?: string
-  agentType?: string
+  AgentType?: string
   canCollectCash?: boolean
   minCashAtHand?: number
   maxCashAtHand?: number
@@ -1721,6 +1721,7 @@ export const fetchAgents = createAsyncThunk(
         serviceCenterId,
         sortBy,
         sortOrder,
+        AgentType,
       } = params
 
       const response = await api.get<AgentsResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.GET), {
@@ -1738,6 +1739,7 @@ export const fetchAgents = createAsyncThunk(
           ...(serviceCenterId !== undefined && { ServiceCenterId: serviceCenterId }),
           ...(sortBy && { SortBy: sortBy }),
           ...(sortOrder && { SortOrder: sortOrder }),
+          ...(AgentType && { AgentType }),
         },
       })
 

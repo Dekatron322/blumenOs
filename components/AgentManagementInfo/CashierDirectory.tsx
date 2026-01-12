@@ -384,6 +384,7 @@ const CashierDirectory: React.FC = () => {
       ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
       ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
       ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+      AgentType: "Cashier",
     }
 
     dispatch(fetchAgents(params))
