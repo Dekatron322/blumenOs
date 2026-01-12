@@ -725,14 +725,14 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                           <div className="flex flex-col">
                             <span className="font-medium">{clearance.collectionOfficer?.fullName || "N/A"}</span>
                             <span className="text-xs text-gray-500">
-                              {clearance.collectionOfficer?.employeeId || ""}
+                              {clearance.collectionOfficer?.employeeId ?? ""}
                             </span>
                           </div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <div className="flex flex-col">
                             <span className="font-medium">{clearance.approvedBy?.fullName || "N/A"}</span>
-                            <span className="text-xs text-gray-500">{clearance.approvedBy?.employeeId || ""}</span>
+                            <span className="text-xs text-gray-500">{clearance.approvedBy?.employeeId ?? ""}</span>
                           </div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">

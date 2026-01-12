@@ -91,6 +91,13 @@ export enum CashClearanceStatus {
 
 // Interface for Cash Clearance
 export interface CashClearance {
+  approvedBy: {
+    id: number
+    fullName: string
+    email: string
+    employeeId?: string
+    phoneNumber?: string
+  }
   id: number
   createdAt: string
   agentId: number
@@ -130,7 +137,6 @@ export interface CashClearance {
     lastUpdated: string
   }
   collectionOfficer: CollectionOfficer | null
-  approvedBy: CollectionOfficer | null
   requestedBy: CollectionOfficer
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { CheckCircle, Copy, User, Key } from "lucide-react"
+import { CheckCircle, Copy, Key, User } from "lucide-react"
 
 interface AgentCreatedSuccessModalProps {
   isOpen: boolean
