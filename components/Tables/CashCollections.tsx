@@ -225,7 +225,7 @@ const CashCollectionsTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
   const openClearCashPanel = (clearance: CashClearance) => {
     setSelectedClearance(clearance)
     setClearCashForm({
-      collectionOfficerUserId: clearance.collectionOfficer.id,
+      collectionOfficerUserId: clearance.collectionOfficer?.id || 0,
       amount: clearance.amountCleared,
       notes: `Clearance for transaction CL-${clearance.id.toString().padStart(5, "0")}`,
     })
@@ -385,8 +385,8 @@ const CashCollectionsTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
       formatCurrency(clearance.cashAtHandBefore).toLowerCase().includes(searchLower) ||
       formatCurrency(clearance.cashAtHandAfter).toLowerCase().includes(searchLower) ||
       clearance.notes.toLowerCase().includes(searchLower) ||
-      clearance.collectionOfficer.fullName.toLowerCase().includes(searchLower) ||
-      clearance.clearedBy.fullName.toLowerCase().includes(searchLower) ||
+      clearance.collectionOfficer?.fullName?.toLowerCase().includes(searchLower) ||
+      clearance.approvedBy?.fullName?.toLowerCase().includes(searchLower) ||
       formatDate(clearance.clearedAt).toLowerCase().includes(searchLower)
     )
   })
@@ -507,10 +507,10 @@ const CashCollectionsTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
                     </th>
                     <th
                       className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                      onClick={() => toggleSort("clearedBy")}
+                      onClick={() => toggleSort("approvedBy")}
                     >
                       <div className="flex items-center gap-2">
-                        Cleared By <RxCaretSort />
+                        Approved By <RxCaretSort />
                       </div>
                     </th>
                     <th
@@ -553,14 +553,16 @@ const CashCollectionsTable: React.FC<{ agentId?: number }> = ({ agentId }) => {
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <div className="flex flex-col">
-                            <span className="font-medium">{clearance.collectionOfficer.fullName}</span>
-                            <span className="text-xs text-gray-500">{clearance.collectionOfficer.employeeId}</span>
+                            <span className="font-medium">{clearance.collectionOfficer?.fullName || "N/A"}</span>
+                            <span className="text-xs text-gray-500">
+                              {clearance.collectionOfficer?.employeeId || "N/A"}
+                            </span>
                           </div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <div className="flex flex-col">
-                            <span className="font-medium">{clearance.clearedBy.fullName}</span>
-                            <span className="text-xs text-gray-500">{clearance.clearedBy.employeeId}</span>
+                            <span className="font-medium">{clearance.approvedBy?.fullName || "N/A"}</span>
+                            <span className="text-xs text-gray-500">{clearance.approvedBy?.employeeId || "N/A"}</span>
                           </div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">

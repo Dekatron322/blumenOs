@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
-import { DashboardIcon, PaymentIcon } from "./Icons"
+import { DashboardIcon, PaymentIcon, ServiceIcon, TokenIcon } from "./Icons"
 import {
   CashClearanceIcon,
   CollectCash,
@@ -35,6 +35,11 @@ const allLinks: NavLink[] = [
     icon: VendingIconOutline,
   },
   {
+    name: "Mop Cash",
+    href: "/sales-rep/mop-cash",
+    icon: TokenIcon,
+  },
+  {
     name: "Raise Ticket",
     href: "/sales-rep/raise-ticket",
     icon: RaiseTicketIcon,
@@ -45,7 +50,17 @@ const allLinks: NavLink[] = [
     icon: MakeChangeRequestIcon,
   },
   {
-    name: "View Cash Clearance History",
+    name: "Assigned Officers",
+    href: "/sales-rep/assigned-officers",
+    icon: ServiceIcon,
+  },
+  {
+    name: "Mopping History",
+    href: "/sales-rep/mopping-history",
+    icon: ServiceIcon,
+  },
+  {
+    name: "View Cash Clearance",
     href: "/sales-rep/view-cash-clearance-history",
     icon: CashClearanceIcon,
   },
@@ -103,6 +118,15 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
     const filteredLinks = allLinks.filter((link) => {
       // Hide Collect payment when agent has reached collection limit
       if (link.href === "/sales-rep/collect-payment" && agent && agent.cashAtHand >= agent.cashCollectionLimit) {
+        return false
+      }
+
+      // Hide Assigned Officers for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/assigned-officers" &&
+        agent &&
+        (agent.agentType === "SalesRep" || agent.agentType === "Cashier")
+      ) {
         return false
       }
 

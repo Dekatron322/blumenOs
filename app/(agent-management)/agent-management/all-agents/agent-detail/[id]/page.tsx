@@ -446,7 +446,7 @@ const AgentDetailsPage = () => {
           formatDate(clearance.clearedAt),
           formatCurrency(clearance.amountCleared),
           clearance.collectionOfficer?.fullName || "N/A",
-          clearance.clearedBy?.fullName || "N/A",
+          clearance.approvedBy?.fullName || "N/A",
         ])
 
         autoTable(doc, {
@@ -1330,7 +1330,7 @@ const AgentDetailsPage = () => {
                                         {clearance.collectionOfficer?.fullName || "N/A"}
                                       </td>
                                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                                        {clearance.clearedBy?.fullName || "N/A"}
+                                        {clearance.approvedBy?.fullName || "N/A"}
                                       </td>
                                       <td className="px-4 py-3 text-sm text-gray-900">{clearance.notes || "—"}</td>
                                     </tr>
