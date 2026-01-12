@@ -3,8 +3,7 @@ import clsx from "clsx"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { useSelector } from "react-redux"
-import { RootState } from "lib/redux/store"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { DashboardIcon, PaymentIcon, ServiceIcon, TokenIcon } from "./Icons"
 import {
   CashClearanceIcon,
@@ -14,6 +13,7 @@ import {
   VendingIcon,
   VendingIconOutline,
 } from "components/Icons/Icons"
+import { fetchAgentSummary } from "lib/redux/agentSlice"
 
 interface NavLink {
   name: string
@@ -65,7 +65,12 @@ const allLinks: NavLink[] = [
     icon: CashClearanceIcon,
   },
   {
-    name: "View Payment History",
+    name: "View Pending Collections",
+    href: "/sales-rep/view-pending-collections",
+    icon: PaymentIcon,
+  },
+  {
+    name: "View Collection History",
     href: "/sales-rep/view-payment-history",
     icon: PaymentIcon,
   },
@@ -79,7 +84,9 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   const pathname = usePathname()
   const [permissions, setPermissions] = useState<string[]>([])
   const [links, setLinks] = useState<NavLink[]>(allLinks)
-  const { agent } = useSelector((state: RootState) => state.auth)
+  const dispatch = useAppDispatch()
+  const { agent } = useAppSelector((state) => state.auth)
+  const { agentSummary } = useAppSelector((state) => state.agents)
 
   useEffect(() => {
     // Get auth data from localStorage
@@ -139,11 +146,25 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
     setLinks(filteredLinks)
   }, [permissions, agent])
 
+  // Fetch agent summary for notification count
+  useEffect(() => {
+    // Only fetch summary if we haven't loaded it yet
+    if (!agentSummary) {
+      dispatch(fetchAgentSummary())
+    }
+  }, [dispatch, agentSummary])
+
   return (
     <div className="flex w-full flex-col space-y-1 overflow-y-auto p-2">
       {links.map((link) => {
         const LinkIcon = link.icon
         const isActive = pathname.startsWith(link.href)
+
+        // Calculate notification count for View Pending Collections
+        const notificationCount =
+          link.name === "View Pending Collections"
+            ? agentSummary?.periods?.find((p) => p.range === "allTime")?.pendingCount || 0
+            : 0
 
         return (
           <div key={link.name} className="group">
@@ -157,13 +178,20 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
                 }
               )}
             >
-              <div
-                className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
-                  "bg-white text-[#004B23] shadow-lg": isActive,
-                  "bg-gray-100 text-[#004B23] group-hover:bg-white group-hover:text-[#004B23]": !isActive,
-                })}
-              >
-                <LinkIcon isActive={isActive} />
+              <div className="relative">
+                <div
+                  className={clsx("flex size-8 items-center justify-center rounded-lg transition-all duration-300", {
+                    "bg-white text-[#004B23] shadow-lg": isActive,
+                    "bg-gray-100 text-[#004B23] group-hover:bg-white group-hover:text-[#004B23]": !isActive,
+                  })}
+                >
+                  <LinkIcon isActive={isActive} />
+                </div>
+                {notificationCount > 0 && (
+                  <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </div>
+                )}
               </div>
 
               <p

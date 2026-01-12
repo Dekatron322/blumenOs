@@ -551,6 +551,7 @@ export interface CustomersRequestParams {
   isSuspended?: boolean
   distributionSubstationId?: number
   serviceCenterId?: number
+  areaOfficeId?: number
   isPPM?: boolean
 }
 
@@ -961,6 +962,7 @@ interface CustomerState {
     isSuspended: boolean | null
     distributionSubstationId: number | null
     serviceCenterId: number | null
+    areaOfficeId: number | null
     isPPM: boolean | null
   }
 
@@ -1074,6 +1076,7 @@ const initialState: CustomerState = {
     isSuspended: null,
     distributionSubstationId: null,
     serviceCenterId: null,
+    areaOfficeId: null,
     isPPM: null,
   },
   paymentDisputesFilters: {
@@ -1102,8 +1105,17 @@ export const fetchCustomers = createAsyncThunk(
   "customers/fetchCustomers",
   async (params: CustomersRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, search, status, isSuspended, distributionSubstationId, serviceCenterId, isPPM } =
-        params
+      const {
+        pageNumber,
+        pageSize,
+        search,
+        status,
+        isSuspended,
+        distributionSubstationId,
+        serviceCenterId,
+        areaOfficeId,
+        isPPM,
+      } = params
 
       const response = await api.get<CustomersResponse>(buildApiUrl(API_ENDPOINTS.CUSTOMER.GET), {
         params: {
@@ -1114,6 +1126,7 @@ export const fetchCustomers = createAsyncThunk(
           ...(isSuspended !== undefined && { IsSuspended: isSuspended }),
           ...(distributionSubstationId && { DistributionSubstationId: distributionSubstationId }),
           ...(serviceCenterId && { ServiceCenterId: serviceCenterId }),
+          ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
           ...(isPPM !== undefined && { IsPPM: isPPM }),
         },
       })
@@ -1722,6 +1735,7 @@ const customerSlice = createSlice({
         isSuspended: null,
         distributionSubstationId: null,
         serviceCenterId: null,
+        areaOfficeId: null,
         isPPM: null,
       }
       state.paymentDisputesFilters = {
@@ -1779,6 +1793,7 @@ const customerSlice = createSlice({
         isSuspended: null,
         distributionSubstationId: null,
         serviceCenterId: null,
+        areaOfficeId: null,
         isPPM: null,
       }
     },

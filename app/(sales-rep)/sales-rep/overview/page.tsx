@@ -6,12 +6,23 @@ import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { RootState } from "lib/redux/store"
 import { motion } from "framer-motion"
-import { CollectCash, MetersProgrammedIcon, TamperIcon, VendingIcon, VendingIconOutline } from "components/Icons/Icons"
+import DisputesChangesCard from "components/Cards/DisputesChangesCard"
+import {
+  AddAgentIcon,
+  CollectCash,
+  MetersProgrammedIcon,
+  PerformanceIcon,
+  TamperIcon,
+  TargetIcon,
+  VendingIcon,
+  VendingIconOutline,
+} from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import { formatCurrency } from "utils/formatCurrency"
 import { useAppDispatch } from "lib/hooks/useRedux"
+
 import {
   AgentDailyPerformance,
   fetchAgentInfo,
@@ -19,10 +30,9 @@ import {
   fetchAgentSummary,
   TimeRange,
 } from "lib/redux/agentSlice"
-
 // Chart Component for Agent Performance
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 // Date utilities
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -763,7 +773,11 @@ export default function AgentManagementDashboard() {
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
                 <h4 className="text-xl font-semibold sm:text-2xl">Welcome {agentLastName}</h4>
-                <p className="text-sm text-gray-600 sm:text-base">Overview of your monthly collections</p>
+                <p className="text-sm text-gray-600 sm:text-base">
+                  {user?.position === "Supervisor" || user?.position === "FinanceManager"
+                    ? `Welcome to  ${agentInfo?.areaOfficeName || "Loading..."}`
+                    : "Overview of your monthly collections"}
+                </p>
               </div>
 
               <motion.div
@@ -986,7 +1000,7 @@ export default function AgentManagementDashboard() {
                       </div>
                     </div>
                     <div className="w-full">
-                      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         {/* Collections Summary Card */}
                         <motion.div
                           className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
@@ -1009,7 +1023,9 @@ export default function AgentManagementDashboard() {
                             <div className="flex w-full justify-between">
                               <p className="text-sm text-gray-600 sm:text-base">Amount Collected:</p>
                               <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatSummaryCurrency(summary.collectedAmount)}
+                                <span className="text-secondary text-lg font-bold sm:text-xl">
+                                  ₦{summary.collectedAmount.toLocaleString()}.<span className="text-sm">00</span>
+                                </span>
                               </p>
                             </div>
                             <div className="flex w-full justify-between">
@@ -1042,7 +1058,9 @@ export default function AgentManagementDashboard() {
                             <div className="flex w-full justify-between">
                               <p className="text-sm text-gray-600 sm:text-base">Pending Amount:</p>
                               <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatSummaryCurrency(summary.pendingAmount)}
+                                <span className="text-secondary text-lg font-bold sm:text-xl">
+                                  ₦{summary.pendingAmount.toLocaleString()}.<span className="text-sm">00</span>
+                                </span>
                               </p>
                             </div>
                             <div className="flex w-full justify-between">
@@ -1075,7 +1093,9 @@ export default function AgentManagementDashboard() {
                             <div className="flex w-full justify-between">
                               <p className="text-sm text-gray-600 sm:text-base">Cash Cleared Amount:</p>
                               <p className="text-secondary text-lg font-bold sm:text-xl">
-                                {formatSummaryCurrency(summary.cashClearedAmount)}
+                                <span className="text-secondary text-lg font-bold sm:text-xl">
+                                  ₦{summary.cashClearedAmount.toLocaleString()}.<span className="text-sm">00</span>
+                                </span>
                               </p>
                             </div>
                             <div className="flex w-full justify-between">
@@ -1086,38 +1106,105 @@ export default function AgentManagementDashboard() {
                             </div>
                           </div>
                         </motion.div>
-
-                        {/* Billing & Change Requests Card */}
-                        <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                          whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                        >
-                          <div className="flex items-center gap-2 border-b pb-4">
-                            <div className="text-red-600">
-                              <TamperIcon />
-                            </div>
-                            <span className="text-sm font-medium sm:text-base">Disputes & Changes</span>
-                          </div>
-                          <div className="flex flex-col gap-3 pt-4">
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Billing Disputes:</p>
-                              <p className="text-secondary text-right text-sm font-medium sm:text-base">
-                                {`${formatNumber(summary.billingDisputesRaised)} raised / ${formatNumber(
-                                  summary.billingDisputesResolved
-                                )} resolved`}
-                              </p>
-                            </div>
-                            <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Change Requests:</p>
-                              <p className="text-secondary text-right text-sm font-medium sm:text-base">
-                                {`${formatNumber(summary.changeRequestsRaised)} raised / ${formatNumber(
-                                  summary.changeRequestsResolved
-                                )} resolved`}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
                       </div>
+                      {/* Quick Actions - Agents Card */}
+                      <div className="small-card mt-6 flex w-full flex-col rounded-md bg-white p-4 shadow-sm transition duration-500 md:border">
+                        <div className="flex items-center gap-2 border-b pb-4">
+                          <span className="text-sm font-medium sm:text-base">Quick Actions</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 pt-4">
+                          <button
+                            onClick={() => router.push("vend")}
+                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-3 text-left transition-all duration-300 hover:border-blue-300 hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-blue-100 p-2">
+                                <VendingIcon />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">Vend</p>
+                                <p className="text-xs text-gray-600">Process vending transactions</p>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => router.push("clear-cash")}
+                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-white p-3 text-left transition-all duration-300 hover:border-green-300 hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-green-100 p-2">
+                                <VendingIconOutline />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">Clear Cash</p>
+                                <p className="text-xs text-gray-600">Clear cash collections</p>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => router.push("mop-cash")}
+                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-3 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-amber-100 p-2">
+                                <CollectCash />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">Mop Cash</p>
+                                <p className="text-xs text-gray-600">Mop up cash collections</p>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => router.push("collect-payment")}
+                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-white p-3 text-left transition-all duration-300 hover:border-purple-300 hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-purple-100 p-2">
+                                <CollectCash />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">Collect Payment</p>
+                                <p className="text-xs text-gray-600">Collect customer payments</p>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => router.push("view-cash-clearance-history")}
+                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-3 text-left transition-all duration-300 hover:border-gray-300 hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-gray-100 p-2">
+                                <VendingIcon />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">View Cash Clearance</p>
+                                <p className="text-xs text-gray-600">Check clearance status</p>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => router.push("assigned-officers")}
+                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-indigo-50 to-white p-3 text-left transition-all duration-300 hover:border-indigo-300 hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-indigo-100 p-2">
+                                <TargetIcon />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">Assigned Officers</p>
+                                <p className="text-xs text-gray-600">View assigned officers</p>
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                      <DisputesChangesCard
+                        billingDisputesRaised={summary.billingDisputesRaised}
+                        billingDisputesResolved={summary.billingDisputesResolved}
+                        changeRequestsRaised={summary.changeRequestsRaised}
+                        changeRequestsResolved={summary.changeRequestsResolved}
+                      />
                     </div>
                   </motion.div>
 

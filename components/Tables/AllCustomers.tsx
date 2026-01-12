@@ -597,6 +597,7 @@ const AllCustomers = () => {
   const [localFilters, setLocalFilters] = useState({
     dss: "",
     serviceCenter: "",
+    areaOffice: "",
     status: "",
     customerType: "",
     tariff: "",
@@ -642,6 +643,7 @@ const AllCustomers = () => {
           distributionSubstationId:
             filters.distributionSubstationId !== null ? filters.distributionSubstationId : undefined,
           serviceCenterId: filters.serviceCenterId !== null ? filters.serviceCenterId : undefined,
+          areaOfficeId: filters.areaOfficeId !== null ? filters.areaOfficeId : undefined,
           isPPM: filters.isPPM !== null ? filters.isPPM : undefined,
         })
       )
@@ -654,21 +656,6 @@ const AllCustomers = () => {
   useEffect(() => {
     setSearchInput(filters.search)
   }, [filters.search])
-
-  // Debounce search input
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      const trimmed = searchInput.trim()
-      const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
-
-      if (shouldUpdate && trimmed !== filters.search) {
-        dispatch(setFilters({ search: trimmed }))
-        dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
-      }
-    }, 500)
-
-    return () => clearTimeout(handler)
-  }, [searchInput, filters.search, dispatch, pagination.pageSize])
 
   // Fetch service centers and distribution substations for filters
   useEffect(() => {
@@ -745,6 +732,24 @@ const AllCustomers = () => {
     setSearchInput(value)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate && trimmed !== filters.search) {
+      dispatch(
+        setFilters({
+          search: trimmed,
+          status: localFilters.status,
+          serviceCenterId: localFilters.serviceCenter ? Number(localFilters.serviceCenter) : undefined,
+          distributionSubstationId: localFilters.dss ? Number(localFilters.dss) : undefined,
+          areaOfficeId: localFilters.areaOffice ? Number(localFilters.areaOffice) : undefined,
+        })
+      )
+      dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    }
+  }
+
   const handleCancelSearch = () => {
     setSearchInput("")
     dispatch(setFilters({ search: "" }))
@@ -767,6 +772,7 @@ const AllCustomers = () => {
         status: localFilters.status || "",
         serviceCenterId: localFilters.serviceCenter ? Number(localFilters.serviceCenter) : undefined,
         distributionSubstationId: localFilters.dss ? Number(localFilters.dss) : undefined,
+        areaOfficeId: localFilters.areaOffice ? Number(localFilters.areaOffice) : undefined,
         isPPM: isPPM,
       })
     )
@@ -778,6 +784,7 @@ const AllCustomers = () => {
     setLocalFilters({
       dss: "",
       serviceCenter: "",
+      areaOffice: "",
       status: "",
       customerType: "",
       tariff: "",
@@ -792,6 +799,7 @@ const AllCustomers = () => {
         status: undefined,
         serviceCenterId: undefined,
         distributionSubstationId: undefined,
+        areaOfficeId: undefined,
         isPPM: undefined,
       })
     )
@@ -1188,6 +1196,7 @@ const AllCustomers = () => {
                     value={searchInput}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search by name or account number"
                     className="w-full max-w-full sm:max-w-[320px]"
                   />
@@ -1221,6 +1230,7 @@ const AllCustomers = () => {
                   value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by name or account number"
                   className="w-full"
                 />
