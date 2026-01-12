@@ -790,22 +790,32 @@ export default function AgentManagementDashboard() {
                 >
                   <span className="hidden sm:inline">Clear Cash</span>
                 </ButtonModule>
-                {(!agentInfo || agentInfo.cashAtHand < agentInfo.cashCollectionLimit) && (
-                  <ButtonModule
-                    variant="blue"
-                    size="md"
-                    className="w-full sm:w-auto"
-                    icon={<CollectCash />}
-                    onClick={() => router.push("/sales-rep/collect-payment")}
-                  >
-                    <span className="hidden sm:inline">Collect Payment</span>
-                  </ButtonModule>
-                )}
+
+                <ButtonModule
+                  variant="black"
+                  size="md"
+                  icon={<CollectCash />}
+                  className="w-full sm:w-auto"
+                  onClick={() => router.push("/sales-rep/clear-cash")}
+                >
+                  <span className="hidden sm:inline">Mopup Cash</span>
+                </ButtonModule>
+                {/* {(!agentInfo || agentInfo.cashAtHand < agentInfo.cashCollectionLimit) && ( */}
+                <ButtonModule
+                  variant="blue"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  icon={<CollectCash />}
+                  onClick={() => router.push("/sales-rep/collect-payment")}
+                >
+                  <span className="hidden sm:inline">Collect Payment</span>
+                </ButtonModule>
+                {/* )} */}
               </motion.div>
             </div>
 
             {/* Sales Rep Details - Cash at hand vs Collection limit */}
-            {agentInfo && (
+            {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
               <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="mb-3 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                   <div>
@@ -1207,7 +1217,7 @@ export default function AgentManagementDashboard() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="mt-6"
                   >
-                    <AllPaymentsTable agentId={agentInfo?.agentId} />
+                    <AllPaymentsTable />
                   </motion.div>
                 </>
               )}

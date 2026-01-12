@@ -25,6 +25,7 @@ interface AgentSummary {
   canCollectCash: boolean
   cashCollectionLimit: number
   cashAtHand: number
+  agentType: string
 }
 
 interface User {

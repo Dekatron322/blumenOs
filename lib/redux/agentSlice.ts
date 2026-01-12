@@ -81,17 +81,57 @@ export interface ClearanceSalesRep {
   accountId: string
 }
 
+// Cash Clearance Status Enum
+export enum CashClearanceStatus {
+  Pending = 0,
+  Approved = 1,
+  ApprovedWithCondition = 2,
+  Declined = 3,
+}
+
 // Interface for Cash Clearance
 export interface CashClearance {
   id: number
+  createdAt: string
+  agentId: number
+  requestedByUserId: number
+  collectionOfficerUserId: number | null
+  approvedByUserId: number | null
   amountCleared: number
+  requestedAmountAtHand: number
   cashAtHandBefore: number
   cashAtHandAfter: number
   clearedAt: string
+  approvedAtUtc: string | null
+  status: CashClearanceStatus
+  issueFlag: number
+  hasAmountDiscrepancy: boolean
   notes: string
-  collectionOfficer: CollectionOfficer
-  clearedBy: CollectionOfficer
-  salesRep?: ClearanceSalesRep
+  approvalNotes: string | null
+  salesRep: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+    isActive: boolean
+    mustChangePassword: boolean
+    employeeId: string
+    position: string
+    employmentType: string
+    employmentStartAt: string | null
+    employmentEndAt: string | null
+    departmentId: number
+    departmentName: string | null
+    areaOfficeId: number
+    areaOfficeName: string | null
+    lastLoginAt: string
+    createdAt: string
+    lastUpdated: string
+  }
+  collectionOfficer: CollectionOfficer | null
+  approvedBy: CollectionOfficer | null
+  requestedBy: CollectionOfficer
 }
 
 // Interface for Clear Cash Response
@@ -118,6 +158,130 @@ export interface ClearCashRequest {
   collectionOfficerUserId: number
   amount: number
   notes: string
+}
+
+// Interface for Agent Clear Cash Request Body
+export interface AgentClearCashRequest {
+  amount: number
+  notes: string
+}
+
+// Interface for Approve Clearance Request Body
+export interface ApproveClearanceRequest {
+  outcome: number
+  clearedAmount: number
+  notes: string
+}
+
+// Interface for Approve Clearance Response Data
+export interface ApproveClearanceResponseData {
+  id: number
+  createdAt: string
+  agentId: number
+  requestedByUserId: number
+  collectionOfficerUserId: number
+  approvedByUserId: number
+  amountCleared: number
+  requestedAmountAtHand: number
+  cashAtHandBefore: number
+  cashAtHandAfter: number
+  clearedAt: string
+  approvedAtUtc: string
+  status: number
+  issueFlag: number
+  notes: string
+  approvalNotes: string
+  salesRep: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+    isActive: boolean
+    mustChangePassword: boolean
+    employeeId: string
+    position: string
+    employmentType: string
+    employmentStartAt: string
+    employmentEndAt: string
+    departmentId: number
+    departmentName: string
+    areaOfficeId: number
+    areaOfficeName: string
+    lastLoginAt: string
+    createdAt: string
+    lastUpdated: string
+  }
+  collectionOfficer: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+    isActive: boolean
+    mustChangePassword: boolean
+    employeeId: string
+    position: string
+    employmentType: string
+    employmentStartAt: string
+    employmentEndAt: string
+    departmentId: number
+    departmentName: string
+    areaOfficeId: number
+    areaOfficeName: string
+    lastLoginAt: string
+    createdAt: string
+    lastUpdated: string
+  }
+  approvedBy: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+    isActive: boolean
+    mustChangePassword: boolean
+    employeeId: string
+    position: string
+    employmentType: string
+    employmentStartAt: string
+    employmentEndAt: string
+    departmentId: number
+    departmentName: string
+    areaOfficeId: number
+    areaOfficeName: string
+    lastLoginAt: string
+    createdAt: string
+    lastUpdated: string
+  }
+  requestedBy: {
+    id: number
+    fullName: string
+    email: string
+    phoneNumber: string
+    accountId: string
+    isActive: boolean
+    mustChangePassword: boolean
+    employeeId: string
+    position: string
+    employmentType: string
+    employmentStartAt: string
+    employmentEndAt: string
+    departmentId: number
+    departmentName: string
+    areaOfficeId: number
+    areaOfficeName: string
+    lastLoginAt: string
+    createdAt: string
+    lastUpdated: string
+  }
+}
+
+// Interface for Approve Clearance Response
+export interface ApproveClearanceResponse {
+  isSuccess: boolean
+  message: string
+  data: ApproveClearanceResponseData
 }
 
 // Interface for Agent (Full Details)
@@ -154,6 +318,7 @@ export interface AgentInfo {
   lastCashCollectionDate: string
   areaOfficeName: string
   serviceCenterName: string
+  agentType: string
 }
 
 export interface AgentInfoResponse {
@@ -1248,6 +1413,18 @@ interface AgentState {
   clearCashSuccess: boolean
   clearCashResponse: ClearCashResponseData | null
 
+  // Agent Clear Cash state
+  agentClearCashLoading: boolean
+  agentClearCashError: string | null
+  agentClearCashSuccess: boolean
+  agentClearCashResponse: ClearCashResponseData | null
+
+  // Approve Clearance state
+  approveClearanceLoading: boolean
+  approveClearanceError: string | null
+  approveClearanceSuccess: boolean
+  approveClearanceResponse: ApproveClearanceResponseData | null
+
   // Change Request state
   changeRequestLoading: boolean
   changeRequestError: string | null
@@ -1413,6 +1590,14 @@ const initialState: AgentState = {
   clearCashError: null,
   clearCashSuccess: false,
   clearCashResponse: null,
+  agentClearCashLoading: false,
+  agentClearCashError: null,
+  agentClearCashSuccess: false,
+  agentClearCashResponse: null,
+  approveClearanceLoading: false,
+  approveClearanceError: null,
+  approveClearanceSuccess: false,
+  approveClearanceResponse: null,
   changeRequestLoading: false,
   changeRequestError: null,
   changeRequestSuccess: false,
@@ -1875,6 +2060,70 @@ export const clearCash = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to clear cash")
       }
       return rejectWithValue(error.message || "Network error during cash clearance")
+    }
+  }
+)
+
+// Agent Clear Cash Async Thunk
+export const agentClearCash = createAsyncThunk(
+  "agents/agentClearCash",
+  async (clearCashData: AgentClearCashRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ClearCashResponse>(
+        buildApiUrl(API_ENDPOINTS.AGENTS.AGENT_CLEAR_CASH),
+        clearCashData
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to clear cash")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Clear cash response data not found")
+      }
+
+      return {
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to clear cash")
+      }
+      return rejectWithValue(error.message || "Network error during cash clearance")
+    }
+  }
+)
+
+// Approve Clearance Async Thunk
+export const approveClearance = createAsyncThunk(
+  "agents/approveClearance",
+  async (
+    { clearanceId, requestBody }: { clearanceId: number; requestBody: ApproveClearanceRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const endpoint = API_ENDPOINTS.AGENTS.APPROVE_CLEARANCE.replace("{clearanceId}", clearanceId.toString())
+      const response = await api.post<ApproveClearanceResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to approve clearance")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Approve clearance response data not found")
+      }
+
+      return {
+        clearanceId,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to approve clearance")
+      }
+      return rejectWithValue(error.message || "Network error during clearance approval")
     }
   }
 )
@@ -3165,13 +3414,46 @@ const agentSlice = createSlice({
           // Add the new clearance to the clearances list
           const newClearance: CashClearance = {
             id: action.payload.data.id,
+            createdAt: action.payload.data.createdAt,
+            agentId: action.payload.agentId,
+            requestedByUserId: action.payload.data.collectionOfficer.id,
+            collectionOfficerUserId: action.payload.data.collectionOfficer.id,
+            approvedByUserId: action.payload.data.clearedBy.id,
             amountCleared: action.payload.data.amountCleared,
+            requestedAmountAtHand: action.payload.data.cashAtHandBefore,
             cashAtHandBefore: action.payload.data.cashAtHandBefore,
             cashAtHandAfter: action.payload.data.cashAtHandAfter,
             clearedAt: action.payload.data.clearedAt,
+            approvedAtUtc: action.payload.data.clearedAt,
+            status: CashClearanceStatus.Approved,
+            issueFlag: 0,
             notes: action.payload.data.notes,
             collectionOfficer: action.payload.data.collectionOfficer,
-            clearedBy: action.payload.data.clearedBy,
+            approvedBy: action.payload.data.clearedBy,
+            requestedBy: action.payload.data.collectionOfficer,
+            hasAmountDiscrepancy: false,
+            approvalNotes: null,
+            salesRep: {
+              id: 0,
+              fullName: "",
+              email: "",
+              phoneNumber: "",
+              accountId: "",
+              isActive: false,
+              mustChangePassword: false,
+              employeeId: "",
+              position: "",
+              employmentType: "",
+              employmentStartAt: null,
+              employmentEndAt: null,
+              departmentId: 0,
+              departmentName: null,
+              areaOfficeId: 0,
+              areaOfficeName: null,
+              lastLoginAt: "",
+              createdAt: "",
+              lastUpdated: "",
+            },
           }
 
           // Add to beginning of clearances list and update pagination
@@ -3212,6 +3494,65 @@ const agentSlice = createSlice({
         state.clearCashError = (action.payload as string) || "Failed to clear cash"
         state.clearCashSuccess = false
         state.clearCashResponse = null
+      })
+
+      // Agent clear cash cases
+      .addCase(agentClearCash.pending, (state) => {
+        state.agentClearCashLoading = true
+        state.agentClearCashError = null
+        state.agentClearCashSuccess = false
+        state.agentClearCashResponse = null
+      })
+      .addCase(
+        agentClearCash.fulfilled,
+        (state, action: PayloadAction<{ data: ClearCashResponseData; message: string }>) => {
+          state.agentClearCashLoading = false
+          state.agentClearCashSuccess = true
+          state.agentClearCashError = null
+          state.agentClearCashResponse = action.payload.data
+        }
+      )
+      .addCase(agentClearCash.rejected, (state, action) => {
+        state.agentClearCashLoading = false
+        state.agentClearCashError = (action.payload as string) || "Failed to clear cash"
+        state.agentClearCashSuccess = false
+        state.agentClearCashResponse = null
+      })
+
+      // Approve clearance cases
+      .addCase(approveClearance.pending, (state) => {
+        state.approveClearanceLoading = true
+        state.approveClearanceError = null
+        state.approveClearanceSuccess = false
+        state.approveClearanceResponse = null
+      })
+      .addCase(
+        approveClearance.fulfilled,
+        (
+          state,
+          action: PayloadAction<{ clearanceId: number; data: ApproveClearanceResponseData; message: string }>
+        ) => {
+          state.approveClearanceLoading = false
+          state.approveClearanceSuccess = true
+          state.approveClearanceError = null
+          state.approveClearanceResponse = action.payload.data
+
+          // Update the clearance status in the clearances list
+          const clearanceIndex = state.clearances.findIndex((c) => c.id === action.payload.clearanceId)
+          if (clearanceIndex !== -1) {
+            const clearance = state.clearances[clearanceIndex]
+            if (clearance) {
+              clearance.status = CashClearanceStatus.Approved
+              clearance.approvedAtUtc = action.payload.data.clearedAt
+            }
+          }
+        }
+      )
+      .addCase(approveClearance.rejected, (state, action) => {
+        state.approveClearanceLoading = false
+        state.approveClearanceError = (action.payload as string) || "Failed to approve clearance"
+        state.approveClearanceSuccess = false
+        state.approveClearanceResponse = null
       })
 
       // Fetch clearances cases

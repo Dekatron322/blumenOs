@@ -8,19 +8,32 @@ import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOu
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  approveClearance,
+  ApproveClearanceRequest,
   CashClearance,
+  CashClearanceStatus,
   ClearancesRequestParams,
   clearCash,
   ClearCashRequest,
   clearCashStatus,
   clearClearances,
   clearError,
+  fetchAgentInfo,
   fetchClearances,
   setClearancesPagination,
 } from "lib/redux/agentSlice"
 import { format } from "date-fns"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
+
+// Enum for Cash Clearance Approval Outcome
+enum CashClearanceApprovalOutcome {
+  Approve = 1,
+  ApproveWithCondition = 2,
+  Decline = 3,
+}
 
 interface ActionDropdownProps {
   clearance: CashClearance
@@ -29,6 +42,12 @@ interface ActionDropdownProps {
 
 interface ClearCashFormErrors {
   collectionOfficerUserId?: string
+  amount?: string
+  notes?: string
+}
+
+interface ApproveClearanceFormErrors {
+  outcome?: string
   amount?: string
   notes?: string
 }
@@ -222,8 +241,51 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { clearances, clearancesLoading, clearancesError, clearancesPagination, clearCashLoading, clearCashError } =
-    useAppSelector((state) => state.agents)
+  const {
+    clearances,
+    clearancesLoading,
+    clearancesError,
+    clearancesPagination,
+    clearCashLoading,
+    clearCashError,
+    agentInfo,
+    approveClearanceLoading,
+  } = useAppSelector((state) => state.agents)
+
+  // Helper function to get status display and styling
+  const getStatusDisplay = (status?: CashClearanceStatus) => {
+    switch (status) {
+      case CashClearanceStatus.Approved:
+        return {
+          text: "Approved",
+          backgroundColor: "#EEF5F0",
+          color: "#589E67",
+          dotColor: "#589E67",
+        }
+      case CashClearanceStatus.ApprovedWithCondition:
+        return {
+          text: "Approved with Condition",
+          backgroundColor: "#FEF6E6",
+          color: "#D97706",
+          dotColor: "#D97706",
+        }
+      case CashClearanceStatus.Declined:
+        return {
+          text: "Declined",
+          backgroundColor: "#F7EDED",
+          color: "#AF4B4B",
+          dotColor: "#AF4B4B",
+        }
+      case CashClearanceStatus.Pending:
+      default:
+        return {
+          text: "Pending",
+          backgroundColor: "#F3F4F6",
+          color: "#6B7280",
+          dotColor: "#6B7280",
+        }
+    }
+  }
 
   // Memoize appliedFilters to prevent unnecessary re-renders
   const memoizedFilters = useMemo(() => appliedFilters, [JSON.stringify(appliedFilters)])
@@ -234,6 +296,8 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
   const [selectedClearance, setSelectedClearance] = useState<CashClearance | null>(null)
   const [isClearCashPanelOpen, setIsClearCashPanelOpen] = useState(false)
   const [expandedClearanceId, setExpandedClearanceId] = useState<number | null>(null)
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
+  const [selectedClearanceForApproval, setSelectedClearanceForApproval] = useState<CashClearance | null>(null)
 
   // Clear cash form state
   const [clearCashForm, setClearCashForm] = useState<ClearCashRequest>({
@@ -242,6 +306,14 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     notes: "",
   })
   const [clearCashFormErrors, setClearCashFormErrors] = useState<ClearCashFormErrors>({})
+
+  // Approve clearance form state
+  const [approveForm, setApproveForm] = useState<ApproveClearanceRequest>({
+    outcome: CashClearanceApprovalOutcome.Approve,
+    clearedAmount: 0,
+    notes: "",
+  })
+  const [approveFormErrors, setApproveFormErrors] = useState<ApproveClearanceFormErrors>({})
 
   // Get pagination values from Redux state
   const currentPage = clearancesPagination?.currentPage || 1
@@ -312,7 +384,9 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
   // Fetch clearances on component mount and when dependencies change
   useEffect(() => {
     fetchClearancesData()
-  }, [fetchClearancesData])
+    // Also fetch agent info to get agentType
+    dispatch(fetchAgentInfo())
+  }, [fetchClearancesData, dispatch])
 
   // Clear error and clearances when component unmounts
   useEffect(() => {
@@ -376,6 +450,58 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     } catch (error) {}
   }
 
+  const handleApproveClearance = (clearance: CashClearance) => {
+    setSelectedClearanceForApproval(clearance)
+    setApproveForm({
+      outcome: CashClearanceApprovalOutcome.Approve,
+      clearedAmount: clearance.amountCleared,
+      notes: "",
+    })
+    setApproveFormErrors({})
+    setIsApproveModalOpen(true)
+  }
+
+  const handleApproveSubmit = async () => {
+    if (!selectedClearanceForApproval) return
+
+    // Validate form
+    const errors: ApproveClearanceFormErrors = {}
+    if (!approveForm.outcome) {
+      errors.outcome = "Outcome is required"
+    }
+    if (approveForm.clearedAmount <= 0) {
+      errors.amount = "Amount must be greater than 0"
+    }
+    if (!approveForm.notes.trim()) {
+      errors.notes = "Notes are required"
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setApproveFormErrors(errors)
+      return
+    }
+
+    try {
+      await dispatch(
+        approveClearance({
+          clearanceId: selectedClearanceForApproval.id,
+          requestBody: approveForm,
+        })
+      ).unwrap()
+      setIsApproveModalOpen(false)
+      setSelectedClearanceForApproval(null)
+      setApproveFormErrors({})
+    } catch (error: any) {
+      // Error is handled by Redux state
+    }
+  }
+
+  const closeApproveModal = () => {
+    setIsApproveModalOpen(false)
+    setSelectedClearanceForApproval(null)
+    setApproveFormErrors({})
+  }
+
   const toggleSort = (column: string) => {
     const isAscending = sortColumn === column && sortOrder === "asc"
     setSortOrder(isAscending ? "desc" : "asc")
@@ -410,7 +536,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
       formatCurrency(clearance.cashAtHandAfter).toLowerCase().includes(searchLower) ||
       clearance.notes.toLowerCase().includes(searchLower) ||
       (clearance.collectionOfficer?.fullName || "").toLowerCase().includes(searchLower) ||
-      (clearance.clearedBy?.fullName || "").toLowerCase().includes(searchLower) ||
+      (clearance.approvedBy?.fullName || "").toLowerCase().includes(searchLower) ||
       formatDate(clearance.clearedAt).toLowerCase().includes(searchLower)
     )
   })
@@ -481,6 +607,17 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                       Amount Cleared <RxCaretSort />
                     </div>
                   </th>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Discrepancy</div>
+                  </th>
+                  <th
+                    className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
+                    onClick={() => toggleSort("requestedAmountAtHand")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Requested Amount at Hand <RxCaretSort />
+                    </div>
+                  </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
                     onClick={() => toggleSort("cashAtHandBefore")}
@@ -515,10 +652,10 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                   </th>
                   <th
                     className="cursor-pointer whitespace-nowrap border-b p-4 text-sm"
-                    onClick={() => toggleSort("clearedBy")}
+                    onClick={() => toggleSort("approvedBy")}
                   >
                     <div className="flex items-center gap-2">
-                      Cleared By <RxCaretSort />
+                      Approved By <RxCaretSort />
                     </div>
                   </th>
                   <th
@@ -551,6 +688,31 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                           {formatCurrency(clearance.amountCleared)}
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {clearance.hasAmountDiscrepancy && (
+                            <motion.div
+                              className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
+                              style={{
+                                backgroundColor: "#FEF3C7",
+                                color: "#D97706",
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.1 }}
+                              title="Amount discrepancy detected"
+                            >
+                              <span
+                                className="size-2 rounded-full"
+                                style={{
+                                  backgroundColor: "#D97706",
+                                }}
+                              ></span>
+                              Discrepancy
+                            </motion.div>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {formatCurrency(clearance.requestedAmountAtHand)}
+                        </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           {formatCurrency(clearance.cashAtHandBefore)}
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
@@ -569,16 +731,16 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <div className="flex flex-col">
-                            <span className="font-medium">{clearance.clearedBy?.fullName || "N/A"}</span>
-                            <span className="text-xs text-gray-500">{clearance.clearedBy?.employeeId || ""}</span>
+                            <span className="font-medium">{clearance.approvedBy?.fullName || "N/A"}</span>
+                            <span className="text-xs text-gray-500">{clearance.approvedBy?.employeeId || ""}</span>
                           </div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                           <motion.div
                             className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
                             style={{
-                              backgroundColor: "#EEF5F0",
-                              color: "#589E67",
+                              backgroundColor: getStatusDisplay(clearance.status).backgroundColor,
+                              color: getStatusDisplay(clearance.status).color,
                             }}
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.1 }}
@@ -586,28 +748,42 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                             <span
                               className="size-2 rounded-full"
                               style={{
-                                backgroundColor: "#589E67",
+                                backgroundColor: getStatusDisplay(clearance.status).dotColor,
                               }}
                             ></span>
-                            Completed
+                            {getStatusDisplay(clearance.status).text}
                           </motion.div>
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                          <ButtonModule
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
-                            }
-                          >
-                            {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
-                          </ButtonModule>
+                          <div className="flex gap-2">
+                            <ButtonModule
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setExpandedClearanceId((prev) => (prev === clearance.id ? null : clearance.id))
+                              }
+                            >
+                              {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
+                            </ButtonModule>
+                            {agentInfo?.agentType === "ClearingCashier" &&
+                              clearance.status === CashClearanceStatus.Pending && (
+                                <ButtonModule
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleApproveClearance(clearance)}
+                                  disabled={approveClearanceLoading}
+                                  loading={approveClearanceLoading}
+                                >
+                                  Approve
+                                </ButtonModule>
+                              )}
+                          </div>
                         </td>
                       </motion.tr>
 
                       {expandedClearanceId === clearance.id && (
                         <tr>
-                          <td colSpan={9} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
+                          <td colSpan={10} className="border-b bg-[#F9FAFB] px-4 py-4 text-sm text-gray-700">
                             <div className="grid gap-4 md:grid-cols-4">
                               <div>
                                 <p className="text-xs font-semibold text-gray-500">Notes</p>
@@ -642,14 +818,14 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                               <div>
                                 <p className="text-xs font-semibold text-gray-500">Cleared By</p>
                                 <p className="mt-1 text-sm font-medium text-gray-800">
-                                  {clearance.clearedBy?.fullName || "N/A"}
+                                  {clearance.approvedBy?.fullName || "N/A"}
                                 </p>
-                                <p className="text-xs text-gray-500">{clearance.clearedBy?.email || ""}</p>
-                                <p className="text-xs text-gray-500">{clearance.clearedBy?.phoneNumber || ""}</p>
+                                <p className="text-xs text-gray-500">{clearance.approvedBy?.email || ""}</p>
+                                <p className="text-xs text-gray-500">{clearance.approvedBy?.phoneNumber || ""}</p>
                               </div>
                             </div>
 
-                            <div className="mt-4 grid gap-4 md:grid-cols-3">
+                            <div className="mt-4 grid gap-4 md:grid-cols-4">
                               <div>
                                 <p className="text-xs font-semibold text-gray-500">Cleared At</p>
                                 <p className="mt-1 text-sm text-gray-800">{formatDate(clearance.clearedAt)}</p>
@@ -664,6 +840,48 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                                 <p className="text-xs font-semibold text-gray-500">Cash After</p>
                                 <p className="mt-1 text-sm text-gray-800">
                                   {formatCurrency(clearance.cashAtHandAfter)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">Amount Discrepancy</p>
+                                <p className="mt-1 text-sm text-gray-800">
+                                  {clearance.hasAmountDiscrepancy ? (
+                                    <motion.div
+                                      className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+                                      style={{
+                                        backgroundColor: "#FEF3C7",
+                                        color: "#D97706",
+                                      }}
+                                      whileHover={{ scale: 1.05 }}
+                                      transition={{ duration: 0.1 }}
+                                    >
+                                      <span
+                                        className="size-2 rounded-full"
+                                        style={{
+                                          backgroundColor: "#D97706",
+                                        }}
+                                      ></span>
+                                      Detected
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div
+                                      className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+                                      style={{
+                                        backgroundColor: "#D1FAE5",
+                                        color: "#059669",
+                                      }}
+                                      whileHover={{ scale: 1.05 }}
+                                      transition={{ duration: 0.1 }}
+                                    >
+                                      <span
+                                        className="size-2 rounded-full"
+                                        style={{
+                                          backgroundColor: "#059669",
+                                        }}
+                                      ></span>
+                                      None
+                                    </motion.div>
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -764,6 +982,152 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
           </motion.div>
         </>
       )}
+
+      {/* Approve Clearance Sidebar */}
+      <AnimatePresence>
+        {isApproveModalOpen && selectedClearanceForApproval && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeApproveModal}
+            />
+
+            {/* Sidebar */}
+            <motion.div
+              className="fixed right-0 top-0 z-[150] h-full w-full max-w-md bg-white shadow-xl"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b px-6 py-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Approve Clearance</h3>
+                    <p className="mt-1 text-sm text-gray-600">
+                      CL-{selectedClearanceForApproval.id.toString().padStart(5, "0")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={closeApproveModal}
+                    className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto px-6 py-6">
+                  <div className="mb-6 rounded-lg bg-gray-50 p-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-gray-500">Amount Requested</p>
+                        <p className="mt-1 font-semibold text-gray-900">
+                          {formatCurrency(selectedClearanceForApproval.amountCleared)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-500">Cash at Hand</p>
+                        <p className="mt-1 font-semibold text-gray-900">
+                          {formatCurrency(selectedClearanceForApproval.cashAtHandBefore)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-500">Requested By</p>
+                        <p className="mt-1 font-semibold text-gray-900">
+                          {selectedClearanceForApproval.requestedBy?.fullName || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-500">Date</p>
+                        <p className="mt-1 font-semibold text-gray-900">
+                          {formatDate(selectedClearanceForApproval.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form
+                    className="space-y-6"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      handleApproveSubmit()
+                    }}
+                  >
+                    {/* Outcome Selection */}
+                    <FormSelectModule
+                      label="Outcome"
+                      name="outcome"
+                      value={approveForm.outcome}
+                      onChange={(e) => setApproveForm({ ...approveForm, outcome: Number(e.target.value) })}
+                      options={[
+                        { value: CashClearanceApprovalOutcome.Approve, label: "Approve" },
+                        { value: CashClearanceApprovalOutcome.ApproveWithCondition, label: "Approve with Condition" },
+                        { value: CashClearanceApprovalOutcome.Decline, label: "Decline" },
+                      ]}
+                      error={approveFormErrors.outcome}
+                    />
+
+                    {/* Amount */}
+                    <div>
+                      <FormInputModule
+                        label="Amount"
+                        type="text"
+                        value={
+                          approveForm.clearedAmount > 0 ? `₦${approveForm.clearedAmount.toLocaleString("en-NG")}` : ""
+                        }
+                        onChange={(e) => {
+                          // Remove naira symbol and commas, then convert to number
+                          const cleanValue = e.target.value.replace(/[₦,]/g, "")
+                          const numValue = cleanValue === "" ? 0 : Number(cleanValue)
+                          setApproveForm({ ...approveForm, clearedAmount: numValue })
+                        }}
+                        placeholder="₦0"
+                        error={approveFormErrors.amount}
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <FormTextAreaModule
+                      label="Notes"
+                      name="notes"
+                      value={approveForm.notes}
+                      onChange={(e) => setApproveForm({ ...approveForm, notes: e.target.value })}
+                      placeholder="Enter notes"
+                      rows={4}
+                      error={approveFormErrors.notes}
+                    />
+                  </form>
+                </div>
+
+                {/* Footer */}
+                <div className="border-t px-6 py-4">
+                  <div className="flex justify-end gap-3">
+                    <ButtonModule variant="outline" onClick={closeApproveModal} disabled={approveClearanceLoading}>
+                      Cancel
+                    </ButtonModule>
+                    <ButtonModule
+                      variant="primary"
+                      onClick={handleApproveSubmit}
+                      disabled={approveClearanceLoading}
+                      loading={approveClearanceLoading}
+                    >
+                      {approveForm.outcome === CashClearanceApprovalOutcome.Decline ? "Decline" : "Approve"}
+                    </ButtonModule>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
