@@ -1320,6 +1320,12 @@ export interface CheckPaymentRequest {
   reference: string
 }
 
+// Interface for Confirm Payment Request
+export interface ConfirmPaymentRequest {
+  // Add any required fields for the confirm payment request
+  // This might be empty or contain specific fields based on API requirements
+}
+
 export interface CheckPaymentData {
   id: number
   reference: string
@@ -1510,6 +1516,9 @@ interface AgentState {
     hasNext: boolean
     hasPrevious: boolean
   }
+  confirmPaymentLoading: boolean
+  confirmPaymentError: string | null
+  confirmPaymentSuccess: boolean
 
   // Create payment state
   createPaymentLoading: boolean
@@ -1668,6 +1677,9 @@ const initialState: AgentState = {
     hasNext: false,
     hasPrevious: false,
   },
+  confirmPaymentLoading: false,
+  confirmPaymentError: null,
+  confirmPaymentSuccess: false,
   createPaymentLoading: false,
   createPaymentError: null,
   createPaymentSuccess: false,
@@ -2415,6 +2427,32 @@ export const fetchPayments = createAsyncThunk(
   }
 )
 
+// Confirm Payment Async Thunk
+export const confirmPayment = createAsyncThunk(
+  "agents/confirmPayment",
+  async (paymentId: number, { rejectWithValue }) => {
+    try {
+      const requestBody: ConfirmPaymentRequest = {} // Empty request body for now
+
+      const response = await api.post(
+        buildApiUrl(API_ENDPOINTS.PAYMENTS.CONFIRM.replace("{id}", paymentId.toString())),
+        requestBody
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to confirm payment")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to confirm payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment confirmation")
+    }
+  }
+)
+
 // Agent slice
 const agentSlice = createSlice({
   name: "agents",
@@ -2534,6 +2572,7 @@ const agentSlice = createSlice({
       state.declineChangeRequestError = null
       state.clearancesError = null
       state.paymentsError = null
+      state.confirmPaymentError = null
       state.billLookupError = null
     },
 
@@ -3891,6 +3930,23 @@ const agentSlice = createSlice({
           hasNext: false,
           hasPrevious: false,
         }
+      })
+
+      // Confirm payment cases
+      .addCase(confirmPayment.pending, (state) => {
+        state.confirmPaymentLoading = true
+        state.confirmPaymentError = null
+        state.confirmPaymentSuccess = false
+      })
+      .addCase(confirmPayment.fulfilled, (state) => {
+        state.confirmPaymentLoading = false
+        state.confirmPaymentSuccess = true
+        state.confirmPaymentError = null
+      })
+      .addCase(confirmPayment.rejected, (state, action) => {
+        state.confirmPaymentLoading = false
+        state.confirmPaymentError = (action.payload as string) || "Failed to confirm payment"
+        state.confirmPaymentSuccess = false
       })
 
       // Create payment cases

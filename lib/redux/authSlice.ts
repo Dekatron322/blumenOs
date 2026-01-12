@@ -41,6 +41,7 @@ interface User {
   profilePicture: string | null
   roles: Role[]
   privileges: Privilege[]
+  position?: string
 }
 
 interface Tokens {
