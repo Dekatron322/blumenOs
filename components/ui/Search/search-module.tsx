@@ -10,6 +10,8 @@ interface SearchModuleProps {
 
   onCancel?: () => void
 
+  onSearch?: () => void
+
   placeholder?: string
 
   className?: string
@@ -30,6 +32,7 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
   value,
   onChange,
   onCancel,
+  onSearch,
   placeholder = "Search",
   className = "",
   searchType = "tag",
@@ -113,8 +116,22 @@ export const SearchModule: React.FC<SearchModuleProps> = ({
           className="h-[50px] w-full bg-transparent outline-none"
           value={value}
           onChange={onChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onSearch) {
+              onSearch()
+            }
+          }}
         />
         {value && onCancel && <RxCross2 onClick={onCancel} style={{ cursor: "pointer" }} />}
+        {onSearch && (
+          <button
+            type="button"
+            onClick={onSearch}
+            className="rounded bg-[#004B23] px-3 py-1 text-xs text-white transition-colors hover:bg-[#003d1c]"
+          >
+            Search
+          </button>
+        )}
       </div>
     </div>
   )

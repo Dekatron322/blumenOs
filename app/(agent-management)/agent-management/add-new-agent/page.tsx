@@ -422,6 +422,25 @@ const AddNewAgent = () => {
       })),
   ]
 
+  // Manager Agent Options for Existing User Form (shows supervisors)
+  const existingUserManagerAgentOptions = [
+    {
+      value: "",
+      label: agentsLoading ? "Loading manager agents..." : "Select manager agent (supervisor)",
+    },
+    ...agents
+      .filter((agent) => {
+        if (agent.status !== "ACTIVE") return false
+
+        // For existing user form, show supervisors (agents with Supervisor position)
+        return agent.user.position === "Supervisor"
+      })
+      .map((agent) => ({
+        value: agent.id.toString(),
+        label: `${agent.user.fullName} (${agent.user.email}) - ${agent.agentCode}`,
+      })),
+  ]
+
   // Filter employees for existing users (non-agents)
   const existingUserOptions = [
     {
@@ -582,6 +601,11 @@ const AddNewAgent = () => {
         errors.agentType = "Agent type is required"
       }
 
+      // Manager Agent is now required for all agent types
+      if (!existingUserFormData.managerAgentId) {
+        errors.managerAgentId = "Manager agent (supervisor) is required"
+      }
+
       // Conditional validation based on agent type
       const agentType = existingUserFormData.agentType
 
@@ -590,9 +614,9 @@ const AddNewAgent = () => {
         errors.distributionSubstationId = "Distribution substation is required for Sales Rep"
       }
 
-      // SalesRep and Cashier require manager agent
-      if ((agentType === "SalesRep" || agentType === "Cashier") && !existingUserFormData.managerAgentId) {
-        errors.managerAgentId = "Manager agent is required for this agent type"
+      // SalesRep and Cashier require manager agent (now all types require it)
+      if (!existingUserFormData.managerAgentId) {
+        errors.managerAgentId = "Manager agent (supervisor) is required for this agent type"
       }
 
       // Cash collection limit based on agent type
@@ -601,6 +625,15 @@ const AddNewAgent = () => {
           errors.cashCollectionLimit = "Cash collection limit is required"
         } else if (parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
           errors.cashCollectionLimit = "Cash collection limit must be greater than 0"
+        }
+      }
+
+      // Max single cash amount for Clearing Cashier only
+      if (agentType === "ClearingCashier") {
+        if (!existingUserFormData.maxSingleAllowedCashAmount.trim()) {
+          errors.maxSingleAllowedCashAmount = "Max single allowed cash amount is required"
+        } else if (parseFloat(existingUserFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) <= 0) {
+          errors.maxSingleAllowedCashAmount = "Max single allowed cash amount must be greater than 0"
         }
       }
 
@@ -678,10 +711,10 @@ const AddNewAgent = () => {
       supervisorId: newAgentFormData.supervisorId || 0,
       employmentType: newAgentFormData.employmentType || "",
       cashCollectionLimit: newAgentFormData.cashCollectionLimit
-        ? parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, ""))
+        ? parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, "")) || 0
         : 0,
       maxSingleAllowedCashAmount: newAgentFormData.maxSingleAllowedCashAmount
-        ? parseFloat(newAgentFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, ""))
+        ? parseFloat(newAgentFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) || 0
         : 0,
       canCollectCash: newAgentFormData.canCollectCash,
       status: newAgentFormData.status,
@@ -708,7 +741,9 @@ const AddNewAgent = () => {
       agentType: existingUserFormData.agentType,
       enforceJurisdiction: existingUserFormData.enforceJurisdiction,
       status: existingUserFormData.status,
-      cashCollectionLimit: parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")),
+      cashCollectionLimit: existingUserFormData.cashCollectionLimit
+        ? parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")) || 0
+        : 0,
       maxSingleAllowedCashAmount: parseFloat(existingUserFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) || 0,
       canCollectCash: existingUserFormData.canCollectCash,
     }
@@ -878,13 +913,15 @@ const AddNewAgent = () => {
         )
 
       case "ClearingCashier":
-        return true // Only basic fields required
+        return (
+          existingUserFormData.managerAgentId !== null && existingUserFormData.maxSingleAllowedCashAmount.trim() !== ""
+        ) // Now requires manager agent and max single amount
 
       case "Supervisor":
-        return true // Only basic fields required, manager agent optional
+        return existingUserFormData.managerAgentId !== null // Now requires manager agent
 
       case "FinanceManager":
-        return true // Only basic fields required
+        return existingUserFormData.managerAgentId !== null // Now requires manager agent
 
       default:
         return false
@@ -2050,43 +2087,22 @@ const AddNewAgent = () => {
                               />
                             )}
 
-                            {/* Required for SalesRep and Cashier */}
-                            {(existingUserFormData.agentType === "SalesRep" ||
-                              existingUserFormData.agentType === "Cashier") && (
-                              <FormSelectModule
-                                label="Manager Agent"
-                                name="managerAgentId"
-                                value={existingUserFormData.managerAgentId?.toString() || ""}
-                                onChange={(e) =>
-                                  setExistingUserFormData((prev) => ({
-                                    ...prev,
-                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
-                                  }))
-                                }
-                                options={managerAgentOptions}
-                                error={formErrors.managerAgentId}
-                                required
-                                disabled={agentsLoading}
-                              />
-                            )}
-
-                            {/* Optional for Supervisor */}
-                            {existingUserFormData.agentType === "Supervisor" && (
-                              <FormSelectModule
-                                label="Manager Agent (Optional)"
-                                name="managerAgentId"
-                                value={existingUserFormData.managerAgentId?.toString() || ""}
-                                onChange={(e) =>
-                                  setExistingUserFormData((prev) => ({
-                                    ...prev,
-                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
-                                  }))
-                                }
-                                options={managerAgentOptions}
-                                error={formErrors.managerAgentId}
-                                disabled={agentsLoading}
-                              />
-                            )}
+                            {/* Manager Agent - Required for all agent types in existing user form */}
+                            <FormSelectModule
+                              label="Manager Agent (Supervisor)"
+                              name="managerAgentId"
+                              value={existingUserFormData.managerAgentId?.toString() || ""}
+                              onChange={(e) =>
+                                setExistingUserFormData((prev) => ({
+                                  ...prev,
+                                  managerAgentId: e.target.value ? Number(e.target.value) : null,
+                                }))
+                              }
+                              options={existingUserManagerAgentOptions}
+                              error={formErrors.managerAgentId}
+                              required
+                              disabled={agentsLoading}
+                            />
 
                             {/* Cash Collection Limit - Required for SalesRep only */}
                             {existingUserFormData.agentType === "SalesRep" && (
@@ -2102,9 +2118,8 @@ const AddNewAgent = () => {
                               />
                             )}
 
-                            {/* Max Single Allowed Cash Amount - Required for SalesRep and Cashier */}
-                            {(existingUserFormData.agentType === "SalesRep" ||
-                              existingUserFormData.agentType === "Cashier") && (
+                            {/* Max Single Allowed Cash Amount - For Clearing Cashier only */}
+                            {existingUserFormData.agentType === "ClearingCashier" && (
                               <FormInputModule
                                 label="Max Single Allowed Cash Amount (₦)"
                                 name="maxSingleAllowedCashAmount"
