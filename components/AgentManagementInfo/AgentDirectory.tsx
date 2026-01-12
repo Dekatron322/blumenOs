@@ -530,6 +530,7 @@ const AgentDirectory: React.FC<AgentDirectoryProps> = ({ onStartNewCycle }) => {
       ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
       ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
       ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+      AgentType: "SalesRep",
     }
 
     dispatch(fetchAgents(params))

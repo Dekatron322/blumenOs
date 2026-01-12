@@ -9,6 +9,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
 import { AddAgentIcon } from "components/Icons/Icons"
 import DashboardNav from "components/Navbar/DashboardNav"
+import AgentCreatedSuccessModal from "components/ui/Modal/agent-created-success-modal"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   addAgent,
@@ -51,6 +52,7 @@ enum AgentType {
   Cashier = 2,
   ClearingCashier = 3,
   Supervisor = 4,
+  FinanceManager = 5,
 }
 
 // For adding new agent
@@ -65,7 +67,6 @@ interface AgentFormData {
   departmentId: number
   managerAgentId: number | null
   employeeId: string
-  position: string
   emergencyContact: string
   address: string
   supervisorId: number | null
@@ -104,7 +105,6 @@ interface CSVAgent {
   departmentId: number
   managerAgentId: number | null
   employeeId: string
-  position: string
   emergencyContact: string
   address: string
   supervisorId: number | null
@@ -123,6 +123,7 @@ const agentTypeOptions = [
   { value: "Cashier", label: "Cashier" },
   { value: "ClearingCashier", label: "Clearing Cashier" },
   { value: "Supervisor", label: "Supervisor" },
+  { value: "FinanceManager", label: "Finance Manager" },
 ]
 
 // Mock data for dropdowns
@@ -183,7 +184,6 @@ const AddNewAgent = () => {
     departmentId: 0,
     managerAgentId: null,
     employeeId: "",
-    position: "",
     emergencyContact: "",
     address: "",
     supervisorId: null,
@@ -210,6 +210,16 @@ const AddNewAgent = () => {
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successModalData, setSuccessModalData] = useState<{
+    agentCode: string
+    tempPassword: string
+    fullName: string
+    email: string
+    agentType: string
+  } | null>(null)
 
   // CSV state
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -245,12 +255,22 @@ const AddNewAgent = () => {
   // Handle Redux state changes for new agent
   useEffect(() => {
     if (addAgentSuccess && newlyAddedAgent) {
-      notify("success", "Agent created successfully", {
-        description: `${newlyAddedAgent.user.fullName} has been registered with agent code: ${newlyAddedAgent.agentCode}`,
-        duration: 6000,
+      // Set modal data
+      setSuccessModalData({
+        agentCode: newlyAddedAgent.agentCode,
+        tempPassword: newlyAddedAgent.tempPassword,
+        fullName: newlyAddedAgent.user.fullName,
+        email: newlyAddedAgent.user.email,
+        agentType: newlyAddedAgent.user.position,
       })
 
+      // Show modal
+      setShowSuccessModal(true)
+
+      // Clear form
       handleReset()
+
+      // Clear Redux state
       setTimeout(() => {
         dispatch(clearAddAgent())
       }, 3000)
@@ -375,9 +395,23 @@ const AddNewAgent = () => {
 
         // Filter based on selected agent type
         if (newAgentFormData.agentType === "SalesRep" || newAgentFormData.agentType === "Cashier") {
-          return agent.user.position === "ClearingCashier"
+          // Debug: Log available agents and their positions
+          console.log(
+            "Available agents for SalesRep/Cashier manager:",
+            agents
+              .filter((a) => a.status === "ACTIVE")
+              .map((a) => ({
+                id: a.id,
+                name: a.user.fullName,
+                position: a.user.position,
+                agentType: a.user.position,
+              }))
+          )
+          return agent.user.position === "Clearing Cashier"
         } else if (newAgentFormData.agentType === "ClearingCashier") {
           return agent.user.position === "Supervisor"
+        } else if (newAgentFormData.agentType === "Supervisor") {
+          return agent.user.position === "FinanceManager"
         }
 
         return false // Don't show any options if no agent type is selected
@@ -503,7 +537,7 @@ const AddNewAgent = () => {
 
         case 4: // Cash & Status Information
           // Cash collection limit based on agent type
-          if (agentType === "SalesRep" || agentType === "Cashier") {
+          if (agentType === "SalesRep") {
             if (!newAgentFormData.cashCollectionLimit.trim()) {
               errors.cashCollectionLimit = "Cash collection limit is required"
             } else if (parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
@@ -511,8 +545,8 @@ const AddNewAgent = () => {
             }
           }
 
-          // Max single cash amount for Cashier and ClearingCashier
-          if (agentType === "Cashier" || agentType === "ClearingCashier") {
+          // Max single cash amount for Cashier only
+          if (agentType === "Cashier") {
             if (!newAgentFormData.maxSingleAllowedCashAmount.trim()) {
               errors.maxSingleAllowedCashAmount = "Max single allowed cash amount is required"
             } else if (parseFloat(newAgentFormData.maxSingleAllowedCashAmount.replace(/[₦,]/g, "")) <= 0) {
@@ -562,7 +596,7 @@ const AddNewAgent = () => {
       }
 
       // Cash collection limit based on agent type
-      if (agentType === "SalesRep" || agentType === "Cashier") {
+      if (agentType === "SalesRep") {
         if (!existingUserFormData.cashCollectionLimit.trim()) {
           errors.cashCollectionLimit = "Cash collection limit is required"
         } else if (parseFloat(existingUserFormData.cashCollectionLimit.replace(/[₦,]/g, "")) <= 0) {
@@ -625,11 +659,23 @@ const AddNewAgent = () => {
       departmentId: newAgentFormData.departmentId || 0,
       managerAgentId: newAgentFormData.managerAgentId || 0,
       agentType: agentType,
+      position:
+        agentType === "SalesRep"
+          ? "Sales Representative"
+          : agentType === "Cashier"
+          ? "Cashier"
+          : agentType === "ClearingCashier"
+          ? "Clearing Cashier"
+          : agentType === "Supervisor"
+          ? "Supervisor"
+          : agentType === "FinanceManager"
+          ? "Finance Manager"
+          : agentType,
       enforceJurisdiction: newAgentFormData.enforceJurisdiction,
       employeeId: newAgentFormData.employeeId || "",
-      position: newAgentFormData.position || "",
       emergencyContact: newAgentFormData.emergencyContact || "",
       address: newAgentFormData.address || "",
+      supervisorId: newAgentFormData.supervisorId || 0,
       employmentType: newAgentFormData.employmentType || "",
       cashCollectionLimit: newAgentFormData.cashCollectionLimit
         ? parseFloat(newAgentFormData.cashCollectionLimit.replace(/[₦,]/g, ""))
@@ -683,7 +729,6 @@ const AddNewAgent = () => {
       departmentId: 0,
       managerAgentId: null,
       employeeId: "",
-      position: "",
       emergencyContact: "",
       address: "",
       supervisorId: null,
@@ -784,15 +829,17 @@ const AddNewAgent = () => {
       case "Cashier":
         return (
           newAgentFormData.managerAgentId !== null &&
-          newAgentFormData.cashCollectionLimit.trim() !== "" &&
           newAgentFormData.maxSingleAllowedCashAmount.trim() !== "" &&
           newAgentFormData.canCollectCash !== undefined
         )
 
       case "ClearingCashier":
-        return newAgentFormData.managerAgentId !== null && newAgentFormData.maxSingleAllowedCashAmount.trim() !== ""
+        return newAgentFormData.managerAgentId !== null
 
       case "Supervisor":
+        return true // Only base fields required, manager agent optional
+
+      case "FinanceManager":
         return true // Only base fields required
 
       default:
@@ -826,7 +873,6 @@ const AddNewAgent = () => {
       case "Cashier":
         return (
           existingUserFormData.managerAgentId !== null &&
-          existingUserFormData.cashCollectionLimit.trim() !== "" &&
           existingUserFormData.maxSingleAllowedCashAmount.trim() !== "" &&
           existingUserFormData.canCollectCash !== undefined
         )
@@ -835,6 +881,9 @@ const AddNewAgent = () => {
         return true // Only basic fields required
 
       case "Supervisor":
+        return true // Only basic fields required, manager agent optional
+
+      case "FinanceManager":
         return true // Only basic fields required
 
       default:
@@ -1423,17 +1472,6 @@ const AddNewAgent = () => {
                               required
                             />
 
-                            <FormInputModule
-                              label="Position"
-                              name="position"
-                              type="text"
-                              placeholder="Job position/title"
-                              value={newAgentFormData.position}
-                              onChange={handleNewAgentInputChange}
-                              error={formErrors.position}
-                              required
-                            />
-
                             <FormSelectModule
                               label="Employment Type"
                               name="employmentType"
@@ -1608,6 +1646,24 @@ const AddNewAgent = () => {
                                 disabled={agentsLoading}
                               />
                             )}
+
+                            {/* Optional for Supervisor */}
+                            {newAgentFormData.agentType === "Supervisor" && (
+                              <FormSelectModule
+                                label="Manager Agent (Optional)"
+                                name="managerAgentId"
+                                value={newAgentFormData.managerAgentId?.toString() || ""}
+                                onChange={(e) =>
+                                  setNewAgentFormData((prev) => ({
+                                    ...prev,
+                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={managerAgentOptions}
+                                error={formErrors.managerAgentId}
+                                disabled={agentsLoading}
+                              />
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -1632,9 +1688,8 @@ const AddNewAgent = () => {
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            {/* Cash Collection Limit - Required for SalesRep and Cashier */}
-                            {(newAgentFormData.agentType === "SalesRep" ||
-                              newAgentFormData.agentType === "Cashier") && (
+                            {/* Cash Collection Limit - Required for SalesRep only */}
+                            {newAgentFormData.agentType === "SalesRep" && (
                               <FormInputModule
                                 label="Cash Collection Limit (₦)"
                                 name="cashCollectionLimit"
@@ -1647,9 +1702,8 @@ const AddNewAgent = () => {
                               />
                             )}
 
-                            {/* Max Single Allowed Cash Amount - Required for Cashier and ClearingCashier */}
-                            {(newAgentFormData.agentType === "Cashier" ||
-                              newAgentFormData.agentType === "ClearingCashier") && (
+                            {/* Max Single Allowed Cash Amount - Required for Cashier only */}
+                            {newAgentFormData.agentType === "Cashier" && (
                               <FormInputModule
                                 label="Max Single Allowed Cash Amount (₦)"
                                 name="maxSingleAllowedCashAmount"
@@ -1753,15 +1807,6 @@ const AddNewAgent = () => {
                               type="text"
                               placeholder="Employee identification number"
                               value={newAgentFormData.employeeId}
-                              onChange={handleNewAgentInputChange}
-                            />
-
-                            <FormInputModule
-                              label="Position"
-                              name="position"
-                              type="text"
-                              placeholder="Job position/title"
-                              value={newAgentFormData.position}
                               onChange={handleNewAgentInputChange}
                             />
 
@@ -2025,9 +2070,26 @@ const AddNewAgent = () => {
                               />
                             )}
 
-                            {/* Cash Collection Limit - Required for SalesRep and Cashier */}
-                            {(existingUserFormData.agentType === "SalesRep" ||
-                              existingUserFormData.agentType === "Cashier") && (
+                            {/* Optional for Supervisor */}
+                            {existingUserFormData.agentType === "Supervisor" && (
+                              <FormSelectModule
+                                label="Manager Agent (Optional)"
+                                name="managerAgentId"
+                                value={existingUserFormData.managerAgentId?.toString() || ""}
+                                onChange={(e) =>
+                                  setExistingUserFormData((prev) => ({
+                                    ...prev,
+                                    managerAgentId: e.target.value ? Number(e.target.value) : null,
+                                  }))
+                                }
+                                options={managerAgentOptions}
+                                error={formErrors.managerAgentId}
+                                disabled={agentsLoading}
+                              />
+                            )}
+
+                            {/* Cash Collection Limit - Required for SalesRep only */}
+                            {existingUserFormData.agentType === "SalesRep" && (
                               <FormInputModule
                                 label="Cash Collection Limit (₦)"
                                 name="cashCollectionLimit"
@@ -2353,6 +2415,13 @@ const AddNewAgent = () => {
 
       {/* Mobile Bottom Navigation for New Agent Form */}
       {activeTab === "new" && <MobileBottomNavigation />}
+
+      {/* Agent Created Success Modal */}
+      <AgentCreatedSuccessModal
+        isOpen={showSuccessModal}
+        onRequestClose={() => setShowSuccessModal(false)}
+        agentData={successModalData}
+      />
     </section>
   )
 }
