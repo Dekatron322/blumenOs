@@ -501,55 +501,55 @@ const CashRemittance = () => {
     </div>
   )
 
-  const QuickActionsCard = () => (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
-      <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2 md:gap-3">
-        <button className="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          New Remittance
-        </button>
-        <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          Export Reports
-        </button>
-        <button className="col-span-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:col-span-1 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
-          View Analytics
-        </button>
-      </div>
-    </div>
-  )
+  // const QuickActionsCard = () => (
+  //   <div className="rounded-lg border border-gray-200 bg-white p-3 md:p-4 lg:p-6">
+  //     <h3 className="mb-3 text-sm font-semibold text-gray-900 md:text-base lg:text-lg">Quick Actions</h3>
+  //     <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2 md:gap-3">
+  //       <button className="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
+  //         New Remittance
+  //       </button>
+  //       <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
+  //         Export Reports
+  //       </button>
+  //       <button className="col-span-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:col-span-1 sm:py-2.5 md:px-4 md:py-2 md:text-sm">
+  //         View Analytics
+  //       </button>
+  //     </div>
+  //   </div>
+  // )
 
-  const MobileQuickActions = () => (
-    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white shadow-lg ring-1 ring-gray-200 md:hidden">
-      <div className="flex items-center gap-1 p-1">
-        <button
-          onClick={() => setShowMobileActions(!showMobileActions)}
-          className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          aria-label="Quick actions"
-        >
-          <span>Actions</span>
-          {showMobileActions ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
-        </button>
-      </div>
+  // const MobileQuickActions = () => (
+  //   <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white shadow-lg ring-1 ring-gray-200 md:hidden">
+  //     <div className="flex items-center gap-1 p-1">
+  //       <button
+  //         onClick={() => setShowMobileActions(!showMobileActions)}
+  //         className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+  //         aria-label="Quick actions"
+  //       >
+  //         <span>Actions</span>
+  //         {showMobileActions ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
+  //       </button>
+  //     </div>
 
-      {showMobileActions && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
-        >
-          <button className="mb-1 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
-            New Remittance
-          </button>
-          <button className="mb-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Export Reports
-          </button>
-          <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            View Analytics
-          </button>
-        </motion.div>
-      )}
-    </div>
-  )
+  //     {showMobileActions && (
+  //       <motion.div
+  //         initial={{ opacity: 0, y: 10 }}
+  //         animate={{ opacity: 1, y: 0 }}
+  //         className="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
+  //       >
+  //         <button className="mb-1 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+  //           New Remittance
+  //         </button>
+  //         <button className="mb-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+  //           Export Reports
+  //         </button>
+  //         <button className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+  //           View Analytics
+  //         </button>
+  //       </motion.div>
+  //     )}
+  //   </div>
+  // )
 
   // Calculate statistics
   const statusCounts = filteredRecords.reduce(
@@ -623,17 +623,17 @@ const CashRemittance = () => {
       </div>
 
       {/* Mobile Quick Actions Button */}
-      <MobileQuickActions />
+      {/* <MobileQuickActions /> */}
 
       {/* Mobile Toggle Sidebar Button */}
-      <button
+      {/* <button
         onClick={() => setShowSidebar(!showSidebar)}
         className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:bg-blue-700 lg:hidden"
         aria-label="Toggle sidebar"
       >
         <span>{showSidebar ? "Hide" : "Show"} Stats</span>
         {showSidebar ? <HiChevronUp className="size-4" /> : <HiChevronDown className="size-4" />}
-      </button>
+      </button> */}
 
       {/* Cash Remittance Modal */}
       <CashRemittanceModal isOpen={showRecordModal} onRequestClose={() => setShowRecordModal(false)} />

@@ -20,6 +20,8 @@ import {
   PaymentStatus,
   setPaymentsPagination,
 } from "lib/redux/agentSlice"
+import { ButtonModule } from "components/ui/Button/Button"
+import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
 
 interface ActionDropdownProps {
   payment: Payment
@@ -236,9 +238,41 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [showConfirmForm, setShowConfirmForm] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
 
   const handleViewPaymentDetails = (payment: Payment) => {
     router.push(`/agents/payments/payment-details/${payment.id}`)
+  }
+
+  const handleConfirmPayment = (payment: Payment) => {
+    setSelectedPayment(payment)
+    setShowConfirmForm(true)
+  }
+
+  const handleCloseConfirmForm = () => {
+    setShowConfirmForm(false)
+    setSelectedPayment(null)
+  }
+
+  const handleConfirmSuccess = () => {
+    // Refetch payments to update the list
+    const fetchParams: PaymentsRequestParams = {
+      pageNumber: paymentsPagination.currentPage,
+      pageSize: pageSize,
+      ...(agentId !== undefined ? { agentId } : appliedFilters.agentId ? { agentId: appliedFilters.agentId } : {}),
+      ...(customerId !== undefined && { customerId }),
+      ...(searchText && { search: searchText }),
+      ...(appliedFilters.status && { status: appliedFilters.status }),
+      ...(appliedFilters.channel && { channel: appliedFilters.channel }),
+      ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
+      ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
+      ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
+      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
+      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    }
+    dispatch(fetchPayments(fetchParams))
   }
 
   // Get pagination values from Redux state
@@ -728,7 +762,13 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown payment={payment} onViewDetails={handleViewPaymentDetails} />
+                        {payment.status === PaymentStatus.Pending ? (
+                          <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
+                            Confirm
+                          </ButtonModule>
+                        ) : (
+                          <p className="text-center">-</p>
+                        )}
                       </td>
                     </motion.tr>
                   ))}
@@ -823,6 +863,19 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             </div>
           </motion.div>
         </>
+      )}
+
+      {/* Confirm Payment Form */}
+      {selectedPayment && (
+        <ConfirmPaymentForm
+          isOpen={showConfirmForm}
+          onClose={handleCloseConfirmForm}
+          paymentId={selectedPayment.id}
+          paymentRef={selectedPayment.reference}
+          customerName={selectedPayment.customerName}
+          amount={selectedPayment.amount}
+          onSuccess={handleConfirmSuccess}
+        />
       )}
     </div>
   )

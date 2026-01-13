@@ -33,6 +33,7 @@ import {
 // Chart Component for Agent Performance
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { ServiceIcon, TokenIcon } from "components/Sidebar/Icons"
 // Date utilities
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -786,44 +787,52 @@ export default function AgentManagementDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  icon={<VendingIconOutline color="white" />}
-                  onClick={() => router.push("/sales-rep/vend")}
-                >
-                  <span className="hidden sm:inline">Vend</span>
-                </ButtonModule>
-                <ButtonModule
-                  variant="orange"
-                  size="md"
-                  icon={<CollectCash />}
-                  className="w-full sm:w-auto"
-                  onClick={() => router.push("/sales-rep/clear-cash")}
-                >
-                  <span className="hidden sm:inline">Clear Cash</span>
-                </ButtonModule>
+                {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
+                  <ButtonModule
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    icon={<VendingIconOutline color="white" />}
+                    onClick={() => router.push("/sales-rep/vend")}
+                  >
+                    <span className="hidden sm:inline">Vend</span>
+                  </ButtonModule>
+                )}
+                {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
+                  <ButtonModule
+                    variant="orange"
+                    size="md"
+                    icon={<CollectCash />}
+                    className="w-full sm:w-auto"
+                    onClick={() => router.push("/sales-rep/clear-cash")}
+                  >
+                    <span className="hidden sm:inline">Clear Cash</span>
+                  </ButtonModule>
+                )}
 
-                <ButtonModule
-                  variant="black"
-                  size="md"
-                  icon={<CollectCash />}
-                  className="w-full sm:w-auto"
-                  onClick={() => router.push("/sales-rep/clear-cash")}
-                >
-                  <span className="hidden sm:inline">Mopup Cash</span>
-                </ButtonModule>
+                {agentInfo && agentInfo.agentType === "ClearingCashier" && (
+                  <ButtonModule
+                    variant="black"
+                    size="md"
+                    icon={<CollectCash />}
+                    className="w-full sm:w-auto"
+                    onClick={() => router.push("/sales-rep/clear-cash")}
+                  >
+                    <span className="hidden sm:inline">Mopup Cash</span>
+                  </ButtonModule>
+                )}
                 {/* {(!agentInfo || agentInfo.cashAtHand < agentInfo.cashCollectionLimit) && ( */}
-                <ButtonModule
-                  variant="blue"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  icon={<CollectCash />}
-                  onClick={() => router.push("/sales-rep/collect-payment")}
-                >
-                  <span className="hidden sm:inline">Collect Payment</span>
-                </ButtonModule>
+                {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
+                  <ButtonModule
+                    variant="blue"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    icon={<CollectCash />}
+                    onClick={() => router.push("/sales-rep/collect-payment")}
+                  >
+                    <span className="hidden sm:inline">Collect Payment</span>
+                  </ButtonModule>
+                )}
                 {/* )} */}
               </motion.div>
             </div>
@@ -1112,63 +1121,71 @@ export default function AgentManagementDashboard() {
                         <div className="flex items-center gap-2 border-b pb-4">
                           <span className="text-sm font-medium sm:text-base">Quick Actions</span>
                         </div>
-                        <div className="grid grid-cols-3 gap-3 pt-4">
-                          <button
-                            onClick={() => router.push("vend")}
-                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-3 text-left transition-all duration-300 hover:border-blue-300 hover:shadow-md"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="rounded-lg bg-blue-100 p-2">
-                                <VendingIcon />
+                        <div className="grid grid-cols-3 gap-3 pt-4 max-sm:grid-cols-1">
+                          {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
+                            <button
+                              onClick={() => router.push("vend")}
+                              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-3 text-left transition-all duration-300 hover:border-blue-300 hover:shadow-md"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-blue-100 p-2">
+                                  <VendingIcon />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">Vend</p>
+                                  <p className="text-xs text-gray-600">Process vending transactions</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium text-gray-900">Vend</p>
-                                <p className="text-xs text-gray-600">Process vending transactions</p>
+                            </button>
+                          )}
+                          {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
+                            <button
+                              onClick={() => router.push("clear-cash")}
+                              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-white p-3 text-left transition-all duration-300 hover:border-green-300 hover:shadow-md"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-green-100 p-2">
+                                  <VendingIconOutline />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">Clear Cash</p>
+                                  <p className="text-xs text-gray-600">Clear cash collections</p>
+                                </div>
                               </div>
-                            </div>
-                          </button>
-                          <button
-                            onClick={() => router.push("clear-cash")}
-                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-white p-3 text-left transition-all duration-300 hover:border-green-300 hover:shadow-md"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="rounded-lg bg-green-100 p-2">
-                                <VendingIconOutline />
+                            </button>
+                          )}
+                          {agentInfo && agentInfo.agentType === "ClearingCashier" && (
+                            <button
+                              onClick={() => router.push("mop-cash")}
+                              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-3 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-md"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-amber-100 p-2">
+                                  <CollectCash />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">Mop Cash</p>
+                                  <p className="text-xs text-gray-600">Mop up cash collections</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium text-gray-900">Clear Cash</p>
-                                <p className="text-xs text-gray-600">Clear cash collections</p>
+                            </button>
+                          )}
+                          {agentInfo && (agentInfo.agentType === "SalesRep" || agentInfo.agentType === "Cashier") && (
+                            <button
+                              onClick={() => router.push("collect-payment")}
+                              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-white p-3 text-left transition-all duration-300 hover:border-purple-300 hover:shadow-md"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-purple-100 p-2">
+                                  <CollectCash />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">Collect Payment</p>
+                                  <p className="text-xs text-gray-600">Collect customer payments</p>
+                                </div>
                               </div>
-                            </div>
-                          </button>
-                          <button
-                            onClick={() => router.push("mop-cash")}
-                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-3 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-md"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="rounded-lg bg-amber-100 p-2">
-                                <CollectCash />
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">Mop Cash</p>
-                                <p className="text-xs text-gray-600">Mop up cash collections</p>
-                              </div>
-                            </div>
-                          </button>
-                          <button
-                            onClick={() => router.push("collect-payment")}
-                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-white p-3 text-left transition-all duration-300 hover:border-purple-300 hover:shadow-md"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="rounded-lg bg-purple-100 p-2">
-                                <CollectCash />
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">Collect Payment</p>
-                                <p className="text-xs text-gray-600">Collect customer payments</p>
-                              </div>
-                            </div>
-                          </button>
+                            </button>
+                          )}
                           <button
                             onClick={() => router.push("view-cash-clearance-history")}
                             className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-3 text-left transition-all duration-300 hover:border-gray-300 hover:shadow-md"
@@ -1183,20 +1200,38 @@ export default function AgentManagementDashboard() {
                               </div>
                             </div>
                           </button>
-                          <button
-                            onClick={() => router.push("assigned-officers")}
-                            className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-indigo-50 to-white p-3 text-left transition-all duration-300 hover:border-indigo-300 hover:shadow-md"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="rounded-lg bg-indigo-100 p-2">
-                                <TargetIcon />
+                          {agentInfo && agentInfo.agentType !== "SalesRep" && agentInfo.agentType !== "Cashier" && (
+                            <button
+                              onClick={() => router.push("assigned-officers")}
+                              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-indigo-50 to-white p-3 text-left transition-all duration-300 hover:border-indigo-300 hover:shadow-md"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-indigo-100 p-2">
+                                  <TargetIcon />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">Assigned Officers</p>
+                                  <p className="text-xs text-gray-600">View assigned officers</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium text-gray-900">Assigned Officers</p>
-                                <p className="text-xs text-gray-600">View assigned officers</p>
+                            </button>
+                          )}
+                          {agentInfo && agentInfo.agentType !== "SalesRep" && agentInfo.agentType !== "Cashier" && (
+                            <button
+                              onClick={() => router.push("mopping-history")}
+                              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-red-50 to-white p-3 text-left transition-all duration-300 hover:border-red-300 hover:shadow-md"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-red-100 p-2">
+                                  <TokenIcon isActive={false} />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">Mopping History</p>
+                                  <p className="text-xs text-gray-600">View mopping history</p>
+                                </div>
                               </div>
-                            </div>
-                          </button>
+                            </button>
+                          )}
                         </div>
                       </div>
                       <DisputesChangesCard
