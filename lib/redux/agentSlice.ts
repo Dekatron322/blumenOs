@@ -1348,20 +1348,6 @@ export interface CheckPaymentResponse {
 
 // ========== END CHECK PAYMENT INTERFACES ==========
 
-// ========== CASH AT HAND INTERFACES ==========
-
-export interface CashAtHandData {
-  cashAtHand: number
-}
-
-export interface CashAtHandResponse {
-  isSuccess: boolean
-  message: string
-  data: CashAtHandData
-}
-
-// ========== END CASH AT HAND INTERFACES ==========
-
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -1551,12 +1537,6 @@ interface AgentState {
   customerLookupLoading: boolean
   customerLookupError: string | null
   customerLookupSuccess: boolean
-
-  // Cash at Hand state
-  cashAtHand: CashAtHandData | null
-  cashAtHandLoading: boolean
-  cashAtHandError: string | null
-  cashAtHandSuccess: boolean
 }
 
 // Initial state
@@ -1714,11 +1694,6 @@ const initialState: AgentState = {
   customerLookupLoading: false,
   customerLookupError: null,
   customerLookupSuccess: false,
-  // Cash at Hand initial state
-  cashAtHand: null,
-  cashAtHandLoading: false,
-  cashAtHandError: null,
-  cashAtHandSuccess: false,
 }
 
 // Async thunks
@@ -1930,28 +1905,6 @@ export const lookupCustomer = createAsyncThunk(
     }
   }
 )
-
-// ========== CASH AT HAND ASYNC THUNK ==========
-export const fetchCashAtHand = createAsyncThunk("agents/fetchCashAtHand", async (_, { rejectWithValue }) => {
-  try {
-    const response = await api.get<CashAtHandResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.CASH_AT_HAND))
-
-    if (!response.data.isSuccess) {
-      return rejectWithValue(response.data.message || "Failed to fetch cash at hand")
-    }
-
-    if (!response.data.data) {
-      return rejectWithValue("Cash at hand data not found")
-    }
-
-    return response.data.data
-  } catch (error: any) {
-    if (error.response?.data) {
-      return rejectWithValue(error.response.data.message || "Failed to fetch cash at hand")
-    }
-    return rejectWithValue(error.message || "Network error during cash at hand fetch")
-  }
-})
 
 export const fetchAgents = createAsyncThunk(
   "agents/fetchAgents",
@@ -2706,22 +2659,6 @@ const agentSlice = createSlice({
       state.customerLookupLoading = false
     },
 
-    // Clear cash at hand state
-    clearCashAtHand: (state) => {
-      state.cashAtHand = null
-      state.cashAtHandError = null
-      state.cashAtHandSuccess = false
-      state.cashAtHandLoading = false
-    },
-
-    // Clear cash at hand data
-    clearCashAtHandData: (state) => {
-      state.cashAtHand = null
-      state.cashAtHandSuccess = false
-      state.cashAtHandError = null
-      state.cashAtHandLoading = false
-    },
-
     // Reset agent state
     resetAgentState: (state) => {
       state.agentInfo = null
@@ -2835,14 +2772,6 @@ const agentSlice = createSlice({
       state.billLookupLoading = false
       state.billLookupError = null
       state.billLookupSuccess = false
-      state.customerLookup = null
-      state.customerLookupLoading = false
-      state.customerLookupError = null
-      state.customerLookupSuccess = false
-      state.cashAtHand = null
-      state.cashAtHandLoading = false
-      state.cashAtHandError = null
-      state.cashAtHandSuccess = false
     },
 
     // Set pagination
@@ -3368,46 +3297,6 @@ const agentSlice = createSlice({
         state.customerLookupError = (action.payload as string) || "Failed to lookup customer"
         state.customerLookupSuccess = false
         state.customerLookup = null
-      })
-
-      // Cash at Hand cases
-      .addCase(fetchCashAtHand.pending, (state) => {
-        state.cashAtHandLoading = true
-        state.cashAtHandError = null
-        state.cashAtHandSuccess = false
-        state.cashAtHand = null
-      })
-      .addCase(fetchCashAtHand.fulfilled, (state, action: PayloadAction<CashAtHandData>) => {
-        state.cashAtHandLoading = false
-        state.cashAtHandSuccess = true
-        state.cashAtHand = action.payload
-        state.cashAtHandError = null
-
-        // Update agent info cash at hand if available
-        if (state.agentInfo) {
-          state.agentInfo.cashAtHand = action.payload.cashAtHand
-        }
-
-        // Update current agent cash at hand if available
-        if (state.currentAgent) {
-          state.currentAgent.cashAtHand = action.payload.cashAtHand
-        }
-
-        // Update payment channels cash info if available
-        if (state.paymentChannels) {
-          state.paymentChannels.cashAtHand = action.payload.cashAtHand
-        }
-
-        // Update agent in list if exists
-        state.agents.forEach((agent) => {
-          agent.cashAtHand = action.payload.cashAtHand
-        })
-      })
-      .addCase(fetchCashAtHand.rejected, (state, action) => {
-        state.cashAtHandLoading = false
-        state.cashAtHandError = (action.payload as string) || "Failed to fetch cash at hand"
-        state.cashAtHandSuccess = false
-        state.cashAtHand = null
       })
 
       // Fetch agents cases
@@ -4184,7 +4073,6 @@ export const {
   clearPayments,
   clearBillLookup,
   clearCustomerLookup,
-  clearCashAtHand,
   clearCreatePayment,
   resetAgentState,
   setPagination,
@@ -4207,7 +4095,6 @@ export const {
   updateAgentInfoPerformanceScore,
   setBillLookup,
   clearBillLookupData,
-  clearCashAtHandData,
   updateAgentSummaryAfterPayment,
   updateAgentSummaryAfterClearance,
   updateAgentSummaryAfterChangeRequest,

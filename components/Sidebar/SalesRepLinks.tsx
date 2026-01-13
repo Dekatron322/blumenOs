@@ -137,6 +137,38 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
         return false
       }
 
+      // Hide View Pending Collections for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/view-pending-collections" &&
+        agent &&
+        (agent.agentType === "SalesRep" || agent.agentType === "Cashier")
+      ) {
+        return false
+      }
+
+      // Hide Mop Cash for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/mop-cash" &&
+        agent &&
+        (agent.agentType === "SalesRep" || agent.agentType === "Cashier")
+      ) {
+        return false
+      }
+
+      // Hide Mopping History for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/mopping-history" &&
+        agent &&
+        (agent.agentType === "SalesRep" || agent.agentType === "Cashier")
+      ) {
+        return false
+      }
+
+      // Only show Vend for SalesRep and Cashier users
+      if (link.href === "/sales-rep/vend" && agent && agent.agentType !== "SalesRep" && agent.agentType !== "Cashier") {
+        return false
+      }
+
       // Always show Dashboard (no permission required)
       if (!link.permission) return true
 

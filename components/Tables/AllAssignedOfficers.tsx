@@ -9,6 +9,8 @@ import { Filter } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { Agent, AgentsRequestParams, clearAgents, clearError, fetchAgents, setPagination } from "lib/redux/agentSlice"
+import { ButtonModule } from "components/ui/Button/Button"
+import { VscEye } from "react-icons/vsc"
 
 interface ActionDropdownProps {
   agent: Agent
@@ -221,7 +223,7 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
   const [searchText, setSearchText] = useState("")
 
   const handleViewAgentDetails = (agent: Agent) => {
-    router.push(`/agents/agent-details/${agent.id}`)
+    router.push(`/sales-rep/assigned-officers/${agent.id}`)
   }
 
   // Get pagination values from Redux state
@@ -615,7 +617,14 @@ const AllAssignedOfficers: React.FC<AllAssignedOfficersProps> = ({
                         {agent.lastCashCollectionDate ? formatDate(agent.lastCashCollectionDate) : "-"}
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ActionDropdown agent={agent} onViewDetails={handleViewAgentDetails} />
+                        <ButtonModule
+                          variant="outline"
+                          size="sm"
+                          icon={<VscEye className="h-4 w-4" />}
+                          onClick={() => handleViewAgentDetails(agent)}
+                        >
+                          View
+                        </ButtonModule>
                       </td>
                     </motion.tr>
                   ))}

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { createCashRemittanceRecord, CreateCashRemittanceRequest } from "lib/redux/cashRemittanceSlice"
-import { fetchAgentInfo, fetchCashAtHand } from "lib/redux/agentSlice"
+import { fetchAgentInfo } from "lib/redux/agentSlice"
 import { fetchBankLists } from "lib/redux/paymentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
@@ -15,7 +15,7 @@ import { notify } from "components/ui/Notification/Notification"
 const MopCashPage = () => {
   const dispatch = useAppDispatch()
   const { addRecordLoading, addRecordError, addRecordSuccess } = useAppSelector((state) => state.cashRemittance)
-  const { agentInfo, cashAtHand, cashAtHandLoading, cashAtHandError } = useAppSelector((state) => state.agents)
+  const { agentInfo, agentInfoLoading, agentInfoError } = useAppSelector((state) => state.agents)
   const { bankLists, bankListsLoading, bankListsError } = useAppSelector((state) => state.payments)
 
   const [form, setForm] = useState<CreateCashRemittanceRequest>({
@@ -51,10 +51,9 @@ const MopCashPage = () => {
     return isNaN(parsed) ? 0 : parsed
   }
 
-  // Fetch current agent info, cash at hand, and bank lists
+  // Fetch current agent info and bank lists
   useEffect(() => {
     dispatch(fetchAgentInfo())
-    dispatch(fetchCashAtHand())
     dispatch(fetchBankLists())
   }, [dispatch])
 
@@ -73,8 +72,8 @@ const MopCashPage = () => {
         notes: "",
         depositedAtUtc: "",
       })
-      // Refresh cash at hand after successful remittance
-      dispatch(fetchCashAtHand())
+      // Refresh agent info after successful remittance
+      dispatch(fetchAgentInfo())
     }
 
     if (addRecordError) {
@@ -82,11 +81,11 @@ const MopCashPage = () => {
     }
   }, [addRecordSuccess, addRecordError, dispatch])
 
-  // Handle cash at hand and bank lists errors
+  // Handle agent info and bank lists errors
   useEffect(() => {
-    if (cashAtHandError) {
-      notify("error", "Failed to fetch cash at hand", {
-        description: cashAtHandError,
+    if (agentInfoError) {
+      notify("error", "Failed to fetch agent info", {
+        description: agentInfoError,
       })
     }
     if (bankListsError) {
@@ -94,7 +93,7 @@ const MopCashPage = () => {
         description: bankListsError,
       })
     }
-  }, [cashAtHandError, bankListsError])
+  }, [agentInfoError, bankListsError])
 
   const handleChange = (field: keyof CreateCashRemittanceRequest, value: string) => {
     if (field === "amount") {
@@ -208,10 +207,8 @@ const MopCashPage = () => {
                 <div className="mt-4 rounded-md bg-gray-50 p-3 text-sm text-gray-700">
                   <p className="font-medium">
                     Current Cash at Hand: ₦
-                    {cashAtHandLoading ? (
+                    {agentInfoLoading ? (
                       <span className="text-gray-500">Loading...</span>
-                    ) : cashAtHand ? (
-                      cashAtHand.cashAtHand.toLocaleString()
                     ) : (
                       agentInfo.cashAtHand.toLocaleString()
                     )}

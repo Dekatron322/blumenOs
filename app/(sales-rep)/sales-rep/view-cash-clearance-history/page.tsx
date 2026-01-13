@@ -26,7 +26,7 @@ const ViewCashClearanceHistoryPage: React.FC = () => {
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
       <DashboardNav />
       <div className="flex w-full">
-        <div className="mx-auto flex w-full flex-col px-3 2xl:container xl:px-16">
+        <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
           <div className="mt-6 w-full">
             <AgentClearanceTable agentId={agent.id} />
           </div>

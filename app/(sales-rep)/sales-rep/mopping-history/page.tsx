@@ -216,7 +216,7 @@ export default function CashManagementDashboard() {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
-            <div className="md:m4-8 my-4 flex w-full items-start justify-between  gap-6  max-md:flex-col ">
+            <div className=" my-4 flex w-full items-start justify-between  gap-6  max-md:flex-col ">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Cash Management</h1>
                 <p className="mt-2 text-gray-600">Monitor cash remittance and collection data</p>
@@ -297,7 +297,6 @@ export default function CashManagementDashboard() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
                     >
                       <CashRemittance />
                     </motion.div>
