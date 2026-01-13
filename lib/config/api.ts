@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
 
   COUNTRIES: {
     GET: "/system/countries",
+    LGA: "/system/sub-provinces/{provinceId}",
   },
 
   AGENTS: {
@@ -42,6 +43,7 @@ export const API_ENDPOINTS = {
     CHECK_PAYMENT: "/payments/reference/{reference}",
     AGENT_CLEAR_CASH: "/agents/me/clear-cash",
     APPROVE_CLEARANCE: "/agents/cash-clearances/{clearanceId}/approve",
+    CASH_AT_HAND: "/agents/cash-at-hand",
   },
 
   BILLING_DISPUTE: {
@@ -296,6 +298,7 @@ export const API_ENDPOINTS = {
     CASH_HOLDERS: "/payments/cash-holders",
     TOP_PERFORMERS: "/payments/reports/performers",
     CONFIRM: "/payments/{id}/confirm",
+    BANK_LISTS: "/payments/blumenpay/banks",
   },
 
   PAYMENT_DUNNING: {

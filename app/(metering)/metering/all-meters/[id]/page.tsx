@@ -12,6 +12,7 @@ import {
   Clock,
   CreditCard,
   Edit3,
+  ExternalLink,
   HistoryIcon,
   HomeIcon,
   Info,
@@ -556,12 +557,14 @@ const MeterBasicInfoTab = ({
   meter,
   canUpdate,
   openModal,
+  router,
 }: {
   meter: MeterDetailData
   canUpdate: boolean
   openModal: (
     modalType: "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl"
   ) => void
+  router: ReturnType<typeof useRouter>
 }) => {
   const dispatch = useAppDispatch()
   const provinces = useAppSelector(selectAllProvinces)
@@ -750,10 +753,22 @@ const MeterBasicInfoTab = ({
               </div>
 
               <div className="space-y-3 text-xs sm:text-sm">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <User2Icon size={16} />
-                  {meter.customerFullName}
-                </div>
+                <button
+                  className="flex items-center  gap-3 text-gray-600"
+                  onClick={() => router.push(`/customers/${meter.customerId}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <User2Icon size={16} />
+                    {meter.customerFullName}
+                  </div>
+                  <button
+                    onClick={() => router.push(`/customers/${meter.customerId}`)}
+                    className="text-blue-500 transition-colors hover:text-blue-700"
+                    title="View Customer Details"
+                  >
+                    <ExternalLink size={14} />
+                  </button>
+                </button>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Receipt size={16} />
                   {meter.customerAccountNumber}
@@ -879,6 +894,10 @@ const MeterBasicInfoTab = ({
               <div className="flex justify-between">
                 <span className="text-xs text-gray-600 sm:text-sm">TCT:</span>
                 <span className="text-sm font-medium sm:text-base">{meter.tct}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-xs text-gray-600 sm:text-sm">TI:</span>
+                <span className="text-sm font-medium sm:text-base">{meter.ti}</span>
               </div>
             </div>
           </motion.div>
@@ -1018,18 +1037,102 @@ const MeterBasicInfoTab = ({
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Rate</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tariffRate}</p>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff
+                      ? `₦${meter.tariff.tariffRate?.toFixed(2) || meter.tariffRate}`
+                      : `₦${meter.tariffRate}`}
+                  </p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Index</label>
-                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tariffIndex}</p>
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Code</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.tariffCode || "N/A"}
+                  </p>
                 </div>
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Name</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tariff?.name || "N/A"}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Type</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.tariffType || "N/A"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Class</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.tariffClass || "N/A"}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Currency</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">{meter.tariff?.currency || "N/A"}</p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Unit of Measure</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.unitOfMeasure || "N/A"}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-4">
                 <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                   <label className="text-xs font-medium text-gray-600 sm:text-sm">Service Band</label>
                   <p className="text-sm font-semibold text-gray-900 sm:text-base">
-                    {getServiceBandConfig(meter.serviceBand).label}
+                    {meter.tariff
+                      ? getServiceBandConfig(meter.tariff.serviceBand).label
+                      : getServiceBandConfig(meter.serviceBand).label}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Tariff Status</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.isActive ? (
+                      <span className="flex items-center gap-1 text-green-600">
+                        <CheckCircle className="h-4 w-4" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-red-600">
+                        <PowerOff className="h-4 w-4" />
+                        Inactive
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Effective From</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.effectiveFromUtc ? formatDate(meter.tariff.effectiveFromUtc) : "N/A"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Effective To</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.effectiveToUtc ? formatDate(meter.tariff.effectiveToUtc) : "No end date"}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Fixed Charge</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.fixedCharge ? `₦${meter.tariff.fixedCharge.toFixed(2)}` : "N/A"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                  <label className="text-xs font-medium text-gray-600 sm:text-sm">Minimum Charge</label>
+                  <p className="text-sm font-semibold text-gray-900 sm:text-base">
+                    {meter.tariff?.minimumCharge ? `₦${meter.tariff.minimumCharge.toFixed(2)}` : "N/A"}
                   </p>
                 </div>
               </div>
@@ -1316,7 +1419,7 @@ const MeterDetailsPage = () => {
 
     switch (activeTab) {
       case "basic-info":
-        return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} />
+        return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} router={router} />
       case "prepaid-credit-history":
         return <PrepaidCreditHistoryTab meterId={meter.id} />
       case "clear-tamper-history":
@@ -1330,7 +1433,7 @@ const MeterDetailsPage = () => {
       case "meter-history":
         return <MeterHistorySection meterId={meter.id} />
       default:
-        return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} />
+        return <MeterBasicInfoTab meter={meter} canUpdate={canUpdate} openModal={openModal} router={router} />
     }
   }
 

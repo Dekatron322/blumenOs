@@ -1183,7 +1183,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{meter.drn}</td>
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{meter.customerFullName}</td>
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                {getServiceBandText(meter.tariff?.serviceBand || meter.serviceBand)}
+                                {getServiceBandText(meter.serviceBand)}
                               </td>
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                                 <motion.div
