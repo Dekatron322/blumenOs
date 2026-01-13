@@ -575,7 +575,7 @@ const CashRemittance = () => {
         <div className="rounded-lg border bg-white p-3 md:p-4 lg:p-6">
           <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center justify-between md:block">
-              <h3 className="text-base font-semibold md:text-lg">Cash Remittance Records</h3>
+              <h3 className="text-base font-semibold md:text-lg">Cash Mop Up Records</h3>
               <button
                 onClick={() => setShowSidebar(!showSidebar)}
                 className="flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs hover:bg-gray-50 md:hidden"
@@ -588,7 +588,7 @@ const CashRemittance = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3 md:max-w-lg">
               <DateFilter />
               <ButtonModule variant="primary" size="md" onClick={() => setShowRecordModal(true)}>
-                Record Remittance
+                Record Cash Mopup
               </ButtonModule>
             </div>
           </div>
@@ -596,7 +596,7 @@ const CashRemittance = () => {
           {/* Loading State */}
           {recordsLoading && (
             <div className="flex items-center justify-center py-8">
-              <div className="text-sm text-gray-500">Loading cash remittance records...</div>
+              <div className="text-sm text-gray-500">Loading cash mop up records...</div>
             </div>
           )}
 
@@ -612,7 +612,7 @@ const CashRemittance = () => {
             <div className="space-y-3 md:space-y-4">
               {filteredRecords.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-sm text-gray-500">No cash remittance records found</p>
+                  <p className="text-sm text-gray-500">No cash mop up records found</p>
                 </div>
               ) : (
                 filteredRecords.map((record, index) => <RecordCard key={record.id} record={record} index={index} />)

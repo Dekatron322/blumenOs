@@ -48,6 +48,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import Footer from "components/Footer/Footer"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -541,1194 +542,1204 @@ export default function Dashboard() {
       : "text-red-500"
 
   return (
-    <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
-      <div className="flex w-full">
-        <div className="flex w-full flex-col">
-          <DashboardNav />
+    <>
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="flex w-full">
+          <div className="flex w-full flex-col">
+            <DashboardNav />
 
-          <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
-            <div className="mb-6 flex w-full flex-col gap-4">
-              <div className="flex w-full items-start justify-between gap-4 max-2xl:flex-col">
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
-                    Dashboard Overview
-                  </h1>
-                  <p className="text-sm font-medium text-gray-500 sm:text-base">
-                    Comprehensive overview of utility operations
-                  </p>
-                </div>
-                <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
-                  <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
-                    <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
-                      <span className="text-sm  font-medium text-gray-500">Time Range:</span>
+            <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
+              <div className="mb-6 flex w-full flex-col gap-4">
+                <div className="flex w-full items-start justify-between gap-4 max-2xl:flex-col">
+                  <div>
+                    <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
+                      Dashboard Overview
+                    </h1>
+                    <p className="text-sm font-medium text-gray-500 sm:text-base">
+                      Comprehensive overview of utility operations
+                    </p>
+                  </div>
+                  <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
+                    <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
+                      <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
+                        <span className="text-sm  font-medium text-gray-500">Time Range:</span>
 
-                      {/* Desktop Layout */}
-                      <div className="hidden items-center gap-2 sm:flex">
-                        <TimeFilterButton filter="day" label="Today" />
-                        <TimeFilterButton filter="week" label="This Week" />
-                        <TimeFilterButton filter="month" label="This Month" />
-                        <TimeFilterButton filter="all" label="All Time" />
+                        {/* Desktop Layout */}
+                        <div className="hidden items-center gap-2 sm:flex">
+                          <TimeFilterButton filter="day" label="Today" />
+                          <TimeFilterButton filter="week" label="This Week" />
+                          <TimeFilterButton filter="month" label="This Month" />
+                          <TimeFilterButton filter="all" label="All Time" />
+                        </div>
+                      </div>
+
+                      {/* Polling Controls */}
+                      <div className="flex items-center gap-2 border-l pl-4">
+                        <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                        <button
+                          onClick={togglePolling}
+                          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                            isPolling
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          }`}
+                        >
+                          {isPolling ? (
+                            <>
+                              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                              </svg>
+                              ON
+                            </>
+                          ) : (
+                            <>
+                              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              OFF
+                            </>
+                          )}
+                        </button>
+
+                        {isPolling && (
+                          <DropdownPopover
+                            options={pollingOptions}
+                            selectedValue={pollingInterval}
+                            onSelect={handlePollingIntervalChange}
+                          >
+                            {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                          </DropdownPopover>
+                        )}
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    {/* Polling Controls */}
-                    <div className="flex items-center gap-2 border-l pl-4">
-                      <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
-                      <button
-                        onClick={togglePolling}
-                        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                          isPolling
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                        }`}
-                      >
-                        {isPolling ? (
-                          <>
-                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {/* Fixed Time Filter Section with Mobile Slider */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="w-full sm:w-auto">
+                    <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:hidden">
+                      <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
+                        <span className="text-sm font-medium text-gray-500">Time Range:</span>
+
+                        {/* Mobile Dropdown Layout */}
+                        <div className="relative xl:hidden">
+                          <button
+                            type="button"
+                            onClick={() => setIsMobileFilterOpen((prev) => !prev)}
+                            className="inline-flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                          >
+                            <span>{getTimeFilterLabel(timeFilter)}</span>
+                            <svg
+                              className="size-4 text-gray-500"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
                               <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                fillRule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                                clipRule="evenodd"
                               />
                             </svg>
-                            ON
-                          </>
-                        ) : (
-                          <>
-                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            OFF
-                          </>
-                        )}
-                      </button>
+                          </button>
 
-                      {isPolling && (
-                        <DropdownPopover
-                          options={pollingOptions}
-                          selectedValue={pollingInterval}
-                          onSelect={handlePollingIntervalChange}
-                        >
-                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                        </DropdownPopover>
-                      )}
+                          {isMobileFilterOpen && (
+                            <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-sm shadow-lg">
+                              <div className="border-b border-gray-100 px-3 py-2">
+                                <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                  Time Range
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("day")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Today
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("week")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "week" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                This Week
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("month")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "month" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                This Month
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("all")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "all" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                All Time
+                              </button>
+
+                              <div className="mb-2 mt-2 border-b border-gray-100"></div>
+                              <div className="px-3 py-2">
+                                <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                  Auto-refresh
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={togglePolling}
+                                className={`flex w-full items-center justify-between px-3 py-2 ${
+                                  isPolling ? "bg-green-50 text-green-700" : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  {isPolling ? (
+                                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                      />
+                                    </svg>
+                                  ) : (
+                                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                      />
+                                    </svg>
+                                  )}
+                                  {isPolling ? "Enabled" : "Disabled"}
+                                </span>
+                              </button>
+
+                              {isPolling && (
+                                <div className="px-3 py-2">
+                                  <DropdownPopover
+                                    options={pollingOptions}
+                                    selectedValue={pollingInterval}
+                                    onSelect={handlePollingIntervalChange}
+                                  >
+                                    {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                                  </DropdownPopover>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Fixed Time Filter Section with Mobile Slider */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="w-full sm:w-auto">
-                  <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:hidden">
-                    <div className="flex flex-row items-center gap-2 max-sm:justify-between sm:gap-3">
-                      <span className="text-sm font-medium text-gray-500">Time Range:</span>
+              {activeView === "kpi" && (
+                <>
+                  <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-6">
+                    {(dashboardCards || []).map((card, index) => (
+                      <Card
+                        key={card.title}
+                        title={card.title}
+                        icon={getCardIcon(card.title)}
+                        className={index < 3 ? "2xl:col-span-2" : "2xl:col-span-3"}
+                      >
+                        <div className="mb-2 flex items-center justify-between border-b py-2">
+                          <Text>{card.description}</Text>
+                          <Text className="text-xs">{card.periodLabel}</Text>
+                        </div>
 
-                      {/* Mobile Dropdown Layout */}
-                      <div className="relative xl:hidden">
-                        <button
-                          type="button"
-                          onClick={() => setIsMobileFilterOpen((prev) => !prev)}
-                          className="inline-flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                        >
-                          <span>{getTimeFilterLabel(timeFilter)}</span>
-                          <svg
-                            className="size-4 text-gray-500"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-
-                        {isMobileFilterOpen && (
-                          <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-sm shadow-lg">
-                            <div className="border-b border-gray-100 px-3 py-2">
-                              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                Time Range
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleTimeFilterChange("day")}
-                              className={`block w-full px-3 py-2 text-left ${
-                                timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              Today
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleTimeFilterChange("week")}
-                              className={`block w-full px-3 py-2 text-left ${
-                                timeFilter === "week" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              This Week
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleTimeFilterChange("month")}
-                              className={`block w-full px-3 py-2 text-left ${
-                                timeFilter === "month" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              This Month
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleTimeFilterChange("all")}
-                              className={`block w-full px-3 py-2 text-left ${
-                                timeFilter === "all" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              All Time
-                            </button>
-
-                            <div className="mb-2 mt-2 border-b border-gray-100"></div>
-                            <div className="px-3 py-2">
-                              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                Auto-refresh
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={togglePolling}
-                              className={`flex w-full items-center justify-between px-3 py-2 ${
-                                isPolling ? "bg-green-50 text-green-700" : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              <span className="flex items-center gap-2">
-                                {isPolling ? (
-                                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                )}
-                                {isPolling ? "Enabled" : "Disabled"}
-                              </span>
-                            </button>
-
-                            {isPolling && (
-                              <div className="px-3 py-2">
-                                <DropdownPopover
-                                  options={pollingOptions}
-                                  selectedValue={pollingInterval}
-                                  onSelect={handlePollingIntervalChange}
-                                >
-                                  {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                                </DropdownPopover>
-                              </div>
+                        {dashboardCardsLoading || isLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-8 w-32 rounded bg-gray-200"></div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
+                            {getCardTrend(card) && (
+                              <TrendIndicator
+                                value={getCardTrend(card)!.value}
+                                positive={getCardTrend(card)!.positive}
+                              />
                             )}
                           </div>
                         )}
-                      </div>
-                    </div>
+                      </Card>
+                    ))}
+
+                    {!dashboardCardsLoading && !isLoading && dashboardCards.length === 0 && (
+                      <Card title="Dashboard Cards" icon={<RevenueIcon />}>
+                        <div className="mb-2 flex items-center justify-between border-b py-2">
+                          <Text>No card data returned.</Text>
+                        </div>
+                        <Metric size="sm">-</Metric>
+                      </Card>
+                    )}
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {activeView === "kpi" && (
-              <>
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-6">
-                  {(dashboardCards || []).map((card, index) => (
-                    <Card
-                      key={card.title}
-                      title={card.title}
-                      icon={getCardIcon(card.title)}
-                      className={index < 3 ? "2xl:col-span-2" : "2xl:col-span-3"}
-                    >
-                      <div className="mb-2 flex items-center justify-between border-b py-2">
-                        <Text>{card.description}</Text>
-                        <Text className="text-xs">{card.periodLabel}</Text>
-                      </div>
-
-                      {dashboardCardsLoading || isLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-8 w-32 rounded bg-gray-200"></div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
-                          {getCardTrend(card) && (
-                            <TrendIndicator value={getCardTrend(card)!.value} positive={getCardTrend(card)!.positive} />
-                          )}
-                        </div>
-                      )}
-                    </Card>
-                  ))}
-
-                  {!dashboardCardsLoading && !isLoading && dashboardCards.length === 0 && (
-                    <Card title="Dashboard Cards" icon={<RevenueIcon />}>
-                      <div className="mb-2 flex items-center justify-between border-b py-2">
-                        <Text>No card data returned.</Text>
-                      </div>
-                      <Metric size="sm">-</Metric>
-                    </Card>
-                  )}
-                </div>
-
-                {/* Collection Efficiency Card */}
-                <div className="mb-6">
-                  <Card title="Collection Efficiency">
-                    {collectionEfficiencyLoading ? (
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                        {/* Efficiency Percentage Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                          <div className="mb-2 h-4 w-32 animate-pulse rounded bg-green-200"></div>
-                          <div className="mb-2 h-10 w-20 animate-pulse rounded bg-green-300"></div>
-                          <div className="h-4 w-24 animate-pulse rounded bg-green-200"></div>
-                        </div>
-
-                        {/* Total Billed Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                          <div className="mb-2 h-4 w-24 animate-pulse rounded bg-blue-200"></div>
-                          <div className="mb-2 h-8 w-32 animate-pulse rounded bg-blue-300"></div>
-                          <div className="h-4 w-16 animate-pulse rounded bg-blue-200"></div>
-                        </div>
-
-                        {/* Total Collected Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-                          <div className="mb-2 h-4 w-28 animate-pulse rounded bg-purple-200"></div>
-                          <div className="mb-2 h-8 w-32 animate-pulse rounded bg-purple-300"></div>
-                          <div className="h-4 w-20 animate-pulse rounded bg-purple-200"></div>
-                        </div>
-
-                        {/* Performance Indicator Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-                          <div className="mb-2 h-4 w-20 animate-pulse rounded bg-gray-300"></div>
-                          <div className="mb-4 h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                          <div className="h-4 w-24 animate-pulse rounded bg-gray-300"></div>
-                        </div>
-                      </div>
-                    ) : collectionEfficiencyError ? (
-                      <div className="flex h-64 items-center justify-center">
-                        <div className="text-center">
-                          <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                          <div className="text-sm text-gray-600">{collectionEfficiencyError}</div>
-                        </div>
-                      </div>
-                    ) : !collectionEfficiencyData ? (
-                      <div className="flex h-64 items-center justify-center">
-                        <div className="text-center">
-                          <div className="mb-2 text-lg font-semibold text-gray-900">No collection efficiency data</div>
-                          <div className="text-sm text-gray-600">Try changing the time range.</div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                        {/* Efficiency Percentage Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
-                            Collection Efficiency
+                  {/* Collection Efficiency Card */}
+                  <div className="mb-6">
+                    <Card title="Collection Efficiency">
+                      {collectionEfficiencyLoading ? (
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                          {/* Efficiency Percentage Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                            <div className="mb-2 h-4 w-32 animate-pulse rounded bg-green-200"></div>
+                            <div className="mb-2 h-10 w-20 animate-pulse rounded bg-green-300"></div>
+                            <div className="h-4 w-24 animate-pulse rounded bg-green-200"></div>
                           </div>
-                          <div className={`text-4xl font-bold ${collectionEfficiencyColor}`}>
-                            {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+
+                          {/* Total Billed Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                            <div className="mb-2 h-4 w-24 animate-pulse rounded bg-blue-200"></div>
+                            <div className="mb-2 h-8 w-32 animate-pulse rounded bg-blue-300"></div>
+                            <div className="h-4 w-16 animate-pulse rounded bg-blue-200"></div>
                           </div>
-                          <div className="mt-2 text-sm text-green-700">
-                            {collectionEfficiencyData.efficiencyPercent >= 90
-                              ? "Excellent"
-                              : collectionEfficiencyData.efficiencyPercent >= 80
-                              ? "Good"
-                              : "Needs Improvement"}
+
+                          {/* Total Collected Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
+                            <div className="mb-2 h-4 w-28 animate-pulse rounded bg-purple-200"></div>
+                            <div className="mb-2 h-8 w-32 animate-pulse rounded bg-purple-300"></div>
+                            <div className="h-4 w-20 animate-pulse rounded bg-purple-200"></div>
+                          </div>
+
+                          {/* Performance Indicator Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                            <div className="mb-2 h-4 w-20 animate-pulse rounded bg-gray-300"></div>
+                            <div className="mb-4 h-4 w-full animate-pulse rounded bg-gray-200"></div>
+                            <div className="h-4 w-24 animate-pulse rounded bg-gray-300"></div>
                           </div>
                         </div>
-
-                        {/* Total Billed Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
-                            Total Billed
-                          </div>
-                          <div className="text-3xl font-bold text-blue-900">
-                            {selectedCurrencySymbol}
-                            {collectionEfficiencyData.totalBilled?.toLocaleString() || "0"}
-                          </div>
-                          <div className="mt-2 text-sm text-blue-700">
-                            {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
-                          </div>
-                        </div>
-
-                        {/* Total Collected Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
-                            Total Collected
-                          </div>
-                          <div className="text-3xl font-bold text-purple-900">
-                            {selectedCurrencySymbol}
-                            {collectionEfficiencyData.totalCollected?.toLocaleString() || "0"}
-                          </div>
-                          <div className="mt-2 text-sm text-purple-700">
-                            {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
-                          </div>
-                        </div>
-
-                        {/* Performance Indicator */}
-                        <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
-                            Performance
-                          </div>
-                          <div className="mb-4">
-                            <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600"
-                                style={{ width: `${Math.min(collectionEfficiencyData.efficiencyPercent || 0, 100)}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="text-sm text-gray-700">
-                            <div className="flex justify-between">
-                              <span>Target: 85%</span>
-                              <span className="font-semibold">
-                                {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-                </div>
-
-                {/* ENERGY DELIVERED vs ENERGY BILLED Chart */}
-                <Card title="ENERGY DELIVERED vs ENERGY BILLED" className="mb-6">
-                  {energyBalanceLoading ? (
-                    <div className="animate-pulse">
-                      <div className="h-[300px] w-full rounded bg-gray-200" />
-                    </div>
-                  ) : energyBalanceError ? (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                      {energyBalanceError}
-                    </div>
-                  ) : memoizedEnergyBalanceChartData.length === 0 ? (
-                    <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                      <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-                        <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 3v18h18M7 14l3-3 4 4 6-7"
-                          />
-                        </svg>
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900">No energy balance data</div>
-                      <div className="mt-1 max-w-md text-sm text-gray-600">
-                        Try changing the time range or confirm feeders exist for the selected period.
-                      </div>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={memoizedEnergyBalanceChartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="delivered" name="Energy Delivered (kWh)" fill="#004B23" />
-                        <Bar dataKey="billed" name="Energy Billed (kWh)" fill="#38b000" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </Card>
-
-                {dashboardCardsError && (
-                  <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                    {dashboardCardsError}
-                  </div>
-                )}
-
-                {/* Collection by BAND Section */}
-                <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
-                  <Card title="Collection by BAND">
-                    <div className="flex h-[200px] flex-col justify-center">
-                      {collectionByBandLoading ? (
-                        <div className="animate-pulse">
-                          <div className="mb-4 h-24 w-full rounded bg-gray-200" />
-                          <div className="h-[200px] w-full rounded bg-gray-200" />
-                        </div>
-                      ) : collectionByBandError ? (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                          {collectionByBandError}
-                        </div>
-                      ) : collectionByBandSlices.length === 0 ? (
-                        <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                          <div className="text-sm font-semibold text-gray-900">No collection-by-band data</div>
-                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="mb-4">
-                            <table className="w-full">
-                              <thead>
-                                <tr className="border-b">
-                                  <th className="py-2 text-left">Band</th>
-                                  <th className="py-2 text-right">Collection</th>
-                                  <th className="py-2 text-right">%</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {collectionByBandSlices.map((item) => (
-                                  <tr key={item.label} className="border-b">
-                                    <td className="py-2">{item.label}</td>
-                                    <td className="py-2 text-right">
-                                      {selectedCurrencySymbol}
-                                      {item.amount.toLocaleString()}
-                                    </td>
-                                    <td className="py-2 text-right">{item.percentage}%</td>
-                                  </tr>
-                                ))}
-                                <tr className="border-b font-medium">
-                                  <td className="py-2">Total</td>
-                                  <td className="py-2 text-right">
-                                    {selectedCurrencySymbol}
-                                    {collectionByBandTotal.amount.toLocaleString()}
-                                  </td>
-                                  <td className="py-2 text-right">100%</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                          <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={collectionByBandChartData}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="name" />
-                              <YAxis />
-                              <Tooltip />
-                              <Bar dataKey="percentage" name="Collection %" fill="#004B23" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </>
-                      )}
-                    </div>
-                  </Card>
-
-                  <div className="grid grid-cols-1  gap-6">
-                    <Card title="Daily Collection">
-                      {dailyCollectionLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-[200px] w-full rounded bg-gray-200" />
-                        </div>
-                      ) : dailyCollectionError ? (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                          {dailyCollectionError}
-                        </div>
-                      ) : memoizedDailyCollectionChartData.length === 0 ? (
-                        <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                          <div className="text-sm font-semibold text-gray-900">No daily collection data</div>
-                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
-                        </div>
-                      ) : (
-                        <ResponsiveContainer width="100%" height={200}>
-                          <AreaChart data={memoizedDailyCollectionChartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="day" />
-                            <YAxis />
-                            <Tooltip />
-                            <Area
-                              type="monotone"
-                              dataKey="collection"
-                              stroke="#004B23"
-                              fill="#004B23"
-                              fillOpacity={0.3}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </Card>
-
-                    <Card title="CBO Performance">
-                      {cboPerformanceLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-[150px] w-full rounded bg-gray-200" />
-                        </div>
-                      ) : cboPerformanceError ? (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                          {cboPerformanceError}
-                        </div>
-                      ) : cboPerformanceChartData.length === 0 ? (
-                        <div className="flex h-[150px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                          <div className="text-sm font-semibold text-gray-900">No CBO performance data</div>
-                          <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
-                        </div>
-                      ) : (
-                        <ResponsiveContainer width="100%" height={150}>
-                          <BarChart data={cboPerformanceChartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis domain={[0, 100]} />
-                            <Tooltip />
-                            <Bar dataKey="performance" name="Performance %" fill="#004B23" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      )}
-                    </Card>
-                  </div>
-                </div>
-
-                {/* Operational Metrics */}
-                <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-4">
-                  <Card title="New Connections (MTD)" icon={<ConnectionIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Meter Installations</Text>
-                    </div>
-                    {newConnectionsLoading || isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
-                      </div>
-                    ) : newConnectionsError ? (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        {newConnectionsError}
-                      </div>
-                    ) : newConnectionsTotal === 0 ? (
-                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
-                        No new connections for this period.
-                      </div>
-                    ) : (
-                      <>
-                        <Metric size="lg">{newConnectionsTotal.toLocaleString()}</Metric>
-                        <div className="mt-2 text-sm text-gray-600">Total connections this period</div>
-                      </>
-                    )}
-                  </Card>
-
-                  <Card title="Prepaid Vends" icon={<VendingIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>Token Transactions</Text>
-                    </div>
-                    {prepaidVendsLoading || isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
-                      </div>
-                    ) : prepaidVendsError ? (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        {prepaidVendsError}
-                      </div>
-                    ) : prepaidVendsTotal === 0 ? (
-                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
-                        No prepaid vends for this period.
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric size="lg">{prepaidVendsTotal.toLocaleString()}</Metric>
-                      </div>
-                    )}
-                  </Card>
-
-                  <Card title="Tokens Generated" icon={<TokenGeneratedIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>KCT, CTT, CCT Tokens</Text>
-                    </div>
-                    {tokenGeneratedLoading || isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
-                      </div>
-                    ) : tokenGeneratedError ? (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        {tokenGeneratedError}
-                      </div>
-                    ) : tokensGeneratedTotal === 0 ? (
-                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
-                        No tokens generated for this period.
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric size="lg">{tokensGeneratedTotal.toLocaleString()}</Metric>
-                      </div>
-                    )}
-                  </Card>
-
-                  <Card title="Meters Programmed" icon={<MetersProgrammedIcon />}>
-                    <div className="mb-2 flex items-center justify-between border-b py-2">
-                      <Text>{metersProgrammedDistinctTotal.toLocaleString()} distinct meters</Text>
-                    </div>
-                    {metersProgrammedLoading || isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 w-32 rounded bg-gray-200"></div>
-                      </div>
-                    ) : metersProgrammedError ? (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        {metersProgrammedError}
-                      </div>
-                    ) : metersProgrammedTotal === 0 ? (
-                      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
-                        No meters programmed for this period.
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Metric size="lg">{metersProgrammedTotal.toLocaleString()}</Metric>
-                      </div>
-                    )}
-                  </Card>
-                </div>
-
-                {/* Outstanding Arrears Section */}
-                <div className="mb-6">
-                  <Card title="Outstanding Arrears Summary" icon={<RevenueIcon />}>
-                    {outstandingArrearsLoading || isLoading ? (
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                        {/* Total Outstanding Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
-                          <div className="mb-2 h-4 w-32 animate-pulse rounded bg-red-200"></div>
-                          <div className="mb-2 h-10 w-32 animate-pulse rounded bg-red-300"></div>
-                          <div className="h-4 w-24 animate-pulse rounded bg-red-200"></div>
-                        </div>
-
-                        {/* Debits Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
-                          <div className="mb-2 h-4 w-24 animate-pulse rounded bg-orange-200"></div>
-                          <div className="mb-2 h-8 w-28 animate-pulse rounded bg-orange-300"></div>
-                          <div className="h-4 w-20 animate-pulse rounded bg-orange-200"></div>
-                        </div>
-
-                        {/* Credits Skeleton */}
-                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                          <div className="mb-2 h-4 w-24 animate-pulse rounded bg-green-200"></div>
-                          <div className="mb-2 h-8 w-28 animate-pulse rounded bg-green-300"></div>
-                          <div className="h-4 w-20 animate-pulse rounded bg-green-200"></div>
-                        </div>
-                      </div>
-                    ) : outstandingArrearsError ? (
-                      <div className="flex h-64 items-center justify-center">
-                        <div className="text-center">
-                          <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                          <div className="text-sm text-gray-600">{outstandingArrearsError}</div>
-                        </div>
-                      </div>
-                    ) : !outstandingArrearsData ? (
-                      <div className="flex h-64 items-center justify-center">
-                        <div className="text-center">
-                          <div className="mb-2 text-lg font-semibold text-gray-900">No arrears data</div>
-                          <div className="text-sm text-gray-600">Try refreshing the dashboard.</div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                        {/* Total Outstanding Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-red-600">
-                            Total Outstanding
-                          </div>
-                          <div className="text-3xl font-bold text-red-900">
-                            {selectedCurrencySymbol}
-                            {outstandingArrearsData.totalOutstanding.toLocaleString()}
-                          </div>
-                          <div className="mt-2 text-sm text-red-700">
-                            {outstandingArrearsData.customersInArrears.toLocaleString()} customers in arrears
-                          </div>
-                        </div>
-
-                        {/* Total Debits Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-orange-600">
-                            Total Debits
-                          </div>
-                          <div className="text-3xl font-bold text-orange-900">
-                            {selectedCurrencySymbol}
-                            {outstandingArrearsData.totalDebits.toLocaleString()}
-                          </div>
-                          <div className="mt-2 text-sm text-orange-700">Outstanding charges and fees</div>
-                        </div>
-
-                        {/* Total Credits Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
-                            Total Credits
-                          </div>
-                          <div className="text-3xl font-bold text-green-900">
-                            {selectedCurrencySymbol}
-                            {outstandingArrearsData.totalCredits.toLocaleString()}
-                          </div>
-                          <div className="mt-2 text-sm text-green-700">Payments and adjustments</div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Bottom row with net amount and performance indicator */}
-                    {outstandingArrearsData && !outstandingArrearsLoading && !outstandingArrearsError && (
-                      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Net Amount Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
-                            Net Amount
-                          </div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {selectedCurrencySymbol}
-                            {(
-                              outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits
-                            ).toLocaleString()}
-                          </div>
-                          <div className="mt-2 text-sm text-gray-700">Debits minus credits</div>
-                        </div>
-
-                        {/* Arrears Ratio Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-                          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
-                            Arrears Ratio
-                          </div>
-                          <div className="mb-4">
-                            <div className="h-4 w-full overflow-hidden rounded-full bg-blue-200">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
-                                style={{
-                                  width: `${Math.min(
-                                    (outstandingArrearsData.totalDebits /
-                                      (outstandingArrearsData.totalDebits + outstandingArrearsData.totalCredits)) *
-                                      100 || 0,
-                                    100
-                                  )}%`,
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="text-sm text-blue-700">
-                            <div className="flex justify-between">
-                              <span>Debit/Credit Ratio</span>
-                              <span className="font-semibold">
-                                {(
-                                  (outstandingArrearsData.totalDebits /
-                                    (outstandingArrearsData.totalDebits + outstandingArrearsData.totalCredits)) *
-                                    100 || 0
-                                ).toFixed(1)}
-                                %
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-                </div>
-
-                {/* Additional Charts Section */}
-                <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-3">
-                  <div className="col-span-2 grid grid-cols-1 gap-6">
-                    <Card>
-                      <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Payment Breakdown</h3>
-                        <p className="text-sm text-gray-600">Payment channels and collector types analysis</p>
-                      </div>
-                      {breakdownLoading ? (
-                        <div className="flex h-64 items-center justify-center p-4">
-                          <div className="w-full">
-                            {/* Chart skeleton */}
-                            <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
-                            <div className="flex h-48 items-end justify-between gap-2">
-                              {[...Array(8)].map((_, i) => (
-                                <div key={i} className="flex w-full flex-col gap-1">
-                                  <div
-                                    className="h-full animate-pulse rounded bg-gray-200"
-                                    style={{ height: `${Math.random() * 60 + 20}%` }}
-                                  ></div>
-                                  <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="mt-4 flex justify-center gap-4">
-                              <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
-                                <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
-                                <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : breakdownError ? (
+                      ) : collectionEfficiencyError ? (
                         <div className="flex h-64 items-center justify-center">
                           <div className="text-center">
                             <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                            <div className="text-sm text-gray-600">{breakdownError}</div>
+                            <div className="text-sm text-gray-600">{collectionEfficiencyError}</div>
                           </div>
                         </div>
-                      ) : !breakdownSlices || breakdownSlices.length === 0 ? (
+                      ) : !collectionEfficiencyData ? (
                         <div className="flex h-64 items-center justify-center">
                           <div className="text-center">
-                            <div className="mb-2 text-lg font-semibold text-gray-900">No breakdown data</div>
+                            <div className="mb-2 text-lg font-semibold text-gray-900">
+                              No collection efficiency data
+                            </div>
                             <div className="text-sm text-gray-600">Try changing the time range.</div>
                           </div>
                         </div>
                       ) : (
-                        <ResponsiveContainer width="100%" height={250}>
-                          <BarChart data={breakdownSlices}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="label" />
-                            <YAxis yAxisId="left" orientation="left" stroke="#004B23" />
-                            <YAxis yAxisId="right" orientation="right" stroke="#ea5806" />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                                border: "1px solid #e5e7eb",
-                                borderRadius: "8px",
-                              }}
-                              formatter={(value: number, name: string) => [
-                                name === "amount"
-                                  ? `${selectedCurrencySymbol}${value.toLocaleString()}`
-                                  : value.toLocaleString(),
-                                name === "amount" ? "Amount" : name === "count" ? "Count" : "Percentage",
-                              ]}
-                            />
-                            <Legend />
-                            <Bar yAxisId="left" dataKey="amount" fill="#004B23" name="Amount" />
-                            <Bar yAxisId="right" dataKey="count" fill="#ea5806" name="Count" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      )}
-                    </Card>
-
-                    <Card title="DISPUTES OVERVIEW">
-                      {disputesLoading ? (
-                        <div className="animate-pulse">
-                          <div className="h-[300px] w-full rounded bg-gray-200" />
-                        </div>
-                      ) : disputesError ? (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                          {disputesError}
-                        </div>
-                      ) : memoizedDisputesChartData.length === 0 ? (
-                        <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-                            <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                              />
-                            </svg>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                          {/* Efficiency Percentage Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
+                              Collection Efficiency
+                            </div>
+                            <div className={`text-4xl font-bold ${collectionEfficiencyColor}`}>
+                              {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+                            </div>
+                            <div className="mt-2 text-sm text-green-700">
+                              {collectionEfficiencyData.efficiencyPercent >= 90
+                                ? "Excellent"
+                                : collectionEfficiencyData.efficiencyPercent >= 80
+                                ? "Good"
+                                : "Needs Improvement"}
+                            </div>
                           </div>
-                          <div className="text-sm font-semibold text-gray-900">No disputes data</div>
+
+                          {/* Total Billed Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
+                              Total Billed
+                            </div>
+                            <div className="text-3xl font-bold text-blue-900">
+                              {selectedCurrencySymbol}
+                              {collectionEfficiencyData.totalBilled?.toLocaleString() || "0"}
+                            </div>
+                            <div className="mt-2 text-sm text-blue-700">
+                              {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
+                            </div>
+                          </div>
+
+                          {/* Total Collected Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
+                              Total Collected
+                            </div>
+                            <div className="text-3xl font-bold text-purple-900">
+                              {selectedCurrencySymbol}
+                              {collectionEfficiencyData.totalCollected?.toLocaleString() || "0"}
+                            </div>
+                            <div className="mt-2 text-sm text-purple-700">
+                              {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
+                            </div>
+                          </div>
+
+                          {/* Performance Indicator */}
+                          <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
+                              Performance
+                            </div>
+                            <div className="mb-4">
+                              <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600"
+                                  style={{
+                                    width: `${Math.min(collectionEfficiencyData.efficiencyPercent || 0, 100)}%`,
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-700">
+                              <div className="flex justify-between">
+                                <span>Target: 85%</span>
+                                <span className="font-semibold">
+                                  {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={memoizedDisputesChartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="count" name="Dispute Count" fill="#dc2626" />
-                            <Bar dataKey="amount" name="Dispute Amount" fill="#f97316" />
-                          </BarChart>
-                        </ResponsiveContainer>
                       )}
                     </Card>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6">
-                    <Card title="ACTIVE CUSTOMERS SUMMARY" className="border-0 shadow-lg">
-                      <div className="space-y-6">
-                        {/* Header with total customers */}
-                        <div className="border-b border-gray-100 pb-4 text-center">
-                          <div className="mb-2">
-                            <div className="mb-1 text-4xl font-bold text-gray-900">
-                              {customerSegmentsData?.totalCustomers?.toLocaleString() || "0"}
+                  {/* ENERGY DELIVERED vs ENERGY BILLED Chart */}
+                  <Card title="ENERGY DELIVERED vs ENERGY BILLED" className="mb-6">
+                    {energyBalanceLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-[300px] w-full rounded bg-gray-200" />
+                      </div>
+                    ) : energyBalanceError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {energyBalanceError}
+                      </div>
+                    ) : memoizedEnergyBalanceChartData.length === 0 ? (
+                      <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                        <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                          <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 3v18h18M7 14l3-3 4 4 6-7"
+                            />
+                          </svg>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-900">No energy balance data</div>
+                        <div className="mt-1 max-w-md text-sm text-gray-600">
+                          Try changing the time range or confirm feeders exist for the selected period.
+                        </div>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={memoizedEnergyBalanceChartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="delivered" name="Energy Delivered (kWh)" fill="#004B23" />
+                          <Bar dataKey="billed" name="Energy Billed (kWh)" fill="#38b000" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </Card>
+
+                  {dashboardCardsError && (
+                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                      {dashboardCardsError}
+                    </div>
+                  )}
+
+                  {/* Collection by BAND Section */}
+                  <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
+                    <Card title="Collection by BAND">
+                      <div className="flex h-[200px] flex-col justify-center">
+                        {collectionByBandLoading ? (
+                          <div className="animate-pulse">
+                            <div className="mb-4 h-24 w-full rounded bg-gray-200" />
+                            <div className="h-[200px] w-full rounded bg-gray-200" />
+                          </div>
+                        ) : collectionByBandError ? (
+                          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            {collectionByBandError}
+                          </div>
+                        ) : collectionByBandSlices.length === 0 ? (
+                          <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                            <div className="text-sm font-semibold text-gray-900">No collection-by-band data</div>
+                            <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="mb-4">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="border-b">
+                                    <th className="py-2 text-left">Band</th>
+                                    <th className="py-2 text-right">Collection</th>
+                                    <th className="py-2 text-right">%</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {collectionByBandSlices.map((item) => (
+                                    <tr key={item.label} className="border-b">
+                                      <td className="py-2">{item.label}</td>
+                                      <td className="py-2 text-right">
+                                        {selectedCurrencySymbol}
+                                        {item.amount.toLocaleString()}
+                                      </td>
+                                      <td className="py-2 text-right">{item.percentage}%</td>
+                                    </tr>
+                                  ))}
+                                  <tr className="border-b font-medium">
+                                    <td className="py-2">Total</td>
+                                    <td className="py-2 text-right">
+                                      {selectedCurrencySymbol}
+                                      {collectionByBandTotal.amount.toLocaleString()}
+                                    </td>
+                                    <td className="py-2 text-right">100%</td>
+                                  </tr>
+                                </tbody>
+                              </table>
                             </div>
-                            <div className="text-sm font-medium uppercase tracking-wide text-gray-500">
-                              Total Active Customers
+                            <ResponsiveContainer width="100%" height={200}>
+                              <BarChart data={collectionByBandChartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="percentage" name="Collection %" fill="#004B23" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </>
+                        )}
+                      </div>
+                    </Card>
+
+                    <div className="grid grid-cols-1  gap-6">
+                      <Card title="Daily Collection">
+                        {dailyCollectionLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-[200px] w-full rounded bg-gray-200" />
+                          </div>
+                        ) : dailyCollectionError ? (
+                          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            {dailyCollectionError}
+                          </div>
+                        ) : memoizedDailyCollectionChartData.length === 0 ? (
+                          <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                            <div className="text-sm font-semibold text-gray-900">No daily collection data</div>
+                            <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                          </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height={200}>
+                            <AreaChart data={memoizedDailyCollectionChartData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="day" />
+                              <YAxis />
+                              <Tooltip />
+                              <Area
+                                type="monotone"
+                                dataKey="collection"
+                                stroke="#004B23"
+                                fill="#004B23"
+                                fillOpacity={0.3}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </Card>
+
+                      <Card title="CBO Performance">
+                        {cboPerformanceLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-[150px] w-full rounded bg-gray-200" />
+                          </div>
+                        ) : cboPerformanceError ? (
+                          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            {cboPerformanceError}
+                          </div>
+                        ) : cboPerformanceChartData.length === 0 ? (
+                          <div className="flex h-[150px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                            <div className="text-sm font-semibold text-gray-900">No CBO performance data</div>
+                            <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
+                          </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height={150}>
+                            <BarChart data={cboPerformanceChartData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis domain={[0, 100]} />
+                              <Tooltip />
+                              <Bar dataKey="performance" name="Performance %" fill="#004B23" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        )}
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* Operational Metrics */}
+                  <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-4">
+                    <Card title="New Connections (MTD)" icon={<ConnectionIcon />}>
+                      <div className="mb-2 flex items-center justify-between border-b py-2">
+                        <Text>Meter Installations</Text>
+                      </div>
+                      {newConnectionsLoading || isLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        </div>
+                      ) : newConnectionsError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {newConnectionsError}
+                        </div>
+                      ) : newConnectionsTotal === 0 ? (
+                        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                          No new connections for this period.
+                        </div>
+                      ) : (
+                        <>
+                          <Metric size="lg">{newConnectionsTotal.toLocaleString()}</Metric>
+                          <div className="mt-2 text-sm text-gray-600">Total connections this period</div>
+                        </>
+                      )}
+                    </Card>
+
+                    <Card title="Prepaid Vends" icon={<VendingIcon />}>
+                      <div className="mb-2 flex items-center justify-between border-b py-2">
+                        <Text>Token Transactions</Text>
+                      </div>
+                      {prepaidVendsLoading || isLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        </div>
+                      ) : prepaidVendsError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {prepaidVendsError}
+                        </div>
+                      ) : prepaidVendsTotal === 0 ? (
+                        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                          No prepaid vends for this period.
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Metric size="lg">{prepaidVendsTotal.toLocaleString()}</Metric>
+                        </div>
+                      )}
+                    </Card>
+
+                    <Card title="Tokens Generated" icon={<TokenGeneratedIcon />}>
+                      <div className="mb-2 flex items-center justify-between border-b py-2">
+                        <Text>KCT, CTT, CCT Tokens</Text>
+                      </div>
+                      {tokenGeneratedLoading || isLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        </div>
+                      ) : tokenGeneratedError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {tokenGeneratedError}
+                        </div>
+                      ) : tokensGeneratedTotal === 0 ? (
+                        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                          No tokens generated for this period.
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Metric size="lg">{tokensGeneratedTotal.toLocaleString()}</Metric>
+                        </div>
+                      )}
+                    </Card>
+
+                    <Card title="Meters Programmed" icon={<MetersProgrammedIcon />}>
+                      <div className="mb-2 flex items-center justify-between border-b py-2">
+                        <Text>{metersProgrammedDistinctTotal.toLocaleString()} distinct meters</Text>
+                      </div>
+                      {metersProgrammedLoading || isLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 w-32 rounded bg-gray-200"></div>
+                        </div>
+                      ) : metersProgrammedError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                          {metersProgrammedError}
+                        </div>
+                      ) : metersProgrammedTotal === 0 ? (
+                        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+                          No meters programmed for this period.
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Metric size="lg">{metersProgrammedTotal.toLocaleString()}</Metric>
+                        </div>
+                      )}
+                    </Card>
+                  </div>
+
+                  {/* Outstanding Arrears Section */}
+                  <div className="mb-6">
+                    <Card title="Outstanding Arrears Summary" icon={<RevenueIcon />}>
+                      {outstandingArrearsLoading || isLoading ? (
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                          {/* Total Outstanding Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
+                            <div className="mb-2 h-4 w-32 animate-pulse rounded bg-red-200"></div>
+                            <div className="mb-2 h-10 w-32 animate-pulse rounded bg-red-300"></div>
+                            <div className="h-4 w-24 animate-pulse rounded bg-red-200"></div>
+                          </div>
+
+                          {/* Debits Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
+                            <div className="mb-2 h-4 w-24 animate-pulse rounded bg-orange-200"></div>
+                            <div className="mb-2 h-8 w-28 animate-pulse rounded bg-orange-300"></div>
+                            <div className="h-4 w-20 animate-pulse rounded bg-orange-200"></div>
+                          </div>
+
+                          {/* Credits Skeleton */}
+                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                            <div className="mb-2 h-4 w-24 animate-pulse rounded bg-green-200"></div>
+                            <div className="mb-2 h-8 w-28 animate-pulse rounded bg-green-300"></div>
+                            <div className="h-4 w-20 animate-pulse rounded bg-green-200"></div>
+                          </div>
+                        </div>
+                      ) : outstandingArrearsError ? (
+                        <div className="flex h-64 items-center justify-center">
+                          <div className="text-center">
+                            <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                            <div className="text-sm text-gray-600">{outstandingArrearsError}</div>
+                          </div>
+                        </div>
+                      ) : !outstandingArrearsData ? (
+                        <div className="flex h-64 items-center justify-center">
+                          <div className="text-center">
+                            <div className="mb-2 text-lg font-semibold text-gray-900">No arrears data</div>
+                            <div className="text-sm text-gray-600">Try refreshing the dashboard.</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                          {/* Total Outstanding Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-red-600">
+                              Total Outstanding
+                            </div>
+                            <div className="text-3xl font-bold text-red-900">
+                              {selectedCurrencySymbol}
+                              {outstandingArrearsData.totalOutstanding.toLocaleString()}
+                            </div>
+                            <div className="mt-2 text-sm text-red-700">
+                              {outstandingArrearsData.customersInArrears.toLocaleString()} customers in arrears
                             </div>
                           </div>
-                          {customerSegmentsData && (
-                            <div className="mt-3 flex justify-center gap-6 text-xs text-gray-600">
-                              <div className="flex items-center gap-1">
-                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                                <span>Active: {customerSegmentsData.activeCustomers.toLocaleString()}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
-                                <span>Suspended: {customerSegmentsData.suspendedCustomers.toLocaleString()}</span>
+
+                          {/* Total Debits Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-orange-600">
+                              Total Debits
+                            </div>
+                            <div className="text-3xl font-bold text-orange-900">
+                              {selectedCurrencySymbol}
+                              {outstandingArrearsData.totalDebits.toLocaleString()}
+                            </div>
+                            <div className="mt-2 text-sm text-orange-700">Outstanding charges and fees</div>
+                          </div>
+
+                          {/* Total Credits Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
+                              Total Credits
+                            </div>
+                            <div className="text-3xl font-bold text-green-900">
+                              {selectedCurrencySymbol}
+                              {outstandingArrearsData.totalCredits.toLocaleString()}
+                            </div>
+                            <div className="mt-2 text-sm text-green-700">Payments and adjustments</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bottom row with net amount and performance indicator */}
+                      {outstandingArrearsData && !outstandingArrearsLoading && !outstandingArrearsError && (
+                        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                          {/* Net Amount Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-600">
+                              Net Amount
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900">
+                              {selectedCurrencySymbol}
+                              {(
+                                outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits
+                              ).toLocaleString()}
+                            </div>
+                            <div className="mt-2 text-sm text-gray-700">Debits minus credits</div>
+                          </div>
+
+                          {/* Arrears Ratio Card */}
+                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                            <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
+                              Arrears Ratio
+                            </div>
+                            <div className="mb-4">
+                              <div className="h-4 w-full overflow-hidden rounded-full bg-blue-200">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
+                                  style={{
+                                    width: `${Math.min(
+                                      (outstandingArrearsData.totalDebits /
+                                        (outstandingArrearsData.totalDebits + outstandingArrearsData.totalCredits)) *
+                                        100 || 0,
+                                      100
+                                    )}%`,
+                                  }}
+                                ></div>
                               </div>
                             </div>
-                          )}
+                            <div className="text-sm text-blue-700">
+                              <div className="flex justify-between">
+                                <span>Debit/Credit Ratio</span>
+                                <span className="font-semibold">
+                                  {(
+                                    (outstandingArrearsData.totalDebits /
+                                      (outstandingArrearsData.totalDebits + outstandingArrearsData.totalCredits)) *
+                                      100 || 0
+                                  ).toFixed(1)}
+                                  %
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
+                      )}
+                    </Card>
+                  </div>
 
-                        {/* Pie Chart */}
-                        <div className="flex justify-center">
-                          <ResponsiveContainer width="100%" height={180}>
-                            <PieChart>
-                              <Pie
-                                data={activeCustomersData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={45}
-                                outerRadius={70}
-                                paddingAngle={3}
-                                dataKey="value"
-                                startAngle={90}
-                                endAngle={-270}
-                              >
-                                {activeCustomersData.map((entry, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={COLORS[index % COLORS.length]}
-                                    className="transition-opacity hover:opacity-80"
-                                  />
+                  {/* Additional Charts Section */}
+                  <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-3">
+                    <div className="col-span-2 grid grid-cols-1 gap-6">
+                      <Card>
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-gray-900">Payment Breakdown</h3>
+                          <p className="text-sm text-gray-600">Payment channels and collector types analysis</p>
+                        </div>
+                        {breakdownLoading ? (
+                          <div className="flex h-64 items-center justify-center p-4">
+                            <div className="w-full">
+                              {/* Chart skeleton */}
+                              <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
+                              <div className="flex h-48 items-end justify-between gap-2">
+                                {[...Array(8)].map((_, i) => (
+                                  <div key={i} className="flex w-full flex-col gap-1">
+                                    <div
+                                      className="h-full animate-pulse rounded bg-gray-200"
+                                      style={{ height: `${Math.random() * 60 + 20}%` }}
+                                    ></div>
+                                    <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
+                                  </div>
                                 ))}
-                              </Pie>
+                              </div>
+                              <div className="mt-4 flex justify-center gap-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                                  <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                                  <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : breakdownError ? (
+                          <div className="flex h-64 items-center justify-center">
+                            <div className="text-center">
+                              <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                              <div className="text-sm text-gray-600">{breakdownError}</div>
+                            </div>
+                          </div>
+                        ) : !breakdownSlices || breakdownSlices.length === 0 ? (
+                          <div className="flex h-64 items-center justify-center">
+                            <div className="text-center">
+                              <div className="mb-2 text-lg font-semibold text-gray-900">No breakdown data</div>
+                              <div className="text-sm text-gray-600">Try changing the time range.</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={breakdownSlices}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="label" />
+                              <YAxis yAxisId="left" orientation="left" stroke="#004B23" />
+                              <YAxis yAxisId="right" orientation="right" stroke="#ea5806" />
                               <Tooltip
                                 contentStyle={{
                                   backgroundColor: "rgba(255, 255, 255, 0.95)",
                                   border: "1px solid #e5e7eb",
                                   borderRadius: "8px",
-                                  fontSize: "12px",
                                 }}
-                                formatter={(value: number) => [value.toLocaleString(), "Customers"]}
+                                formatter={(value: number, name: string) => [
+                                  name === "amount"
+                                    ? `${selectedCurrencySymbol}${value.toLocaleString()}`
+                                    : value.toLocaleString(),
+                                  name === "amount" ? "Amount" : name === "count" ? "Count" : "Percentage",
+                                ]}
                               />
-                              <Legend
-                                verticalAlign="bottom"
-                                height={36}
-                                formatter={(value) => <span className="text-xs text-gray-700">{value}</span>}
-                              />
-                            </PieChart>
+                              <Legend />
+                              <Bar yAxisId="left" dataKey="amount" fill="#004B23" name="Amount" />
+                              <Bar yAxisId="right" dataKey="count" fill="#ea5806" name="Count" />
+                            </BarChart>
                           </ResponsiveContainer>
-                        </div>
+                        )}
+                      </Card>
 
-                        {/* Customer metrics grid */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-3 text-center">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-blue-600">
-                              Postpaid
-                            </div>
-                            <div className="text-xl font-bold text-blue-900">
-                              {customerSegmentsData?.postpaidCustomers?.toLocaleString() || "0"}
-                            </div>
-                            <div className="mt-1 text-xs text-blue-600">
-                              {customerSegmentsData &&
-                                `${(
-                                  (customerSegmentsData.postpaidCustomers / customerSegmentsData.totalCustomers) *
-                                  100
-                                ).toFixed(1)}%`}
-                            </div>
+                      <Card title="DISPUTES OVERVIEW">
+                        {disputesLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-[300px] w-full rounded bg-gray-200" />
                           </div>
-                          <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-3 text-center">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-green-600">
-                              Prepaid
-                            </div>
-                            <div className="text-xl font-bold text-green-900">
-                              {customerSegmentsData?.prepaidCustomers?.toLocaleString() || "0"}
-                            </div>
-                            <div className="mt-1 text-xs text-green-600">
-                              {customerSegmentsData &&
-                                `${(
-                                  (customerSegmentsData.prepaidCustomers / customerSegmentsData.totalCustomers) *
-                                  100
-                                ).toFixed(1)}%`}
-                            </div>
+                        ) : disputesError ? (
+                          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            {disputesError}
                           </div>
-                          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-3 text-center">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-purple-600">
-                              Active
+                        ) : memoizedDisputesChartData.length === 0 ? (
+                          <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                            <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                              <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                />
+                              </svg>
                             </div>
-                            <div className="text-xl font-bold text-purple-900">
-                              {customerSegmentsData?.activeCustomers?.toLocaleString() || "0"}
-                            </div>
-                            <div className="mt-1 text-xs text-purple-600">
-                              {customerSegmentsData &&
-                                `${(
-                                  (customerSegmentsData.activeCustomers / customerSegmentsData.totalCustomers) *
-                                  100
-                                ).toFixed(1)}%`}
-                            </div>
+                            <div className="text-sm font-semibold text-gray-900">No disputes data</div>
                           </div>
-                          <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 text-center">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-orange-600">
-                              Suspended
-                            </div>
-                            <div className="text-xl font-bold text-orange-900">
-                              {customerSegmentsData?.suspendedCustomers?.toLocaleString() || "0"}
-                            </div>
-                            <div className="mt-1 text-xs text-orange-600">
-                              {customerSegmentsData &&
-                                `${(
-                                  (customerSegmentsData.suspendedCustomers / customerSegmentsData.totalCustomers) *
-                                  100
-                                ).toFixed(1)}%`}
-                            </div>
-                          </div>
-                          <div className="rounded-lg bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 text-center">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-cyan-600">
-                              Unmetered
-                            </div>
-                            <div className="text-xl font-bold text-cyan-900">
-                              {customerSegmentsData?.unmeteredCustomers?.toLocaleString() || "0"}
-                            </div>
-                            <div className="mt-1 text-xs text-cyan-600">
-                              {customerSegmentsData &&
-                                `${(
-                                  (customerSegmentsData.unmeteredCustomers / customerSegmentsData.totalCustomers) *
-                                  100
-                                ).toFixed(1)}%`}
-                            </div>
-                          </div>
-                          <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 p-3 text-center">
-                            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-indigo-600">MD</div>
-                            <div className="text-xl font-bold text-indigo-900">
-                              {customerSegmentsData?.mdCustomers?.toLocaleString() || "0"}
-                            </div>
-                            <div className="mt-1 text-xs text-indigo-600">
-                              {customerSegmentsData &&
-                                `${(
-                                  (customerSegmentsData.mdCustomers / customerSegmentsData.totalCustomers) *
-                                  100
-                                ).toFixed(1)}%`}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-
-                {/* Trend Chart */}
-                <Card className="mb-6">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Payment Trends</h3>
-                    <p className="text-sm text-gray-600">Confirmed payments over time</p>
-                  </div>
-                  {trendLoading ? (
-                    <div className="flex h-64 items-center justify-center p-4">
-                      <div className="w-full">
-                        {/* Chart skeleton */}
-                        <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
-                        <div className="flex h-48 items-end justify-between gap-2">
-                          {[...Array(12)].map((_, i) => (
-                            <div key={i} className="flex w-full flex-col gap-1">
-                              <div
-                                className="h-full animate-pulse rounded bg-gray-200"
-                                style={{ height: `${Math.random() * 60 + 20}%` }}
-                              ></div>
-                              <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-4 flex justify-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
-                            <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
-                            <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
-                          </div>
-                        </div>
-                      </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={memoizedDisputesChartData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Bar dataKey="count" name="Dispute Count" fill="#dc2626" />
+                              <Bar dataKey="amount" name="Dispute Amount" fill="#f97316" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        )}
+                      </Card>
                     </div>
-                  ) : trendError ? (
-                    <div className="flex h-64 items-center justify-center">
-                      <div className="text-center">
-                        <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
-                        <div className="text-sm text-gray-600">{trendError}</div>
-                      </div>
-                    </div>
-                  ) : !trendPoints || trendPoints.length === 0 ? (
-                    <div className="flex h-64 items-center justify-center">
-                      <div className="text-center">
-                        <div className="mb-2 text-lg font-semibold text-gray-900">No trend data</div>
-                        <div className="text-sm text-gray-600">Try changing the time range.</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <AreaChart
-                        data={trendPoints.map((point) => ({
-                          date: new Date(point.bucketDate).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "2-digit",
-                          }),
-                          amount: point.amount,
-                          count: point.count,
-                        }))}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis yAxisId="left" orientation="left" stroke="#004B23" />
-                        <YAxis yAxisId="right" orientation="right" stroke="#ea5806" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(255, 255, 255, 0.95)",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "8px",
-                          }}
-                          formatter={(value: number, name: string) => [
-                            name === "amount"
-                              ? `${selectedCurrencySymbol}${value.toLocaleString()}`
-                              : value.toLocaleString(),
-                            name === "amount" ? "Amount" : "Count",
-                          ]}
-                        />
-                        <Legend />
-                        <Area
-                          yAxisId="left"
-                          type="monotone"
-                          dataKey="amount"
-                          stroke="#004B23"
-                          fill="#004B23"
-                          fillOpacity={0.3}
-                          name="Amount"
-                        />
-                        <Area
-                          yAxisId="right"
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#ea5806"
-                          fill="#ea5806"
-                          fillOpacity={0.3}
-                          name="Count"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-                </Card>
 
-                {/* Breakdown Chart */}
+                    <div className="grid grid-cols-1 gap-6">
+                      <Card title="ACTIVE CUSTOMERS SUMMARY" className="border-0 shadow-lg">
+                        <div className="space-y-6">
+                          {/* Header with total customers */}
+                          <div className="border-b border-gray-100 pb-4 text-center">
+                            <div className="mb-2">
+                              <div className="mb-1 text-4xl font-bold text-gray-900">
+                                {customerSegmentsData?.totalCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="text-sm font-medium uppercase tracking-wide text-gray-500">
+                                Total Active Customers
+                              </div>
+                            </div>
+                            {customerSegmentsData && (
+                              <div className="mt-3 flex justify-center gap-6 text-xs text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                  <span>Active: {customerSegmentsData.activeCustomers.toLocaleString()}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+                                  <span>Suspended: {customerSegmentsData.suspendedCustomers.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
-                {/* Date Range */}
-                <Card className="mb-6">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <Text>Selected Date Range:</Text>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                      <div className="flex items-center gap-2">
-                        <Text>From:</Text>
-                        <span className="font-medium text-gray-900">11/03/2025</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Text>To:</Text>
-                        <span className="font-medium text-gray-900">11/03/2025</span>
-                      </div>
+                          {/* Pie Chart */}
+                          <div className="flex justify-center">
+                            <ResponsiveContainer width="100%" height={180}>
+                              <PieChart>
+                                <Pie
+                                  data={activeCustomersData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={45}
+                                  outerRadius={70}
+                                  paddingAngle={3}
+                                  dataKey="value"
+                                  startAngle={90}
+                                  endAngle={-270}
+                                >
+                                  {activeCustomersData.map((entry, index) => (
+                                    <Cell
+                                      key={`cell-${index}`}
+                                      fill={COLORS[index % COLORS.length]}
+                                      className="transition-opacity hover:opacity-80"
+                                    />
+                                  ))}
+                                </Pie>
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                    border: "1px solid #e5e7eb",
+                                    borderRadius: "8px",
+                                    fontSize: "12px",
+                                  }}
+                                  formatter={(value: number) => [value.toLocaleString(), "Customers"]}
+                                />
+                                <Legend
+                                  verticalAlign="bottom"
+                                  height={36}
+                                  formatter={(value) => <span className="text-xs text-gray-700">{value}</span>}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+
+                          {/* Customer metrics grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-3 text-center">
+                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-blue-600">
+                                Postpaid
+                              </div>
+                              <div className="text-xl font-bold text-blue-900">
+                                {customerSegmentsData?.postpaidCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="mt-1 text-xs text-blue-600">
+                                {customerSegmentsData &&
+                                  `${(
+                                    (customerSegmentsData.postpaidCustomers / customerSegmentsData.totalCustomers) *
+                                    100
+                                  ).toFixed(1)}%`}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-3 text-center">
+                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-green-600">
+                                Prepaid
+                              </div>
+                              <div className="text-xl font-bold text-green-900">
+                                {customerSegmentsData?.prepaidCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="mt-1 text-xs text-green-600">
+                                {customerSegmentsData &&
+                                  `${(
+                                    (customerSegmentsData.prepaidCustomers / customerSegmentsData.totalCustomers) *
+                                    100
+                                  ).toFixed(1)}%`}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-3 text-center">
+                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-purple-600">
+                                Active
+                              </div>
+                              <div className="text-xl font-bold text-purple-900">
+                                {customerSegmentsData?.activeCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="mt-1 text-xs text-purple-600">
+                                {customerSegmentsData &&
+                                  `${(
+                                    (customerSegmentsData.activeCustomers / customerSegmentsData.totalCustomers) *
+                                    100
+                                  ).toFixed(1)}%`}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 text-center">
+                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-orange-600">
+                                Suspended
+                              </div>
+                              <div className="text-xl font-bold text-orange-900">
+                                {customerSegmentsData?.suspendedCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="mt-1 text-xs text-orange-600">
+                                {customerSegmentsData &&
+                                  `${(
+                                    (customerSegmentsData.suspendedCustomers / customerSegmentsData.totalCustomers) *
+                                    100
+                                  ).toFixed(1)}%`}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 text-center">
+                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-cyan-600">
+                                Unmetered
+                              </div>
+                              <div className="text-xl font-bold text-cyan-900">
+                                {customerSegmentsData?.unmeteredCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="mt-1 text-xs text-cyan-600">
+                                {customerSegmentsData &&
+                                  `${(
+                                    (customerSegmentsData.unmeteredCustomers / customerSegmentsData.totalCustomers) *
+                                    100
+                                  ).toFixed(1)}%`}
+                              </div>
+                            </div>
+                            <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 p-3 text-center">
+                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-indigo-600">MD</div>
+                              <div className="text-xl font-bold text-indigo-900">
+                                {customerSegmentsData?.mdCustomers?.toLocaleString() || "0"}
+                              </div>
+                              <div className="mt-1 text-xs text-indigo-600">
+                                {customerSegmentsData &&
+                                  `${(
+                                    (customerSegmentsData.mdCustomers / customerSegmentsData.totalCustomers) *
+                                    100
+                                  ).toFixed(1)}%`}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
                     </div>
                   </div>
-                </Card>
-              </>
-            )}
+
+                  {/* Trend Chart */}
+                  <Card className="mb-6">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Payment Trends</h3>
+                      <p className="text-sm text-gray-600">Confirmed payments over time</p>
+                    </div>
+                    {trendLoading ? (
+                      <div className="flex h-64 items-center justify-center p-4">
+                        <div className="w-full">
+                          {/* Chart skeleton */}
+                          <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200"></div>
+                          <div className="flex h-48 items-end justify-between gap-2">
+                            {[...Array(12)].map((_, i) => (
+                              <div key={i} className="flex w-full flex-col gap-1">
+                                <div
+                                  className="h-full animate-pulse rounded bg-gray-200"
+                                  style={{ height: `${Math.random() * 60 + 20}%` }}
+                                ></div>
+                                <div className="h-2 w-full animate-pulse rounded bg-gray-200"></div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-4 flex justify-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                              <div className="h-3 w-16 animate-pulse rounded bg-gray-200"></div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 animate-pulse rounded bg-gray-300"></div>
+                              <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : trendError ? (
+                      <div className="flex h-64 items-center justify-center">
+                        <div className="text-center">
+                          <div className="mb-2 text-lg font-semibold text-red-600">Error</div>
+                          <div className="text-sm text-gray-600">{trendError}</div>
+                        </div>
+                      </div>
+                    ) : !trendPoints || trendPoints.length === 0 ? (
+                      <div className="flex h-64 items-center justify-center">
+                        <div className="text-center">
+                          <div className="mb-2 text-lg font-semibold text-gray-900">No trend data</div>
+                          <div className="text-sm text-gray-600">Try changing the time range.</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <AreaChart
+                          data={trendPoints.map((point) => ({
+                            date: new Date(point.bucketDate).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "2-digit",
+                            }),
+                            amount: point.amount,
+                            count: point.count,
+                          }))}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis yAxisId="left" orientation="left" stroke="#004B23" />
+                          <YAxis yAxisId="right" orientation="right" stroke="#ea5806" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255, 255, 255, 0.95)",
+                              border: "1px solid #e5e7eb",
+                              borderRadius: "8px",
+                            }}
+                            formatter={(value: number, name: string) => [
+                              name === "amount"
+                                ? `${selectedCurrencySymbol}${value.toLocaleString()}`
+                                : value.toLocaleString(),
+                              name === "amount" ? "Amount" : "Count",
+                            ]}
+                          />
+                          <Legend />
+                          <Area
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="amount"
+                            stroke="#004B23"
+                            fill="#004B23"
+                            fillOpacity={0.3}
+                            name="Amount"
+                          />
+                          <Area
+                            yAxisId="right"
+                            type="monotone"
+                            dataKey="count"
+                            stroke="#ea5806"
+                            fill="#ea5806"
+                            fillOpacity={0.3}
+                            name="Count"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+                  </Card>
+
+                  {/* Breakdown Chart */}
+
+                  {/* Date Range */}
+                  <Card className="mb-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <Text>Selected Date Range:</Text>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                        <div className="flex items-center gap-2">
+                          <Text>From:</Text>
+                          <span className="font-medium text-gray-900">11/03/2025</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Text>To:</Text>
+                          <span className="font-medium text-gray-900">11/03/2025</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <Footer />
+    </>
   )
 }

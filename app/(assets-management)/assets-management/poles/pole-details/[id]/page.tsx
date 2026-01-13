@@ -1188,7 +1188,6 @@ const PoleDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-xl font-bold text-gray-900">{currentPole.htPoleNumber}</h2>
-                      <p className="mb-4 text-gray-600">HT Pole #{currentPole.id}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">

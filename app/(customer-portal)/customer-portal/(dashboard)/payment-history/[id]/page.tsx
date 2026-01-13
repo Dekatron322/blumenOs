@@ -570,7 +570,7 @@ const PaymentDetailsPage = () => {
                       <h2 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">
                         {formatCurrency(paymentDetail.amount, paymentDetail.currency)}
                       </h2>
-                      <p className="mb-4 text-sm text-gray-600 sm:text-base">Payment #{paymentDetail.reference}</p>
+                      {/* <p className="mb-4 text-sm text-gray-600 sm:text-base">Payment #{paymentDetail.reference}</p> */}
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div

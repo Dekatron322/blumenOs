@@ -1340,7 +1340,6 @@ const DistributionStationDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-xl font-bold text-gray-900">{currentDistributionSubstation.dssCode}</h2>
-                      <p className="mb-4 text-gray-600">Distribution Station #{currentDistributionSubstation.id}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div
@@ -1574,6 +1573,18 @@ const DistributionStationDetailsPage = () => {
                         <strong>Note:</strong> These coordinates are used for geographical mapping and system
                         operations.
                       </p>
+                    </div>
+                    <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
+                      <h4 className="mb-3 text-sm font-medium text-gray-900">Location Map</h4>
+                      <div className="overflow-hidden rounded-lg">
+                        <iframe
+                          width="100%"
+                          height="300"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={`https://www.google.com/maps?q=${currentDistributionSubstation.latitude},${currentDistributionSubstation.longitude}&z=15&output=embed`}
+                        ></iframe>
+                      </div>
                     </div>
                   </motion.div>
 

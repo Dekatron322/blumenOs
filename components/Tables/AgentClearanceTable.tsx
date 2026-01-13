@@ -765,7 +765,8 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                             >
                               {expandedClearanceId === clearance.id ? "Hide details" : "View details"}
                             </ButtonModule>
-                            {agentInfo?.agentType === "ClearingCashier" &&
+                            {agentInfo?.agentType !== "SalesRep" &&
+                              agentInfo?.agentType !== "Cashier" &&
                               clearance.status === CashClearanceStatus.Pending && (
                                 <ButtonModule
                                   variant="primary"

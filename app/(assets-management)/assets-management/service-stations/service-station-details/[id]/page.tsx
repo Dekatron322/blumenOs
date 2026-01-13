@@ -725,7 +725,7 @@ const ServiceStationDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-xl font-bold text-gray-900">{currentServiceStation.name}</h2>
-                      <p className="mb-4 text-gray-600">Service Station #{currentServiceStation.id}</p>
+                      {/* <p className="mb-4 text-gray-600">Service Station #{currentServiceStation.id}</p> */}
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">
@@ -805,8 +805,14 @@ const ServiceStationDetailsPage = () => {
                           NERC: {currentServiceStation.areaOffice.newNercCode}
                         </div>
                         <div className="text-sm text-gray-600">
-                          Coordinates: {currentServiceStation.areaOffice.latitude.toFixed(4)},{" "}
-                          {currentServiceStation.areaOffice.longitude.toFixed(4)}
+                          Coordinates:{" "}
+                          {typeof currentServiceStation.areaOffice.latitude === "number"
+                            ? currentServiceStation.areaOffice.latitude.toFixed(4)
+                            : parseFloat(currentServiceStation.areaOffice.latitude || "0").toFixed(4)}
+                          ,{" "}
+                          {typeof currentServiceStation.areaOffice.longitude === "number"
+                            ? currentServiceStation.areaOffice.longitude.toFixed(4)
+                            : parseFloat(currentServiceStation.areaOffice.longitude || "0").toFixed(4)}
                         </div>
                       </div>
                     </div>
@@ -890,7 +896,13 @@ const ServiceStationDetailsPage = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-600">Coordinates</label>
                             <p className="font-semibold text-gray-900">
-                              {currentServiceStation.latitude.toFixed(4)}, {currentServiceStation.longitude.toFixed(4)}
+                              {typeof currentServiceStation.latitude === "number"
+                                ? currentServiceStation.latitude.toFixed(4)
+                                : parseFloat(currentServiceStation.latitude || "0").toFixed(4)}
+                              ,{" "}
+                              {typeof currentServiceStation.longitude === "number"
+                                ? currentServiceStation.longitude.toFixed(4)
+                                : parseFloat(currentServiceStation.longitude || "0").toFixed(4)}
                             </p>
                           </div>
                         </div>

@@ -44,7 +44,7 @@ const FeederCard = ({ feeder }: { feeder: any }) => {
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
-        <span>ID: {feeder.id}</span>
+        {/* <span>ID: {feeder.id}</span> */}
         <div className="flex items-center gap-1">
           <Zap className="size-3" />
           <span>Feeder</span>
@@ -1391,7 +1391,6 @@ const InjectionSubstationDetailsPage = () => {
                       <h2 className="mb-2 text-xl font-bold text-gray-900">
                         {currentInjectionSubstation.injectionSubstationCode}
                       </h2>
-                      <p className="mb-4 text-gray-600">Injection Substation #{currentInjectionSubstation.id}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">
@@ -1474,8 +1473,8 @@ const InjectionSubstationDetailsPage = () => {
                           NERC: {currentInjectionSubstation.areaOffice.newNercCode}
                         </div>
                         <div className="text-sm text-gray-600">
-                          Coordinates: {currentInjectionSubstation.areaOffice.latitude.toFixed(4)},{" "}
-                          {currentInjectionSubstation.areaOffice.longitude.toFixed(4)}
+                          Coordinates: {currentInjectionSubstation.areaOffice.latitude?.toFixed(4) || "N/A"},{" "}
+                          {currentInjectionSubstation.areaOffice.longitude?.toFixed(4) || "N/A"}
                         </div>
                       </div>
                     </div>
@@ -1508,10 +1507,6 @@ const InjectionSubstationDetailsPage = () => {
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                          <label className="text-sm font-medium text-gray-600">Injection Substation ID</label>
-                          <p className="font-semibold text-gray-900">{currentInjectionSubstation.id}</p>
-                        </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                           <label className="text-sm font-medium text-gray-600">Status</label>
                           <p className="font-semibold text-green-600">Active</p>
@@ -1575,8 +1570,8 @@ const InjectionSubstationDetailsPage = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-600">Coordinates</label>
                             <p className="font-semibold text-gray-900">
-                              {currentInjectionSubstation.areaOffice.latitude.toFixed(4)},{" "}
-                              {currentInjectionSubstation.areaOffice.longitude.toFixed(4)}
+                              {currentInjectionSubstation.areaOffice.latitude?.toFixed(4) || "N/A"},{" "}
+                              {currentInjectionSubstation.areaOffice.longitude?.toFixed(4) || "N/A"}
                             </p>
                           </div>
                         </div>

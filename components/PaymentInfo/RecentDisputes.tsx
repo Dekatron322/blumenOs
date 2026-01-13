@@ -312,7 +312,7 @@ const PerformingAgents = () => {
           <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3">
             <div className="min-w-0">
               <h4 className="truncate text-sm font-semibold text-gray-900 md:text-base">{performer.name}</h4>
-              <p className="mt-0.5 text-xs text-gray-500 md:text-sm">ID: {performer.id}</p>
+              {/* <p className="mt-0.5 text-xs text-gray-500 md:text-sm">ID: {performer.id}</p> */}
             </div>
             <div className="mt-2 flex flex-wrap gap-2 md:mt-0 md:flex-col md:items-end">
               <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">

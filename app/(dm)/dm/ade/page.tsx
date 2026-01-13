@@ -1028,7 +1028,7 @@ export default function AllDebtEntriesPage() {
             {/* Page Header */}
             <div className="flex w-full flex-col items-start justify-between gap-4 py-4 sm:py-6 md:gap-6 md:py-4 xl:flex-row xl:items-start">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">All Debt Entries</h4>
+                <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">All Manually Entered Debts</h4>
                 <p className="text-sm text-gray-600 sm:text-base">View and manage all debt entries</p>
               </div>
 
