@@ -167,85 +167,6 @@ const TableSkeleton = () => {
   )
 }
 
-// List View Skeleton
-const ListSkeleton = () => {
-  return (
-    <div className="flex-1 rounded-md border bg-white p-5">
-      {/* Header Skeleton */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <div className="h-8 w-40 rounded bg-gray-200"></div>
-        <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-          <div className="h-10 w-full rounded bg-gray-200 sm:w-80"></div>
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded bg-gray-200 max-sm:w-20"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* List View Skeleton */}
-      <div className="divide-y">
-        {[...Array(5)].map((_, index) => (
-          <div key={index} className="border-b bg-white p-4">
-            <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-gray-200"></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-center">
-                    <div className="h-5 w-40 rounded bg-gray-200"></div>
-                    <div className="flex gap-2">
-                      <div className="h-6 w-16 rounded-full bg-gray-200"></div>
-                      <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-                    </div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-4 w-24 rounded bg-gray-200"></div>
-                    ))}
-                  </div>
-                  <div className="mt-1 h-4 w-64 rounded bg-gray-200"></div>
-                </div>
-              </div>
-
-              <div className="flex w-full items-center justify-between gap-3 lg:w-auto">
-                <div className="text-right">
-                  <div className="h-4 w-24 rounded bg-gray-200"></div>
-                  <div className="mt-1 h-4 w-20 rounded bg-gray-200"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-20 rounded bg-gray-200"></div>
-                  <div className="size-6 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Skeleton */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-16 rounded bg-gray-200"></div>
-          <div className="h-8 w-16 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-gray-200"></div>
-          <div className="flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="size-7 rounded bg-gray-200"></div>
-            ))}
-          </div>
-          <div className="size-8 rounded bg-gray-200"></div>
-        </div>
-
-        <div className="h-4 w-24 rounded bg-gray-200"></div>
-      </div>
-    </div>
-  )
-}
-
 // Main Loading Component
 const LoadingState = ({ showCategories = true }) => {
   return (
@@ -327,7 +248,7 @@ export default function AgentManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 lg:container sm:px-4 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 ">
               <div className="flex-1">
