@@ -304,6 +304,26 @@ export interface CashHoldersRequestParams {
   order?: string
 }
 
+// Interface for Bank
+export interface Bank {
+  name: string
+  additionalProp1: string
+  additionalProp2: string
+  additionalProp3: string
+}
+
+// Interface for Bank Lists Response
+export interface BankListsResponse {
+  isSuccess: boolean
+  message: string
+  data: Bank[]
+}
+
+// Interface for Bank Lists Request Params
+export interface BankListsRequestParams {
+  provider?: string
+}
+
 // Interfaces for Top Performers
 export interface TopPerformerAgent {
   id: number
@@ -467,6 +487,12 @@ interface PaymentState {
   confirmPaymentError: string | null
   confirmPaymentSuccess: boolean
   confirmedPayment: Payment | null
+
+  // Bank Lists state
+  bankLists: Bank[]
+  bankListsLoading: boolean
+  bankListsError: string | null
+  bankListsSuccess: boolean
 }
 
 // Initial state
@@ -570,6 +596,12 @@ const initialState: PaymentState = {
   confirmPaymentError: null,
   confirmPaymentSuccess: false,
   confirmedPayment: null,
+
+  // Bank Lists
+  bankLists: [],
+  bankListsLoading: false,
+  bankListsError: null,
+  bankListsSuccess: false,
 }
 
 // Async thunk for fetching payments
@@ -998,6 +1030,30 @@ export const confirmPayment = createAsyncThunk(
   }
 )
 
+// Async thunk for fetching bank lists
+export const fetchBankLists = createAsyncThunk("payments/fetchBankLists", async (params?: BankListsRequestParams) => {
+  try {
+    const { provider } = params || {}
+
+    const response = await api.get<BankListsResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.BANK_LISTS), {
+      params: {
+        ...(provider && { provider }),
+      },
+    })
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch bank lists")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch bank lists")
+    }
+    return rejectWithValue(error.message || "Network error during bank lists fetch")
+  }
+})
+
 // Payment slice
 const paymentSlice = createSlice({
   name: "payments",
@@ -1047,6 +1103,7 @@ const paymentSlice = createSlice({
       state.declineChangeRequestError = null
       state.topPerformersError = null
       state.confirmPaymentError = null
+      state.bankListsError = null
     },
 
     // Reset payment state
@@ -1165,6 +1222,14 @@ const paymentSlice = createSlice({
       state.confirmPaymentError = null
       state.confirmPaymentSuccess = false
       state.confirmedPayment = null
+    },
+
+    // Clear bank lists state
+    clearBankLists: (state) => {
+      state.bankListsLoading = false
+      state.bankListsError = null
+      state.bankListsSuccess = false
+      state.bankLists = []
     },
 
     // Set pagination
@@ -1675,6 +1740,25 @@ const paymentSlice = createSlice({
         state.confirmPaymentSuccess = false
         state.confirmedPayment = null
       })
+
+      // Fetch bank lists cases
+      .addCase(fetchBankLists.pending, (state) => {
+        state.bankListsLoading = true
+        state.bankListsError = null
+        state.bankListsSuccess = false
+      })
+      .addCase(fetchBankLists.fulfilled, (state, action: PayloadAction<Bank[]>) => {
+        state.bankListsLoading = false
+        state.bankListsSuccess = true
+        state.bankListsError = null
+        state.bankLists = action.payload
+      })
+      .addCase(fetchBankLists.rejected, (state, action) => {
+        state.bankListsLoading = false
+        state.bankListsError = (action.payload as string) || "Failed to fetch bank lists"
+        state.bankListsSuccess = false
+        state.bankLists = []
+      })
   },
 })
 
@@ -1697,6 +1781,10 @@ export const {
   clearCashHolders,
   clearTopPerformers,
   clearConfirmPayment,
+  clearBankLists,
 } = paymentSlice.actions
 
 export default paymentSlice.reducer
+function rejectWithValue(arg0: string): any {
+  throw new Error("Function not implemented.")
+}
