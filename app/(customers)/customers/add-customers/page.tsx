@@ -9,18 +9,17 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { notify } from "components/ui/Notification/Notification"
-import { AddCustomerIcon } from "components/Icons/Icons"
 import { AppDispatch, RootState } from "lib/redux/store"
-import { clearCreateState, createCustomer, CreateCustomerRequest } from "lib/redux/createCustomerSlice"
+import { clearCreateState, createCustomer } from "lib/redux/createCustomerSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
-import { fetchCountries } from "lib/redux/countriesSlice"
+import { fetchCountries, fetchLGAsByProvinceId } from "lib/redux/countriesSlice"
 
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { ChevronRight, Menu, X } from "lucide-react"
 import { VscAdd, VscArrowLeft, VscArrowRight } from "react-icons/vsc"
 
 interface CustomerFormData {
@@ -97,6 +96,8 @@ const AddCustomerPage = () => {
     loading: countriesLoading,
     error: countriesError,
   } = useSelector((state: RootState) => state.countries)
+
+  const { lgas, loading: lgasLoading } = useSelector((state: RootState) => state.countries)
 
   const { feeders, loading: feedersLoading, error: feedersError } = useSelector((state: RootState) => state.feeders)
 
@@ -211,6 +212,13 @@ const AddCustomerPage = () => {
       dispatch(fetchSubCategoriesByCategoryId(formData.customerCategoryId))
     }
   }, [dispatch, formData.customerCategoryId])
+
+  // Fetch LGAs whenever a province (state) is selected
+  React.useEffect(() => {
+    if (formData.provinceId && formData.provinceId !== 0) {
+      dispatch(fetchLGAsByProvinceId(formData.provinceId))
+    }
+  }, [dispatch, formData.provinceId])
 
   // Debounced search handlers
   const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
@@ -398,6 +406,14 @@ const AddCustomerPage = () => {
       value: province.id,
       label: province.name,
     })) || []),
+  ]
+
+  // LGA options based on selected province
+  const lgaOptions = [
+    { value: "", label: "Select LGA" },
+    ...lgas
+      .filter((lga) => lga.provinceId === formData.provinceId)
+      .map((lga) => ({ value: lga.name, label: lga.name })),
   ]
 
   // Service center options from fetched data
@@ -1078,13 +1094,13 @@ const AddCustomerPage = () => {
                               disabled={countriesLoading}
                             />
 
-                            <FormInputModule
+                            <FormSelectModule
                               label="LGA"
                               name="lga"
-                              type="text"
-                              placeholder="Enter LGA"
                               value={formData.lga}
                               onChange={handleInputChange}
+                              options={lgaOptions}
+                              disabled={!formData.provinceId || formData.provinceId === 0 || lgasLoading}
                             />
                           </div>
                           <FormInputModule

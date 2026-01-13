@@ -492,7 +492,7 @@ interface ReportOutageResponse {
 }
 
 // Customer Meter Tariff Interface
-interface CustomerMeterTariff {
+export interface CustomerMeterTariff {
   id: number
   tariffIndex: string
   tariffCode: string

@@ -2,9 +2,14 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import { CustomerMeterTariff } from "./customersDashboardSlice"
+
+// Type alias for Tariff to maintain compatibility
+type Tariff = CustomerMeterTariff
 
 // Interface for Meter
 export interface Meter {
+  tariff: any
   id: number
   customerId: number
   customerAccountNumber: string
@@ -45,9 +50,6 @@ export interface Meter {
   longitude: number
   tenantFullName: string
   tenantPhoneNumber: string
-  tariff?: {
-    serviceBand: number
-  }
 }
 
 // Interface for Meter Detail Response Data
@@ -80,7 +82,9 @@ export interface MeterDetailData {
   status: number
   meterState: number
   sealNumber: string
+  poleNumber: string
   tariffRate: number
+  tariffId: number
   tariffIndex: string
   serviceBand: number
   customerClass: string
@@ -98,6 +102,8 @@ export interface MeterDetailData {
   longitude: number
   tenantFullName: string
   tenantPhoneNumber: string
+  currentTariffOverride: any
+  tariff?: Tariff
 }
 
 // Interface for Meter Detail Response

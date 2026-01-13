@@ -20,6 +20,12 @@ export interface Province {
   name: string
 }
 
+export interface LGA {
+  id: number
+  provinceId: number
+  name: string
+}
+
 export interface Country {
   id: number
   name: string
@@ -35,8 +41,15 @@ export interface CountriesResponse {
   data: Country[]
 }
 
+export interface LGAResponse {
+  isSuccess: boolean
+  message: string
+  data: LGA[]
+}
+
 interface CountriesState {
   countries: Country[]
+  lgas: LGA[]
   loading: boolean
   error: string | null
   success: boolean
@@ -44,6 +57,7 @@ interface CountriesState {
 
 const initialState: CountriesState = {
   countries: [],
+  lgas: [],
   loading: false,
   error: null,
   success: false,
@@ -67,18 +81,42 @@ export const fetchCountries = createAsyncThunk("countries/fetchCountries", async
   }
 })
 
+// Fetch LGAs by province ID
+export const fetchLGAsByProvinceId = createAsyncThunk(
+  "countries/fetchLGAsByProvinceId",
+  async (provinceId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.COUNTRIES.LGA.replace("{provinceId}", provinceId.toString())
+      const response = await api.get<LGAResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch LGAs")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch LGAs")
+      }
+      return rejectWithValue(error.message || "Network error during LGAs fetch")
+    }
+  }
+)
+
 const countriesSlice = createSlice({
   name: "countries",
   initialState,
   reducers: {
     clearCountries: (state) => {
       state.countries = []
+      state.lgas = []
       state.loading = false
       state.error = null
       state.success = false
     },
     resetCountriesState: (state) => {
       state.countries = []
+      state.lgas = []
       state.loading = false
       state.error = null
       state.success = false
@@ -103,6 +141,23 @@ const countriesSlice = createSlice({
         state.success = false
         state.countries = []
       })
+      .addCase(fetchLGAsByProvinceId.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.success = false
+      })
+      .addCase(fetchLGAsByProvinceId.fulfilled, (state, action: PayloadAction<LGAResponse>) => {
+        state.loading = false
+        state.success = true
+        state.lgas = action.payload.data
+        state.error = null
+      })
+      .addCase(fetchLGAsByProvinceId.rejected, (state, action) => {
+        state.loading = false
+        state.error = (action.payload as string) || "Failed to fetch LGAs"
+        state.success = false
+        state.lgas = []
+      })
   },
 })
 
@@ -110,6 +165,7 @@ export const { clearCountries, resetCountriesState } = countriesSlice.actions
 
 // Selectors
 export const selectCountries = (state: RootState) => state.countries.countries
+export const selectLGAs = (state: RootState) => state.countries.lgas
 export const selectCountriesLoading = (state: RootState) => state.countries.loading
 export const selectCountriesError = (state: RootState) => state.countries.error
 export const selectCountriesSuccess = (state: RootState) => state.countries.success
@@ -122,6 +178,11 @@ export const selectAllProvinces = (state: RootState) =>
 export const selectProvincesByCountryId = (countryId: number) => (state: RootState) => {
   const country = state.countries.countries.find((c) => c.id === countryId)
   return country ? country.provinces : []
+}
+
+// LGAs by province id
+export const selectLGAsByProvinceId = (provinceId: number) => (state: RootState) => {
+  return state.countries.lgas.filter((lga) => lga.provinceId === provinceId)
 }
 
 export default countriesSlice.reducer
