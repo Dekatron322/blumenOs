@@ -739,7 +739,6 @@ const CustomerDetailsPage = () => {
             <div className="flex items-start justify-between gap-2 md:items-center md:gap-3">
               <div className="text-right text-xs md:text-sm">
                 <div className="text-base font-bold text-gray-900 md:text-lg">{formatCurrency(payment.amount)}</div>
-                <div className="hidden text-gray-500 md:block">Payment ID: {payment.id}</div>
               </div>
               <button
                 onClick={() => handleViewPaymentReceipt(payment)}

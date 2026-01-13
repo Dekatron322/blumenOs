@@ -21,8 +21,8 @@ const Footer = () => {
     return null
   }
   return (
-    <div className="bg-primary fixed bottom-0 w-full px-7 py-4 max-sm:bottom-0 max-sm:right-0">
-      <p className="text-center text-[#000000]">Otech Plus @2025 All Rights Reserved </p>
+    <div className="w-full bg-[#f9f9f9] px-7 py-4 max-sm:bottom-0 max-sm:right-0">
+      <p className="text-center text-[#000000]">Powered by BlumenTech @2026 All Rights Reserved </p>
     </div>
   )
 }

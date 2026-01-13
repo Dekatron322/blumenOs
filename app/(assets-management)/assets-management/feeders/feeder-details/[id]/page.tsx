@@ -41,7 +41,6 @@ const DistributionSubstationCard = ({ substation }: { substation: any }) => {
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
-        <span>ID: {substation.id}</span>
         <div className="flex items-center gap-1">
           <MapPin className="size-3" />
           <span>
@@ -1392,7 +1391,6 @@ const FeederDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-xl font-bold text-gray-900">{currentFeeder.name}</h2>
-                      <p className="mb-4 text-gray-600">Feeder #{currentFeeder.id}</p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">
@@ -1567,7 +1565,7 @@ const FeederDetailsPage = () => {
                             <p className="font-semibold text-gray-900">
                               {currentFeeder?.htPole?.htPoleNumber || "N/A"}
                             </p>
-                            <p className="text-sm text-gray-600">ID: {currentFeeder?.htPole?.id || "N/A"}</p>
+                            <p className="text-sm text-gray-600">-</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">

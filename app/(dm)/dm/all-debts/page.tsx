@@ -561,57 +561,6 @@ const DebtManagementSummary = ({
       </motion.div>
     )
   }
-
-  return (
-    <motion.div
-      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex items-center gap-3 border-b pb-3">
-        <div className="rounded-full bg-blue-100 p-2">
-          <svg className="size-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-        </div>
-        <div>
-          <h5 className="text-sm font-semibold text-gray-900">Recovery Summary</h5>
-          <p className="text-xs text-gray-500">Total recoveries for selected period</p>
-        </div>
-      </div>
-      <div className="mt-4 space-y-3">
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">Total Recovered Amount:</span>
-          <span className="text-sm font-semibold text-green-600">{formatCurrency(totalRecoveredAmount)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">Total Recoveries:</span>
-          <span className="text-sm font-semibold text-blue-600">{totalRecoveries.toLocaleString()}</span>
-        </div>
-        {recoverySummary.length > 0 && (
-          <div className="border-t pt-3">
-            <p className="mb-2 text-xs text-gray-500">Breakdown by period:</p>
-            <div className="space-y-1">
-              {recoverySummary.map((item) => (
-                <div key={item.periodKey} className="flex justify-between text-xs">
-                  <span className="text-gray-600">{item.periodKey}:</span>
-                  <span className="font-medium">
-                    {formatCurrency(item.totalRecoveredAmount)} ({item.totalRecoveries})
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  )
 }
 
 // Debt Management Customers Component

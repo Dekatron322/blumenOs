@@ -998,9 +998,9 @@ const RecentPayments = () => {
                 >
                   {payment.channel}
                 </div>
-                <div className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium md:px-2 md:py-1">
+                {/* <div className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium md:px-2 md:py-1">
                   ID: {payment.id}
-                </div>
+                </div> */}
               </div>
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-600 md:mt-2 md:gap-2.5 md:text-sm lg:gap-4">

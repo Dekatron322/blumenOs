@@ -13,7 +13,7 @@ import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchInjectionSubstations } from "lib/redux/injectionSubstationSlice"
 import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Eye, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 interface ActionDropdownProps {
@@ -897,12 +897,22 @@ const PolesTab: React.FC = () => {
                     {filteredPoles.map((pole, index) => (
                       <motion.div
                         key={pole.id}
-                        className="relative rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+                        className="relative cursor-pointer rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
+                        onClick={() => router.push(`/assets-management/poles/pole-details/${pole.id}`)}
                       >
+                        <div className="absolute right-2 top-2">
+                          <motion.div
+                            className="flex size-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Eye className="size-4" />
+                          </motion.div>
+                        </div>
                         <div className="text-sm text-gray-500">HT Pole Number</div>
                         <div className="text-sm">{pole.htPoleNumber}</div>
                       </motion.div>

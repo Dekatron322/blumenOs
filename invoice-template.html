@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KAD-ELEC Invoice</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <style>
+      .invoice-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+      }
+
+      .logo-section {
+        text-align: center;
+      }
+
+      .barcode-section {
+        flex: 1;
+        text-align: center;
+      }
+
+      .account-section {
+        text-align: center;
+      }
+
+      .section-header {
+        background: #004b23;
+        color: white;
+        padding: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid #e5e7eb;
+        background: white;
+      }
+
+      .info-column {
+        padding: 0;
+      }
+
+      .info-column:first-child .info-item {
+        border-right: none;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.875rem;
+      }
+
+      .info-item:last-child {
+        border-bottom: none;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #4b5563;
+      }
+
+      .info-value {
+        color: #111827;
+        margin-left: 0.5rem;
+      }
+
+      .column-header {
+        background: #6cad2b;
+        color: white;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .column-header.right {
+        background: #008001;
+      }
+
+      .total-section {
+        background: #008001;
+        color: white;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .footer-note {
+        text-align: center;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 2rem;
+        padding: 1rem;
+      }
+
+      .powered-by {
+        background: #008002;
+        color: white;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .warning-box {
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+
+      .warning-estimated {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+
+      .warning-dispute {
+        background: #fef2f2;
+        border: 1px solid #ef4444;
+      }
+
+      .barcode-canvas {
+        width: 208px;
+        height: 56px;
+        border: 1px solid #e5e7eb;
+      }
+
+      @media print {
+        .invoice-container {
+          margin: 0;
+          box-shadow: none;
+        }
+
+        .no-print {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="invoice-container p-8">
+      <!-- Header Section -->
+      <div class="header-section">
+        <div class="logo-section">
+          <img src="/kad.svg" alt="KAD-ELEC Logo" class="h-16" />
+        </div>
+        <div class="barcode-section">
+          <canvas id="barcode" class="barcode-canvas"></canvas>
+        </div>
+        <div class="account-section">
+          <h1 class="mb-2 text-xl font-bold text-gray-900">KAD-ELEC.</h1>
+          <div class="inline-block bg-[#6EAD2A] px-2 py-1 text-sm font-semibold text-white">#123456789</div>
+        </div>
+      </div>
+
+      <!-- Billing Information Section -->
+      <div class="section-header">
+        <p>BILLING INFORMATION</p>
+      </div>
+      <div class="info-grid">
+        <div class="info-column">
+          <div class="column-header">
+            <p>AREA OFFICE</p>
+            <p>KADUNA MAIN</p>
+          </div>
+          <div class="info-item">
+            <span class="info-label"># Bill:</span>
+            <span class="info-value">123456789</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Bill Month:</span>
+            <span class="info-value">November 2024</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Customer Account:</span>
+            <span class="info-value">123456789</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Account Name:</span>
+            <span class="info-value">John Doe</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Address:</span>
+            <span class="info-value">123 Main Street, Kaduna</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Phone number:</span>
+            <span class="info-value">08012345678</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">City:</span>
+            <span class="info-value">Kaduna</span>
+          </div>
+        </div>
+        <div class="info-column">
+          <div class="column-header right">
+            <p>SERVICE CENTER:</p>
+            <p>KADUNA CENTRAL</p>
+          </div>
+          <div class="info-item">
+            <span class="info-label">State:</span>
+            <span class="info-value">Kaduna</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">11KV Feeder:</span>
+            <span class="info-value">FEEDER-001</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">33kv Feeder:</span>
+            <span class="info-value">SUBSTATION-A</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">DT Name:</span>
+            <span class="info-value">DT-001</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Sales Rep:</span>
+            <span class="info-value">Ahmed Mohammed</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Meter:</span>
+            <span class="info-value">No Meter</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Multiplier:</span>
+            <span class="info-value">1.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing Charges Section -->
+      <div class="section-header mt-4">
+        <p>BILLING CHARGES</p>
+      </div>
+      <div class="info-grid">
+        <div class="info-column">
+          <div class="column-header">
+            <p>CHARGES</p>
+            <p>TOTAL</p>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Payment Date:</span>
+            <span class="info-value">Oct 15, 2024</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Payment Amount:</span>
+            <span class="info-value">₦5,000.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">ADC:</span>
+            <span class="info-value">9.14 kwh</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Present Reading:</span>
+            <span class="info-value">0</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Previous Reading:</span>
+            <span class="info-value">0</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Consumption:</span>
+            <span class="info-value">150kwh</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tariff Rate:</span>
+            <span class="info-value">₦50.00/kwh</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tariff Class:</span>
+            <span class="info-value">A1</span>
+          </div>
+        </div>
+        <div class="info-column">
+          <div class="column-header right">
+            <p>CHARGES</p>
+            <p>TOTAL</p>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Status Code:</span>
+            <span class="info-value">Active</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Opening Balance:</span>
+            <span class="info-value">₦2,000.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Adjustment:</span>
+            <span class="info-value">₦0.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Total Payment Amt:</span>
+            <span class="info-value">₦5,000.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Net Arrears:</span>
+            <span class="info-value">₦-3,000.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Energy Charged:</span>
+            <span class="info-value">₦7,500.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Fixed Charge:</span>
+            <span class="info-value">₦0.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">VAT:</span>
+            <span class="info-value">₦1,125.00</span>
+          </div>
+          <div class="info-item border-t border-gray-200">
+            <span class="info-label">SUBTOTAL:</span>
+            <span class="info-value font-semibold">₦7,500.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">TAX VAT 7.5%:</span>
+            <span class="info-value">₦1,125.00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Current Bill Amount:</span>
+            <span class="info-value">₦8,625.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Due Section -->
+      <div class="info-grid mt-4">
+        <div class="info-column">
+          <div class="column-header">
+            <p>-</p>
+            <p>-</p>
+          </div>
+        </div>
+        <div class="info-column">
+          <div class="total-section">
+            <p>TOTAL DUE:</p>
+            <p>₦5,625.00</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning Messages -->
+      <div class="warning-box warning-estimated">
+        <div class="flex items-center">
+          <svg class="mr-2 h-5 w-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span class="font-semibold text-amber-800">Estimated Bill</span>
+        </div>
+        <p class="mt-1 text-sm text-amber-700">This bill is estimated based on forecasted consumption of 150kwh.</p>
+      </div>
+
+      <!-- Footer Information -->
+      <div class="footer-note">
+        <p>
+          PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO OUR SALES REPS
+          USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS |
+          <strong> ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</strong>
+        </p>
+      </div>
+
+      <div class="powered-by">POWERED BY BLUMENTECHNOLOGIES LTD</div>
+    </div>
+
+    <!-- Action Buttons (No Print) -->
+    <div class="no-print fixed bottom-4 right-4 flex gap-2">
+      <button onclick="window.print()" class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+        Print Invoice
+      </button>
+      <button onclick="downloadPDF()" class="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700">
+        Download PDF
+      </button>
+    </div>
+
+    <script>
+      // Generate simple barcode
+      function generateBarcode() {
+        const canvas = document.getElementById("barcode")
+        const ctx = canvas.getContext("2d")
+        const value = "123456789"
+
+        canvas.width = 208
+        canvas.height = 56
+
+        // Background
+        ctx.fillStyle = "#FFFFFF"
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        // Generate hash for pattern
+        let hash = 0
+        for (let i = 0; i < value.length; i++) {
+          hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+        }
+
+        const barWidth = 2
+        const totalBars = Math.floor(canvas.width / barWidth)
+
+        for (let i = 0; i < totalBars; i++) {
+          const bit = (hash >> i % 32) & 1
+          if (bit === 1) {
+            ctx.fillStyle = "#000000"
+            ctx.fillRect(i * barWidth, 4, barWidth, canvas.height - 16)
+          }
+        }
+
+        // Draw the value below bars
+        ctx.fillStyle = "#000000"
+        ctx.font = "10px Arial"
+        ctx.textAlign = "center"
+        ctx.textBaseline = "bottom"
+        ctx.fillText(value, canvas.width / 2, canvas.height - 2)
+      }
+
+      // Download PDF functionality (simplified version)
+      function downloadPDF() {
+        // In a real implementation, you would use a library like jsPDF
+        // For now, we'll just trigger print
+        window.print()
+      }
+
+      // Initialize barcode on page load
+      document.addEventListener("DOMContentLoaded", generateBarcode)
+    </script>
+  </body>
+</html>
