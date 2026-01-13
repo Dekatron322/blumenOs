@@ -3,7 +3,18 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, Building, Calendar, CreditCard, Edit3, Package, Receipt, User, Zap } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowRight,
+  Building,
+  Calendar,
+  CreditCard,
+  Edit3,
+  Package,
+  Receipt,
+  User,
+  Zap,
+} from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ExportOutlineIcon } from "components/Icons/Icons"
@@ -1613,7 +1624,7 @@ const PaymentDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-lg font-bold text-gray-900 md:text-xl">{currentPayment.reference}</h2>
-                      <p className="mb-4 text-sm text-gray-600 md:text-base">Payment #{currentPayment.id}</p>
+                      {/* <p className="mb-4 text-sm text-gray-600 md:text-base">Payment #{currentPayment.id}</p> */}
 
                       <div className="mb-4 flex flex-wrap justify-center gap-2 md:mb-6">
                         <StatusBadge status={currentPayment.status} />
@@ -1685,9 +1696,19 @@ const PaymentDetailsPage = () => {
                     transition={{ delay: 0.15 }}
                     className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-gray-900 md:text-lg">
-                      <User className="size-4 md:size-5" />
-                      Customer
+                    <h3 className="mb-3 flex items-center justify-between text-base font-semibold text-gray-900 md:text-lg">
+                      <div className="flex items-center gap-2">
+                        <User className="size-4 md:size-5" />
+                        Customer
+                      </div>
+                      <button
+                        onClick={() => router.push(`/customers/${currentPayment.customerId}`)}
+                        className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-blue-600"
+                        title="View Customer Details"
+                      >
+                        <span className="hidden sm:inline">View Details</span>
+                        <ArrowRight className="size-3 md:size-4" />
+                      </button>
                     </h3>
                     <div className="space-y-2 md:space-y-3">
                       <div className="rounded-lg bg-[#f9f9f9] p-3">

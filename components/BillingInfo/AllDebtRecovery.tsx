@@ -510,9 +510,13 @@ const AllDebtRecoveryContent: React.FC = () => {
 
   // Fetch debt recovery data on component mount and when search/pagination/appliedFilters change
   useEffect(() => {
+    // Ensure valid pagination parameters
+    const validPageNumber = Math.max(1, currentPage)
+    const validPageSize = Math.max(1, pageSize)
+
     const fetchParams: any = {
-      PageNumber: currentPage,
-      PageSize: pageSize,
+      PageNumber: validPageNumber,
+      PageSize: validPageSize,
       ...(appliedFilters.customerId && { CustomerId: appliedFilters.customerId }),
       ...(appliedFilters.policyId && { PolicyId: appliedFilters.policyId }),
       ...(appliedFilters.fromUtc && { FromUtc: appliedFilters.fromUtc }),
@@ -703,13 +707,17 @@ const AllDebtRecoveryContent: React.FC = () => {
 
   const changePage = (page: number) => {
     if (page > 0 && page <= totalPages) {
+      // Ensure valid pagination parameters
+      const validPageNumber = Math.max(1, page)
+      const validPageSize = Math.max(1, pageSize)
+
       // Update the current page in the component state
       // This will trigger the useEffect to fetch new data
       window.scrollTo(0, 0)
       // We need to trigger a re-fetch with the new page number
       const fetchParams: any = {
-        PageNumber: page,
-        PageSize: pageSize,
+        PageNumber: validPageNumber,
+        PageSize: validPageSize,
         ...(appliedFilters.customerId && { CustomerId: appliedFilters.customerId }),
         ...(appliedFilters.policyId && { PolicyId: appliedFilters.policyId }),
         ...(appliedFilters.fromUtc && { FromUtc: appliedFilters.fromUtc }),
@@ -721,10 +729,14 @@ const AllDebtRecoveryContent: React.FC = () => {
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
+    // Ensure valid pagination parameters
+    const validPageNumber = 1
+    const validPageSize = Math.max(1, newPageSize)
+
     // Reset to first page when changing page size
     const fetchParams: any = {
-      PageNumber: 1,
-      PageSize: newPageSize,
+      PageNumber: validPageNumber,
+      PageSize: validPageSize,
       ...(appliedFilters.customerId && { CustomerId: appliedFilters.customerId }),
       ...(appliedFilters.policyId && { PolicyId: appliedFilters.policyId }),
       ...(appliedFilters.fromUtc && { FromUtc: appliedFilters.fromUtc }),

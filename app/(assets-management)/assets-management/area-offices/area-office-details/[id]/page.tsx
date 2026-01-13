@@ -46,13 +46,13 @@ const InjectionSubstationCard = ({ substation }: { substation: InjectionSubstati
           )}
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
+      {/* <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
         <span>ID: {substation.id}</span>
         <div className="flex items-center gap-1">
           <MapPin className="size-3" />
           <span>Located</span>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }
@@ -71,7 +71,7 @@ const ServiceCenterCard = ({ serviceCenter }: { serviceCenter: ServiceCenter }) 
           <p className="truncate text-sm text-gray-600">{serviceCenter.address}</p>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
+      {/* <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
         <span>ID: {serviceCenter.id}</span>
         <div className="flex items-center gap-1">
           <MapPin className="size-3" />
@@ -79,7 +79,7 @@ const ServiceCenterCard = ({ serviceCenter }: { serviceCenter: ServiceCenter }) 
             {serviceCenter.latitude?.toFixed(4)}, {serviceCenter.longitude?.toFixed(4)}
           </span>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }
@@ -1395,7 +1395,7 @@ const AreaOfficeDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-xl font-bold text-gray-900">{currentAreaOffice.nameOfNewOAreaffice}</h2>
-                      <p className="mb-4 text-gray-600">Area Office #{currentAreaOffice.id}</p>
+                      {/* <p className="mb-4 text-gray-600">Area Office #{currentAreaOffice.id}</p> */}
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">

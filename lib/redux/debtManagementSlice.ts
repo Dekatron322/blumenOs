@@ -540,7 +540,7 @@ const initialState: DebtManagementState = {
     totalCount: 0,
     totalPages: 0,
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 20,
     hasNext: false,
     hasPrevious: false,
   },
@@ -934,22 +934,29 @@ export const fetchDebtRecovery = createAsyncThunk(
   "debtManagement/fetchDebtRecovery",
   async (params: DebtRecoveryRequest, { rejectWithValue }) => {
     try {
+      // Ensure valid pagination parameters
+      const validParams = {
+        ...params,
+        PageNumber: Math.max(1, params.PageNumber),
+        PageSize: Math.max(1, params.PageSize),
+      }
+
       // Build query parameters
       const queryParams = new URLSearchParams()
-      queryParams.append("PageNumber", params.PageNumber.toString())
-      queryParams.append("PageSize", params.PageSize.toString())
+      queryParams.append("PageNumber", validParams.PageNumber.toString())
+      queryParams.append("PageSize", validParams.PageSize.toString())
 
-      if (params.CustomerId !== undefined && params.CustomerId !== null) {
-        queryParams.append("CustomerId", params.CustomerId.toString())
+      if (validParams.CustomerId !== undefined && validParams.CustomerId !== null) {
+        queryParams.append("CustomerId", validParams.CustomerId.toString())
       }
-      if (params.PolicyId !== undefined && params.PolicyId !== null) {
-        queryParams.append("PolicyId", params.PolicyId.toString())
+      if (validParams.PolicyId !== undefined && validParams.PolicyId !== null) {
+        queryParams.append("PolicyId", validParams.PolicyId.toString())
       }
-      if (params.FromUtc !== undefined && params.FromUtc !== null) {
-        queryParams.append("FromUtc", params.FromUtc)
+      if (validParams.FromUtc !== undefined && validParams.FromUtc !== null) {
+        queryParams.append("FromUtc", validParams.FromUtc)
       }
-      if (params.ToUtc !== undefined && params.ToUtc !== null) {
-        queryParams.append("ToUtc", params.ToUtc)
+      if (validParams.ToUtc !== undefined && validParams.ToUtc !== null) {
+        queryParams.append("ToUtc", validParams.ToUtc)
       }
 
       const url = `${buildApiUrl(API_ENDPOINTS.DEBT_MANAGEMENT.DEBT_RECOVERY)}?${queryParams.toString()}`
@@ -961,7 +968,7 @@ export const fetchDebtRecovery = createAsyncThunk(
 
       return {
         data: response.data,
-        requestParams: params,
+        requestParams: validParams,
       }
     } catch (error: any) {
       if (error.response?.data) {

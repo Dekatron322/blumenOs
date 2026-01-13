@@ -1650,7 +1650,6 @@ const AgentDetailsPage = () => {
                                         <div className="text-lg font-bold text-gray-900">
                                           {formatCurrency(payment.amount)}
                                         </div>
-                                        <div className="text-xs text-gray-500">Payment ID: {payment.id}</div>
                                       </div>
                                       <button
                                         onClick={() => router.push(`/agents/payments/payment-details/${payment.id}`)}

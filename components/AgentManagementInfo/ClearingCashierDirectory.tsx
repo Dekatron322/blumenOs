@@ -564,9 +564,7 @@ const ClearingCashierDirectory: React.FC = () => {
                         variant="outline"
                         type="button"
                         size="sm"
-                        onClick={() =>
-                          router.push(`/agent-management/all-clearing-cashiers/clearing-cashier-detail/${agent.id}`)
-                        }
+                        onClick={() => router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)}
                         className="mt-1 bg-white text-xs sm:text-sm"
                       >
                         View Details

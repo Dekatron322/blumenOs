@@ -1321,7 +1321,7 @@ const AllDebtEntriesTable = ({
               </button>
 
               <div>
-                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Debt Entries</p>
+                <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">All Manually Entered Debts</p>
                 <p className="text-sm text-gray-600">View and manage all debt entries</p>
               </div>
             </div>
