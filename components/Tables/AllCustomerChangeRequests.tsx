@@ -228,6 +228,7 @@ const AllCustomerChangeRequests = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedStatus, setSelectedStatus] = useState("")
   const [selectedSource, setSelectedSource] = useState("")
@@ -343,7 +344,17 @@ const AllCustomerChangeRequests = () => {
   }
 
   const handleCancelSearch = () => {
+    setSearchInput("")
     setSearchText("")
+  }
+
+  const handleSearch = () => {
+    setSearchText(searchInput.trim())
+    setCurrentPage(1)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -650,9 +661,10 @@ const AllCustomerChangeRequests = () => {
                 {/* Desktop/Tablet search input */}
                 <div className="hidden sm:block">
                   <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleSearch}
                     placeholder="Search by reference, requester, or entity label"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
@@ -677,9 +689,10 @@ const AllCustomerChangeRequests = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleSearch}
                   placeholder="Search by reference, requester, or entity label"
                   className="w-full"
                 />

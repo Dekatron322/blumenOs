@@ -127,9 +127,9 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
                       {(() => {
                         try {
                           const parsed = JSON.parse(selectedEvent.responsePayload) as {
-                            tokens?: Array<{ tokenDec?: string }>
+                            result?: Array<{ tokenDec?: string }>
                           }
-                          const tokenDec = parsed.tokens?.[0]?.tokenDec
+                          const tokenDec = parsed.result?.[0]?.tokenDec
                           if (tokenDec && tokenDec.length >= 16) {
                             // Format as 4 groups of 4 characters: 0000-0000-0000-0000
                             return tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
@@ -146,9 +146,9 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
                       onClick={() => {
                         try {
                           const parsed = JSON.parse(selectedEvent.responsePayload) as {
-                            tokens?: Array<{ tokenDec?: string }>
+                            result?: Array<{ tokenDec?: string }>
                           }
-                          const tokenDec = parsed.tokens?.[0]?.tokenDec
+                          const tokenDec = parsed.result?.[0]?.tokenDec
                           const tokenToCopy =
                             tokenDec && tokenDec.length >= 16
                               ? tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec

@@ -16,6 +16,7 @@ import {
   ServiceIcon,
   TokenIcon,
 } from "./Icons"
+import { useRecordDebtModal } from "lib/contexts/RecordDebtModalContext"
 
 export type LinkChild = { name: string; href: string; privilegeKey?: string; requiredActions?: string[] }
 export type LinkItem = {
@@ -184,7 +185,7 @@ export const allLinks: LinkItem[] = [
     requiredActions: ["R"],
     children: [
       { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["W"] },
-      { name: "All Transactions", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "All Collections", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Record Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Cash Management", href: "/payment/cash-management", privilegeKey: "payments", requiredActions: ["R"] },
       {
@@ -551,6 +552,7 @@ interface LinksProps {
 export function Links({ isCollapsed }: LinksProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { openModal } = useRecordDebtModal()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [userPermissions, setUserPermissions] = useState<UserPermission | null>(null)
   const [filteredLinks, setFilteredLinks] = useState<LinkItem[]>([])
@@ -621,6 +623,16 @@ export function Links({ isCollapsed }: LinksProps) {
 
   const handleExpand = (linkName: string, next: boolean) => {
     setExpanded((prev) => ({ ...prev, [linkName]: next }))
+  }
+
+  const handleChildLinkClick = (child: LinkChild) => {
+    // Special handling for "Add Debt" link
+    if (child.name === "Add Debt") {
+      openModal()
+      return
+    }
+    // Normal navigation for other links
+    router.push(child.href)
   }
 
   if (!userPermissions) {
@@ -741,7 +753,7 @@ export function Links({ isCollapsed }: LinksProps) {
                   {filteredChildren.map((child) => {
                     const isChildActive = pathname.startsWith(child.href)
                     return (
-                      <Link key={child.name} href={child.href}>
+                      <button key={child.name} onClick={() => handleChildLinkClick(child)} className="w-full text-left">
                         <div
                           className={clsx(
                             "group/child mb-2 rounded-md p-2  transition-all duration-300 last:mb-0",
@@ -767,7 +779,7 @@ export function Links({ isCollapsed }: LinksProps) {
                             </p>
                           </div>
                         </div>
-                      </Link>
+                      </button>
                     )
                   })}
                 </div>
