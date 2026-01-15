@@ -1,9 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
+import Image from "next/image"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
 
 interface TokenData {
   token: string
@@ -21,18 +24,308 @@ interface VendTokenModalProps {
     reference: string
     customerName: string
     customerAccountNumber: string
-    amount: number
+    customerAddress?: string
+    customerPhoneNumber?: string
+    customerMeterNumber?: string
+    accountType?: string
+    tariffRate?: number
+    units?: number
+    vatRate?: number
+    vatAmount?: number
+    electricityAmount?: number
+    outstandingDebt?: number
+    debtPayable?: number
+    totalAmountPaid: number
     currency: string
     channel: string
+    status?: string
+    paymentTypeName?: string
     paidAtUtc: string
+    externalReference?: string
   } | null
 }
 
 const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose, tokenData, paymentData }) => {
   const [isCopyingToken, setIsCopyingToken] = useState(false)
   const [isCopyingAll, setIsCopyingAll] = useState(false)
+  const [showReceipt, setShowReceipt] = useState(false)
+  const receiptRef = useRef<HTMLDivElement>(null)
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: currency || "NGN",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString("en-NG", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!receiptRef.current || !paymentData) return
+
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#EFEFEF",
+      })
+
+      const imgData = canvas.toDataURL("image/png")
+
+      // A5 format: 148 x 210 mm = 420 x 595 points at 72 DPI
+      const pageWidth = 420
+      const pageHeight = 595
+      const margin = 20
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a5",
+      })
+
+      pdf.setFillColor(239, 239, 239) // #EFEFEF background
+      pdf.rect(0, 0, pageWidth, pageHeight, "F")
+
+      // Scale image to fit A5 page with margins
+      const maxWidth = pageWidth - margin * 2
+      const maxHeight = pageHeight - margin * 2
+      const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height)
+      const imgWidth = canvas.width * scale
+      const imgHeight = canvas.height * scale
+      const x = (pageWidth - imgWidth) / 2
+      const y = margin
+
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight)
+
+      const fileName = `Token-Receipt-${paymentData.customerAccountNumber}-${paymentData.reference}.pdf`
+      pdf.save(fileName)
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      alert("Error generating PDF. Please try again.")
+    }
+  }
 
   if (!isOpen || !tokenData || !paymentData) return null
+
+  if (showReceipt) {
+    // Show Receipt Modal
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+        onClick={onRequestClose}
+      >
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 20, opacity: 0 }}
+          transition={{ type: "spring", damping: 25 }}
+          className="relative w-full max-w-2xl overflow-hidden bg-[#EFEFEF] shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div ref={receiptRef} className="relative space-y-4 px-4 pb-4 text-sm text-gray-800 sm:space-y-6 sm:px-6">
+            {/* Header */}
+            <div className="flex flex-col items-center justify-between bg-[#EFEFEF]  pt-4 sm:flex-row ">
+              <Image src="/kadco.svg" alt="" height={120} width={123} className="max-sm:w-20" />
+              <div className="mt-3 text-center sm:mt-0 sm:text-right">
+                <h2 className="text-base font-bold text-gray-900 sm:text-lg">Token Receipt</h2>
+                <p className="max-w-[250px] break-words text-xs text-gray-500 sm:max-w-none">
+                  Reference: {paymentData.reference}
+                </p>
+              </div>
+            </div>
+
+            {/* Paid Stamp Overlay */}
+            <div className="pointer-events-none absolute  top-10 z-10 -translate-x-1/2 opacity-90 max-sm:right-0 sm:left-1/2">
+              <Image
+                src="/paid-stamp.svg"
+                alt="Paid stamp"
+                width={190}
+                height={190}
+                className="h-32 w-32 select-none sm:h-48 sm:w-48 md:h-[190px] md:w-[190px]"
+                priority
+              />
+            </div>
+
+            {/* Token Information */}
+            {/* <div className="relative rounded-lg bg-white p-4">
+              <div className="mb-4">
+                <p className="text-xs text-gray-500">Electricity Token</p>
+                <p className="break-words font-mono text-xl font-bold text-gray-900">{tokenData.token}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500">Amount</p>
+                  <p className="font-semibold text-gray-900">
+                    {tokenData.vendedAmount} {tokenData.unit}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Meter Number</p>
+                  <p className="font-mono font-semibold text-gray-900">{tokenData.drn}</p>
+                </div>
+              </div>
+            </div> */}
+
+            {/* Customer and Payment Summary */}
+            <div className="relative flex flex-col items-start justify-between rounded-lg bg-white p-4 sm:flex-row sm:items-center">
+              <div className="mb-3 w-full sm:mb-0 sm:w-auto">
+                <p className="text-xs text-gray-500">Customer</p>
+                <p className="break-words font-semibold text-gray-900">{paymentData.customerName}</p>
+                <p className="text-xs text-gray-500">Account: {paymentData.customerAccountNumber}</p>
+                {paymentData.customerAddress && (
+                  <p className="text-xs text-gray-500">Address: {paymentData.customerAddress}</p>
+                )}
+                {paymentData.customerPhoneNumber && (
+                  <p className="text-xs text-gray-500">Phone: {paymentData.customerPhoneNumber}</p>
+                )}
+
+                {paymentData.accountType && <p className="text-xs text-gray-500">Type: {paymentData.accountType}</p>}
+              </div>
+              <div className="w-full text-left sm:w-auto sm:text-right">
+                <p className="text-xs text-gray-500">Amount Paid</p>
+                <p className="text-xl font-bold text-gray-900 sm:text-2xl">
+                  {formatCurrency(paymentData.totalAmountPaid, paymentData.currency)}
+                </p>
+                <p className="break-words text-xs text-gray-500">Paid at: {formatDateTime(paymentData.paidAtUtc)}</p>
+                {paymentData.externalReference && (
+                  <p className="break-words text-xs text-gray-500">Ext Ref: {paymentData.externalReference}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Billing Details */}
+            <div className="rounded-lg bg-white p-4">
+              <h4 className="mb-3 font-semibold text-gray-600">Billing Details</h4>
+              <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Electricity Amount:</span>
+                  <span className="font-semibold">
+                    {paymentData.electricityAmount
+                      ? formatCurrency(paymentData.electricityAmount, paymentData.currency)
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">VAT Rate:</span>
+                  <span className="font-semibold">
+                    {paymentData.vatRate ? `${(paymentData.vatRate * 100).toFixed(1)}%` : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">VAT Amount:</span>
+                  <span className="font-semibold">
+                    {paymentData.vatAmount ? formatCurrency(paymentData.vatAmount, paymentData.currency) : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Tariff Rate:</span>
+                  <span className="font-semibold">
+                    {paymentData.tariffRate ? formatCurrency(paymentData.tariffRate, paymentData.currency) : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Units Purchased:</span>
+                  <span className="font-semibold">{paymentData.units ? `${paymentData.units} kWh` : "N/A"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Outstanding Debt:</span>
+                  <span className="font-semibold">
+                    {paymentData.outstandingDebt !== undefined
+                      ? formatCurrency(paymentData.outstandingDebt, paymentData.currency)
+                      : "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Details */}
+            <div className="gap-4 rounded-lg bg-gray-50 p-4">
+              <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:grid-cols-2 sm:gap-10">
+                <p className="font-semibold text-gray-600">Payment Details</p>
+                <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Token Information</p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 pt-4 text-xs sm:grid-cols-2 sm:gap-10">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Status: </span>
+                    <span className="break-words font-semibold">{paymentData.status || "Confirmed"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Channel: </span>
+                    <span className="break-words font-semibold">{paymentData.channel}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Payment Type: </span>
+                    <span className="break-words font-semibold">{paymentData.paymentTypeName || "Energy Bill"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Reference: </span>
+                    <span className="break-words font-semibold">{paymentData.reference}</span>
+                  </div>
+                </div>
+                <div className="space-y-2 sm:mt-0">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Token: </span>
+                    <span className="break-words font-semibold">{tokenData.token}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Units: </span>
+                    <span className="break-words font-semibold">
+                      {tokenData.vendedAmount} {tokenData.unit}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Description: </span>
+                    <span className="break-words font-semibold">{tokenData.description}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Meter Number: </span>
+                    <span className="break-words font-semibold">{tokenData.drn}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-16 flex w-full items-center justify-center">
+              <Image src="/os.svg" alt="" height={20} width={60} className="ml-1" />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <ButtonModule variant="outline" onClick={() => setShowReceipt(false)} className="w-full sm:w-auto">
+              Back to Token
+            </ButtonModule>
+            <ButtonModule variant="outline" onClick={handlePrint} className="w-full sm:w-auto">
+              Print
+            </ButtonModule>
+            <ButtonModule variant="primary" onClick={handleDownloadPDF} className="w-full sm:w-auto">
+              Download PDF
+            </ButtonModule>
+          </div>
+        </motion.div>
+      </motion.div>
+    )
+  }
+
+  // Show Token Modal
 
   const handleCopyToken = () => {
     if (navigator?.clipboard?.writeText) {
@@ -50,7 +343,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
       paymentData.customerName
     }\nAccount Number: ${paymentData.customerAccountNumber}\nAmount Paid: ${
       paymentData.currency
-    } ${paymentData.amount.toLocaleString()}\nPayment Channel: ${paymentData.channel}\nDate: ${new Date(
+    } ${paymentData.totalAmountPaid.toLocaleString()}\nPayment Channel: ${paymentData.channel}\nDate: ${new Date(
       paymentData.paidAtUtc
     ).toLocaleString()}`
 
@@ -123,7 +416,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
                 </div>
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:text-xs">
-                    DRN
+                    Meter Number
                   </span>
                   <p className="font-mono text-lg font-bold text-gray-900 max-sm:text-sm">{tokenData.drn}</p>
                 </div>
@@ -154,7 +447,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
               <div className="flex justify-between gap-4">
                 <span className="font-medium text-gray-600">Amount Paid:</span>
                 <span className="font-semibold">
-                  {paymentData.currency} {paymentData.amount.toLocaleString()}
+                  {paymentData.currency} {paymentData.totalAmountPaid.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between gap-4">
@@ -170,11 +463,14 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
         </div>
 
         <div className="flex gap-3  border-t bg-white px-6 py-4 max-sm:px-3  sm:gap-4">
-          <ButtonModule variant="secondary" className="flex w-full" size="sm" onClick={handleCopyToken}>
+          <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={handleCopyToken}>
             {isCopyingToken ? "Copied!" : "Copy Token"}
           </ButtonModule>
-          <ButtonModule variant="primary" className="flex w-full" size="sm" onClick={handleCopyAll}>
+          <ButtonModule variant="primary" className="flex w-full" size="md" onClick={handleCopyAll}>
             {isCopyingAll ? "Copied!" : "Copy All Details"}
+          </ButtonModule>
+          <ButtonModule variant="outline" className="flex w-full" size="md" onClick={() => setShowReceipt(true)}>
+            View Receipt
           </ButtonModule>
         </div>
       </motion.div>

@@ -159,8 +159,8 @@ const VendPage: React.FC = () => {
   useEffect(() => {
     if (vendSuccess && vendData) {
       // Check if payment is pending and has virtual account (bank transfer)
-      if (vendData.isPending && vendData.payment?.virtualAccount) {
-        setVirtualAccount(vendData.payment.virtualAccount)
+      if (vendData.isPending && vendData.paymentDetails?.virtualAccount) {
+        setVirtualAccount(vendData.paymentDetails.virtualAccount)
         setIsVirtualAccountModalOpen(true)
       } else if (vendData.token) {
         // Show token modal if token data is available
@@ -233,40 +233,32 @@ const VendPage: React.FC = () => {
 
   useEffect(() => {
     if (checkPaymentSuccess && checkPaymentData) {
-      // Close the bank transfer modal
-      setIsVirtualAccountModalOpen(false)
-      setVirtualAccount(null)
+      // If the confirmed payment has tokens, close modal and show token modal
+      if (checkPaymentData.token) {
+        // Close the bank transfer modal
+        setIsVirtualAccountModalOpen(false)
+        setVirtualAccount(null)
 
-      // Show success notification
-      notify("success", "Payment confirmed successfully", {
-        description: "Your bank transfer has been confirmed and the vend will be processed.",
-        duration: 5000,
-      })
+        // Show success notification
+        notify("success", "Payment confirmed successfully", {
+          description: "Your bank transfer has been confirmed and the vend will be processed.",
+          duration: 5000,
+        })
 
-      // If the confirmed payment has tokens, show the token modal
-      if (checkPaymentData.tokens && checkPaymentData.tokens.length > 0) {
         // Update vendData with the confirmed payment data to trigger token modal
         const updatedVendData = {
           ...vendData,
-          payment: checkPaymentData,
-          token: checkPaymentData.tokens[0],
+          ...checkPaymentData,
           isPending: false,
         }
 
         // Manually trigger the vend success flow
         dispatch({ type: "agents/vend/fulfilled", payload: updatedVendData })
-      } else {
-        // Reset form if no token
-        setMeterNumber("")
-        setAmountInput("")
-        setChannel(PaymentChannel.Cash)
-        setNarrative("")
-        setCustomerInfo(null)
-        dispatch(clearVend())
-      }
 
-      // Clear check payment state
-      dispatch(clearCheckPayment())
+        // Clear check payment state
+        dispatch(clearCheckPayment())
+      }
+      // If token is still null, do nothing - let polling continue
     }
   }, [checkPaymentSuccess, checkPaymentData, dispatch, vendData])
 
@@ -408,7 +400,7 @@ const VendPage: React.FC = () => {
   }
 
   const handleCheckPayment = async () => {
-    if (!vendData?.payment?.reference) {
+    if (!vendData?.reference) {
       notify("error", "Payment reference not found")
       return
     }
@@ -416,7 +408,7 @@ const VendPage: React.FC = () => {
     try {
       await dispatch(
         checkPayment({
-          reference: vendData.payment.reference,
+          reference: vendData.reference,
         })
       ).unwrap()
     } catch (error: any) {
@@ -676,15 +668,29 @@ const VendPage: React.FC = () => {
         onRequestClose={handleTokenModalClose}
         tokenData={vendData?.token || null}
         paymentData={
-          vendData?.payment
+          vendData
             ? {
-                reference: vendData.payment.reference,
-                customerName: vendData.payment.customerName,
-                customerAccountNumber: vendData.payment.customerAccountNumber,
-                amount: vendData.payment.amount,
-                currency: vendData.payment.currency,
-                channel: vendData.payment.channel,
-                paidAtUtc: vendData.payment.paidAtUtc,
+                reference: vendData.reference!,
+                customerName: vendData.customerName!,
+                customerAccountNumber: vendData.customerAccountNumber!,
+                customerAddress: vendData.customerAddress,
+                customerPhoneNumber: vendData.customerPhoneNumber,
+                customerMeterNumber: vendData.customerMeterNumber,
+                accountType: vendData.accountType,
+                tariffRate: vendData.tariffRate,
+                units: vendData.units,
+                vatRate: vendData.vatRate,
+                vatAmount: vendData.vatAmount,
+                electricityAmount: vendData.electricityAmount,
+                outstandingDebt: vendData.outstandingDebt,
+                debtPayable: vendData.debtPayable,
+                totalAmountPaid: vendData.totalAmountPaid!,
+                currency: vendData.currency!,
+                channel: vendData.channel!,
+                status: vendData.status,
+                paymentTypeName: vendData.paymentTypeName,
+                paidAtUtc: vendData.paidAtUtc!,
+                externalReference: vendData.externalReference,
               }
             : null
         }
@@ -696,13 +702,32 @@ const VendPage: React.FC = () => {
         onRequestClose={handleVirtualAccountModalClose}
         virtualAccount={virtualAccount}
         paymentData={
-          vendData?.payment
+          vendData &&
+          vendData.reference &&
+          vendData.totalAmountPaid &&
+          vendData.currency &&
+          vendData.customerName &&
+          vendData.customerAccountNumber
             ? {
-                reference: vendData.payment.reference,
-                amount: vendData.payment.amount,
-                currency: vendData.payment.currency,
-                customerName: vendData.payment.customerName,
-                customerAccountNumber: vendData.payment.customerAccountNumber,
+                reference: vendData.reference,
+                amount: vendData.totalAmountPaid,
+                currency: vendData.currency,
+                customerName: vendData.customerName,
+                customerAccountNumber: vendData.customerAccountNumber,
+                customerAddress: vendData.customerAddress,
+                customerPhoneNumber: vendData.customerPhoneNumber,
+                customerMeterNumber: vendData.customerMeterNumber,
+                accountType: vendData.accountType,
+                tariffRate: vendData.tariffRate,
+                units: vendData.units,
+                vatRate: vendData.vatRate,
+                vatAmount: vendData.vatAmount,
+                electricityAmount: vendData.electricityAmount,
+                outstandingDebt: vendData.outstandingDebt,
+                debtPayable: vendData.debtPayable,
+                totalAmountPaid: vendData.totalAmountPaid,
+                status: vendData.status,
+                paymentTypeName: vendData.paymentTypeName,
               }
             : null
         }
