@@ -55,6 +55,60 @@ const getLast365Days = () => {
   return dates
 }
 
+// Get agent type styling for Collections Summary card
+const getCollectionsSummaryStyle = (agentType: string) => {
+  switch (agentType) {
+    case "SalesRep":
+      return {
+        bgGradient: "from-blue-50 to-blue-100",
+        borderColor: "border-blue-100",
+        iconColor: "text-blue-700",
+        hoverBorder: "hover:border-blue-200",
+        hoverShadow: "hover:shadow-blue-100",
+      }
+    case "Cashier":
+      return {
+        bgGradient: "from-green-50 to-green-100",
+        borderColor: "border-green-100",
+        iconColor: "text-green-700",
+        hoverBorder: "hover:border-green-200",
+        hoverShadow: "hover:shadow-green-100",
+      }
+    case "ClearingCashier":
+      return {
+        bgGradient: "from-purple-50 to-purple-100",
+        borderColor: "border-purple-100",
+        iconColor: "text-purple-700",
+        hoverBorder: "hover:border-purple-200",
+        hoverShadow: "hover:shadow-purple-100",
+      }
+    case "Supervisor":
+      return {
+        bgGradient: "from-teal-50 to-cyan-100",
+        borderColor: "border-teal-100",
+        iconColor: "text-teal-700",
+        hoverBorder: "hover:border-teal-200",
+        hoverShadow: "hover:shadow-teal-100",
+      }
+    case "FinanceManager":
+      return {
+        bgGradient: "from-emerald-50 to-emerald-100",
+        borderColor: "border-emerald-100",
+        iconColor: "text-emerald-700",
+        hoverBorder: "hover:border-emerald-200",
+        hoverShadow: "hover:shadow-emerald-100",
+      }
+    default:
+      return {
+        bgGradient: "from-gray-50 to-gray-100",
+        borderColor: "border-gray-100",
+        iconColor: "text-gray-700",
+        hoverBorder: "hover:border-gray-200",
+        hoverShadow: "hover:shadow-gray-100",
+      }
+  }
+}
+
 const getStartAndEndOfYear = () => {
   const now = new Date()
   const startOfYear = new Date(now.getFullYear(), 0, 1)
@@ -769,7 +823,7 @@ export default function AgentManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 lg:container sm:px-4 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
@@ -1012,15 +1066,43 @@ export default function AgentManagementDashboard() {
                       <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         {/* Collections Summary Card */}
                         <motion.div
-                          className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
+                          className={`small-card rounded-md bg-gradient-to-br ${
+                            agentInfo
+                              ? getCollectionsSummaryStyle(agentInfo.agentType).bgGradient
+                              : "from-gray-50 to-gray-100"
+                          } ${
+                            agentInfo ? getCollectionsSummaryStyle(agentInfo.agentType).borderColor : "border-gray-200"
+                          } border p-4 shadow-sm transition duration-500 ${
+                            agentInfo
+                              ? getCollectionsSummaryStyle(agentInfo.agentType).hoverBorder
+                              : "hover:border-gray-300"
+                          } ${
+                            agentInfo
+                              ? getCollectionsSummaryStyle(agentInfo.agentType).hoverShadow
+                              : "hover:shadow-gray-100"
+                          }`}
                           whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                         >
                           <div className="flex items-center justify-between gap-2 border-b pb-4">
                             <div className="flex items-center gap-2">
-                              <div className="text-blue-600">
+                              <div
+                                className={
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-600"
+                                }
+                              >
                                 <MetersProgrammedIcon />
                               </div>
-                              <span className="text-sm font-medium sm:text-base">Collections Summary</span>
+                              <span
+                                className={`text-sm font-medium sm:text-base ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-700"
+                                }`}
+                              >
+                                Collections Summary
+                              </span>
                             </div>
                             <div className="text-right">
                               <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 sm:text-xs">
@@ -1030,22 +1112,70 @@ export default function AgentManagementDashboard() {
                           </div>
                           <div className="flex flex-col gap-3 pt-4">
                             <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Amount Collected:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
-                                <span className="text-secondary text-lg font-bold sm:text-xl">
+                              <p
+                                className={`text-sm sm:text-base ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Amount Collected:
+                              </p>
+                              <p
+                                className={`text-lg font-bold sm:text-xl ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                <span
+                                  className={`text-lg font-bold sm:text-xl ${
+                                    agentInfo
+                                      ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                      : "text-gray-900"
+                                  }`}
+                                >
                                   ₦{summary.collectedAmount.toLocaleString()}.<span className="text-sm">00</span>
                                 </span>
                               </p>
                             </div>
                             <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Collections Count:</p>
-                              <p className="text-secondary text-lg font-bold sm:text-xl">
+                              <p
+                                className={`text-sm sm:text-base ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Collections Count:
+                              </p>
+                              <p
+                                className={`text-lg font-bold sm:text-xl ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-900"
+                                }`}
+                              >
                                 {formatNumber(summary.collectedCount)}
                               </p>
                             </div>
                             <div className="flex w-full justify-between">
-                              <p className="text-sm text-gray-600 sm:text-base">Channels Used:</p>
-                              <p className="text-secondary text-sm font-medium sm:text-base">
+                              <p
+                                className={`text-sm sm:text-base ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Channels Used:
+                              </p>
+                              <p
+                                className={`text-sm font-medium sm:text-base ${
+                                  agentInfo
+                                    ? getCollectionsSummaryStyle(agentInfo.agentType).iconColor
+                                    : "text-gray-700"
+                                }`}
+                              >
                                 {formatNumber(summary.collectionsByChannel?.length ?? 0)}
                               </p>
                             </div>
