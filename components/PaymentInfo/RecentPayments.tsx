@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchPayments, Payment, PaymentsRequestParams } from "lib/redux/paymentSlice"
+import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { ExportCsvIcon } from "components/Icons/Icons"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -20,6 +21,26 @@ import { clearAgents, fetchAgents } from "lib/redux/agentSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 
 type SortOrder = "asc" | "desc" | null
+
+// Channel mapping utilities
+const channelStringToEnum = (channelString: string): PaymentChannel => {
+  switch (channelString) {
+    case "Cash":
+      return PaymentChannel.Cash
+    case "BankTransfer":
+      return PaymentChannel.BankTransfer
+    case "Pos":
+      return PaymentChannel.Pos
+    case "Card":
+      return PaymentChannel.Card
+    case "VendorWallet":
+      return PaymentChannel.VendorWallet
+    case "Chaque":
+      return PaymentChannel.Chaque
+    default:
+      return PaymentChannel.Cash
+  }
+}
 
 interface SortOption {
   label: string
@@ -570,9 +591,9 @@ const RecentPayments = () => {
     agentId: undefined as number | undefined,
     paymentTypeId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
-    channel: undefined as "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | undefined,
+    channel: undefined as PaymentChannel | undefined,
     status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
-    collectorType: undefined as "Customer" | "Agent" | "Vendor" | "Staff" | undefined,
+    collectorType: undefined as CollectorType | undefined,
     paidFromUtc: undefined as string | undefined,
     paidToUtc: undefined as string | undefined,
     sortBy: "",
@@ -586,9 +607,9 @@ const RecentPayments = () => {
     agentId: undefined as number | undefined,
     paymentTypeId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
-    channel: undefined as "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | undefined,
+    channel: undefined as PaymentChannel | undefined,
     status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
-    collectorType: undefined as "Customer" | "Agent" | "Vendor" | "Staff" | undefined,
+    collectorType: undefined as CollectorType | undefined,
     paidFromUtc: undefined as string | undefined,
     paidToUtc: undefined as string | undefined,
     sortBy: undefined as string | undefined,
@@ -723,9 +744,21 @@ const RecentPayments = () => {
 
   // Filter handlers
   const handleFilterChange = (key: string, value: string | number | undefined) => {
+    let processedValue = value
+
+    // Handle channel field - convert string to enum
+    if (key === "channel" && typeof value === "string" && value) {
+      processedValue = channelStringToEnum(value)
+    }
+
+    // Handle collectorType field - convert string to enum
+    if (key === "collectorType" && typeof value === "string" && value) {
+      processedValue = value as CollectorType
+    }
+
     setLocalFilters((prev) => ({
       ...prev,
-      [key]: value === "" ? undefined : value,
+      [key]: processedValue === "" ? undefined : processedValue,
     }))
   }
 

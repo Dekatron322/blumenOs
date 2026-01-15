@@ -14,14 +14,16 @@ import {
   clearPayments,
   CollectorType,
   fetchPayments,
-  Payment,
   PaymentChannel,
   PaymentsRequestParams,
   PaymentStatus,
   setPaymentsPagination,
 } from "lib/redux/agentSlice"
+import { Payment } from "lib/redux/paymentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
+import VendTokenModal from "components/ui/Modal/vend-token-modal"
+import CollectPaymentReceiptModal from "components/ui/Modal/collect-payment-receipt-modal"
 
 interface ActionDropdownProps {
   payment: Payment
@@ -234,12 +236,15 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
+  const { agent } = useAppSelector((state) => state.auth)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [showConfirmForm, setShowConfirmForm] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
+  const [showVendTokenModal, setShowVendTokenModal] = useState(false)
+  const [showCollectPaymentReceiptModal, setShowCollectPaymentReceiptModal] = useState(false)
 
   const handleViewPaymentDetails = (payment: Payment) => {
     router.push(`/agents/payments/payment-details/${payment.id}`)
@@ -273,6 +278,25 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
     }
     dispatch(fetchPayments(fetchParams))
+  }
+
+  const handleDownloadReceipt = (payment: Payment) => {
+    setSelectedPayment(payment)
+    // Determine which modal to show based on payment type
+    if (
+      payment.paymentTypeName?.toLowerCase().includes("token") ||
+      payment.paymentTypeName?.toLowerCase().includes("vend")
+    ) {
+      setShowVendTokenModal(true)
+    } else {
+      setShowCollectPaymentReceiptModal(true)
+    }
+  }
+
+  const handleCloseReceiptModals = () => {
+    setShowVendTokenModal(false)
+    setShowCollectPaymentReceiptModal(false)
+    setSelectedPayment(null)
   }
 
   // Get pagination values from Redux state
@@ -763,9 +787,19 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         {payment.status === PaymentStatus.Pending ? (
-                          <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
-                            Confirm
-                          </ButtonModule>
+                          agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager") ? (
+                            <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
+                              Confirm
+                            </ButtonModule>
+                          ) : (
+                            <p className="text-center">-</p>
+                          )
+                        ) : payment.status === PaymentStatus.Confirmed ? (
+                          <div className="flex gap-1">
+                            <ButtonModule variant="outline" size="sm" onClick={() => handleDownloadReceipt(payment)}>
+                              Download Receipt
+                            </ButtonModule>
+                          </div>
                         ) : (
                           <p className="text-center">-</p>
                         )}
@@ -875,6 +909,75 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           customerName={selectedPayment.customerName}
           amount={selectedPayment.amount}
           onSuccess={handleConfirmSuccess}
+        />
+      )}
+
+      {/* Vend Token Modal */}
+      {selectedPayment && showVendTokenModal && (
+        <VendTokenModal
+          isOpen={showVendTokenModal}
+          onRequestClose={handleCloseReceiptModals}
+          tokenData={{
+            token: "N/A", // This would come from the payment data if available
+            vendedAmount: selectedPayment.amount.toString(),
+            unit: "kWh",
+            description: selectedPayment.paymentTypeName || "Energy Payment",
+            drn: selectedPayment.customerMeterNumber || "N/A",
+          }}
+          paymentData={{
+            reference: selectedPayment.reference,
+            customerName: selectedPayment.customerName || "",
+            customerAccountNumber: selectedPayment.customerAccountNumber || "",
+            customerAddress: selectedPayment.customerAddress,
+            customerPhoneNumber: selectedPayment.customerPhoneNumber,
+            customerMeterNumber: selectedPayment.customerMeterNumber,
+            accountType: selectedPayment.accountType,
+            tariffRate: selectedPayment.tariffRate,
+            units: selectedPayment.units,
+            vatRate: selectedPayment.vatRate,
+            vatAmount: selectedPayment.vatAmount,
+            electricityAmount: selectedPayment.electricityAmount,
+            outstandingDebt: selectedPayment.outstandingDebt,
+            debtPayable: selectedPayment.debtPayable,
+            totalAmountPaid: selectedPayment.amount,
+            currency: selectedPayment.currency || "NGN",
+            channel: selectedPayment.channel,
+            status: selectedPayment.status,
+            paymentTypeName: selectedPayment.paymentTypeName,
+            paidAtUtc: selectedPayment.paidAtUtc,
+            externalReference: selectedPayment.externalReference,
+          }}
+        />
+      )}
+
+      {/* Collect Payment Receipt Modal */}
+      {selectedPayment && showCollectPaymentReceiptModal && (
+        <CollectPaymentReceiptModal
+          isOpen={showCollectPaymentReceiptModal}
+          onRequestClose={handleCloseReceiptModals}
+          paymentData={{
+            reference: selectedPayment.reference,
+            customerName: selectedPayment.customerName || "",
+            customerAccountNumber: selectedPayment.customerAccountNumber || "",
+            customerAddress: selectedPayment.customerAddress,
+            customerPhoneNumber: selectedPayment.customerPhoneNumber,
+            customerMeterNumber: selectedPayment.customerMeterNumber,
+            accountType: selectedPayment.accountType,
+            tariffRate: selectedPayment.tariffRate,
+            units: selectedPayment.units,
+            vatRate: selectedPayment.vatRate,
+            vatAmount: selectedPayment.vatAmount,
+            electricityAmount: selectedPayment.electricityAmount,
+            outstandingDebt: selectedPayment.outstandingDebt,
+            debtPayable: selectedPayment.debtPayable,
+            totalAmountPaid: selectedPayment.amount,
+            currency: selectedPayment.currency || "NGN",
+            channel: selectedPayment.channel,
+            status: selectedPayment.status,
+            paymentTypeName: selectedPayment.paymentTypeName,
+            paidAtUtc: selectedPayment.paidAtUtc,
+            externalReference: selectedPayment.externalReference,
+          }}
         />
       )}
     </div>

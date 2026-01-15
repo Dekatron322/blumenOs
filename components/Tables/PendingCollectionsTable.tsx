@@ -234,12 +234,19 @@ const AllPendingCollectionsTable: React.FC<AllPendingCollectionsTableProps> = ({
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
+  const { user } = useAppSelector((state) => state.auth)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
   const [showConfirmForm, setShowConfirmForm] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
+
+  // Check if user has required roles to confirm payments
+  const canConfirmPayment = () => {
+    if (!user?.roles) return false
+    return user.roles.some((role) => role.name === "Supervisor" || role.name === "FinanceManager")
+  }
 
   const handleViewPaymentDetails = (payment: Payment) => {
     router.push(`/sales-rep/view-payment-details/${payment.id}`)
@@ -762,9 +769,11 @@ const AllPendingCollectionsTable: React.FC<AllPendingCollectionsTableProps> = ({
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
-                          Confirm
-                        </ButtonModule>
+                        {canConfirmPayment() && (
+                          <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
+                            Confirm
+                          </ButtonModule>
+                        )}
                       </td>
                     </motion.tr>
                   ))}

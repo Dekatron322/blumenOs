@@ -146,12 +146,8 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
         return false
       }
 
-      // Hide Mop Cash for SalesRep and Cashier users
-      if (
-        link.href === "/sales-rep/mop-cash" &&
-        agent &&
-        (agent.agentType === "SalesRep" || agent.agentType === "Cashier")
-      ) {
+      // Only show Mop Cash for ClearingCashier users
+      if (link.href === "/sales-rep/mop-cash" && agent && agent.agentType !== "ClearingCashier") {
         return false
       }
 

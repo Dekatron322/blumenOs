@@ -19,8 +19,29 @@ import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { clearPayments, fetchPaymentChannels, fetchPayments, PaymentsRequestParams } from "lib/redux/paymentSlice"
+import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
 import { VscEye } from "react-icons/vsc"
+
+// Channel mapping utilities
+const channelStringToEnum = (channelString: string): PaymentChannel => {
+  switch (channelString) {
+    case "Cash":
+      return PaymentChannel.Cash
+    case "BankTransfer":
+      return PaymentChannel.BankTransfer
+    case "Pos":
+      return PaymentChannel.Pos
+    case "Card":
+      return PaymentChannel.Card
+    case "VendorWallet":
+      return PaymentChannel.VendorWallet
+    case "Chaque":
+      return PaymentChannel.Chaque
+    default:
+      return PaymentChannel.Cash
+  }
+}
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -107,7 +128,7 @@ interface Payment {
   reference: string
   channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
-  collectorType: "Customer" | "Agent" | "Vendor" | "Staff"
+  collectorType: CollectorType
   amount: number
   amountApplied: number
   overPaymentAmount: number
@@ -119,9 +140,21 @@ interface Payment {
   customerId: number
   customerName: string
   customerAccountNumber: string
+  customerAddress?: string
+  customerPhoneNumber?: string
+  customerMeterNumber?: string
   postpaidBillId: number
   postpaidBillPeriod: string
   billTotalDue: number
+  accountType?: string
+  tariffRate?: number
+  units?: number
+  vatRate?: number
+  vatAmount?: number
+  electricityAmount?: number
+  outstandingDebt?: number
+  debtPayable?: number
+  totalAmountPaid?: number
   vendorId: number
   vendorName: string
   agentId: number
@@ -378,7 +411,7 @@ const MobileFilterSidebar = ({
   agentOptions: Array<{ value: string | number; label: string }>
   paymentTypeOptions: Array<{ value: string | number; label: string }>
   areaOfficeOptions: Array<{ value: string | number; label: string }>
-  channelOptions: Array<{ value: string; label: string }>
+  channelOptions: Array<{ value: string | PaymentChannel; label: string }>
   statusOptions: Array<{ value: string; label: string }>
   collectorTypeOptions: Array<{ value: string; label: string }>
   sortOptions: SortOption[]
@@ -516,7 +549,7 @@ const MobileFilterSidebar = ({
                   <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Payment Channel</label>
                   <FormSelectModule
                     name="channel"
-                    value={localFilters.channel || ""}
+                    value={String(localFilters.channel || "")}
                     onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
                     options={channelOptions}
                     className="w-full"
@@ -701,9 +734,9 @@ const AllPayments: React.FC = () => {
     agentId: undefined as number | undefined,
     paymentTypeId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
-    channel: undefined as "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | undefined,
+    channel: undefined as PaymentChannel | undefined,
     status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
-    collectorType: undefined as "Customer" | "Agent" | "Vendor" | "Staff" | undefined,
+    collectorType: undefined as CollectorType | undefined,
     paidFromUtc: undefined as string | undefined,
     paidToUtc: undefined as string | undefined,
     sortBy: "",
@@ -717,9 +750,9 @@ const AllPayments: React.FC = () => {
     agentId: undefined as number | undefined,
     paymentTypeId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
-    channel: undefined as "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | undefined,
+    channel: undefined as PaymentChannel | undefined,
     status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
-    collectorType: undefined as "Customer" | "Agent" | "Vendor" | "Staff" | undefined,
+    collectorType: undefined as CollectorType | undefined,
     paidFromUtc: undefined as string | undefined,
     paidToUtc: undefined as string | undefined,
     sortBy: undefined as string | undefined,
@@ -871,29 +904,29 @@ const AllPayments: React.FC = () => {
     }
   }
 
-  const getPaymentMethodStyle = (channel: Payment["channel"]) => {
+  const getPaymentMethodStyle = (channel: PaymentChannel) => {
     switch (channel) {
-      case "BankTransfer":
+      case PaymentChannel.BankTransfer:
         return {
           backgroundColor: "#EFF6FF",
           color: "#2563EB",
         }
-      case "Cash":
+      case PaymentChannel.Cash:
         return {
           backgroundColor: "#DBE8FE",
           color: "#2563EB",
         }
-      case "Pos":
+      case PaymentChannel.Pos:
         return {
           backgroundColor: "#FFFBEB",
           color: "#D97706",
         }
-      case "Card":
+      case PaymentChannel.Card:
         return {
           backgroundColor: "#F0FDF4",
           color: "#16A34A",
         }
-      case "VendorWallet":
+      case PaymentChannel.VendorWallet:
         return {
           backgroundColor: "#FEF2F2",
           color: "#DC2626",
@@ -906,24 +939,24 @@ const AllPayments: React.FC = () => {
     }
   }
 
-  const getCollectorTypeStyle = (collectorType: Payment["collectorType"]) => {
+  const getCollectorTypeStyle = (collectorType: CollectorType) => {
     switch (collectorType) {
-      case "Customer":
+      case CollectorType.Customer:
         return {
           backgroundColor: "#EFF6FF",
           color: "#2563EB",
         }
-      case "Agent":
+      case CollectorType.SalesRep:
         return {
           backgroundColor: "#F0FDF4",
           color: "#16A34A",
         }
-      case "Vendor":
+      case CollectorType.Vendor:
         return {
           backgroundColor: "#FFFBEB",
           color: "#D97706",
         }
-      case "Staff":
+      case CollectorType.Staff:
         return {
           backgroundColor: "#DBE8FE",
           color: "#2563EB",
@@ -957,9 +990,21 @@ const AllPayments: React.FC = () => {
 
   // Handle individual filter changes (local state)
   const handleFilterChange = (key: string, value: string | number | undefined) => {
+    let processedValue = value
+
+    // Handle channel field - convert string to enum
+    if (key === "channel" && typeof value === "string" && value) {
+      processedValue = channelStringToEnum(value)
+    }
+
+    // Handle collectorType field - convert string to enum
+    if (key === "collectorType" && typeof value === "string" && value) {
+      processedValue = value as CollectorType
+    }
+
     setLocalFilters((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: processedValue,
     }))
   }
 
@@ -1085,7 +1130,10 @@ const AllPayments: React.FC = () => {
   // Generate channel options from payment channels endpoint
   const channelOptions = [
     { value: "", label: "All Channels" },
-    ...paymentChannels.map((channel) => ({ value: channel, label: channel })),
+    ...paymentChannels.map((channel) => ({
+      value: channelStringToEnum(channel),
+      label: channel,
+    })),
   ]
 
   const statusOptions = [
@@ -1099,7 +1147,7 @@ const AllPayments: React.FC = () => {
   const collectorTypeOptions = [
     { value: "", label: "All Collector Types" },
     { value: "Customer", label: "Customer" },
-    { value: "Agent", label: "Agent" },
+    { value: "SalesRep", label: "Agent" },
     { value: "Vendor", label: "Vendor" },
     { value: "Staff", label: "Staff" },
   ]
@@ -1629,7 +1677,7 @@ const AllPayments: React.FC = () => {
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Channel</label>
                       <FormSelectModule
                         name="channel"
-                        value={localFilters.channel || ""}
+                        value={String(localFilters.channel || "")}
                         onChange={(e) => handleFilterChange("channel", e.target.value || undefined)}
                         options={channelOptions}
                         className="w-full"
