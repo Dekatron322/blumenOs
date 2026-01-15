@@ -33,6 +33,7 @@ const CashRemittance = () => {
   const { records, recordsLoading, recordsError, recordsSuccess } = useSelector(
     (state: RootState) => state.cashRemittance
   )
+  const { agent } = useSelector((state: RootState) => state.auth)
 
   const handleCancelSearch = () => {
     setSearchText("")
@@ -587,9 +588,11 @@ const CashRemittance = () => {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3 md:max-w-lg">
               <DateFilter />
-              <ButtonModule variant="primary" size="md" onClick={() => setShowRecordModal(true)}>
-                Record Cash Mopup
-              </ButtonModule>
+              {agent && agent.agentType === "ClearingCashier" && (
+                <ButtonModule variant="primary" size="md" onClick={() => setShowRecordModal(true)}>
+                  Record Cash Mopup
+                </ButtonModule>
+              )}
             </div>
           </div>
 

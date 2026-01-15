@@ -331,8 +331,8 @@ export default function AgentManagementDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 ">
               <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl"> Cash Collection History</h4>
-                <p className="text-sm text-gray-600 sm:text-base">Overview of cash collections</p>
+                <h4 className="text-xl font-semibold sm:text-2xl">Collection History</h4>
+                <p className="text-sm text-gray-600 sm:text-base">Overview of collections</p>
               </div>
             </div>
 
