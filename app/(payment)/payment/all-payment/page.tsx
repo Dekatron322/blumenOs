@@ -18,7 +18,13 @@ import { clearAgents, fetchAgents } from "lib/redux/agentSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
-import { clearPayments, fetchPaymentChannels, fetchPayments, PaymentsRequestParams } from "lib/redux/paymentSlice"
+import {
+  clearPayments,
+  fetchPaymentChannels,
+  fetchPayments,
+  Payment,
+  PaymentsRequestParams,
+} from "lib/redux/paymentSlice"
 import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
 import { VscEye } from "react-icons/vsc"
@@ -121,50 +127,6 @@ interface SortOption {
   label: string
   value: string
   order: "asc" | "desc"
-}
-
-interface Payment {
-  id: number
-  reference: string
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
-  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
-  collectorType: CollectorType
-  amount: number
-  amountApplied: number
-  overPaymentAmount: number
-  outstandingAfterPayment: number
-  outstandingBeforePayment: number
-  currency: string
-  paidAtUtc: string
-  confirmedAtUtc: string
-  customerId: number
-  customerName: string
-  customerAccountNumber: string
-  customerAddress?: string
-  customerPhoneNumber?: string
-  customerMeterNumber?: string
-  postpaidBillId: number
-  postpaidBillPeriod: string
-  billTotalDue: number
-  accountType?: string
-  tariffRate?: number
-  units?: number
-  vatRate?: number
-  vatAmount?: number
-  electricityAmount?: number
-  outstandingDebt?: number
-  debtPayable?: number
-  totalAmountPaid?: number
-  vendorId: number
-  vendorName: string
-  agentId: number
-  agentCode: string
-  agentName: string
-  areaOfficeName: string
-  distributionSubstationCode: string
-  feederName: string
-  paymentTypeId: number
-  paymentTypeName: string
 }
 
 interface ActionDropdownProps {
@@ -1408,7 +1370,7 @@ const AllPayments: React.FC = () => {
                                   </div>
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                                  {formatCurrency(payment.amount, payment.currency)}
+                                  {formatCurrency(payment.totalAmountPaid, payment.currency)}
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                   <motion.div
@@ -1450,14 +1412,16 @@ const AllPayments: React.FC = () => {
                                   {formatDate(payment.paidAtUtc)}
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  <motion.div
-                                    style={getCollectorTypeStyle(payment.collectorType)}
-                                    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ duration: 0.1 }}
-                                  >
-                                    {payment.collectorType}
-                                  </motion.div>
+                                  {payment.collectorType && (
+                                    <motion.div
+                                      style={getCollectorTypeStyle(payment.collectorType)}
+                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                      whileHover={{ scale: 1.05 }}
+                                      transition={{ duration: 0.1 }}
+                                    >
+                                      {payment.collectorType}
+                                    </motion.div>
+                                  )}
                                 </td>
                                 {/* <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
                                   <div className="flex items-center gap-2">

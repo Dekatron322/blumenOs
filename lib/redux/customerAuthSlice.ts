@@ -165,6 +165,9 @@ const initialState: CustomerAuthState = {
 
 // Helper functions for localStorage
 const loadCustomerAuthState = (): StoredCustomerAuthState | undefined => {
+  if (typeof window === "undefined") {
+    return undefined
+  }
   try {
     const serializedState = localStorage.getItem("customerAuthState")
     if (serializedState === null) {
@@ -178,6 +181,9 @@ const loadCustomerAuthState = (): StoredCustomerAuthState | undefined => {
 }
 
 const saveCustomerAuthState = (state: CustomerAuthState) => {
+  if (typeof window === "undefined") {
+    return
+  }
   try {
     const serializedState = JSON.stringify({
       customer: state.customer,
@@ -191,6 +197,9 @@ const saveCustomerAuthState = (state: CustomerAuthState) => {
 }
 
 const clearCustomerAuthState = () => {
+  if (typeof window === "undefined") {
+    return
+  }
   try {
     localStorage.removeItem("customerAuthState")
   } catch (err) {

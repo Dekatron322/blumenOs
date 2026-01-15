@@ -1327,11 +1327,11 @@ const PaymentDetailsPage = () => {
         head: [["Field", "Details"]],
         body: [
           ["Reference", currentPayment.reference],
-          ["Amount", formatCurrency(currentPayment.amount, currentPayment.currency)],
+          ["External Reference", currentPayment.externalReference],
+          ["Total Amount Paid", formatCurrency(currentPayment.totalAmountPaid, currentPayment.currency)],
           ["Status", currentPayment.status],
           ["Payment Method", currentPayment.channel],
-          ["Collector Type", currentPayment.collectorType],
-          ["Payment ID", currentPayment.id.toString()],
+          ["Payment Type", currentPayment.paymentTypeName],
         ],
         theme: "grid",
         headStyles: { fillColor: [59, 130, 246], textColor: 255 },
@@ -1353,7 +1353,10 @@ const PaymentDetailsPage = () => {
         body: [
           ["Customer Name", currentPayment.customerName],
           ["Account Number", currentPayment.customerAccountNumber],
-          ["Customer ID", currentPayment.customerId.toString()],
+          ["Phone Number", currentPayment.customerPhoneNumber],
+          ["Address", currentPayment.customerAddress],
+          ["Meter Number", currentPayment.customerMeterNumber],
+          ["Account Type", currentPayment.accountType],
         ],
         theme: "grid",
         headStyles: { fillColor: [16, 185, 129], textColor: 255 },
@@ -1373,11 +1376,14 @@ const PaymentDetailsPage = () => {
         startY: yPosition,
         head: [["Field", "Details"]],
         body: [
-          ["Amount Applied", formatCurrency(currentPayment.amountApplied, currentPayment.currency)],
-          ["Overpayment Amount", formatCurrency(currentPayment.overPaymentAmount, currentPayment.currency)],
-          ["Outstanding Before", formatCurrency(currentPayment.outstandingBeforePayment, currentPayment.currency)],
-          ["Outstanding After", formatCurrency(currentPayment.outstandingAfterPayment, currentPayment.currency)],
-          ["Bill Total Due", formatCurrency(currentPayment.billTotalDue, currentPayment.currency)],
+          ["Tariff Rate", `${currentPayment.tariffRate} per kWh`],
+          ["Units Purchased", `${currentPayment.units} kWh`],
+          ["VAT Rate", `${(currentPayment.vatRate * 100).toFixed(1)}%`],
+          ["VAT Amount", formatCurrency(currentPayment.vatAmount, currentPayment.currency)],
+          ["Electricity Amount", formatCurrency(currentPayment.electricityAmount, currentPayment.currency)],
+          ["Outstanding Debt", formatCurrency(currentPayment.outstandingDebt, currentPayment.currency)],
+          ["Debt Payable", formatCurrency(currentPayment.debtPayable, currentPayment.currency)],
+          ["Total Amount Paid", formatCurrency(currentPayment.totalAmountPaid, currentPayment.currency)],
           ["Currency", currentPayment.currency],
         ],
         theme: "grid",
@@ -1397,10 +1403,7 @@ const PaymentDetailsPage = () => {
       autoTable(doc, {
         startY: yPosition,
         head: [["Event", "Date & Time"]],
-        body: [
-          ["Paid At", formatDate(currentPayment.paidAtUtc)],
-          ["Confirmed At", currentPayment.confirmedAtUtc ? formatDate(currentPayment.confirmedAtUtc) : "N/A"],
-        ],
+        body: [["Paid At", formatDate(currentPayment.paidAtUtc)]],
         theme: "grid",
         headStyles: { fillColor: [245, 158, 11], textColor: 255 },
         styles: { fontSize: 10 },
@@ -1416,14 +1419,9 @@ const PaymentDetailsPage = () => {
       yPosition += 10
 
       const additionalInfo = [
-        ["Vendor", currentPayment.vendorName || "N/A"],
-        ["Agent", currentPayment.agentName || "N/A"],
-        ["Area Office", currentPayment.areaOfficeName || "N/A"],
-        ["Feeder", currentPayment.feederName || "N/A"],
-        ["Bill Period", currentPayment.postpaidBillPeriod || "N/A"],
-        ["Narrative", currentPayment.narrative || "N/A"],
+        ["Payment Type", currentPayment.paymentTypeName || "N/A"],
         ["External Reference", currentPayment.externalReference || "N/A"],
-        ["Recorded By", currentPayment.recordedByName || "N/A"],
+        ["Is Pending", currentPayment.isPending ? "Yes" : "No"],
       ]
 
       autoTable(doc, {
@@ -1436,23 +1434,24 @@ const PaymentDetailsPage = () => {
         margin: { left: 14, right: 14 },
       })
 
-      // Virtual Account Information
-      if (currentPayment.virtualAccount) {
+      // Token Information
+      if (currentPayment.token) {
         yPosition = (doc as any).lastAutoTable.finalY + 15
 
         doc.setFontSize(14)
         doc.setFont("helvetica", "bold")
-        doc.text("VIRTUAL ACCOUNT INFORMATION", 14, yPosition)
+        doc.text("TOKEN INFORMATION", 14, yPosition)
         yPosition += 10
 
         autoTable(doc, {
           startY: yPosition,
           head: [["Field", "Details"]],
           body: [
-            ["Account Number", currentPayment.virtualAccount.accountNumber],
-            ["Bank Name", currentPayment.virtualAccount.bankName],
-            ["Reference", currentPayment.virtualAccount.reference],
-            ["Expires At", formatDate(currentPayment.virtualAccount.expiresAtUtc)],
+            ["Token", currentPayment.token.token],
+            ["Token Decimal", currentPayment.token.tokenDec],
+            ["Vended Amount", `${currentPayment.token.vendedAmount} ${currentPayment.token.unit}`],
+            ["Description", currentPayment.token.description],
+            ["DRN", currentPayment.token.drn],
           ],
           theme: "grid",
           headStyles: { fillColor: [16, 185, 129], textColor: 255 },
@@ -1510,7 +1509,7 @@ const PaymentDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container ">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 md:px-4 lg:px-6 2xl:px-16">
                 <div className="flex w-full flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-0">
                   <div className="flex items-center gap-3 md:gap-4">
                     <motion.button
@@ -1606,7 +1605,7 @@ const PaymentDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6 lg:py-8 xl:px-16">
+            <div className="flex w-full px-3 py-6 md:px-4 lg:px-6 lg:py-8 2xl:px-16">
               <div className="flex w-full flex-col gap-4 lg:flex-row lg:gap-6">
                 {/* Left Column - Profile & Quick Stats */}
                 <div className="flex w-full flex-col space-y-4 lg:w-[30%] lg:space-y-6">
@@ -1633,14 +1632,14 @@ const PaymentDetailsPage = () => {
 
                       <div className="space-y-2 text-xs md:space-y-3 md:text-sm">
                         <div className="flex flex-col items-center justify-between gap-1 text-gray-600 sm:flex-row">
-                          <span className="font-medium">Amount:</span>
+                          <span className="font-medium">Total Amount:</span>
                           <span className="font-semibold text-gray-900">
-                            {formatCurrency(currentPayment.amount, currentPayment.currency)}
+                            {formatCurrency(currentPayment.totalAmountPaid, currentPayment.currency)}
                           </span>
                         </div>
                         <div className="flex flex-col items-center justify-between gap-1 text-gray-600 sm:flex-row">
-                          <span className="font-medium">Collector:</span>
-                          <CollectorTypeBadge type={currentPayment.collectorType} />
+                          <span className="font-medium">Payment Type:</span>
+                          <span className="font-medium text-gray-900">{currentPayment.paymentTypeName}</span>
                         </div>
                         <div className="flex flex-col items-center justify-between gap-1 text-gray-600 sm:flex-row">
                           <span className="font-medium">Paid:</span>
@@ -1663,27 +1662,25 @@ const PaymentDetailsPage = () => {
                     </h3>
                     <div className="space-y-3 md:space-y-4">
                       <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
-                        <span className="text-xs text-gray-600 md:text-sm">Amount Applied</span>
+                        <span className="text-xs text-gray-600 md:text-sm">Units Purchased</span>
+                        <span className="font-semibold text-gray-900">{currentPayment.units} kWh</span>
+                      </div>
+                      <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+                        <span className="text-xs text-gray-600 md:text-sm">Tariff Rate</span>
                         <span className="font-semibold text-gray-900">
-                          {formatCurrency(currentPayment.amountApplied, currentPayment.currency)}
+                          {formatCurrency(currentPayment.tariffRate, currentPayment.currency)}/kWh
                         </span>
                       </div>
                       <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
-                        <span className="text-xs text-gray-600 md:text-sm">Overpayment</span>
+                        <span className="text-xs text-gray-600 md:text-sm">VAT Amount</span>
                         <span className="font-semibold text-gray-900">
-                          {formatCurrency(currentPayment.overPaymentAmount, currentPayment.currency)}
+                          {formatCurrency(currentPayment.vatAmount, currentPayment.currency)}
                         </span>
                       </div>
                       <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
-                        <span className="text-xs text-gray-600 md:text-sm">Outstanding Before</span>
+                        <span className="text-xs text-gray-600 md:text-sm">Outstanding Debt</span>
                         <span className="font-semibold text-gray-900">
-                          {formatCurrency(currentPayment.outstandingBeforePayment, currentPayment.currency)}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
-                        <span className="text-xs text-gray-600 md:text-sm">Outstanding After</span>
-                        <span className="font-semibold text-gray-900">
-                          {formatCurrency(currentPayment.outstandingAfterPayment, currentPayment.currency)}
+                          {formatCurrency(currentPayment.outstandingDebt, currentPayment.currency)}
                         </span>
                       </div>
                     </div>
@@ -1696,25 +1693,23 @@ const PaymentDetailsPage = () => {
                     transition={{ delay: 0.15 }}
                     className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
-                    <h3 className="mb-3 flex items-center justify-between text-base font-semibold text-gray-900 md:text-lg">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 md:text-lg">
                       <div className="flex items-center gap-2">
                         <User className="size-4 md:size-5" />
                         Customer
                       </div>
-                      <button
-                        onClick={() => router.push(`/customers/${currentPayment.customerId}`)}
-                        className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-blue-600"
-                        title="View Customer Details"
-                      >
-                        <span className="hidden sm:inline">View Details</span>
-                        <ArrowRight className="size-3 md:size-4" />
-                      </button>
                     </h3>
                     <div className="space-y-2 md:space-y-3">
-                      <div className="rounded-lg bg-[#f9f9f9] p-3">
+                      <div className="rounded-lg ">
                         <div className="font-medium text-gray-900">{currentPayment.customerName}</div>
                         <div className="text-xs text-gray-600 md:text-sm">
                           Account: {currentPayment.customerAccountNumber}
+                        </div>
+                        <div className="text-xs text-gray-600 md:text-sm">
+                          Phone: {currentPayment.customerPhoneNumber}
+                        </div>
+                        <div className="text-xs text-gray-600 md:text-sm">
+                          Address: {currentPayment.customerAddress}
                         </div>
                       </div>
                     </div>
@@ -1739,10 +1734,8 @@ const PaymentDetailsPage = () => {
                         <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.reference}</p>
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                        <label className="text-xs font-medium text-gray-600 md:text-sm">Payment Method</label>
-                        <div className="mt-1 md:mt-2">
-                          <PaymentMethodBadge method={currentPayment.channel} />
-                        </div>
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">External Reference</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.externalReference}</p>
                       </div>
                     </div>
                     <div className="mt-3 grid grid-cols-1 gap-3 md:mt-4 md:grid-cols-3 md:gap-4">
@@ -1753,14 +1746,14 @@ const PaymentDetailsPage = () => {
                         </div>
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                        <label className="text-xs font-medium text-gray-600 md:text-sm">Collector Type</label>
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Payment Method</label>
                         <div className="mt-1 md:mt-2">
-                          <CollectorTypeBadge type={currentPayment.collectorType} />
+                          <PaymentMethodBadge method={currentPayment.channel} />
                         </div>
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                        <label className="text-xs font-medium text-gray-600 md:text-sm">Currency</label>
-                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.currency}</p>
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Payment Type</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.paymentTypeName}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -1783,9 +1776,9 @@ const PaymentDetailsPage = () => {
                             <CreditCard className="size-4 text-blue-600 md:size-5" />
                           </div>
                           <div className="flex-1">
-                            <label className="text-xs font-medium text-gray-600 md:text-sm">Total Amount</label>
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Total Amount Paid</label>
                             <p className="font-semibold text-gray-900">
-                              {formatCurrency(currentPayment.amount, currentPayment.currency)}
+                              {formatCurrency(currentPayment.totalAmountPaid, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
@@ -1794,9 +1787,9 @@ const PaymentDetailsPage = () => {
                             <Zap className="size-4 text-green-600 md:size-5" />
                           </div>
                           <div className="flex-1">
-                            <label className="text-xs font-medium text-gray-600 md:text-sm">Amount Applied</label>
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Electricity Amount</label>
                             <p className="font-semibold text-gray-900">
-                              {formatCurrency(currentPayment.amountApplied, currentPayment.currency)}
+                              {formatCurrency(currentPayment.electricityAmount, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
@@ -1807,9 +1800,9 @@ const PaymentDetailsPage = () => {
                             <AlertCircle className="size-4 text-orange-600 md:size-5" />
                           </div>
                           <div className="flex-1">
-                            <label className="text-xs font-medium text-gray-600 md:text-sm">Overpayment</label>
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">VAT Amount</label>
                             <p className="font-semibold text-gray-900">
-                              {formatCurrency(currentPayment.overPaymentAmount, currentPayment.currency)}
+                              {formatCurrency(currentPayment.vatAmount, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
@@ -1818,9 +1811,9 @@ const PaymentDetailsPage = () => {
                             <Building className="size-4 text-purple-600 md:size-5" />
                           </div>
                           <div className="flex-1">
-                            <label className="text-xs font-medium text-gray-600 md:text-sm">Bill Total Due</label>
+                            <label className="text-xs font-medium text-gray-600 md:text-sm">Outstanding Debt</label>
                             <p className="font-semibold text-gray-900">
-                              {formatCurrency(currentPayment.billTotalDue, currentPayment.currency)}
+                              {formatCurrency(currentPayment.outstandingDebt, currentPayment.currency)}
                             </p>
                           </div>
                         </div>
@@ -1847,9 +1840,9 @@ const PaymentDetailsPage = () => {
                         </p>
                       </div>
                       <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                        <label className="text-xs font-medium text-gray-600 md:text-sm">Confirmed At</label>
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Is Pending</label>
                         <p className="mt-1 font-semibold text-gray-900 md:mt-0">
-                          {currentPayment.confirmedAtUtc ? formatDate(currentPayment.confirmedAtUtc) : "Not confirmed"}
+                          {currentPayment.isPending ? "Yes" : "No"}
                         </p>
                       </div>
                     </div>
@@ -1867,49 +1860,25 @@ const PaymentDetailsPage = () => {
                       Additional Information
                     </h3>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {currentPayment.vendorName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Vendor</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.vendorName}</p>
-                        </div>
-                      )}
-                      {currentPayment.agentName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Agent</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.agentName}</p>
-                        </div>
-                      )}
-                      {currentPayment.areaOfficeName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Area Office</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.areaOfficeName}</p>
-                        </div>
-                      )}
-                      {currentPayment.feederName && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Feeder</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.feederName}</p>
-                        </div>
-                      )}
-                      {currentPayment.postpaidBillPeriod && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Bill Period</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
-                            {currentPayment.postpaidBillPeriod}
-                          </p>
-                        </div>
-                      )}
-                      {currentPayment.narrative && (
-                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Narrative</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.narrative}</p>
-                        </div>
-                      )}
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Payment Type</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.paymentTypeName}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">External Reference</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.externalReference}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                        <label className="text-xs font-medium text-gray-600 md:text-sm">Is Pending</label>
+                        <p className="mt-1 font-semibold text-gray-900 md:mt-0">
+                          {currentPayment.isPending ? "Yes" : "No"}
+                        </p>
+                      </div>
                     </div>
                   </motion.div>
 
-                  {/* Virtual Account Information */}
-                  {currentPayment.virtualAccount && (
+                  {/* Token Information */}
+                  {currentPayment.token && (
                     <motion.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -1917,32 +1886,36 @@ const PaymentDetailsPage = () => {
                       className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                     >
                       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 md:mb-6">
-                        <CreditCard className="size-5" />
-                        Virtual Account Information
+                        <Zap className="size-5" />
+                        Token Information
                       </h3>
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Account Number</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
-                            {currentPayment.virtualAccount.accountNumber}
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Token</label>
+                          <p className="mt-1 font-mono text-sm font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.token.token}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Bank Name</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
-                            {currentPayment.virtualAccount.bankName}
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Token Decimal</label>
+                          <p className="mt-1 font-mono text-sm font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.token.tokenDec}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Reference</label>
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Vended Amount</label>
                           <p className="mt-1 font-semibold text-gray-900 md:mt-0">
-                            {currentPayment.virtualAccount.reference}
+                            {currentPayment.token.vendedAmount} {currentPayment.token.unit}
                           </p>
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
-                          <label className="text-xs font-medium text-gray-600 md:text-sm">Expires At</label>
-                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">
-                            {formatDate(currentPayment.virtualAccount.expiresAtUtc)}
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">Description</label>
+                          <p className="mt-1 font-semibold text-gray-900 md:mt-0">{currentPayment.token.description}</p>
+                        </div>
+                        <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-3 md:p-4">
+                          <label className="text-xs font-medium text-gray-600 md:text-sm">DRN</label>
+                          <p className="mt-1 font-mono text-sm font-semibold text-gray-900 md:mt-0">
+                            {currentPayment.token.drn}
                           </p>
                         </div>
                       </div>
@@ -1979,7 +1952,7 @@ const PaymentDetailsPage = () => {
         onRequestClose={closeAllModals}
         paymentId={currentPayment.id}
         paymentReference={currentPayment.reference}
-        currentAmount={currentPayment.amount}
+        currentAmount={currentPayment.totalAmountPaid}
         onSuccess={handleConfirmBankTransferSuccess}
       />
     </section>

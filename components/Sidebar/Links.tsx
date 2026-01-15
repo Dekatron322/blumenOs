@@ -559,6 +559,9 @@ export function Links({ isCollapsed }: LinksProps) {
 
   useEffect(() => {
     // Load user permissions from localStorage
+    if (typeof window === "undefined") {
+      return
+    }
     const storedPermissions = localStorage.getItem("userPermissions")
     if (storedPermissions) {
       try {

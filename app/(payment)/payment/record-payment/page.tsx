@@ -1563,7 +1563,7 @@ const AddPaymentPage = () => {
           createdPayment
             ? {
                 reference: createdPayment.reference,
-                amount: createdPayment.amount,
+                amount: createdPayment.amount || createdPayment.totalAmountPaid,
                 currency: createdPayment.currency,
                 customerName: createdPayment.customerName,
                 customerAccountNumber: createdPayment.customerAccountNumber,
