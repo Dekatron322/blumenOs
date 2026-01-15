@@ -1086,6 +1086,14 @@ const CustomerDetailsPage = () => {
                           <Edit3 className="size-4" />
                           Change Account Number
                         </ButtonModule>
+                        <ButtonModule
+                          variant="outlineDanger"
+                          className="w-full justify-start gap-3"
+                          onClick={() => router.push("/metering/install-new-meter")}
+                        >
+                          <MeterOutlineIcon className="size-4" />
+                          Add New Meter
+                        </ButtonModule>
                         {canUpdate && (
                           <ButtonModule
                             variant={currentCustomer.isSuspended ? "primary" : "danger"}

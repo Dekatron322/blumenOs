@@ -1,20 +1,8 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
-import { useCallback, useEffect, useState } from "react"
-import AddEmployeeModal from "components/ui/Modal/add-employee-modal"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import {
-  AddIcon,
-  ContractIcon,
-  DepartmentIcon,
-  EmployeeIcon,
-  PayrollIcon,
-  RefreshCircleIcon,
-} from "components/Icons/Icons"
-import AllEmployees from "components/Tables/AllEmployees"
-import { ButtonModule } from "components/ui/Button/Button"
 import { useAppSelector } from "lib/hooks/useRedux"
 import AllChangeRequest from "components/Tables/AllChangeRequest"
 

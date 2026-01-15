@@ -647,6 +647,7 @@ const AllChangeRequest = () => {
                     value={localFilters.searchText}
                     onChange={(e) => setLocalFilters((prev) => ({ ...prev, searchText: e.target.value }))}
                     onCancel={handleCancelSearch}
+                    onSearch={handleApplyFilters}
                     placeholder="Search by reference, requester, or entity label"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
@@ -674,6 +675,7 @@ const AllChangeRequest = () => {
                   value={localFilters.searchText}
                   onChange={(e) => setLocalFilters((prev) => ({ ...prev, searchText: e.target.value }))}
                   onCancel={handleCancelSearch}
+                  onSearch={handleApplyFilters}
                   placeholder="Search by reference, requester, or entity label"
                   className="w-full"
                 />

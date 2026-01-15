@@ -1126,6 +1126,7 @@ const AllEmployees = () => {
                     value={searchInput}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={applyFilters}
                     placeholder="Search by name, email, or department"
                     className="w-full max-w-full sm:max-w-[320px]"
                   />
@@ -1169,6 +1170,7 @@ const AllEmployees = () => {
                   value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={applyFilters}
                   placeholder="Search by name, email, or department"
                   className="w-full"
                 />
