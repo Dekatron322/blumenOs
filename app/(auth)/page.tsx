@@ -126,11 +126,13 @@ const SignIn: React.FC = () => {
         // Login successful - the useEffect will handle redirect based on mustChangePassword
         const userFullName = result.payload.data.user.fullName
         // Store user roles and privileges in localStorage for sidebar access
-        const userData = {
-          roles: result.payload.data.user.roles,
-          privileges: result.payload.data.user.privileges,
+        if (typeof window !== "undefined") {
+          const userData = {
+            roles: result.payload.data.user.roles,
+            privileges: result.payload.data.user.privileges,
+          }
+          localStorage.setItem("userPermissions", JSON.stringify(userData))
         }
-        localStorage.setItem("userPermissions", JSON.stringify(userData))
       }
     } catch (error: any) {
       const errorMessage = "An unexpected error occurred. Please try again."

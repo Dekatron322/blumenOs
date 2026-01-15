@@ -161,11 +161,13 @@ export const adminApi = createApi({
       if (accessToken) {
         headers.set("Authorization", `Bearer ${accessToken}`)
       } else {
-        const storedAuth = localStorage.getItem("authState")
-        if (storedAuth) {
-          const parsedAuth = JSON.parse(storedAuth) as { tokens?: { accessToken?: string } }
-          if (parsedAuth.tokens?.accessToken) {
-            headers.set("Authorization", `Bearer ${parsedAuth.tokens.accessToken}`)
+        if (typeof window !== "undefined") {
+          const storedAuth = localStorage.getItem("authState")
+          if (storedAuth) {
+            const parsedAuth = JSON.parse(storedAuth) as { tokens?: { accessToken?: string } }
+            if (parsedAuth.tokens?.accessToken) {
+              headers.set("Authorization", `Bearer ${parsedAuth.tokens.accessToken}`)
+            }
           }
         }
       }

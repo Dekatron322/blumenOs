@@ -964,7 +964,7 @@ const RecentPayments = () => {
       <div className="mt-3 space-y-1.5 text-xs text-gray-600 md:mt-4 md:text-sm">
         <div className="flex justify-between">
           <span>Amount:</span>
-          <span className="font-medium">{formatCurrency(payment.amount)}</span>
+          <span className="font-medium">{formatCurrency(payment.amount || 0)}</span>
         </div>
         <div className="flex justify-between">
           <span>Account:</span>
@@ -1038,7 +1038,7 @@ const RecentPayments = () => {
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-600 md:mt-2 md:gap-2.5 md:text-sm lg:gap-4">
               <span>
-                <strong>Amount:</strong> {formatCurrency(payment.amount)}
+                <strong>Amount:</strong> {formatCurrency(payment.amount || 0)}
               </span>
               <span>
                 <strong>Account:</strong> {payment.customerAccountNumber}

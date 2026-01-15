@@ -71,8 +71,10 @@ const SignIn: React.FC = () => {
       })
 
       // Store phone number for verification page
-      localStorage.setItem("customerPhoneNumber", phoneNumber)
-      localStorage.setItem("customerAccountNumber", accountNumber)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("customerPhoneNumber", phoneNumber)
+        localStorage.setItem("customerAccountNumber", accountNumber)
+      }
 
       // Redirect after a short delay to allow notification to be seen
       setTimeout(() => {

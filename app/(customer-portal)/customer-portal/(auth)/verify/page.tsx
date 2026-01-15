@@ -38,6 +38,9 @@ const Verify: React.FC = () => {
 
   useEffect(() => {
     // Load customer data from localStorage
+    if (typeof window === "undefined") {
+      return
+    }
     const storedAccountNumber = localStorage.getItem("customerAccountNumber")
     const storedPhoneNumber = localStorage.getItem("customerPhoneNumber")
 
@@ -114,8 +117,10 @@ const Verify: React.FC = () => {
       })
 
       // Clear localStorage data
-      localStorage.removeItem("customerPhoneNumber")
-      localStorage.removeItem("customerAccountNumber")
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("customerPhoneNumber")
+        localStorage.removeItem("customerAccountNumber")
+      }
 
       // Redirect after a short delay to allow notification to be seen
       setTimeout(() => {

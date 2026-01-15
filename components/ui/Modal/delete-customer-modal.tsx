@@ -37,7 +37,9 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
       console.log(`Customer ${customerId} deleted successfully`)
 
       // Remove from localStorage if exists
-      localStorage.removeItem("selectedCustomer")
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("selectedCustomer")
+      }
 
       // Call optional success callback
       if (onDeleteSuccess) {
