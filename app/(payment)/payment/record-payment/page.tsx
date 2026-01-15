@@ -131,6 +131,7 @@ const AddPaymentPage = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [amountInput, setAmountInput] = useState("")
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false)
 
   const [formData, setFormData] = useState<PaymentFormData>({
     postpaidBillId: 0,
@@ -520,6 +521,35 @@ const AddPaymentPage = () => {
         })
       }
     }
+  }
+
+  const handleCheckPayment = async () => {
+    if (!createdPayment?.reference) return
+
+    setIsCheckingPayment(true)
+    try {
+      // For now, just simulate checking payment
+      // In a real implementation, you would call an API to check payment status
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      notify("success", "Payment confirmed!", {
+        description: "Your payment has been confirmed and processed successfully.",
+        duration: 5000,
+      })
+      setIsVirtualAccountModalOpen(false)
+      setIsSuccessModalOpen(true)
+    } catch (error: any) {
+      notify("error", "Failed to check payment", {
+        description: error || "Unable to verify payment status",
+        duration: 4000,
+      })
+    } finally {
+      setIsCheckingPayment(false)
+    }
+  }
+
+  const handleConfirmPayment = () => {
+    setIsVirtualAccountModalOpen(false)
+    setIsSuccessModalOpen(true)
   }
 
   const handleReset = () => {
@@ -1520,6 +1550,34 @@ const AddPaymentPage = () => {
         isOpen={isVirtualAccountModalOpen}
         onRequestClose={() => setIsVirtualAccountModalOpen(false)}
         virtualAccount={virtualAccount}
+        paymentData={
+          createdPayment
+            ? {
+                reference: createdPayment.reference,
+                amount: createdPayment.amount,
+                currency: createdPayment.currency,
+                customerName: createdPayment.customerName,
+                customerAccountNumber: createdPayment.customerAccountNumber,
+                customerAddress: createdPayment.customerAddress,
+                customerPhoneNumber: createdPayment.customerPhoneNumber,
+                customerMeterNumber: createdPayment.customerMeterNumber,
+                accountType: createdPayment.accountType,
+                tariffRate: createdPayment.tariffRate,
+                units: createdPayment.units,
+                vatRate: createdPayment.vatRate,
+                vatAmount: createdPayment.vatAmount,
+                electricityAmount: createdPayment.electricityAmount,
+                outstandingDebt: createdPayment.outstandingDebt,
+                debtPayable: createdPayment.debtPayable,
+                totalAmountPaid: createdPayment.totalAmountPaid,
+                status: createdPayment.status,
+                paymentTypeName: createdPayment.paymentTypeName,
+              }
+            : null
+        }
+        onCheckPayment={handleCheckPayment}
+        onConfirm={handleConfirmPayment}
+        isCheckingPayment={isCheckingPayment}
       />
       <AnimatePresence>
         {isSuccessModalOpen && (

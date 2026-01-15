@@ -615,6 +615,8 @@ export enum CollectorType {
 }
 
 export interface Payment {
+  paymentDetails: any
+  isPending: boolean
   id: number
   reference: string
   latitude: number
@@ -1304,6 +1306,30 @@ export interface VendData {
   isPending: boolean
   payment: VendPayment
   token: Token
+  reference?: string
+  totalAmountPaid?: number
+  currency?: string
+  customerName?: string
+  customerAccountNumber?: string
+  customerAddress?: string
+  customerPhoneNumber?: string
+  customerMeterNumber?: string
+  accountType?: string
+  tariffRate?: number
+  units?: number
+  vatRate?: number
+  vatAmount?: number
+  electricityAmount?: number
+  outstandingDebt?: number
+  debtPayable?: number
+  status?: string
+  paymentTypeName?: string
+  channel?: string
+  paidAtUtc?: string
+  externalReference?: string
+  paymentDetails?: {
+    virtualAccount?: string
+  }
 }
 
 export interface VendResponse {
@@ -1334,10 +1360,25 @@ export interface CheckPaymentData {
   currency: string
   customerName: string
   customerAccountNumber: string
+  customerAddress?: string
+  customerPhoneNumber?: string
+  customerMeterNumber?: string
+  accountType?: string
+  tariffRate?: number
+  units?: number
+  vatRate?: number
+  vatAmount?: number
+  electricityAmount?: number
+  outstandingDebt?: number
+  debtPayable?: number
+  totalAmountPaid?: number
   channel: string
   paidAtUtc: string
-  confirmedAtUtc: string
-  tokens: Token[]
+  confirmedAtUtc?: string
+  externalReference?: string
+  paymentTypeName?: string
+  token?: Token
+  isPending: boolean
 }
 
 export interface CheckPaymentResponse {

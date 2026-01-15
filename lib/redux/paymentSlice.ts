@@ -28,9 +28,21 @@ export interface Payment {
   customerId: number
   customerName: string
   customerAccountNumber: string
+  customerAddress?: string
+  customerPhoneNumber?: string
+  customerMeterNumber?: string
   postpaidBillId: number
   postpaidBillPeriod: string
   billTotalDue: number
+  accountType?: string
+  tariffRate?: number
+  units?: number
+  vatRate?: number
+  vatAmount?: number
+  electricityAmount?: number
+  outstandingDebt?: number
+  debtPayable?: number
+  totalAmountPaid?: number
   vendorId: number
   vendorName: string
   agentId: number

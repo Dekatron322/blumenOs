@@ -20,6 +20,20 @@ interface VendBankTransferModalProps {
     currency: string
     customerName: string
     customerAccountNumber: string
+    customerAddress?: string
+    customerPhoneNumber?: string
+    customerMeterNumber?: string
+    accountType?: string
+    tariffRate?: number
+    units?: number
+    vatRate?: number
+    vatAmount?: number
+    electricityAmount?: number
+    outstandingDebt?: number
+    debtPayable?: number
+    totalAmountPaid?: number
+    status?: string
+    paymentTypeName?: string
   } | null
   onCheckPayment: () => void
   onConfirm: () => void
@@ -39,6 +53,8 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
   const [timeLeft, setTimeLeft] = useState<string>("")
   const [canCheckPayment, setCanCheckPayment] = useState(false)
   const [checkTime] = useState(() => new Date(Date.now() + 60 * 1000)) // 1 minute from now when user can check payment
+  const [isPolling, setIsPolling] = useState(false)
+  const [pollingAttempts, setPollingAttempts] = useState(0)
 
   useEffect(() => {
     if (!isOpen) return
@@ -69,14 +85,59 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
     return () => clearInterval(intervalId)
   }, [isOpen, checkTime])
 
+  // Reset polling state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPolling(false)
+      setPollingAttempts(0)
+    }
+  }, [isOpen])
+
+  // Short polling logic
+  useEffect(() => {
+    if (!isPolling) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        setPollingAttempts((prev) => prev + 1)
+
+        // Call the check payment function
+        await onCheckPayment()
+
+        // Check if payment is confirmed and has token - this will be handled by the parent component
+        // The polling will stop automatically when the modal closes due to token being found
+
+        // If we reach max attempts (30 attempts = 5 minutes at 10 second intervals), stop polling
+        if (pollingAttempts >= 30) {
+          setIsPolling(false)
+          setPollingAttempts(0)
+        }
+      } catch (error) {
+        console.error("Polling error:", error)
+        // Stop polling on error
+        setIsPolling(false)
+        setPollingAttempts(0)
+      }
+    }, 10000) // Poll every 10 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [isPolling, pollingAttempts, onCheckPayment])
+
   if (!isOpen || !virtualAccount || !paymentData) return null
+
+  const handleCheckPayment = () => {
+    if (!canCheckPayment || isCheckingPayment) return
+
+    setIsPolling(true)
+    setPollingAttempts(0)
+  }
 
   const handleCopy = () => {
     const text = `Account Number: ${virtualAccount.accountNumber}\nBank Name: ${
       virtualAccount.bankName
     }\nPayment Reference: ${virtualAccount.reference}\nAmount: ${
       paymentData.currency
-    } ${paymentData.amount.toLocaleString()}\nCustomer: ${paymentData.customerName} (${
+    } ${paymentData.totalAmountPaid?.toLocaleString()}\nCustomer: ${paymentData.customerName} (${
       paymentData.customerAccountNumber
     })\nExpires At: ${new Date(virtualAccount.expiresAtUtc).toLocaleString()}`
 
@@ -129,16 +190,84 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
                 <span className="text-gray-600">Account Number:</span>
                 <span className="font-medium">{paymentData.customerAccountNumber}</span>
               </div>
+              {paymentData.customerMeterNumber && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Meter Number:</span>
+                  <span className="font-medium">{paymentData.customerMeterNumber}</span>
+                </div>
+              )}
+              {paymentData.customerPhoneNumber && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Phone Number:</span>
+                  <span className="font-medium">{paymentData.customerPhoneNumber}</span>
+                </div>
+              )}
+              {/* {paymentData.customerAddress && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Address:</span>
+                  <span className="max-w-[60%] text-right font-medium">{paymentData.customerAddress}</span>
+                </div>
+              )}
               <div className="flex justify-between">
-                <span className="text-gray-600">Amount:</span>
-                <span className="text-lg font-bold">
-                  {paymentData.currency} {paymentData.amount.toLocaleString()}
-                </span>
+                <span className="text-gray-600">Account Type:</span>
+                <span className="font-medium capitalize">{paymentData.accountType}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-gray-600">Payment Type:</span>
+                <span className="font-medium">{paymentData.paymentTypeName}</span>
+              </div>
+              {paymentData.tariffRate && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tariff Rate:</span>
+                  <span className="font-medium">₦{paymentData.tariffRate.toFixed(2)}</span>
+                </div>
+              )}
+              {paymentData.units && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Units:</span>
+                  <span className="font-medium">{paymentData.units.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-600">Electricity Amount:</span>
+                <span className="font-medium">₦{paymentData.electricityAmount?.toLocaleString()}</span>
+              </div>
+              {paymentData.vatAmount && paymentData.vatAmount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">VAT Amount:</span>
+                  <span className="font-medium">₦{paymentData.vatAmount.toLocaleString()}</span>
+                </div>
+              )}
+              {paymentData.outstandingDebt && paymentData.outstandingDebt > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Outstanding Debt:</span>
+                  <span className="font-medium">₦{paymentData.outstandingDebt.toLocaleString()}</span>
+                </div>
+              )} */}
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Amount Paid:</span>
+                <span className="text-lg font-bold">
+                  {paymentData.currency} {paymentData.totalAmountPaid?.toLocaleString()}
+                </span>
+              </div>
+              {/* <div className="flex justify-between">
                 <span className="text-gray-600">Payment Reference:</span>
                 <span className="font-medium">{paymentData.reference}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Status:</span>
+                <span
+                  className={`font-medium capitalize ${
+                    paymentData.status === "Pending"
+                      ? "text-amber-600"
+                      : paymentData.status === "Completed"
+                      ? "text-green-600"
+                      : "text-gray-600"
+                  }`}
+                >
+                  {paymentData.status}
+                </span>
+              </div> */}
             </div>
           </div>
 
@@ -161,36 +290,67 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
                 <span className="font-semibold">{virtualAccount.reference}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="font-medium">Can Check Payment From:</span>
-                <span className="font-semibold">{checkTime.toLocaleString()}</span>
+                <span className="font-medium">Expires At:</span>
+                <span className="font-semibold">{new Date(virtualAccount.expiresAtUtc).toLocaleString()}</span>
               </div>
             </div>
           </div>
 
-          {/* Countdown Timer */}
-          <div className="mb-6">
-            <div
-              className={`rounded-lg border-2 p-6 text-center ${
-                canCheckPayment ? "border-green-300 bg-green-50" : "border-blue-300 bg-blue-50"
-              }`}
-            >
-              <div className="mb-2 text-sm font-semibold uppercase tracking-wide">
-                {canCheckPayment ? "Payment Ready to Check" : "Wait Before Checking"}
+          {/* Payment Confirmation Status */}
+          {isPolling && (
+            <div className="mt-4 rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-center justify-center gap-3">
+                <div className="flex size-4 animate-pulse rounded-full bg-blue-500"></div>
+                <div className="text-center">
+                  <h3 className="text-lg font-bold text-blue-900">PAYMENT CONFIRMATION IN PROGRESS</h3>
+                  <p className="text-sm text-blue-700">Checking your payment every 10 seconds...</p>
+                  <p className="mt-1 text-xs text-blue-600">Please wait while we confirm your payment</p>
+                </div>
+                <div className="flex size-4 animate-pulse rounded-full bg-blue-500"></div>
               </div>
-              <div
-                className={`text-5xl font-bold tracking-wider max-sm:text-2xl ${
-                  canCheckPayment ? "text-green-600" : "text-blue-600"
-                }`}
-              >
-                {timeLeft}
+              {/* Payment Check Details */}
+              <div className="mt-4 rounded-md bg-white p-3">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-blue-700">Reference:</span>
+                    <span className="font-mono font-medium text-blue-900">{paymentData?.reference || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-700">Status:</span>
+                    <span
+                      className={`font-medium ${
+                        paymentData?.status === "Paid" || paymentData?.status === "Confirmed"
+                          ? "text-green-600"
+                          : paymentData?.status === "Pending"
+                          ? "text-yellow-600"
+                          : "text-blue-600"
+                      }`}
+                    >
+                      {paymentData?.status || "Processing"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-700">Payment Check:</span>
+                    <span className="font-medium text-blue-900">
+                      <span className="flex items-center gap-2">
+                        <span>{pollingAttempts}/30 attempts</span>
+                        <span className="text-xs text-blue-600">
+                          (~{Math.round((30 - pollingAttempts) * 0.17)}min left)
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                {/* Progress Bar */}
+                <div className="mt-3 overflow-hidden rounded-full bg-blue-200">
+                  <div
+                    className="h-2 bg-blue-600 transition-all duration-300"
+                    style={{ width: `${(pollingAttempts / 30) * 100}%` }}
+                  ></div>
+                </div>
               </div>
-              {!canCheckPayment ? (
-                <p className="mt-2 text-sm text-gray-600">Make your bank transfer, then wait to check payment status</p>
-              ) : (
-                <p className="mt-2 text-sm text-green-600">You can now check your payment status!</p>
-              )}
             </div>
-          </div>
+          )}
 
           {/* Instructions */}
           {/* <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -198,7 +358,6 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
             <ol className="list-inside list-decimal space-y-1 text-sm text-blue-700">
               <li>Copy the virtual account details above</li>
               <li>Make a bank transfer for the exact amount</li>
-              <li>Use the payment reference as the transfer description</li>
               <li>Click "Check Payment" after making the transfer</li>
               <li>Your electricity token will be generated automatically</li>
             </ol>
@@ -210,13 +369,19 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
             {isCopying ? "Copied!" : "Copy Details"}
           </ButtonModule>
           <ButtonModule
-            variant={canCheckPayment ? "primary" : "secondary"}
+            variant={isPolling ? "secondary" : canCheckPayment ? "primary" : "secondary"}
             className="flex w-full"
             size="sm"
-            onClick={onCheckPayment}
-            disabled={!canCheckPayment || isCheckingPayment}
+            onClick={handleCheckPayment}
+            disabled={!canCheckPayment || isCheckingPayment || isPolling}
           >
-            {!canCheckPayment ? `Wait: ${timeLeft}` : isCheckingPayment ? "Checking..." : "Check Payment"}
+            {!canCheckPayment
+              ? `Wait: ${timeLeft}`
+              : isPolling
+              ? `Checking... (${pollingAttempts}/30)`
+              : isCheckingPayment
+              ? "Checking..."
+              : "Check Payment"}
           </ButtonModule>
         </div>
       </motion.div>
