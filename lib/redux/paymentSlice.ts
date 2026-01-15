@@ -12,53 +12,65 @@ export interface VirtualAccount {
   expiresAtUtc: string
 }
 
+export interface Token {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
 export interface Payment {
   id: number
   reference: string
+  externalReference: string
   channel: PaymentChannel
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
-  collectorType: CollectorType
-  amount: number
-  amountApplied: number
-  overPaymentAmount: number
-  outstandingAfterPayment: number
-  outstandingBeforePayment: number
+  isPending: boolean
+  totalAmountPaid: number
   currency: string
   paidAtUtc: string
-  confirmedAtUtc: string
-  customerId: number
   customerName: string
   customerAccountNumber: string
-  customerAddress?: string
-  customerPhoneNumber?: string
-  customerMeterNumber?: string
-  postpaidBillId: number
-  postpaidBillPeriod: string
-  billTotalDue: number
-  accountType?: string
-  tariffRate?: number
-  units?: number
-  vatRate?: number
-  vatAmount?: number
-  electricityAmount?: number
-  outstandingDebt?: number
-  debtPayable?: number
-  totalAmountPaid?: number
-  vendorId: number
-  vendorName: string
-  agentId: number
-  agentCode: string
-  agentName: string
-  areaOfficeName: string
-  distributionSubstationCode: string
-  feederName: string
-  paymentTypeId: number
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
   paymentTypeName: string
-  narrative: string
-  externalReference: string
+  token?: Token
+  // Legacy fields - keeping for backward compatibility
+  collectorType?: CollectorType
+  amount?: number
+  amountApplied?: number
+  overPaymentAmount?: number
+  outstandingAfterPayment?: number
+  outstandingBeforePayment?: number
+  confirmedAtUtc?: string
+  customerId?: number
+  postpaidBillId?: number
+  postpaidBillPeriod?: string
+  billTotalDue?: number
+  vendorId?: number
+  vendorName?: string
+  agentId?: number
+  agentCode?: string
+  agentName?: string
+  areaOfficeName?: string
+  distributionSubstationCode?: string
+  feederName?: string
+  paymentTypeId?: number
+  narrative?: string
   virtualAccount?: VirtualAccount
-  vendorAccountId: string
-  recordedByName: string
+  vendorAccountId?: string
+  recordedByName?: string
 }
 
 export interface PaymentTracking {

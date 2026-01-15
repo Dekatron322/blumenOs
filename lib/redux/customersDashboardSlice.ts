@@ -26,6 +26,9 @@ const customerApi = axios.create({
 // Add request interceptor to inject customer token from localStorage
 customerApi.interceptors.request.use(
   (config) => {
+    if (typeof window === "undefined") {
+      return config
+    }
     try {
       const storedCustomerAuth = localStorage.getItem("customerAuthState")
       if (storedCustomerAuth) {
@@ -55,6 +58,9 @@ customerApi.interceptors.response.use(
       originalRequest._retry = true
 
       try {
+        if (typeof window === "undefined") {
+          return Promise.reject(error)
+        }
         const storedCustomerAuth = localStorage.getItem("customerAuthState")
         if (storedCustomerAuth) {
           const customerAuthState: StoredCustomerAuthState = JSON.parse(storedCustomerAuth) as StoredCustomerAuthState
@@ -92,7 +98,9 @@ customerApi.interceptors.response.use(
       } catch (refreshError) {
         console.error("Customer token refresh failed:", refreshError)
         // Clear auth state on refresh failure
-        localStorage.removeItem("customerAuthState")
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("customerAuthState")
+        }
         // You might want to dispatch a logout action here or redirect to login
       }
     }

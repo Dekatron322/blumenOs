@@ -138,20 +138,25 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                   <p className="text-xs text-gray-500">Customer</p>
                   <p className="break-words font-semibold text-gray-900">{payment.customerName}</p>
                   <p className="text-xs text-gray-500">Account: {payment.customerAccountNumber}</p>
+                  <p className="text-xs text-gray-500">Phone: {payment.customerPhoneNumber}</p>
+                  <p className="text-xs text-gray-500">Address: {payment.customerAddress}</p>
+                  <p className="text-xs text-gray-500">Meter: {payment.customerMeterNumber}</p>
+                  <p className="text-xs text-gray-500">Type: {payment.accountType}</p>
                 </div>
                 <div className="w-full text-left sm:w-auto sm:text-right">
-                  <p className="text-xs text-gray-500">Amount Paid</p>
+                  <p className="text-xs text-gray-500">Total Amount Paid</p>
                   <p className="text-xl font-bold text-gray-900 sm:text-2xl">
-                    {formatCurrency(payment.amount, payment.currency)}
+                    {formatCurrency(payment.totalAmountPaid, payment.currency)}
                   </p>
                   <p className="break-words text-xs text-gray-500">Paid at: {formatDateTime(payment.paidAtUtc)}</p>
+                  <p className="break-words text-xs text-gray-500">Payment Type: {payment.paymentTypeName}</p>
                 </div>
               </div>
 
               <div className="gap-4 rounded-lg bg-gray-50 p-4">
                 <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:grid-cols-2 sm:gap-10">
                   <p className="font-semibold text-gray-600">Payment Details</p>
-                  <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Bills Summary</p>
+                  <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Energy Summary</p>
                 </div>
                 <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 pt-4 text-xs sm:grid-cols-2 sm:gap-10">
                   <div className="space-y-2">
@@ -168,51 +173,90 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                       <span className="break-words font-semibold">{payment.paymentTypeName}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Recorded By: </span>
-                      <span className="break-words font-semibold">{payment.recordedByName}</span>
+                      <span className="text-gray-500">External Reference: </span>
+                      <span className="break-words font-semibold">{payment.externalReference}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Is Pending: </span>
+                      <span className="break-words font-semibold">{payment.isPending ? "Yes" : "No"}</span>
                     </div>
                   </div>
                   <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:hidden sm:grid-cols-2 sm:gap-10">
                     <p className="font-semibold text-gray-600">Payment Details</p>
-                    <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Bills Summary</p>
+                    <p className="mt-2 font-semibold text-gray-600 max-sm:hidden sm:mt-0">Energy Summary</p>
                   </div>
                   <div className="space-y-2 sm:mt-0">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Bill Period: </span>
-                      <span className="break-words font-semibold">{payment.postpaidBillPeriod || "N/A"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Bill Total Due: </span>
+                      <span className="text-gray-500">Tariff Rate: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.billTotalDue, payment.currency)}
+                        {formatCurrency(payment.tariffRate, payment.currency)}/kWh
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Outstanding Before: </span>
+                      <span className="text-gray-500">Units Purchased: </span>
+                      <span className="break-words font-semibold">{payment.units} kWh</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">VAT Rate: </span>
+                      <span className="break-words font-semibold">{(payment.vatRate * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">VAT Amount: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.outstandingBeforePayment, payment.currency)}
+                        {formatCurrency(payment.vatAmount, payment.currency)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Outstanding After: </span>
+                      <span className="text-gray-500">Electricity Amount: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.outstandingAfterPayment, payment.currency)}
+                        {formatCurrency(payment.electricityAmount, payment.currency)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {payment.narrative && (
-                  <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
-                    <p className="mb-1 font-medium text-gray-700">Narrative</p>
-                    <p className="break-words text-gray-600">{payment.narrative}</p>
+                {/* Debt Information */}
+                <div className="mt-4 grid grid-cols-1 gap-4 rounded-lg bg-gray-50 pt-4 text-xs sm:grid-cols-2 sm:gap-10">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Outstanding Debt: </span>
+                      <span className="break-words font-semibold">
+                        {formatCurrency(payment.outstandingDebt, payment.currency)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Debt Payable: </span>
+                      <span className="break-words font-semibold">
+                        {formatCurrency(payment.debtPayable, payment.currency)}
+                      </span>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {payment.externalReference && (
+                {/* Token Information */}
+                {payment.token && (
                   <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs">
-                    <p className="mb-1 font-medium text-gray-700">External Reference</p>
-                    <p className="break-words text-gray-600">{payment.externalReference}</p>
+                    <p className="mb-2 font-medium text-gray-700">Token Information</p>
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Token: </span>
+                        <span className="break-words font-mono font-semibold">{payment.token.token}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Vended Amount: </span>
+                        <span className="break-words font-semibold">
+                          {payment.token.vendedAmount} {payment.token.unit}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Description: </span>
+                        <span className="break-words font-semibold">{payment.token.description}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Meter Number: </span>
+                        <span className="break-words font-mono font-semibold">{payment.token.drn}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

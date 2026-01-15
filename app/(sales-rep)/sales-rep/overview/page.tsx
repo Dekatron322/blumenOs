@@ -795,7 +795,7 @@ export default function AgentManagementDashboard() {
     )
   }
 
-  const agentLastName = user?.fullName
+  const _agentLastName = user?.fullName
     ? user.fullName
         .trim()
         .split(" ")
@@ -827,7 +827,7 @@ export default function AgentManagementDashboard() {
             {/* Page Header - Always Visible */}
             <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6">
               <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Welcome {agentLastName}</h4>
+                <h4 className="text-xl font-semibold sm:text-2xl">Welcome {_agentLastName}</h4>
                 <p className="text-sm text-gray-600 sm:text-base">
                   {user?.position === "Supervisor" || user?.position === "FinanceManager"
                     ? `Welcome to  ${agentInfo?.areaOfficeName || "Loading..."}`

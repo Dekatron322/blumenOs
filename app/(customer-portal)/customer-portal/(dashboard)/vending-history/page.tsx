@@ -684,7 +684,7 @@ export default function AgentManagementDashboard() {
     setPerformanceChartType(range)
   }
 
-  const agentLastName = user?.fullName
+  const _agentLastName = user?.fullName
     ? user.fullName
         .trim()
         .split(" ")
@@ -702,7 +702,7 @@ export default function AgentManagementDashboard() {
     { value: TimeRange.AllTime, label: "All Time" },
   ]
 
-  const getTimeRangeLabel = (range: TimeRange) => {
+  const _getTimeRangeLabel = (range: TimeRange) => {
     const found = timeRanges.find((r) => r.value === range)
     return found ? found.label : range
   }

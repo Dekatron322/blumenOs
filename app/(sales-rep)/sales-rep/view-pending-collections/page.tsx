@@ -314,7 +314,7 @@ export default function AgentManagementDashboard() {
     }, 1000)
   }
 
-  const agentLastName = user?.fullName
+  const _agentLastName = user?.fullName
     ? user.fullName
         .trim()
         .split(" ")
