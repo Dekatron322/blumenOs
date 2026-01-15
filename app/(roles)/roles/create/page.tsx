@@ -8,20 +8,15 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { createRole, CreateRoleRequest, PrivilegeAssignment, resetCreateState } from "lib/redux/roleSlice"
+import {
+  createRole,
+  CreateRoleRequest,
+  fetchPrivileges,
+  PrivilegeAssignment,
+  resetCreateState,
+} from "lib/redux/roleSlice"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-
-// Define category options (these should match your backend categories)
-const categoryOptions = [
-  { value: "ADMINISTRATIVE", label: "Administrative" },
-  { value: "OPERATIONAL", label: "Operational" },
-  { value: "MANAGERIAL", label: "Managerial" },
-  { value: "SUPPORT", label: "Support" },
-  { value: "TECHNICAL", label: "Technical" },
-  { value: "FINANCIAL", label: "Financial" },
-  { value: "CUSTOM", label: "Custom" },
-]
 
 // Define privilege action options (Approve and View All removed)
 const actionOptions = [
@@ -29,20 +24,6 @@ const actionOptions = [
   { value: "2", label: "Read (R)", bit: 2 },
   { value: "4", label: "Update (U)", bit: 4 },
   { value: "8", label: "Delete (D)", bit: 8 },
-]
-
-// Mock privileges data - in a real app, you would fetch this from an API
-const mockPrivileges = [
-  { id: 1, name: "User Management", key: "user.manage", category: "ADMINISTRATIVE", availableActions: 63 },
-  { id: 2, name: "Role Management", key: "role.manage", category: "ADMINISTRATIVE", availableActions: 63 },
-  { id: 3, name: "Dashboard View", key: "dashboard.view", category: "OPERATIONAL", availableActions: 2 },
-  { id: 4, name: "Reports Access", key: "reports.access", category: "OPERATIONAL", availableActions: 6 },
-  { id: 5, name: "Settings Management", key: "settings.manage", category: "ADMINISTRATIVE", availableActions: 63 },
-  { id: 6, name: "Audit Logs", key: "audit.view", category: "ADMINISTRATIVE", availableActions: 2 },
-  { id: 7, name: "Agent Management", key: "agent.manage", category: "OPERATIONAL", availableActions: 31 },
-  { id: 8, name: "Customer Management", key: "customer.manage", category: "OPERATIONAL", availableActions: 31 },
-  { id: 9, name: "Payment Processing", key: "payment.process", category: "FINANCIAL", availableActions: 7 },
-  { id: 10, name: "Financial Reports", key: "finance.reports", category: "FINANCIAL", availableActions: 2 },
 ]
 
 // Loading Skeleton Component
@@ -111,6 +92,11 @@ const CreateRolePage = () => {
   const { createRoleLoading, createRoleSuccess, createRoleError, createdRole } = useAppSelector((state) => state.roles)
   const { user } = useAppSelector((state) => state.auth)
 
+  // Get privileges from Redux store
+  const { privileges, privilegesLoading, privilegesError, privilegesSuccess, privilegesCategories } = useAppSelector(
+    (state) => state.roles
+  )
+
   // Temporarily allow creating roles for any authenticated user
   const canCreate = true
 
@@ -128,16 +114,28 @@ const CreateRolePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("")
 
   // Filter privileges based on search and category
-  const filteredPrivileges = mockPrivileges.filter((privilege) => {
+  const filteredPrivileges = privileges.filter((privilege) => {
     const matchesSearch =
       privilege.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      privilege.key.toLowerCase().includes(searchTerm.toLowerCase())
+      privilege.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (privilege.description && privilege.description.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = !selectedCategory || privilege.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
   // Get unique categories from privileges
-  const privilegeCategories = Array.from(new Set(mockPrivileges.map((p) => p.category)))
+  const privilegeCategories = privilegesCategories
+
+  // Define category options dynamically from API
+  const categoryOptions = privilegeCategories.map((category) => ({
+    value: category,
+    label: category.charAt(0) + category.slice(1).toLowerCase().replace(/_/g, " "),
+  }))
+
+  // Fetch privileges on component mount
+  useEffect(() => {
+    dispatch(fetchPrivileges())
+  }, [dispatch])
 
   // Reset state when component unmounts
   useEffect(() => {
@@ -166,6 +164,13 @@ const CreateRolePage = () => {
       notify("error", createRoleError)
     }
   }, [createRoleError])
+
+  // Handle privileges error notification
+  useEffect(() => {
+    if (privilegesError) {
+      notify("error", privilegesError)
+    }
+  }, [privilegesError])
 
   const handleInputChange =
     (field: keyof Omit<CreateRoleRequest, "privileges">) =>
@@ -243,7 +248,7 @@ const CreateRolePage = () => {
 
   // Select all available actions for a privilege
   const handleSelectAllActions = (privilegeId: number, availableActions: number) => {
-    const privilege = mockPrivileges.find((p) => p.id === privilegeId)
+    const privilege = privileges.find((p) => p.id === privilegeId)
     if (!privilege) return
 
     const actions = new Set<number>()
@@ -359,91 +364,91 @@ const CreateRolePage = () => {
     return touched[field] ? errors[field] || "" : ""
   }
 
-  const isLoading = createRoleLoading
+  const isLoading = createRoleLoading || privilegesLoading
 
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
-            {/* Header */}
-            <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-16 py-4">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <motion.button
-                      type="button"
-                      onClick={handleCancel}
-                      className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2 }}
-                      aria-label="Go back"
-                      title="Go back"
-                    >
-                      <ArrowLeft className="size-5" />
-                    </motion.button>
+          <div className="sticky top-16 z-40 border-b border-gray-200 bg-white ">
+            <div className="mx-auto w-full px-3 py-4 2xl:container sm:px-4  md:px-6 2xl:px-16">
+              <div className="flex w-full items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <motion.button
+                    type="button"
+                    onClick={handleCancel}
+                    className="flex size-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2 }}
+                    aria-label="Go back"
+                    title="Go back"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </motion.button>
 
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Create New Role</h1>
-                      <p className="text-gray-600">Define a new role with specific permissions</p>
-                    </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Create New Role</h1>
+                    <p className="text-gray-600">Define a new role with specific permissions</p>
                   </div>
+                </div>
 
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <ButtonModule
+                    variant="secondary"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={handleCancel}
+                    disabled={isLoading}
+                  >
+                    <XCircle className="size-4" />
+                    Cancel
+                  </ButtonModule>
+
+                  {canCreate && (
                     <ButtonModule
-                      variant="secondary"
+                      variant="primary"
                       size="sm"
                       className="flex items-center gap-2"
-                      onClick={handleCancel}
+                      onClick={handleSubmit}
                       disabled={isLoading}
                     >
-                      <XCircle className="size-4" />
-                      Cancel
+                      {isLoading ? (
+                        <>
+                          <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircle className="size-4" />
+                          Create Role
+                        </>
+                      )}
                     </ButtonModule>
-
-                    {canCreate && (
-                      <ButtonModule
-                        variant="primary"
-                        size="sm"
-                        className="flex items-center gap-2"
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            Creating...
-                          </>
-                        ) : (
-                          <>
-                            <PlusCircle className="size-4" />
-                            Create Role
-                          </>
-                        )}
-                      </ButtonModule>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container  md:px-6 2xl:px-16">
+            {/* Header */}
 
-            <div className="flex w-full px-16 py-8">
+            <div className="flex w-full py-8">
               <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Main Form Content - 2/3 width */}
                 <div className="space-y-6 md:col-span-2">
@@ -731,7 +736,7 @@ const CreateRolePage = () => {
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {Array.from(selectedPrivileges.entries()).map(([privilegeId, actions]) => {
-                                  const privilege = mockPrivileges.find((p) => p.id === privilegeId)
+                                  const privilege = privileges.find((p) => p.id === privilegeId)
                                   if (!privilege) return null
                                   return (
                                     <span
