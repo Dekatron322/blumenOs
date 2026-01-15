@@ -615,6 +615,8 @@ export enum CollectorType {
 }
 
 export interface Payment {
+  paymentDetails: any
+  isPending: boolean
   id: number
   reference: string
   latitude: number
@@ -1376,6 +1378,7 @@ export interface CheckPaymentData {
   externalReference?: string
   paymentTypeName?: string
   token?: Token
+  isPending: boolean
 }
 
 export interface CheckPaymentResponse {

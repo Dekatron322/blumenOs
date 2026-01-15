@@ -303,8 +303,9 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
                 </div>
               </div>
             </div>
-            <div className="mt-16 flex w-full items-center justify-center">
-              <Image src="/os.svg" alt="" height={20} width={60} className="ml-1" />
+            <div className="text-center text-xs text-gray-500">
+              <p>Thank you for your payment!</p>
+              <p className="mt-1">This receipt serves as proof of payment.</p>
             </div>
           </div>
 

@@ -8,14 +8,17 @@ import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
 import BankTransferDetailsModal from "components/ui/Modal/bank-transfer-details-modal"
+import CollectPaymentReceiptModal from "components/ui/Modal/collect-payment-receipt-modal"
+
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import type { VirtualAccount } from "lib/redux/paymentSlice"
 import {
+  checkPayment,
   clearBillLookup,
+  clearCheckPayment,
   clearCreatePayment,
   clearCustomerLookup,
-  clearPaymentChannels,
   CollectorType,
   createAgentPayment,
   fetchPaymentChannels,
@@ -43,10 +46,13 @@ const CollectPaymentPage: React.FC = () => {
   const { paymentChannels, paymentChannelsLoading, paymentChannelsError, paymentChannelsSuccess } = useAppSelector(
     (state) => state.agents
   )
+  const { checkPaymentData, checkPaymentLoading, checkPaymentError, checkPaymentSuccess } = useAppSelector(
+    (state) => state.agents
+  )
 
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
 
-  const [lookupMode, setLookupMode] = useState<"bill" | "customer">("bill")
+  const [lookupMode, setLookupMode] = useState<"bill" | "customer">("customer")
   const [billNumber, setBillNumber] = useState("")
   const [customerReference, setCustomerReference] = useState("")
   const [customerInfo, setCustomerInfo] = useState<{
@@ -72,6 +78,9 @@ const CollectPaymentPage: React.FC = () => {
   const [lastFetchedAmount, setLastFetchedAmount] = useState<number | null>(null)
   const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null)
   const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
+  const [createdPaymentData, setCreatedPaymentData] = useState<any>(null)
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [confirmedPaymentData, setConfirmedPaymentData] = useState<any>(null)
 
   // Generate channel options based on available channels
   const channelOptions = [
@@ -96,6 +105,7 @@ const CollectPaymentPage: React.FC = () => {
   useEffect(() => {
     dispatch(clearBillLookup())
     dispatch(clearCreatePayment())
+    dispatch(clearCheckPayment())
     // Load payment types for payment type selection
     dispatch(fetchPaymentTypes())
   }, [dispatch])
@@ -218,6 +228,42 @@ const CollectPaymentPage: React.FC = () => {
       ])
     }
   }, [paymentChannelsError])
+
+  // Handle payment confirmation from polling
+  useEffect(() => {
+    if (checkPaymentSuccess && checkPaymentData && checkPaymentData.isPending === false) {
+      notify("success", "Payment confirmed!", {
+        description: "Your payment has been confirmed and processed successfully.",
+        duration: 5000,
+      })
+
+      // Close bank transfer modal and show receipt modal
+      setIsVirtualAccountModalOpen(false)
+      setConfirmedPaymentData(checkPaymentData)
+      setIsReceiptModalOpen(true)
+
+      // Reset form data
+      setBillNumber("")
+      setAmountInput("")
+      setChannel(PaymentChannel.Cash)
+      setPaidAt(new Date().toISOString().slice(0, 16))
+      setNarrative("")
+      setPaymentTypeId("")
+      setCustomerInfo(null)
+      dispatch(clearCreatePayment())
+      dispatch(clearCheckPayment())
+    }
+  }, [checkPaymentSuccess, checkPaymentData, dispatch])
+
+  // Show error if payment check fails
+  useEffect(() => {
+    if (checkPaymentError) {
+      notify("error", "Payment check failed", {
+        description: checkPaymentError,
+        duration: 6000,
+      })
+    }
+  }, [checkPaymentError])
 
   // Customer lookup success effect
   useEffect(() => {
@@ -408,16 +454,98 @@ const CollectPaymentPage: React.FC = () => {
       })
 
       // If this is a bank transfer and a virtual account is returned, show the modal
-      if (result.data.channel === PaymentChannel.BankTransfer && result.data.virtualAccount) {
-        setVirtualAccount(result.data.virtualAccount)
+      if (result.data.channel === PaymentChannel.BankTransfer && result.data.paymentDetails?.virtualAccount) {
+        setVirtualAccount(result.data.paymentDetails.virtualAccount)
+        setCreatedPaymentData(result.data)
         setIsVirtualAccountModalOpen(true)
+      } else if (result.data.isPending === false) {
+        // For non-bank transfer payments that are already confirmed, show receipt directly
+        setConfirmedPaymentData(result.data)
+        setIsReceiptModalOpen(true)
+
+        // Reset form data
+        setBillNumber("")
+        setAmountInput("")
+        setChannel(PaymentChannel.Cash)
+        setPaidAt(new Date().toISOString().slice(0, 16))
+        setNarrative("")
+        setPaymentTypeId("")
+        setCustomerInfo(null)
+        dispatch(clearCreatePayment())
       } else {
+        // For other cases, just reset the form
         setVirtualAccount(null)
+        setCreatedPaymentData(null)
         setIsVirtualAccountModalOpen(false)
+
+        // Reset form data
+        setBillNumber("")
+        setAmountInput("")
+        setChannel(PaymentChannel.Cash)
+        setPaidAt(new Date().toISOString().slice(0, 16))
+        setNarrative("")
+        setPaymentTypeId("")
+        setCustomerInfo(null)
+        dispatch(clearCreatePayment())
       }
     } catch (error: any) {
       notify("error", error.message || "Failed to record payment")
     }
+  }
+
+  const handleCheckPayment = async () => {
+    if (!createdPaymentData?.reference) {
+      notify("error", "Payment reference not found")
+      return
+    }
+
+    try {
+      const result = await dispatch(checkPayment({ reference: createdPaymentData.reference })).unwrap()
+
+      if (result && result.isPending === false) {
+        // Payment confirmed (no longer pending)
+        notify("success", "Payment confirmed!", {
+          description: "Your payment has been confirmed and processed successfully.",
+          duration: 5000,
+        })
+
+        // Close bank transfer modal and show receipt modal
+        setIsVirtualAccountModalOpen(false)
+        setConfirmedPaymentData(result)
+        setIsReceiptModalOpen(true)
+
+        // Reset form data
+        setBillNumber("")
+        setAmountInput("")
+        setChannel(PaymentChannel.Cash)
+        setPaidAt(new Date().toISOString().slice(0, 16))
+        setNarrative("")
+        setPaymentTypeId("")
+        setCustomerInfo(null)
+        dispatch(clearCreatePayment())
+      } else {
+        // Payment still pending
+        notify("info", "Payment still pending", {
+          description: "Your payment is still being processed. Please check again in a few moments.",
+          duration: 3000,
+        })
+      }
+    } catch (error: any) {
+      notify("error", error.message || "Failed to check payment status")
+    }
+  }
+
+  const handleVirtualAccountModalClose = () => {
+    setIsVirtualAccountModalOpen(false)
+    setVirtualAccount(null)
+    setCreatedPaymentData(null)
+  }
+
+  const handleReceiptModalClose = () => {
+    setIsReceiptModalOpen(false)
+    setConfirmedPaymentData(null)
+    setVirtualAccount(null)
+    setCreatedPaymentData(null)
   }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -445,6 +573,10 @@ const CollectPaymentPage: React.FC = () => {
 
   const handlePaymentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPaymentTypeId(Number(e.target.value))
+  }
+
+  const handlePaymentTypeCardClick = (typeId: number) => {
+    setPaymentTypeId(typeId)
   }
 
   const resetForm = () => {
@@ -481,7 +613,7 @@ const CollectPaymentPage: React.FC = () => {
               >
                 <h2 className="mb-3 text-base font-semibold text-gray-800">Lookup</h2>
 
-                <div className="mb-4 grid grid-cols-2 gap-2">
+                {/* <div className="mb-4 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -517,7 +649,52 @@ const CollectPaymentPage: React.FC = () => {
                   >
                     By Customer
                   </button>
-                </div>
+                </div> */}
+
+                {lookupMode === "customer" && (
+                  <form onSubmit={handleLookupCustomer} className="space-y-4">
+                    <FormInputModule
+                      label="Customer Account Number"
+                      type="text"
+                      name="customerReference"
+                      placeholder="Enter customer account number or meter number"
+                      value={customerReference}
+                      onChange={(e) => setCustomerReference(e.target.value)}
+                      required
+                    />
+
+                    <p className="text-xs text-gray-500">
+                      Use the customer&apos;s account number or other reference to find the customer record.
+                    </p>
+
+                    <div className="mt-4 flex gap-3">
+                      <ButtonModule
+                        type="submit"
+                        variant="primary"
+                        className="w-full sm:w-auto"
+                        disabled={isValidatingCustomer || customerLookupLoading}
+                      >
+                        {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Lookup Customer"}
+                      </ButtonModule>
+
+                      {customerInfo && (
+                        <ButtonModule
+                          type="button"
+                          variant="secondary"
+                          className="w-full sm:w-auto"
+                          onClick={() => {
+                            setCustomerReference("")
+                            setCustomerInfo(null)
+                            resetForm()
+                          }}
+                          disabled={isValidatingCustomer || customerLookupLoading}
+                        >
+                          Clear
+                        </ButtonModule>
+                      )}
+                    </div>
+                  </form>
+                )}
 
                 {lookupMode === "bill" && (
                   <form onSubmit={handleLookupBill} className="space-y-4">
@@ -558,51 +735,6 @@ const CollectPaymentPage: React.FC = () => {
                             resetForm()
                           }}
                           disabled={billLookupLoading}
-                        >
-                          Clear
-                        </ButtonModule>
-                      )}
-                    </div>
-                  </form>
-                )}
-
-                {lookupMode === "customer" && (
-                  <form onSubmit={handleLookupCustomer} className="space-y-4">
-                    <FormInputModule
-                      label="Customer Reference"
-                      type="text"
-                      name="customerReference"
-                      placeholder="Enter customer account number or reference"
-                      value={customerReference}
-                      onChange={(e) => setCustomerReference(e.target.value)}
-                      required
-                    />
-
-                    <p className="text-xs text-gray-500">
-                      Use the customer&apos;s account number or other reference to find the customer record.
-                    </p>
-
-                    <div className="mt-4 flex gap-3">
-                      <ButtonModule
-                        type="submit"
-                        variant="primary"
-                        className="w-full sm:w-auto"
-                        disabled={isValidatingCustomer || customerLookupLoading}
-                      >
-                        {isValidatingCustomer || customerLookupLoading ? "Validating..." : "Lookup Customer"}
-                      </ButtonModule>
-
-                      {customerInfo && (
-                        <ButtonModule
-                          type="button"
-                          variant="secondary"
-                          className="w-full sm:w-auto"
-                          onClick={() => {
-                            setCustomerReference("")
-                            setCustomerInfo(null)
-                            resetForm()
-                          }}
-                          disabled={isValidatingCustomer || customerLookupLoading}
                         >
                           Clear
                         </ButtonModule>
@@ -853,19 +985,33 @@ const CollectPaymentPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <FormSelectModule
-                        label="Payment Type"
-                        name="paymentTypeId"
-                        value={paymentTypeId}
-                        onChange={handlePaymentTypeChange}
-                        options={[
-                          { value: "", label: "Select payment type" },
-                          ...paymentTypes.filter((pt) => pt.isActive).map((pt) => ({ value: pt.id, label: pt.name })),
-                        ]}
-                        required
-                      />
+                    <div className="mb-6">
+                      <label className="mb-3 block text-sm font-medium text-gray-700">
+                        Payment Type <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {paymentTypes
+                          .filter((pt) => pt.isActive)
+                          .map((paymentType) => (
+                            <div
+                              key={paymentType.id}
+                              onClick={() => handlePaymentTypeCardClick(paymentType.id)}
+                              className={`cursor-pointer rounded-lg border-2 p-4 text-center transition-all duration-200 hover:shadow-md ${
+                                paymentTypeId === paymentType.id
+                                  ? "border-[#004B23] bg-[#004B23] text-white"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="text-sm font-medium">{paymentType.name}</div>
+                            </div>
+                          ))}
+                      </div>
+                      {paymentTypeId === "" && (
+                        <p className="mt-2 text-xs text-red-500">Please select a payment type</p>
+                      )}
+                    </div>
 
+                    <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <FormInputModule
                           label="Amount"
@@ -993,9 +1139,58 @@ const CollectPaymentPage: React.FC = () => {
 
       <BankTransferDetailsModal
         isOpen={isVirtualAccountModalOpen}
-        onRequestClose={() => setIsVirtualAccountModalOpen(false)}
+        onRequestClose={handleVirtualAccountModalClose}
         virtualAccount={virtualAccount}
-        onConfirm={() => setIsVirtualAccountModalOpen(false)}
+        paymentData={
+          createdPaymentData &&
+          createdPaymentData.reference &&
+          createdPaymentData.totalAmountPaid &&
+          createdPaymentData.currency &&
+          createdPaymentData.customerName &&
+          createdPaymentData.customerAccountNumber
+            ? {
+                reference: createdPaymentData.reference,
+                amount: createdPaymentData.totalAmountPaid,
+                currency: createdPaymentData.currency,
+                customerName: createdPaymentData.customerName,
+                customerAccountNumber: createdPaymentData.customerAccountNumber,
+                customerAddress: createdPaymentData.customerAddress,
+                customerPhoneNumber: createdPaymentData.customerPhoneNumber,
+                customerMeterNumber: createdPaymentData.customerMeterNumber,
+                accountType: createdPaymentData.accountType,
+                tariffRate: createdPaymentData.tariffRate,
+                units: createdPaymentData.units,
+                vatRate: createdPaymentData.vatRate,
+                vatAmount: createdPaymentData.vatAmount,
+                electricityAmount: createdPaymentData.electricityAmount,
+                outstandingDebt: createdPaymentData.outstandingDebt,
+                debtPayable: createdPaymentData.debtPayable,
+                totalAmountPaid: createdPaymentData.totalAmountPaid,
+                status: createdPaymentData.status,
+                paymentTypeName: createdPaymentData.paymentTypeName,
+              }
+            : null
+        }
+        onCheckPayment={handleCheckPayment}
+        isCheckingPayment={checkPaymentLoading}
+        onConfirm={() => {
+          if (createdPaymentData && createdPaymentData.isPending === false) {
+            // If payment is already confirmed, show receipt
+            setIsVirtualAccountModalOpen(false)
+            setConfirmedPaymentData(createdPaymentData)
+            setIsReceiptModalOpen(true)
+          } else {
+            // Otherwise just close the modal
+            handleVirtualAccountModalClose()
+          }
+        }}
+      />
+
+      {/* Receipt Modal */}
+      <CollectPaymentReceiptModal
+        isOpen={isReceiptModalOpen}
+        onRequestClose={handleReceiptModalClose}
+        paymentData={confirmedPaymentData}
       />
     </section>
   )
