@@ -49,16 +49,50 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
 
   const getStatusLabel = (code: string) => {
     switch (code) {
-      case "02":
+      case "ACTIVE":
         return "Active"
-      case "04":
+      case "SUSPENDED":
         return "Suspended"
-      case "05":
-        return "PPM"
-      case "07":
+      case "INACTIVE":
         return "Inactive"
       default:
         return code || "Unknown"
+    }
+  }
+
+  const getMeterStatusLabel = (status: number) => {
+    switch (status) {
+      case 1:
+        return "Active"
+      case 2:
+        return "Deactivated"
+      case 3:
+        return "Suspended"
+      case 4:
+        return "Retired"
+      default:
+        return "Unknown"
+    }
+  }
+
+  const getMeterStateLabel = (state: number) => {
+    switch (state) {
+      case 1:
+        return "Good"
+      case 2:
+        return "Tamper"
+      case 3:
+        return "Suspicious"
+      case 4:
+        return "Missing"
+      case 5:
+        return "Unknown"
+      case 6:
+        return "Faulty"
+      case 7:
+        return "Unassigned"
+      default:
+        return "Unknown"
     }
   }
 
@@ -93,13 +127,11 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             <p
               className={`inline-flex rounded-full px-2 py-1 text-xs font-medium
                 ${
-                  currentCustomer.statusCode === "02"
+                  currentCustomer.statusCode === "ACTIVE"
                     ? "bg-emerald-50 text-emerald-700"
-                    : currentCustomer.statusCode === "04"
+                    : currentCustomer.statusCode === "SUSPENDED"
                     ? "bg-red-50 text-red-700"
-                    : currentCustomer.statusCode === "05"
-                    ? "bg-blue-50 text-blue-700"
-                    : currentCustomer.statusCode === "07"
+                    : currentCustomer.statusCode === "INACTIVE"
                     ? "bg-amber-50 text-amber-700"
                     : "bg-gray-100 text-gray-700"
                 }
@@ -197,8 +229,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Customer Category</label>
-            {/* //change to customer category */}
-            {/* types are - commercial, residential, industrial, government, special - can be extracted from tarriff */}
+            <p className="text-sm text-gray-900">{currentCustomer.category?.name || "N/A"}</p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Gender</label>
             <p className="text-sm text-gray-900">{currentCustomer.gender || "N/A"}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
@@ -236,7 +270,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
               </div>
               <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">State</label>
-                <p className="text-sm text-gray-900">{currentCustomer.state}</p>
+                <p className="text-sm text-gray-900">{currentCustomer.provinceName || "N/A"}</p>
               </div>
             </div>
           </div>
@@ -260,6 +294,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
               <label className="text-sm font-medium text-gray-500">Service Center</label>
               <p className="text-sm text-gray-900">{currentCustomer.serviceCenterName}</p>
+            </div>
+            <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+              <label className="text-sm font-medium text-gray-500">VAT Waived</label>
+              <p className="text-sm text-gray-900">{currentCustomer.isVATWaved ? "Yes" : "No"}</p>
             </div>
           </div>
         </div>
@@ -398,15 +436,18 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Distribution Station</label>
-            <p className="text-sm text-gray-900">{currentCustomer.distributionSubstationCode}</p>
+            <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation?.dssCode || "N/A"}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Feeder Name</label>
-            <p className="text-sm text-gray-900">{currentCustomer.feederName}</p>
+            <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation?.feeder?.name || "N/A"}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Area Office</label>
-            <p className="text-sm text-gray-900">{currentCustomer.areaOfficeName}</p>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.distributionSubstation?.feeder?.injectionSubstation?.areaOffice?.nameOfNewOAreaffice ||
+                "N/A"}
+            </p>
           </div>
 
           {currentCustomer.distributionSubstation && (
@@ -414,12 +455,12 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
               <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">Transformer Capacity</label>
                 <p className="text-sm text-gray-900">
-                  {currentCustomer.distributionSubstation.transformerCapacityInKva} kVA
+                  {currentCustomer.distributionSubstation?.transformerCapacityInKva || "N/A"} kVA
                 </p>
               </div>
               <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
                 <label className="text-sm font-medium text-gray-500">Number of Units</label>
-                <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation.numberOfUnit}</p>
+                <p className="text-sm text-gray-900">{currentCustomer.distributionSubstation?.numberOfUnit || "N/A"}</p>
               </div>
             </>
           )}
@@ -437,26 +478,142 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <Building className="size-5" />
           Meter & Billing Information
         </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Meter Number</label>
-            <p className="text-sm font-semibold text-gray-900">{currentCustomer.meterNumber}</p>
+            <label className="text-sm font-medium text-gray-500">Meter Serial Number</label>
+            <p className="text-sm font-semibold text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].serialNumber
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Meter DRN</label>
+            <p className="text-sm font-semibold text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0 ? currentCustomer.meters[0].drn : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Seal Number</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].sealNumber || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Meter Type</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].meterCategory || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Smart Meter</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].isSmart
+                  ? "Yes"
+                  : "No"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Installation Date</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? formatDate(currentCustomer.meters[0].installationDate)
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Meter Status</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? getMeterStatusLabel(currentCustomer.meters[0].status)
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">Meter State</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? getMeterStateLabel(currentCustomer.meters[0].meterState)
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">SGC</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].sgc || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">KRN</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].krn || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">TI</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].ti || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">EA</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].ea || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">TCT</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].tct || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">KEN</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].ken || "N/A"
+                : "N/A"}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+            <label className="text-sm font-medium text-gray-500">MFR Code</label>
+            <p className="text-sm text-gray-900">
+              {currentCustomer.meters && currentCustomer.meters.length > 0
+                ? currentCustomer.meters[0].mfrCode || "N/A"
+                : "N/A"}
+            </p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Tariff Rate</label>
-            <p className="text-sm text-gray-900">{currentCustomer.tariff}</p>
+            <p className="text-sm text-gray-900">{formatCurrency(currentCustomer.tariffRate)}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Tariff Code</label>
-            <p className="text-sm text-gray-900">{currentCustomer.tariffCode}</p>
+            <label className="text-sm font-medium text-gray-500">Tariff ID</label>
+            <p className="text-sm text-gray-900">{currentCustomer.tariffId || "N/A"}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Tariff Class</label>
-            <p className="text-sm text-gray-900">{currentCustomer.tariffClass}</p>
+            <p className="text-sm text-gray-900">{currentCustomer.category?.name || "N/A"}</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">Tariff Band</label>
-            <p className="text-sm text-gray-900">{currentCustomer.band}</p>
+            <p className="text-sm text-gray-900">{currentCustomer.subCategory?.name || "N/A"}</p>
           </div>
           {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">New Rate</label>
@@ -464,11 +621,11 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           </div> */}
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">VAT</label>
-            <p className="text-sm text-gray-900">{currentCustomer.vat}%</p>
+            <p className="text-sm text-gray-900">N/A</p>
           </div>
           <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
             <label className="text-sm font-medium text-gray-500">VAT Waived</label>
-            <p className="text-sm text-gray-900">{currentCustomer.isVATWaved ? "Yes" : "No"}</p>
+            <p className="text-sm text-gray-900">No</p>
           </div>
         </div>
         {/* <div className="mt-4 grid grid-cols-1 gap-4 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 md:grid-cols-2 lg:grid-cols-4">

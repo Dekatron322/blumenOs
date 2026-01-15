@@ -722,6 +722,7 @@ const AllPayments: React.FC = () => {
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -1164,12 +1165,17 @@ const AllPayments: React.FC = () => {
     { label: "Reference Desc", value: "reference", order: "desc" },
   ]
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
+  const handleSearch = () => {
+    setSearchText(searchInput.trim())
     setCurrentPage(1)
   }
 
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+  }
+
   const handleCancelSearch = () => {
+    setSearchInput("")
     setSearchText("")
     setCurrentPage(1)
   }
@@ -1303,9 +1309,10 @@ const AllPayments: React.FC = () => {
                       <div className="max-w-md">
                         <SearchModule
                           placeholder="Search customers or references..."
-                          value={searchText}
-                          onChange={handleSearch}
+                          value={searchInput}
+                          onChange={(e) => handleSearchChange(e.target.value)}
                           onCancel={handleCancelSearch}
+                          onSearch={handleSearch}
                         />
                       </div>
                     </div>
@@ -1371,9 +1378,9 @@ const AllPayments: React.FC = () => {
                               <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Collector Type</div>
                               </th>
-                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
+                              {/* <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Location</div>
-                              </th>
+                              </th> */}
                               <th className="sticky right-0 z-10 whitespace-nowrap border-y bg-white  p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Actions</div>
                               </th>
@@ -1452,12 +1459,12 @@ const AllPayments: React.FC = () => {
                                     {payment.collectorType}
                                   </motion.div>
                                 </td>
-                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
+                                {/* <td className="whitespace-nowrap border-b px-4 py-3 text-sm text-gray-600">
                                   <div className="flex items-center gap-2">
                                     <MapIcon />
                                     {payment.areaOfficeName}
                                   </div>
-                                </td>
+                                </td> */}
                                 <td className="shadow-[ -2px_0_5px_-2px_rgba(0,0,0,0.1) ] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-3 text-sm shadow-md">
                                   <ButtonModule
                                     size="sm"

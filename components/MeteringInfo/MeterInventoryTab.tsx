@@ -347,6 +347,7 @@ const MobileFilterSidebar = ({
   distributionSubstations,
   meterStatusOptions,
   meterTypeOptions,
+  meterStateOptions,
   serviceBandOptions,
 }: {
   isOpen: boolean
@@ -361,6 +362,7 @@ const MobileFilterSidebar = ({
   distributionSubstations: any[]
   meterStatusOptions: Array<{ value: number; label: string }>
   meterTypeOptions: Array<{ value: number; label: string }>
+  meterStateOptions: Array<{ value: number; label: string }>
   serviceBandOptions: Array<{ value: number; label: string }>
 }) => {
   const [isSortExpanded, setIsSortExpanded] = useState(true)
@@ -465,6 +467,31 @@ const MobileFilterSidebar = ({
                         }`}
                       >
                         {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Meter State Filter */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">Meter State</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {meterStateOptions.map((state) => (
+                      <button
+                        key={state.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "meterState",
+                            localFilters.meterState === state.value.toString() ? "" : state.value.toString()
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.meterState === state.value.toString()
+                            ? "bg-orange-50 text-orange-700 ring-1 ring-orange-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {state.label}
                       </button>
                     ))}
                   </div>
@@ -677,6 +704,7 @@ const MobileFilterSidebar = ({
 const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: propPageSize = 10 }) => {
   const router = useRouter()
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(propPageSize)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -694,6 +722,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
   const [localFilters, setLocalFilters] = useState({
     status: "",
     meterType: "",
+    meterState: "",
     serviceBand: "",
     injectionSubstationId: "",
     serviceCenterId: "",
@@ -715,6 +744,17 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
     { value: 2, label: "Deactivated" },
     { value: 3, label: "Suspended" },
     { value: 4, label: "Retired" },
+  ]
+
+  // Meter state options
+  const meterStateOptions = [
+    { value: 1, label: "Good" },
+    { value: 2, label: "Tamper" },
+    { value: 3, label: "Suspicious" },
+    { value: 4, label: "Missing" },
+    { value: 5, label: "Unknown" },
+    { value: 6, label: "Faulty" },
+    { value: 7, label: "Unassigned" },
   ]
 
   // Meter type options
@@ -801,13 +841,18 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
   }, [dispatch, serviceStations.length, distributionSubstations.length])
 
   const handleCancelSearch = () => {
+    setSearchInput("")
     setSearchText("")
     setCurrentPage(1)
   }
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
+  const handleSearch = () => {
+    setSearchText(searchInput.trim())
     setCurrentPage(1)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
   }
 
   const toggleSort = (column: string) => {
@@ -844,7 +889,10 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
   }
 
   // Helper function to get service band text
-  const getServiceBandText = (serviceBand: number): string => {
+  const getServiceBandText = (serviceBand?: number): string => {
+    if (serviceBand === undefined || serviceBand === null) {
+      return "Unknown"
+    }
     const bandMap: { [key: number]: string } = {
       1: "Band A",
       2: "Band B",
@@ -866,6 +914,20 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
     return statusMap[status] || "Unknown"
   }
 
+  // Helper function to get meter state text
+  const getMeterStateText = (state: number): string => {
+    const stateMap: { [key: number]: string } = {
+      1: "Good",
+      2: "Tamper",
+      3: "Suspicious",
+      4: "Missing",
+      5: "Unknown",
+      6: "Faulty",
+      7: "Unassigned",
+    }
+    return stateMap[state] || "Unknown"
+  }
+
   // Helper function to get meter status color
   const getMeterStatusColor = (status: number): string => {
     const colorMap: { [key: number]: string } = {
@@ -875,6 +937,20 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
       4: "#6B7280", // Retired - Gray
     }
     return colorMap[status] || "#6B7280"
+  }
+
+  // Helper function to get meter state color
+  const getMeterStateColor = (state: number): string => {
+    const colorMap: { [key: number]: string } = {
+      1: "#589E67", // Good - Green
+      2: "#DC2626", // Tamper - Red
+      3: "#F59E0B", // Suspicious - Amber
+      4: "#6B7280", // Missing - Gray
+      5: "#9CA3AF", // Unknown - Light Gray
+      6: "#EF4444", // Faulty - Red
+      7: "#6B7280", // Unassigned - Gray
+    }
+    return colorMap[state] || "#6B7280"
   }
 
   // Helper function to get meter status style
@@ -948,6 +1024,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
     setLocalFilters({
       status: "",
       meterType: "",
+      meterState: "",
       serviceBand: "",
       injectionSubstationId: "",
       serviceCenterId: "",
@@ -997,18 +1074,6 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
               <div className="mb-3 flex w-full items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   {/* Filter Button for ALL screens up to 2xl */}
-                  <button
-                    onClick={() => setShowMobileFilters(true)}
-                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
-                  >
-                    <Filter className="size-4" />
-                    Filters
-                    {getActiveFilterCount() > 0 && (
-                      <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
-                        {getActiveFilterCount()}
-                      </span>
-                    )}
-                  </button>
 
                   <p className="whitespace-nowrap text-lg font-medium sm:text-xl md:text-2xl">Meter Directory</p>
                 </div>
@@ -1029,9 +1094,10 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                   {/* Desktop/Tablet search input */}
                   <div className="hidden sm:block">
                     <SearchModule
-                      value={searchText}
-                      onChange={handleSearch}
+                      value={searchInput}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       onCancel={handleCancelSearch}
+                      onSearch={handleSearch}
                       placeholder="Search by Meter Number and Customer"
                       className="w-full max-w-full sm:max-w-[320px]"
                       bgClassName="bg-white"
@@ -1057,23 +1123,36 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                     {showDesktopFilters ? "Hide filters" : "Show filters"}
                   </button>
 
-                  <motion.button
+                  {/* <motion.button
                     className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <MdOutlineArrowBackIosNew className="h-4 w-4" />
                     Export
-                  </motion.button>
+                  </motion.button> */}
+                  <button
+                    onClick={() => setShowMobileFilters(true)}
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 2xl:hidden"
+                  >
+                    <Filter className="size-4" />
+                    Filters
+                    {getActiveFilterCount() > 0 && (
+                      <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-xs text-white">
+                        {getActiveFilterCount()}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
 
               {/* Mobile search input revealed when icon is tapped */}
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={handleSearch}
+                  value={searchInput}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleSearch}
                   placeholder="Search by Meter Number and Customer"
                   className="w-full"
                   bgClassName="bg-white"
@@ -1183,7 +1262,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">{meter.drn}</td>
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{meter.customerFullName}</td>
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                                {getServiceBandText(meter.serviceBand)}
+                                {getServiceBandText(meter.tariff?.serviceBand)}
                               </td>
                               <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
                                 <motion.div
@@ -1269,18 +1348,16 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                                               <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">Status:</span>
                                                 <motion.div
-                                                  style={getStatusStyle(selectedMeter.isMeterActive)}
+                                                  style={getMeterStatusStyle(selectedMeter.status)}
                                                   className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1"
                                                 >
                                                   <span
                                                     className="size-2 rounded-full"
                                                     style={{
-                                                      backgroundColor: selectedMeter.isMeterActive
-                                                        ? "#589E67"
-                                                        : "#AF4B4B",
+                                                      backgroundColor: getMeterStatusColor(selectedMeter.status),
                                                     }}
                                                   ></span>
-                                                  {selectedMeter.isMeterActive ? "Online" : "Offline"}
+                                                  {getMeterStatusText(selectedMeter.status)}
                                                 </motion.div>
                                               </div>
                                               <div className="flex justify-between text-sm">
@@ -1335,13 +1412,13 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                                               <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">Service Band:</span>
                                                 <span className="font-medium">
-                                                  {selectedMeter.serviceBand || "N/A"}
+                                                  {getServiceBandText(selectedMeter.tariff?.serviceBand)}
                                                 </span>
                                               </div>
                                               <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">Installation Date:</span>
                                                 <span className="font-medium">
-                                                  {new Date(selectedMeter.installationDate).toLocaleDateString()}
+                                                  {new Date(selectedMeter.installationDate).toLocaleString()}
                                                 </span>
                                               </div>
                                             </div>
@@ -1772,6 +1849,7 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
         distributionSubstations={distributionSubstations}
         meterStatusOptions={meterStatusOptions}
         meterTypeOptions={meterTypeOptions}
+        meterStateOptions={meterStateOptions}
         serviceBandOptions={serviceBandOptions}
       />
 

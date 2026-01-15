@@ -673,13 +673,13 @@ const MeterBasicInfoTab = ({
 
   const getServiceBandConfig = (band: number) => {
     const configs = {
-      1: { label: "BAND 1" },
-      2: { label: "BAND 2" },
-      3: { label: "BAND 3" },
-      4: { label: "BAND 4" },
-      5: { label: "BAND 5" },
+      1: { label: "A" },
+      2: { label: "B" },
+      3: { label: "C" },
+      4: { label: "D" },
+      5: { label: "E" },
     }
-    return configs[band as keyof typeof configs] || { label: `BAND ${band}` }
+    return configs[band as keyof typeof configs] || { label: `${band}` }
   }
 
   const formatDate = (dateString?: string) => {
@@ -1674,13 +1674,13 @@ const MeterDetailsPage = () => {
 
   const getServiceBandConfig = (band: number) => {
     const configs = {
-      1: { label: "BAND 1" },
-      2: { label: "BAND 2" },
-      3: { label: "BAND 3" },
-      4: { label: "BAND 4" },
-      5: { label: "BAND 5" },
+      1: { label: "A" },
+      2: { label: "B" },
+      3: { label: "C" },
+      4: { label: "D" },
+      5: { label: "E" },
     }
-    return configs[band as keyof typeof configs] || { label: `BAND ${band}` }
+    return configs[band as keyof typeof configs] || { label: `${band}` }
   }
 
   const formatDate = (dateString?: string) => {
