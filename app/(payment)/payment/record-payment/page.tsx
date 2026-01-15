@@ -15,7 +15,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { clearCreatePayment, createPayment, fetchPaymentChannels, type VirtualAccount } from "lib/redux/paymentSlice"
 import BankTransferDetailsModal from "components/ui/Modal/bank-transfer-details-modal"
 import { fetchVendors } from "lib/redux/vendorSlice"
-import { fetchAgents } from "lib/redux/agentSlice"
+import { CollectorType, fetchAgents, PaymentChannel } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import { clearCurrentBillByReference, fetchPostpaidBillByReference } from "lib/redux/postpaidSlice"
 import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
@@ -29,7 +29,7 @@ interface PaymentFormData {
   longitude: number
   paymentTypeId: number
   amount: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
+  channel: PaymentChannel
   currency: string
   externalReference: string
   narrative: string
@@ -72,19 +72,21 @@ interface CustomerInfo {
 
 // Channel mapping utilities
 const channelMap = {
-  1: "Cash" as const,
-  2: "BankTransfer" as const,
-  3: "Pos" as const,
-  4: "Card" as const,
-  5: "VendorWallet" as const,
+  1: PaymentChannel.Cash,
+  2: PaymentChannel.BankTransfer,
+  3: PaymentChannel.Pos,
+  4: PaymentChannel.Card,
+  5: PaymentChannel.VendorWallet,
+  6: PaymentChannel.Chaque,
 }
 
 const reverseChannelMap = {
-  Cash: 1,
-  BankTransfer: 2,
-  Pos: 3,
-  Card: 4,
-  VendorWallet: 5,
+  [PaymentChannel.Cash]: 1,
+  [PaymentChannel.BankTransfer]: 2,
+  [PaymentChannel.Pos]: 3,
+  [PaymentChannel.Card]: 4,
+  [PaymentChannel.VendorWallet]: 5,
+  [PaymentChannel.Chaque]: 6,
 }
 
 const AddPaymentPage = () => {
@@ -140,7 +142,7 @@ const AddPaymentPage = () => {
     longitude: 0,
     paymentTypeId: 1,
     amount: 0,
-    channel: "Cash",
+    channel: PaymentChannel.Cash,
     currency: "NGN",
     externalReference: "",
     narrative: "",
@@ -354,7 +356,7 @@ const AddPaymentPage = () => {
     // Handle channel field - convert numeric value to string type
     if (name === "channel") {
       const numericValue = Number(value)
-      processedValue = channelMap[numericValue as keyof typeof channelMap] || "Cash"
+      processedValue = channelMap[numericValue as keyof typeof channelMap] || PaymentChannel.Cash
     }
 
     // Handle date field
@@ -492,6 +494,13 @@ const AddPaymentPage = () => {
         // Always send agentId/vendorId as either a valid ID or null so backend does not see 0
         agentId: formData.collectorType === "Agent" && agentId && agentId > 0 ? agentId : null,
         vendorId: formData.collectorType === "Vendor" && vendorId && vendorId > 0 ? vendorId : null,
+        // Map form collectorType to correct CollectorType enum
+        collectorType:
+          formData.collectorType === "Agent"
+            ? CollectorType.SalesRep
+            : formData.collectorType === "Vendor"
+            ? CollectorType.Vendor
+            : CollectorType.Customer,
       }
 
       const result = await dispatch(createPayment(paymentData)).unwrap()
@@ -504,7 +513,7 @@ const AddPaymentPage = () => {
 
         setIsSuccessModalOpen(true)
 
-        if (result.data?.channel === "BankTransfer" && result.data.virtualAccount) {
+        if (result.data?.channel === PaymentChannel.BankTransfer && result.data.virtualAccount) {
           setVirtualAccount(result.data.virtualAccount)
           setIsVirtualAccountModalOpen(true)
         } else {
@@ -560,7 +569,7 @@ const AddPaymentPage = () => {
       longitude: 0,
       paymentTypeId: 1,
       amount: 0,
-      channel: "Cash",
+      channel: PaymentChannel.Cash,
       currency: "NGN",
       externalReference: "",
       narrative: "",

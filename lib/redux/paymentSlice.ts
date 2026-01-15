@@ -2,6 +2,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import { CollectorType, PaymentChannel } from "./agentSlice"
 
 // Interfaces for Payment
 export interface VirtualAccount {
@@ -14,9 +15,9 @@ export interface VirtualAccount {
 export interface Payment {
   id: number
   reference: string
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
+  channel: PaymentChannel
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
-  collectorType: "Customer" | "Agent" | "Vendor" | "Staff"
+  collectorType: CollectorType
   amount: number
   amountApplied: number
   overPaymentAmount: number
@@ -64,7 +65,7 @@ export interface PaymentTracking {
   id: number
   reference: string
   amount: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
+  channel: PaymentChannel
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
   clearanceStatus: "Uncleared" | "Clearing" | "Cleared" | "Suspended"
   isRemitted: boolean
@@ -116,9 +117,9 @@ export interface PaymentsRequestParams {
   agentId?: number
   postpaidBillId?: number
   paymentTypeId?: number
-  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
+  channel?: PaymentChannel
   status?: "Pending" | "Confirmed" | "Failed" | "Reversed"
-  collectorType?: "Customer" | "Agent" | "Vendor" | "Staff"
+  collectorType?: CollectorType
   paidFromUtc?: string
   paidToUtc?: string
   search?: string
@@ -132,14 +133,14 @@ export interface CreatePaymentRequest {
   customerId?: number
   paymentTypeId: number
   amount: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet"
+  channel: PaymentChannel
   currency: string
   externalReference?: string
   narrative?: string
   paidAtUtc: string
   agentId?: number | null
   vendorId?: number | null
-  collectorType: "Customer" | "Agent" | "Vendor" | "Staff"
+  collectorType: CollectorType
 }
 
 // Interfaces for Change Request

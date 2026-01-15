@@ -648,6 +648,10 @@ export interface Payment {
   feederName: string
   paymentTypeId: number
   paymentTypeName: string
+  narrative: string
+  externalReference: string
+  vendorAccountId: string
+  recordedByName: string
   virtualAccount?: {
     accountNumber: string
     bankName: string
