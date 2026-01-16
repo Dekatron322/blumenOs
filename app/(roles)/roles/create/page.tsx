@@ -18,12 +18,12 @@ import {
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
-// Define privilege action options (Approve and View All removed)
+// Define privilege action options
 const actionOptions = [
-  { value: "1", label: "Create (C)", bit: 1 },
-  { value: "2", label: "Read (R)", bit: 2 },
+  { value: "1", label: "Read (R)", bit: 1 },
+  { value: "2", label: "Write (W)", bit: 2 },
   { value: "4", label: "Update (U)", bit: 4 },
-  { value: "8", label: "Delete (D)", bit: 8 },
+  { value: "8", label: "Execute (E)", bit: 8 },
 ]
 
 // Loading Skeleton Component
@@ -357,7 +357,7 @@ const CreateRolePage = () => {
   }
 
   const handleCancel = () => {
-    router.push("/roles-management/roles")
+    router.push("/roles")
   }
 
   const getError = (field: keyof Omit<CreateRoleRequest, "privileges"> | "privileges"): string => {
