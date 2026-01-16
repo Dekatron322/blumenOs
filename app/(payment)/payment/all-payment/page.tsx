@@ -1370,7 +1370,7 @@ const AllPayments: React.FC = () => {
                                   </div>
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm font-semibold text-gray-900">
-                                  {formatCurrency(payment.totalAmountPaid, payment.currency)}
+                                  {formatCurrency(payment.amount || 0, payment.currency)}
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
                                   <motion.div
