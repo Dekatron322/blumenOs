@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -29,6 +30,7 @@ import {
 } from "lib/redux/customersDashboardSlice"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import CustomerDashboardNav from "components/Navbar/CustomerDashboardNav"
+import { AppDispatch, RootState } from "lib/redux/store"
 
 // Mock data types
 enum PaymentChannel {
@@ -68,6 +70,11 @@ const getPaymentTypeIcon = (paymentType: any) => {
 const CustomerPaymentPage: React.FC = () => {
   // Redux hooks
   const dispatch = useAppDispatch()
+  const router = useRouter()
+
+  // Get customer data from Redux store
+  const { isAuthenticated, customer } = useAppSelector((state: RootState) => state.customerAuth)
+
   const paymentTypes = useAppSelector(selectPaymentTypesList)
   const isLoadingPaymentTypes = useAppSelector(selectPaymentTypesLoading)
   const paymentTypesError = useAppSelector(selectPaymentTypesError)
@@ -78,6 +85,13 @@ const CustomerPaymentPage: React.FC = () => {
   const isMakingPayment = useAppSelector(selectMakePaymentLoading)
   const makePaymentError = useAppSelector(selectMakePaymentError)
   const makePaymentSuccess = useAppSelector(selectMakePaymentSuccess)
+
+  // Redirect to auth page if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/customer-portal/auth")
+    }
+  }, [isAuthenticated, router])
 
   // Fetch payment types on component mount
   useEffect(() => {
@@ -306,7 +320,7 @@ const CustomerPaymentPage: React.FC = () => {
       <CustomerDashboardNav />
       <div className="flex w-full">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Make Payment</h1>
@@ -498,15 +512,17 @@ const CustomerPaymentPage: React.FC = () => {
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div className="rounded-lg bg-white p-3">
                           <p className="text-xs text-gray-500">Account Holder</p>
-                          <p className="font-semibold text-gray-900">John Smith</p>
+                          <p className="font-semibold text-gray-900">{customer?.fullName || "N/A"}</p>
                         </div>
                         <div className="rounded-lg bg-white p-3">
                           <p className="text-xs text-gray-500">Account Number</p>
-                          <p className="font-semibold text-gray-900">ACC00123456</p>
+                          <p className="font-semibold text-gray-900">{customer?.accountNumber || "N/A"}</p>
                         </div>
                         <div className="rounded-lg bg-white p-3">
                           <p className="text-xs text-gray-500">Outstanding Balance</p>
-                          <p className="font-semibold text-[#004B23]">₦25,000</p>
+                          <p className="font-semibold text-[#004B23]">
+                            ₦{customer?.customerOutstandingBalance?.toLocaleString() || "0"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -575,15 +591,17 @@ const CustomerPaymentPage: React.FC = () => {
                       <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Account Holder:</span>
-                          <span className="font-medium text-gray-900">John Smith</span>
+                          <span className="font-medium text-gray-900">{customer?.fullName || "N/A"}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Account Number:</span>
-                          <span className="font-medium text-gray-900">ACC00123456</span>
+                          <span className="font-medium text-gray-900">{customer?.accountNumber || "N/A"}</span>
                         </div>
                         <div className="flex justify-between border-t pt-3">
                           <span className="text-sm text-gray-600">Outstanding Balance:</span>
-                          <span className="font-bold text-[#004B23]">₦25,000</span>
+                          <span className="font-bold text-[#004B23]">
+                            ₦{customer?.customerOutstandingBalance?.toLocaleString() || "0"}
+                          </span>
                         </div>
                       </div>
                     </div>

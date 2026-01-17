@@ -441,6 +441,15 @@ const FeederEnergyCaps: React.FC = () => {
   const { feeders } = useAppSelector((state) => state.feeders)
   const { companies } = useAppSelector((state) => state.companies)
   const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for feeder energy caps
+  const canAddFeederCap = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "billing-feeder-energy-caps" && p.actions?.includes("W")) ||
+      (p.key === "billing-billing-proper" && p.actions?.includes("W")) ||
+      (p.key === "billing-reports" && p.actions?.includes("W"))
+  )
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -858,14 +867,16 @@ const FeederEnergyCaps: React.FC = () => {
                 bgClassName="bg-white"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => router.push("/billing/feeder-energy-caps/add")}
-              className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
-            >
-              <PlusCircle className="size-4 sm:hidden" />
-              <p className="max-sm:hidden">Add Feeder Cap</p>
-            </button>
+            {canAddFeederCap && (
+              <button
+                type="button"
+                onClick={() => router.push("/billing/feeder-energy-caps/add")}
+                className="whitespace-nowrap rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:px-4"
+              >
+                <PlusCircle className="size-4 sm:hidden" />
+                <p className="max-sm:hidden">Add Feeder Cap</p>
+              </button>
+            )}
           </div>
 
           {feederEnergyCaps.length === 0 ? (

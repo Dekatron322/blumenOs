@@ -288,6 +288,31 @@ const CustomerDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
+  // Permission checks for specific actions
+  const canRecordPayment = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "payments" && p.actions?.includes("W")) ||
+      (p.key === "finance-bill-payments-and-vending" && p.actions?.includes("W"))
+  )
+  const canGenerateBill = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "billing-postpaid" && p.actions?.includes("W")) ||
+      (p.key === "billing-billing-proper" && p.actions?.includes("W"))
+  )
+  const canRecordMeterReading = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "metering-meter-reading" && p.actions?.includes("W")) ||
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "metering-meter-capturing-allocation" && p.actions?.includes("W"))
+  )
+  const canChangeAccountNumber = !!user?.privileges?.some((p) => p.key === "customers" && p.actions?.includes("U"))
+  const canAddNewMeter = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("W")) ||
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "new-service-new-capture-separation" && p.actions?.includes("W"))
+  )
+
   // Payment receipt modal state
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
@@ -1053,47 +1078,57 @@ const CustomerDetailsPage = () => {
                         Quick Actions
                       </h3>
                       <div className="space-y-3">
-                        <ButtonModule
-                          variant="outlineBlue"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("recordPayment")}
-                        >
-                          <PaymentDisputeOutlineIcon />
-                          Record Payment
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="outlinePurple"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("manualBill")}
-                        >
-                          <PostpaidBillOutlineIcon className="size-4" />
-                          Generate Bill
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="outlineTeal"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("meterReading")}
-                        >
-                          <MeterOutlineIcon className="size-4" />
-                          Record Meter Reading
-                        </ButtonModule>
+                        {canRecordPayment && (
+                          <ButtonModule
+                            variant="outlineBlue"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("recordPayment")}
+                          >
+                            <PaymentDisputeOutlineIcon />
+                            Record Payment
+                          </ButtonModule>
+                        )}
+                        {canGenerateBill && (
+                          <ButtonModule
+                            variant="outlinePurple"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("manualBill")}
+                          >
+                            <PostpaidBillOutlineIcon className="size-4" />
+                            Generate Bill
+                          </ButtonModule>
+                        )}
+                        {canRecordMeterReading && (
+                          <ButtonModule
+                            variant="outlineTeal"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("meterReading")}
+                          >
+                            <MeterOutlineIcon className="size-4" />
+                            Record Meter Reading
+                          </ButtonModule>
+                        )}
 
-                        <ButtonModule
-                          variant="outline"
-                          className="w-full justify-start gap-3"
-                          onClick={() => openModal("changeAccountNumber")}
-                        >
-                          <Edit3 className="size-4" />
-                          Change Account Number
-                        </ButtonModule>
-                        <ButtonModule
-                          variant="outlineDanger"
-                          className="w-full justify-start gap-3"
-                          onClick={() => router.push("/metering/install-new-meter")}
-                        >
-                          <MeterOutlineIcon className="size-4" />
-                          Add New Meter
-                        </ButtonModule>
+                        {canChangeAccountNumber && (
+                          <ButtonModule
+                            variant="outline"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("changeAccountNumber")}
+                          >
+                            <Edit3 className="size-4" />
+                            Change Account Number
+                          </ButtonModule>
+                        )}
+                        {canAddNewMeter && (
+                          <ButtonModule
+                            variant="outlineDanger"
+                            className="w-full justify-start gap-3"
+                            onClick={() => router.push("/metering/install-new-meter")}
+                          >
+                            <MeterOutlineIcon className="size-4" />
+                            Add New Meter
+                          </ButtonModule>
+                        )}
                         {canUpdate && (
                           <ButtonModule
                             variant={currentCustomer.isSuspended ? "primary" : "danger"}

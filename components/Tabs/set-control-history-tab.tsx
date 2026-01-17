@@ -27,6 +27,15 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
     setControlError,
     setControlData,
   } = useAppSelector((state) => state.meters)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for control settings
+  const canSetControl = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("W")) ||
+      (p.key === "maintenance" && p.actions?.includes("W"))
+  )
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [currentPage, setCurrentPage] = useState(1)
@@ -278,21 +287,23 @@ const SetControlHistoryTab: React.FC<SetControlHistoryTabProps> = ({ meterId }) 
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
-          <ButtonModule
-            variant="primary"
-            size="sm"
-            onClick={() => setShowSetControlModal(true)}
-            disabled={setControlLoading}
-          >
-            {setControlLoading ? (
-              <div className="flex items-center">
-                <RefreshCw className="size-4 animate-spin" />
-                Setting...
-              </div>
-            ) : (
-              "Set Control"
-            )}
-          </ButtonModule>
+          {canSetControl && (
+            <ButtonModule
+              variant="primary"
+              size="sm"
+              onClick={() => setShowSetControlModal(true)}
+              disabled={setControlLoading}
+            >
+              {setControlLoading ? (
+                <div className="flex items-center">
+                  <RefreshCw className="size-4 animate-spin" />
+                  Setting...
+                </div>
+              ) : (
+                "Set Control"
+              )}
+            </ButtonModule>
+          )}
         </div>
       </div>
 

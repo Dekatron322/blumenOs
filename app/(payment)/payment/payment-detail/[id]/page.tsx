@@ -10,6 +10,7 @@ import {
   Calendar,
   CreditCard,
   Edit3,
+  ExternalLink,
   Package,
   Receipt,
   User,
@@ -1694,9 +1695,20 @@ const PaymentDetailsPage = () => {
                     className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6"
                   >
                     <h3 className="mb-3 text-base font-semibold text-gray-900 md:text-lg">
-                      <div className="flex items-center gap-2">
-                        <User className="size-4 md:size-5" />
-                        Customer
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <User className="size-4 md:size-5" />
+                          Customer
+                        </div>
+                        <button
+                          onClick={() => {
+                            router.push(`/customers/${currentPayment.customerId}`)
+                          }}
+                          className="rounded-lg p-1.5 text-blue-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                          title="View Customer Details"
+                        >
+                          <ExternalLink className="size-4 md:size-5" />
+                        </button>
                       </div>
                     </h3>
                     <div className="space-y-2 md:space-y-3">

@@ -25,10 +25,16 @@ interface Status {
 interface ActionDropdownProps {
   office: AreaOffice
   onViewDetails: (office: AreaOffice) => void
-  onUpdateAreaOffice: (officeId: number) => void // Add this prop
+  onUpdateAreaOffice: (officeId: number) => void
+  canUpdateAreaOffice: boolean
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails, onUpdateAreaOffice }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({
+  office,
+  onViewDetails,
+  onUpdateAreaOffice,
+  canUpdateAreaOffice,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -127,14 +133,16 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ office, onViewDetails, 
                 View Details
               </motion.button>
 
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleUpdateAreaOffice}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Area Office
-              </motion.button>
+              {canUpdateAreaOffice && (
+                <motion.button
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={handleUpdateAreaOffice}
+                  whileHover={{ backgroundColor: "#f3f4f6" }}
+                  transition={{ duration: 0.1 }}
+                >
+                  Update Area Office
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
@@ -209,6 +217,11 @@ const AreaOfficesTab: React.FC = () => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { areaOffices, loading, error, pagination } = useAppSelector((state) => state.areaOffices)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canUpdateAreaOffice = !!user?.privileges?.some(
+    (p) => (p.key === "assets-management" || p.key === "assets" || p.key === "area-offices") && p.actions?.includes("U")
+  )
 
   const [searchInput, setSearchInput] = useState("")
   const [selectedOffice, setSelectedOffice] = useState<AreaOffice | null>(null)
@@ -651,7 +664,7 @@ const AreaOfficesTab: React.FC = () => {
           }
         >
           <motion.div
-            className="items-center justify-between border-b py-2 md:flex md:py-4"
+            className="w-full items-center justify-between border-b py-2 md:flex md:py-4"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -811,7 +824,8 @@ const AreaOfficesTab: React.FC = () => {
                               <ActionDropdown
                                 office={office}
                                 onViewDetails={handleViewAreaOfficeDetails}
-                                onUpdateAreaOffice={handleUpdateAreaOffice} // Pass the handler
+                                onUpdateAreaOffice={handleUpdateAreaOffice}
+                                canUpdateAreaOffice={canUpdateAreaOffice}
                               />
                             </td>
                           </motion.tr>

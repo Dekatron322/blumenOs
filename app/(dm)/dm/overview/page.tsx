@@ -37,6 +37,7 @@ import { VscAdd, VscEye } from "react-icons/vsc"
 import RecordDebtModal from "components/ui/Modal/record-debt-modal"
 import ViewDebtEntryModal from "components/ui/Modal/view-debt-entry-modal"
 import DebtManagementInfo from "components/DebtManagementInfo/DebtManagementInfo"
+import DashboardNav from "components/Navbar/DashboardNav"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -499,6 +500,15 @@ export default function DebtManagementDashboard() {
   const allDebtEntriesError = useAppSelector(selectAllDebtEntriesError)
   const allDebtEntriesSuccess = useAppSelector(selectAllDebtEntriesSuccess)
   const allDebtEntriesPagination = useAppSelector(selectAllDebtEntriesPagination)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for debt recording
+  const canRecordDebt = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "debt-management" && p.actions?.includes("W")) ||
+      (p.key === "finance-bill-payments-and-vending" && p.actions?.includes("W")) ||
+      (p.key === "customers" && p.actions?.includes("W"))
+  )
 
   // State for customers pagination
   const [customersPage, setCustomersPage] = useState(1)
@@ -733,6 +743,7 @@ export default function DebtManagementDashboard() {
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+      <DashboardNav />
       <div className="flex min-h-screen w-full pb-20">
         <div className="flex w-full flex-col">
           <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-3 xl:px-6 2xl:px-16">
@@ -751,19 +762,21 @@ export default function DebtManagementDashboard() {
               >
                 <div className="flex items-center gap-3">
                   {/* Polling Controls */}
-                  <ButtonModule
-                    variant="primary"
-                    size="md"
-                    icon={<VscAdd />}
-                    iconPosition="start"
-                    onClick={() => {
-                      // For now, open with a placeholder customer ID
-                      // In a real implementation, you might want a customer selection modal
-                      handleOpenRecordDebtModal(0, "Select Customer", "")
-                    }}
-                  >
-                    Record Debt
-                  </ButtonModule>
+                  {canRecordDebt && (
+                    <ButtonModule
+                      variant="primary"
+                      size="md"
+                      icon={<VscAdd />}
+                      iconPosition="start"
+                      onClick={() => {
+                        // For now, open with a placeholder customer ID
+                        // In a real implementation, you might want a customer selection modal
+                        handleOpenRecordDebtModal(0, "Select Customer", "")
+                      }}
+                    >
+                      Record Debt
+                    </ButtonModule>
+                  )}
                   <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                     <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
                     <button

@@ -362,7 +362,7 @@ const OutageReport: React.FC = () => {
         Select Outage Type
       </h2>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
         {outageTypes.map((type) => (
           <button
             key={type.id}
@@ -512,7 +512,7 @@ const OutageReport: React.FC = () => {
       transition={{ duration: 0.3, delay: 0.1 }}
     >
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800 max-sm:text-base">
           <BsCalendar className="text-purple-500" />
           Recent Outages in Your Area
         </h2>
@@ -686,7 +686,7 @@ const OutageReport: React.FC = () => {
       <CustomerDashboardNav />
       <div className="flex w-full">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 md:px-6 2xl:px-16">
             <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Report Power Outage</h1>

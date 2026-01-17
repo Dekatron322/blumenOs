@@ -46,7 +46,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "customers",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["W"] },
+      { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
       { name: "Change Request", href: "/customers/change-request", privilegeKey: "customers", requiredActions: ["E"] },
@@ -69,7 +69,7 @@ export const allLinks: LinkItem[] = [
         name: "Overview",
         href: "/employees/overview",
         privilegeKey: "identity-users",
-        requiredActions: ["W"],
+        requiredActions: ["R"],
       },
       {
         name: "View Employees",
@@ -98,7 +98,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "billing-postpaid",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["W"] },
+      { name: "Overview", href: "/billing/overview", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       { name: "Postpaid Bills", href: "/billing/bills", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       // {
       //   name: "Postpaid Meter Readings",
@@ -116,7 +116,7 @@ export const allLinks: LinkItem[] = [
         name: "Generate Postpaid Bills",
         href: "/billing/jobs",
         privilegeKey: "billing-postpaid",
-        requiredActions: ["R"],
+        requiredActions: ["W"],
       },
       {
         name: "Change Request",
@@ -133,7 +133,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "assets",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/metering/overview", privilegeKey: "assets", requiredActions: ["W"] },
+      { name: "Overview", href: "/metering/overview", privilegeKey: "assets", requiredActions: ["R"] },
       { name: "All Meters", href: "/metering/all-meters", privilegeKey: "assets", requiredActions: ["R"] },
       {
         name: "Postpaid Meter Readings",
@@ -162,12 +162,12 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "payments",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/tokens/overview", privilegeKey: "payments", requiredActions: ["W"] },
+      { name: "Overview", href: "/tokens/overview", privilegeKey: "payments", requiredActions: ["R"] },
       {
         name: "Prepaid History",
         href: "/tokens/prepaid-history",
         privilegeKey: "payments",
-        requiredActions: ["W"],
+        requiredActions: ["R"],
       },
       // {
       //   name: "Verify Meter Tokens",
@@ -184,7 +184,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "payments",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["W"] },
+      { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Collections", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "Record Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Cash Management", href: "/payment/cash-management", privilegeKey: "payments", requiredActions: ["R"] },
@@ -212,7 +212,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "payments",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/dm/overview", privilegeKey: "payments", requiredActions: ["W"] },
+      { name: "Overview", href: "/dm/overview", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Debts Entries", href: "/dm/ade", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Customer Debts", href: "/dm/all-debts", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Debt Recovery", href: "/dm/adr", privilegeKey: "payments", requiredActions: ["R"] },
@@ -228,7 +228,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "agents",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/agent-management/overview", privilegeKey: "agents", requiredActions: ["W"] },
+      { name: "Overview", href: "/agent-management/overview", privilegeKey: "agents", requiredActions: ["R"] },
       {
         name: "View All Sales Rep",
         href: "/agent-management/all-agents",
@@ -281,7 +281,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "vendors",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/vendor-management/overview", privilegeKey: "vendors", requiredActions: ["W"] },
+      { name: "Overview", href: "/vendor-management/overview", privilegeKey: "vendors", requiredActions: ["R"] },
       {
         name: "View All Vendors",
         href: "/vendor-management/all-vendors",
@@ -309,7 +309,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "assets",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/assets-management/overview", privilegeKey: "assets", requiredActions: ["W"] },
+      { name: "Overview", href: "/assets-management/overview", privilegeKey: "assets", requiredActions: ["R"] },
       { name: "Area Offices", href: "/assets-management/area-offices", privilegeKey: "assets", requiredActions: ["R"] },
       {
         name: "Injection Substation",
@@ -346,7 +346,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "outages",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/outage-management/overview", privilegeKey: "outages", requiredActions: ["W"] },
+      { name: "Overview", href: "/outage-management/overview", privilegeKey: "outages", requiredActions: ["R"] },
       {
         name: "View Outages",
         href: "/outage-management/view-outages",
@@ -444,7 +444,7 @@ export const allLinks: LinkItem[] = [
     privilegeKey: "disputes",
     requiredActions: ["R"],
     children: [
-      { name: "Overview", href: "/disputes/overview", privilegeKey: "disputes", requiredActions: ["W"] },
+      { name: "Overview", href: "/disputes/overview", privilegeKey: "disputes", requiredActions: ["R"] },
       {
         name: "Billing Disputes",
         href: "/disputes/billing-disputes",

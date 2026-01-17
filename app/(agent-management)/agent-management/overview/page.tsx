@@ -17,6 +17,7 @@ import {
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
+import { useAppSelector } from "lib/hooks/useRedux"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -349,6 +350,16 @@ const generateAgentData = () => {
 
 export default function AgentManagementDashboard() {
   const router = useRouter()
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for agent management
+  const canAddAgent = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "agent-management" && p.actions?.includes("W")) ||
+      (p.key === "users" && p.actions?.includes("W")) ||
+      (p.key === "customers" && p.actions?.includes("W"))
+  )
+
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
@@ -488,16 +499,18 @@ export default function AgentManagementDashboard() {
                   )}
                 </div>
 
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  icon={<PlusIcon />}
-                  onClick={() => router.push("/agent-management/add-new-agent")}
-                >
-                  <span className="hidden sm:inline">Add New Officer</span>
-                  <span className="sm:hidden">Add New Officer</span>
-                </ButtonModule>
+                {canAddAgent && (
+                  <ButtonModule
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    icon={<PlusIcon />}
+                    onClick={() => router.push("/agent-management/add-new-agent")}
+                  >
+                    <span className="hidden sm:inline">Add New Officer</span>
+                    <span className="sm:hidden">Add New Officer</span>
+                  </ButtonModule>
+                )}
               </motion.div>
             </div>
 

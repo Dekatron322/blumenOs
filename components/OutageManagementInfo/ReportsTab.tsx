@@ -7,6 +7,7 @@ import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOu
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
+import { useAppSelector } from "lib/hooks/useRedux"
 
 interface SortOption {
   label: string
@@ -352,97 +353,7 @@ const LoadingSkeleton = () => {
 }
 
 // Mock data
-const mockReports: Report[] = [
-  {
-    id: "RPT-001",
-    title: "Monthly Outage Report - January 2024",
-    type: "outage",
-    period: "January 2024",
-    generatedDate: "2024-02-01T10:00:00Z",
-    generatedBy: "System Administrator",
-    status: "published",
-    fileSize: "2.4 MB",
-    format: "pdf",
-    description: "Comprehensive report on all outages and incidents for January 2024",
-    tags: ["outage", "monthly", "incidents"],
-    downloadCount: 15,
-    lastDownloaded: "2024-02-05T14:30:00Z",
-  },
-  {
-    id: "RPT-002",
-    title: "Maintenance Performance Analysis",
-    type: "maintenance",
-    period: "Q4 2023",
-    generatedDate: "2024-01-15T09:30:00Z",
-    generatedBy: "Maintenance Manager",
-    status: "approved",
-    fileSize: "1.8 MB",
-    format: "excel",
-    description: "Analysis of maintenance activities and performance metrics",
-    tags: ["maintenance", "performance", "quarterly"],
-    downloadCount: 8,
-    lastDownloaded: "2024-01-20T11:15:00Z",
-  },
-  {
-    id: "RPT-003",
-    title: "System Availability Report",
-    type: "performance",
-    period: "December 2023",
-    generatedDate: "2024-01-01T08:00:00Z",
-    generatedBy: "Operations Team",
-    status: "published",
-    fileSize: "1.2 MB",
-    format: "pdf",
-    description: "Monthly system availability and uptime statistics",
-    tags: ["availability", "uptime", "performance"],
-    downloadCount: 22,
-    lastDownloaded: "2024-01-10T16:45:00Z",
-  },
-  {
-    id: "RPT-004",
-    title: "Compliance Audit Report",
-    type: "compliance",
-    period: "Annual 2023",
-    generatedDate: "2024-01-05T12:00:00Z",
-    generatedBy: "Compliance Officer",
-    status: "draft",
-    fileSize: "3.1 MB",
-    format: "pdf",
-    description: "Annual compliance audit findings and recommendations",
-    tags: ["compliance", "audit", "annual"],
-    downloadCount: 0,
-  },
-  {
-    id: "RPT-005",
-    title: "Financial Performance Q1 2024",
-    type: "financial",
-    period: "Q1 2024",
-    generatedDate: "2024-04-01T14:00:00Z",
-    generatedBy: "Finance Department",
-    status: "pending",
-    fileSize: "2.8 MB",
-    format: "excel",
-    description: "Quarterly financial performance and revenue analysis",
-    tags: ["financial", "revenue", "quarterly"],
-    downloadCount: 3,
-    lastDownloaded: "2024-04-05T09:20:00Z",
-  },
-  {
-    id: "RPT-006",
-    title: "Customer Satisfaction Survey Results",
-    type: "performance",
-    period: "March 2024",
-    generatedDate: "2024-04-10T11:00:00Z",
-    generatedBy: "Customer Service",
-    status: "published",
-    fileSize: "0.9 MB",
-    format: "csv",
-    description: "Monthly customer satisfaction survey results and feedback",
-    tags: ["customer", "satisfaction", "survey"],
-    downloadCount: 12,
-    lastDownloaded: "2024-04-15T13:45:00Z",
-  },
-]
+const mockReports: Report[] = []
 
 // Mobile Filter Sidebar Component
 const MobileFilterSidebar = ({
@@ -651,6 +562,11 @@ const ReportsTab: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canGenerateReport = !!user?.privileges?.some(
+    (p) => (p.key === "outage-management" || p.key === "reports") && p.actions?.includes("W")
+  )
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
@@ -963,18 +879,20 @@ const ReportsTab: React.FC = () => {
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
               </button>
 
-              <div className="w-full sm:w-64 md:w-80">
+              <div className=":max-w-[310px] sm:w-64 md:w-80">
                 <SearchModule
                   placeholder="Search reports..."
                   value={searchText}
                   onChange={(e) => handleSearch(e.target.value)}
                   onCancel={handleCancelSearch}
-                  className="w-full"
+                  className="max-w-[310px] sm:w-64 md:w-80"
                 />
               </div>
-              <button className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto">
-                Generate Report
-              </button>
+              {canGenerateReport && (
+                <button className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto">
+                  Generate Report
+                </button>
+              )}
             </div>
           </div>
 

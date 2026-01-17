@@ -283,6 +283,11 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
 
   // Get state from Redux store
   const { maintenances, loading, error, pagination } = useAppSelector((state) => state.maintenances)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canScheduleMaintenance = !!user?.privileges?.some(
+    (p) => (p.key === "outage-management" || p.key === "maintenance") && p.actions?.includes("W")
+  )
 
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -689,14 +694,16 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
               </div>
             </div>
             <div className="w-full md:w-auto md:pl-4">
-              <ButtonModule
-                onClick={() => router.push("/outage-management/schedule-maintenance")}
-                variant="primary"
-                size="md"
-                className="mt-2 md:mt-0 md:w-auto"
-              >
-                Schedule Maintenance
-              </ButtonModule>
+              {canScheduleMaintenance && (
+                <ButtonModule
+                  onClick={() => router.push("/outage-management/schedule-maintenance")}
+                  variant="primary"
+                  size="md"
+                  className="mt-2 md:mt-0 md:w-auto"
+                >
+                  Schedule Maintenance
+                </ButtonModule>
+              )}
             </div>
           </div>
 

@@ -35,7 +35,7 @@ export default function StatusMapDashboard() {
       <div className="relative z-0 flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-50 pb-20 xl:z-auto">
         <div className="relative z-0 flex w-full flex-col xl:z-auto">
           <DashboardNav />
-          <div className="relative z-0 mx-auto flex w-full flex-col px-3 2xl:container xl:z-auto xl:px-16">
+          <div className="relative z-0 mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 xl:z-auto 2xl:px-16">
             {/* Page Header */}
             <div className="relative z-0 flex w-full items-start justify-between gap-6 max-md:flex-col max-sm:my-4 md:my-8 xl:z-auto">
               <div>
