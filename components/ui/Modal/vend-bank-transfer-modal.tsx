@@ -154,7 +154,7 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm max-sm:items-end max-sm:px-0"
       onClick={onRequestClose}
     >
       <motion.div
@@ -162,44 +162,44 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="relative flex max-h-[90vh] w-[90vw] max-w-2xl flex-col rounded-lg bg-white shadow-2xl"
+        className="relative flex max-h-[90vh] w-[90vw] max-w-2xl flex-col rounded-lg bg-white shadow-2xl max-sm:h-[90vh] max-sm:max-w-full max-sm:rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3">
-          <h2 className="text-lg font-semibold text-gray-900 max-sm:text-base">Bank Transfer Payment</h2>
+        <div className="flex flex-shrink-0 items-center justify-between border-b bg-[#F9F9F9] px-6 py-4 max-sm:px-3 max-sm:py-3">
+          <h2 className="text-lg font-semibold text-gray-900 max-sm:text-sm">Bank Transfer Payment</h2>
           <button
             onClick={onRequestClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 max-sm:size-6"
           >
             <CloseIcon />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 max-sm:p-3">
+        <div className="flex-1 overflow-y-auto p-6 max-sm:p-3 max-sm:pb-20">
           {/* Payment Status */}
 
           {/* Payment Summary */}
-          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-gray-800">Payment Summary</h3>
+          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 max-sm:mb-4 max-sm:p-3">
+            <h3 className="mb-3 text-sm font-semibold text-gray-800 max-sm:text-xs">Payment Summary</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Customer:</span>
-                <span className="font-medium">{paymentData.customerName}</span>
+                <span className="text-gray-600 max-sm:text-xs">Customer:</span>
+                <span className="font-medium max-sm:text-xs">{paymentData.customerName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Account Number:</span>
-                <span className="font-medium">{paymentData.customerAccountNumber}</span>
+                <span className="text-gray-600 max-sm:text-xs">Account Number:</span>
+                <span className="font-medium max-sm:text-xs">{paymentData.customerAccountNumber}</span>
               </div>
               {paymentData.customerMeterNumber && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Meter Number:</span>
-                  <span className="font-medium">{paymentData.customerMeterNumber}</span>
+                  <span className="text-gray-600 max-sm:text-xs">Meter Number:</span>
+                  <span className="font-medium max-sm:text-xs">{paymentData.customerMeterNumber}</span>
                 </div>
               )}
               {paymentData.customerPhoneNumber && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Phone Number:</span>
-                  <span className="font-medium">{paymentData.customerPhoneNumber}</span>
+                  <span className="text-gray-600 max-sm:text-xs">Phone Number:</span>
+                  <span className="font-medium max-sm:text-xs">{paymentData.customerPhoneNumber}</span>
                 </div>
               )}
               {/* {paymentData.customerAddress && (
@@ -245,8 +245,8 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
                 </div>
               )} */}
               <div className="flex justify-between">
-                <span className="text-gray-600">Total Amount Paid:</span>
-                <span className="text-lg font-bold">
+                <span className="text-gray-600 max-sm:text-xs">Total Amount Paid:</span>
+                <span className="text-lg font-bold max-sm:text-base max-sm:font-semibold">
                   {paymentData.currency} {paymentData.totalAmountPaid?.toLocaleString()}
                 </span>
               </div>
@@ -272,53 +272,61 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
           </div>
 
           {/* Virtual Account Details */}
-          <div className="mb-6">
-            <h3 className="mb-3 text-sm font-semibold text-gray-800">Virtual Account Details</h3>
-            <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-              <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
-                <span className="text-xs font-semibold uppercase tracking-wide text-green-700">Account Number</span>
-                <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-3xl sm:text-5xl">
+          <div className="mb-6 max-sm:mb-4">
+            <h3 className="mb-3 text-sm font-semibold text-gray-800 max-sm:text-xs">Virtual Account Details</h3>
+            <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900 max-sm:p-3 max-sm:text-xs">
+              <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center max-sm:p-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-green-700 max-sm:text-xs">
+                  Account Number
+                </span>
+                <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-2xl max-sm:tracking-normal sm:text-5xl">
                   {virtualAccount.accountNumber}
                 </span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="font-medium">Bank Name:</span>
-                <span className="font-semibold">{virtualAccount.bankName}</span>
+                <span className="font-medium max-sm:text-xs">Bank Name:</span>
+                <span className="font-semibold max-sm:text-xs">{virtualAccount.bankName}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="font-medium">Payment Reference:</span>
-                <span className="font-semibold">{virtualAccount.reference}</span>
+                <span className="font-medium max-sm:text-xs">Payment Reference:</span>
+                <span className="font-semibold max-sm:break-all max-sm:text-xs">{virtualAccount.reference}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="font-medium">Expires At:</span>
-                <span className="font-semibold">{new Date(virtualAccount.expiresAtUtc).toLocaleString()}</span>
+                <span className="font-medium max-sm:text-xs">Expires At:</span>
+                <span className="font-semibold max-sm:text-xs">
+                  {new Date(virtualAccount.expiresAtUtc).toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Payment Confirmation Status */}
           {isPolling && (
-            <div className="mt-4 rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+            <div className="mt-4 rounded-lg border-2 border-blue-200 bg-blue-50 p-4 max-sm:mt-3 max-sm:p-3">
               <div className="flex items-center justify-center gap-3">
                 <div className="flex size-4 animate-pulse rounded-full bg-blue-500"></div>
                 <div className="text-center">
-                  <h3 className="text-lg font-bold text-blue-900">PAYMENT CONFIRMATION IN PROGRESS</h3>
-                  <p className="text-sm text-blue-700">Checking your payment every 10 seconds...</p>
-                  <p className="mt-1 text-xs text-blue-600">Please wait while we confirm your payment</p>
+                  <h3 className="text-lg font-bold text-blue-900 max-sm:text-base max-sm:font-semibold">
+                    PAYMENT CONFIRMATION IN PROGRESS
+                  </h3>
+                  <p className="text-sm text-blue-700 max-sm:text-xs">Checking your payment every 10 seconds...</p>
+                  <p className="mt-1 text-xs text-blue-600 max-sm:text-xs">Please wait while we confirm your payment</p>
                 </div>
                 <div className="flex size-4 animate-pulse rounded-full bg-blue-500"></div>
               </div>
               {/* Payment Check Details */}
-              <div className="mt-4 rounded-md bg-white p-3">
-                <div className="space-y-2 text-sm">
+              <div className="mt-4 rounded-md bg-white p-3 max-sm:mt-2 max-sm:p-2">
+                <div className="space-y-2 text-sm max-sm:text-xs">
                   <div className="flex justify-between">
-                    <span className="text-blue-700">Reference:</span>
-                    <span className="font-mono font-medium text-blue-900">{paymentData?.reference || "N/A"}</span>
+                    <span className="text-blue-700 max-sm:text-xs">Reference:</span>
+                    <span className="font-mono font-medium text-blue-900 max-sm:text-xs max-sm:font-normal">
+                      {paymentData?.reference || "N/A"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-700">Status:</span>
+                    <span className="text-blue-700 max-sm:text-xs">Status:</span>
                     <span
-                      className={`font-medium ${
+                      className={`font-medium max-sm:text-xs ${
                         paymentData?.status === "Paid" || paymentData?.status === "Confirmed"
                           ? "text-green-600"
                           : paymentData?.status === "Pending"
@@ -330,11 +338,11 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-700">Payment Check:</span>
-                    <span className="font-medium text-blue-900">
+                    <span className="text-blue-700 max-sm:text-xs">Payment Check:</span>
+                    <span className="font-medium text-blue-900 max-sm:text-xs">
                       <span className="flex items-center gap-2">
                         <span>{pollingAttempts}/30 attempts</span>
-                        <span className="text-xs text-blue-600">
+                        <span className="text-xs text-blue-600 max-sm:text-xs">
                           (~{Math.round((30 - pollingAttempts) * 0.17)}min left)
                         </span>
                       </span>
@@ -364,13 +372,13 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
           </div> */}
         </div>
 
-        <div className="flex flex-shrink-0  gap-3 border-t bg-white px-6 py-4 max-sm:px-3 sm:flex-row sm:gap-4">
-          <ButtonModule variant="secondary" className="flex w-full" size="sm" onClick={handleCopy}>
+        <div className="flex flex-shrink-0 gap-3 border-t bg-white px-6 py-4 max-sm:gap-2 max-sm:px-3 max-sm:py-3 sm:flex-row sm:gap-4">
+          <ButtonModule variant="secondary" className="flex w-full max-sm:text-sm" size="sm" onClick={handleCopy}>
             {isCopying ? "Copied!" : "Copy Details"}
           </ButtonModule>
           <ButtonModule
             variant={isPolling ? "secondary" : canCheckPayment ? "primary" : "secondary"}
-            className="flex w-full"
+            className="flex w-full max-sm:text-sm"
             size="sm"
             onClick={handleCheckPayment}
             disabled={!canCheckPayment || isCheckingPayment || isPolling}
