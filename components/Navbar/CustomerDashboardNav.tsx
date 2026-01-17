@@ -101,7 +101,7 @@ const CustomerDashboardNav = () => {
     <>
       {/* Desktop Navigation */}
       <nav className="containerbg sticky top-0 z-50 hidden w-full border-b bg-white xl:block">
-        <div className="flexBetween container mx-auto px-16 py-2 max-sm:px-3">
+        <div className="flexBetween mx-auto px-3 py-2 2xl:container max-sm:px-3 md:px-6 lg:px-6 2xl:px-16">
           <SearchModule
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
