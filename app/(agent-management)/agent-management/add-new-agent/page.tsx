@@ -387,7 +387,7 @@ const AddNewAgent = () => {
   const managerAgentOptions = [
     {
       value: "",
-      label: agentsLoading ? "Loading manager agents..." : "Select manager agent (optional)",
+      label: agentsLoading ? "Loading manager agents..." : "Select manager agent",
     },
     ...agents
       .filter((agent) => {

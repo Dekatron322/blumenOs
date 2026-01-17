@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   AGENTS: {
     GET: "/agents",
     GET_BY_ID: "/agents/{id}",
+    UPDATE: "/agents/{id}",
     ADD: "/agents/with-user",
     ADD_EXISTING_USER: "/agents",
     CHANGE_REQUEST: "/agents/{id}/change-requests",
