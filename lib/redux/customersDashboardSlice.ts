@@ -231,6 +231,10 @@ interface VendResponseData {
   status: string
   checkoutUrl: string
   virtualAccount: VirtualAccount
+  paymentDetails?: {
+    checkoutUrl?: string
+    virtualAccount?: VirtualAccount
+  }
   tokens: VendToken[]
 }
 
@@ -249,6 +253,7 @@ interface GetTokenResponseData {
   channel: string
   status: string
   tokens: VendToken[]
+  token?: VendToken
   recoveryApplied: boolean
   recoveryAmount: number
   recoveryPolicyId: number
