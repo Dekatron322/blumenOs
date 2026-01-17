@@ -165,6 +165,7 @@ interface VirtualAccount {
 // Payment Token Interface
 interface PaymentToken {
   token: string
+  tokenDec: string
   vendedAmount: string
   unit: string
   description: string
@@ -276,6 +277,7 @@ interface PaymentItem {
   status: string
   collectorType: string
   amount: number
+  totalAmountPaid: number
   amountApplied: number
   vatAmount: number
   overPaymentAmount: number
@@ -307,11 +309,31 @@ interface PaymentItem {
   recoveryAmount: number
   recoveryPolicyId: number
   recoveryPolicyName: string
-  tokens: PaymentToken[]
+  token: PaymentToken
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  paymentDetails?: {
+    reference: string
+    checkoutUrl: string | null
+    virtualAccount?: {
+      accountNumber: string
+      bankName: string
+      reference: string
+      expiresAtUtc: string
+    }
+  }
 }
 
 // Payment Detail Interface (extends PaymentItem with additional fields)
-interface PaymentDetail extends PaymentItem {
+export interface PaymentDetail extends PaymentItem {
   narrative: string
   externalReference: string
   virtualAccount: VirtualAccount
@@ -1327,7 +1349,7 @@ interface CustomersDashboardState {
   lastTicketDetailMessage: string | null
   paymentsSummary: PaymentsSummaryData | null
   paymentsList: PaymentItem[] | null
-  paymentDetail: PaymentDetail | null
+  paymentDetail: PaymentDetailResponse | null
   customerLookupData: CustomerLookupData | null
   vendResponseData: VendResponseData | null
   getTokenResponseData: GetTokenResponseData | null
@@ -2260,7 +2282,7 @@ const customersDashboardSlice = createSlice({
         state.paymentDetailSuccess = true
         state.paymentDetailError = null
         state.lastPaymentDetailMessage = action.payload.message
-        state.paymentDetail = action.payload.data
+        state.paymentDetail = action.payload
       })
       .addCase(getPaymentDetail.rejected, (state, action) => {
         state.isLoadingPaymentDetail = false

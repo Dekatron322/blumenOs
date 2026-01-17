@@ -293,7 +293,7 @@ const SupportTicket: React.FC = () => {
         Select Ticket Category
       </h2>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3">
         {isLoadingCategories ? (
           // Loading state
           Array.from({ length: 6 }).map((_, index) => (
@@ -670,7 +670,7 @@ const SupportTicket: React.FC = () => {
   )
 
   const renderRecentTickets = () => (
-    <div className="rounded-md border border-gray-200 bg-white p-4">
+    <div className="w-full  rounded-md border border-gray-200 bg-white p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-900">Recent Tickets</h3>
         <div className="flex items-center gap-2">
@@ -789,7 +789,7 @@ const SupportTicket: React.FC = () => {
       <CustomerDashboardNav />
       <div className="flex w-full">
         <div className="flex w-full flex-col">
-          <div className="mx-auto flex w-full flex-col px-3 py-4 lg:container sm:px-4 md:px-6 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Raise Support Ticket</h1>

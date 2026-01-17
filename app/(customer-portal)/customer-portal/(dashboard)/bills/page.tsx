@@ -704,7 +704,7 @@ export default function AgentManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <CustomerDashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 lg:container sm:px-4 xl:px-16">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
             {/* Main Content Area */}
             <div className="">
               {/* Time Range Filters for Performance Summary */}
