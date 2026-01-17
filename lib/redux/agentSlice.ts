@@ -297,6 +297,7 @@ export interface Agent {
   status: string
   canCollectCash: boolean
   cashCollectionLimit: number
+  maxSingleAllowedCashAmount: number
   cashAtHand: number
   lastCashCollectionDate: string
   user: AgentUser
@@ -305,6 +306,10 @@ export interface Agent {
   areaOfficeName: string
   serviceCenterId: number
   serviceCenterName: string
+  distributionSubstationId: number
+  managerAgentId: number | null
+  agentType: string
+  enforceJurisdiction: boolean
   tempPassword: string
 }
 
@@ -401,6 +406,36 @@ export interface AddExistingUserAsAgentRequest {
 
 // Interface for Add Existing User as Agent Response
 export interface AddExistingUserAsAgentResponse {
+  isSuccess: boolean
+  message: string
+  data: Agent
+}
+
+// Interface for Update Agent Request Body
+export interface UpdateAgentRequest {
+  status?: string
+  agentCode?: string
+  cashCollectionLimit?: number
+  maxSingleAllowedCashAmount?: number
+  cashAtHand?: number
+  canCollectCash?: boolean
+  lastCashCollectionDate?: string
+  areaOfficeId?: number
+  serviceCenterId?: number
+  distributionSubstationId?: number
+  managerAgentId?: number
+  agentType?: string
+  enforceJurisdiction?: boolean
+  employeeId?: string
+  emergencyContact?: string
+  address?: string
+  employmentType?: string
+  supervisorId?: number
+  departmentId?: number
+}
+
+// Interface for Update Agent Response
+export interface UpdateAgentResponse {
   isSuccess: boolean
   message: string
   data: Agent
@@ -1464,6 +1499,12 @@ interface AgentState {
   addExistingUserAsAgentSuccess: boolean
   newlyAddedExistingUserAgent: Agent | null
 
+  // Update agent state
+  updateAgentLoading: boolean
+  updateAgentError: string | null
+  updateAgentSuccess: boolean
+  updatedAgent: Agent | null
+
   // Clear Cash state
   clearCashLoading: boolean
   clearCashError: string | null
@@ -1646,6 +1687,10 @@ const initialState: AgentState = {
   addExistingUserAsAgentError: null,
   addExistingUserAsAgentSuccess: false,
   newlyAddedExistingUserAgent: null,
+  updateAgentLoading: false,
+  updateAgentError: null,
+  updateAgentSuccess: false,
+  updatedAgent: null,
   clearCashLoading: false,
   clearCashError: null,
   clearCashSuccess: false,
@@ -2084,6 +2129,36 @@ export const addExistingUserAsAgent = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to add existing user as agent")
       }
       return rejectWithValue(error.message || "Network error during existing user agent addition")
+    }
+  }
+)
+
+// Update Agent Async Thunk
+export const updateAgent = createAsyncThunk(
+  "agents/updateAgent",
+  async ({ id, updateData }: { id: number; updateData: UpdateAgentRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.AGENTS.UPDATE.replace("{id}", id.toString())
+      const response = await api.patch<UpdateAgentResponse>(buildApiUrl(endpoint), updateData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update agent")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Update agent response data not found")
+      }
+
+      return {
+        agentId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update agent")
+      }
+      return rejectWithValue(error.message || "Network error during agent update")
     }
   }
 )
@@ -2608,6 +2683,7 @@ const agentSlice = createSlice({
       state.currentAgentError = null
       state.addAgentError = null
       state.addExistingUserAsAgentError = null
+      state.updateAgentError = null
       state.clearCashError = null
       state.changeRequestError = null
       state.changeRequestsByAgentError = null
@@ -2649,6 +2725,14 @@ const agentSlice = createSlice({
       state.addExistingUserAsAgentError = null
       state.addExistingUserAsAgentSuccess = false
       state.newlyAddedExistingUserAgent = null
+    },
+
+    // Clear update agent state
+    clearUpdateAgent: (state) => {
+      state.updateAgentLoading = false
+      state.updateAgentError = null
+      state.updateAgentSuccess = false
+      state.updatedAgent = null
     },
 
     // Clear cash state
@@ -2745,6 +2829,10 @@ const agentSlice = createSlice({
       state.addExistingUserAsAgentError = null
       state.addExistingUserAsAgentSuccess = false
       state.newlyAddedExistingUserAgent = null
+      state.updateAgentLoading = false
+      state.updateAgentError = null
+      state.updateAgentSuccess = false
+      state.updatedAgent = null
       state.clearCashLoading = false
       state.clearCashError = null
       state.clearCashSuccess = false
@@ -3455,6 +3543,40 @@ const agentSlice = createSlice({
         state.newlyAddedExistingUserAgent = null
       })
 
+      // Update agent cases
+      .addCase(updateAgent.pending, (state) => {
+        state.updateAgentLoading = true
+        state.updateAgentError = null
+        state.updateAgentSuccess = false
+        state.updatedAgent = null
+      })
+      .addCase(
+        updateAgent.fulfilled,
+        (state, action: PayloadAction<{ agentId: number; data: Agent; message: string }>) => {
+          state.updateAgentLoading = false
+          state.updateAgentSuccess = true
+          state.updateAgentError = null
+          state.updatedAgent = action.payload.data
+
+          // Update agent in the agents list
+          const index = state.agents.findIndex((agent) => agent.id === action.payload.agentId)
+          if (index !== -1) {
+            state.agents[index] = action.payload.data
+          }
+
+          // Update current agent if it's the same one
+          if (state.currentAgent && state.currentAgent.id === action.payload.agentId) {
+            state.currentAgent = action.payload.data
+          }
+        }
+      )
+      .addCase(updateAgent.rejected, (state, action) => {
+        state.updateAgentLoading = false
+        state.updateAgentError = (action.payload as string) || "Failed to update agent"
+        state.updateAgentSuccess = false
+        state.updatedAgent = null
+      })
+
       // Clear cash cases
       .addCase(clearCash.pending, (state) => {
         state.clearCashLoading = true
@@ -4113,6 +4235,7 @@ export const {
   clearCurrentAgent,
   clearAddAgent,
   clearAddExistingUserAsAgent,
+  clearUpdateAgent,
   clearCashStatus,
   clearClearances,
   clearPayments,

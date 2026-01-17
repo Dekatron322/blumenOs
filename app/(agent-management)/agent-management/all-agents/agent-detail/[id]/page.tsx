@@ -482,10 +482,7 @@ const AgentDetailsPage = () => {
 
   const handleEditAgent = () => {
     if (!currentAgent) return
-    console.log("Editing agent:", currentAgent.id)
-    setActiveAction("edit")
-    // TODO: Implement actual edit logic
-    setTimeout(() => setActiveAction(null), 2000)
+    router.push(`/agent-management/all-agents/update-agent/${currentAgent.id}`)
   }
 
   const handleToggleActivation = () => {
@@ -679,7 +676,11 @@ const AgentDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">{currentAgent.user.fullName}</h2>
-                      <p className="mb-4 text-sm text-gray-600 sm:text-base">{currentAgent.user.position}</p>
+                      <p className="mb-4 text-sm text-gray-600 sm:text-base">
+                        {currentAgent.user.roles.length > 0
+                          ? currentAgent.user.roles.map((role) => role.name).join(", ")
+                          : "No role assigned"}
+                      </p>
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div

@@ -198,17 +198,27 @@ export default function Dashboard() {
 
   const refreshDashboardData = useCallback(() => {
     const now = new Date()
-    const endDateUtc = now.toISOString()
+    let endDateUtc: string
     const start = new Date(now)
 
     if (timeFilter === "day") {
       start.setUTCDate(start.getUTCDate() - 1)
+      endDateUtc = now.toISOString()
     } else if (timeFilter === "week") {
       start.setUTCDate(start.getUTCDate() - 7)
+      endDateUtc = now.toISOString()
     } else if (timeFilter === "month") {
-      start.setUTCMonth(start.getUTCMonth() - 1)
+      start.setUTCDate(1) // Set to 1st day of current month
+      start.setUTCHours(0, 0, 0, 0) // Start of day
+
+      // Set end date to last day of current month
+      const endOfMonth = new Date(start)
+      endOfMonth.setUTCMonth(start.getUTCMonth() + 1, 0) // Last day of current month
+      endOfMonth.setUTCHours(23, 59, 59, 999) // End of day
+      endDateUtc = endOfMonth.toISOString()
     } else {
       start.setUTCFullYear(start.getUTCFullYear() - 10)
+      endDateUtc = now.toISOString()
     }
 
     const startDateUtc = start.toISOString()
@@ -1070,7 +1080,7 @@ export default function Dashboard() {
                         )}
                       </Card>
 
-                      <Card title="CBO Performance">
+                      <Card title="State Performance">
                         {cboPerformanceLoading ? (
                           <div className="animate-pulse">
                             <div className="h-[150px] w-full rounded bg-gray-200" />
@@ -1081,7 +1091,7 @@ export default function Dashboard() {
                           </div>
                         ) : cboPerformanceChartData.length === 0 ? (
                           <div className="flex h-[150px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                            <div className="text-sm font-semibold text-gray-900">No CBO performance data</div>
+                            <div className="text-sm font-semibold text-gray-900">No State performance data</div>
                             <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
                           </div>
                         ) : (
