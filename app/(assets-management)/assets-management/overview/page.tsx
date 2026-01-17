@@ -300,6 +300,11 @@ export default function MeteringDashboard() {
   const { assetManagementData, assetManagementLoading, assetManagementError } = useSelector(
     (state: RootState) => state.analytics
   )
+  const { user } = useSelector((state: RootState) => state.auth)
+
+  const canAddAsset = !!user?.privileges?.some(
+    (p) => (p.key === "assets-management" || p.key === "assets") && p.actions?.includes("W")
+  )
 
   const {
     anchorRef: addAssetButtonRef,
@@ -386,9 +391,9 @@ export default function MeteringDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="container mx-auto flex flex-col">
+          <div className="mx-auto flex w-full flex-col 2xl:container">
             {/* Page Header - Always Visible */}
-            <div className="flex w-full items-start justify-between gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8">
+            <div className="flex w-full items-start justify-between gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:my-8 md:px-4 lg:px-6 2xl:px-16">
               <div>
                 <h4 className="text-lg font-semibold sm:text-xl md:text-2xl">Asset Management</h4>
                 <p className="text-sm sm:text-base">Network infrastructure and equipment tracking</p>
@@ -410,95 +415,97 @@ export default function MeteringDashboard() {
                 >
                   <span>{showLoading ? "Refreshing..." : "Refresh Data"}</span>
                 </button>
-                <div className="relative" ref={addAssetButtonRef}>
-                  <button
-                    onClick={toggleAddAssetMenu}
-                    className="flex items-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#000000]"
-                  >
-                    <PlusIcon />
-                    Add New Asset
-                  </button>
+                {canAddAsset && (
+                  <div className="relative" ref={addAssetButtonRef}>
+                    <button
+                      onClick={toggleAddAssetMenu}
+                      className="flex items-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#000000]"
+                    >
+                      <PlusIcon />
+                      Add New Asset
+                    </button>
 
-                  <AnimatePresence>
-                    {isAddAssetMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-md bg-white text-sm shadow-lg ring-1 ring-black ring-opacity-5"
-                      >
-                        <div className="flex flex-col py-1">
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/area-offices/add-area-offices")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <OfficeIcon />
-                            <span>Add Area Office</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/feeders/add-feeders")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <ReadingsIcon />
-                            <span>Add Feeder</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/injection-substations/add-injection-substations")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <AlertsIcon />
-                            <span>Add Injection Substation</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/poles/add-poles")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <PoleIcon />
-                            <span>Add Pole</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/distribution-stations/add-distribution-stations")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <DistributionIcon />
-                            <span>Add Distribution Station</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              router.push("/assets-management/service-stations/add-service-stations")
-                              closeAddAssetMenu()
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                          >
-                            <ServiceStationIcon />
-                            <span>Add Service Station</span>
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                    <AnimatePresence>
+                      {isAddAssetMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
+                          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-md bg-white text-sm shadow-lg ring-1 ring-black ring-opacity-5"
+                        >
+                          <div className="flex flex-col py-1">
+                            <button
+                              onClick={() => {
+                                router.push("/assets-management/area-offices/add-area-offices")
+                                closeAddAssetMenu()
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                              <OfficeIcon />
+                              <span>Add Area Office</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                router.push("/assets-management/feeders/add-feeders")
+                                closeAddAssetMenu()
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                              <ReadingsIcon />
+                              <span>Add Feeder</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                router.push("/assets-management/injection-substations/add-injection-substations")
+                                closeAddAssetMenu()
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                              <AlertsIcon />
+                              <span>Add Injection Substation</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                router.push("/assets-management/poles/add-poles")
+                                closeAddAssetMenu()
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                              <PoleIcon />
+                              <span>Add Pole</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                router.push("/assets-management/distribution-stations/add-distribution-stations")
+                                closeAddAssetMenu()
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                              <DistributionIcon />
+                              <span>Add Distribution Station</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                router.push("/assets-management/service-stations/add-service-stations")
+                                closeAddAssetMenu()
+                              }}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                              <ServiceStationIcon />
+                              <span>Add Service Station</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </motion.div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex w-full gap-6 px-16 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3">
+            <div className="flex w-full gap-6 px-3 max-md:flex-col max-md:px-0 max-sm:my-4 max-sm:px-3 md:px-4 lg:px-6 2xl:px-16">
               <div className="w-full">
                 {showLoading ? (
                   // Loading State

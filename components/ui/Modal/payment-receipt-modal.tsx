@@ -138,15 +138,15 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                   <p className="text-xs text-gray-500">Customer</p>
                   <p className="break-words font-semibold text-gray-900">{payment.customerName}</p>
                   <p className="text-xs text-gray-500">Account: {payment.customerAccountNumber}</p>
-                  <p className="text-xs text-gray-500">Phone: {payment.customerPhoneNumber}</p>
-                  <p className="text-xs text-gray-500">Address: {payment.customerAddress}</p>
-                  <p className="text-xs text-gray-500">Meter: {payment.customerMeterNumber}</p>
-                  <p className="text-xs text-gray-500">Type: {payment.accountType}</p>
+                  <p className="text-xs text-gray-500">Phone: {payment.customerPhoneNumber || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Address: {payment.customerAddress || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Meter: {payment.customerMeterNumber || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Type: {payment.accountType || "N/A"}</p>
                 </div>
                 <div className="w-full text-left sm:w-auto sm:text-right">
                   <p className="text-xs text-gray-500">Total Amount Paid</p>
                   <p className="text-xl font-bold text-gray-900 sm:text-2xl">
-                    {formatCurrency(payment.totalAmountPaid, payment.currency)}
+                    {formatCurrency(payment.amount || payment.totalAmountPaid, payment.currency)}
                   </p>
                   <p className="break-words text-xs text-gray-500">Paid at: {formatDateTime(payment.paidAtUtc)}</p>
                   <p className="break-words text-xs text-gray-500">Payment Type: {payment.paymentTypeName}</p>
@@ -174,11 +174,13 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">External Reference: </span>
-                      <span className="break-words font-semibold">{payment.externalReference}</span>
+                      <span className="break-words font-semibold">{payment.externalReference || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Is Pending: </span>
-                      <span className="break-words font-semibold">{payment.isPending ? "Yes" : "No"}</span>
+                      <span className="break-words font-semibold">
+                        {payment.isPending ?? payment.status === "Pending" ? "Yes" : "No"}
+                      </span>
                     </div>
                   </div>
                   <div className="grid w-full grid-cols-1 gap-4 border-b border-dashed border-gray-200 pb-2 sm:hidden sm:grid-cols-2 sm:gap-10">
@@ -189,27 +191,27 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                     <div className="flex justify-between">
                       <span className="text-gray-500">Tariff Rate: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.tariffRate, payment.currency)}/kWh
+                        {formatCurrency(payment.tariffRate || 0, payment.currency)}/kWh
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Units Purchased: </span>
-                      <span className="break-words font-semibold">{payment.units} kWh</span>
+                      <span className="break-words font-semibold">{payment.units || 0} kWh</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">VAT Rate: </span>
-                      <span className="break-words font-semibold">{(payment.vatRate * 100).toFixed(1)}%</span>
+                      <span className="break-words font-semibold">{((payment.vatRate || 0) * 100).toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">VAT Amount: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.vatAmount, payment.currency)}
+                        {formatCurrency(payment.vatAmount || 0, payment.currency)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Electricity Amount: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.electricityAmount, payment.currency)}
+                        {formatCurrency(payment.electricityAmount || 0, payment.currency)}
                       </span>
                     </div>
                   </div>
@@ -221,13 +223,16 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                     <div className="flex justify-between">
                       <span className="text-gray-500">Outstanding Debt: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.outstandingDebt, payment.currency)}
+                        {formatCurrency(
+                          payment.outstandingAfterPayment ?? payment.outstandingDebt ?? 0,
+                          payment.currency
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Debt Payable: </span>
                       <span className="break-words font-semibold">
-                        {formatCurrency(payment.debtPayable, payment.currency)}
+                        {formatCurrency(payment.debtPayable || 0, payment.currency)}
                       </span>
                     </div>
                   </div>

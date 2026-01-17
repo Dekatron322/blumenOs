@@ -28,6 +28,15 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
     clearTamperError,
     clearTamperData,
   } = useAppSelector((state) => state.meters)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for tamper clearing
+  const canClearTamper = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("W")) ||
+      (p.key === "maintenance" && p.actions?.includes("W"))
+  )
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [currentPage, setCurrentPage] = useState(1)
@@ -414,15 +423,17 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
-          <ButtonModule
-            variant="primary"
-            size="sm"
-            onClick={() => setShowClearTamperModal(true)}
-            className="flex items-center"
-          >
-            <Shield className="size-4" />
-            Clear Tamper
-          </ButtonModule>
+          {canClearTamper && (
+            <ButtonModule
+              variant="primary"
+              size="sm"
+              onClick={() => setShowClearTamperModal(true)}
+              className="flex items-center"
+            >
+              <Shield className="size-4" />
+              Clear Tamper
+            </ButtonModule>
+          )}
         </div>
       </div>
 

@@ -28,6 +28,16 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
     clearCreditError,
     clearCreditData,
   } = useAppSelector((state) => state.meters)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for credit clearing
+  const canClearCredit = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("W")) ||
+      (p.key === "prepaid" && p.actions?.includes("W")) ||
+      (p.key === "finance-bill-payments-and-vending" && p.actions?.includes("W"))
+  )
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [currentPage, setCurrentPage] = useState(1)
@@ -462,21 +472,23 @@ const ClearCreditHistoryTab: React.FC<ClearCreditHistoryTabProps> = ({ meterId }
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
-          <ButtonModule
-            variant="primary"
-            size="sm"
-            onClick={() => setShowClearCreditModal(true)}
-            disabled={clearCreditLoading}
-          >
-            {clearCreditLoading ? (
-              <div className="flex items-center">
-                <RefreshCw className="size-4 animate-spin" />
-                Clearing...
-              </div>
-            ) : (
-              "Clear Credit"
-            )}
-          </ButtonModule>
+          {canClearCredit && (
+            <ButtonModule
+              variant="primary"
+              size="sm"
+              onClick={() => setShowClearCreditModal(true)}
+              disabled={clearCreditLoading}
+            >
+              {clearCreditLoading ? (
+                <div className="flex items-center">
+                  <RefreshCw className="size-4 animate-spin" />
+                  Clearing...
+                </div>
+              ) : (
+                "Clear Credit"
+              )}
+            </ButtonModule>
+          )}
         </div>
       </div>
 

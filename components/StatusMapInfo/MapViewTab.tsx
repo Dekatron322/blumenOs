@@ -19,8 +19,8 @@ const MapViewTab = () => {
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All Status")
   const [customersLayerEnabled, setCustomersLayerEnabled] = useState(true)
   const [assetsLayerEnabled, setAssetsLayerEnabled] = useState(true)
-  const [selectedCustomerDetails, setSelectedCustomerDetails] = useState<StatusMapCustomer | null>(null)
-  const [selectedAssetDetails, setSelectedAssetDetails] = useState<StatusMapAsset | null>(null)
+  const [selectedCustomerDetails, setSelectedCustomerDetails] = useState<StatusMapCustomer[]>([])
+  const [selectedAssetDetails, setSelectedAssetDetails] = useState<StatusMapAsset[]>([])
   const [showFiltersMobile, setShowFiltersMobile] = useState(true)
   const [showLayersMobile, setShowLayersMobile] = useState(true)
 
@@ -179,8 +179,10 @@ const MapViewTab = () => {
           .addTo(customersGroupRef.current!)
 
         marker.on("click", () => {
-          const fullDetails = statusMapCustomers.find((cust: StatusMapCustomer) => cust.id === c.id) || null
-          setSelectedCustomerDetails(fullDetails)
+          const fullDetails = statusMapCustomers.find((cust: StatusMapCustomer) => cust.id === c.id)
+          if (fullDetails && !selectedCustomerDetails.find((cust) => cust.id === c.id)) {
+            setSelectedCustomerDetails((prev) => [...prev, fullDetails])
+          }
         })
       })
     }
@@ -198,8 +200,10 @@ const MapViewTab = () => {
           .addTo(assetsGroupRef.current!)
 
         marker.on("click", () => {
-          const fullDetails = statusMapAssets.find((asset: StatusMapAsset) => asset.id === a.id) || null
-          setSelectedAssetDetails(fullDetails)
+          const fullDetails = statusMapAssets.find((asset: StatusMapAsset) => asset.id === a.id)
+          if (fullDetails && !selectedAssetDetails.find((asset) => asset.id === a.id)) {
+            setSelectedAssetDetails((prev) => [...prev, fullDetails])
+          }
         })
       })
     }
@@ -496,13 +500,13 @@ const MapViewTab = () => {
           </div>
         </div>
       </div>
-      {selectedCustomerDetails && (
+      {selectedCustomerDetails.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[60] flex justify-end bg-black/30 backdrop-blur-sm xl:z-[1100]"
-          onClick={() => setSelectedCustomerDetails(null)}
+          onClick={() => setSelectedCustomerDetails([])}
         >
           <motion.div
             initial={{ x: 40, opacity: 0 }}
@@ -513,9 +517,9 @@ const MapViewTab = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b bg-[#F9F9F9] p-4">
-              <h2 className="text-base font-bold text-gray-900">Customer Details</h2>
+              <h2 className="text-base font-bold text-gray-900">Customer Details ({selectedCustomerDetails.length})</h2>
               <button
-                onClick={() => setSelectedCustomerDetails(null)}
+                onClick={() => setSelectedCustomerDetails([])}
                 className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
               >
                 <CloseIcon />
@@ -523,78 +527,93 @@ const MapViewTab = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 text-xs">
-              <div className="mb-4 space-y-1">
-                <div className="text-sm font-semibold">{selectedCustomerDetails.fullName}</div>
-                <div className="text-gray-500">{selectedCustomerDetails.accountNumber}</div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Status</div>
+              <div className="space-y-4">
+                {selectedCustomerDetails.map((customer, index) => (
                   <div
-                    className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      selectedCustomerDetails.status === 1
-                        ? "bg-green-100 text-green-700"
-                        : selectedCustomerDetails.status === 2
-                        ? "bg-red-100 text-red-700"
-                        : selectedCustomerDetails.status === 3
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
+                    key={customer.id}
+                    className={`border-b pb-4 ${index < selectedCustomerDetails.length - 1 ? "mb-4" : ""}`}
                   >
-                    {selectedCustomerDetails.status === 0
-                      ? "Unknown"
-                      : selectedCustomerDetails.status === 1
-                      ? "Paid"
-                      : selectedCustomerDetails.status === 2
-                      ? "Unpaid"
-                      : selectedCustomerDetails.status === 3
-                      ? "Partial"
-                      : "Unknown"}
+                    <div className="mb-4 space-y-1">
+                      <div className="text-sm font-semibold">{customer.fullName}</div>
+                      <div className="text-gray-500">{customer.accountNumber}</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Status</div>
+                        <div
+                          className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                            customer.status === 1
+                              ? "bg-green-100 text-green-700"
+                              : customer.status === 2
+                              ? "bg-red-100 text-red-700"
+                              : customer.status === 3
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {customer.status === 0
+                            ? "Unknown"
+                            : customer.status === 1
+                            ? "Paid"
+                            : customer.status === 2
+                            ? "Unpaid"
+                            : customer.status === 3
+                            ? "Partial"
+                            : "Unknown"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Outstanding</div>
+                        <div className="">{customer.outstanding}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">State</div>
+                        <div className="">{customer.state}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">City / LGA</div>
+                        <div className="">
+                          {customer.city}, {customer.lga}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Feeder</div>
+                        <div className="">{customer.feederName}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Substation</div>
+                        <div className="">{customer.distributionSubstationCode}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Service Center</div>
+                        <div className="">{customer.serviceCenterName}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Sales Rep</div>
+                        <div className="">{customer.salesRepName}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCustomerDetails((prev) => prev.filter((c) => c.id !== customer.id))}
+                      className="mt-3 text-xs text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
                   </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Outstanding</div>
-                  <div className="">{selectedCustomerDetails.outstanding}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">State</div>
-                  <div className="">{selectedCustomerDetails.state}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">City / LGA</div>
-                  <div className="">
-                    {selectedCustomerDetails.city}, {selectedCustomerDetails.lga}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Feeder</div>
-                  <div className="">{selectedCustomerDetails.feederName}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Substation</div>
-                  <div className="">{selectedCustomerDetails.distributionSubstationCode}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Service Center</div>
-                  <div className="">{selectedCustomerDetails.serviceCenterName}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Sales Rep</div>
-                  <div className="">{selectedCustomerDetails.salesRepName}</div>
-                </div>
+                ))}
               </div>
             </div>
           </motion.div>
         </motion.div>
       )}
-      {selectedAssetDetails && (
+      {selectedAssetDetails.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[60] flex justify-end bg-black/30 backdrop-blur-sm xl:z-[1100]"
-          onClick={() => setSelectedAssetDetails(null)}
+          onClick={() => setSelectedAssetDetails([])}
         >
           <motion.div
             initial={{ x: 40, opacity: 0 }}
@@ -605,9 +624,9 @@ const MapViewTab = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b bg-[#F9F9F9] p-4">
-              <h2 className="text-base font-bold text-gray-900">Asset Details</h2>
+              <h2 className="text-base font-bold text-gray-900">Asset Details ({selectedAssetDetails.length})</h2>
               <button
-                onClick={() => setSelectedAssetDetails(null)}
+                onClick={() => setSelectedAssetDetails([])}
                 className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
               >
                 <CloseIcon />
@@ -615,30 +634,45 @@ const MapViewTab = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 text-xs">
-              <div className="mb-4 space-y-1">
-                <div className="text-sm font-semibold">{selectedAssetDetails.name}</div>
-                <div className="capitalize text-gray-500">
-                  {selectedAssetDetails.type.toLowerCase() === "substation" ? "Transformer" : selectedAssetDetails.type}
-                </div>
-              </div>
+              <div className="space-y-4">
+                {selectedAssetDetails.map((asset, index) => (
+                  <div
+                    key={asset.id}
+                    className={`border-b pb-4 ${index < selectedAssetDetails.length - 1 ? "mb-4" : ""}`}
+                  >
+                    <div className="mb-4 space-y-1">
+                      <div className="text-sm font-semibold">{asset.name}</div>
+                      <div className="capitalize text-gray-500">
+                        {asset.type.toLowerCase() === "substation" ? "Transformer" : asset.type}
+                      </div>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Feeder</div>
-                  <div className="">{selectedAssetDetails.feederName}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Area Office</div>
-                  <div className="">{selectedAssetDetails.areaOfficeName}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Latitude</div>
-                  <div className="">{selectedAssetDetails.latitude}</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Longitude</div>
-                  <div className="">{selectedAssetDetails.longitude}</div>
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Feeder</div>
+                        <div className="">{asset.feederName}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Area Office</div>
+                        <div className="">{asset.areaOfficeName}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Latitude</div>
+                        <div className="">{asset.latitude}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500">Longitude</div>
+                        <div className="">{asset.longitude}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedAssetDetails((prev) => prev.filter((a) => a.id !== asset.id))}
+                      className="mt-3 text-xs text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </motion.div>

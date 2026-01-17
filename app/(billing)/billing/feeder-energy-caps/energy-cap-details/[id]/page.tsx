@@ -328,7 +328,7 @@ const FeederEnergyCapDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4  xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 lg:px-6  2xl:px-16">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <motion.button
@@ -396,7 +396,7 @@ const FeederEnergyCapDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6  sm:py-8 xl:px-16">
+            <div className="flex w-full px-3 py-6 sm:py-8 md:px-4 lg:px-6 2xl:px-16">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Profile & Quick Stats */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[30%]">
@@ -414,7 +414,7 @@ const FeederEnergyCapDetailsPage = () => {
                       </div>
 
                       <h2 className="mb-2 text-lg font-bold text-gray-900 sm:text-xl">Feeder Energy Cap</h2>
-                      <p className="mb-4 text-sm text-gray-600 sm:text-base">ID: #{selectedFeederEnergyCap.id}</p>
+                      {/* <p className="mb-4 text-sm text-gray-600 sm:text-base">ID: #{selectedFeederEnergyCap.id}</p> */}
 
                       <div className="mb-6 flex flex-wrap justify-center gap-2">
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 sm:text-sm">

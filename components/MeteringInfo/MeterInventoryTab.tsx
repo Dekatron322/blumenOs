@@ -737,6 +737,15 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
   const { meters, error, pagination, loading } = useAppSelector((state) => state.meters)
   const { serviceStations } = useAppSelector((state) => state.serviceStations)
   const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Update permission for meter editing
+  const canEditMeter = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "meters" && p.actions?.includes("U")) ||
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("U")) ||
+      (p.key === "new-service-new-capture-separation" && p.actions?.includes("U"))
+  )
 
   // Meter status options
   const meterStatusOptions = [
@@ -1427,13 +1436,15 @@ const MeterInventoryTable: React.FC<MeterInventoryTableProps> = ({ pageSize: pro
                                       </div>
 
                                       <div className="mt-6 flex justify-end gap-3">
-                                        <ButtonModule
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => handleEditMeter(selectedMeter)}
-                                        >
-                                          Edit Meter
-                                        </ButtonModule>
+                                        {canEditMeter && (
+                                          <ButtonModule
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleEditMeter(selectedMeter)}
+                                          >
+                                            Edit Meter
+                                          </ButtonModule>
+                                        )}
                                         <ButtonModule size="sm" onClick={() => handleViewHistory(selectedMeter)}>
                                           View History
                                         </ButtonModule>

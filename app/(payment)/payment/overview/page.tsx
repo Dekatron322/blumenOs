@@ -857,23 +857,7 @@ export default function BillingDashboard() {
                 </div>
                 <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
                   {activeTab === "collections" ? (
-                    <ButtonModule
-                      variant="primary"
-                      size="md"
-                      className="flex sm:flex-none"
-                      icon={<PdfFileIcon />}
-                      onClick={handleRefreshData}
-                      disabled={showLoading}
-                    >
-                      {showLoading ? (
-                        "Refreshing..."
-                      ) : (
-                        <>
-                          <span className="hidden sm:inline">Export Report</span>
-                          <span className="sm:hidden">Export</span>
-                        </>
-                      )}
-                    </ButtonModule>
+                    <></>
                   ) : (
                     <>
                       <ButtonModule

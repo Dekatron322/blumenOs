@@ -353,6 +353,11 @@ export default function VendorManagementDashboard() {
   const { vendorSummaryData, vendorSummaryLoading, vendorSummaryError, vendorSummarySuccess } = useAppSelector(
     (state) => state.analytics
   )
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canAddVendor = !!user?.privileges?.some(
+    (p) => (p.key === "vendor-management" || p.key === "vendors") && p.actions?.includes("W")
+  )
 
   // Calculate derived metrics from vendor data
   const calculateDerivedMetrics = () => {
@@ -442,16 +447,18 @@ export default function VendorManagementDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  icon={<PlusIcon />}
-                  onClick={() => setIsAddVendorModalOpen(true)}
-                >
-                  <span className="hidden sm:inline">Add New Vendor</span>
-                  <span className="sm:hidden">Add Vendor</span>
-                </ButtonModule>
+                {canAddVendor && (
+                  <ButtonModule
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    icon={<PlusIcon />}
+                    onClick={() => setIsAddVendorModalOpen(true)}
+                  >
+                    <span className="hidden sm:inline">Add New Vendor</span>
+                    <span className="sm:hidden">Add Vendor</span>
+                  </ButtonModule>
+                )}
               </motion.div>
 
               {/* Auto-refresh controls */}

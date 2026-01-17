@@ -521,6 +521,14 @@ export default function BillingDashboard() {
     postpaidBillingAnalyticsError,
     postpaidBillingAnalyticsParams,
   } = useAppSelector((state) => state.analytics)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for postpaid billing
+  const canPublishBills = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "billing-postpaid" && p.actions?.includes("W")) ||
+      (p.key === "billing-billing-proper" && p.actions?.includes("W"))
+  )
 
   // Fetch postpaid billing analytics on component mount and when period changes
   useEffect(() => {
@@ -637,17 +645,19 @@ export default function BillingDashboard() {
               >
                 <div className="flex items-center gap-3">
                   <PeriodSelector currentPeriod={selectedPeriod} onPeriodChange={handlePeriodChange} />
-                  <ButtonModule
-                    variant="primary"
-                    size="md"
-                    className="flex sm:flex-none"
-                    icon={<FiSend />}
-                    onClick={handleStartBillingRun}
-                    disabled={postpaidBillingAnalyticsLoading}
-                  >
-                    <span className="hidden sm:inline">Publish Postpaid Bills</span>
-                    <span className="sm:hidden">Publish</span>
-                  </ButtonModule>
+                  {canPublishBills && (
+                    <ButtonModule
+                      variant="primary"
+                      size="md"
+                      className="flex sm:flex-none"
+                      icon={<FiSend />}
+                      onClick={handleStartBillingRun}
+                      disabled={postpaidBillingAnalyticsLoading}
+                    >
+                      <span className="hidden sm:inline">Publish Postpaid Bills</span>
+                      <span className="sm:hidden">Publish</span>
+                    </ButtonModule>
+                  )}
                   {/* Polling Controls */}
                   <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                     <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>

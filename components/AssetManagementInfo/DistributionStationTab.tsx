@@ -25,6 +25,7 @@ interface ActionDropdownProps {
   substation: DistributionSubstation
   onViewDetails: (substation: DistributionSubstation) => void
   onUpdateStatus: (substation: DistributionSubstation) => void
+  canUpdateDistributionStation: boolean
 }
 
 interface SortOption {
@@ -33,7 +34,12 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetails, onUpdateStatus }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({
+  substation,
+  onViewDetails,
+  onUpdateStatus,
+  canUpdateDistributionStation,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -130,25 +136,17 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ substation, onViewDetai
               >
                 View Details
               </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  console.log("Monitor performance for:", substation.id)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Monitor Performance
-              </motion.button>
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleUpdateStatusClick}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Status
-              </motion.button>
+
+              {canUpdateDistributionStation && (
+                <motion.button
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={handleUpdateStatusClick}
+                  whileHover={{ backgroundColor: "#f3f4f6" }}
+                  transition={{ duration: 0.1 }}
+                >
+                  Update Status
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
@@ -223,6 +221,13 @@ const DistributionStationTab: React.FC = () => {
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { injectionSubstations } = useAppSelector((state) => state.injectionSubstations)
   const { feeders } = useAppSelector((state) => state.feeders)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canUpdateDistributionStation = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "assets-management" || p.key === "assets" || p.key === "distribution-stations") &&
+      p.actions?.includes("U")
+  )
 
   const [searchInput, setSearchInput] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -922,6 +927,7 @@ const DistributionStationTab: React.FC = () => {
                                 substation={substation}
                                 onViewDetails={handleViewDetails}
                                 onUpdateStatus={handleUpdateStatus}
+                                canUpdateDistributionStation={canUpdateDistributionStation}
                               />
                             </td>
                           </motion.tr>

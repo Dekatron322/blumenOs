@@ -23,6 +23,7 @@ interface ActionDropdownProps {
   station: ServiceStation
   onViewDetails: (station: ServiceStation) => void
   onUpdateServiceStation: (stationId: number) => void
+  canUpdateServiceStation: boolean
 }
 
 interface SortOption {
@@ -31,7 +32,12 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ station, onViewDetails, onUpdateServiceStation }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({
+  station,
+  onViewDetails,
+  onUpdateServiceStation,
+  canUpdateServiceStation,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -130,14 +136,16 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ station, onViewDetails,
                 View Details
               </motion.button>
 
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={handleUpdateServiceStation}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Service Station
-              </motion.button>
+              {canUpdateServiceStation && (
+                <motion.button
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={handleUpdateServiceStation}
+                  whileHover={{ backgroundColor: "#f3f4f6" }}
+                  transition={{ duration: 0.1 }}
+                >
+                  Update Service Station
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
@@ -208,6 +216,12 @@ const ServiceStationTab: React.FC = () => {
   const { serviceStations, loading, error, pagination } = useAppSelector((state) => state.serviceStations)
   const { companies } = useAppSelector((state) => state.companies)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canUpdateServiceStation = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "assets-management" || p.key === "assets" || p.key === "service-stations") && p.actions?.includes("U")
+  )
 
   const [searchInput, setSearchInput] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -882,6 +896,7 @@ const ServiceStationTab: React.FC = () => {
                                 station={station}
                                 onViewDetails={handleViewServiceStationDetails}
                                 onUpdateServiceStation={handleUpdateServiceStation}
+                                canUpdateServiceStation={canUpdateServiceStation}
                               />
                             </td>
                           </motion.tr>
