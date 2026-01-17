@@ -15,6 +15,8 @@ import { customerLookup, getToken, vend, VendToken } from "lib/redux/customersDa
 import { useSearchParams } from "next/navigation"
 
 function BuyUnitContent() {
+  console.log("BuyUnitContent component mounting/initializing")
+
   // Redux hooks
   const dispatch = useAppDispatch()
   const searchParams = useSearchParams()
@@ -60,7 +62,15 @@ function BuyUnitContent() {
   const [showTokensModal, setShowTokensModal] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<string | undefined>(undefined)
   const [shouldPoll, setShouldPoll] = useState(false)
-  const [manuallyClosed, setManuallyClosed] = useState(false)
+  const [manuallyClosed, setManuallyClosed] = useState(() => {
+    // Check localStorage on initial mount to see if user manually closed modal
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("cardPaymentModalManuallyClosed")
+      return stored === "true"
+    }
+    return false
+  })
+  const [vendData, setVendData] = useState<any>(null)
 
   // Refs for polling control
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -72,7 +82,12 @@ function BuyUnitContent() {
   const customerDRN = customer?.meters?.[0]?.drn || ""
   const customerType = customer?.isMeteredPostpaid ? "postpaid" : "prepaid"
 
-  // Clean up polling on unmount
+  // Persist manuallyClosed state to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("cardPaymentModalManuallyClosed", manuallyClosed.toString())
+    }
+  }, [manuallyClosed])
   useEffect(() => {
     return () => {
       stopTokenPolling()
@@ -127,8 +142,10 @@ function BuyUnitContent() {
 
   // Handle return from card payment checkout using sessionStorage
   useEffect(() => {
+    console.log("SessionStorage effect running")
     if (typeof window !== "undefined") {
       const callbackData = sessionStorage.getItem("paymentCallback")
+      console.log("SessionStorage callbackData:", callbackData)
 
       if (callbackData) {
         try {
@@ -171,6 +188,14 @@ function BuyUnitContent() {
   // Handle URL parameters as fallback (for payment gateway redirects)
   useEffect(() => {
     const reference = searchParams.get("reference") || searchParams.get("trxref")
+    console.log(
+      "URL parameters effect - reference:",
+      reference,
+      "isCardPaymentModalOpen:",
+      isCardPaymentModalOpen,
+      "manuallyClosed:",
+      manuallyClosed
+    )
 
     if (reference && !isCardPaymentModalOpen && !manuallyClosed) {
       setVendReference(reference)
@@ -187,11 +212,30 @@ function BuyUnitContent() {
     }
   }, [searchParams, isCardPaymentModalOpen, manuallyClosed])
 
+  // Handle page refresh scenario - detect when page is refreshed with payment parameters
+  useEffect(() => {
+    const reference = searchParams.get("reference") || searchParams.get("trxref")
+
+    // If we have URL parameters and it's a page refresh (not initial navigation),
+    // automatically close modal and clear URL
+    if (reference && isCardPaymentModalOpen) {
+      // Check if this is a page refresh by looking at navigation type
+      if (performance.getEntriesByType && performance.getEntriesByType("navigation").length > 0) {
+        const navigationEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
+        if (navigationEntry.type === "reload") {
+          console.log("Page refresh detected with payment modal open - auto-closing modal and clearing URL")
+          setIsCardPaymentModalOpen(false)
+          setManuallyClosed(true)
+          window.history.replaceState({}, "", "/customer-portal/buy-unit")
+        }
+      }
+    }
+  }, [searchParams, isCardPaymentModalOpen])
+
   // Handle customer lookup response
   useEffect(() => {
     if (customerLookupSuccess && customerLookupData) {
       setIsValidatingMeter(false)
-      setMeterValidationError(null)
 
       const firstMeter = customerLookupData.meters?.[0]
       const meterDRN = firstMeter?.drn
@@ -283,13 +327,14 @@ function BuyUnitContent() {
       setIsSubmittingPayment(false)
       setVendReference(vendResponseData.reference)
       setPaymentStatus(vendResponseData.status)
+      setVendData(vendResponseData)
 
       notify("success", "Vend initiated successfully", {
         description: `Reference: ${vendResponseData.reference}`,
         duration: 3000,
       })
 
-      if (vendResponseData.channel === "Card" && vendResponseData.checkoutUrl) {
+      if (vendResponseData.channel === "Card" && vendResponseData.paymentDetails?.checkoutUrl) {
         setIsCardPaymentModalOpen(true)
 
         if (isInitiatingNewCardPayment) {
@@ -304,7 +349,7 @@ function BuyUnitContent() {
             )
           }
 
-          window.open(vendResponseData.checkoutUrl, "_self")
+          window.open(vendResponseData.paymentDetails.checkoutUrl, "_self")
           setIsInitiatingNewCardPayment(false)
 
           notify("info", "Redirecting to checkout", {
@@ -317,7 +362,7 @@ function BuyUnitContent() {
           // This is for returning from payment - start polling
           setShouldPoll(true)
         }
-      } else if (vendResponseData.virtualAccount) {
+      } else if (vendResponseData.paymentDetails?.virtualAccount) {
         setIsVirtualAccountModalOpen(true)
         setShouldPoll(true)
       }
@@ -338,9 +383,17 @@ function BuyUnitContent() {
       console.log("Get token response data:", getTokenResponseData)
 
       if (getTokenResponseData.status === "Paid" || getTokenResponseData.status === "Confirmed") {
-        const tokenData = getTokenResponseData.tokens || []
+        // Handle token data - it could be an array or a single object
+        let tokenData: VendToken[] = []
+        if (getTokenResponseData.tokens && Array.isArray(getTokenResponseData.tokens)) {
+          tokenData = getTokenResponseData.tokens
+        } else if (getTokenResponseData.token) {
+          // Single token object
+          tokenData = [getTokenResponseData.token]
+        }
         setTokens(tokenData)
         setPaymentStatus(getTokenResponseData.status)
+        setVendData(getTokenResponseData) // Update vendData with complete payment information
 
         // Determine if this is prepaid or postpaid
         const isPrepaid = vendType === "self" ? customerType === "prepaid" : meterType === "prepaid"
@@ -411,9 +464,17 @@ function BuyUnitContent() {
         const result = await dispatch(getToken({ reference: vendReference })).unwrap()
 
         if (result?.data?.status === "Paid" || result?.data?.status === "Confirmed") {
-          const tokenData = result?.data?.tokens || []
+          // Handle token data - it could be an array or a single object
+          let tokenData: VendToken[] = []
+          if (result?.data?.tokens && Array.isArray(result?.data?.tokens)) {
+            tokenData = result?.data?.tokens
+          } else if (result?.data?.token) {
+            // Single token object
+            tokenData = [result?.data?.token]
+          }
           setTokens(tokenData)
           setPaymentStatus(result?.data?.status)
+          setVendData(result?.data) // Update vendData with complete payment information
 
           // Determine if this is prepaid or postpaid
           const isPrepaid = vendType === "self" ? customerType === "prepaid" : meterType === "prepaid"
@@ -635,6 +696,9 @@ function BuyUnitContent() {
 
     setIsSubmittingPayment(true)
 
+    // Clear manuallyClosed state when starting new payment
+    setManuallyClosed(false)
+
     if (paymentChannel === "Card") {
       setIsInitiatingNewCardPayment(true)
     }
@@ -676,16 +740,16 @@ function BuyUnitContent() {
     setMeterType("prepaid")
     setMeterInfo(null)
     setMeterValidationError(null)
+    setSelectedMeter(null)
     setAmountInput("")
     setPaymentChannel("BankTransfer")
-    setVendReference(null)
-    setTokens([])
-    setPaymentStatus(undefined)
+    setIsVirtualAccountModalOpen(false)
     setIsCardPaymentModalOpen(false)
     setIsInitiatingNewCardPayment(false)
     setShouldPoll(false)
+    setVendData(null)
     hasTokensRef.current = false
-    setManuallyClosed(false)
+    setManuallyClosed(false) // This will also clear localStorage via useEffect
   }
 
   const copyToClipboard = (text: string) => {
@@ -1254,7 +1318,7 @@ function BuyUnitContent() {
       <BankTransferDetailsModal
         isOpen={isVirtualAccountModalOpen}
         onRequestClose={() => setIsVirtualAccountModalOpen(false)}
-        virtualAccount={vendResponseData?.virtualAccount}
+        virtualAccount={vendResponseData?.paymentDetails?.virtualAccount}
         vendReference={vendResponseData?.reference}
         onIHavePaid={handleGetToken}
         isCheckingToken={isCheckingToken}
@@ -1262,6 +1326,8 @@ function BuyUnitContent() {
         maxPollingAttempts={maxPollingAttempts}
         paymentStatus={paymentStatus}
         meterType={vendType === "self" ? customerType : meterType}
+        tokens={tokens}
+        vendData={vendData}
       />
 
       <CardPaymentModal
@@ -1269,16 +1335,21 @@ function BuyUnitContent() {
         onRequestClose={() => {
           setIsCardPaymentModalOpen(false)
           setManuallyClosed(true)
-          // Clear URL parameters to prevent modal from reopening
-          window.history.replaceState({}, "", "/customer-portal/buy-unit")
+          // Only clear URL parameters if payment is confirmed and user has seen tokens
+          if (
+            (paymentStatus === "Paid" || paymentStatus === "Confirmed") &&
+            ((vendType === "self" ? customerType === "prepaid" : meterType === "prepaid") ? tokens.length > 0 : true)
+          ) {
+            // Clear URL parameters to prevent modal from reopening
+            window.history.replaceState({}, "", "/customer-portal/buy-unit")
+          }
         }}
         vendReference={vendReference}
         onPaymentConfirmed={(tokens) => {
           setShowTokensModal(true)
           setIsCardPaymentModalOpen(false)
           setManuallyClosed(true)
-          // Clear URL parameters to prevent modal from reopening
-          window.history.replaceState({}, "", "/customer-portal/buy-unit")
+          // Don't clear URL parameters here - let the user close the modal manually
         }}
         isCheckingToken={isCheckingToken}
         pollingAttempts={pollingAttempts}
@@ -1286,6 +1357,7 @@ function BuyUnitContent() {
         paymentStatus={paymentStatus}
         tokens={tokens}
         meterType={vendType === "self" ? customerType : meterType}
+        vendData={vendData}
       />
     </section>
   )
