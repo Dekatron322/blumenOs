@@ -560,6 +560,11 @@ const OutagesTab: React.FC = () => {
     hasNext,
     hasPrevious,
   } = useAppSelector((state) => state.outages)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canReportOutage = !!user?.privileges?.some(
+    (p) => (p.key === "outage-management" || p.key === "outages") && p.actions?.includes("W")
+  )
 
   const [searchText, setSearchText] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -871,21 +876,23 @@ const OutagesTab: React.FC = () => {
                 {showDesktopFilters ? "Hide filters" : "Show filters"}
               </button>
 
-              <div className="w-full sm:w-64 md:w-80">
+              <div className="w-80 max-w-[350px]">
                 <SearchModule
                   placeholder="Search outages..."
                   value={searchText}
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
-                  className="w-full"
+                  className="w-80 max-w-[310px]"
                 />
               </div>
-              <button
-                className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
-                onClick={() => router.push("/outage-management/report-outage")}
-              >
-                Report Outage
-              </button>
+              {canReportOutage && (
+                <button
+                  className="w-full rounded-md bg-[#004B23] px-4 py-2 text-white hover:bg-[#000000] sm:w-auto"
+                  onClick={() => router.push("/outage-management/report-outage")}
+                >
+                  Report Outage
+                </button>
+              )}
             </div>
           </motion.div>
 

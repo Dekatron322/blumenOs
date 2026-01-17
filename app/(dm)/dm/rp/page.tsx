@@ -586,6 +586,7 @@ const RecoveryPolicies = ({
   pauseRecoveryPolicyLoading,
   onResumePolicy,
   resumeRecoveryPolicyLoading,
+  canManageRecoveryPolicy,
 }: {
   recoveryPolicies: RecoveryPolicy[]
   recoveryPoliciesLoading: boolean
@@ -604,6 +605,7 @@ const RecoveryPolicies = ({
   pauseRecoveryPolicyLoading: boolean
   onResumePolicy: (policy: RecoveryPolicy) => void
   resumeRecoveryPolicyLoading: boolean
+  canManageRecoveryPolicy: boolean
 }) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -831,28 +833,32 @@ const RecoveryPolicies = ({
                   </p>
                   <p className="text-xs text-gray-500">Recovery Value</p>
                   <div className="mt-3 flex gap-2  pt-3">
-                    {policy.isPaused ? (
-                      <ButtonModule
-                        size="sm"
-                        variant="success"
-                        icon={<VscDebugStart />}
-                        onClick={() => onResumePolicy(policy)}
-                        disabled={resumeRecoveryPolicyLoading}
-                        className="flex items-center  rounded-md border   text-sm font-medium  transition-colors  disabled:cursor-not-allowed "
-                      >
-                        Resume Policy
-                      </ButtonModule>
-                    ) : (
-                      <ButtonModule
-                        size="sm"
-                        variant="danger"
-                        icon={<VscDebugPause />}
-                        onClick={() => onPausePolicy(policy)}
-                        disabled={pauseRecoveryPolicyLoading}
-                        className="flex items-center  rounded-md border   text-sm font-medium  transition-colors  disabled:cursor-not-allowed "
-                      >
-                        Pause Policy
-                      </ButtonModule>
+                    {canManageRecoveryPolicy && (
+                      <>
+                        {policy.isPaused ? (
+                          <ButtonModule
+                            size="sm"
+                            variant="success"
+                            icon={<VscDebugStart />}
+                            onClick={() => onResumePolicy(policy)}
+                            disabled={resumeRecoveryPolicyLoading}
+                            className="flex items-center  rounded-md border   text-sm font-medium  transition-colors  disabled:cursor-not-allowed "
+                          >
+                            Resume Policy
+                          </ButtonModule>
+                        ) : (
+                          <ButtonModule
+                            size="sm"
+                            variant="danger"
+                            icon={<VscDebugPause />}
+                            onClick={() => onPausePolicy(policy)}
+                            disabled={pauseRecoveryPolicyLoading}
+                            className="flex items-center  rounded-md border   text-sm font-medium  transition-colors  disabled:cursor-not-allowed "
+                          >
+                            Pause Policy
+                          </ButtonModule>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -1024,6 +1030,23 @@ export default function DebtAgingDashboard() {
   const recoveryPoliciesPagination = useAppSelector(selectRecoveryPoliciesPagination)
   const pauseRecoveryPolicyLoading = useAppSelector(selectPauseRecoveryPolicyLoading)
   const resumeRecoveryPolicyLoading = useAppSelector(selectResumeRecoveryPolicyLoading)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for recovery policy management
+  const canAddRecoveryPolicy = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "debt-management" && p.actions?.includes("W")) ||
+      (p.key === "finance-bill-payments-and-vending" && p.actions?.includes("W")) ||
+      (p.key === "customers" && p.actions?.includes("W"))
+  )
+
+  // Check if user has Update permission for recovery policy management
+  const canManageRecoveryPolicy = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "debt-management" && p.actions?.includes("U")) ||
+      (p.key === "finance-bill-payments-and-vending" && p.actions?.includes("U")) ||
+      (p.key === "customers" && p.actions?.includes("U"))
+  )
 
   // Pause modal state
   const [pauseModalOpen, setPauseModalOpen] = useState(false)
@@ -1317,9 +1340,16 @@ export default function DebtAgingDashboard() {
               >
                 <div className="flex items-center gap-3">
                   {/* Polling Controls */}
-                  <ButtonModule variant="primary" size="md" icon={<VscAdd />} onClick={() => router.push("/dm/rp/add")}>
-                    Add Recovery Policy
-                  </ButtonModule>
+                  {canAddRecoveryPolicy && (
+                    <ButtonModule
+                      variant="primary"
+                      size="md"
+                      icon={<VscAdd />}
+                      onClick={() => router.push("/dm/rp/add")}
+                    >
+                      Add Recovery Policy
+                    </ButtonModule>
+                  )}
                   <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                     <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
                     <button
@@ -1429,6 +1459,7 @@ export default function DebtAgingDashboard() {
                       pauseRecoveryPolicyLoading={false}
                       onResumePolicy={() => {}}
                       resumeRecoveryPolicyLoading={false}
+                      canManageRecoveryPolicy={canManageRecoveryPolicy}
                     />
                   </motion.div>
                 </>
@@ -1467,6 +1498,7 @@ export default function DebtAgingDashboard() {
                       pauseRecoveryPolicyLoading={pauseRecoveryPolicyLoading}
                       onResumePolicy={handleResumePolicy}
                       resumeRecoveryPolicyLoading={resumeRecoveryPolicyLoading}
+                      canManageRecoveryPolicy={canManageRecoveryPolicy}
                     />
                   </motion.div>
                 </>

@@ -878,6 +878,13 @@ const BillDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
+  // Check if user has Write permission for postpaid billing
+  const canPublishBills = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "billing-postpaid" && p.actions?.includes("W")) ||
+      (p.key === "billing-billing-proper" && p.actions?.includes("W"))
+  )
+
   const [activeModal, setActiveModal] = useState<"edit" | "changeRequest" | "finalize" | null>(null)
   const [isExporting, setIsExporting] = useState(false)
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
@@ -1097,7 +1104,7 @@ const BillDetailsPage = () => {
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col 2xl:container">
             <div className="sticky top-16 z-40 border-b border-gray-200 bg-white">
-              <div className="mx-auto w-full px-3 py-4 xl:px-16">
+              <div className="mx-auto w-full px-3 py-4 sm:px-4 lg:px-6 2xl:px-16">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <motion.button
@@ -1142,7 +1149,7 @@ const BillDetailsPage = () => {
                       <span className="max-sm:hidden">View Invoice</span>
                       <span className="sm:hidden">Invoice</span>
                     </ButtonModule>
-                    {currentBill && currentBill.status !== 1 && (
+                    {currentBill && currentBill.status !== 1 && canPublishBills && (
                       <ButtonModule
                         variant="primary"
                         size="sm"
@@ -1185,7 +1192,7 @@ const BillDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex w-full px-3 py-6  sm:py-8 xl:px-16">
+            <div className="flex w-full px-3 py-6  sm:px-4 sm:py-8 lg:px-6 2xl:px-16">
               <div className="flex w-full flex-col gap-6 xl:flex-row">
                 {/* Left Column - Customer & Quick Info */}
                 <div className="flex w-full flex-col space-y-6 xl:w-[30%]">

@@ -335,25 +335,29 @@ const RoleDetailsPage = () => {
     }
   }
 
+  // Permission mapping constants
+  const PERMISSIONS = {
+    READ: 1,
+    WRITE: 2,
+    UPDATE: 4,
+    EXECUTE: 8,
+  }
+
   const getActionLabel = (action: number): string => {
     const actions = []
-    if (action & 1) actions.push("C") // Create
-    if (action & 2) actions.push("R") // Read
-    if (action & 4) actions.push("U") // Update
-    if (action & 8) actions.push("D") // Delete
-    if (action & 16) actions.push("A") // Approve
-    if (action & 32) actions.push("V") // View All
+    if (action & PERMISSIONS.READ) actions.push("R") // Read
+    if (action & PERMISSIONS.WRITE) actions.push("W") // Write
+    if (action & PERMISSIONS.UPDATE) actions.push("U") // Update
+    if (action & PERMISSIONS.EXECUTE) actions.push("E") // Execute
     return actions.join(", ")
   }
 
   const getAvailableActionsLabel = (action: number): string => {
     const actions = []
-    if (action & 1) actions.push("Create")
-    if (action & 2) actions.push("Read")
-    if (action & 4) actions.push("Update")
-    if (action & 8) actions.push("Delete")
-    if (action & 16) actions.push("Approve")
-    if (action & 32) actions.push("View All")
+    if (action & PERMISSIONS.READ) actions.push("Read")
+    if (action & PERMISSIONS.WRITE) actions.push("Write")
+    if (action & PERMISSIONS.UPDATE) actions.push("Update")
+    if (action & PERMISSIONS.EXECUTE) actions.push("Execute")
     return actions.join(", ")
   }
 
@@ -461,11 +465,11 @@ const RoleDetailsPage = () => {
         const categories = Array.from(new Set(currentRole.privileges.map((p) => p.privilegeCategory)))
         const totalActions = currentRole.privileges.reduce((sum, p) => {
           let actionCount = 0
-          // Only count core CRUD actions in metrics (C, R, U, D)
-          if (p.actions & 1) actionCount++ // C
-          if (p.actions & 2) actionCount++ // R
-          if (p.actions & 4) actionCount++ // U
-          if (p.actions & 8) actionCount++ // D
+          // Count actions using new permission mapping
+          if (p.actions & PERMISSIONS.READ) actionCount++ // Read
+          if (p.actions & PERMISSIONS.WRITE) actionCount++ // Write
+          if (p.actions & PERMISSIONS.UPDATE) actionCount++ // Update
+          if (p.actions & PERMISSIONS.EXECUTE) actionCount++ // Execute
           return sum + actionCount
         }, 0)
 
@@ -1068,12 +1072,10 @@ const RoleDetailsPage = () => {
                               <div className="text-3xl font-bold text-purple-900">
                                 {currentRole.privileges.reduce((sum, p) => {
                                   let actionCount = 0
-                                  if (p.actions & 1) actionCount++ // C
-                                  if (p.actions & 2) actionCount++ // R
-                                  if (p.actions & 4) actionCount++ // U
-                                  if (p.actions & 8) actionCount++ // D
-                                  if (p.actions & 16) actionCount++ // A
-                                  if (p.actions & 32) actionCount++ // V
+                                  if (p.actions & PERMISSIONS.READ) actionCount++ // Read
+                                  if (p.actions & PERMISSIONS.WRITE) actionCount++ // Write
+                                  if (p.actions & PERMISSIONS.UPDATE) actionCount++ // Update
+                                  if (p.actions & PERMISSIONS.EXECUTE) actionCount++ // Execute
                                   return sum + actionCount
                                 }, 0)}
                               </div>
@@ -1127,16 +1129,16 @@ const RoleDetailsPage = () => {
                                     Category
                                   </th>
                                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    C
+                                    R
                                   </th>
                                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    R
+                                    W
                                   </th>
                                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                     U
                                   </th>
                                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    D
+                                    E
                                   </th>
                                   {/* <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                     A
@@ -1157,7 +1159,7 @@ const RoleDetailsPage = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                       <div className="flex justify-center">
-                                        {privilege.actions & 1 ? (
+                                        {privilege.actions & PERMISSIONS.READ ? (
                                           <CheckCircle className="size-5 text-green-500" />
                                         ) : (
                                           <XCircle className="size-5 text-gray-300" />
@@ -1166,7 +1168,7 @@ const RoleDetailsPage = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                       <div className="flex justify-center">
-                                        {privilege.actions & 2 ? (
+                                        {privilege.actions & PERMISSIONS.WRITE ? (
                                           <CheckCircle className="size-5 text-green-500" />
                                         ) : (
                                           <XCircle className="size-5 text-gray-300" />
@@ -1175,7 +1177,7 @@ const RoleDetailsPage = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                       <div className="flex justify-center">
-                                        {privilege.actions & 4 ? (
+                                        {privilege.actions & PERMISSIONS.UPDATE ? (
                                           <CheckCircle className="size-5 text-green-500" />
                                         ) : (
                                           <XCircle className="size-5 text-gray-300" />
@@ -1184,7 +1186,7 @@ const RoleDetailsPage = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                       <div className="flex justify-center">
-                                        {privilege.actions & 8 ? (
+                                        {privilege.actions & PERMISSIONS.EXECUTE ? (
                                           <CheckCircle className="size-5 text-green-500" />
                                         ) : (
                                           <XCircle className="size-5 text-gray-300" />
@@ -1219,16 +1221,16 @@ const RoleDetailsPage = () => {
                             <h4 className="mb-2 text-sm font-medium text-gray-700">Legend:</h4>
                             <div className="flex flex-wrap gap-4 text-xs text-gray-600">
                               <div className="flex items-center gap-1">
-                                <span className="font-medium">C:</span> Create
+                                <span className="font-medium">R:</span> Read
                               </div>
                               <div className="flex items-center gap-1">
-                                <span className="font-medium">R:</span> Read
+                                <span className="font-medium">W:</span> Write
                               </div>
                               <div className="flex items-center gap-1">
                                 <span className="font-medium">U:</span> Update
                               </div>
                               <div className="flex items-center gap-1">
-                                <span className="font-medium">D:</span> Delete
+                                <span className="font-medium">E:</span> Execute
                               </div>
                             </div>
                           </div>

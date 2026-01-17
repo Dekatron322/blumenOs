@@ -17,6 +17,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 interface ActionDropdownProps {
   feeder: Feeder
   onViewDetails: (feeder: Feeder) => void
+  canUpdateFeeder: boolean
 }
 
 interface SortOption {
@@ -25,7 +26,7 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }) => {
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails, canUpdateFeeder }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState<"bottom" | "top">("bottom")
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -118,17 +119,19 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ feeder, onViewDetails }
                 View Details
               </motion.button>
 
-              <motion.button
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  router.push(`/assets-management/feeders/update-feeder/${feeder.id}`)
-                  setIsOpen(false)
-                }}
-                whileHover={{ backgroundColor: "#f3f4f6" }}
-                transition={{ duration: 0.1 }}
-              >
-                Update Feeder
-              </motion.button>
+              {canUpdateFeeder && (
+                <motion.button
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => {
+                    router.push(`/assets-management/feeders/update-feeder/${feeder.id}`)
+                    setIsOpen(false)
+                  }}
+                  whileHover={{ backgroundColor: "#f3f4f6" }}
+                  transition={{ duration: 0.1 }}
+                >
+                  Update Feeder
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
@@ -200,6 +203,11 @@ const FeedersTab: React.FC = () => {
   const { companies } = useAppSelector((state) => state.companies)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { injectionSubstations } = useAppSelector((state) => state.injectionSubstations)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canUpdateFeeder = !!user?.privileges?.some(
+    (p) => (p.key === "assets-management" || p.key === "assets" || p.key === "feeders") && p.actions?.includes("U")
+  )
 
   const [searchInput, setSearchInput] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -845,7 +853,11 @@ const FeedersTab: React.FC = () => {
                               })()}
                             </td>
                             <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                              <ActionDropdown feeder={feeder} onViewDetails={handleViewFeederDetails} />
+                              <ActionDropdown
+                                feeder={feeder}
+                                onViewDetails={handleViewFeederDetails}
+                                canUpdateFeeder={canUpdateFeeder}
+                              />
                             </td>
                           </motion.tr>
                         ))}

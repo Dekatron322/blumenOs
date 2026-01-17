@@ -337,6 +337,15 @@ export default function MeteringDashboard() {
 
   const dispatch = useAppDispatch()
   const { summary, summaryLoading, summaryError } = useAppSelector((state) => state.meters)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for meter installation
+  const canInstallMeter = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("W")) ||
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "new-service-new-capture-separation" && p.actions?.includes("W"))
+  )
 
   // Fetch meters summary on component mount
   useEffect(() => {
@@ -427,13 +436,15 @@ export default function MeteringDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <button
-                  onClick={() => router.push("/metering/install-new-meter")}
-                  className="flex items-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#000000]"
-                >
-                  <PlusIcon />
-                  Install Meter
-                </button>
+                {canInstallMeter && (
+                  <button
+                    onClick={() => router.push("/metering/install-new-meter")}
+                    className="flex items-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-white focus-within:ring-2 focus-within:ring-[#004B23] focus-within:ring-offset-2 hover:border-[#004B23] hover:bg-[#000000]"
+                  >
+                    <PlusIcon />
+                    Install Meter
+                  </button>
+                )}
                 {/* Auto-refresh controls */}
                 <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                   <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>

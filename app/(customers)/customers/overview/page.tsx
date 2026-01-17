@@ -467,6 +467,10 @@ export default function AllTransactions() {
   const dispatch = useAppDispatch()
   const { customerAnalyticsData, customerAnalyticsLoading, customerAnalyticsError, customerAnalyticsSuccess } =
     useAppSelector((state) => state.analytics)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for customers
+  const canAddCustomer = !!user?.privileges?.some((p) => p.key === "customers" && p.actions?.includes("W"))
 
   // Fetch customer analytics on component mount
   useEffect(() => {
@@ -540,15 +544,17 @@ export default function AllTransactions() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  onClick={handleOpenAddCustomerModal}
-                  icon={<VscAdd />}
-                  iconPosition="start"
-                >
-                  Add Customer
-                </ButtonModule>
+                {canAddCustomer && (
+                  <ButtonModule
+                    variant="primary"
+                    size="md"
+                    onClick={handleOpenAddCustomerModal}
+                    icon={<VscAdd />}
+                    iconPosition="start"
+                  >
+                    Add Customer
+                  </ButtonModule>
+                )}
                 {/* Polling Controls */}
                 <div className="flex items-center gap-2 rounded-md border-r bg-white p-2 pr-3">
                   <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>

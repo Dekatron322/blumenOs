@@ -154,6 +154,7 @@ const AgentDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
 
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
+  const canExecute = !!user?.privileges?.some((p) => p.actions?.includes("E"))
 
   const [isExporting, setIsExporting] = useState(false)
   const [activeAction, setActiveAction] = useState<"edit" | "deactivate" | "activate" | "resetPassword" | null>(null)
@@ -617,29 +618,31 @@ const AgentDetailsPage = () => {
                       </ButtonModule>
                     )}
 
-                    <ButtonModule
-                      variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}
-                      size="md"
-                      className="flex items-center gap-2 text-xs sm:text-sm"
-                      onClick={handleToggleActivation}
-                      disabled={activeAction === "deactivate" || activeAction === "activate"}
-                    >
-                      {currentAgent.status === "ACTIVE" ? (
-                        <>
-                          <StopCircle className="size-3 sm:size-4" />
-                          <span className="whitespace-nowrap">
-                            {activeAction === "deactivate" ? "Deactivating..." : "Deactivate"}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="size-3 sm:size-4" />
-                          <span className="whitespace-nowrap">
-                            {activeAction === "activate" ? "Activating..." : "Activate"}
-                          </span>
-                        </>
-                      )}
-                    </ButtonModule>
+                    {/* {canExecute && (
+                      <ButtonModule
+                        variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}
+                        size="md"
+                        className="flex items-center gap-2 text-xs sm:text-sm"
+                        onClick={handleToggleActivation}
+                        disabled={activeAction === "deactivate" || activeAction === "activate"}
+                      >
+                        {currentAgent.status === "ACTIVE" ? (
+                          <>
+                            <StopCircle className="size-3 sm:size-4" />
+                            <span className="whitespace-nowrap">
+                              {activeAction === "deactivate" ? "Deactivating..." : "Deactivate"}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="size-3 sm:size-4" />
+                            <span className="whitespace-nowrap">
+                              {activeAction === "activate" ? "Activating..." : "Activate"}
+                            </span>
+                          </>
+                        )}
+                      </ButtonModule>
+                    )} */}
                   </div>
                 </div>
               </div>
@@ -727,44 +730,50 @@ const AgentDetailsPage = () => {
                       Quick Actions
                     </h3>
                     <div className="flex flex-col gap-4 lg:flex-row xl:flex-col">
-                      <ButtonModule
-                        variant="primary"
-                        className="w-full justify-start gap-3"
-                        onClick={handleEditAgent}
-                        disabled={activeAction === "edit"}
-                      >
-                        <Edit3 className="size-4" />
-                        {activeAction === "edit" ? "Editing..." : "Edit Profile"}
-                      </ButtonModule>
+                      {canUpdate && (
+                        <ButtonModule
+                          variant="primary"
+                          className="w-full justify-start gap-3"
+                          onClick={handleEditAgent}
+                          disabled={activeAction === "edit"}
+                        >
+                          <Edit3 className="size-4" />
+                          {activeAction === "edit" ? "Editing..." : "Edit Profile"}
+                        </ButtonModule>
+                      )}
 
-                      <ButtonModule
-                        variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}
-                        className="w-full justify-start gap-3"
-                        onClick={handleToggleActivation}
-                        disabled={activeAction === "deactivate" || activeAction === "activate"}
-                      >
-                        {currentAgent.status === "ACTIVE" ? (
-                          <>
-                            <StopCircle className="size-4" />
-                            {activeAction === "deactivate" ? "Deactivating..." : "Deactivate Agent"}
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="size-4" />
-                            {activeAction === "activate" ? "Activating..." : "Activate Agent"}
-                          </>
-                        )}
-                      </ButtonModule>
+                      {/* {canExecute && (
+                        <ButtonModule
+                          variant={currentAgent.status === "ACTIVE" ? "danger" : "success"}
+                          className="w-full justify-start gap-3"
+                          onClick={handleToggleActivation}
+                          disabled={activeAction === "deactivate" || activeAction === "activate"}
+                        >
+                          {currentAgent.status === "ACTIVE" ? (
+                            <>
+                              <StopCircle className="size-4" />
+                              {activeAction === "deactivate" ? "Deactivating..." : "Deactivate Agent"}
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="size-4" />
+                              {activeAction === "activate" ? "Activating..." : "Activate Agent"}
+                            </>
+                          )}
+                        </ButtonModule>
+                      )} */}
 
-                      <ButtonModule
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={handleResetPassword}
-                        disabled={activeAction === "resetPassword"}
-                      >
-                        <Shield className="size-4" />
-                        {activeAction === "resetPassword" ? "Resetting..." : "Reset Password"}
-                      </ButtonModule>
+                      {canUpdate && (
+                        <ButtonModule
+                          variant="secondary"
+                          className="w-full justify-start gap-3"
+                          onClick={handleResetPassword}
+                          disabled={activeAction === "resetPassword"}
+                        >
+                          <Shield className="size-4" />
+                          {activeAction === "resetPassword" ? "Resetting..." : "Reset Password"}
+                        </ButtonModule>
+                      )}
 
                       <ButtonModule
                         variant="secondary"

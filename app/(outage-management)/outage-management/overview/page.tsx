@@ -328,6 +328,11 @@ export default function OutageManagementDashboard() {
 
   // Get outage summary data from Redux store
   const { outageSummaryData, outageSummaryLoading, outageSummaryError } = useAppSelector((state) => state.analytics)
+  const { user } = useAppSelector((state) => state.auth)
+
+  const canReportOutage = !!user?.privileges?.some(
+    (p) => (p.key === "outage-management" || p.key === "outages") && p.actions?.includes("W")
+  )
 
   // Fetch outage summary data on component mount
   useEffect(() => {
@@ -406,7 +411,7 @@ export default function OutageManagementDashboard() {
         <div className="flex w-full">
           <div className="flex w-full flex-col">
             <DashboardNav />
-            <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+            <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-2 sm:px-4 lg:px-6 2xl:px-16">
               <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
                 <div className="flex-1">
                   <h4 className="text-2xl font-semibold">Outage Management</h4>
@@ -445,7 +450,7 @@ export default function OutageManagementDashboard() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
+          <div className="mx-auto w-full px-3 py-8 2xl:container max-sm:px-2 sm:px-4 lg:px-6 2xl:px-16">
             {/* Page Header - Always Visible */}
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
@@ -469,13 +474,15 @@ export default function OutageManagementDashboard() {
                     <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                   )}
                 </button>
-                <button
-                  onClick={() => setIsAddCustomerModalOpen(true)}
-                  className="flex items-center justify-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-sm text-white hover:bg-[#000000] focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2 sm:text-base"
-                >
-                  <PlusIcon />
-                  Report Outage
-                </button>
+                {canReportOutage && (
+                  <button
+                    onClick={() => setIsAddCustomerModalOpen(true)}
+                    className="flex items-center justify-center gap-2 rounded-md bg-[#004B23] px-4 py-2 text-sm text-white hover:bg-[#000000] focus:ring-2 focus:ring-[#004B23] focus:ring-offset-2 sm:text-base"
+                  >
+                    <PlusIcon />
+                    Report Outage
+                  </button>
+                )}
               </motion.div>
             </div>
 

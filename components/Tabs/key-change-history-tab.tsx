@@ -24,6 +24,15 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
   const { keyChangeHistory, keyChangeHistoryLoading, keyChangeHistoryError, keyChangeHistoryPagination } =
     useAppSelector((state) => state.meters)
   const { addKeyChangeData, addKeyChangeLoading, addKeyChangeError } = useAppSelector((state) => state.meters)
+  const { user } = useAppSelector((state) => state.auth)
+
+  // Check if user has Write permission for key changes
+  const canAddKeyChange = !!user?.privileges?.some(
+    (p) =>
+      (p.key === "meters" && p.actions?.includes("W")) ||
+      (p.key === "metering-meter-changeout-activation-de-activation" && p.actions?.includes("W")) ||
+      (p.key === "maintenance" && p.actions?.includes("W"))
+  )
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [currentPage, setCurrentPage] = useState(1)
@@ -471,10 +480,12 @@ const KeyChangeHistoryTab: React.FC<KeyChangeHistoryTabProps> = ({ meterId }) =>
             <MdFormatListBulleted className="size-4" />
             <p className="max-sm:hidden">List</p>
           </button>
-          <ButtonModule size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
-            <Key className="size-4" />
-            <p className="max-sm:hidden">Add Key Change</p>
-          </ButtonModule>
+          {canAddKeyChange && (
+            <ButtonModule size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
+              <Key className="size-4" />
+              <p className="max-sm:hidden">Add Key Change</p>
+            </ButtonModule>
+          )}
         </div>
       </div>
 
