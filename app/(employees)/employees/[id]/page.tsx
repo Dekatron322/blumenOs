@@ -1196,7 +1196,7 @@ const EmployeeDetailsPage = () => {
                         variant="primary"
                         size="sm"
                         className="flex items-center gap-2 text-sm"
-                        onClick={() => openModal("edit")}
+                        onClick={() => router.push(`/employees/update-employee?id=${employeeId}`)}
                       >
                         <Edit3 className="size-3 sm:size-4" />
                         <span className="max-sm:hidden">Edit</span>

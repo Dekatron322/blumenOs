@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { useRouter, useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
@@ -562,7 +562,7 @@ const UpdateAgentPage = () => {
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-gray-900">Agent Not Found</h2>
-                  <p className="mt-2 text-gray-600">The agent you're trying to update could not be found.</p>
+                  <p className="mt-2 text-gray-600">The agent you&apos;re trying to update could not be found.</p>
                   <ButtonModule variant="primary" size="md" onClick={() => router.back()} className="mt-4">
                     Go Back
                   </ButtonModule>
@@ -628,7 +628,7 @@ const UpdateAgentPage = () => {
             >
               <div className="mb-6 border-b pb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Agent Information</h3>
-                <p className="text-sm text-gray-600">Update the agent's information and settings</p>
+                <p className="text-sm text-gray-600">Update the agent&apos;s information and settings</p>
               </div>
 
               <form className="space-y-6 rounded-lg bg-[#F9f9f9] p-4 sm:p-6">
