@@ -28,10 +28,18 @@ export interface BillingPeriodsResponse {
   isSuccess: boolean
   message: string
   data: BillingPeriod[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // Request parameters interface
 export interface BillingPeriodsRequestParams {
+  pageNumber: number
+  pageSize: number
   year?: number
   month?: number
   status?: 1 | 2
@@ -45,6 +53,16 @@ interface BillingPeriodState {
   error: string | null
   success: boolean
 
+  // Pagination state
+  pagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
   // Current billing period state (for viewing/editing)
   currentBillingPeriod: BillingPeriod | null
   currentBillingPeriodLoading: boolean
@@ -57,6 +75,14 @@ const initialState: BillingPeriodState = {
   loading: false,
   error: null,
   success: false,
+  pagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
   currentBillingPeriod: null,
   currentBillingPeriodLoading: false,
   currentBillingPeriodError: null,
@@ -65,36 +91,31 @@ const initialState: BillingPeriodState = {
 // Async thunk for fetching billing periods
 export const fetchBillingPeriods = createAsyncThunk(
   "billingPeriods/fetchBillingPeriods",
-  async (params: BillingPeriodsRequestParams = {}, { rejectWithValue }) => {
+  async (params: BillingPeriodsRequestParams, { rejectWithValue }) => {
     try {
-      // Build query parameters
-      const searchParams = new URLSearchParams()
+      const { year, month, status } = params
 
-      if (params.year !== undefined) {
-        searchParams.append("year", params.year.toString())
-      }
+      console.log("Fetching billing periods with params:", params)
 
-      if (params.month !== undefined) {
-        searchParams.append("month", params.month.toString())
-      }
+      const response = await api.get<BillingPeriodsResponse>(buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.GET), {
+        params: {
+          PageNumber: 1,
+          PageSize: 100,
+          ...(year !== undefined && { Year: year }),
+          ...(month !== undefined && { Month: month }),
+          ...(status !== undefined && { Status: status }),
+        },
+      })
 
-      if (params.status !== undefined) {
-        searchParams.append("status", params.status.toString())
-      }
-
-      const queryString = searchParams.toString()
-      const url = queryString
-        ? `${buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.GET)}?${queryString}`
-        : buildApiUrl(API_ENDPOINTS.BILLING_PERIODS.GET)
-
-      const response = await api.get<BillingPeriodsResponse>(url)
+      console.log("Billing periods API response:", response.data)
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch billing periods")
       }
 
-      return response.data.data
+      return response.data
     } catch (error: any) {
+      console.error("Billing periods API error:", error)
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to fetch billing periods")
       }
@@ -114,6 +135,14 @@ const billingPeriodsSlice = createSlice({
       state.error = null
       state.success = false
       state.billingPeriods = []
+      state.pagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
 
     // Clear current billing period state
@@ -135,6 +164,14 @@ const billingPeriodsSlice = createSlice({
       state.error = null
       state.success = false
       state.billingPeriods = []
+      state.pagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
       state.currentBillingPeriod = null
       state.currentBillingPeriodLoading = false
       state.currentBillingPeriodError = null
@@ -148,11 +185,19 @@ const billingPeriodsSlice = createSlice({
         state.error = null
         state.success = false
       })
-      .addCase(fetchBillingPeriods.fulfilled, (state, action: PayloadAction<BillingPeriod[]>) => {
+      .addCase(fetchBillingPeriods.fulfilled, (state, action: PayloadAction<BillingPeriodsResponse>) => {
         state.loading = false
         state.success = true
         state.error = null
-        state.billingPeriods = action.payload
+        state.billingPeriods = action.payload.data
+        state.pagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
       })
       .addCase(fetchBillingPeriods.rejected, (state, action) => {
         state.loading = false

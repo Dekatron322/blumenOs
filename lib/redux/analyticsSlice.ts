@@ -76,13 +76,13 @@ export interface PostpaidBillingAnalyticsData {
 }
 
 export interface PostpaidBillingAnalyticsParams {
-  period?: string
-  customerId?: number
-  accountNumber?: string
-  status?: 0 | 1 | 2
-  category?: 1 | 2
-  areaOfficeId?: number
-  feederId?: number
+  BillingPeriodId?: number
+  CustomerId?: number
+  AccountNumber?: string
+  Status?: 0 | 1 | 2
+  Category?: 1 | 2
+  AreaOfficeId?: number
+  FeederId?: number
 }
 
 // Interfaces for Payment Summary Analytics
