@@ -8,6 +8,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { ToggleSwitch } from "components/ui/Input/ToggleSwitch"
 import { notify } from "components/ui/Notification/Notification"
 import { AppDispatch, RootState } from "lib/redux/store"
 import { clearCreateState, createCustomer } from "lib/redux/createCustomerSlice"
@@ -342,12 +343,6 @@ const AddCustomerPage = () => {
     { value: "Female", label: "Female" },
   ]
 
-  const booleanOptions = [
-    { value: "", label: "Select option" },
-    { value: "true", label: "Yes" },
-    { value: "false", label: "No" },
-  ]
-
   // Distribution substation options from fetched data
   const distributionSubstationOptions = [
     { value: 0, label: "Select distribution substation" },
@@ -435,24 +430,22 @@ const AddCustomerPage = () => {
   ]
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } }
   ) => {
     const { name, value } = "target" in e ? e.target : e
+    let processedValue: string | number | boolean | undefined = value
 
-    // Handle number fields
-    let processedValue = value
+    // Handle numeric fields
     if (
       [
         "distributionSubstationId",
         "serviceCenterId",
-        "latitude",
-        "longitude",
+        "provinceId",
         "tariffId",
-        "storedAverage",
-        "salesRepUserId",
-        "technicalEngineerUserId",
         "customerCategoryId",
         "customerSubCategoryId",
+        "salesRepUserId",
+        "technicalEngineerUserId",
       ].includes(name)
     ) {
       processedValue = value === "" ? 0 : Number(value)
@@ -465,7 +458,7 @@ const AddCustomerPage = () => {
 
     // Handle boolean fields
     if (["isPPM", "isMD", "isUrban", "isHRB", "isCustomerAccGovt"].includes(name)) {
-      processedValue = value === "true" || value === true
+      processedValue = value === "true"
     }
 
     setFormData((prev) => ({
@@ -480,6 +473,13 @@ const AddCustomerPage = () => {
         [name]: "",
       }))
     }
+  }
+
+  const handleToggleChange = (name: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }))
   }
 
   const validateCurrentStep = (): boolean => {
@@ -521,11 +521,11 @@ const AddCustomerPage = () => {
 
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3))
+      setCurrentStep((prev) => Math.min(prev + 1, 6))
       setIsMobileSidebarOpen(false)
     } else {
       notify("error", "Please fix the form errors before continuing", {
-        description: "Some required fields are missing or contain invalid data",
+        description: "Some fields are missing or contain invalid data",
         duration: 4000,
       })
     }
@@ -862,7 +862,7 @@ const AddCustomerPage = () => {
         </div>
 
         <div className="flex gap-2">
-          {currentStep < 3 ? (
+          {currentStep < 6 ? (
             <button
               type="button"
               onClick={nextStep}
@@ -1045,6 +1045,43 @@ const AddCustomerPage = () => {
                             error={formErrors.email}
                             required
                           />
+
+                          {/* Boolean Toggle Fields */}
+                          <div className="col-span-2 border-t border-gray-200 pt-4">
+                            <h5 className="mb-4 text-sm font-medium text-gray-900">Customer Attributes</h5>
+                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                              <ToggleSwitch
+                                label="PPM"
+                                name="isPPM"
+                                checked={formData.isPPM}
+                                onChange={(checked) => handleToggleChange("isPPM", checked)}
+                              />
+                              <ToggleSwitch
+                                label="MD"
+                                name="isMD"
+                                checked={formData.isMD}
+                                onChange={(checked) => handleToggleChange("isMD", checked)}
+                              />
+                              <ToggleSwitch
+                                label="Urban"
+                                name="isUrban"
+                                checked={formData.isUrban}
+                                onChange={(checked) => handleToggleChange("isUrban", checked)}
+                              />
+                              <ToggleSwitch
+                                label="HRB"
+                                name="isHRB"
+                                checked={formData.isHRB}
+                                onChange={(checked) => handleToggleChange("isHRB", checked)}
+                              />
+                              <ToggleSwitch
+                                label="Govt Account"
+                                name="isCustomerAccGovt"
+                                checked={formData.isCustomerAccGovt}
+                                onChange={(checked) => handleToggleChange("isCustomerAccGovt", checked)}
+                              />
+                            </div>
+                          </div>
 
                           {/* <FormInputModule
                             label="Auto Number"
@@ -1283,44 +1320,39 @@ const AddCustomerPage = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                          <FormSelectModule
+                          <ToggleSwitch
                             label="PPM"
                             name="isPPM"
-                            value={formData.isPPM.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
+                            checked={formData.isPPM}
+                            onChange={(checked) => handleToggleChange("isPPM", checked)}
                           />
 
-                          <FormSelectModule
+                          <ToggleSwitch
                             label="MD"
                             name="isMD"
-                            value={formData.isMD.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
+                            checked={formData.isMD}
+                            onChange={(checked) => handleToggleChange("isMD", checked)}
                           />
 
-                          <FormSelectModule
+                          <ToggleSwitch
                             label="Urban"
                             name="isUrban"
-                            value={formData.isUrban.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
+                            checked={formData.isUrban}
+                            onChange={(checked) => handleToggleChange("isUrban", checked)}
                           />
 
-                          <FormSelectModule
+                          <ToggleSwitch
                             label="HRB"
                             name="isHRB"
-                            value={formData.isHRB.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
+                            checked={formData.isHRB}
+                            onChange={(checked) => handleToggleChange("isHRB", checked)}
                           />
 
-                          <FormSelectModule
+                          <ToggleSwitch
                             label="Government Account"
                             name="isCustomerAccGovt"
-                            value={formData.isCustomerAccGovt.toString()}
-                            onChange={handleInputChange}
-                            options={booleanOptions}
+                            checked={formData.isCustomerAccGovt}
+                            onChange={(checked) => handleToggleChange("isCustomerAccGovt", checked)}
                           />
                         </div>
                       </motion.div>
@@ -1483,7 +1515,7 @@ const AddCustomerPage = () => {
                         Reset
                       </ButtonModule>
 
-                      {currentStep < 3 ? (
+                      {currentStep < 6 ? (
                         <ButtonModule
                           variant="primary"
                           size="md"

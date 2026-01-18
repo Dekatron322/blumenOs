@@ -66,9 +66,9 @@ const RecordDebtModal: React.FC<RecordDebtModalProps> = ({
     }
   }, [isOpen, dispatch, paymentTypes, customers, customerId])
 
-  const paymentTypeOptions = paymentTypes.map((type) => ({ value: type.id.toString(), label: type.name }))
+  const paymentTypeOptions = paymentTypes.map((type) => ({ value: String(type.id), label: type.name }))
   const customerOptions = customers.map((customer) => ({
-    value: customer.id.toString(),
+    value: String(customer.id),
     label: `${customer.fullName} (${customer.accountNumber})`,
   }))
 

@@ -6,6 +6,7 @@ import CloseIcon from "public/close-icon"
 import { FormSelectModule } from "../Input/FormSelectModule"
 import { ButtonModule } from "../Button/Button"
 import { FormInputModule } from "../Input/Input"
+import { ToggleSwitch } from "../Input/ToggleSwitch"
 import { notify } from "../Notification/Notification"
 
 interface AddCustomerModalProps {
@@ -47,6 +48,11 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
     address: "",
     phoneNumber: "",
     email: "",
+    isPPM: false,
+    isMD: false,
+    isUrban: false,
+    isHRB: false,
+    isCustomerAccGovt: false,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -68,6 +74,13 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
         [name]: "",
       }))
     }
+  }
+
+  const handleToggleChange = (name: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }))
   }
 
   const validateForm = () => {
@@ -373,6 +386,22 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
       await new Promise((resolve) => setTimeout(resolve, 1200))
 
       // Frontend-only: no API call, just notify success
+      // In a real implementation, this would be the customer data sent to the API
+      const customerData = {
+        fullName: formData.customerName,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        address: formData.address,
+        // Add other required fields from the API specification
+        isPPM: formData.isPPM,
+        isMD: formData.isMD,
+        isUrban: formData.isUrban,
+        isHRB: formData.isHRB,
+        isCustomerAccGovt: formData.isCustomerAccGovt,
+      }
+
+      console.log("Customer data ready for API:", customerData)
+
       notify("success", "Customer created successfully", {
         description: `${formData.customerName} (${formData.accountNumber}) has been added to the system`,
         duration: 5000,
@@ -390,6 +419,11 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
         address: "",
         phoneNumber: "",
         email: "",
+        isPPM: false,
+        isMD: false,
+        isUrban: false,
+        isHRB: false,
+        isCustomerAccGovt: false,
       })
       setFormErrors({})
 
@@ -678,6 +712,43 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ isOpen, onRequestCl
                 error={formErrors.email}
                 required
               />
+
+              {/* Boolean Toggle Fields */}
+              <div className="col-span-2 border-t border-gray-200 pt-4">
+                <h3 className="mb-4 text-sm font-medium text-gray-900">Customer Attributes</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <ToggleSwitch
+                    label="PPM"
+                    name="isPPM"
+                    checked={formData.isPPM}
+                    onChange={(checked) => handleToggleChange("isPPM", checked)}
+                  />
+                  <ToggleSwitch
+                    label="MD"
+                    name="isMD"
+                    checked={formData.isMD}
+                    onChange={(checked) => handleToggleChange("isMD", checked)}
+                  />
+                  <ToggleSwitch
+                    label="Urban"
+                    name="isUrban"
+                    checked={formData.isUrban}
+                    onChange={(checked) => handleToggleChange("isUrban", checked)}
+                  />
+                  <ToggleSwitch
+                    label="HRB"
+                    name="isHRB"
+                    checked={formData.isHRB}
+                    onChange={(checked) => handleToggleChange("isHRB", checked)}
+                  />
+                  <ToggleSwitch
+                    label="Customer Account Government"
+                    name="isCustomerAccGovt"
+                    checked={formData.isCustomerAccGovt}
+                    onChange={(checked) => handleToggleChange("isCustomerAccGovt", checked)}
+                  />
+                </div>
+              </div>
 
               {/* Error Display for Single Entry */}
               {Object.keys(formErrors).length > 0 && (
