@@ -359,10 +359,11 @@ export const API_ENDPOINTS = {
     GET: "/vendors",
     GET_BY_ID: "/vendors/{id}",
     ADD: "/vendors/bulk",
+    UPDATE: "/vendors/{id}",
     GET_VENDOR_WALLET: "/vendors/{id}/wallet",
     TOP_UP: "/vendors/{id}/wallet/top-up",
-    SUSPEND: "/vendors/{id}/suspend",
     UPDATE_COMMISSION: "/vendors/{id}/commission",
+    SUSPEND: "/vendors/{id}/suspend",
     GENERATE_API_KEY: "/vendors/{id}/api-keys/rotate",
     CHANGE_REQUEST: "/vendors/{id}/change-requests",
     CHANGE_REQUESTS_BY_ID: "/vendors/{id}/change-requests",
@@ -371,6 +372,7 @@ export const API_ENDPOINTS = {
     APPROVE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/decline",
     VENDOR_PAYMENT: "/vendors/{id}/payments",
+    ROTATE_WEBHOOK_SECRET: "/vendors/{id}/webhook/secret/rotate",
   },
 
   METERS: {

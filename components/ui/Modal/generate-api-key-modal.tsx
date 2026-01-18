@@ -45,18 +45,23 @@ const GenerateApiKeyModal: React.FC<GenerateApiKeyModalProps> = ({
   const handleGenerateApiKey = async () => {
     try {
       setIsLoading(true)
+      console.log("Generating API key for vendor:", vendorId)
 
       const result = await dispatch(generateApiKey(vendorId))
+      console.log("API key generation result:", result)
 
       if (generateApiKey.fulfilled.match(result)) {
         const apiKeyData = result.payload.data
+        console.log("API key data received:", apiKeyData)
         setGeneratedKeyData(apiKeyData)
         notify("success", `API key for ${vendorName} has been generated successfully`)
         onSuccess?.(apiKeyData)
       } else {
+        console.error("API key generation failed:", result.payload)
         throw new Error(result.payload as string)
       }
     } catch (error: any) {
+      console.error("Error generating API key:", error)
       notify("error", error.message || "Failed to generate API key")
     } finally {
       setIsLoading(false)
