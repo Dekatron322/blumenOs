@@ -185,7 +185,7 @@ const LoadingSkeleton = () => {
         <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
           <thead>
             <tr>
-              {[...Array(8)].map((_, i) => (
+              {[...Array(9)].map((_, i) => (
                 <th key={i} className="whitespace-nowrap border-b p-4">
                   <div className="h-4 w-24 rounded bg-gray-200"></div>
                 </th>
@@ -195,7 +195,7 @@ const LoadingSkeleton = () => {
           <tbody>
             {[...Array(5)].map((_, rowIndex) => (
               <tr key={rowIndex}>
-                {[...Array(8)].map((_, cellIndex) => (
+                {[...Array(9)].map((_, cellIndex) => (
                   <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
                     <div className="h-4 w-full rounded bg-gray-200"></div>
                   </td>
@@ -613,6 +613,9 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                       ID
                     </div>
                   </th>
+                  <th className="whitespace-nowrap border-b p-4 text-sm">
+                    <div className="flex items-center gap-2">Agent Name</div>
+                  </th>
                   <th
                     className="text-500 cursor-pointer whitespace-nowrap border-b p-4 text-sm"
                     onClick={() => toggleSort("amountCleared")}
@@ -698,11 +701,14 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
                           CL-{clearance.id.toString().padStart(5, "0")}
                         </td>
+                        <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
+                          {clearance.salesRep?.fullName || "N/A"}
+                        </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm font-medium">
                           {formatCurrency(clearance.amountCleared)}
                         </td>
                         <td className="whitespace-nowrap border-b px-4 py-2 text-sm">
-                          {clearance.hasAmountDiscrepancy && (
+                          {clearance.hasAmountDiscrepancy ? (
                             <motion.div
                               className="inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-xs"
                               style={{
@@ -719,7 +725,25 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                                   backgroundColor: "#D97706",
                                 }}
                               ></span>
-                              Discrepancy
+                              Detected
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+                              style={{
+                                backgroundColor: "#D1FAE5",
+                                color: "#059669",
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.1 }}
+                            >
+                              <span
+                                className="size-2 rounded-full"
+                                style={{
+                                  backgroundColor: "#059669",
+                                }}
+                              ></span>
+                              None
                             </motion.div>
                           )}
                         </td>
@@ -1040,6 +1064,25 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto px-6 py-6">
+                  {/* Instructions */}
+                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <h4 className="mb-2 text-sm font-semibold text-blue-900">Instructions</h4>
+                    <ul className="space-y-1 text-xs text-blue-800">
+                      <li>
+                        • <strong>Approve:</strong> Cash submitted matches the amount entered exactly
+                      </li>
+                      <li>
+                        • <strong>Approve with Condition:</strong> There is a discrepancy between cash submitted and
+                        amount entered
+                      </li>
+                      <li>
+                        • <strong>Decline:</strong> There is a violation of collection law or serious irregularity
+                      </li>
+                      <li>• Adjust the amount if necessary based on your verification</li>
+                      <li>• Provide detailed notes explaining your decision and any findings</li>
+                    </ul>
+                  </div>
+
                   <div className="mb-6 rounded-lg bg-gray-50 p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -1106,6 +1149,20 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
                         }}
                         placeholder="₦0"
                         error={approveFormErrors.amount}
+                        suffix={
+                          <ButtonModule
+                            type="button"
+                            onClick={() =>
+                              setApproveForm({
+                                ...approveForm,
+                                clearedAmount: selectedClearanceForApproval.cashAtHandBefore,
+                              })
+                            }
+                            className="h-7 px-2 py-1 text-xs"
+                          >
+                            Max
+                          </ButtonModule>
+                        }
                       />
                     </div>
 
