@@ -18,6 +18,7 @@ interface FormInputProps {
   max?: string | number
   step?: string | number
   prefix?: React.ReactNode
+  suffix?: React.ReactNode
 }
 
 export const FormInputModule: React.FC<FormInputProps> = ({
@@ -36,6 +37,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
   max,
   step,
   prefix,
+  suffix,
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
@@ -73,6 +75,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
         />
+        {suffix && <span className="ml-2">{suffix}</span>}
       </div>
       {typeof error === "string" && error.length > 0 && (
         <p id={`${name}-error`} className="mt-1 text-xs text-[#D14343]">

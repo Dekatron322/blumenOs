@@ -338,6 +338,15 @@ export interface AgentInfoResponse {
   data: AgentInfo
 }
 
+// Interface for Cash at Hand Response
+export interface CashAtHandResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    cashAtHand: number
+  }
+}
+
 // Interface for Agent Details Response
 export interface AgentDetailsResponse {
   isSuccess: boolean
@@ -1436,6 +1445,12 @@ interface AgentState {
   agentInfoError: string | null
   agentInfoSuccess: boolean
 
+  // Cash at hand state
+  cashAtHand: number | null
+  cashAtHandLoading: boolean
+  cashAtHandError: string | null
+  cashAtHandSuccess: boolean
+
   // Agent summary state
   agentSummary: AgentSummaryData | null
   agentSummaryLoading: boolean
@@ -1633,6 +1648,12 @@ const initialState: AgentState = {
   agentInfoError: null,
   agentInfoSuccess: false,
 
+  // Cash at hand initial state
+  cashAtHand: null,
+  cashAtHandLoading: false,
+  cashAtHandError: null,
+  cashAtHandSuccess: false,
+
   // Agent Summary initial state
   agentSummary: null,
   agentSummaryLoading: false,
@@ -1807,6 +1828,28 @@ export const fetchAgentInfo = createAsyncThunk("agents/fetchAgentInfo", async (_
       return rejectWithValue(error.response.data.message || "Failed to fetch agent info")
     }
     return rejectWithValue(error.message || "Network error during agent info fetch")
+  }
+})
+
+// ========== CASH AT HAND ASYNC THUNK ==========
+export const fetchCashAtHand = createAsyncThunk("agents/fetchCashAtHand", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<CashAtHandResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.CASH_AT_HAND))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch cash at hand")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Cash at hand data not found")
+    }
+
+    return response.data.data.cashAtHand
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch cash at hand")
+    }
+    return rejectWithValue(error.message || "Network error during cash at hand fetch")
   }
 })
 
@@ -3292,6 +3335,26 @@ const agentSlice = createSlice({
         state.agentInfoError = (action.payload as string) || "Failed to fetch agent info"
         state.agentInfoSuccess = false
         state.agentInfo = null
+      })
+
+      // Cash at Hand cases
+      .addCase(fetchCashAtHand.pending, (state) => {
+        state.cashAtHandLoading = true
+        state.cashAtHandError = null
+        state.cashAtHandSuccess = false
+        state.cashAtHand = null
+      })
+      .addCase(fetchCashAtHand.fulfilled, (state, action: PayloadAction<number>) => {
+        state.cashAtHandLoading = false
+        state.cashAtHandSuccess = true
+        state.cashAtHand = action.payload
+        state.cashAtHandError = null
+      })
+      .addCase(fetchCashAtHand.rejected, (state, action) => {
+        state.cashAtHandLoading = false
+        state.cashAtHandError = (action.payload as string) || "Failed to fetch cash at hand"
+        state.cashAtHandSuccess = false
+        state.cashAtHand = null
       })
 
       // Agent Summary cases

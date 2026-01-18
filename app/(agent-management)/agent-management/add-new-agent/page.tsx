@@ -393,24 +393,19 @@ const AddNewAgent = () => {
       .filter((agent) => {
         if (agent.status !== "ACTIVE") return false
 
-        // Filter based on selected agent type
+        // Filter based on selected agent type - show all managers ahead in hierarchy
         if (newAgentFormData.agentType === "SalesRep" || newAgentFormData.agentType === "Cashier") {
-          // Debug: Log available agents and their positions
-          console.log(
-            "Available agents for SalesRep/Cashier manager:",
-            agents
-              .filter((a) => a.status === "ACTIVE")
-              .map((a) => ({
-                id: a.id,
-                name: a.user.fullName,
-                position: a.user.position,
-                agentType: a.user.position,
-              }))
+          // Show all managers ahead: Clearing Cashiers, Supervisors, and Finance Managers
+          return (
+            agent.user.position === "Clearing Cashier" ||
+            agent.user.position === "Supervisor" ||
+            agent.user.position === "FinanceManager"
           )
-          return agent.user.position === "Clearing Cashier"
         } else if (newAgentFormData.agentType === "ClearingCashier") {
-          return agent.user.position === "Supervisor"
+          // Show supervisors and finance managers
+          return agent.user.position === "Supervisor" || agent.user.position === "FinanceManager"
         } else if (newAgentFormData.agentType === "Supervisor") {
+          // Show only finance managers
           return agent.user.position === "FinanceManager"
         }
 
@@ -432,8 +427,23 @@ const AddNewAgent = () => {
       .filter((agent) => {
         if (agent.status !== "ACTIVE") return false
 
-        // For existing user form, show supervisors (agents with Supervisor position)
-        return agent.user.position === "Supervisor"
+        // Filter based on selected agent type - show all managers ahead in hierarchy
+        if (existingUserFormData.agentType === "SalesRep" || existingUserFormData.agentType === "Cashier") {
+          // Show all managers ahead: Clearing Cashiers, Supervisors, and Finance Managers
+          return (
+            agent.user.position === "Clearing Cashier" ||
+            agent.user.position === "Supervisor" ||
+            agent.user.position === "FinanceManager"
+          )
+        } else if (existingUserFormData.agentType === "ClearingCashier") {
+          // Show supervisors and finance managers
+          return agent.user.position === "Supervisor" || agent.user.position === "FinanceManager"
+        } else if (existingUserFormData.agentType === "Supervisor") {
+          // Show only finance managers
+          return agent.user.position === "FinanceManager"
+        }
+
+        return false // Don't show any options if no agent type is selected
       })
       .map((agent) => ({
         value: agent.id.toString(),

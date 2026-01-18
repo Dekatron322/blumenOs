@@ -13,7 +13,8 @@ import {
   VendingIcon,
   VendingIconOutline,
 } from "components/Icons/Icons"
-import { fetchAgentSummary } from "lib/redux/agentSlice"
+import { fetchAgentSummary, fetchClearances } from "lib/redux/agentSlice"
+import { CashClearanceStatus } from "lib/redux/agentSlice"
 
 interface NavLink {
   name: string
@@ -29,10 +30,17 @@ const allLinks: NavLink[] = [
     href: "/sales-rep/collect-payment",
     icon: CollectCash,
   },
+
   {
     name: "Vend",
     href: "/sales-rep/vend",
     icon: VendingIconOutline,
+  },
+
+  {
+    name: "Clear Cash",
+    href: "/sales-rep/clear-cash",
+    icon: CollectCash,
   },
   {
     name: "Mop Cash",
@@ -64,11 +72,11 @@ const allLinks: NavLink[] = [
     href: "/sales-rep/view-cash-clearance-history",
     icon: CashClearanceIcon,
   },
-  {
-    name: "View Pending Collections",
-    href: "/sales-rep/view-pending-collections",
-    icon: PaymentIcon,
-  },
+  // {
+  //   name: "View Pending Collections",
+  //   href: "/sales-rep/view-pending-collections",
+  //   icon: PaymentIcon,
+  // },
   {
     name: "View Collection History",
     href: "/sales-rep/view-payment-history",
@@ -86,7 +94,7 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   const [links, setLinks] = useState<NavLink[]>(allLinks)
   const dispatch = useAppDispatch()
   const { agent } = useAppSelector((state) => state.auth)
-  const { agentSummary } = useAppSelector((state) => state.agents)
+  const { agentSummary, clearances } = useAppSelector((state) => state.agents)
 
   useEffect(() => {
     // Get auth data from localStorage
@@ -165,6 +173,16 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
         return false
       }
 
+      // Only show Clear Cash for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/clear-cash" &&
+        agent &&
+        agent.agentType !== "SalesRep" &&
+        agent.agentType !== "Cashier"
+      ) {
+        return false
+      }
+
       // Always show Dashboard (no permission required)
       if (!link.permission) return true
 
@@ -182,16 +200,24 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
     }
   }, [dispatch, agentSummary])
 
+  // Fetch clearances for notification count
+  useEffect(() => {
+    // Fetch clearances to check for pending approvals
+    dispatch(fetchClearances({ pageNumber: 1, pageSize: 1000 }))
+  }, [dispatch])
+
   return (
     <div className="flex w-full flex-col space-y-1 overflow-y-auto p-2">
       {links.map((link) => {
         const LinkIcon = link.icon
         const isActive = pathname.startsWith(link.href)
 
-        // Calculate notification count for View Pending Collections
+        // Calculate notification count for View Pending Collections and View Cash Clearance
         const notificationCount =
           link.name === "View Pending Collections"
             ? agentSummary?.periods?.find((p) => p.range === "allTime")?.pendingCount || 0
+            : link.name === "View Cash Clearance"
+            ? clearances?.filter((c) => c.status === CashClearanceStatus.Pending).length || 0
             : 0
 
         return (
