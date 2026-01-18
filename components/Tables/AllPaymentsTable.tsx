@@ -241,6 +241,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [showConfirmForm, setShowConfirmForm] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
   const [showVendTokenModal, setShowVendTokenModal] = useState(false)
@@ -482,13 +483,23 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
-    // Reset to first page when searching
-    dispatch(setPaymentsPagination({ page: 1, pageSize }))
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      // Reset to first page when searching
+      dispatch(setPaymentsPagination({ page: 1, pageSize }))
+    }
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     // Reset to first page when clearing search
     dispatch(setPaymentsPagination({ page: 1, pageSize }))
   }
@@ -577,9 +588,10 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             </button>
           )}
           <SearchModule
-            value={searchText}
+            value={searchInput}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
+            onSearch={handleManualSearch}
             placeholder="Search payments..."
             className="w-full max-w-[380px]"
             bgClassName="bg-white"

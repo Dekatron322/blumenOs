@@ -665,6 +665,7 @@ const Badge: React.FC<BadgeProps> = ({ children, variant = "default", size = "sm
 const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageSize: propPageSize = 10 }) => {
   const router = useRouter()
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(propPageSize)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -861,7 +862,18 @@ const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageS
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1042,6 +1054,8 @@ const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageS
       sortBy: "",
       sortOrder: "asc",
     })
+    setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
   }
 
@@ -1111,9 +1125,10 @@ const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageS
                     {/* Desktop/Tablet search input */}
                     <div className="hidden sm:block">
                       <SearchModule
-                        value={searchText}
-                        onChange={handleSearch}
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
                         onCancel={handleCancelSearch}
+                        onSearch={handleManualSearch}
                         placeholder="Search by Reference, Customer Name, or Account Number"
                         className="w-full max-w-full sm:max-w-[320px]"
                         bgClassName="bg-white"
@@ -1138,24 +1153,16 @@ const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageS
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
                     </button>
-
-                    <motion.button
-                      className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <MdOutlineArrowBackIosNew className="h-4 w-4" />
-                      Export
-                    </motion.button>
                   </div>
                 </div>
 
                 {/* Mobile search input revealed when icon is tapped */}
                 <div className="mb-3 sm:hidden">
                   <SearchModule
-                    value={searchText}
-                    onChange={handleSearch}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search by Reference, Customer Name, or Account Number"
                     className="w-full"
                     bgClassName="bg-white"

@@ -513,6 +513,7 @@ const AllVendors: React.FC = () => {
   const router = useRouter()
   const [isAddVendorModalOpen, setIsAddVendorModalOpen] = useState(false)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showMobileSearch, setShowMobileSearch] = useState(false)
@@ -722,6 +723,16 @@ const AllVendors: React.FC = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
   }
 
   const handleAddVendorSuccess = async () => {
@@ -1101,9 +1112,10 @@ const AllVendors: React.FC = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by name, phone, or location"
                   className="w-full"
                 />
@@ -1114,9 +1126,10 @@ const AllVendors: React.FC = () => {
               {/* Desktop search input */}
               <div className="hidden sm:block">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by name, phone, or location"
                   className="w-full sm:max-w-[300px]"
                 />

@@ -428,6 +428,7 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
   const { feeders } = useAppSelector((state) => state.feeders)
 
   const [searchText, setSearchText] = useState("")
+  const [searchTrigger, setSearchTrigger] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedBill, setSelectedBill] = useState<PostpaidBill | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -507,12 +508,19 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
     }
 
     void dispatch(fetchPostpaidBills(fetchParams))
-  }, [dispatch, currentPage, pagination.pageSize, searchText, appliedFilters])
+  }, [dispatch, currentPage, pagination.pageSize, appliedFilters, searchTrigger])
 
   const handleCancelSearch = () => {
     setSearchText("")
     setCurrentPage(1)
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setSearchTrigger((prev) => prev + 1)
+  }
+
+  const handleManualSearch = () => {
+    setCurrentPage(1)
+    dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   // Generate period options
@@ -1146,10 +1154,9 @@ const RecentBills: React.FC<RecentBillsProps> = ({ onExport, onGenerateBills, on
               value={searchText}
               onChange={(e) => {
                 setSearchText(e.target.value)
-                setCurrentPage(1)
-                dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
               }}
               onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
               placeholder="Search bills..."
               className="w-full sm:w-96"
             />

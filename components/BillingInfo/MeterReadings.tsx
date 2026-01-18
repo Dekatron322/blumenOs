@@ -409,6 +409,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
   const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
 
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -508,8 +509,20 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+      dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
+    }
   }
 
   // Generate period options
@@ -659,6 +672,7 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
       sortOrder: undefined,
     })
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
     dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
   }
@@ -994,13 +1008,10 @@ const MeterReadings: React.FC<MeterReadingsProps> = ({ onExport, onGenerateBills
           {/* Search */}
           <div className="mb-4 sm:mb-6">
             <SearchModule
-              value={searchText}
-              onChange={(e) => {
-                setSearchText(e.target.value)
-                setCurrentPage(1)
-                dispatch(setMeterReadingPagination({ page: 1, pageSize: pagination.pageSize }))
-              }}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
               placeholder="Search meter readings..."
               className="w-full sm:w-96"
             />

@@ -543,6 +543,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchTrigger, setSearchTrigger] = useState(0)
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -602,7 +603,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   }, [dispatch])
 
   // Fetch bills on component mount and when search/pagination/appliedFilters change
-  // Note: searchText triggers immediate search, but filters only apply when "Apply Filters" is clicked
+  // Note: searchText only updates local state, search triggers when button is clicked
   useEffect(() => {
     const fetchParams: any = {
       pageNumber: currentPage,
@@ -618,7 +619,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     }
 
     dispatch(fetchPostpaidBills(fetchParams))
-  }, [dispatch, currentPage, pageSize, searchText, appliedFilters])
+  }, [dispatch, currentPage, pageSize, appliedFilters, searchTrigger])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -686,13 +687,17 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchText(value)
-    if (value.trim()) {
-      dispatch(setFilters({ accountNumber: value.trim() }))
+  }
+
+  const handleManualSearch = () => {
+    if (searchText.trim()) {
+      dispatch(setFilters({ accountNumber: searchText.trim() }))
     } else {
       dispatch(clearFilters())
     }
     // Reset to first page when searching
     dispatch(setPagination({ page: 1, pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   const handleCancelSearch = () => {
@@ -700,6 +705,7 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
     dispatch(clearFilters())
     // Reset to first page when clearing search
     dispatch(setPagination({ page: 1, pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   const generateBillingPeriodOptions = () => {
@@ -1090,7 +1096,8 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
                   value={searchText}
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
-                  placeholder="Search by customer, account or period..."
+                  onSearch={handleManualSearch}
+                  placeholder="enter account number to search."
                   className="w-full"
                   bgClassName="bg-white"
                 />

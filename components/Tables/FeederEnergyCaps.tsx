@@ -454,6 +454,7 @@ const FeederEnergyCaps: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchTrigger, setSearchTrigger] = useState(0)
   const [selectedEnergyCap, setSelectedEnergyCap] = useState<FeederEnergyCap | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -523,6 +524,7 @@ const FeederEnergyCaps: React.FC = () => {
     const fetchParams: FeederEnergyCapsRequestParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
+      ...(searchText && { search: searchText }),
       ...(appliedFilters.billingPeriodId ? { billingPeriodId: appliedFilters.billingPeriodId } : {}),
       ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
       ...(appliedFilters.feederId !== undefined ? { feederId: appliedFilters.feederId } : {}),
@@ -532,7 +534,7 @@ const FeederEnergyCaps: React.FC = () => {
     }
 
     dispatch(fetchFeederEnergyCaps(fetchParams))
-  }, [dispatch, currentPage, pageSize, appliedFilters])
+  }, [dispatch, currentPage, pageSize, appliedFilters, searchTrigger])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -682,15 +684,24 @@ const FeederEnergyCaps: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
-    // Reset to first page when searching
+  }
+
+  const handleManualSearch = () => {
     dispatch(setPagination({ page: 1, pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
-    // Reset to first page when clearing search
     dispatch(setPagination({ page: 1, pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
+
+  // const handleCancelSearch = () => {
+  //   setSearchText("")
+  //   // Reset to first page when clearing search
+  //   dispatch(setPagination({ page: 1, pageSize }))
+  // }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
@@ -862,6 +873,7 @@ const FeederEnergyCaps: React.FC = () => {
                 value={searchText}
                 onChange={handleSearch}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search by period (e.g., 2024-01)..."
                 className="w-full"
                 bgClassName="bg-white"

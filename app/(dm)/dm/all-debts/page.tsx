@@ -28,6 +28,7 @@ import { ArrowLeft, ChevronDown, Filter, SortAsc, SortDesc, X } from "lucide-rea
 import { AnimatePresence } from "framer-motion"
 import Dropdown from "components/Dropdown/Dropdown"
 import { fetchCustomers } from "lib/redux/customerSlice"
+import { SearchModule } from "components/ui/Search/search-module"
 
 // Date Range Filter Component
 const DateRangeFilter = ({
@@ -574,6 +575,7 @@ const DebtManagementCustomers = ({
   searchInput,
   onSearchChange,
   onSearchCancel,
+  onManualSearch,
 }: {
   customers: DebtManagementCustomer[]
   customersLoading: boolean
@@ -591,6 +593,7 @@ const DebtManagementCustomers = ({
   searchInput: string
   onSearchChange: (value: string) => void
   onSearchCancel: () => void
+  onManualSearch: () => void
 }) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -720,23 +723,14 @@ const DebtManagementCustomers = ({
 
         {/* Search Input */}
         <div className="mb-4">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by customer name or account number..."
-              className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            {searchInput && (
-              <button
-                onClick={onSearchCancel}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100"
-              >
-                <X className="size-4 text-gray-500" />
-              </button>
-            )}
-          </div>
+          <SearchModule
+            value={searchInput}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onCancel={onSearchCancel}
+            onSearch={onManualSearch}
+            placeholder="Search by customer name or account number..."
+            className="w-full"
+          />
         </div>
       </div>
 
@@ -874,6 +868,9 @@ export default function DebtManagementDashboard() {
     sortBy: "outstandingBalance",
     sortOrder: "desc" as "asc" | "desc",
   })
+
+  // Separate state for search input to enable manual search
+  const [searchInput, setSearchInput] = useState("")
 
   // Sort options
   const sortOptions: { label: string; value: string; order: "asc" | "desc" }[] = [
@@ -1078,11 +1075,21 @@ export default function DebtManagementDashboard() {
 
   // Search handlers
   const handleSearchChange = (value: string) => {
-    handleFilterChange("search", value)
+    setSearchInput(value)
   }
 
   const handleSearchCancel = () => {
+    setSearchInput("")
     handleFilterChange("search", "")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      handleFilterChange("search", trimmed)
+    }
   }
 
   const togglePolling = () => {
@@ -1316,6 +1323,7 @@ export default function DebtManagementDashboard() {
                         searchInput=""
                         onSearchChange={() => {}}
                         onSearchCancel={() => {}}
+                        onManualSearch={() => {}}
                       />
                     </motion.div>
                   </>
@@ -1353,6 +1361,7 @@ export default function DebtManagementDashboard() {
                         searchInput={localFilters.search}
                         onSearchChange={handleSearchChange}
                         onSearchCancel={handleSearchCancel}
+                        onManualSearch={handleManualSearch}
                       />
                     </motion.div>
                   </>

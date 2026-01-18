@@ -576,6 +576,7 @@ const RecentPayments = () => {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
@@ -817,6 +818,8 @@ const RecentPayments = () => {
       sortBy: undefined,
       sortOrder: undefined,
     })
+    setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
   }
 
@@ -900,6 +903,17 @@ const RecentPayments = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1206,7 +1220,7 @@ const RecentPayments = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="items-center justify-between border-b py-2 md:flex md:py-4">
+          <div className="flex items-center  justify-between py-2 md:py-4">
             <div>
               <p className="text-lg font-medium max-sm:pb-3 md:text-2xl">Recent Payments</p>
             </div>
@@ -1249,9 +1263,10 @@ const RecentPayments = () => {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
             <div className="flex-1">
               <SearchModule
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search by customer, account, or reference"
                 className="w-full"
               />
