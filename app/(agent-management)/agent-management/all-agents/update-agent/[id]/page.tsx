@@ -280,15 +280,19 @@ const UpdateAgentPage = () => {
     const filteredAgents = agents.filter((agent) => {
       if (agent.status !== "ACTIVE" || agent.id === Number(agentId)) return false
 
-      // Filter based on selected agent type
+      // Filter based on selected agent type - show all managers ahead in hierarchy
       if (formData.agentType === "SalesRep" || formData.agentType === "Cashier") {
-        // SalesRep and Cashier can only have ClearingCashier as manager
-        return agent.user.position === "Clearing Cashier"
+        // Show all managers ahead: Clearing Cashiers, Supervisors, and Finance Managers
+        return (
+          agent.user.position === "Clearing Cashier" ||
+          agent.user.position === "Supervisor" ||
+          agent.user.position === "Finance Manager"
+        )
       } else if (formData.agentType === "ClearingCashier") {
-        // ClearingCashier can only have Supervisor as manager
-        return agent.user.position === "Supervisor"
+        // Show supervisors and finance managers
+        return agent.user.position === "Supervisor" || agent.user.position === "Finance Manager"
       } else if (formData.agentType === "Supervisor") {
-        // Supervisor can only have FinanceManager as manager
+        // Show only finance managers
         return agent.user.position === "Finance Manager"
       }
 
@@ -873,11 +877,11 @@ const UpdateAgentPage = () => {
                         </h4>
                         <p className="text-sm text-blue-600">
                           {formData.agentType === "SalesRep" &&
-                            "Sales Representatives require a distribution substation, cash collection limit, and a Clearing Cashier as manager agent."}
+                            "Sales Representatives require a distribution substation, cash collection limit, and can select Clearing Cashiers, Supervisors, or Finance Managers as manager agent."}
                           {formData.agentType === "Cashier" &&
-                            "Cashiers require a max single allowed cash amount and a Clearing Cashier as manager agent."}
+                            "Cashiers require a max single allowed cash amount and can select Clearing Cashiers, Supervisors, or Finance Managers as manager agent."}
                           {formData.agentType === "ClearingCashier" &&
-                            "Clearing Cashiers require a Supervisor as manager agent."}
+                            "Clearing Cashiers can select Supervisors or Finance Managers as manager agent."}
                           {formData.agentType === "Supervisor" &&
                             "Supervisors can optionally have a Finance Manager as manager agent."}
                           {formData.agentType === "FinanceManager" &&
