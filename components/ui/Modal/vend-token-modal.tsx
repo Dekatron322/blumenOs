@@ -402,7 +402,7 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
             <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
               <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
                 <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Electricity Token</span>
-                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-4xl">
+                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-base sm:text-3xl">
                   {tokenData.token}
                 </span>
               </div>

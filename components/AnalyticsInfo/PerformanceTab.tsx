@@ -703,7 +703,7 @@ const PerformanceTab: React.FC = () => {
                           transition={{ duration: 0.1 }}
                         >
                           {data.changePercentage > 0 ? "+" : ""}
-                          {data.changePercentage.toFixed(1)}%
+                          {(data.changePercentage || 0).toFixed(1)}%
                         </motion.div>
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">

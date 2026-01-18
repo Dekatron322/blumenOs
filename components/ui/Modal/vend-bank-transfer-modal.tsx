@@ -279,7 +279,7 @@ const VendBankTransferModal: React.FC<VendBankTransferModalProps> = ({
                 <span className="text-xs font-semibold uppercase tracking-wide text-green-700 max-sm:text-xs">
                   Account Number
                 </span>
-                <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-2xl max-sm:tracking-normal sm:text-5xl">
+                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 max-sm:text-2xl max-sm:tracking-normal sm:text-5xl">
                   {virtualAccount.accountNumber}
                 </span>
               </div>
