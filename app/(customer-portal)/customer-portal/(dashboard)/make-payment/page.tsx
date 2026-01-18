@@ -160,11 +160,13 @@ const CustomerPaymentPage: React.FC = () => {
       isEnergyBill: pt.isEnergyBill,
       isDebtClearance: pt.isDebtClearance,
     })) || []
-  // Step states
-  const [currentStep, setCurrentStep] = useState<"select-payment-type" | "payment-details">("select-payment-type")
+  // Step states - auto-determine initial step based on customer type
+  const [currentStep, setCurrentStep] = useState<"select-payment-type" | "payment-details">(
+    customer?.isMD === true ? "payment-details" : "select-payment-type"
+  )
 
   // Form states
-  const [selectedPaymentType, setSelectedPaymentType] = useState<number | null>(null)
+  const [selectedPaymentType, setSelectedPaymentType] = useState<number | null>(customer?.isMD === true ? 1 : null)
   const [amountInput, setAmountInput] = useState("")
   const [channel, setChannel] = useState<PaymentChannel | "">(PaymentChannel.BankTransfer)
   const [narrative, setNarrative] = useState("")
@@ -184,6 +186,17 @@ const CustomerPaymentPage: React.FC = () => {
     setNarrative("")
     setAvailableChannels([PaymentChannel.BankTransfer, PaymentChannel.Card])
   }
+
+  // Auto-select energy bill payment type for MD customers
+  useEffect(() => {
+    if (customer?.isMD === true && paymentTypes && paymentTypes.length > 0) {
+      const energyBillPaymentType = paymentTypes.find((pt) => pt.id === 1)
+      if (energyBillPaymentType) {
+        setSelectedPaymentType(1)
+        setCurrentStep("payment-details")
+      }
+    }
+  }, [customer, paymentTypes])
 
   const handleSelectPaymentType = (paymentTypeId: number) => {
     setSelectedPaymentType(paymentTypeId)
@@ -447,6 +460,14 @@ const CustomerPaymentPage: React.FC = () => {
                       ) : (
                         transformedPaymentTypes
                           .filter((pt) => pt.isActive)
+                          .filter((pt) => {
+                            // For MD customers, only show energy bill payment type (id = 1)
+                            if (customer?.isMD === true) {
+                              return pt.id === 1
+                            }
+                            // For non-MD customers, show all active payment types
+                            return true
+                          })
                           .map((paymentType) => (
                             <motion.div
                               key={paymentType.id}
