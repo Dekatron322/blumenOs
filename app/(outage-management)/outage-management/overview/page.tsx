@@ -423,7 +423,7 @@ export default function OutageManagementDashboard() {
                 <div className="w-full">
                   <div className="flex items-center justify-center py-8 sm:py-12">
                     <div className="w-full max-w-md text-center">
-                      <div className="mb-4 text-4xl sm:text-6xl">⚠️</div>
+                      <div className="mb-4 text-3xl sm:text-6xl">⚠️</div>
                       <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl">
                         Failed to Load Outage Data
                       </h3>

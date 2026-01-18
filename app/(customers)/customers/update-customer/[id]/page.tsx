@@ -8,6 +8,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
+import { ToggleSwitch } from "components/ui/Input/ToggleSwitch"
 import { notify } from "components/ui/Notification/Notification"
 import { AppDispatch, RootState } from "lib/redux/store"
 import {
@@ -405,8 +406,8 @@ const UpdateCustomerPage = () => {
     }
 
     // Handle boolean fields
-    if (["isPPM", "isMD"].includes(name)) {
-      processedValue = value === "true" || value === true
+    if (["isPPM", "isMD", "isUrban", "isHRB", "isCustomerAccGovt"].includes(name)) {
+      processedValue = value === "true"
     }
 
     setFormData((prev) => ({
@@ -421,6 +422,13 @@ const UpdateCustomerPage = () => {
         [name]: "",
       }))
     }
+  }
+
+  const handleToggleChange = (name: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }))
   }
 
   const validateForm = (): boolean => {
@@ -1051,6 +1059,42 @@ const UpdateCustomerPage = () => {
                         value={formData.comment}
                         onChange={handleInputChange}
                       />
+
+                      <div className="space-y-4">
+                        <h5 className="text-sm font-medium text-gray-900">Customer Classification</h5>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                          <ToggleSwitch
+                            label="PPM"
+                            name="isPPM"
+                            checked={formData.isPPM}
+                            onChange={(checked) => handleToggleChange("isPPM", checked)}
+                          />
+                          <ToggleSwitch
+                            label="MD"
+                            name="isMD"
+                            checked={formData.isMD}
+                            onChange={(checked) => handleToggleChange("isMD", checked)}
+                          />
+                          <ToggleSwitch
+                            label="Urban"
+                            name="isUrban"
+                            checked={formData.isUrban}
+                            onChange={(checked) => handleToggleChange("isUrban", checked)}
+                          />
+                          <ToggleSwitch
+                            label="HRB"
+                            name="isHRB"
+                            checked={formData.isHRB}
+                            onChange={(checked) => handleToggleChange("isHRB", checked)}
+                          />
+                          <ToggleSwitch
+                            label="Govt Account"
+                            name="isCustomerAccGovt"
+                            checked={formData.isCustomerAccGovt}
+                            onChange={(checked) => handleToggleChange("isCustomerAccGovt", checked)}
+                          />
+                        </div>
+                      </div>
 
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                         <FormSelectModule

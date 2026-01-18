@@ -951,15 +951,17 @@ export default function AgentManagementDashboard() {
                     <span className="hidden sm:inline">Make Payment</span>
                   </ButtonModule>
                 )}
-                <ButtonModule
-                  variant="primary"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  icon={<VendingIconOutline color="white" />}
-                  onClick={() => router.push("/customer-portal/buy-unit")}
-                >
-                  <span className="hidden sm:inline">Buy Unit</span>
-                </ButtonModule>
+                {(!customer || customer.isMD !== true) && (
+                  <ButtonModule
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    icon={<VendingIconOutline color="white" />}
+                    onClick={() => router.push("/customer-portal/buy-unit")}
+                  >
+                    <span className="hidden sm:inline">Buy Unit</span>
+                  </ButtonModule>
+                )}
               </motion.div>
             </div>
 
@@ -1562,20 +1564,24 @@ export default function AgentManagementDashboard() {
               <div className="mb-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
                 <h3 className="mb-4 text-base font-semibold text-gray-900 sm:text-lg">Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <button
-                    onClick={() => router.push("/customer-portal/buy-unit")}
-                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-3 text-left transition-all duration-300 hover:border-blue-300 hover:shadow-md sm:p-4"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="rounded-lg bg-blue-100 p-1.5 sm:p-2">
-                        <CollectionIcon />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 sm:text-sm">Pay Bills</p>
-                        <p className="hidden text-xs text-gray-600 sm:block">View and pay your bills</p>
-                      </div>
-                    </div>
-                  </button>
+                  {(!customer || customer.isMD !== true) && (
+                    <>
+                      <button
+                        onClick={() => router.push("/customer-portal/buy-unit")}
+                        className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-white p-3 text-left transition-all duration-300 hover:border-blue-300 hover:shadow-md sm:p-4"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="rounded-lg bg-blue-100 p-1.5 sm:p-2">
+                            <CollectionIcon />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-900 sm:text-sm">Pay Bills</p>
+                            <p className="hidden text-xs text-gray-600 sm:block">View and pay your bills</p>
+                          </div>
+                        </div>
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={() => router.push("/customer-portal/make-payment")}
                     className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-white p-3 text-left transition-all duration-300 hover:border-purple-300 hover:shadow-md sm:p-4"
@@ -1590,36 +1596,39 @@ export default function AgentManagementDashboard() {
                       </div>
                     </div>
                   </button>
+                  {(!customer || customer.isMD !== true) && (
+                    <>
+                      <button
+                        onClick={() => router.push("/customer-portal/support-ticket")}
+                        className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-white p-3 text-left transition-all duration-300 hover:border-green-300 hover:shadow-md sm:p-4"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="rounded-lg bg-green-100 p-1.5 sm:p-2">
+                            <AlertIcon />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-900 sm:text-sm">Raise Ticket</p>
+                            <p className="hidden text-xs text-gray-600 sm:block">Get support from our team</p>
+                          </div>
+                        </div>
+                      </button>
 
-                  <button
-                    onClick={() => router.push("/customer-portal/support-ticket")}
-                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-white p-3 text-left transition-all duration-300 hover:border-green-300 hover:shadow-md sm:p-4"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="rounded-lg bg-green-100 p-1.5 sm:p-2">
-                        <AlertIcon />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 sm:text-sm">Raise Ticket</p>
-                        <p className="hidden text-xs text-gray-600 sm:block">Get support from our team</p>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push("/customer-portal/report-outage")}
-                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-3 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-md sm:p-4"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="rounded-lg bg-amber-100 p-1.5 sm:p-2">
-                        <AlertIcon />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 sm:text-sm">Report Outage</p>
-                        <p className="hidden text-xs text-gray-600 sm:block">Report power outages</p>
-                      </div>
-                    </div>
-                  </button>
+                      <button
+                        onClick={() => router.push("/customer-portal/report-outage")}
+                        className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-3 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-md sm:p-4"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="rounded-lg bg-amber-100 p-1.5 sm:p-2">
+                            <AlertIcon />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-900 sm:text-sm">Report Outage</p>
+                            <p className="hidden text-xs text-gray-600 sm:block">Report power outages</p>
+                          </div>
+                        </div>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -197,7 +197,7 @@ export default function PerformanceAnalyticsDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
-  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("NGN")
+  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("₦")
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(300000) // 5 minutes default
@@ -230,7 +230,7 @@ export default function PerformanceAnalyticsDashboard() {
   // Mock currencies data
   const currenciesData = {
     data: [
-      { id: 1, symbol: "NGN", name: "Nigerian Naira" },
+      { id: 1, symbol: "₦", name: "Nigerian Naira" },
       { id: 2, symbol: "USD", name: "US Dollar" },
       { id: 3, symbol: "EUR", name: "Euro" },
     ],
@@ -614,7 +614,7 @@ export default function PerformanceAnalyticsDashboard() {
                       <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
                         Collection Efficiency
                       </div>
-                      <div className="text-4xl font-bold text-green-700">
+                      <div className="text-3xl font-bold text-green-700">
                         {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
                       </div>
                       <div className="mt-2 text-sm text-green-700">
@@ -911,7 +911,7 @@ export default function PerformanceAnalyticsDashboard() {
                               <td className="px-4 py-2 text-right">{slice.count.toLocaleString()}</td>
                               <td className="px-4 py-2 text-right">
                                 <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
-                                  {slice.percentage.toFixed(1)}%
+                                  {(slice.percentage || 0).toFixed(1)}%
                                 </span>
                               </td>
                             </tr>
@@ -997,7 +997,7 @@ export default function PerformanceAnalyticsDashboard() {
                               cx="50%"
                               cy="50%"
                               labelLine={false}
-                              label={(entry) => `${entry.label}: ${entry.percentage.toFixed(1)}%`}
+                              label={(entry) => `${entry.label}: ${(entry.percentage || 0).toFixed(1)}%`}
                               outerRadius={80}
                               fill="#8884d8"
                               dataKey="percentage"
@@ -1117,7 +1117,9 @@ export default function PerformanceAnalyticsDashboard() {
                                   </td>
                                   <td className="whitespace-nowrap px-6 py-4">
                                     <div className="flex items-center">
-                                      <div className="mr-2 text-sm text-gray-900">{slice.percentage.toFixed(1)}%</div>
+                                      <div className="mr-2 text-sm text-gray-900">
+                                        {(slice.percentage || 0).toFixed(1)}%
+                                      </div>
                                       <div className="w-32">
                                         <div className="h-2 w-full rounded-full bg-gray-200">
                                           <div

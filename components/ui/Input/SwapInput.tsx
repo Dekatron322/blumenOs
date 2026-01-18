@@ -57,7 +57,7 @@ export const FormInputModule: React.FC<FormInputProps> = ({
         <input
           type={type}
           placeholder={placeholder}
-          className="w-full bg-transparent text-4xl text-[#000000] outline-none disabled:cursor-not-allowed disabled:text-gray-500"
+          className="w-full bg-transparent text-3xl text-[#000000] outline-none disabled:cursor-not-allowed disabled:text-gray-500"
           value={value}
           name={name}
           onChange={onChange}

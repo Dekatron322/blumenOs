@@ -372,7 +372,7 @@ const PrepaidSummaryAnalytics = () => {
               <div className="mt-4">
                 <h3 className="text-sm font-medium text-gray-500">Success Rate</h3>
                 <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {prepaidSummaryData.totals.successRatePercent.toFixed(1)}%
+                  {(prepaidSummaryData.totals.successRatePercent || 0).toFixed(1)}%
                 </p>
                 <div className="mt-3 text-sm text-gray-600">
                   <div className="flex justify-between">
