@@ -787,8 +787,8 @@ export default function Dashboard() {
                             <div className="h-8 w-32 rounded bg-gray-200"></div>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2">
-                            <div className="flex flex-1 items-center justify-between">
+                          <div className="flex items-start justify-between">
+                            <div className="flex flex-col">
                               <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
                               {card.valueFormat === "currency" && (
                                 <div className="text-sm text-gray-600">
@@ -893,7 +893,7 @@ export default function Dashboard() {
                             <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
                               Total Billed
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="">
                               <div className="text-3xl font-bold text-blue-900">
                                 {collectionEfficiencyData.totalBilled
                                   ? (() => {
@@ -927,7 +927,7 @@ export default function Dashboard() {
                             <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
                               Total Collected
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="">
                               <div className="text-3xl font-bold text-purple-900">
                                 {collectionEfficiencyData.totalCollected
                                   ? (() => {
