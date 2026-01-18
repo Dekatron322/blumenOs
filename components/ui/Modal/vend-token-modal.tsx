@@ -467,8 +467,16 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
           <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={handleCopyToken}>
             {isCopyingToken ? "Copied!" : "Copy Token"}
           </ButtonModule>
-          <ButtonModule variant="primary" className="flex w-full" size="md" onClick={handleCopyAll}>
-            {isCopyingAll ? "Copied!" : "Copy All Details"}
+          <ButtonModule
+            variant="primary"
+            className="flex w-full"
+            size="md"
+            onClick={() => {
+              setShowReceipt(true)
+              setTimeout(() => handlePrint(), 100)
+            }}
+          >
+            Print Receipt
           </ButtonModule>
           <ButtonModule variant="outline" className="flex w-full" size="md" onClick={() => setShowReceipt(true)}>
             View Receipt

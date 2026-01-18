@@ -147,19 +147,42 @@ const ClearCashPage = () => {
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="grid gap-4 md:grid-cols-1">
-                  <FormInputModule
-                    label="Amount"
-                    type="text"
-                    name="amount"
-                    value={`₦${formatAmount(form.amount)}`}
-                    onChange={(e) => {
-                      // Remove ₦ symbol and commas, then handle the change
-                      const cleanValue = e.target.value.replace(/[₦,]/g, "")
-                      handleChange("amount", cleanValue)
-                    }}
-                    error={errors.amount}
-                    placeholder="₦0"
-                  />
+                  <div>
+                    <label className="mb-1 block text-sm text-[#2a2f4b]">Amount</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="amount"
+                        value={`₦${formatAmount(form.amount)}`}
+                        onChange={(e) => {
+                          // Remove ₦ symbol and commas, then handle the change
+                          const cleanValue = e.target.value.replace(/[₦,]/g, "")
+                          handleChange("amount", cleanValue)
+                        }}
+                        placeholder="₦0"
+                        className={`
+                          h-[46px] w-full rounded-md border px-3 py-2 text-base outline-none transition-all duration-200
+                          ${
+                            errors.amount
+                              ? "border-[#D14343] bg-[#FBFAFC] ring-2 ring-[#D14343]"
+                              : "border-[#E0E0E0] bg-[#F9F9F9]"
+                          }
+                          pr-20 focus:border-transparent focus:bg-[#FBFAFC] focus:ring-2
+                          focus:ring-[#004B23]
+                        `}
+                      />
+                      {agentInfo && (
+                        <button
+                          type="button"
+                          onClick={() => handleChange("amount", agentInfo.cashAtHand.toString())}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        >
+                          Max
+                        </button>
+                      )}
+                    </div>
+                    {errors.amount && <p className="mt-1 text-xs text-[#D14343]">{errors.amount}</p>}
+                  </div>
                 </div>
 
                 <div className="grid gap-4">

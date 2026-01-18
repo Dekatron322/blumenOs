@@ -289,8 +289,8 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex gap-3 border-t bg-white px-6 py-4 max-sm:px-3 sm:gap-4">
-          <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={handleCopyAll}>
-            {isCopyingAll ? "Copied!" : "Copy Details"}
+          <ButtonModule variant="secondary" className="flex w-full" size="md" onClick={handlePrint}>
+            Print
           </ButtonModule>
           <ButtonModule variant="outline" className="flex w-full" size="md" onClick={handleDownloadPDF}>
             Download PDF
