@@ -567,6 +567,7 @@ const OutagesTab: React.FC = () => {
   )
 
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOutage, setSelectedOutage] = useState<Outage | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -772,13 +773,23 @@ const OutagesTab: React.FC = () => {
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
-    dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
-    setCurrentPage(1)
+    setSearchInput(e.target.value)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
+      setCurrentPage(1)
+    }
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     dispatch(setPagination({ page: 1, pageSize: pageSize || 10 }))
     setCurrentPage(1)
   }
@@ -879,9 +890,10 @@ const OutagesTab: React.FC = () => {
               <div className="w-80 max-w-[350px]">
                 <SearchModule
                   placeholder="Search outages..."
-                  value={searchText}
+                  value={searchInput}
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   className="w-80 max-w-[310px]"
                 />
               </div>

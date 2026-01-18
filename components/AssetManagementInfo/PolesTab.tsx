@@ -365,6 +365,7 @@ const PolesTab: React.FC = () => {
   const { serviceStations } = useAppSelector((state) => state.serviceStations)
 
   const [searchInput, setSearchInput] = useState("")
+  const [searchText, setSearchText] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
@@ -505,7 +506,7 @@ const PolesTab: React.FC = () => {
   // Apply all filters at once
   const applyFilters = () => {
     setAppliedFilters({
-      searchText: searchInput.trim(),
+      searchText: searchText.trim(),
       companyId: localFilters.companyId,
       areaOfficeId: localFilters.areaOfficeId,
       injectionSubstationId: localFilters.injectionSubstationId,
@@ -530,6 +531,7 @@ const PolesTab: React.FC = () => {
       sortBy: "",
       sortOrder: "asc",
     })
+    setSearchText("")
     setSearchInput("")
     setAppliedFilters({
       searchText: "",
@@ -563,7 +565,17 @@ const PolesTab: React.FC = () => {
     setSearchInput(value)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
+  }
+
   const handleCancelSearch = () => {
+    setSearchText("")
     setSearchInput("")
   }
 
@@ -849,6 +861,7 @@ const PolesTab: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search poles..."
                 className="w-full max-w-[300px]"
                 bgClassName="bg-white"

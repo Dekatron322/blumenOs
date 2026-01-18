@@ -428,12 +428,12 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "system-settings",
         requiredActions: ["E"],
       },
-      {
-        name: "NERC Reports",
-        href: "/complaince/nerc-reports",
-        privilegeKey: "system-settings",
-        requiredActions: ["R"],
-      },
+      // {
+      //   name: "NERC Reports",
+      //   href: "/complaince/nerc-reports",
+      //   privilegeKey: "system-settings",
+      //   requiredActions: ["R"],
+      // },
     ],
   },
 

@@ -293,6 +293,7 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [selectedClearance, setSelectedClearance] = useState<CashClearance | null>(null)
   const [isClearCashPanelOpen, setIsClearCashPanelOpen] = useState(false)
   const [expandedClearanceId, setExpandedClearanceId] = useState<number | null>(null)
@@ -516,8 +517,20 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     // Reset to first page when clearing search
     dispatch(setClearancesPagination({ page: 1, pageSize }))
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      // Reset to first page when searching
+      dispatch(setClearancesPagination({ page: 1, pageSize }))
+    }
   }
 
   const paginate = (pageNumber: number) => {
@@ -549,9 +562,10 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
       {/* Search Section */}
       <div className="mb-4 flex items-center justify-end">
         <SearchModule
-          value={searchText}
-          onChange={handleSearch}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           onCancel={handleCancelSearch}
+          onSearch={handleManualSearch}
           placeholder="Search clearances..."
           className="w-full max-w-[380px]"
           bgClassName="bg-white"

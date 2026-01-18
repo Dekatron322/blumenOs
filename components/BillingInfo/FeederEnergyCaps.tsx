@@ -394,6 +394,7 @@ const MobileFilterSidebar = ({
 
 const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onViewDetails }) => {
   const [searchText, setSearchText] = useState("")
+  const [searchTrigger, setSearchTrigger] = useState(0)
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -475,6 +476,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     const fetchParams: any = {
       pageNumber: pagination.currentPage,
       pageSize: pagination.pageSize,
+      ...(searchText && { search: searchText }),
       ...(appliedFilters.period && { period: appliedFilters.period }),
       ...(appliedFilters.areaOfficeId !== undefined && { areaOfficeId: appliedFilters.areaOfficeId }),
       ...(appliedFilters.feederId !== undefined && { feederId: appliedFilters.feederId }),
@@ -484,17 +486,22 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
     }
 
     void dispatch(fetchFeederEnergyCaps(fetchParams))
-  }, [dispatch, pagination.currentPage, pagination.pageSize, appliedFilters])
+  }, [dispatch, pagination.currentPage, pagination.pageSize, appliedFilters, searchTrigger])
 
   // Handle search
   const handleSearch = (text: string) => {
     setSearchText(text)
+  }
+
+  const handleManualSearch = () => {
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   // Generate period options
@@ -1189,6 +1196,7 @@ const FeederEnergyCaps: React.FC<FeederEnergyCapsProps> = ({ onApplyNewCaps, onV
                 value={searchText}
                 onChange={(e) => handleSearch(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search by period or feeder..."
                 className="w-full"
               />

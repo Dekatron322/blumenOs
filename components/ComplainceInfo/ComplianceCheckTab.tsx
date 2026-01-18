@@ -274,6 +274,16 @@ const ComplianceChecksTab: React.FC = () => {
     setCurrentPage(1)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchText.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
+  }
+
   const handleCancelSearch = () => {
     setSearchText("")
     setCurrentPage(1)
@@ -321,6 +331,7 @@ const ComplianceChecksTab: React.FC = () => {
             value={searchText}
             onChange={handleSearch}
             onCancel={handleCancelSearch}
+            onSearch={handleManualSearch}
             placeholder="Search compliance checks..."
             className="w-[380px]"
             bgClassName="bg-white"

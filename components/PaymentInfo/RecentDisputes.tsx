@@ -16,6 +16,7 @@ const PerformingAgents = () => {
   )
 
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [selectedDispute, setSelectedDispute] = useState<any>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showSidebar, setShowSidebar] = useState(true)
@@ -87,6 +88,16 @@ const PerformingAgents = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -523,9 +534,10 @@ const PerformingAgents = () => {
 
               <div className="flex-1 md:max-w-md">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder={`Search ${agentType}...`}
                   className="w-full"
                 />

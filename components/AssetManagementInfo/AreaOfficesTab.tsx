@@ -224,6 +224,7 @@ const AreaOfficesTab: React.FC = () => {
   )
 
   const [searchInput, setSearchInput] = useState("")
+  const [searchText, setSearchText] = useState("")
   const [selectedOffice, setSelectedOffice] = useState<AreaOffice | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -401,7 +402,7 @@ const AreaOfficesTab: React.FC = () => {
   // Apply all filters at once
   const applyFilters = () => {
     setAppliedFilters({
-      searchText: searchInput.trim(),
+      searchText: searchText.trim(),
       companyId: localFilters.companyId,
       status: localFilters.status,
       officeNameId: localFilters.officeNameId,
@@ -420,6 +421,7 @@ const AreaOfficesTab: React.FC = () => {
       sortBy: "",
       sortOrder: "asc",
     })
+    setSearchText("")
     setSearchInput("")
     setAppliedFilters({
       searchText: "",
@@ -447,7 +449,17 @@ const AreaOfficesTab: React.FC = () => {
     setSearchInput(value)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
+  }
+
   const handleCancelSearch = () => {
+    setSearchText("")
     setSearchInput("")
   }
 
@@ -693,6 +705,7 @@ const AreaOfficesTab: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search area offices..."
                 className="w-full max-w-[300px]"
                 bgClassName="bg-white"

@@ -314,6 +314,15 @@ const AllBillingDisputeChangeRequests = () => {
     setSearchText("")
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchText.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
+  }
+
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
     dispatch(
@@ -614,6 +623,7 @@ const AllBillingDisputeChangeRequests = () => {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search by reference, requester, or entity label"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
@@ -641,6 +651,7 @@ const AllBillingDisputeChangeRequests = () => {
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by reference, requester, or entity label"
                   className="w-full"
                 />

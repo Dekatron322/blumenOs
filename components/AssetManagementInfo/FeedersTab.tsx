@@ -210,6 +210,7 @@ const FeedersTab: React.FC = () => {
   )
 
   const [searchInput, setSearchInput] = useState("")
+  const [searchText, setSearchText] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
@@ -389,7 +390,7 @@ const FeedersTab: React.FC = () => {
   // Apply all filters at once
   const applyFilters = () => {
     setAppliedFilters({
-      searchText: searchInput.trim(),
+      searchText: searchText.trim(),
       companyId: localFilters.companyId,
       areaOfficeId: localFilters.areaOfficeId,
       injectionSubstationId: localFilters.injectionSubstationId,
@@ -412,6 +413,7 @@ const FeedersTab: React.FC = () => {
       sortBy: "",
       sortOrder: "asc",
     })
+    setSearchText("")
     setSearchInput("")
     setAppliedFilters({
       searchText: "",
@@ -443,7 +445,17 @@ const FeedersTab: React.FC = () => {
     setSearchInput(value)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
+  }
+
   const handleCancelSearch = () => {
+    setSearchText("")
     setSearchInput("")
   }
 
@@ -725,6 +737,7 @@ const FeedersTab: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search feeders..."
                 className="w-full max-w-[300px]"
                 bgClassName="bg-white"

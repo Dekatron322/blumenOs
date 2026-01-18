@@ -995,23 +995,23 @@ const DepartmentsTable: React.FC = () => {
 
                 <div className="border-t bg-gray-50 p-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-600">
+                    {/* <div className="text-xs text-gray-600">
                       <div className="font-medium">Department ID:</div>
                       <div className="mt-1 font-mono">#{selectedDepartment.id}</div>
-                    </div>
+                    </div> */}
                     <div className="flex gap-2">
                       <ButtonModule variant="outline" size="sm" onClick={() => handleEdit(selectedDepartment)}>
                         <MdOutlineEdit className="mr-1 size-3.5" />
                         Edit
                       </ButtonModule>
-                      <ButtonModule
+                      {/* <ButtonModule
                         variant="primary"
                         size="sm"
                         onClick={() => router.push(`/departments/${selectedDepartment.id}/employees`)}
                       >
                         <MdOutlinePeople className="mr-1 size-3.5" />
                         View Employees
-                      </ButtonModule>
+                      </ButtonModule> */}
                     </div>
                   </div>
                 </div>

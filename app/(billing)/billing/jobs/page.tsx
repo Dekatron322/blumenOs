@@ -637,6 +637,7 @@ const BillingJobs: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchTrigger, setSearchTrigger] = useState(0)
   const [selectedJob, setSelectedJob] = useState<BillingJob | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -687,6 +688,7 @@ const BillingJobs: React.FC = () => {
     const params = {
       pageNumber: currentPage,
       pageSize: pageSize,
+      ...(searchText && { search: searchText }),
       ...(appliedFilters.billingPeriodId ? { billingPeriodId: appliedFilters.billingPeriodId } : {}),
       ...(appliedFilters.areaOfficeId !== undefined ? { areaOfficeId: appliedFilters.areaOfficeId } : {}),
       ...(appliedFilters.status !== undefined ? { status: appliedFilters.status } : {}),
@@ -695,7 +697,7 @@ const BillingJobs: React.FC = () => {
     }
 
     dispatch(fetchBillingJobs(params))
-  }, [dispatch, currentPage, pageSize, appliedFilters])
+  }, [dispatch, currentPage, pageSize, appliedFilters, searchTrigger])
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -877,13 +879,23 @@ const BillingJobs: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value)
+  }
+
+  const handleManualSearch = () => {
     dispatch(setBillingJobsPagination({ page: 1, pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
     dispatch(setBillingJobsPagination({ page: 1, pageSize }))
+    setSearchTrigger((prev) => prev + 1)
   }
+
+  // const handleCancelSearch = () => {
+  //   setSearchText("")
+  //   dispatch(setBillingJobsPagination({ page: 1, pageSize }))
+  // }
 
   const handleAddJobSuccess = async () => {
     setIsAddJobModalOpen(false)
@@ -1052,6 +1064,7 @@ const BillingJobs: React.FC = () => {
                             value={searchText}
                             onChange={handleSearch}
                             onCancel={handleCancelSearch}
+                            onSearch={handleManualSearch}
                             className="w-full"
                           />
                         </div>

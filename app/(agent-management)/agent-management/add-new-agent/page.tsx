@@ -426,7 +426,7 @@ const AddNewAgent = () => {
   const existingUserManagerAgentOptions = [
     {
       value: "",
-      label: agentsLoading ? "Loading manager agents..." : "Select manager agent (supervisor)",
+      label: agentsLoading ? "Loading manager agents..." : "Select manager agent (supervisor, optional)",
     },
     ...agents
       .filter((agent) => {
@@ -548,10 +548,7 @@ const AddNewAgent = () => {
             errors.distributionSubstationId = "Distribution substation is required for Sales Rep"
           }
 
-          // SalesRep and Cashier require manager agent
-          if ((agentType === "SalesRep" || agentType === "Cashier") && !newAgentFormData.managerAgentId) {
-            errors.managerAgentId = "Manager agent is required for this agent type"
-          }
+          // Manager Agent is now optional for all agent types
           break
 
         case 4: // Cash & Status Information
@@ -585,8 +582,8 @@ const AddNewAgent = () => {
           }
           break
 
-        case 5: // Additional Information
-          // All fields in this step are optional
+        case 5: // Additional Information - REMOVED
+          // All fields moved to Step 2
           break
       }
     } else if (activeTab === "existing") {
@@ -601,10 +598,7 @@ const AddNewAgent = () => {
         errors.agentType = "Agent type is required"
       }
 
-      // Manager Agent is now required for all agent types
-      if (!existingUserFormData.managerAgentId) {
-        errors.managerAgentId = "Manager agent (supervisor) is required"
-      }
+      // Manager Agent is now optional for all agent types
 
       // Conditional validation based on agent type
       const agentType = existingUserFormData.agentType
@@ -614,10 +608,7 @@ const AddNewAgent = () => {
         errors.distributionSubstationId = "Distribution substation is required for Sales Rep"
       }
 
-      // SalesRep and Cashier require manager agent (now all types require it)
-      if (!existingUserFormData.managerAgentId) {
-        errors.managerAgentId = "Manager agent (supervisor) is required for this agent type"
-      }
+      // Manager Agent is now optional for all agent types
 
       // Cash collection limit based on agent type
       if (agentType === "SalesRep") {
@@ -655,7 +646,7 @@ const AddNewAgent = () => {
 
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 5))
+      setCurrentStep((prev) => Math.min(prev + 1, 4))
       setIsMobileSidebarOpen(false)
     } else {
       notify("error", "Please fix the form errors before continuing", {
@@ -856,20 +847,17 @@ const AddNewAgent = () => {
       case "SalesRep":
         return (
           newAgentFormData.distributionSubstationId !== null &&
-          newAgentFormData.managerAgentId !== null &&
           newAgentFormData.cashCollectionLimit.trim() !== "" &&
           newAgentFormData.canCollectCash !== undefined
         )
 
       case "Cashier":
         return (
-          newAgentFormData.managerAgentId !== null &&
-          newAgentFormData.maxSingleAllowedCashAmount.trim() !== "" &&
-          newAgentFormData.canCollectCash !== undefined
+          newAgentFormData.maxSingleAllowedCashAmount.trim() !== "" && newAgentFormData.canCollectCash !== undefined
         )
 
       case "ClearingCashier":
-        return newAgentFormData.managerAgentId !== null
+        return true // Manager agent now optional
 
       case "Supervisor":
         return true // Only base fields required, manager agent optional
@@ -900,28 +888,24 @@ const AddNewAgent = () => {
       case "SalesRep":
         return (
           existingUserFormData.distributionSubstationId !== null &&
-          existingUserFormData.managerAgentId !== null &&
           existingUserFormData.cashCollectionLimit.trim() !== "" &&
           existingUserFormData.canCollectCash !== undefined
         )
 
       case "Cashier":
         return (
-          existingUserFormData.managerAgentId !== null &&
           existingUserFormData.maxSingleAllowedCashAmount.trim() !== "" &&
           existingUserFormData.canCollectCash !== undefined
         )
 
       case "ClearingCashier":
-        return (
-          existingUserFormData.managerAgentId !== null && existingUserFormData.maxSingleAllowedCashAmount.trim() !== ""
-        ) // Now requires manager agent and max single amount
+        return existingUserFormData.maxSingleAllowedCashAmount.trim() !== "" // Manager agent now optional
 
       case "Supervisor":
-        return existingUserFormData.managerAgentId !== null // Now requires manager agent
+        return true // Manager agent now optional
 
       case "FinanceManager":
-        return existingUserFormData.managerAgentId !== null // Now requires manager agent
+        return true // Manager agent now optional
 
       default:
         return false
@@ -938,14 +922,13 @@ const AddNewAgent = () => {
           onClick={() => setIsMobileSidebarOpen(true)}
         >
           <Menu className="size-4" />
-          <span>Step {currentStep}/5</span>
+          <span>Step {currentStep}/4</span>
         </button>
         <div className="text-sm font-medium text-gray-900">
           {currentStep === 1 && "Personal"}
           {currentStep === 2 && "Employment"}
           {currentStep === 3 && "Department"}
           {currentStep === 4 && "Cash & Status"}
-          {currentStep === 5 && "Additional"}
         </div>
       </div>
     </div>
@@ -998,7 +981,6 @@ const AddNewAgent = () => {
                     { step: 2, title: "Employment Information", description: "Employment details" },
                     { step: 3, title: "Department & Office", description: "Department and office assignment" },
                     { step: 4, title: "Cash & Status", description: "Cash collection and agent status" },
-                    { step: 5, title: "Additional Information", description: "Additional agent details" },
                   ].map((item) => (
                     <button
                       key={item.step}
@@ -1083,7 +1065,7 @@ const AddNewAgent = () => {
   const StepProgress = () => (
     <div className="mb-8">
       <div className="flex items-center justify-between">
-        {[1, 2, 3, 4, 5].map((step) => (
+        {[1, 2, 3, 4].map((step) => (
           <React.Fragment key={step}>
             <div className="flex flex-col items-center">
               <div
@@ -1116,10 +1098,9 @@ const AddNewAgent = () => {
                 {step === 2 && "Employment"}
                 {step === 3 && "Department"}
                 {step === 4 && "Cash & Status"}
-                {step === 5 && "Additional"}
               </span>
             </div>
-            {step < 5 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
+            {step < 4 && <div className={`mx-4 h-0.5 flex-1 ${step < currentStep ? "bg-[#004B23]" : "bg-gray-300"}`} />}
           </React.Fragment>
         ))}
       </div>
@@ -1153,7 +1134,7 @@ const AddNewAgent = () => {
         </div>
 
         <div className="flex gap-2">
-          {currentStep < 5 ? (
+          {currentStep < 4 ? (
             <button
               type="button"
               onClick={nextStep}
@@ -1279,7 +1260,7 @@ const AddNewAgent = () => {
                   >
                     Reset Form
                   </ButtonModule>
-                  {activeTab === "new" && currentStep === 5 && (
+                  {activeTab === "new" && currentStep === 4 && (
                     <ButtonModule
                       variant="primary"
                       size="md"
@@ -1519,6 +1500,15 @@ const AddNewAgent = () => {
                               required
                             />
 
+                            <FormInputModule
+                              label="Address"
+                              name="address"
+                              type="text"
+                              placeholder="Enter complete address"
+                              value={newAgentFormData.address}
+                              onChange={handleNewAgentInputChange}
+                            />
+
                             {/* <div className="space-y-2">
                               <label className="block text-sm font-medium text-gray-700">Roles</label>
                               <div className="mb-2 flex flex-wrap gap-2">
@@ -1645,7 +1635,7 @@ const AddNewAgent = () => {
                               />
                             )}
 
-                            {/* Required for SalesRep and Cashier */}
+                            {/* Optional for SalesRep and Cashier */}
                             {(newAgentFormData.agentType === "SalesRep" ||
                               newAgentFormData.agentType === "Cashier") && (
                               <FormSelectModule
@@ -1660,15 +1650,14 @@ const AddNewAgent = () => {
                                 }
                                 options={managerAgentOptions}
                                 error={formErrors.managerAgentId}
-                                required
                                 disabled={agentsLoading}
                               />
                             )}
 
-                            {/* Required for ClearingCashier */}
+                            {/* Optional for ClearingCashier */}
                             {newAgentFormData.agentType === "ClearingCashier" && (
                               <FormSelectModule
-                                label="Manager Agent"
+                                label="Manager Agent "
                                 name="managerAgentId"
                                 value={newAgentFormData.managerAgentId?.toString() || ""}
                                 onChange={(e) =>
@@ -1679,7 +1668,6 @@ const AddNewAgent = () => {
                                 }
                                 options={managerAgentOptions}
                                 error={formErrors.managerAgentId}
-                                required
                                 disabled={agentsLoading}
                               />
                             )}
@@ -1687,7 +1675,7 @@ const AddNewAgent = () => {
                             {/* Optional for Supervisor */}
                             {newAgentFormData.agentType === "Supervisor" && (
                               <FormSelectModule
-                                label="Manager Agent (Optional)"
+                                label="Manager Agent"
                                 name="managerAgentId"
                                 value={newAgentFormData.managerAgentId?.toString() || ""}
                                 onChange={(e) =>
@@ -1819,53 +1807,6 @@ const AddNewAgent = () => {
                           </div>
                         </motion.div>
                       )}
-
-                      {/* Step 5: Additional Information */}
-                      {currentStep === 5 && (
-                        <motion.div
-                          key="step-5"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
-                        >
-                          <div className="border-b pb-3 sm:pb-4">
-                            <div className="flex items-center gap-2">
-                              <Home className="size-5" />
-                              <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                            </div>
-                            <p className="text-sm text-gray-600">Enter additional agent information (optional)</p>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            <FormInputModule
-                              label="Employee ID"
-                              name="employeeId"
-                              type="text"
-                              placeholder="Employee identification number"
-                              value={newAgentFormData.employeeId}
-                              onChange={handleNewAgentInputChange}
-                            />
-
-                            <FormSelectModule
-                              label="Employment Type"
-                              name="employmentType"
-                              value={newAgentFormData.employmentType}
-                              onChange={handleNewAgentInputChange}
-                              options={employmentTypeOptions}
-                            />
-
-                            <FormInputModule
-                              label="Address"
-                              name="address"
-                              type="text"
-                              placeholder="Enter complete address"
-                              value={newAgentFormData.address}
-                              onChange={handleNewAgentInputChange}
-                            />
-                          </div>
-                        </motion.div>
-                      )}
                     </AnimatePresence>
 
                     {/* Error Summary */}
@@ -1924,7 +1865,7 @@ const AddNewAgent = () => {
                           Reset
                         </ButtonModule>
 
-                        {currentStep < 5 ? (
+                        {currentStep < 4 ? (
                           <ButtonModule
                             variant="primary"
                             size="md"
@@ -2087,9 +2028,9 @@ const AddNewAgent = () => {
                               />
                             )}
 
-                            {/* Manager Agent - Required for all agent types in existing user form */}
+                            {/* Manager Agent - Optional for all agent types in existing user form */}
                             <FormSelectModule
-                              label="Manager Agent (Supervisor)"
+                              label="Manager Agent"
                               name="managerAgentId"
                               value={existingUserFormData.managerAgentId?.toString() || ""}
                               onChange={(e) =>
@@ -2100,7 +2041,6 @@ const AddNewAgent = () => {
                               }
                               options={existingUserManagerAgentOptions}
                               error={formErrors.managerAgentId}
-                              required
                               disabled={agentsLoading}
                             />
 

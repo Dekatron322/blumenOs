@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { Suspense, useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -381,7 +381,7 @@ const UpdateEmployeePage = () => {
                 {/* Form Header */}
                 <div className="mb-6 border-b pb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Employee Information</h3>
-                  <p className="text-sm text-gray-600">Update the employee's information</p>
+                  <p className="text-sm text-gray-600">Update the employee&apos;s information</p>
                 </div>
 
                 {/* Employee Form */}
@@ -390,7 +390,7 @@ const UpdateEmployeePage = () => {
                   <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
                     <div className="border-b pb-3">
                       <h4 className="text-lg font-medium text-gray-900">Basic Information</h4>
-                      <p className="text-sm text-gray-600">Enter the employee's basic details</p>
+                      <p className="text-sm text-gray-600">Enter the employee&apos;s basic details</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
@@ -450,7 +450,7 @@ const UpdateEmployeePage = () => {
                   <div className="space-y-4 rounded-lg bg-[#f9f9f9] p-4 sm:space-y-6 sm:p-6">
                     <div className="border-b pb-3">
                       <h4 className="text-lg font-medium text-gray-900">Employment Details</h4>
-                      <p className="text-sm text-gray-600">Configure the employee's work arrangements</p>
+                      <p className="text-sm text-gray-600">Configure the employee&apos;s work arrangements</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
@@ -654,4 +654,22 @@ const UpdateEmployeePage = () => {
   )
 }
 
-export default UpdateEmployeePage
+const UpdateEmployeePageWrapper = () => (
+  <Suspense
+    fallback={
+      <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200">
+        <DashboardNav />
+        <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-[#004B23]"></div>
+            <p className="mt-4 text-gray-600">Loading employee data...</p>
+          </div>
+        </div>
+      </section>
+    }
+  >
+    <UpdateEmployeePage />
+  </Suspense>
+)
+
+export default UpdateEmployeePageWrapper

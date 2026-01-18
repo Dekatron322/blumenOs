@@ -516,6 +516,7 @@ const MeterReadings: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [selectedReading, setSelectedReading] = useState<MeterReading | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -807,7 +808,18 @@ const MeterReadings: React.FC = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     dispatch(setPagination({ page: 1, pageSize }))
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      dispatch(setPagination({ page: 1, pageSize }))
+    }
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -879,6 +891,7 @@ const MeterReadings: React.FC = () => {
     setLocalFilters(emptyFilters)
     setAppliedFilters(emptyFilters)
     setSearchText("")
+    setSearchInput("")
     dispatch(setPagination({ page: 1, pageSize }))
   }
 
@@ -1019,9 +1032,10 @@ const MeterReadings: React.FC = () => {
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-full sm:w-64 md:w-[380px]">
                 <SearchModule
-                  value={searchText}
-                  onChange={handleSearch}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by customer, account or period..."
                   className="w-full"
                   bgClassName="bg-white"

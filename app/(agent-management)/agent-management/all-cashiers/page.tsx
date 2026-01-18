@@ -708,6 +708,7 @@ const AllCashiers: React.FC = () => {
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [agentData, setAgentData] = useState(generateAgentData())
@@ -827,13 +828,24 @@ const AllCashiers: React.FC = () => {
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value)
+    setSearchInput(e.target.value)
     setCurrentPage(1)
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
   }
 
   const handleAddAgentSuccess = async () => {
@@ -1156,9 +1168,10 @@ const AllCashiers: React.FC = () => {
                     </button>
                     <SearchModule
                       placeholder="Search agents..."
-                      value={searchText}
+                      value={searchInput}
                       onChange={handleSearch}
                       onCancel={handleCancelSearch}
+                      onSearch={handleManualSearch}
                       className="w-[260px] md:w-[320px]"
                       bgClassName="bg-white"
                     />

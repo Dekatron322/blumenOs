@@ -58,9 +58,20 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
   const dispatch = useAppDispatch()
   const { vendors: apiVendors, loading, error } = useAppSelector((state) => state.vendors)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
   }
 
   useEffect(() => {
@@ -146,9 +157,10 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
             <h3 className="mb-2 text-lg font-semibold">Vendor Directory</h3>
             <SearchModule
               placeholder="Search vendors..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               onCancel={handleCancelSearch}
+              onSearch={handleManualSearch}
             />
           </div>
 

@@ -804,6 +804,16 @@ const ReportsTab: React.FC = () => {
     setCurrentPage(1)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchText.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
+  }
+
   const handleCancelSearch = () => {
     setSearchText("")
     setCurrentPage(1)
@@ -885,6 +895,7 @@ const ReportsTab: React.FC = () => {
                   value={searchText}
                   onChange={(e) => handleSearch(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   className="max-w-[310px] sm:w-64 md:w-80"
                 />
               </div>

@@ -430,6 +430,16 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchText.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
+    }
+  }
+
   const handleCancelSearch = () => {
     setSearchText("")
     dispatch(setPagination({ page: 1, pageSize: pagination.pageSize }))
@@ -688,7 +698,9 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ onViewMaintenanceDetail
                     value={searchText}
                     onChange={(e) => handleSearch(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search maintenance by title, reference code, or location..."
+                    className="w-80 max-w-[310px]"
                   />
                 </div>
               </div>
