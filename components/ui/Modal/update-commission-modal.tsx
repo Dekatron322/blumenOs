@@ -14,7 +14,8 @@ interface UpdateCommissionModalProps {
   onConfirm?: () => void
   vendorId: number
   vendorName: string
-  currentCommission: number
+  currentUrbanCommission?: number
+  currentRuralCommission?: number
   onSuccess?: () => void
 }
 
@@ -24,20 +25,23 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
   onConfirm,
   vendorId,
   vendorName,
-  currentCommission,
+  currentUrbanCommission,
+  currentRuralCommission,
   onSuccess,
 }) => {
   const dispatch = useAppDispatch()
   const [isLoading, setIsLoading] = React.useState(false)
-  const [commission, setCommission] = React.useState(currentCommission.toString())
+  const [urbanCommission, setUrbanCommission] = React.useState((currentUrbanCommission || 0).toString())
+  const [ruralCommission, setRuralCommission] = React.useState((currentRuralCommission || 0).toString())
   const [error, setError] = React.useState("")
 
   React.useEffect(() => {
     if (isOpen) {
-      setCommission(currentCommission.toString())
+      setUrbanCommission((currentUrbanCommission || 0).toString())
+      setRuralCommission((currentRuralCommission || 0).toString())
       setError("")
     }
-  }, [isOpen, currentCommission])
+  }, [isOpen, currentUrbanCommission, currentRuralCommission])
 
   if (!isOpen) return null
 
@@ -59,18 +63,28 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
     return ""
   }
 
-  const handleCommissionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrbanCommissionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    setCommission(value)
+    setUrbanCommission(value)
+
+    const validationError = validateCommission(value)
+    setError(validationError)
+  }
+
+  const handleRuralCommissionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setRuralCommission(value)
 
     const validationError = validateCommission(value)
     setError(validationError)
   }
 
   const handleConfirm = async () => {
-    const validationError = validateCommission(commission)
-    if (validationError) {
-      setError(validationError)
+    const urbanValidationError = validateCommission(urbanCommission)
+    const ruralValidationError = validateCommission(ruralCommission)
+
+    if (urbanValidationError || ruralValidationError) {
+      setError(urbanValidationError || ruralValidationError)
       return
     }
 
@@ -84,12 +98,15 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
         return
       }
 
-      // Otherwise, use the update vendor commission action
-      const commissionValue = parseFloat(commission)
+      // Use the update vendor commission action with separate urban and rural values
+      const urbanCommissionValue = parseFloat(urbanCommission)
+      const ruralCommissionValue = parseFloat(ruralCommission)
+
       const result = await dispatch(
         updateVendorCommission({
           id: vendorId,
-          commission: commissionValue,
+          urbanCommission: urbanCommissionValue,
+          ruralCommission: ruralCommissionValue,
         })
       )
 
@@ -114,9 +131,9 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
     }
   }
 
-  const commissionValue = parseFloat(commission)
-  const hasChanges = commissionValue !== currentCommission
-  const isCommissionIncreased = commissionValue > currentCommission
+  const urbanCommissionValue = parseFloat(urbanCommission)
+  const ruralCommissionValue = parseFloat(ruralCommission)
+  const hasChanges = urbanCommissionValue !== currentUrbanCommission || ruralCommissionValue !== currentRuralCommission
 
   return (
     <motion.div
@@ -149,17 +166,8 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
           <div className="flex flex-col items-center px-6 pb-6 pt-6">
             {/* Info Icon */}
             <div className="mb-6 flex items-center justify-center">
-              <div
-                className={`flex size-20 items-center justify-center rounded-full ${
-                  isCommissionIncreased ? "bg-green-50" : "bg-blue-50"
-                }`}
-              >
-                <svg
-                  className={`size-10 ${isCommissionIncreased ? "text-green-500" : "text-blue-500"}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+              <div className="flex size-20 items-center justify-center rounded-full bg-blue-50">
+                <svg className="size-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -177,54 +185,102 @@ const UpdateCommissionModal: React.FC<UpdateCommissionModalProps> = ({
             </p>
 
             {/* Current Commission Display */}
-            <div className="mb-4 w-full rounded-lg bg-gray-50 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">Current Commission:</span>
-                <span className="text-lg font-bold text-gray-900">{currentCommission}%</span>
+            <div className="mb-6 w-full space-y-3">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Current Urban Commission:</span>
+                  <span className="text-lg font-bold text-gray-900">{currentUrbanCommission || 0}%</span>
+                </div>
+              </div>
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Current Rural Commission:</span>
+                  <span className="text-lg font-bold text-gray-900">{currentRuralCommission || 0}%</span>
+                </div>
               </div>
             </div>
 
-            {/* Commission Input */}
-            <div className="mb-4 w-full">
-              <label htmlFor="commission" className="mb-2 block text-sm font-medium text-gray-700">
-                New Commission Rate (%)
-              </label>
-              <div className="relative">
-                <input
-                  id="commission"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={commission}
-                  onChange={handleCommissionChange}
-                  onKeyPress={handleKeyPress}
-                  className={`w-full rounded-lg border bg-white px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                    error ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
-                  }`}
-                  placeholder="Enter commission percentage"
-                  disabled={isLoading}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-gray-500">%</span>
+            {/* Commission Inputs */}
+            <div className="mb-4 w-full space-y-4">
+              <div>
+                <label htmlFor="urbanCommission" className="mb-2 block text-sm font-medium text-gray-700">
+                  Urban Commission Rate (%)
+                </label>
+                <div className="relative">
+                  <input
+                    id="urbanCommission"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={urbanCommission}
+                    onChange={handleUrbanCommissionChange}
+                    onKeyPress={handleKeyPress}
+                    className={`w-full rounded-lg border bg-white px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+                      error ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    }`}
+                    placeholder="Enter urban commission percentage"
+                    disabled={isLoading}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-gray-500">%</span>
+                  </div>
                 </div>
               </div>
-              {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+              <div>
+                <label htmlFor="ruralCommission" className="mb-2 block text-sm font-medium text-gray-700">
+                  Rural Commission Rate (%)
+                </label>
+                <div className="relative">
+                  <input
+                    id="ruralCommission"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={ruralCommission}
+                    onChange={handleRuralCommissionChange}
+                    onKeyPress={handleKeyPress}
+                    className={`w-full rounded-lg border bg-white px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+                      error ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    }`}
+                    placeholder="Enter rural commission percentage"
+                    disabled={isLoading}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-gray-500">%</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
             {/* Change Indicator */}
             {hasChanges && (
-              <div
-                className={`w-full rounded-lg p-3 ${
-                  isCommissionIncreased ? "border border-green-200 bg-green-50" : "border border-blue-200 bg-blue-50"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Change:</span>
-                  <span className={`text-sm font-bold ${isCommissionIncreased ? "text-green-700" : "text-blue-700"}`}>
-                    {isCommissionIncreased ? "↑" : "↓"} {Math.abs(commissionValue - currentCommission).toFixed(1)}%
-                    {isCommissionIncreased ? " increase" : " decrease"}
-                  </span>
+              <div className="w-full rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <div className="space-y-2">
+                  {urbanCommissionValue !== currentUrbanCommission && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Urban Change:</span>
+                      <span className="text-sm font-bold text-blue-700">
+                        {urbanCommissionValue > (currentUrbanCommission || 0) ? "↑" : "↓"}{" "}
+                        {Math.abs(urbanCommissionValue - (currentUrbanCommission || 0)).toFixed(1)}%
+                        {urbanCommissionValue > (currentUrbanCommission || 0) ? " increase" : " decrease"}
+                      </span>
+                    </div>
+                  )}
+                  {ruralCommissionValue !== currentRuralCommission && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Rural Change:</span>
+                      <span className="text-sm font-bold text-blue-700">
+                        {ruralCommissionValue > (currentRuralCommission || 0) ? "↑" : "↓"}{" "}
+                        {Math.abs(ruralCommissionValue - (currentRuralCommission || 0)).toFixed(1)}%
+                        {ruralCommissionValue > (currentRuralCommission || 0) ? " increase" : " decrease"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

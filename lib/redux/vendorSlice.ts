@@ -12,6 +12,7 @@ export interface VendorEmployeeUser {
 }
 
 export interface Vendor {
+  commission: any
   id: number
   accountId: string
   blumenpayId: string
@@ -23,15 +24,18 @@ export interface Vendor {
   state: string
   canProcessPostpaid: boolean
   canProcessPrepaid: boolean
+  posCollectionAllowed: boolean
   status: string
   isSuspended: boolean
-  commission: number
+  urbanCommissionPercent: number
+  ruralCommissionPercent: number
   employeeUserId: number
   employeeName: string
   apiPublicKey: string
   apiKeyIssuedAt: string
   apiKeyLastUsedAt: string
   documentUrls: string[]
+  webhookUrl?: string
   suspendedAt?: string
   suspensionReason?: string
   lastLoginAt?: string
@@ -89,7 +93,8 @@ export interface VendorSuspendResponse {
 
 // Vendor Commission Update Interfaces
 export interface VendorCommissionUpdateRequest {
-  commission: number
+  urbanCommissionPercent?: number
+  ruralCommissionPercent?: number
 }
 
 export interface VendorCommissionUpdateResponse {
@@ -109,7 +114,9 @@ export interface BulkVendorRequest {
   state: string
   canProcessPostpaid: boolean
   canProcessPrepaid: boolean
-  commission: number
+  posCollectionAllowed: boolean
+  urbanCommissionPercent: number
+  ruralCommissionPercent: number
   employeeUserId: number
   documentUrls: string[]
 }
@@ -167,6 +174,18 @@ export interface ApiKeyResponse {
   isSuccess: boolean
   message: string
   data: ApiKeyData
+}
+
+// Webhook Secret Rotation Interfaces
+export interface WebhookSecretData {
+  webhookSecret: string
+  generatedAtUtc: string
+}
+
+export interface WebhookSecretResponse {
+  isSuccess: boolean
+  message: string
+  data: WebhookSecretData
 }
 
 // Change Request Interfaces
@@ -313,6 +332,31 @@ export interface DeclineChangeRequestResponse {
   isSuccess: boolean
   message: string
   data: ChangeRequestResponseData
+}
+
+// Vendor Update Interfaces
+export interface VendorUpdateRequest {
+  name?: string
+  phoneNumber?: string
+  email?: string
+  address?: string
+  city?: string
+  state?: string
+  canProcessPostpaid?: boolean
+  canProcessPrepaid?: boolean
+  posCollectionAllowed?: boolean
+  urbanCommissionPercent?: number
+  ruralCommissionPercent?: number
+  status?: string
+  employeeUserId?: number
+  documentUrls?: string[]
+  webhookUrl?: string
+}
+
+export interface VendorUpdateResponse {
+  isSuccess: boolean
+  message: string
+  data: Vendor
 }
 
 // Vendor Payment Interfaces
@@ -499,6 +543,17 @@ interface VendorState {
     hasNext: boolean
     hasPrevious: boolean
   }
+
+  // Vendor Update state
+  vendorUpdateLoading: boolean
+  vendorUpdateError: string | null
+  vendorUpdateSuccess: boolean
+
+  // Webhook Secret Rotation state
+  webhookSecretRotationLoading: boolean
+  webhookSecretRotationError: string | null
+  webhookSecretRotationSuccess: boolean
+  rotatedWebhookSecret: WebhookSecretData | null
 }
 
 // Initial state
@@ -591,6 +646,13 @@ const initialState: VendorState = {
     hasNext: false,
     hasPrevious: false,
   },
+  vendorUpdateLoading: false,
+  vendorUpdateError: null,
+  vendorUpdateSuccess: false,
+  webhookSecretRotationLoading: false,
+  webhookSecretRotationError: null,
+  webhookSecretRotationSuccess: false,
+  rotatedWebhookSecret: null,
 }
 
 // Async thunks
@@ -729,10 +791,20 @@ export const suspendVendor = createAsyncThunk(
 
 export const updateVendorCommission = createAsyncThunk(
   "vendors/updateVendorCommission",
-  async ({ id, commission }: { id: number; commission: number }, { rejectWithValue }) => {
+  async (
+    { id, urbanCommission, ruralCommission }: { id: number; urbanCommission?: number; ruralCommission?: number },
+    { rejectWithValue }
+  ) => {
     try {
       const endpoint = API_ENDPOINTS.VENDORS.UPDATE_COMMISSION.replace("{id}", id.toString())
-      const requestData: VendorCommissionUpdateRequest = { commission }
+      const requestData: VendorCommissionUpdateRequest = {}
+
+      if (urbanCommission !== undefined) {
+        requestData.urbanCommissionPercent = urbanCommission
+      }
+      if (ruralCommission !== undefined) {
+        requestData.ruralCommissionPercent = ruralCommission
+      }
 
       const response = await api.put<VendorCommissionUpdateResponse>(buildApiUrl(endpoint), requestData)
 
@@ -787,6 +859,27 @@ export const generateApiKey = createAsyncThunk("vendors/generateApiKey", async (
     return rejectWithValue(error.message || "Network error during API key generation")
   }
 })
+
+export const rotateWebhookSecret = createAsyncThunk(
+  "vendors/rotateWebhookSecret",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.VENDORS.ROTATE_WEBHOOK_SECRET.replace("{id}", id.toString())
+      const response = await api.post<WebhookSecretResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to rotate webhook secret")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to rotate webhook secret")
+      }
+      return rejectWithValue(error.message || "Network error during webhook secret rotation")
+    }
+  }
+)
 
 // Change Request Async Thunks
 export const submitVendorChangeRequest = createAsyncThunk(
@@ -969,6 +1062,27 @@ export const declineChangeRequest = createAsyncThunk(
   }
 )
 
+export const updateVendor = createAsyncThunk(
+  "vendors/updateVendor",
+  async ({ id, updateData }: { id: number; updateData: VendorUpdateRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.VENDORS.UPDATE.replace("{id}", id.toString())
+      const response = await api.put<VendorUpdateResponse>(buildApiUrl(endpoint), updateData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update vendor")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update vendor")
+      }
+      return rejectWithValue(error.message || "Network error during vendor update")
+    }
+  }
+)
+
 // Vendor Payment Async Thunks
 export const fetchVendorPayments = createAsyncThunk(
   "vendors/fetchVendorPayments",
@@ -1069,6 +1183,8 @@ const vendorSlice = createSlice({
       state.approveChangeRequestError = null
       state.declineChangeRequestError = null
       state.vendorPaymentsError = null
+      state.vendorUpdateError = null
+      state.webhookSecretRotationError = null
     },
 
     // Clear current vendor
@@ -1199,6 +1315,21 @@ const vendorSlice = createSlice({
       }
     },
 
+    // Clear vendor update state
+    clearVendorUpdate: (state) => {
+      state.vendorUpdateLoading = false
+      state.vendorUpdateError = null
+      state.vendorUpdateSuccess = false
+    },
+
+    // Clear webhook secret rotation state
+    clearWebhookSecretRotation: (state) => {
+      state.webhookSecretRotationLoading = false
+      state.webhookSecretRotationError = null
+      state.webhookSecretRotationSuccess = false
+      state.rotatedWebhookSecret = null
+    },
+
     // Reset vendor state
     resetVendorState: (state) => {
       state.vendors = []
@@ -1289,6 +1420,13 @@ const vendorSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+      state.vendorUpdateLoading = false
+      state.vendorUpdateError = null
+      state.vendorUpdateSuccess = false
+      state.webhookSecretRotationLoading = false
+      state.webhookSecretRotationError = null
+      state.webhookSecretRotationSuccess = false
+      state.rotatedWebhookSecret = null
     },
 
     // Set pagination
@@ -1357,19 +1495,6 @@ const vendorSlice = createSlice({
       }
     },
 
-    // Update vendor commission (optimistic update)
-    updateVendorCommissionOptimistic: (state, action: PayloadAction<number>) => {
-      if (state.currentVendor) {
-        state.currentVendor.commission = action.payload
-      }
-
-      // Also update in vendors list if the vendor exists there
-      const vendorIndex = state.vendors.findIndex((v) => v.id === state.currentVendor?.id)
-      if (vendorIndex !== -1) {
-        state.vendors[vendorIndex]!.commission = action.payload
-      }
-    },
-
     // Update vendor API key info after generation (optimistic update)
     updateVendorApiKeyInfo: (state, action: PayloadAction<{ apiPublicKey: string; apiKeyIssuedAt: string }>) => {
       if (state.currentVendor) {
@@ -1382,6 +1507,30 @@ const vendorSlice = createSlice({
       if (vendorIndex !== -1) {
         state.vendors[vendorIndex]!.apiPublicKey = action.payload.apiPublicKey
         state.vendors[vendorIndex]!.apiKeyIssuedAt = action.payload.apiKeyIssuedAt
+      }
+    },
+
+    // Update vendor commission (optimistic update)
+    updateVendorCommissionOptimistic: (state, action: PayloadAction<{ urban?: number; rural?: number }>) => {
+      if (state.currentVendor) {
+        if (action.payload.urban !== undefined) {
+          state.currentVendor.urbanCommissionPercent = action.payload.urban
+        }
+        if (action.payload.rural !== undefined) {
+          state.currentVendor.ruralCommissionPercent = action.payload.rural
+        }
+      }
+
+      // Also update in vendors list if vendor exists there
+      const vendorIndex = state.vendors.findIndex((v) => v.id === state.currentVendor?.id)
+      if (vendorIndex !== -1) {
+        const vendor = state.vendors[vendorIndex]!
+        if (action.payload.urban !== undefined) {
+          vendor.urbanCommissionPercent = action.payload.urban
+        }
+        if (action.payload.rural !== undefined) {
+          vendor.ruralCommissionPercent = action.payload.rural
+        }
       }
     },
   },
@@ -1842,6 +1991,52 @@ const vendorSlice = createSlice({
           hasPrevious: false,
         }
       })
+      // Update vendor cases
+      .addCase(updateVendor.pending, (state) => {
+        state.vendorUpdateLoading = true
+        state.vendorUpdateError = null
+        state.vendorUpdateSuccess = false
+      })
+      .addCase(updateVendor.fulfilled, (state, action: PayloadAction<VendorUpdateResponse>) => {
+        state.vendorUpdateLoading = false
+        state.vendorUpdateSuccess = true
+        state.vendorUpdateError = null
+
+        // Update current vendor with new data
+        if (state.currentVendor && state.currentVendor.id === action.payload.data.id) {
+          state.currentVendor = action.payload.data
+        }
+
+        // Update vendor in vendors list
+        const vendorIndex = state.vendors.findIndex((v) => v.id === action.payload.data.id)
+        if (vendorIndex !== -1) {
+          state.vendors[vendorIndex] = action.payload.data
+        }
+      })
+      .addCase(updateVendor.rejected, (state, action) => {
+        state.vendorUpdateLoading = false
+        state.vendorUpdateError = (action.payload as string) || "Failed to update vendor"
+        state.vendorUpdateSuccess = false
+      })
+      // Rotate webhook secret cases
+      .addCase(rotateWebhookSecret.pending, (state) => {
+        state.webhookSecretRotationLoading = true
+        state.webhookSecretRotationError = null
+        state.webhookSecretRotationSuccess = false
+        state.rotatedWebhookSecret = null
+      })
+      .addCase(rotateWebhookSecret.fulfilled, (state, action: PayloadAction<WebhookSecretResponse>) => {
+        state.webhookSecretRotationLoading = false
+        state.webhookSecretRotationSuccess = true
+        state.rotatedWebhookSecret = action.payload.data
+        state.webhookSecretRotationError = null
+      })
+      .addCase(rotateWebhookSecret.rejected, (state, action) => {
+        state.webhookSecretRotationLoading = false
+        state.webhookSecretRotationError = (action.payload as string) || "Failed to rotate webhook secret"
+        state.webhookSecretRotationSuccess = false
+        state.rotatedWebhookSecret = null
+      })
   },
 })
 
@@ -1862,6 +2057,8 @@ export const {
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
   clearVendorPayments,
+  clearVendorUpdate,
+  clearWebhookSecretRotation,
   resetVendorState,
   setPagination,
   setChangeRequestsPagination,

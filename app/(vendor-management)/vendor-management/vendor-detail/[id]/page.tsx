@@ -7,8 +7,12 @@ import {
   AlertCircle,
   CheckCircle,
   ChevronDown,
+  Copy,
   CreditCard,
   Edit3,
+  Eye,
+  EyeOff,
+  Globe,
   Mail,
   MapPin,
   Phone,
@@ -18,6 +22,7 @@ import {
   TrendingUp,
   User,
   Wallet,
+  Webhook,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import SendReminderModal from "components/ui/Modal/send-reminder-modal"
@@ -25,6 +30,7 @@ import TopUpWalletModal from "components/ui/Modal/top-up-wallet"
 import SuspendVendorModal from "components/ui/Modal/suspend-vendor-modal"
 import UpdateCommissionModal from "components/ui/Modal/update-commission-modal"
 import GenerateApiKeyModal from "components/ui/Modal/generate-api-key-modal"
+import RotateWebhookModal from "components/ui/Modal/rotate-webhook-modal"
 import VendorChangeRequestModal from "components/ui/Modal/vendor-change-request-modal"
 import VendorChangeRequestsTab from "components/Tabs/vendor-change-requests-tab"
 import VendorPaymentsTab from "components/Tabs/vendor-payments-tab"
@@ -33,6 +39,7 @@ import {
   BasicInfoOutlineIcon,
   CalendarOutlineIcon,
   ChangeRequestOutlineIcon,
+  ConnectionIcon,
   DepartmentInfoIcon,
   EmailOutlineIcon,
   EmployeeInfoIcon,
@@ -83,12 +90,27 @@ const VendorDetailsPage = () => {
     | "generateApiKey"
     | "changeRequest"
     | "updateCommission"
+    | "rotateWebhook"
     | null
   >(null)
+
+  React.useEffect(() => {
+    console.log("activeModal changed:", activeModal)
+  }, [activeModal])
   const [isExporting, setIsExporting] = useState(false)
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>("details")
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+
+  const handleCopyApiKey = () => {
+    if (currentVendor?.apiPublicKey) {
+      navigator.clipboard.writeText(currentVendor.apiPublicKey)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000) // Reset after 2 seconds
+    }
+  }
 
   useEffect(() => {
     if (vendorId) {
@@ -168,7 +190,11 @@ const VendorDetailsPage = () => {
       | "generateApiKey"
       | "changeRequest"
       | "updateCommission"
-  ) => setActiveModal(modalType)
+      | "rotateWebhook"
+  ) => {
+    console.log("Opening modal:", modalType)
+    setActiveModal(modalType)
+  }
 
   const handleConfirmSuspend = () => {
     console.log("Vendor suspended")
@@ -190,6 +216,18 @@ const VendorDetailsPage = () => {
       }
     }
     closeAllModals()
+  }
+
+  const handleApiKeyGenerationSuccess = () => {
+    // Refresh vendor details after successful API key generation but keep modal open
+    if (vendorId) {
+      const id = parseInt(vendorId)
+      if (!isNaN(id)) {
+        dispatch(fetchVendorById(id))
+        dispatch(fetchVendorWallet(id))
+      }
+    }
+    // Don't close the modal - let user see the generated keys
   }
 
   const handleChangeRequestSuccess = () => {
@@ -299,7 +337,8 @@ const VendorDetailsPage = () => {
           ["BlumenPay ID", currentVendor.blumenpayId],
           ["Status", currentVendor.status],
           ["Suspended", currentVendor.isSuspended ? "Yes" : "No"],
-          ["Commission", formatCommission(currentVendor.commission)],
+          ["Urban Commission", formatCommission(currentVendor.urbanCommissionPercent)],
+          ["Rural Commission", formatCommission(currentVendor.ruralCommissionPercent)],
         ],
         theme: "grid",
         headStyles: { fillColor: [59, 130, 246], textColor: 255 },
@@ -369,6 +408,7 @@ const VendorDetailsPage = () => {
         body: [
           ["Postpaid Processing", currentVendor.canProcessPostpaid ? "Enabled" : "Disabled"],
           ["Prepaid Processing", currentVendor.canProcessPrepaid ? "Enabled" : "Disabled"],
+          ["POS Collection", currentVendor.posCollectionAllowed ? "Enabled" : "Disabled"],
         ],
         theme: "grid",
         headStyles: { fillColor: [245, 158, 11], textColor: 255 },
@@ -388,10 +428,13 @@ const VendorDetailsPage = () => {
         startY: yPosition,
         head: [["Category", "Details"]],
         body: [
-          ["Assigned Employee", currentVendor.employeeName || "Not assigned"],
+          ["Assigned Employee", currentVendor.employeeUser?.fullName || currentVendor.employeeName || "Not assigned"],
           ["Employee User ID", currentVendor.employeeUserId?.toString() || "N/A"],
+          ["Employee Email", currentVendor.employeeUser?.email || "N/A"],
+          ["Employee Phone", currentVendor.employeeUser?.phoneNumber || "N/A"],
           ["API Key Issued", formatDate(currentVendor.apiKeyIssuedAt)],
           ["API Key Last Used", formatDate(currentVendor.apiKeyLastUsedAt)],
+          ["Webhook URL", currentVendor.webhookUrl || "N/A"],
           ["Suspended At", formatDate(currentVendor.suspendedAt)],
           ["Suspension Reason", currentVendor.suspensionReason || "N/A"],
           ["Last Login", formatDate(currentVendor.lastLoginAt)],
@@ -506,7 +549,7 @@ const VendorDetailsPage = () => {
                         variant="primary"
                         size="md"
                         className="flex items-center gap-2"
-                        onClick={() => openModal("edit")}
+                        onClick={() => router.push(`/vendor-management/update-vendor/${vendorId}`)}
                       >
                         <Edit3 className="size-4" />
                         Edit
@@ -567,7 +610,8 @@ const VendorDetailsPage = () => {
                           </div>
                         )}
                         <div className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600">
-                          Commission: {formatCommission(currentVendor.commission)}
+                          Urban: {formatCommission(currentVendor.urbanCommissionPercent)} / Rural:{" "}
+                          {formatCommission(currentVendor.ruralCommissionPercent)}
                         </div>
                       </div>
 
@@ -714,7 +758,7 @@ const VendorDetailsPage = () => {
                         </h3>
                         <div className="space-y-3">
                           <ButtonModule
-                            variant="secondary"
+                            variant="outlinePurple"
                             className="w-full justify-start gap-3"
                             onClick={() => openModal("updateCommission")}
                           >
@@ -722,12 +766,20 @@ const VendorDetailsPage = () => {
                             Update Commission
                           </ButtonModule>
                           <ButtonModule
-                            variant="primary"
+                            variant="outlineBlue"
                             className="w-full justify-start gap-3"
                             onClick={() => openModal("generateApiKey")}
                           >
                             <PasswordOutlineIcon size={20} />
                             Generate API Key
+                          </ButtonModule>
+                          <ButtonModule
+                            variant="outlineGreen"
+                            className="w-full justify-start gap-3"
+                            onClick={() => openModal("rotateWebhook")}
+                            icon={<Webhook size={20} />}
+                          >
+                            Rotate Webhook
                           </ButtonModule>
                           <ButtonModule
                             variant={currentVendor.isSuspended ? "primary" : "danger"}
@@ -876,8 +928,16 @@ const VendorDetailsPage = () => {
                             <p className="font-semibold text-gray-900">{currentVendor.accountId}</p>
                           </div>
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Commission Rate</label>
-                            <p className="font-semibold text-gray-900">{formatCommission(currentVendor.commission)}</p>
+                            <label className="text-sm font-medium text-gray-600">Urban Commission Rate</label>
+                            <p className="font-semibold text-gray-900">
+                              {formatCommission(currentVendor.urbanCommissionPercent)}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Rural Commission Rate</label>
+                            <p className="font-semibold text-gray-900">
+                              {formatCommission(currentVendor.ruralCommissionPercent)}
+                            </p>
                           </div>
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                             <label className="text-sm font-medium text-gray-600">Status</label>
@@ -891,7 +951,17 @@ const VendorDetailsPage = () => {
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
                             <label className="text-sm font-medium text-gray-600">Assigned Employee</label>
                             <p className="font-semibold text-gray-900">
-                              {currentVendor.employeeName || "Not assigned"}
+                              {currentVendor.employeeUser?.fullName || currentVendor.employeeName || "Not assigned"}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Employee Email</label>
+                            <p className="font-semibold text-gray-900">{currentVendor.employeeUser?.email || "N/A"}</p>
+                          </div>
+                          <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
+                            <label className="text-sm font-medium text-gray-600">Employee Phone</label>
+                            <p className="font-semibold text-gray-900">
+                              {currentVendor.employeeUser?.phoneNumber || "N/A"}
                             </p>
                           </div>
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
@@ -967,7 +1037,7 @@ const VendorDetailsPage = () => {
                           <DepartmentInfoIcon />
                           Service Capabilities
                         </h3>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                           <div className="space-y-4">
                             <div className={`rounded-lg border border-gray-100 p-4 ${postpaidConfig.bg}`}>
                               <label className="text-sm font-medium text-gray-600">Postpaid Processing</label>
@@ -983,6 +1053,25 @@ const VendorDetailsPage = () => {
                               <p className={`font-semibold ${prepaidConfig.color}`}>{prepaidConfig.label}</p>
                               <p className="mt-1 text-sm text-gray-600">
                                 Ability to process prepaid payment transactions
+                              </p>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div
+                              className={`rounded-lg border border-gray-100 p-4 ${
+                                currentVendor.posCollectionAllowed ? "bg-emerald-50" : "bg-gray-50"
+                              }`}
+                            >
+                              <label className="text-sm font-medium text-gray-600">POS Collection</label>
+                              <p
+                                className={`font-semibold ${
+                                  currentVendor.posCollectionAllowed ? "text-emerald-600" : "text-gray-600"
+                                }`}
+                              >
+                                {currentVendor.posCollectionAllowed ? "ENABLED" : "DISABLED"}
+                              </p>
+                              <p className="mt-1 text-sm text-gray-600">
+                                Ability to collect payments via POS terminals
                               </p>
                             </div>
                           </div>
@@ -1037,8 +1126,38 @@ const VendorDetailsPage = () => {
                             API Information
                           </h3>
                           <div className="rounded-lg border border-gray-100 bg-[#f9f9f9] p-4">
-                            <label className="text-sm font-medium text-gray-600">Public API Key</label>
-                            <p className="break-all font-mono text-sm text-gray-900">{currentVendor.apiPublicKey}</p>
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-gray-600">Public API Key</label>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={handleCopyApiKey}
+                                  className={`rounded p-1 transition-colors ${
+                                    isCopied
+                                      ? "bg-green-50 text-green-600"
+                                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                  }`}
+                                  title={isCopied ? "Copied!" : "Copy API Key"}
+                                >
+                                  {isCopied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsApiKeyVisible(!isApiKeyVisible)}
+                                  className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                                  title={isApiKeyVisible ? "Hide API Key" : "Show API Key"}
+                                >
+                                  {isApiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                            </div>
+                            <p
+                              className={`break-all font-mono text-sm text-gray-900 ${
+                                !isApiKeyVisible ? "select-none blur-sm" : ""
+                              }`}
+                            >
+                              {currentVendor.apiPublicKey}
+                            </p>
                           </div>
                         </motion.div>
                       )}
@@ -1101,6 +1220,7 @@ const VendorDetailsPage = () => {
         }}
         vendorId={currentVendor.id}
         vendorName={currentVendor.name}
+        vendorEmail={currentVendor.email}
         currentBalance={vendorWallet?.balance ?? 0}
         currency={vendorWallet?.currency ?? "NGN"}
       />
@@ -1118,7 +1238,8 @@ const VendorDetailsPage = () => {
         onRequestClose={closeAllModals}
         vendorId={currentVendor.id}
         vendorName={currentVendor.name}
-        currentCommission={currentVendor.commission}
+        currentUrbanCommission={currentVendor.urbanCommissionPercent}
+        currentRuralCommission={currentVendor.ruralCommissionPercent}
         onSuccess={handleUpdateSuccess}
       />
 
@@ -1127,9 +1248,20 @@ const VendorDetailsPage = () => {
         onRequestClose={closeAllModals}
         vendorId={currentVendor.id}
         vendorName={currentVendor.name}
-        onSuccess={() => {
-          handleUpdateSuccess()
+        onSuccess={(apiKeyData) => {
+          // You can handle the success here if needed
+          console.log("API keys generated:", apiKeyData)
+          // Don't refresh immediately - let users copy the keys
+          // handleUpdateSuccess(); // Remove this line
         }}
+      />
+
+      <RotateWebhookModal
+        isOpen={activeModal === "rotateWebhook"}
+        onRequestClose={closeAllModals}
+        onSuccess={handleUpdateSuccess}
+        vendorId={currentVendor.id}
+        vendorName={currentVendor.name}
       />
 
       {/* TODO: Implement UpdateVendorModal */}
