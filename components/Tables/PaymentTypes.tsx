@@ -359,7 +359,7 @@ const PaymentTypes: React.FC = () => {
       />
 
       <motion.div
-        className="items-center justify-between py-2 md:flex"
+        className="w-full items-center justify-between py-2 md:flex"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
