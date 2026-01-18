@@ -28,6 +28,7 @@ import {
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
+import AgentChangePasswordModal from "components/ui/Modal/agent-change-password-modal"
 import {
   ChangeRequestOutlineIcon,
   ExportCsvIcon,
@@ -43,6 +44,7 @@ import {
   fetchChangeRequestsByAgentId,
   fetchPayments,
 } from "lib/redux/agentSlice"
+import { resetEmployeePassword } from "lib/redux/employeeSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
@@ -160,6 +162,7 @@ const AgentDetailsPage = () => {
   const [activeAction, setActiveAction] = useState<"edit" | "deactivate" | "activate" | "resetPassword" | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false)
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<AgentTabType>("basic-info")
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
   const [paymentsPage, setPaymentsPage] = useState(1)
@@ -496,10 +499,7 @@ const AgentDetailsPage = () => {
 
   const handleResetPassword = () => {
     if (!currentAgent) return
-    console.log("Resetting password for agent:", currentAgent.id)
-    setActiveAction("resetPassword")
-    // TODO: Implement actual password reset logic
-    setTimeout(() => setActiveAction(null), 2000)
+    setIsResetPasswordModalOpen(true)
   }
 
   const toggleSection = (section: string) => {
@@ -1752,6 +1752,17 @@ const AgentDetailsPage = () => {
         agentId={currentAgent.id}
         agentName={currentAgent.user.fullName}
         agentCode={currentAgent.agentCode}
+      />
+
+      <AgentChangePasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onRequestClose={() => setIsResetPasswordModalOpen(false)}
+        userId={currentAgent.user.id}
+        agentName={currentAgent.user.fullName}
+        onSuccess={() => {
+          // Optional: Refresh agent data or show success message
+          console.log("Password reset successfully")
+        }}
       />
     </section>
   )

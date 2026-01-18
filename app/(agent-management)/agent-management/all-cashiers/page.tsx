@@ -10,9 +10,11 @@ import { BillsIcon, MapIcon, PhoneIcon, PlusIcon, UserIcon } from "components/Ic
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
+import AgentChangePasswordModal from "components/ui/Modal/agent-change-password-modal"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { AgentsRequestParams, type Agent as BackendAgent, fetchAgents } from "lib/redux/agentSlice"
+import { resetEmployeePassword } from "lib/redux/employeeSlice"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { formatCurrency } from "utils/formatCurrency"
 
@@ -98,6 +100,7 @@ const CyclesIcon = () => (
 
 interface Agent {
   id: number
+  userId: number // Add user ID
   name: string
   status: "active" | "inactive" | "low float"
   phone: string
@@ -705,6 +708,8 @@ const AllCashiers: React.FC = () => {
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
 
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false)
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
+  const [selectedAgentForReset, setSelectedAgentForReset] = useState<Agent | null>(null)
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
   const [searchText, setSearchText] = useState("")
@@ -749,6 +754,7 @@ const AllCashiers: React.FC = () => {
   const agents: Agent[] = backendAgents.map((agent: BackendAgent) => ({
     id: agent.id,
     name: agent.user.fullName,
+    userId: agent.user.id, // Add user ID for password reset
     status:
       agent.status.toLowerCase() === "active"
         ? "active"
@@ -971,6 +977,11 @@ const AllCashiers: React.FC = () => {
     if (appliedFilters.lastCashCollectionDateTo) count++
     if (appliedFilters.sortBy) count++
     return count
+  }
+
+  const handleResetPassword = (agent: Agent) => {
+    setSelectedAgentForReset(agent)
+    setIsResetPasswordModalOpen(true)
   }
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
@@ -1323,14 +1334,26 @@ const AllCashiers: React.FC = () => {
                                   </motion.div>
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                                  <ButtonModule
-                                    variant="outline"
-                                    type="button"
-                                    size="sm"
-                                    onClick={() => router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)}
-                                  >
-                                    View details
-                                  </ButtonModule>
+                                  <div className="flex items-center gap-2">
+                                    <ButtonModule
+                                      variant="outline"
+                                      type="button"
+                                      size="sm"
+                                      onClick={() =>
+                                        router.push(`/agent-management/all-agents/agent-detail/${agent.id}`)
+                                      }
+                                    >
+                                      View details
+                                    </ButtonModule>
+                                    <ButtonModule
+                                      variant="outline"
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => handleResetPassword(agent)}
+                                    >
+                                      Reset Password
+                                    </ButtonModule>
+                                  </div>
                                 </td>
                               </motion.tr>
                             ))}
@@ -1694,6 +1717,21 @@ const AllCashiers: React.FC = () => {
         isOpen={isAddAgentModalOpen}
         onRequestClose={() => setIsAddAgentModalOpen(false)}
         onSuccess={handleAddAgentSuccess}
+      />
+
+      <AgentChangePasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onRequestClose={() => {
+          setIsResetPasswordModalOpen(false)
+          setSelectedAgentForReset(null)
+        }}
+        userId={selectedAgentForReset?.userId || 0}
+        agentName={selectedAgentForReset?.name || ""}
+        onSuccess={() => {
+          console.log("Password reset successfully")
+          setIsResetPasswordModalOpen(false)
+          setSelectedAgentForReset(null)
+        }}
       />
     </section>
   )
