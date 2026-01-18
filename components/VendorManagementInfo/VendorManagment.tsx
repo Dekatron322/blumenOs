@@ -1,37 +1,11 @@
 import React, { useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { SearchModule } from "components/ui/Search/search-module"
-import {
-  AddAgentIcon,
-  BillsIcon,
-  CycleIcon,
-  DateIcon,
-  FloatIcon,
-  MapIcon,
-  PerformanceIcon,
-  PhoneIcon,
-  RateIcon,
-  RevenueGeneratedIcon,
-  RouteIcon,
-  StatusIcon,
-  TargetIcon,
-  UserIcon,
-} from "components/Icons/Icons"
+import { BillsIcon, MapIcon, PerformanceIcon, PhoneIcon, RateIcon, UserIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { fetchVendors } from "lib/redux/vendorSlice"
 import { ButtonModule } from "components/ui/Button/Button"
-
-const CyclesIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM10 18C5.58 18 2 14.42 2 10C2 5.58 5.58 2 10 2C14.42 2 18 5.58 18 10C18 14.42 14.42 18 10 18Z"
-      fill="currentColor"
-    />
-    <path d="M10.5 5H9V11L14.2 14.2L15 13L10.5 10.25V5Z" fill="currentColor" />
-  </svg>
-)
 
 interface Vendor {
   id: number
@@ -100,7 +74,7 @@ const VendorManagement: React.FC<VendorManagementProps> = ({ onStartNewCycle }) 
     dailySales: "₦0",
     transactionsToday: 0,
     stockBalance: "₦0",
-    commissionRate: `${v.commission}%`,
+    commissionRate: `U: ${v.urbanCommissionPercent}%, R: ${v.ruralCommissionPercent}%`,
     performance: "Good",
     businessType: "",
     totalRevenue: "₦0",

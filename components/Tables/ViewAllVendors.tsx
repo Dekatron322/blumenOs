@@ -23,18 +23,27 @@ interface SortOption {
 
 interface VendorUI {
   id: number
+  accountId: string
+  blumenpayId: string
   name: string
-  status: "active" | "inactive" | "low stock"
-  phone: string
-  location: string
-  dailySales: string
-  transactionsToday: number
-  stockBalance: string
-  commissionRate: string
-  performance: "Excellent" | "Good" | "Average" | "Poor"
-  businessType: string
-  contactPerson: string
-  totalRevenue: string
+  phoneNumber: string
+  email: string
+  address: string
+  city: string
+  state: string
+  canProcessPostpaid: boolean
+  canProcessPrepaid: boolean
+  posCollectionAllowed: boolean
+  status: "Active" | "Inactive"
+  isSuspended: boolean
+  urbanCommissionPercent: number
+  ruralCommissionPercent: number
+  employeeUserId: number
+  employeeName: string
+  apiPublicKey: string | null
+  apiKeyIssuedAt: string | null
+  apiKeyLastUsedAt: string | null
+  documentUrls: string[]
 }
 
 // Responsive Skeleton Components
@@ -673,43 +682,35 @@ const AllVendors: React.FC = () => {
 
   const uiVendors: VendorUI[] = vendors.map((vendor) => ({
     id: vendor.id,
+    accountId: vendor.accountId,
+    blumenpayId: vendor.blumenpayId,
     name: vendor.name,
-    status: vendor.isSuspended ? "inactive" : "active",
-    phone: vendor.phoneNumber,
-    location: `${vendor.city || ""}${vendor.state ? ", " + vendor.state : ""}`.trim(),
-    dailySales: "-",
-    transactionsToday: 0,
-    stockBalance: "-",
-    commissionRate: `${vendor.commission}%`,
-    performance: "Good",
-    businessType: "Vendor",
-    contactPerson: vendor.employeeName || "-",
-    totalRevenue: "-",
+    phoneNumber: vendor.phoneNumber,
+    email: vendor.email,
+    address: vendor.address,
+    city: vendor.city,
+    state: vendor.state,
+    canProcessPostpaid: vendor.canProcessPostpaid,
+    canProcessPrepaid: vendor.canProcessPrepaid,
+    posCollectionAllowed: vendor.posCollectionAllowed,
+    status: (vendor.isSuspended ? "Inactive" : vendor.status || "Active") as "Active" | "Inactive",
+    isSuspended: vendor.isSuspended,
+    urbanCommissionPercent: vendor.urbanCommissionPercent,
+    ruralCommissionPercent: vendor.ruralCommissionPercent,
+    employeeUserId: vendor.employeeUserId,
+    employeeName: vendor.employeeName,
+    apiPublicKey: vendor.apiPublicKey,
+    apiKeyIssuedAt: vendor.apiKeyIssuedAt,
+    apiKeyLastUsedAt: vendor.apiKeyLastUsedAt,
+    documentUrls: vendor.documentUrls || [],
   }))
 
   const getStatusStyle = (status: VendorUI["status"]) => {
     switch (status) {
-      case "active":
+      case "Active":
         return { backgroundColor: "#EEF5F0", color: "#589E67" }
-      case "inactive":
+      case "Inactive":
         return { backgroundColor: "#F3F4F6", color: "#6B7280" }
-      case "low stock":
-        return { backgroundColor: "#F7EDED", color: "#AF4B4B" }
-      default:
-        return { backgroundColor: "#F3F4F6", color: "#6B7280" }
-    }
-  }
-
-  const getPerformanceStyle = (performance: VendorUI["performance"]) => {
-    switch (performance) {
-      case "Excellent":
-        return { backgroundColor: "#EEF5F0", color: "#589E67" }
-      case "Good":
-        return { backgroundColor: "#F0F7FF", color: "#003F9F" }
-      case "Average":
-        return { backgroundColor: "#FEF6E6", color: "#D97706" }
-      case "Poor":
-        return { backgroundColor: "#F7EDED", color: "#AF4B4B" }
       default:
         return { backgroundColor: "#F3F4F6", color: "#6B7280" }
     }
@@ -717,7 +718,7 @@ const AllVendors: React.FC = () => {
 
   const dotStyle = (status: VendorUI["status"]) => {
     return {
-      backgroundColor: status === "active" ? "#589E67" : status === "inactive" ? "#6B7280" : "#AF4B4B",
+      backgroundColor: status === "Active" ? "#589E67" : "#6B7280",
     }
   }
 
@@ -752,34 +753,42 @@ const AllVendors: React.FC = () => {
 
     const headers = [
       "ID",
+      "Account ID",
+      "Blumenpay ID",
       "Vendor Name",
+      "Phone Number",
+      "Email",
+      "Address",
+      "City",
+      "State",
       "Status",
-      "Phone",
-      "Location",
-      "Daily Sales",
-      "Transactions Today",
-      "Stock Balance",
-      "Commission Rate",
-      "Performance",
-      "Business Type",
-      "Contact Person",
-      "Total Revenue",
+      "Can Process Postpaid",
+      "Can Process Prepaid",
+      "POS Collection Allowed",
+      "Urban Commission %",
+      "Rural Commission %",
+      "Employee Name",
+      "Document URLs",
     ]
 
     const csvRows = uiVendors.map((vendor) => [
       vendor.id.toString(),
+      `"${vendor.accountId}"`,
+      `"${vendor.blumenpayId}"`,
       `"${vendor.name.replace(/"/g, '""')}"`,
+      `"${vendor.phoneNumber}"`,
+      `"${vendor.email}"`,
+      `"${vendor.address.replace(/"/g, '""')}"`,
+      `"${vendor.city}"`,
+      `"${vendor.state}"`,
       vendor.status,
-      `"${vendor.phone}"`,
-      `"${vendor.location}"`,
-      `"${vendor.dailySales}"`,
-      vendor.transactionsToday.toString(),
-      `"${vendor.stockBalance}"`,
-      `"${vendor.commissionRate}"`,
-      vendor.performance,
-      vendor.businessType,
-      `"${vendor.contactPerson}"`,
-      `"${vendor.totalRevenue}"`,
+      vendor.canProcessPostpaid.toString(),
+      vendor.canProcessPrepaid.toString(),
+      vendor.posCollectionAllowed.toString(),
+      vendor.urbanCommissionPercent.toString(),
+      vendor.ruralCommissionPercent.toString(),
+      `"${vendor.employeeName}"`,
+      `"${vendor.documentUrls.join("; ")}"`,
     ])
 
     const csvContent = [headers, ...csvRows].map((row) => row.join(",")).join("\n")
@@ -829,11 +838,9 @@ const AllVendors: React.FC = () => {
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
               >
                 <span className="size-2 rounded-full" style={dotStyle(vendor.status)}></span>
-                {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                {vendor.status}
               </div>
-              <div style={getPerformanceStyle(vendor.performance)} className="rounded-full px-2 py-1 text-xs">
-                {vendor.performance}
-              </div>
+              <div className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{vendor.blumenpayId}</div>
             </div>
           </div>
         </div>
@@ -841,31 +848,39 @@ const AllVendors: React.FC = () => {
 
       <div className="mt-3 space-y-2 text-xs text-gray-600 sm:mt-4 sm:text-sm">
         <div className="flex justify-between">
-          <span>Contact:</span>
-          <span className="font-medium">{vendor.contactPerson}</span>
+          <span>Email:</span>
+          <span className="max-w-[150px] truncate font-medium">{vendor.email}</span>
         </div>
         <div className="flex justify-between">
           <span>Phone:</span>
-          <span className="font-medium">{vendor.phone}</span>
+          <span className="font-medium">{vendor.phoneNumber}</span>
         </div>
         <div className="flex justify-between">
           <span>Location:</span>
-          <span className="font-medium">{vendor.location}</span>
+          <span className="font-medium">{`${vendor.city}, ${vendor.state}`}</span>
         </div>
         <div className="flex justify-between">
-          <span>Commission:</span>
-          <span className="font-medium">{vendor.commissionRate}</span>
+          <span>Urban Commission:</span>
+          <span className="font-medium">{vendor.urbanCommissionPercent}%</span>
         </div>
         <div className="flex justify-between">
-          <span>Business Type:</span>
-          <span className="font-medium">{vendor.businessType}</span>
+          <span>Rural Commission:</span>
+          <span className="font-medium">{vendor.ruralCommissionPercent}%</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Employee:</span>
+          <span className="max-w-[150px] truncate font-medium">{vendor.employeeName}</span>
         </div>
       </div>
 
       <div className="mt-2 border-t pt-2 sm:mt-3 sm:pt-3">
         <div className="flex justify-between text-xs sm:text-sm">
-          <span className="text-gray-500">Daily Sales:</span>
-          <span className="font-semibold">{vendor.dailySales}</span>
+          <span className="text-gray-500">Services:</span>
+          <span className="text-xs font-semibold">
+            {vendor.canProcessPrepaid && "Prepaid "}
+            {vendor.canProcessPostpaid && "Postpaid "}
+            {vendor.posCollectionAllowed && "POS"}
+          </span>
         </div>
       </div>
 
@@ -898,13 +913,14 @@ const AllVendors: React.FC = () => {
                   className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
                 >
                   <span className="size-2 rounded-full" style={dotStyle(vendor.status)}></span>
-                  {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                  {vendor.status}
                 </div>
-                <div style={getPerformanceStyle(vendor.performance)} className="rounded-full px-2 py-1 text-xs">
-                  {vendor.performance}
+                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">{vendor.blumenpayId}</div>
+                <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                  Urban: {vendor.urbanCommissionPercent}%
                 </div>
-                <div className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
-                  Commission: {vendor.commissionRate}
+                <div className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
+                  Rural: {vendor.ruralCommissionPercent}%
                 </div>
               </div>
             </div>
@@ -912,31 +928,34 @@ const AllVendors: React.FC = () => {
               <span className="flex items-center gap-1">
                 <PhoneIcon />
                 <strong className="sm:hidden">Ph:</strong>
-                <strong className="hidden sm:inline">Phone:</strong> {vendor.phone}
+                <strong className="hidden sm:inline">Phone:</strong> {vendor.phoneNumber}
               </span>
               <span className="flex items-center gap-1">
                 <MapIcon />
-                <strong>Location:</strong> {vendor.location}
+                <strong>Location:</strong> {vendor.city}, {vendor.state}
               </span>
-              <span>
-                <strong>Contact:</strong> {vendor.contactPerson}
-              </span>
-              <span>
-                <strong>Business Type:</strong> {vendor.businessType}
+              <span className="flex items-center gap-1">
+                <strong>Email:</strong> <span className="inline-block max-w-[150px] truncate">{vendor.email}</span>
               </span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 sm:gap-4 sm:text-sm">
-              <span>Daily Sales: {vendor.dailySales}</span>
-              <span>Transactions: {vendor.transactionsToday}</span>
-              <span>Stock: {vendor.stockBalance}</span>
+              <span>
+                <strong>Employee:</strong> {vendor.employeeName}
+              </span>
+              <span>
+                <strong>Services:</strong>
+                {vendor.canProcessPrepaid && " Prepaid"}
+                {vendor.canProcessPostpaid && " Postpaid"}
+                {vendor.posCollectionAllowed && " POS"}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:gap-3">
           <div className="text-right text-xs sm:text-sm">
-            <div className="hidden font-medium text-gray-900 sm:block">Revenue: {vendor.totalRevenue}</div>
-            <div className="mt-1 text-gray-600 sm:hidden">{vendor.businessType}</div>
+            <div className="hidden font-medium text-gray-900 sm:block">Account ID: {vendor.accountId}</div>
+            <div className="mt-1 text-gray-600 sm:hidden">{vendor.blumenpayId}</div>
           </div>
           <div className="flex items-center gap-2">
             <button
