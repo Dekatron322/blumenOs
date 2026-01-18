@@ -433,6 +433,7 @@ const BillingChangeRequestsTable = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -530,7 +531,7 @@ const BillingChangeRequestsTable = () => {
   }
 
   // Reset all filters
-  const resetFilters = () => {
+  const clearAllFilters = () => {
     const emptyFilters = {
       status: undefined,
       source: undefined,
@@ -541,8 +542,11 @@ const BillingChangeRequestsTable = () => {
     setLocalFilters(emptyFilters)
     setAppliedFilters(emptyFilters)
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
   }
+
+  const resetFilters = clearAllFilters
 
   // Get active filter count
   const getActiveFilterCount = () => {
@@ -615,6 +619,17 @@ const BillingChangeRequestsTable = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -944,9 +959,10 @@ const BillingChangeRequestsTable = () => {
                 {/* Desktop/Tablet search input */}
                 <div className="hidden sm:block">
                   <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search by reference or requester"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
@@ -990,9 +1006,10 @@ const BillingChangeRequestsTable = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by reference or requester"
                   className="w-full"
                 />

@@ -404,6 +404,7 @@ const VendorChangeRequests = () => {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -611,8 +612,20 @@ const VendorChangeRequests = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     dispatch(setChangeRequestsPagination({ page: 1, pageSize: changeRequestsPagination.pageSize }))
     setCurrentPage(1)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      dispatch(setChangeRequestsPagination({ page: 1, pageSize: changeRequestsPagination.pageSize }))
+      setCurrentPage(1)
+    }
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -944,9 +957,10 @@ const VendorChangeRequests = () => {
                 {/* Desktop/Tablet search input */}
                 <div className="hidden sm:block">
                   <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search by reference, requester, or entity label"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
@@ -971,9 +985,10 @@ const VendorChangeRequests = () => {
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by reference, requester, or entity label"
                   className="w-full"
                 />

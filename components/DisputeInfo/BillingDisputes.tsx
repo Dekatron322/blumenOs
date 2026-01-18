@@ -32,6 +32,15 @@ const BillingDisputes = () => {
     setSearchText("")
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchText.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
+  }
+
   const formatDate = (value: string | null | undefined): string => {
     if (!value) return "-"
     const date = new Date(value)
@@ -758,6 +767,7 @@ const BillingDisputes = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search disputes..."
               />
             </div>
@@ -789,6 +799,7 @@ const BillingDisputes = () => {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search disputes..."
                   />
                 </div>

@@ -236,6 +236,7 @@ const SupervisorsDirectory: React.FC = () => {
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
 
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
@@ -370,7 +371,18 @@ const SupervisorsDirectory: React.FC = () => {
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
     setCurrentPage(1)
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      setCurrentPage(1)
+    }
   }
 
   // Fetch agents with filters
@@ -506,9 +518,10 @@ const SupervisorsDirectory: React.FC = () => {
             <div className="w-full sm:w-96">
               <SearchModule
                 placeholder="Search supervisors..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 className="w-full"
               />
             </div>

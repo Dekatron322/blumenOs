@@ -477,6 +477,7 @@ const AllDebtRecoveryContent: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [selectedItem, setSelectedItem] = useState<DebtRecoveryItem | null>(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -566,13 +567,24 @@ const AllDebtRecoveryContent: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    setSearchText(value)
+    setSearchInput(value)
     // Reset to first page when searching
     // Note: Search functionality might need to be implemented based on API capabilities
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+      // Reset to first page when searching
+    }
   }
 
   // Fetch recovery policies on component mount
@@ -879,9 +891,10 @@ const AllDebtRecoveryContent: React.FC = () => {
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-full sm:w-64 md:w-[380px]">
                 <SearchModule
-                  value={searchText}
+                  value={searchInput}
                   onChange={handleSearch}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by customer, account or reference..."
                   className="w-full"
                   bgClassName="bg-white"

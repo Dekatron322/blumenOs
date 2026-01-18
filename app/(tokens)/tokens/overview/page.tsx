@@ -681,7 +681,7 @@ const PrepaidSummaryAnalytics = () => {
         </div>
       </div>
 
-      {/* Daily Trend */}
+      {/* Daily Trend - Grid Layout */}
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h4 className="text-md font-semibold text-gray-900">Daily Trend (Last 7 Days)</h4>
@@ -692,50 +692,46 @@ const PrepaidSummaryAnalytics = () => {
             <span className="text-sm font-medium">+6.8%</span>
           </div>
         </div>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {prepaidSummaryData.daily.slice(-7).map((day, index) => (
             <div
               key={index}
-              className={`rounded-r-lg border-l-4 p-4 ${
+              className={`rounded-lg border p-3 ${
                 index === 6
-                  ? "border-purple-500 bg-purple-50"
+                  ? "border-purple-200 bg-purple-50"
                   : index === 5
-                  ? "border-blue-500 bg-blue-50"
+                  ? "border-blue-200 bg-blue-50"
                   : index === 4
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-300 bg-gray-50"
+                  ? "border-green-200 bg-green-50"
+                  : "border-gray-200 bg-gray-50"
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-gray-900">{formatDate(day.bucketDate)}</p>
-                  <p className="text-sm text-gray-600">{day.totalVends} vends</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-gray-900">{formatCurrency(day.totalPaymentAmount)}</p>
-                  <p className="text-sm text-gray-600">{day.totalKwh.toLocaleString()} kWh</p>
-                </div>
+              <div className="mb-2">
+                <p className="text-sm font-semibold text-gray-900">{formatDate(day.bucketDate)}</p>
+                <p className="text-xs text-gray-600">{day.totalVends} vends</p>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-4 text-xs">
-                <div>
-                  <span className="text-gray-500">Success Rate:</span>
-                  <span className="font-medium text-gray-900">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Revenue:</span>
+                  <span className="text-sm font-bold text-gray-900">{formatCurrency(day.totalPaymentAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">kWh:</span>
+                  <span className="text-sm font-medium text-gray-900">{day.totalKwh.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Success:</span>
+                  <span className="text-xs font-medium text-gray-900">
                     {day.totalVends > 0
                       ? (((day.successfulVends || day.totalVends) / day.totalVends) * 100).toFixed(1)
                       : 0}
                     %
                   </span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Avg Amount:</span>
-                  <span className="font-medium text-gray-900">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Avg:</span>
+                  <span className="text-xs font-medium text-gray-900">
                     {day.totalVends > 0 ? formatCurrency(day.totalPaymentAmount / day.totalVends) : formatCurrency(0)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Avg kWh:</span>
-                  <span className="font-medium text-gray-900">
-                    {day.totalVends > 0 ? (day.totalKwh / day.totalVends).toFixed(1) : 0} kWh
                   </span>
                 </div>
               </div>
@@ -785,7 +781,7 @@ export default function AllTransactions() {
       <div className="flex w-full">
         <div className="flex w-full flex-col">
           <DashboardNav />
-          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6">
+          <div className="mx-auto flex w-full flex-col px-3 2xl:container md:px-4 lg:px-6 2xl:px-6">
             {/* Page Header - Always Visible */}
             <div className="flex w-full items-start justify-between gap-6 max-md:flex-col  md:my-4 ">
               <div>

@@ -224,6 +224,7 @@ const ServiceStationTab: React.FC = () => {
   )
 
   const [searchInput, setSearchInput] = useState("")
+  const [searchText, setSearchText] = useState("")
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(true)
@@ -421,7 +422,7 @@ const ServiceStationTab: React.FC = () => {
   // Apply all filters at once
   const applyFilters = () => {
     setAppliedFilters({
-      searchText: searchInput.trim(),
+      searchText: searchText.trim(),
       companyId: localFilters.companyId,
       areaOfficeId: localFilters.areaOfficeId,
       stationNameId: localFilters.stationNameId,
@@ -444,6 +445,7 @@ const ServiceStationTab: React.FC = () => {
       sortBy: "",
       sortOrder: "asc",
     })
+    setSearchText("")
     setSearchInput("")
     setAppliedFilters({
       searchText: "",
@@ -475,7 +477,17 @@ const ServiceStationTab: React.FC = () => {
     setSearchInput(value)
   }
 
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
+  }
+
   const handleCancelSearch = () => {
+    setSearchText("")
     setSearchInput("")
   }
 
@@ -759,6 +771,7 @@ const ServiceStationTab: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
                 placeholder="Search service stations..."
                 className="w-full max-w-[300px]"
                 bgClassName="bg-white"

@@ -10,6 +10,7 @@ import type { DebtEntryData, DebtManagementCustomer } from "lib/redux/debtManage
 import { ButtonModule } from "components/ui/Button/Button"
 import { VscEye } from "react-icons/vsc"
 import { UserIcon } from "components/Icons/Icons"
+import { SearchModule } from "components/ui/Search/search-module"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -394,6 +395,9 @@ const DebtManagementCustomers = ({
     lastLedgerEndDate: "",
   })
 
+  // Separate state for search input to enable manual search
+  const [searchInput, setSearchInput] = useState("")
+
   // Mock customer data for dropdown (in real app, this would come from Redux)
   const allCustomers = customers // Use the customers prop for dropdown options
 
@@ -524,11 +528,21 @@ const DebtManagementCustomers = ({
 
   // Handle search changes
   const handleSearchChange = (value: string) => {
-    handleFilterChange("search", value)
+    setSearchInput(value)
   }
 
   const handleSearchCancel = () => {
+    setSearchInput("")
     handleFilterChange("search", "")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      handleFilterChange("search", trimmed)
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -703,23 +717,14 @@ const DebtManagementCustomers = ({
 
           {/* Search Input */}
           <div className="mb-4">
-            <div className="relative">
-              <input
-                type="text"
-                value={localFilters.search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search by customer name or account number..."
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              {localFilters.search && (
-                <button
-                  onClick={handleSearchCancel}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100"
-                >
-                  <X className="size-4 text-gray-500" />
-                </button>
-              )}
-            </div>
+            <SearchModule
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onCancel={handleSearchCancel}
+              onSearch={handleManualSearch}
+              placeholder="Search by customer name or account number..."
+              className="w-full"
+            />
           </div>
 
           {customers.length === 0 ? (
@@ -899,16 +904,6 @@ const DebtManagementCustomers = ({
 
           <div className="space-y-6">
             {/* Search Filter */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Search</label>
-              <input
-                type="text"
-                value={localFilters.search || ""}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
-                placeholder="Search by name or account number"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
 
             {/* Customer Filter */}
             <div>

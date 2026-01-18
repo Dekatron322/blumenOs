@@ -247,6 +247,7 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
 
   const [currentPage, setCurrentPage] = useState(1)
   const [searchText, setSearchText] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [selectedChangeRequestId, setSelectedChangeRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -377,6 +378,16 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setSearchInput("")
+  }
+
+  const handleManualSearch = () => {
+    const trimmed = searchInput.trim()
+    const shouldUpdate = trimmed.length === 0 || trimmed.length >= 3
+
+    if (shouldUpdate) {
+      setSearchText(trimmed)
+    }
   }
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -729,9 +740,10 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
                 {/* Desktop/Tablet search input */}
                 <div className="hidden sm:block">
                   <SearchModule
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     onCancel={handleCancelSearch}
+                    onSearch={handleManualSearch}
                     placeholder="Search by reference, requester, or entity label"
                     className="w-full max-w-full md:max-w-[300px]"
                   />
@@ -756,9 +768,10 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
             {showMobileSearch && (
               <div className="mb-3 sm:hidden">
                 <SearchModule
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onCancel={handleCancelSearch}
+                  onSearch={handleManualSearch}
                   placeholder="Search by reference, requester, or entity label"
                   className="w-full"
                 />
@@ -803,7 +816,13 @@ const AllAgentChangeRequests: React.FC<AllAgentChangeRequestsProps> = ({ applied
                     {searchText ? "Try adjusting your search criteria" : "No agent change requests available"}
                   </p>
                   {searchText && (
-                    <button className="button-oulined mt-3" onClick={() => setSearchText("")}>
+                    <button
+                      className="button-oulined mt-3"
+                      onClick={() => {
+                        setSearchText("")
+                        setSearchInput("")
+                      }}
+                    >
                       Clear Search
                     </button>
                   )}
