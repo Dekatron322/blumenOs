@@ -590,7 +590,7 @@ const BankTransferDetailsModal: React.FC<BankTransferDetailsModalProps> = ({
             <div className="mt-4 space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900">
               <div className="flex flex-col gap-1 rounded-md bg-white p-3 text-center">
                 <span className="text-xs font-semibold uppercase tracking-wide text-green-700">Account Number</span>
-                <span className="select-all text-4xl font-extrabold tracking-[0.12em] text-gray-900 sm:text-5xl">
+                <span className="select-all text-3xl font-extrabold tracking-[0.12em] text-gray-900 sm:text-5xl">
                   {virtualAccount.accountNumber}
                 </span>
               </div>

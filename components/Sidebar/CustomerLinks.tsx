@@ -1,4 +1,5 @@
 "use client"
+
 import clsx from "clsx"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -26,7 +27,7 @@ interface NavLink {
 }
 
 const allLinks: NavLink[] = [
-  { name: "Overiview", href: "/customer-portal/overview", icon: DashboardIcon },
+  { name: "Overview", href: "/customer-portal/overview", icon: DashboardIcon },
   {
     name: "Make payment",
     href: "/customer-portal/make-payment",
@@ -76,6 +77,7 @@ interface CustomerLinksProps {
 export function CustomerLinks({ isCollapsed }: CustomerLinksProps) {
   const pathname = usePathname()
   const [permissions, setPermissions] = useState<string[]>([])
+  const [customer, setCustomer] = useState<any>(null)
   const [links, setLinks] = useState<NavLink[]>(allLinks)
   const { agent } = useSelector((state: RootState) => state.auth)
   const myBillsList = useSelector(selectMyBillsList)
@@ -98,13 +100,38 @@ export function CustomerLinks({ isCollapsed }: CustomerLinksProps) {
       return []
     }
 
-    // Set initial permissions
-    setPermissions(getAuthData())
+    // Get customer data from localStorage
+    const getCustomerData = () => {
+      if (typeof window !== "undefined") {
+        const customerAuthState = localStorage.getItem("customerAuthState")
+        // console.log("Raw customerAuthState from localStorage:", customerAuthState)
+        if (customerAuthState) {
+          try {
+            const parsedAuth = JSON.parse(customerAuthState) as any
+            // console.log("Parsed customer auth state:", parsedAuth)
+            const customer = parsedAuth.customer || null
+            // console.log("Extracted customer data:", customer)
+            return customer
+          } catch (e) {
+            // console.error("Error parsing customer data", e)
+            return null
+          }
+        }
+      }
+      return null
+    }
 
-    // Listen for storage changes to update permissions in real-time
+    // Set initial permissions and customer data
+    setPermissions(getAuthData())
+    setCustomer(getCustomerData())
+
+    // Listen for storage changes to update permissions and customer data in real-time
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "authData") {
         setPermissions(getAuthData())
+      }
+      if (e.key === "customerAuthState") {
+        setCustomer(getCustomerData())
       }
     }
 
@@ -113,21 +140,54 @@ export function CustomerLinks({ isCollapsed }: CustomerLinksProps) {
   }, [])
 
   useEffect(() => {
-    // Filter links based on permissions
+    // Filter links based on permissions, agent data, and customer data
     const filteredLinks = allLinks.filter((link) => {
       // Hide Collect payment when agent has reached collection limit
       if (link.href === "/sales-rep/collect-payment" && agent && agent.cashAtHand >= agent.cashCollectionLimit) {
         return false
       }
 
-      // Always show Dashboard (no permission required)
+      // Hide "Buy unit" link for customers with isMD: true
+      if (link.href === "/customer-portal/buy-unit") {
+        // Check if customer exists and has isMD property set to true
+        // console.log("Checking Buy unit link - customer:", customer)
+        // console.log("Customer isMD:", customer?.isMD)
+        if (customer && customer.isMD === true) {
+          // console.log("Hiding Buy unit link for MD customer")
+          return false
+        }
+      }
+
+      // Hide "Report Outage" link for customers with isMD: true
+      if (link.href === "/customer-portal/report-outage") {
+        if (customer && customer.isMD === true) {
+          return false
+        }
+      }
+
+      // Hide "All Support Ticket" link for customers with isMD: true
+      if (link.href === "/customer-portal/all-support-ticket") {
+        if (customer && customer.isMD === true) {
+          return false
+        }
+      }
+
+      // Hide "Raise Support Ticket" link for customers with isMD: true
+      if (link.href === "/customer-portal/support-ticket") {
+        if (customer && customer.isMD === true) {
+          return false
+        }
+      }
+
+      // Always show links without permission requirements
       if (!link.permission) return true
 
       // Check if user has the required permission
       return permissions.includes(link.permission)
     })
+
     setLinks(filteredLinks)
-  }, [permissions, agent])
+  }, [permissions, agent, customer])
 
   return (
     <div className="flex w-full flex-col space-y-1 overflow-y-auto p-2">

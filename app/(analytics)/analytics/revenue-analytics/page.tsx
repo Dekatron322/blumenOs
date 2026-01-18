@@ -31,6 +31,7 @@ import {
   YAxis,
 } from "recharts"
 import { BillingIcon, CollectionIcon, CustomeraIcon, MetersProgrammedIcon, RevenueIcon } from "components/Icons/Icons"
+import { formatCurrencyWithAbbreviation } from "utils/helpers"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -356,7 +357,7 @@ export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
-  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("NGN")
+  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("₦")
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [breakdownDimension, setBreakdownDimension] = useState<0 | 1 | 2 | 3 | 4 | 5>(0)
   const [showCategories, setShowCategories] = useState(true)
@@ -814,11 +815,23 @@ export default function MeteringDashboard() {
                   <Text>{getTimeFilterLabel(timeFilter)} Revenue</Text>
                   <Text className="text-xs">Currency: {selectedCurrencySymbol}</Text>
                 </div>
-                <Metric>
-                  {selectedCurrencySymbol}
-                  {formatNumber(totalRevenue)}
-                </Metric>
-                <div className="mt-2 text-sm text-gray-600">{revenueData?.length || 0} days of data</div>
+                <div>
+                  <Metric>
+                    {(() => {
+                      const { formatted } = formatCurrencyWithAbbreviation(totalRevenue, selectedCurrencySymbol)
+                      return formatted
+                    })()}
+                  </Metric>
+                </div>
+                <div className="flex w-full items-center justify-between">
+                  <div className="mt-1 text-sm text-gray-600">
+                    {(() => {
+                      const { full } = formatCurrencyWithAbbreviation(totalRevenue, selectedCurrencySymbol)
+                      return full
+                    })()}
+                  </div>
+                  <div className="mt-2 text-sm text-gray-600">{revenueData?.length || 0} days of data</div>
+                </div>
               </Card>
 
               <Card title="Total Transactions" icon={getCardIcon("Total Transactions")}>
@@ -885,7 +898,10 @@ export default function MeteringDashboard() {
                         <XAxis dataKey="date" />
                         <YAxis />
                         <Tooltip
-                          formatter={(value) => [`${selectedCurrencySymbol}${formatNumber(Number(value))}`, "Amount"]}
+                          formatter={(value) => {
+                            const { formatted } = formatCurrencyWithAbbreviation(Number(value), selectedCurrencySymbol)
+                            return [formatted, "Amount"]
+                          }}
                         />
                         <Area
                           type="monotone"
@@ -928,17 +944,21 @@ export default function MeteringDashboard() {
                         data={paymentTypesChartData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : "0"}%`}
                         outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
+                        fill="#8884d8"
+                        dataKey="amount"
                       >
                         {paymentTypesChartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value) => [`${selectedCurrencySymbol}${formatNumber(Number(value))}`, "Amount"]}
+                        formatter={(value) => {
+                          const { formatted } = formatCurrencyWithAbbreviation(Number(value), selectedCurrencySymbol)
+                          return [formatted, "Amount"]
+                        }}
                       />
                       <Legend />
                     </PieChart>
@@ -994,7 +1014,10 @@ export default function MeteringDashboard() {
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip
-                        formatter={(value) => [`${selectedCurrencySymbol}${formatNumber(Number(value))}`, "Amount"]}
+                        formatter={(value) => {
+                          const { formatted } = formatCurrencyWithAbbreviation(Number(value), selectedCurrencySymbol)
+                          return [formatted, "Amount"]
+                        }}
                       />
                       <Bar dataKey="amount" fill="#004B23" name="Revenue" />
                     </BarChart>
@@ -1029,7 +1052,10 @@ export default function MeteringDashboard() {
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip
-                        formatter={(value) => [`${selectedCurrencySymbol}${formatNumber(Number(value))}`, "Amount"]}
+                        formatter={(value) => {
+                          const { formatted } = formatCurrencyWithAbbreviation(Number(value), selectedCurrencySymbol)
+                          return [formatted, "Amount"]
+                        }}
                       />
                       <Bar dataKey="amount" fill="#38b000" name="Collection Amount" />
                     </BarChart>

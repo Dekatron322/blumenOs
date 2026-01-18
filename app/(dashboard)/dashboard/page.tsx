@@ -49,6 +49,7 @@ import {
   YAxis,
 } from "recharts"
 import Footer from "components/Footer/Footer"
+import { formatCurrencyWithAbbreviation } from "utils/helpers"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -119,7 +120,7 @@ type TimeFilter = "day" | "week" | "month" | "all"
 
 export default function Dashboard() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
-  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("NGN")
+  const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("₦")
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
   const [activeView, setActiveView] = useState<"kpi" | "statistics">("kpi")
   const [isLoading, setIsLoading] = useState(false)
@@ -190,7 +191,7 @@ export default function Dashboard() {
   // Mock currencies data
   const currenciesData = {
     data: [
-      { id: 1, symbol: "NGN", name: "Nigerian Naira" },
+      { id: 1, symbol: "₦", name: "Nigerian Naira" },
       { id: 2, symbol: "USD", name: "US Dollar" },
       { id: 3, symbol: "EUR", name: "Euro" },
     ],
@@ -409,7 +410,8 @@ export default function Dashboard() {
 
   const formatCardValue = (value: number, valueFormat: string) => {
     if (valueFormat === "currency") {
-      return `${selectedCurrencySymbol}${Number(value).toLocaleString()}`
+      const { formatted } = formatCurrencyWithAbbreviation(Number(value), selectedCurrencySymbol)
+      return formatted
     }
     if (valueFormat === "percent") {
       return `${Number(value).toFixed(1)}%`
@@ -786,7 +788,17 @@ export default function Dashboard() {
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
+                            <div className="flex flex-1 items-center justify-between">
+                              <Metric>{formatCardValue(card.value, card.valueFormat)}</Metric>
+                              {card.valueFormat === "currency" && (
+                                <div className="text-sm text-gray-600">
+                                  {(() => {
+                                    const { full } = formatCurrencyWithAbbreviation(card.value, selectedCurrencySymbol)
+                                    return full
+                                  })()}
+                                </div>
+                              )}
+                            </div>
                             {getCardTrend(card) && (
                               <TrendIndicator
                                 value={getCardTrend(card)!.value}
@@ -864,7 +876,7 @@ export default function Dashboard() {
                             <div className="mb-2 text-sm font-medium uppercase tracking-wide text-green-600">
                               Collection Efficiency
                             </div>
-                            <div className={`text-4xl font-bold ${collectionEfficiencyColor}`}>
+                            <div className={`text-3xl font-bold ${collectionEfficiencyColor}`}>
                               {collectionEfficiencyData.efficiencyPercent?.toFixed(1) || "0.0"}%
                             </div>
                             <div className="mt-2 text-sm text-green-700">
@@ -881,9 +893,29 @@ export default function Dashboard() {
                             <div className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600">
                               Total Billed
                             </div>
-                            <div className="text-3xl font-bold text-blue-900">
-                              {selectedCurrencySymbol}
-                              {collectionEfficiencyData.totalBilled?.toLocaleString() || "0"}
+                            <div className="flex items-center justify-between">
+                              <div className="text-3xl font-bold text-blue-900">
+                                {collectionEfficiencyData.totalBilled
+                                  ? (() => {
+                                      const { formatted } = formatCurrencyWithAbbreviation(
+                                        collectionEfficiencyData.totalBilled,
+                                        selectedCurrencySymbol
+                                      )
+                                      return formatted
+                                    })()
+                                  : `${selectedCurrencySymbol}0`}
+                              </div>
+                              <div className="text-sm text-blue-700">
+                                {collectionEfficiencyData.totalBilled
+                                  ? (() => {
+                                      const { full } = formatCurrencyWithAbbreviation(
+                                        collectionEfficiencyData.totalBilled,
+                                        selectedCurrencySymbol
+                                      )
+                                      return full
+                                    })()
+                                  : `${selectedCurrencySymbol}0`}
+                              </div>
                             </div>
                             <div className="mt-2 text-sm text-blue-700">
                               {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
@@ -895,9 +927,29 @@ export default function Dashboard() {
                             <div className="mb-2 text-sm font-medium uppercase tracking-wide text-purple-600">
                               Total Collected
                             </div>
-                            <div className="text-3xl font-bold text-purple-900">
-                              {selectedCurrencySymbol}
-                              {collectionEfficiencyData.totalCollected?.toLocaleString() || "0"}
+                            <div className="flex items-center justify-between">
+                              <div className="text-3xl font-bold text-purple-900">
+                                {collectionEfficiencyData.totalCollected
+                                  ? (() => {
+                                      const { formatted } = formatCurrencyWithAbbreviation(
+                                        collectionEfficiencyData.totalCollected,
+                                        selectedCurrencySymbol
+                                      )
+                                      return formatted
+                                    })()
+                                  : `${selectedCurrencySymbol}0`}
+                              </div>
+                              <div className="text-sm text-purple-700">
+                                {collectionEfficiencyData.totalCollected
+                                  ? (() => {
+                                      const { full } = formatCurrencyWithAbbreviation(
+                                        collectionEfficiencyData.totalCollected,
+                                        selectedCurrencySymbol
+                                      )
+                                      return full
+                                    })()
+                                  : `${selectedCurrencySymbol}0`}
+                              </div>
                             </div>
                             <div className="mt-2 text-sm text-purple-700">
                               {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
@@ -1466,7 +1518,7 @@ export default function Dashboard() {
                           {/* Header with total customers */}
                           <div className="border-b border-gray-100 pb-4 text-center">
                             <div className="mb-2">
-                              <div className="mb-1 text-4xl font-bold text-gray-900">
+                              <div className="mb-1 text-3xl font-bold text-gray-900">
                                 {customerSegmentsData?.totalCustomers?.toLocaleString() || "0"}
                               </div>
                               <div className="text-sm font-medium uppercase tracking-wide text-gray-500">
