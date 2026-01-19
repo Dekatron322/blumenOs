@@ -658,6 +658,19 @@ export enum CollectorType {
   Staff = "Staff",
 }
 
+export interface Collector {
+  type: CollectorType
+  name: string
+  agentId: number | null
+  agentCode: string | null
+  agentType: string | null
+  vendorId: number | null
+  vendorName: string | null
+  staffName: string | null
+  customerId: number | null
+  customerName: string | null
+}
+
 export interface Payment {
   paymentDetails: any
   isPending: boolean
@@ -668,6 +681,7 @@ export interface Payment {
   channel: PaymentChannel
   status: PaymentStatus
   collectorType: CollectorType
+  collector: Collector
   amount: number
   amountApplied: number
   overPaymentAmount: number

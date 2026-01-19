@@ -513,12 +513,6 @@ const VendPage: React.FC = () => {
                         {customerInfo.isSuspended ? "Suspended" : customerInfo.status || "Active"}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-[#004B23]">Outstanding Balance:</span>
-                      <span className="text-base font-bold text-[#004B23]">
-                        ₦{Number(customerInfo.customerOutstandingDebtBalance ?? 0).toLocaleString()}
-                      </span>
-                    </div>
                   </div>
                 )}
 
@@ -532,6 +526,50 @@ const VendPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.05 }}
               >
+                {customerInfo && (
+                  <div
+                    className={`mb-4 rounded-md border-2 p-3 ${
+                      customerInfo.customerOutstandingDebtBalance > 0
+                        ? "border-red-300 bg-red-50"
+                        : "border-dashed border-[#004B23] bg-[#004B23]/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-2 w-2 rounded-full ${
+                            customerInfo.customerOutstandingDebtBalance > 0 ? "bg-red-500" : "bg-green-500"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-semibold ${
+                            customerInfo.customerOutstandingDebtBalance > 0 ? "text-red-800" : "text-green-800"
+                          }`}
+                        >
+                          {customerInfo.customerOutstandingDebtBalance > 0
+                            ? "⚠️ OUTSTANDING DEBT ALERT"
+                            : "✓ NO OUTSTANDING DEBT"}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-lg font-bold ${
+                          customerInfo.customerOutstandingDebtBalance > 0 ? "text-red-700" : "text-green-700"
+                        }`}
+                      >
+                        ₦{Number(customerInfo.customerOutstandingDebtBalance).toLocaleString()}
+                      </span>
+                    </div>
+                    {customerInfo.customerOutstandingDebtBalance > 0 ? (
+                      <p className="mt-1 text-xs text-red-600">
+                        Customer has outstanding debt that may affect this transaction
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-green-600">
+                        Customer has no outstanding debt - transaction can proceed normally
+                      </p>
+                    )}
+                  </div>
+                )}
                 <h2 className="mb-3 text-base font-semibold text-gray-800">Vend Details</h2>
 
                 {!customerInfo && !isValidatingCustomer && (

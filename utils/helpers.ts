@@ -24,14 +24,14 @@ export const formatCurrencyWithAbbreviation = (
     // Billion format
     const billions = numAmount / 1000000000
     return {
-      formatted: `${symbol}${billions.toFixed(1)}B`,
+      formatted: `${symbol}${Math.floor(billions * 100) / 100}B`,
       full: `${symbol}${numAmount.toLocaleString()}`,
     }
   } else if (numAmount >= 1000000) {
     // Million format
     const millions = numAmount / 1000000
     return {
-      formatted: `${symbol}${millions.toFixed(1)}M`,
+      formatted: `${symbol}${Math.floor(millions * 100) / 100}M`,
       full: `${symbol}${numAmount.toLocaleString()}`,
     }
   } else {

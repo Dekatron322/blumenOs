@@ -905,20 +905,23 @@ export default function Dashboard() {
                                     })()
                                   : `${selectedCurrencySymbol}0`}
                               </div>
-                              <div className="text-sm text-blue-700">
-                                {collectionEfficiencyData.totalBilled
-                                  ? (() => {
-                                      const { full } = formatCurrencyWithAbbreviation(
-                                        collectionEfficiencyData.totalBilled,
-                                        selectedCurrencySymbol
-                                      )
-                                      return full
-                                    })()
-                                  : `${selectedCurrencySymbol}0`}
+                              <div className="flex w-full items-center justify-between">
+                                <div className="text-sm text-blue-700">
+                                  {collectionEfficiencyData.totalBilled
+                                    ? (() => {
+                                        const { full } = formatCurrencyWithAbbreviation(
+                                          collectionEfficiencyData.totalBilled,
+                                          selectedCurrencySymbol
+                                        )
+                                        return full
+                                      })()
+                                    : `${selectedCurrencySymbol}0`}
+                                </div>
+
+                                <div className="mt-2 text-sm text-blue-700">
+                                  {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
+                                </div>
                               </div>
-                            </div>
-                            <div className="mt-2 text-sm text-blue-700">
-                              {collectionEfficiencyData.billCount?.toLocaleString() || "0"} bills
                             </div>
                           </div>
 
@@ -939,20 +942,23 @@ export default function Dashboard() {
                                     })()
                                   : `${selectedCurrencySymbol}0`}
                               </div>
-                              <div className="text-sm text-purple-700">
-                                {collectionEfficiencyData.totalCollected
-                                  ? (() => {
-                                      const { full } = formatCurrencyWithAbbreviation(
-                                        collectionEfficiencyData.totalCollected,
-                                        selectedCurrencySymbol
-                                      )
-                                      return full
-                                    })()
-                                  : `${selectedCurrencySymbol}0`}
+                              <div className="flex w-full items-center justify-between">
+                                <div className="text-sm text-purple-700">
+                                  {collectionEfficiencyData.totalCollected
+                                    ? (() => {
+                                        const { full } = formatCurrencyWithAbbreviation(
+                                          collectionEfficiencyData.totalCollected,
+                                          selectedCurrencySymbol
+                                        )
+                                        return full
+                                      })()
+                                    : `${selectedCurrencySymbol}0`}
+                                </div>
+
+                                <div className="mt-2 text-sm text-purple-700">
+                                  {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
+                                </div>
                               </div>
-                            </div>
-                            <div className="mt-2 text-sm text-purple-700">
-                              {collectionEfficiencyData.billsWithPayments?.toLocaleString() || "0"} paid bills
                             </div>
                           </div>
 
