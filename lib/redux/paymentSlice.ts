@@ -21,6 +21,19 @@ export interface Token {
   drn: string
 }
 
+export interface Collector {
+  type: CollectorType
+  name: string
+  agentId: number | null
+  agentCode: string | null
+  agentType: string | null
+  vendorId: number | null
+  vendorName: string | null
+  staffName: string | null
+  customerId: number | null
+  customerName: string | null
+}
+
 export interface Payment {
   id: number
   reference: string
@@ -45,6 +58,7 @@ export interface Payment {
   outstandingDebt: number
   debtPayable: number
   paymentTypeName: string
+  collector: Collector
   token?: Token
   // Legacy fields - keeping for backward compatibility
   collectorType?: CollectorType
