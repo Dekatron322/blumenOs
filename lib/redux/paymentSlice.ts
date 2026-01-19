@@ -1521,7 +1521,9 @@ const paymentSlice = createSlice({
       })
       .addCase(fetchChangeRequestsByPaymentId.rejected, (state, action) => {
         state.changeRequestsByPaymentLoading = false
-        state.changeRequestsByPaymentError = (action.payload as string) || "Failed to fetch change requests for payment"
+        const errorMessage = action.payload
+        state.changeRequestsByPaymentError =
+          typeof errorMessage === "string" ? errorMessage : "Failed to fetch change requests for payment"
         state.changeRequestsByPaymentSuccess = false
         state.changeRequestsByPayment = []
         state.changeRequestsByPaymentPagination = {
