@@ -66,6 +66,7 @@ const CollectPaymentPage: React.FC = () => {
     areaOfficeName: string
     feederName: string
     customerOutstandingDebtBalance: number
+    minimumPayment: number
   } | null>(null)
   const [isValidatingCustomer, setIsValidatingCustomer] = useState(false)
   const [amountInput, setAmountInput] = useState("")
@@ -152,8 +153,10 @@ const CollectPaymentPage: React.FC = () => {
       const rawAmount = amountInput.replace(/,/g, "").trim()
       const amount = Number(rawAmount)
 
-      // Only fetch if we have a valid amount and it's different from the last fetched amount
-      if (rawAmount && !Number.isNaN(amount) && amount > 0 && amount !== lastFetchedAmount) {
+      // Only fetch if we have a valid amount, it's different from the last fetched amount, and meets minimum payment
+      const meetsMinimumPayment =
+        !customerInfo || customerInfo.minimumPayment <= 0 || amount >= customerInfo.minimumPayment
+      if (rawAmount && !Number.isNaN(amount) && amount > 0 && amount !== lastFetchedAmount && meetsMinimumPayment) {
         setIsFetchingChannels(true)
         try {
           const result = await dispatch(fetchPaymentChannels({ amount })).unwrap()
@@ -199,7 +202,7 @@ const CollectPaymentPage: React.FC = () => {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [amountInput, dispatch, channel, lastFetchedAmount])
+  }, [amountInput, dispatch, channel, lastFetchedAmount, customerInfo])
 
   // When payment channels are fetched via Redux, update local state
   useEffect(() => {
@@ -279,6 +282,7 @@ const CollectPaymentPage: React.FC = () => {
         areaOfficeName: customerLookup.areaOfficeName,
         feederName: customerLookup.feederName,
         customerOutstandingDebtBalance: customerLookup.customerOutstandingDebtBalance,
+        minimumPayment: customerLookup.minimumPayment || 0,
       })
 
       notify("success", "Customer validated successfully", {
@@ -334,6 +338,7 @@ const CollectPaymentPage: React.FC = () => {
               areaOfficeName: customer.areaOfficeName,
               feederName: customer.feederName,
               customerOutstandingDebtBalance: customer.customerOutstandingDebtBalance,
+              minimumPayment: customer.minimumPayment || 0,
             })
 
             notify("success", "Customer found with this reference", {
@@ -396,6 +401,20 @@ const CollectPaymentPage: React.FC = () => {
 
     if (!rawAmount || Number.isNaN(amount) || amount <= 0) {
       notify("error", "Please enter a valid amount greater than 0")
+      return
+    }
+
+    // Check if amount meets minimum payment requirement (for customer mode)
+    if (
+      lookupMode === "customer" &&
+      customerInfo &&
+      customerInfo.minimumPayment > 0 &&
+      amount < customerInfo.minimumPayment
+    ) {
+      notify("error", `Minimum payment amount is ₦${customerInfo.minimumPayment.toLocaleString()}`, {
+        description: `Please enter an amount of at least ₦${customerInfo.minimumPayment.toLocaleString()} to proceed.`,
+        duration: 6000,
+      })
       return
     }
 
@@ -933,6 +952,45 @@ const CollectPaymentPage: React.FC = () => {
 
                 {lookupMode === "customer" && customerInfo && (
                   <form onSubmit={handleSubmitPayment} className="mt-4 space-y-5">
+                    {/* Debt Alert */}
+                    {customerInfo.customerOutstandingDebtBalance > 0 && (
+                      <div
+                        className={`mb-4 rounded-md border-2 p-3 ${
+                          customerInfo.customerOutstandingDebtBalance > 0
+                            ? "border-dashed border-red-300 bg-red-50"
+                            : "border-dashed border-[#004B23] bg-[#004B23]/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-red-500"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="font-semibold text-red-700">Outstanding Debt Alert</span>
+                        </div>
+                        <p className="mt-1 text-sm text-red-600">
+                          This customer has an outstanding debt of{" "}
+                          <span className="font-bold">
+                            ₦{Number(customerInfo.customerOutstandingDebtBalance).toLocaleString()}
+                          </span>
+                        </p>
+                        {customerInfo.minimumPayment > 0 && (
+                          <p className="mt-1 text-sm text-red-600">
+                            Minimum payment required:{" "}
+                            <span className="font-bold">₦{customerInfo.minimumPayment.toLocaleString()}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
                         <span className="font-medium text-[#004B23]">Customer:</span>
@@ -1025,6 +1083,19 @@ const CollectPaymentPage: React.FC = () => {
                           step="0.01"
                           prefix="₦"
                         />
+                        {customerInfo.minimumPayment > 0 && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Minimum payment: ₦{customerInfo.minimumPayment.toLocaleString()}
+                          </p>
+                        )}
+                        {amountInput &&
+                          customerInfo.minimumPayment > 0 &&
+                          Number(amountInput.replace(/,/g, "")) < customerInfo.minimumPayment && (
+                            <p className="mt-1 text-xs font-medium text-red-600">
+                              Entered amount is less than minimum payment of ₦
+                              {customerInfo.minimumPayment.toLocaleString()}
+                            </p>
+                          )}
                         {isFetchingChannels && (
                           <p className="mt-1 text-xs text-blue-600">Checking available payment channels...</p>
                         )}
@@ -1106,7 +1177,13 @@ const CollectPaymentPage: React.FC = () => {
                         type="submit"
                         variant="primary"
                         className="w-full sm:w-auto"
-                        disabled={createPaymentLoading || isFetchingChannels}
+                        disabled={
+                          createPaymentLoading ||
+                          isFetchingChannels ||
+                          (customerInfo &&
+                            customerInfo.minimumPayment > 0 &&
+                            Number(amountInput.replace(/,/g, "")) < customerInfo.minimumPayment)
+                        }
                       >
                         {createPaymentLoading ? "Recording..." : "Record Payment"}
                       </ButtonModule>

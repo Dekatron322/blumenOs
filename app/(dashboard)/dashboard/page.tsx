@@ -1042,7 +1042,7 @@ export default function Dashboard() {
                   {/* Collection by BAND Section */}
                   <div className="mb-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
                     <Card title="Collection by BAND">
-                      <div className="flex h-[200px] flex-col justify-center">
+                      <div className="my-4 flex flex-col">
                         {collectionByBandLoading ? (
                           <div className="animate-pulse">
                             <div className="mb-4 h-24 w-full rounded bg-gray-200" />
@@ -1053,39 +1053,39 @@ export default function Dashboard() {
                             {collectionByBandError}
                           </div>
                         ) : collectionByBandSlices.length === 0 ? (
-                          <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
+                          <div className="flex h-[200px] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
                             <div className="text-sm font-semibold text-gray-900">No collection-by-band data</div>
                             <div className="mt-1 text-sm text-gray-600">Try changing the time range.</div>
                           </div>
                         ) : (
                           <>
-                            <div className="mb-4">
-                              <table className="w-full">
+                            <div className="mb-4 overflow-x-auto">
+                              <table className="w-full text-sm">
                                 <thead>
-                                  <tr className="border-b">
-                                    <th className="py-2 text-left">Band</th>
-                                    <th className="py-2 text-right">Collection</th>
-                                    <th className="py-2 text-right">%</th>
+                                  <tr className="border-b border-gray-200 bg-gray-50">
+                                    <th className="px-2 py-2 text-left font-medium text-gray-700">Band</th>
+                                    <th className="px-2 py-2 text-right font-medium text-gray-700">Collection</th>
+                                    <th className="px-2 py-2 text-right font-medium text-gray-700">%</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {collectionByBandSlices.map((item) => (
-                                    <tr key={item.label} className="border-b">
-                                      <td className="py-2">{item.label}</td>
-                                      <td className="py-2 text-right">
+                                    <tr key={item.label} className="border-b border-gray-100 hover:bg-gray-50">
+                                      <td className="px-2 py-2 text-gray-800">{item.label}</td>
+                                      <td className="px-2 py-2 text-right text-gray-800">
                                         {selectedCurrencySymbol}
                                         {item.amount.toLocaleString()}
                                       </td>
-                                      <td className="py-2 text-right">{item.percentage}%</td>
+                                      <td className="px-2 py-2 text-right text-gray-800">{item.percentage}%</td>
                                     </tr>
                                   ))}
-                                  <tr className="border-b font-medium">
-                                    <td className="py-2">Total</td>
-                                    <td className="py-2 text-right">
+                                  <tr className="border-t-2 border-gray-200 bg-gray-50 font-semibold">
+                                    <td className="px-2 py-2 text-gray-900">Total</td>
+                                    <td className="px-2 py-2 text-right text-gray-900">
                                       {selectedCurrencySymbol}
                                       {collectionByBandTotal.amount.toLocaleString()}
                                     </td>
-                                    <td className="py-2 text-right">100%</td>
+                                    <td className="px-2 py-2 text-right text-gray-900">100%</td>
                                   </tr>
                                 </tbody>
                               </table>
@@ -1311,8 +1311,20 @@ export default function Dashboard() {
                               Total Outstanding
                             </div>
                             <div className="text-3xl font-bold text-red-900">
-                              {selectedCurrencySymbol}
-                              {outstandingArrearsData.totalOutstanding.toLocaleString()}
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalOutstanding,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </div>
+                            <div className="mt-1 text-sm text-red-700">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalOutstanding,
+                                  selectedCurrencySymbol
+                                ).full
+                              }
                             </div>
                             <div className="mt-2 text-sm text-red-700">
                               {outstandingArrearsData.customersInArrears.toLocaleString()} customers in arrears
@@ -1325,8 +1337,20 @@ export default function Dashboard() {
                               Total Debits
                             </div>
                             <div className="text-3xl font-bold text-orange-900">
-                              {selectedCurrencySymbol}
-                              {outstandingArrearsData.totalDebits.toLocaleString()}
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalDebits,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </div>
+                            <div className="mt-1 text-sm text-orange-700">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalDebits,
+                                  selectedCurrencySymbol
+                                ).full
+                              }
                             </div>
                             <div className="mt-2 text-sm text-orange-700">Outstanding charges and fees</div>
                           </div>
@@ -1337,8 +1361,20 @@ export default function Dashboard() {
                               Total Credits
                             </div>
                             <div className="text-3xl font-bold text-green-900">
-                              {selectedCurrencySymbol}
-                              {outstandingArrearsData.totalCredits.toLocaleString()}
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalCredits,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </div>
+                            <div className="mt-1 text-sm text-green-700">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalCredits,
+                                  selectedCurrencySymbol
+                                ).full
+                              }
                             </div>
                             <div className="mt-2 text-sm text-green-700">Payments and adjustments</div>
                           </div>
@@ -1354,10 +1390,20 @@ export default function Dashboard() {
                               Net Amount
                             </div>
                             <div className="text-2xl font-bold text-gray-900">
-                              {selectedCurrencySymbol}
-                              {(
-                                outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits
-                              ).toLocaleString()}
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits,
+                                  selectedCurrencySymbol
+                                ).formatted
+                              }
+                            </div>
+                            <div className="mt-1 text-sm text-gray-700">
+                              {
+                                formatCurrencyWithAbbreviation(
+                                  outstandingArrearsData.totalDebits - outstandingArrearsData.totalCredits,
+                                  selectedCurrencySymbol
+                                ).full
+                              }
                             </div>
                             <div className="mt-2 text-sm text-gray-700">Debits minus credits</div>
                           </div>

@@ -57,6 +57,7 @@ const VendPage: React.FC = () => {
     areaOfficeName: string
     feederName: string
     customerOutstandingDebtBalance: number
+    minimumPayment: number
   } | null>(null)
   const [isValidatingCustomer, setIsValidatingCustomer] = useState(false)
   const [amountInput, setAmountInput] = useState("")
@@ -102,8 +103,10 @@ const VendPage: React.FC = () => {
       const rawAmount = amountInput.replace(/,/g, "").trim()
       const amount = Number(rawAmount)
 
-      // Only fetch if we have a valid amount and it's different from the last fetched amount
-      if (rawAmount && !Number.isNaN(amount) && amount > 0 && amount !== lastFetchedAmount) {
+      // Only fetch if we have a valid amount, it's different from the last fetched amount, and meets minimum payment
+      const meetsMinimumPayment =
+        !customerInfo || customerInfo.minimumPayment <= 0 || amount >= customerInfo.minimumPayment
+      if (rawAmount && !Number.isNaN(amount) && amount > 0 && amount !== lastFetchedAmount && meetsMinimumPayment) {
         setIsFetchingChannels(true)
         try {
           const result = await dispatch(fetchPaymentChannels({ amount })).unwrap()
@@ -154,7 +157,7 @@ const VendPage: React.FC = () => {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [amountInput, dispatch, channel, lastFetchedAmount])
+  }, [amountInput, dispatch, channel, lastFetchedAmount, customerInfo])
 
   useEffect(() => {
     if (vendSuccess && vendData) {
@@ -205,6 +208,7 @@ const VendPage: React.FC = () => {
         areaOfficeName: customerLookup.areaOfficeName,
         feederName: customerLookup.feederName,
         customerOutstandingDebtBalance: customerLookup.customerOutstandingDebtBalance,
+        minimumPayment: customerLookup.minimumPayment || 0,
       })
 
       notify("success", "Customer validated successfully", {
@@ -306,6 +310,15 @@ const VendPage: React.FC = () => {
 
     if (!rawAmount || Number.isNaN(amount) || amount <= 0) {
       notify("error", "Please enter a valid amount greater than 0")
+      return
+    }
+
+    // Check if amount meets minimum payment requirement
+    if (customerInfo && amount < customerInfo.minimumPayment) {
+      notify("error", `Minimum payment amount is ₦${customerInfo.minimumPayment.toLocaleString()}`, {
+        description: `Please enter an amount of at least ₦${customerInfo.minimumPayment.toLocaleString()} to proceed with the vend.`,
+        duration: 6000,
+      })
       return
     }
 
@@ -530,7 +543,7 @@ const VendPage: React.FC = () => {
                   <div
                     className={`mb-4 rounded-md border-2 p-3 ${
                       customerInfo.customerOutstandingDebtBalance > 0
-                        ? "border-red-300 bg-red-50"
+                        ? "border-dashed border-red-300 bg-red-50"
                         : "border-dashed border-[#004B23] bg-[#004B23]/5"
                     }`}
                   >
@@ -596,6 +609,19 @@ const VendPage: React.FC = () => {
                           step="0.01"
                           prefix="₦"
                         />
+                        {customerInfo.minimumPayment > 0 && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Minimum payment: ₦{customerInfo.minimumPayment.toLocaleString()}
+                          </p>
+                        )}
+                        {amountInput &&
+                          customerInfo.minimumPayment > 0 &&
+                          Number(amountInput.replace(/,/g, "")) < customerInfo.minimumPayment && (
+                            <p className="mt-1 text-xs font-medium text-red-600">
+                              Entered amount is less than minimum payment of ₦
+                              {customerInfo.minimumPayment.toLocaleString()}
+                            </p>
+                          )}
                       </div>
 
                       <FormSelectModule
@@ -688,7 +714,17 @@ const VendPage: React.FC = () => {
                         Reset
                       </ButtonModule>
 
-                      <ButtonModule type="submit" variant="primary" className="w-full sm:w-auto" disabled={vendLoading}>
+                      <ButtonModule
+                        type="submit"
+                        variant="primary"
+                        className="w-full sm:w-auto"
+                        disabled={
+                          vendLoading ||
+                          (customerInfo &&
+                            customerInfo.minimumPayment > 0 &&
+                            Number(amountInput.replace(/,/g, "")) < customerInfo.minimumPayment)
+                        }
+                      >
                         {vendLoading ? "Processing..." : "Process Vend"}
                       </ButtonModule>
                     </div>
