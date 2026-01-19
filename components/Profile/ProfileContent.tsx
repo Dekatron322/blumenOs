@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useAppSelector } from "lib/hooks/useRedux"
 import {
   Building2,
@@ -382,7 +382,7 @@ export default function ProfileContent({ activeTab }: ProfileContentProps) {
                         <Calendar className="mt-1 size-4 text-gray-400" />
                         <div>
                           <p className="text-sm text-gray-500">Member Since</p>
-                          <p className="text-gray-900">"Not available"</p>
+                          <p className="text-gray-900">&quot;Not available&quot;</p>
                         </div>
                       </div>
 
