@@ -137,6 +137,13 @@ const VendorDetailsPage = () => {
         icon: CheckCircle,
         label: "ACTIVE",
       },
+      Active: {
+        color: "text-emerald-600",
+        bg: "bg-emerald-50",
+        border: "border-emerald-200",
+        icon: CheckCircle,
+        label: "ACTIVE",
+      },
       INACTIVE: {
         color: "text-red-600",
         bg: "bg-red-50",
