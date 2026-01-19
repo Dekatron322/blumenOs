@@ -1957,7 +1957,7 @@ const PaymentDetailsPage = () => {
       <PaymentTrackingModal
         isOpen={activeModal === "tracking"}
         onRequestClose={closeAllModals}
-        paymentId={currentPayment.id}
+        paymentId={parseInt(paymentId)}
       />
       <ConfirmBankTransferModal
         isOpen={activeModal === "confirmBankTransfer"}

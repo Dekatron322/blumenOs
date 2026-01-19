@@ -593,7 +593,12 @@ const AllBillsContent: React.FC<AllBillsProps> = ({ onViewBillDetails }) => {
       })
     )
 
-    dispatch(fetchBillingPeriods({}))
+    dispatch(
+      fetchBillingPeriods({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
 
     // Cleanup function to clear states when component unmounts
     return () => {

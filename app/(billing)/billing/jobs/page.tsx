@@ -675,7 +675,12 @@ const BillingJobs: React.FC = () => {
       })
     )
 
-    dispatch(fetchBillingPeriods({}))
+    dispatch(
+      fetchBillingPeriods({
+        pageNumber: 0,
+        pageSize: 0,
+      })
+    )
 
     // Cleanup function to clear states when component unmounts
     return () => {

@@ -620,7 +620,12 @@ const MeterReadings: React.FC = () => {
 
   // Fetch billing periods when component mounts
   useEffect(() => {
-    dispatch(fetchBillingPeriods({}))
+    dispatch(
+      fetchBillingPeriods({
+        pageNumber: 0,
+        pageSize: 0,
+      })
+    )
   }, [dispatch])
 
   // Generate period options from billing periods

@@ -352,7 +352,12 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   // Fetch all billing periods on component mount (for filter dropdown)
   useEffect(() => {
     const fetchAllPeriods = async () => {
-      const result = await dispatch(fetchBillingPeriods({})) // Fetch all periods without filters
+      const result = await dispatch(
+        fetchBillingPeriods({
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      ) // Fetch all periods without filters
       // Store the complete list for filter dropdown
       if (result.payload && Array.isArray(result.payload)) {
         setAllBillingPeriods(result.payload as BillingPeriod[])
