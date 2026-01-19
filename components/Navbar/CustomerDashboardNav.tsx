@@ -140,7 +140,7 @@ const CustomerDashboardNav = () => {
 
                     {/* Profile Link */}
                     <Link
-                      href="/customer-portal/profile"
+                      href="#"
                       onClick={() => setIsUserDropdownOpen(false)}
                       className="flex w-full items-center gap-2 px-4 py-3 text-sm text-gray-700 transition-colors duration-300 ease-in-out hover:bg-gray-50"
                     >

@@ -294,6 +294,8 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   const [isMobileView, setIsMobileView] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const dispatch = useAppDispatch()
   const router = useRouter()
 
@@ -370,7 +372,10 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
   // Fetch billing periods when appliedFilters change (for display)
   useEffect(() => {
     const fetchBills = async () => {
-      const requestParams: any = {}
+      const requestParams: any = {
+        PageNumber: currentPage,
+        PageSize: pageSize,
+      }
 
       // Parse billing period to get year and month
       if (appliedFilters.billingPeriod) {
@@ -393,15 +398,17 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     // Always fetch - if no filter applied, it will fetch all periods
     // If filter applied, it will fetch filtered periods
     fetchBills()
-  }, [dispatch, searchText, appliedFilters])
+  }, [dispatch, searchText, appliedFilters, currentPage, pageSize])
 
   // Handle search
   const handleSearch = (text: string) => {
     setSearchText(text)
+    setCurrentPage(1) // Reset to first page when searching
   }
 
   const handleCancelSearch = () => {
     setSearchText("")
+    setCurrentPage(1) // Reset to first page when clearing search
   }
 
   // Generate billing period options from all available periods (for filter dropdown)
@@ -426,6 +433,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
     setAppliedFilters({
       billingPeriod: localFilters.billingPeriod,
     })
+    setCurrentPage(1) // Reset to first page when applying filters
   }
 
   // Reset all filters
@@ -437,6 +445,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
       billingPeriod: undefined,
     })
     setSearchText("")
+    setCurrentPage(1)
   }
 
   // Get active filter count
@@ -498,20 +507,28 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
 
   const displayCycles = billingCycles
 
-  const totalPages = displayCycles.length > 0 ? 1 : 0
-  const totalRecords = displayCycles.length || 0
+  // Get pagination data from Redux store or calculate from local data
+  const totalPages = billingPeriods?.length > 0 ? Math.ceil(billingPeriods.length / pageSize) : 0
+  const totalRecords = billingPeriods?.length || 0
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const paginatedCycles = displayCycles.slice(startIndex, endIndex)
 
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    // Pagination not supported for billing periods
+    const newSize = parseInt(event.target.value)
+    setPageSize(newSize)
+    setCurrentPage(1) // Reset to first page when changing page size
   }
 
   const changePage = (page: number) => {
-    // Pagination not supported for billing periods
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
   }
 
   const getPageItems = (): (number | string)[] => {
     const total = totalPages
-    const current = 1
+    const current = currentPage
     const items: (number | string)[] = []
 
     if (total <= 7) {
@@ -547,7 +564,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
 
   const getMobilePageItems = (): (number | string)[] => {
     const total = totalPages
-    const current = 1
+    const current = currentPage
     const items: (number | string)[] = []
 
     if (total <= 5) {
@@ -656,9 +673,9 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
           </p>
         </div>
         <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-          <p className={`text-sm font-semibold sm:text-base ${getAmountColor(cycle.totalAmount)}`}>
+          {/* <p className={`text-sm font-semibold sm:text-base ${getAmountColor(cycle.totalAmount)}`}>
             {cycle.totalAmount}
-          </p>
+          </p> */}
           <p className="text-xs text-gray-500 sm:text-sm">
             {cycle.status === "Completed"
               ? formatDate(cycle.endDate)
@@ -895,7 +912,7 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
 
           {/* Billing Cycles List */}
           <div className="space-y-3 sm:space-y-4">
-            {displayCycles.map((cycle) =>
+            {paginatedCycles.map((cycle) =>
               isMobileView ? (
                 <MobileBillingCycleCard key={cycle.id} cycle={cycle} />
               ) : (
@@ -905,11 +922,11 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
           </div>
 
           {/* Pagination */}
-          {displayCycles.length > 0 && totalPages > 1 && (
+          {paginatedCycles.length > 0 && totalPages > 1 && (
             <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 border-t pt-4 sm:mt-6 sm:flex-row">
               <div className="flex items-center gap-1 max-sm:hidden">
                 <p className="text-xs sm:text-sm">Show rows</p>
-                <select value={10} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1 text-xs sm:text-sm">
+                <select value={pageSize} onChange={handleRowsChange} className="bg-[#F2F2F2] p-1 text-xs sm:text-sm">
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -918,7 +935,13 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
               </div>
 
               <div className="flex items-center gap-1">
-                <button className="cursor-not-allowed text-gray-400" onClick={() => {}} disabled={true}>
+                <button
+                  className={`${
+                    currentPage === 1 ? "cursor-not-allowed text-gray-400" : "text-gray-600 hover:text-gray-900"
+                  }`}
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
                   <BiSolidLeftArrow className="size-3 sm:size-4" />
                 </button>
                 <div className="flex items-center gap-1">
@@ -926,33 +949,41 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                     <button
                       key={index}
                       className={`h-6 w-6 rounded text-xs sm:h-7 sm:w-7 sm:text-sm ${
-                        item === 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                        item === currentPage
+                          ? "bg-[#000000] text-white"
+                          : item === "..."
+                          ? "cursor-default bg-transparent text-gray-400"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                       }`}
-                      onClick={() => {}}
-                      disabled={item !== 1}
+                      onClick={() => (typeof item === "number" ? changePage(item) : null)}
+                      disabled={item === "..." || item === currentPage}
                     >
                       {item}
                     </button>
                   ))}
                 </div>
                 <button
-                  className="cursor-not-allowed text-gray-400"
-                  onClick={() => {}}
-                  disabled={true || totalPages === 0}
+                  className={`${
+                    currentPage === totalPages || totalPages === 0
+                      ? "cursor-not-allowed text-gray-400"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage === totalPages || totalPages === 0}
                 >
                   <BiSolidRightArrow className="size-3 sm:size-4" />
                 </button>
               </div>
 
               <p className="text-center text-xs text-gray-600 sm:text-right sm:text-sm">
-                Page 1 of {totalPages || 1} ({totalRecords.toLocaleString()} total cycles)
+                Page {currentPage} of {totalPages || 1} ({totalRecords.toLocaleString()} total cycles)
                 {searchText.trim() && " - filtered"}
               </p>
             </div>
           )}
 
           {/* Empty State */}
-          {displayCycles.length === 0 && !loading && (
+          {paginatedCycles.length === 0 && !loading && (
             <div className="flex flex-col items-center justify-center py-8 sm:py-12">
               <div className="text-center">
                 <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16">
@@ -1031,7 +1062,9 @@ const BillingCycles: React.FC<BillingCyclesProps> = ({ onStartNewCycle, onViewDe
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Current Page:</span>
-                  <span className="font-medium">1 / {totalPages || 1}</span>
+                  <span className="font-medium">
+                    {currentPage} / {totalPages || 1}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Active Filters:</span>

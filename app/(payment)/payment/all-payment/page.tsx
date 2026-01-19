@@ -1412,14 +1412,14 @@ const AllPayments: React.FC = () => {
                                   {formatDate(payment.paidAtUtc)}
                                 </td>
                                 <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
-                                  {payment.collectorType && (
+                                  {payment.collector && (
                                     <motion.div
-                                      style={getCollectorTypeStyle(payment.collectorType)}
-                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-xs"
+                                      style={getCollectorTypeStyle(payment.collector.type)}
+                                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1 text-sm font-medium"
                                       whileHover={{ scale: 1.05 }}
                                       transition={{ duration: 0.1 }}
                                     >
-                                      {payment.collectorType}
+                                      {payment.collector.type} - {payment.collector.name}
                                     </motion.div>
                                   )}
                                 </td>
