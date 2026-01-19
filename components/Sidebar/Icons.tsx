@@ -105,7 +105,7 @@ export const ServiceIcon = ({ isActive }: { isActive: boolean }) => (
 )
 
 export const MeteringIcon = ({ isActive }: { isActive: boolean }) => (
-  <Image src={isActive ? "/Icons/cpu.svg" : "/Icons/cpu.svg"} alt="Utility" width={20} height={20} />
+  <Image src={isActive ? "/Icons/cpu-active.svg" : "/Icons/cpu.svg"} alt="Utility" width={20} height={20} />
 )
 
 export const SupportIcon = ({ isActive }: { isActive: boolean }) => (

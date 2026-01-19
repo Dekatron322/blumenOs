@@ -503,7 +503,7 @@ const CustomerDetailsPage = () => {
           <p className="mb-6 text-gray-600">
             {currentCustomerError || "The customer you're looking for doesn't exist."}
           </p>
-          <ButtonModule variant="primary" onClick={() => router.back()}>
+          <ButtonModule variant="primary" onClick={() => router.back()} className="mx-auto">
             Back to Customers
           </ButtonModule>
         </div>
