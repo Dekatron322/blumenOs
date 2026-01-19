@@ -29,6 +29,7 @@ import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
 import AgentChangePasswordModal from "components/ui/Modal/agent-change-password-modal"
+import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 import {
   ChangeRequestOutlineIcon,
   ExportCsvIcon,
@@ -44,6 +45,9 @@ import {
   fetchChangeRequestsByAgentId,
   fetchPayments,
 } from "lib/redux/agentSlice"
+import type { Payment as AgentPayment } from "lib/redux/agentSlice"
+import type { Payment as DetailedPayment } from "lib/redux/paymentSlice"
+import { fetchPaymentById } from "lib/redux/paymentSlice"
 import { resetEmployeePassword } from "lib/redux/employeeSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -163,6 +167,8 @@ const AgentDetailsPage = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false)
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
+  const [isPaymentReceiptModalOpen, setIsPaymentReceiptModalOpen] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<DetailedPayment | null>(null)
   const [activeTab, setActiveTab] = useState<AgentTabType>("basic-info")
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
   const [paymentsPage, setPaymentsPage] = useState(1)
@@ -500,6 +506,72 @@ const AgentDetailsPage = () => {
   const handleResetPassword = () => {
     if (!currentAgent) return
     setIsResetPasswordModalOpen(true)
+  }
+
+  const handleViewPaymentReceipt = async (payment: AgentPayment) => {
+    try {
+      // Fetch detailed payment info using the payment ID
+      const result = await dispatch(fetchPaymentById(payment.id))
+      if (fetchPaymentById.fulfilled.match(result)) {
+        setSelectedPayment(result.payload.data)
+        setIsPaymentReceiptModalOpen(true)
+      } else {
+        console.error("Failed to fetch payment details:", result.payload)
+        // Fallback: use the basic payment info if detailed fetch fails
+        setSelectedPayment({
+          id: payment.id,
+          reference: payment.reference,
+          externalReference: payment.externalReference,
+          channel: payment.channel,
+          status: payment.status,
+          isPending: payment.isPending,
+          totalAmountPaid: payment.amount,
+          currency: payment.currency,
+          paidAtUtc: payment.paidAtUtc,
+          customerName: payment.customerName,
+          customerAccountNumber: payment.customerAccountNumber,
+          customerAddress: "",
+          customerPhoneNumber: "",
+          customerMeterNumber: "",
+          accountType: "",
+          tariffRate: 0,
+          units: 0,
+          vatRate: 0,
+          vatAmount: 0,
+          electricityAmount: 0,
+          outstandingDebt: payment.outstandingAfterPayment,
+          debtPayable: 0,
+          paymentTypeName: payment.paymentTypeName,
+          collectorType: payment.collectorType,
+          amount: payment.amount,
+          amountApplied: payment.amountApplied,
+          overPaymentAmount: payment.overPaymentAmount,
+          outstandingAfterPayment: payment.outstandingAfterPayment,
+          outstandingBeforePayment: payment.outstandingBeforePayment,
+          confirmedAtUtc: payment.confirmedAtUtc,
+          customerId: payment.customerId,
+          postpaidBillId: payment.postpaidBillId,
+          postpaidBillPeriod: payment.postpaidBillPeriod,
+          billTotalDue: payment.billTotalDue,
+          vendorId: payment.vendorId,
+          vendorName: payment.vendorName,
+          agentId: payment.agentId,
+          agentCode: payment.agentCode,
+          agentName: payment.agentName,
+          areaOfficeName: payment.areaOfficeName,
+          distributionSubstationCode: payment.distributionSubstationCode,
+          feederName: payment.feederName,
+          paymentTypeId: payment.paymentTypeId,
+          narrative: payment.narrative,
+          virtualAccount: payment.virtualAccount,
+          vendorAccountId: payment.vendorAccountId,
+          recordedByName: payment.recordedByName,
+        })
+        setIsPaymentReceiptModalOpen(true)
+      }
+    } catch (error) {
+      console.error("Error fetching payment details:", error)
+    }
   }
 
   const toggleSection = (section: string) => {
@@ -1662,7 +1734,7 @@ const AgentDetailsPage = () => {
                                         </div>
                                       </div>
                                       <button
-                                        onClick={() => router.push(`/agents/payments/payment-details/${payment.id}`)}
+                                        onClick={() => handleViewPaymentReceipt(payment)}
                                         className="button-oulined flex items-center gap-2"
                                       >
                                         <span>View</span>
@@ -1763,6 +1835,15 @@ const AgentDetailsPage = () => {
           // Optional: Refresh agent data or show success message
           console.log("Password reset successfully")
         }}
+      />
+
+      <PaymentReceiptModal
+        isOpen={isPaymentReceiptModalOpen}
+        onRequestClose={() => {
+          setIsPaymentReceiptModalOpen(false)
+          setSelectedPayment(null)
+        }}
+        payment={selectedPayment}
       />
     </section>
   )

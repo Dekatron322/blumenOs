@@ -265,7 +265,10 @@ const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({ isOpen, onReq
                   </div>
                 )}
               </div>
-              <p className="text-center text-xs font-medium">Powered by Blumentechnologies</p>
+              <div className="text-center text-xs text-gray-500">
+                <p>Thank you for your payment!</p>
+                <p className="mt-1">This receipt serves as proof of payment.</p>
+              </div>
             </div>
 
             {/* Action Buttons */}
