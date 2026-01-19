@@ -50,7 +50,13 @@ const ManualBillModal: React.FC<ManualBillModalProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       // Fetch billing periods
-      dispatch(fetchBillingPeriods({ status: 1 })) // Fetch active periods
+      dispatch(
+        fetchBillingPeriods({
+          status: 1,
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      ) // Fetch active periods
       setBillingPeriodId("")
       setCategory("")
       setPreviousReadingKwh("")

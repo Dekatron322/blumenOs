@@ -44,7 +44,13 @@ const MeterReadingModal: React.FC<MeterReadingModalProps> = ({
       setNotes("")
 
       // Fetch billing periods
-      dispatch(fetchBillingPeriods({ status: 1 })) // Fetch active periods
+      dispatch(
+        fetchBillingPeriods({
+          status: 1,
+          pageNumber: 1,
+          pageSize: 100,
+        })
+      ) // Fetch active periods
     }
   }, [isOpen, dispatch])
 

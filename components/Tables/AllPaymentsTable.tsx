@@ -247,9 +247,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [showVendTokenModal, setShowVendTokenModal] = useState(false)
   const [showCollectPaymentReceiptModal, setShowCollectPaymentReceiptModal] = useState(false)
 
-  const handleViewPaymentDetails = (payment: Payment) => {
-    router.push(`/agents/payments/payment-details/${payment.id}`)
-  }
+  // const handleViewPaymentDetails = (payment: Payment) => {
+  //   router.push(`/agents/payments/payment-details/${payment.id}`)
+  // }
 
   const handleConfirmPayment = (payment: Payment) => {
     setSelectedPayment(payment)

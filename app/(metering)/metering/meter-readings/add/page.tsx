@@ -82,7 +82,12 @@ const AddMeterReadingPage = () => {
         pageSize: 100,
       })
     )
-    dispatch(fetchBillingPeriods({}))
+    dispatch(
+      fetchBillingPeriods({
+        pageNumber: 0,
+        pageSize: 0,
+      })
+    )
   }, [dispatch])
 
   // Generate customer options from API response
