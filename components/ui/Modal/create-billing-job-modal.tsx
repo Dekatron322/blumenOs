@@ -59,7 +59,12 @@ const CreateBillingJobModal: React.FC<CreateBillingJobModalProps> = ({ isOpen, o
 
       // Load billing periods for the dropdown if not already loaded
       if (!billingPeriods || billingPeriods.length === 0) {
-        dispatch(fetchBillingPeriods({}))
+        dispatch(
+          fetchBillingPeriods({
+            pageNumber: 0,
+            pageSize: 0,
+          })
+        )
       }
     }
   }, [isOpen, dispatch, areaOffices, billingPeriods])

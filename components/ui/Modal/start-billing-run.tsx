@@ -57,7 +57,12 @@ const StartBillingRun: React.FC<StartBillingRunProps> = ({ isOpen, onRequestClos
           PageSize: 100, // Fetch all area offices
         })
       )
-      dispatch(fetchBillingPeriods({}))
+      dispatch(
+        fetchBillingPeriods({
+          pageNumber: 0,
+          pageSize: 0,
+        })
+      )
     }
   }, [dispatch, isOpen])
 

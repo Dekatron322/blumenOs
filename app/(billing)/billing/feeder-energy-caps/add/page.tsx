@@ -99,7 +99,12 @@ const AddFeederEnergyCapPage = () => {
         PageSize: 100,
       })
     )
-    dispatch(fetchBillingPeriods({}))
+    dispatch(
+      fetchBillingPeriods({
+        pageNumber: 0,
+        pageSize: 0,
+      })
+    )
     dispatch(
       fetchFeeders({
         pageNumber: 1,

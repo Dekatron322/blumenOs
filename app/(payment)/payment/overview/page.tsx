@@ -738,9 +738,9 @@ export default function BillingDashboard() {
 
     // Fetch postpaid billing analytics
     const params: PostpaidBillingAnalyticsParams = {
-      period: selectedPeriod,
-      status: 1,
-      category: 2,
+      BillingPeriodId: parseInt(selectedPeriod, 10),
+      Status: 1,
+      Category: 2,
     }
     dispatch(setPostpaidBillingAnalyticsParams(params))
     dispatch(fetchPostpaidBillingAnalytics(params))
@@ -778,9 +778,9 @@ export default function BillingDashboard() {
       dispatch(fetchPaymentSummaryAnalytics(requestBody))
     } else {
       const params: PostpaidBillingAnalyticsParams = {
-        period: selectedPeriod,
-        status: 1,
-        category: 2,
+        BillingPeriodId: parseInt(selectedPeriod, 10),
+        Status: 1,
+        Category: 2,
       }
       dispatch(clearPostpaidBillingAnalytics())
       dispatch(fetchPostpaidBillingAnalytics(params))

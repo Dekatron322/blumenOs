@@ -1,14 +1,17 @@
 "use client"
 
-import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
 import React, { useCallback, useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { FiSend } from "react-icons/fi"
-import { BillingIcon, PlayIcon, PostpaidIcon, RefreshCircleIcon } from "components/Icons/Icons"
-import { ButtonModule } from "components/ui/Button/Button"
+
 import BillingInfo from "components/BillingInfo/BillingInfo"
+import { BillingIcon, PostpaidIcon, RefreshCircleIcon } from "components/Icons/Icons"
+import { ButtonModule } from "components/ui/Button/Button"
+import DashboardNav from "components/Navbar/DashboardNav"
 import StartBillingRun from "components/ui/Modal/start-billing-run"
+
+import ArrowIcon from "public/arrow-icon"
+
 import {
   clearPostpaidBillingAnalytics,
   fetchPostpaidBillingAnalytics,
@@ -33,7 +36,7 @@ const DropdownPopover = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  const selectedOption = options.find((opt) => opt.value === selectedValue)
+  const _selectedOption = options.find((opt) => opt.value === selectedValue)
 
   return (
     <div className="relative">
@@ -506,13 +509,15 @@ const PeriodSelector = React.memo(
   }
 )
 
+PeriodSelector.displayName = "PeriodSelector"
+
 export default function BillingDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState<number>(480000) // Default 8 minutes (480,000 ms)
 
-  const getCurrentPeriod = () => {
+  const _getCurrentPeriod = () => {
     const now = new Date()
     const year = now.getFullYear()
     const month = String(now.getMonth() + 1).padStart(2, "0")
@@ -521,12 +526,8 @@ export default function BillingDashboard() {
 
   // Redux hooks
   const dispatch = useAppDispatch()
-  const {
-    postpaidBillingAnalyticsData,
-    postpaidBillingAnalyticsLoading,
-    postpaidBillingAnalyticsError,
-    postpaidBillingAnalyticsParams,
-  } = useAppSelector((state) => state.analytics)
+  const { postpaidBillingAnalyticsData, postpaidBillingAnalyticsLoading, postpaidBillingAnalyticsError } =
+    useAppSelector((state) => state.analytics)
   const { user } = useAppSelector((state) => state.auth)
   const { billingPeriods } = useAppSelector((state) => state.billingPeriods)
 

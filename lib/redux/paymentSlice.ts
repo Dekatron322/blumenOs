@@ -77,24 +77,24 @@ export interface PaymentTracking {
   id: number
   reference: string
   amount: number
-  channel: PaymentChannel
-  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  channel: "Cash" | "Transfer" | "Card" | "POS" | "BankDeposit"
+  status: "Pending" | "Processing" | "Completed" | "Failed" | "Cancelled"
   clearanceStatus: "Uncleared" | "Clearing" | "Cleared" | "Suspended"
   isRemitted: boolean
   paidAtUtc: string
   location: string
   agentId: number
   agentName: string
-  clearedByUserId: number
-  clearedByName: string
-  remittedByUserId: number
-  remittedByName: string
-  remittanceId: number
-  remittanceStatus: string
-  remittanceDepositedAtUtc: string
-  remittanceTellerUrl: string
-  collectionOfficerUserId: number
-  collectionOfficerName: string
+  clearedByUserId: number | null
+  clearedByName: string | null
+  remittedByUserId: number | null
+  remittedByName: string | null
+  remittanceId: number | null
+  remittanceStatus: string | null
+  remittanceDepositedAtUtc: string | null
+  remittanceTellerUrl: string | null
+  collectionOfficerUserId: number | null
+  collectionOfficerName: string | null
 }
 
 export interface PaymentResponse {
