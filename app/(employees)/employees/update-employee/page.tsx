@@ -151,7 +151,7 @@ const UpdateEmployeePage = () => {
         description: `${employee?.fullName}'s profile has been updated successfully`,
         duration: 5000,
       })
-      router.push("/employees")
+      router.push(`/employees/${employeeId}`)
     }
 
     if (updateError) {
