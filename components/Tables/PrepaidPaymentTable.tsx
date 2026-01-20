@@ -11,14 +11,14 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearError,
-  clearPayments,
-  CollectorType,
-  fetchPayments,
-  Payment,
-  PaymentChannel,
-  PaymentsRequestParams,
-  PaymentStatus,
-  setPaymentsPagination,
+  clearPrepaidPayments,
+  fetchPrepaidPayments,
+  PrepaidPayment,
+  PrepaidPaymentChannel,
+  PrepaidPaymentsRequestParams,
+  PrepaidPaymentStatus,
+  PrepaidCollectorType,
+  setPrepaidPaymentsPagination,
 } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
@@ -28,8 +28,8 @@ import VendTokenModal from "components/ui/Modal/vend-token-modal"
 import CollectPaymentReceiptModal from "components/ui/Modal/collect-payment-receipt-modal"
 
 interface ActionDropdownProps {
-  payment: Payment
-  onViewDetails: (payment: Payment) => void
+  payment: PrepaidPayment
+  onViewDetails: (payment: PrepaidPayment) => void
 }
 
 const ActionDropdown: React.FC<ActionDropdownProps> = ({ payment, onViewDetails }) => {
@@ -202,9 +202,9 @@ const LoadingSkeleton = () => {
 
 interface AppliedFilters {
   agentId?: number
-  status?: PaymentStatus
-  channel?: PaymentChannel
-  collectorType?: CollectorType
+  status?: PrepaidPaymentStatus
+  channel?: PrepaidPaymentChannel
+  collectorType?: PrepaidCollectorType
   paymentTypeId?: number
   paidFromUtc?: string
   paidToUtc?: string
@@ -212,7 +212,7 @@ interface AppliedFilters {
   sortOrder?: "asc" | "desc"
 }
 
-interface AllPaymentsTableProps {
+interface AllPrepaidPaymentsTableProps {
   agentId?: number
   customerId?: number
   appliedFilters?: AppliedFilters
@@ -224,7 +224,7 @@ interface AllPaymentsTableProps {
   getActiveFilterCount?: () => number
 }
 
-const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
+const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
   agentId,
   customerId,
   appliedFilters = {} as AppliedFilters,
@@ -237,7 +237,9 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
+  const { prepaidPayments, prepaidPaymentsLoading, prepaidPaymentsError, prepaidPaymentsPagination } = useAppSelector(
+    (state) => state.agents
+  )
   const { agent } = useAppSelector((state) => state.auth)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -245,7 +247,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [searchText, setSearchText] = useState("")
   const [searchInput, setSearchInput] = useState("")
   const [showConfirmForm, setShowConfirmForm] = useState(false)
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
+  const [selectedPayment, setSelectedPayment] = useState<PrepaidPayment | null>(null)
   const [showVendTokenModal, setShowVendTokenModal] = useState(false)
   const [showCollectPaymentReceiptModal, setShowCollectPaymentReceiptModal] = useState(false)
 
@@ -253,7 +255,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   //   router.push(`/agents/payments/payment-details/${payment.id}`)
   // }
 
-  const handleConfirmPayment = (payment: Payment) => {
+  const handleConfirmPayment = (payment: PrepaidPayment) => {
     setSelectedPayment(payment)
     setShowConfirmForm(true)
   }
@@ -265,25 +267,27 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   const handleConfirmSuccess = () => {
     // Refetch payments to update the list
-    const fetchParams: PaymentsRequestParams = {
-      pageNumber: paymentsPagination.currentPage,
-      pageSize: pageSize,
-      ...(agentId !== undefined ? { agentId } : appliedFilters.agentId ? { agentId: appliedFilters.agentId } : {}),
-      ...(customerId !== undefined && { customerId }),
-      ...(searchText && { search: searchText }),
-      ...(appliedFilters.status && { status: appliedFilters.status }),
-      ...(appliedFilters.channel && { channel: appliedFilters.channel }),
-      ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
-      ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
-      ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
-      ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
-      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
-      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+    const fetchParams: PrepaidPaymentsRequestParams = {
+      PageNumber: prepaidPaymentsPagination.currentPage,
+      PageSize: pageSize,
+      ...(agentId !== undefined
+        ? { AgentId: agentId }
+        : appliedFilters.agentId
+        ? { AgentId: appliedFilters.agentId }
+        : {}),
+      ...(customerId !== undefined && { CustomerId: customerId }),
+      ...(searchText && { Search: searchText }),
+      ...(appliedFilters.status && { Status: appliedFilters.status }),
+      ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
+      ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
+      ...(appliedFilters.paidFromUtc && { PaidFromUtc: appliedFilters.paidFromUtc }),
+      ...(appliedFilters.paidToUtc && { PaidToUtc: appliedFilters.paidToUtc }),
     }
-    dispatch(fetchPayments(fetchParams))
+    dispatch(fetchPrepaidPayments(fetchParams))
   }
 
-  const handleDownloadReceipt = (payment: Payment) => {
+  const handleDownloadReceipt = (payment: PrepaidPayment) => {
     setSelectedPayment(payment)
     // Determine which modal to show based on payment type
     if (
@@ -303,32 +307,34 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   // Get pagination values from Redux state
-  const currentPage = paymentsPagination.currentPage
-  const pageSize = paymentsPagination.pageSize
-  const totalRecords = paymentsPagination.totalCount
-  const totalPages = paymentsPagination.totalPages
+  const currentPage = prepaidPaymentsPagination.currentPage
+  const pageSize = prepaidPaymentsPagination.pageSize
+  const totalRecords = prepaidPaymentsPagination.totalCount
+  const totalPages = prepaidPaymentsPagination.totalPages
 
-  // Fetch payments on component mount and when search/pagination/filters change
+  // Fetch prepaid payments on component mount and when search/pagination/filters change
   useEffect(() => {
-    const fetchParams: PaymentsRequestParams = {
-      pageNumber: currentPage,
-      pageSize: pageSize,
+    const fetchParams: PrepaidPaymentsRequestParams = {
+      PageNumber: currentPage,
+      PageSize: pageSize,
       // Use agentId prop if provided, otherwise use appliedFilters.agentId
-      ...(agentId !== undefined ? { agentId } : appliedFilters.agentId ? { agentId: appliedFilters.agentId } : {}),
-      ...(customerId !== undefined && { customerId }),
-      ...(searchText && { search: searchText }),
+      ...(agentId !== undefined
+        ? { AgentId: agentId }
+        : appliedFilters.agentId
+        ? { AgentId: appliedFilters.agentId }
+        : {}),
+      ...(customerId !== undefined && { CustomerId: customerId }),
+      ...(searchText && { Search: searchText }),
       // Applied filters from parent component
-      ...(appliedFilters.status && { status: appliedFilters.status }),
-      ...(appliedFilters.channel && { channel: appliedFilters.channel }),
-      ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
-      ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
-      ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
-      ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
-      ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
-      ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
+      ...(appliedFilters.status && { Status: appliedFilters.status }),
+      ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
+      ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
+      ...(appliedFilters.paidFromUtc && { PaidFromUtc: appliedFilters.paidFromUtc }),
+      ...(appliedFilters.paidToUtc && { PaidToUtc: appliedFilters.paidToUtc }),
     }
 
-    dispatch(fetchPayments(fetchParams))
+    dispatch(fetchPrepaidPayments(fetchParams))
   }, [
     dispatch,
     currentPage,
@@ -342,39 +348,37 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     appliedFilters.paymentTypeId,
     appliedFilters.paidFromUtc,
     appliedFilters.paidToUtc,
-    appliedFilters.sortBy,
-    appliedFilters.sortOrder,
   ])
 
   // Clear error when component unmounts
   useEffect(() => {
     return () => {
       dispatch(clearError())
-      dispatch(clearPayments())
+      dispatch(clearPrepaidPayments())
     }
   }, [dispatch])
 
-  const getStatusStyle = (status: PaymentStatus) => {
+  const getStatusStyle = (status: PrepaidPaymentStatus) => {
     switch (status) {
-      case PaymentStatus.Confirmed:
+      case "Confirmed":
         return {
           backgroundColor: "#EEF5F0",
           color: "#589E67",
           dotColor: "#589E67",
         }
-      case PaymentStatus.Pending:
+      case "Pending":
         return {
           backgroundColor: "#FEF6E6",
           color: "#D97706",
           dotColor: "#D97706",
         }
-      case PaymentStatus.Failed:
+      case "Failed":
         return {
           backgroundColor: "#F7EDED",
           color: "#AF4B4B",
           dotColor: "#AF4B4B",
         }
-      case PaymentStatus.Reversed:
+      case "Reversed":
         return {
           backgroundColor: "#EFF6FF",
           color: "#3B82F6",
@@ -389,34 +393,34 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
   }
 
-  const getChannelStyle = (channel: PaymentChannel) => {
+  const getChannelStyle = (channel: PrepaidPaymentChannel) => {
     switch (channel) {
-      case PaymentChannel.Cash:
+      case "Cash":
         return {
           backgroundColor: "#F3E8FF",
           color: "#7C3AED",
         }
-      case PaymentChannel.BankTransfer:
+      case "BankTransfer":
         return {
           backgroundColor: "#E0F2FE",
           color: "#0284C7",
         }
-      case PaymentChannel.Pos:
+      case "Pos":
         return {
           backgroundColor: "#FEF3C7",
           color: "#D97706",
         }
-      case PaymentChannel.Card:
+      case "Card":
         return {
           backgroundColor: "#FCE7F3",
           color: "#DB2777",
         }
-      case PaymentChannel.VendorWallet:
+      case "VendorWallet":
         return {
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Chaque:
+      case "Chaque":
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",
@@ -429,24 +433,24 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
   }
 
-  const getCollectorTypeStyle = (collectorType: CollectorType) => {
+  const getCollectorTypeStyle = (collectorType: PrepaidCollectorType) => {
     switch (collectorType) {
-      case CollectorType.Customer:
+      case "Customer":
         return {
           backgroundColor: "#F0F9FF",
           color: "#0C4A6E",
         }
-      case CollectorType.SalesRep:
+      case "SalesRep":
         return {
           backgroundColor: "#FEF3C7",
           color: "#92400E",
         }
-      case CollectorType.Vendor:
+      case "Vendor":
         return {
           backgroundColor: "#F3E8FF",
           color: "#5B21B6",
         }
-      case CollectorType.Staff:
+      case "Staff":
         return {
           backgroundColor: "#F0FDF4",
           color: "#166534",
@@ -508,7 +512,16 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     if (shouldUpdate) {
       setSearchText(trimmed)
       // Reset to first page when searching
-      dispatch(setPaymentsPagination({ page: 1, pageSize }))
+      dispatch(
+        setPrepaidPaymentsPagination({
+          totalCount: prepaidPaymentsPagination.totalCount,
+          totalPages: prepaidPaymentsPagination.totalPages,
+          currentPage: 1,
+          pageSize,
+          hasNext: prepaidPaymentsPagination.hasNext,
+          hasPrevious: false,
+        })
+      )
     }
   }
 
@@ -516,7 +529,16 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     setSearchText("")
     setSearchInput("")
     // Reset to first page when clearing search
-    dispatch(setPaymentsPagination({ page: 1, pageSize }))
+    dispatch(
+      setPrepaidPaymentsPagination({
+        totalCount: prepaidPaymentsPagination.totalCount,
+        totalPages: prepaidPaymentsPagination.totalPages,
+        currentPage: 1,
+        pageSize,
+        hasNext: prepaidPaymentsPagination.hasNext,
+        hasPrevious: false,
+      })
+    )
   }
 
   const [isExporting, setIsExporting] = useState(false)
@@ -568,8 +590,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     try {
       const dateRange = getExportDateRange()
 
-      // Fetch all payments from API
-      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENTS), {
+      // Fetch all prepaid payments from API
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PREPAID_PAYMENT), {
         params: {
           PageNumber: 1,
           PageSize: 10000,
@@ -593,7 +615,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         },
       })
 
-      const allPayments: Payment[] = response.data?.data || []
+      const allPayments: PrepaidPayment[] = response.data?.data || []
 
       if (allPayments.length === 0) {
         setIsExporting(false)
@@ -662,16 +684,25 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const paginate = (pageNumber: number) => {
-    dispatch(setPaymentsPagination({ page: pageNumber, pageSize }))
+    dispatch(
+      setPrepaidPaymentsPagination({
+        totalCount: prepaidPaymentsPagination.totalCount,
+        totalPages: prepaidPaymentsPagination.totalPages,
+        currentPage: pageNumber,
+        pageSize,
+        hasNext: pageNumber < prepaidPaymentsPagination.totalPages,
+        hasPrevious: pageNumber > 1,
+      })
+    )
   }
 
   // If only showing statistics, return just the statistics cards
   if (showStatisticsOnly) {
-    const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
-    const confirmedCount = payments.filter((p) => p.status === PaymentStatus.Confirmed).length
-    const pendingCount = payments.filter((p) => p.status === PaymentStatus.Pending).length
-    const failedCount = payments.filter((p) => p.status === PaymentStatus.Failed).length
-    const totalCount = payments.length
+    const totalAmount = prepaidPayments.reduce((sum, payment) => sum + payment.amount, 0)
+    const confirmedCount = prepaidPayments.filter((p) => p.status === "Confirmed").length
+    const pendingCount = prepaidPayments.filter((p) => p.status === "Pending").length
+    const failedCount = prepaidPayments.filter((p) => p.status === "Failed").length
+    const totalCount = prepaidPayments.length
 
     return (
       <motion.div
@@ -745,7 +776,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     )
   }
 
-  if (paymentsLoading) return <LoadingSkeleton />
+  if (prepaidPaymentsLoading) return <LoadingSkeleton />
 
   return (
     <div className="w-full">
@@ -753,7 +784,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       <div className="mb-4 space-y-4">
         {/* Title Row */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Payments</h4>
+          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Prepaid Payments</h4>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center border-b">
               <SearchModule
@@ -923,13 +954,13 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       </AnimatePresence>
 
       {/* Error Message */}
-      {paymentsError && (
+      {prepaidPaymentsError && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 md:p-4 md:text-base">
-          <p>Error loading payments: {paymentsError}</p>
+          <p>Error loading prepaid payments: {prepaidPaymentsError}</p>
         </div>
       )}
 
-      {payments.length === 0 ? (
+      {prepaidPayments.length === 0 ? (
         <motion.div
           className="flex h-60 flex-col items-center justify-center gap-2 bg-[#F6F6F9]"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -1059,7 +1090,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {payments.map((payment, index) => (
+                  {prepaidPayments.map((payment, index) => (
                     <motion.tr
                       key={payment.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -1139,7 +1170,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       </td>
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
-                        {payment.status === PaymentStatus.Pending ? (
+                        {payment.status === "Pending" ? (
                           agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager") ? (
                             <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
                               Confirm
@@ -1147,7 +1178,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                           ) : (
                             <p className="text-center">-</p>
                           )
-                        ) : payment.status === PaymentStatus.Confirmed ? (
+                        ) : payment.status === "Confirmed" ? (
                           <div className="flex gap-1">
                             <ButtonModule variant="outline" size="sm" onClick={() => handleDownloadReceipt(payment)}>
                               Download Receipt
@@ -1337,4 +1368,4 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   )
 }
 
-export default AllPaymentsTable
+export default AllPrepaidPaymentsTable

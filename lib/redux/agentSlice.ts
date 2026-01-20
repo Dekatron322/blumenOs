@@ -674,6 +674,7 @@ export interface Collector {
 export interface Payment {
   paymentDetails: any
   isPending: boolean
+  isPrepaid: boolean
   id: number
   reference: string
   latitude: number
@@ -1452,6 +1453,149 @@ export interface CheckPaymentResponse {
 
 // ========== END CHECK PAYMENT INTERFACES ==========
 
+// ========== PREPAID PAYMENT INTERFACES ==========
+
+export type PrepaidPaymentChannel =
+  | "Cash"
+  | "BankTransfer"
+  | "Pos"
+  | "Card"
+  | "VendorWallet"
+  | "Chaque"
+  | "BankDeposit"
+  | "Vendor"
+  | "Migration"
+
+export type PrepaidPaymentStatus = "Pending" | "Confirmed" | "Failed" | "Reversed"
+
+export type PrepaidCollectorType = "Customer" | "SalesRep" | "Vendor" | "Staff" | "Migration"
+
+export type PrepaidClearanceStatus = "Uncleared" | "Cleared" | "ClearedWithCondition"
+
+export type PrepaidAgentType = "SalesRep" | string
+
+export interface PrepaidPaymentCollector {
+  type: string
+  name: string
+  agentId: number
+  agentCode: string
+  agentType: PrepaidAgentType
+  vendorId: number
+  vendorName: string
+  staffName: string
+  customerId: number
+  customerName: string
+}
+
+export interface PrepaidPaymentToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+export interface PrepaidPayment {
+  externalReference: string | undefined
+  id: number
+  reference: string
+  latitude: number
+  longitude: number
+  phoneNumber: string
+  channel: PrepaidPaymentChannel
+  status: PrepaidPaymentStatus
+  collectorType: PrepaidCollectorType
+  isPrepaid: boolean
+  agentType: PrepaidAgentType
+  amount: number
+  amountApplied: number
+  vatAmount: number
+  overPaymentAmount: number
+  outstandingAfterPayment: number
+  outstandingBeforePayment: number
+  customerOutstandingDebtBalance: number
+  vendorCommissionRatePercent: number
+  vendorCommissionAmount: number
+  vendorDebitAmount: number
+  currency: string
+  paidAtUtc: string
+  confirmedAtUtc: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  postpaidBillId: number
+  postpaidBillPeriod: string
+  billTotalDue: number
+  vendorId: number
+  vendorName: string
+  agentId: number
+  agentCode: string
+  agentName: string
+  recordedByName: string
+  areaOfficeName: string
+  distributionSubstationCode: string
+  feederName: string
+  paymentTypeId: number
+  paymentTypeName: string
+  isManualEntry: boolean
+  isSystemGenerated: boolean
+  evidenceFileUrl: string
+  recoveryApplied: boolean
+  recoveryAmount: number
+  recoveryPolicyId: number
+  recoveryPolicyName: string
+  collector: PrepaidPaymentCollector
+  tokens: PrepaidPaymentToken[]
+}
+
+export interface PrepaidPaymentsResponse {
+  isSuccess: boolean
+  message: string
+  data: PrepaidPayment[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface PrepaidPaymentsRequestParams {
+  id?: number
+  PageNumber: number
+  PageSize: number
+  CustomerId?: number
+  VendorId?: number
+  AgentId?: number
+  Reference?: string
+  AccountNumber?: string
+  MeterNumber?: string
+  AgentIds?: number[]
+  AreaOfficeId?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+  ServiceCenterId?: number
+  PostpaidBillId?: number
+  PaymentTypeId?: number
+  PrepaidOnly?: boolean
+  Channel?: PrepaidPaymentChannel
+  Status?: PrepaidPaymentStatus
+  CollectorType?: PrepaidCollectorType
+  ClearanceStatus?: PrepaidClearanceStatus
+  PaidFromUtc?: string
+  PaidToUtc?: string
+  Search?: string
+  IsCleared?: boolean
+  IsRemitted?: boolean
+  CustomerIsPPM?: boolean
+  CustomerIsMD?: boolean
+  CustomerIsUrban?: boolean
+  CustomerProvinceId?: number
+}
+
+// ========== END PREPAID PAYMENT INTERFACES ==========
+
 // Agent State
 interface AgentState {
   // Current logged-in agent info state
@@ -1653,6 +1797,20 @@ interface AgentState {
   customerLookupLoading: boolean
   customerLookupError: string | null
   customerLookupSuccess: boolean
+
+  // Prepaid Payments state
+  prepaidPayments: PrepaidPayment[]
+  prepaidPaymentsLoading: boolean
+  prepaidPaymentsError: string | null
+  prepaidPaymentsSuccess: boolean
+  prepaidPaymentsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 }
 
 // Initial state
@@ -1820,6 +1978,19 @@ const initialState: AgentState = {
   customerLookupLoading: false,
   customerLookupError: null,
   customerLookupSuccess: false,
+  // Prepaid Payments initial state
+  prepaidPayments: [],
+  prepaidPaymentsLoading: false,
+  prepaidPaymentsError: null,
+  prepaidPaymentsSuccess: false,
+  prepaidPaymentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
 }
 
 // Async thunks
@@ -2605,6 +2776,93 @@ export const fetchPayments = createAsyncThunk(
   }
 )
 
+// Prepaid Payments Async Thunk
+export const fetchPrepaidPayments = createAsyncThunk(
+  "agents/fetchPrepaidPayments",
+  async (params: PrepaidPaymentsRequestParams, { rejectWithValue }) => {
+    try {
+      const {
+        id,
+        PageNumber,
+        PageSize,
+        CustomerId,
+        VendorId,
+        AgentId,
+        Reference,
+        AccountNumber,
+        MeterNumber,
+        AgentIds,
+        AreaOfficeId,
+        DistributionSubstationId,
+        FeederId,
+        ServiceCenterId,
+        PostpaidBillId,
+        PaymentTypeId,
+        PrepaidOnly,
+        Channel,
+        Status,
+        CollectorType,
+        ClearanceStatus,
+        PaidFromUtc,
+        PaidToUtc,
+        Search,
+        IsCleared,
+        IsRemitted,
+        CustomerIsPPM,
+        CustomerIsMD,
+        CustomerIsUrban,
+        CustomerProvinceId,
+      } = params
+
+      const response = await api.get<PrepaidPaymentsResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.PREPAID_PAYMENT), {
+        params: {
+          ...(id !== undefined && { id }),
+          PageNumber,
+          PageSize,
+          ...(CustomerId !== undefined && { CustomerId }),
+          ...(VendorId !== undefined && { VendorId }),
+          ...(AgentId !== undefined && { AgentId }),
+          ...(Reference && { Reference }),
+          ...(AccountNumber && { AccountNumber }),
+          ...(MeterNumber && { MeterNumber }),
+          ...(AgentIds && AgentIds.length > 0 && { AgentIds }),
+          ...(AreaOfficeId !== undefined && { AreaOfficeId }),
+          ...(DistributionSubstationId !== undefined && { DistributionSubstationId }),
+          ...(FeederId !== undefined && { FeederId }),
+          ...(ServiceCenterId !== undefined && { ServiceCenterId }),
+          ...(PostpaidBillId !== undefined && { PostpaidBillId }),
+          ...(PaymentTypeId !== undefined && { PaymentTypeId }),
+          ...(PrepaidOnly !== undefined && { PrepaidOnly }),
+          ...(Channel && { Channel }),
+          ...(Status && { Status }),
+          ...(CollectorType && { CollectorType }),
+          ...(ClearanceStatus && { ClearanceStatus }),
+          ...(PaidFromUtc && { PaidFromUtc }),
+          ...(PaidToUtc && { PaidToUtc }),
+          ...(Search && { Search }),
+          ...(IsCleared !== undefined && { IsCleared }),
+          ...(IsRemitted !== undefined && { IsRemitted }),
+          ...(CustomerIsPPM !== undefined && { CustomerIsPPM }),
+          ...(CustomerIsMD !== undefined && { CustomerIsMD }),
+          ...(CustomerIsUrban !== undefined && { CustomerIsUrban }),
+          ...(CustomerProvinceId !== undefined && { CustomerProvinceId }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch prepaid payments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch prepaid payments")
+      }
+      return rejectWithValue(error.message || "Network error during prepaid payments fetch")
+    }
+  }
+)
+
 // Confirm Payment Async Thunk
 export const confirmPayment = createAsyncThunk(
   "agents/confirmPayment",
@@ -2844,6 +3102,37 @@ const agentSlice = createSlice({
       state.customerLookupError = null
       state.customerLookupSuccess = false
       state.customerLookupLoading = false
+    },
+
+    // Clear prepaid payments state
+    clearPrepaidPayments: (state) => {
+      state.prepaidPayments = []
+      state.prepaidPaymentsError = null
+      state.prepaidPaymentsSuccess = false
+      state.prepaidPaymentsLoading = false
+      state.prepaidPaymentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Set prepaid payments pagination
+    setPrepaidPaymentsPagination: (
+      state,
+      action: PayloadAction<{
+        totalCount: number
+        totalPages: number
+        currentPage: number
+        pageSize: number
+        hasNext: boolean
+        hasPrevious: boolean
+      }>
+    ) => {
+      state.prepaidPaymentsPagination = action.payload
     },
 
     // Reset agent state
@@ -4177,6 +4466,41 @@ const agentSlice = createSlice({
         }
       })
 
+      // Fetch prepaid payments cases
+      .addCase(fetchPrepaidPayments.pending, (state) => {
+        state.prepaidPaymentsLoading = true
+        state.prepaidPaymentsError = null
+        state.prepaidPaymentsSuccess = false
+      })
+      .addCase(fetchPrepaidPayments.fulfilled, (state, action: PayloadAction<PrepaidPaymentsResponse>) => {
+        state.prepaidPaymentsLoading = false
+        state.prepaidPaymentsSuccess = true
+        state.prepaidPayments = action.payload.data || []
+        state.prepaidPaymentsPagination = {
+          totalCount: action.payload.totalCount || 0,
+          totalPages: action.payload.totalPages || 0,
+          currentPage: action.payload.currentPage || 1,
+          pageSize: action.payload.pageSize || 10,
+          hasNext: action.payload.hasNext || false,
+          hasPrevious: action.payload.hasPrevious || false,
+        }
+        state.prepaidPaymentsError = null
+      })
+      .addCase(fetchPrepaidPayments.rejected, (state, action) => {
+        state.prepaidPaymentsLoading = false
+        state.prepaidPaymentsError = (action.payload as string) || "Failed to fetch prepaid payments"
+        state.prepaidPaymentsSuccess = false
+        state.prepaidPayments = []
+        state.prepaidPaymentsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+
       // Confirm payment cases
       .addCase(confirmPayment.pending, (state) => {
         state.confirmPaymentLoading = true
@@ -4349,6 +4673,8 @@ export const {
   updateAgentPerformanceDailyAfterIssue,
   updatePaymentChannels,
   updatePaymentChannelsWithCashInfo,
+  clearPrepaidPayments,
+  setPrepaidPaymentsPagination,
 } = agentSlice.actions
 
 export default agentSlice.reducer
