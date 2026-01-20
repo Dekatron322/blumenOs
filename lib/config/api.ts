@@ -363,7 +363,7 @@ export const API_ENDPOINTS = {
     ADD: "/vendors/bulk",
     UPDATE: "/vendors/{id}",
     GET_VENDOR_WALLET: "/vendors/{id}/wallet",
-    TOP_UP: "/vendors/{id}/wallet/top-up",
+    TOP_UP: "/vendors/{id}/wallet/top-up/admin",
     UPDATE_COMMISSION: "/vendors/{id}/commission",
     SUSPEND: "/vendors/{id}/suspend",
     GENERATE_API_KEY: "/vendors/{id}/api-keys/rotate",

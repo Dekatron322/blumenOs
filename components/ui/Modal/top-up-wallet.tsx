@@ -39,6 +39,8 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
     amount: "",
     displayAmount: "",
     reference: "",
+    reason: "",
+    effectiveAtUtc: new Date().toISOString(),
   })
 
   const [step, setStep] = useState<"amount" | "confirmation" | "success">("amount")
@@ -56,7 +58,13 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setFormData({ amount: "", displayAmount: "", reference: "" })
+      setFormData({
+        amount: "",
+        displayAmount: "",
+        reference: "",
+        reason: "",
+        effectiveAtUtc: new Date().toISOString(),
+      })
       setStep("amount")
       dispatch(clearVendorTopUp())
     }
@@ -144,8 +152,15 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
   const handleSubmit = async () => {
     try {
       const amount = parseFloat(formData.amount)
-      if (!isNaN(amount) && amount > 0) {
-        await dispatch(topUpVendorWallet({ id: vendorId, amount })).unwrap()
+      if (!isNaN(amount) && amount > 0 && formData.reason.trim()) {
+        await dispatch(
+          topUpVendorWallet({
+            id: vendorId,
+            amount,
+            reason: formData.reason.trim(),
+            effectiveAtUtc: formData.effectiveAtUtc,
+          })
+        ).unwrap()
 
         if (onSuccess) {
           onSuccess()
@@ -283,6 +298,22 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
                   </div>
                 </div>
 
+                {/* Reason Input */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Reason <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="reason"
+                    placeholder="Enter reason for top-up..."
+                    value={formData.reason}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, reason: e.target.value }))}
+                    required
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  />
+                </div>
+
                 {/* New Balance Preview */}
                 {isAmountValid() && (
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -326,9 +357,13 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
                     <span className="text-sm text-gray-600">Current Balance:</span>
                     <span className="font-medium text-gray-900">{formatCurrency(currentBalance)}</span>
                   </div>
-                  <div className="flex justify-between border-t border-gray-100 pt-2">
+                  <div className="flex justify-between border-t border-gray-100 py-2">
                     <span className="text-sm text-gray-600">New Balance:</span>
                     <span className="font-semibold text-gray-900">{formatCurrency(getNewBalance())}</span>
+                  </div>
+                  <div className="border-t border-gray-100 pt-2">
+                    <span className="text-sm text-gray-600">Reason:</span>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{formData.reason}</p>
                   </div>
                 </div>
               </div>
@@ -409,7 +444,7 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
                 className="flex-1"
                 size="lg"
                 onClick={handleProceedToConfirmation}
-                disabled={!isAmountValid()}
+                disabled={!isAmountValid() || !formData.reason.trim()}
               >
                 Continue
               </ButtonModule>

@@ -58,6 +58,8 @@ export interface VendorWalletResponse {
 // Vendor Wallet Top-up Interfaces
 export interface VendorTopUpRequest {
   amount: number
+  reason: string
+  effectiveAtUtc: string
 }
 
 export interface VendorTopUpResponseData {
@@ -890,10 +892,13 @@ export const fetchVendorWallet = createAsyncThunk(
 
 export const topUpVendorWallet = createAsyncThunk(
   "vendors/topUpVendorWallet",
-  async ({ id, amount }: { id: number; amount: number }, { rejectWithValue }) => {
+  async (
+    { id, amount, reason, effectiveAtUtc }: { id: number; amount: number; reason: string; effectiveAtUtc: string },
+    { rejectWithValue }
+  ) => {
     try {
       const endpoint = API_ENDPOINTS.VENDORS.TOP_UP.replace("{id}", id.toString())
-      const requestData: VendorTopUpRequest = { amount }
+      const requestData: VendorTopUpRequest = { amount, reason, effectiveAtUtc }
 
       const response = await api.post<VendorTopUpResponse>(buildApiUrl(endpoint), requestData)
 
