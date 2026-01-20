@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Download, Filter, SortAsc, SortDesc, X } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { RxDotsVertical } from "react-icons/rx"
 
@@ -28,6 +28,8 @@ import {
 import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
 import { VscEye } from "react-icons/vsc"
+import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import { api } from "lib/redux/authSlice"
 
 // Channel mapping utilities
 const channelStringToEnum = (channelString: string): PaymentChannel => {
@@ -690,6 +692,13 @@ const AllPayments: React.FC = () => {
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
+  // Export CSV state
+  const [isExporting, setIsExporting] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
+  const [exportFromDate, setExportFromDate] = useState("")
+  const [exportToDate, setExportToDate] = useState("")
+
   // Local state for filters to avoid too many Redux dispatches
   const [localFilters, setLocalFilters] = useState({
     customerId: undefined as number | undefined,
@@ -1156,6 +1165,135 @@ const AllPayments: React.FC = () => {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
+  const getExportDateRange = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    switch (exportDateRange) {
+      case "today":
+        const endOfToday = new Date(today)
+        endOfToday.setHours(23, 59, 59, 999)
+        return {
+          from: today.toISOString(),
+          to: endOfToday.toISOString(),
+        }
+      case "week":
+        const weekAgo = new Date(today)
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        return {
+          from: weekAgo.toISOString(),
+          to: new Date().toISOString(),
+        }
+      case "month":
+        const monthAgo = new Date(today)
+        monthAgo.setMonth(monthAgo.getMonth() - 1)
+        return {
+          from: monthAgo.toISOString(),
+          to: new Date().toISOString(),
+        }
+      case "custom":
+        return {
+          from: exportFromDate ? new Date(exportFromDate).toISOString() : undefined,
+          to: exportToDate ? new Date(exportToDate + "T23:59:59").toISOString() : undefined,
+        }
+      default:
+        return { from: undefined, to: undefined }
+    }
+  }
+
+  const exportToCSV = async () => {
+    setIsExporting(true)
+    setShowExportModal(false)
+
+    try {
+      const dateRange = getExportDateRange()
+
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.PAYMENTS.GET), {
+        params: {
+          PageNumber: 1,
+          PageSize: 10000,
+          ...(searchText && { Search: searchText }),
+          ...(appliedFilters.customerId && { CustomerId: appliedFilters.customerId }),
+          ...(appliedFilters.vendorId && { VendorId: appliedFilters.vendorId }),
+          ...(appliedFilters.agentId && { AgentId: appliedFilters.agentId }),
+          ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
+          ...(appliedFilters.areaOfficeId && { AreaOfficeId: appliedFilters.areaOfficeId }),
+          ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
+          ...(appliedFilters.status && { Status: appliedFilters.status }),
+          ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
+          ...(dateRange.from || appliedFilters.paidFromUtc
+            ? { PaidFromUtc: dateRange.from || appliedFilters.paidFromUtc }
+            : {}),
+          ...(dateRange.to || appliedFilters.paidToUtc ? { PaidToUtc: dateRange.to || appliedFilters.paidToUtc } : {}),
+          ...(appliedFilters.sortBy && { SortBy: appliedFilters.sortBy }),
+          ...(appliedFilters.sortOrder && { SortOrder: appliedFilters.sortOrder }),
+        },
+      })
+
+      const allPayments: Payment[] = response.data?.data || []
+
+      if (allPayments.length === 0) {
+        setIsExporting(false)
+        return
+      }
+
+      const headers = [
+        "Reference",
+        "Amount",
+        "Currency",
+        "Customer Name",
+        "Customer Account",
+        "Payment Type",
+        "Channel",
+        "Status",
+        "Collector Type",
+        "Date/Time",
+        "Area Office",
+      ]
+
+      const csvRows = allPayments.map((payment) => [
+        payment.reference || `PAY-${payment.id}`,
+        payment.amount,
+        payment.currency || "NGN",
+        payment.customerName || "-",
+        payment.customerAccountNumber || "-",
+        payment.paymentTypeName || "-",
+        payment.channel,
+        payment.status,
+        payment.collectorType,
+        payment.paidAtUtc ? formatDate(payment.paidAtUtc) : "-",
+        payment.areaOfficeName || "-",
+      ])
+
+      const escapeCSV = (value: string | number | undefined) => {
+        const stringValue = String(value)
+        if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+          return `"${stringValue.replace(/"/g, '""')}"`
+        }
+        return stringValue
+      }
+
+      const csvContent = [headers.map(escapeCSV).join(","), ...csvRows.map((row) => row.map(escapeCSV).join(","))].join(
+        "\n"
+      )
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `payments_export_${new Date().toISOString().split("T")[0]}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Failed to export payments:", error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   if (loading) return <LoadingSkeleton />
   if (error) return <div className="p-4 text-red-600">Error loading payments: {error}</div>
 
@@ -1286,6 +1424,17 @@ const AllPayments: React.FC = () => {
                     >
                       {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
                       {showDesktopFilters ? "Hide filters" : "Show filters"}
+                    </button>
+                    {/* Export CSV Button */}
+                    <button
+                      onClick={() => setShowExportModal(true)}
+                      disabled={isExporting}
+                      className={`flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium transition-colors ${
+                        isExporting ? "cursor-not-allowed text-gray-400" : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />
+                      {isExporting ? "Exporting..." : "Export"}
                     </button>
                   </div>
                 </div>
@@ -1826,6 +1975,113 @@ const AllPayments: React.FC = () => {
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
       />
+
+      {/* Export CSV Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Export Payments to CSV</h3>
+                <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "all", label: "All Time" },
+                    { value: "today", label: "Today" },
+                    { value: "week", label: "Last 7 Days" },
+                    { value: "month", label: "Last 30 Days" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                        exportDateRange === option.value
+                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setExportDateRange("custom")}
+                  className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    exportDateRange === "custom"
+                      ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <Calendar className="mr-2 inline-block size-4" />
+                  Custom Date Range
+                </button>
+              </div>
+
+              {exportDateRange === "custom" && (
+                <div className="mb-4 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                    <input
+                      type="date"
+                      value={exportFromDate}
+                      onChange={(e) => setExportFromDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                    <input
+                      type="date"
+                      value={exportToDate}
+                      onChange={(e) => setExportToDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={exportToCSV}
+                  disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
+                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
+                    exportDateRange === "custom" && !exportFromDate && !exportToDate
+                      ? "cursor-not-allowed bg-gray-400"
+                      : "bg-[#004B23] hover:bg-[#003a1b]"
+                  }`}
+                >
+                  <Download className="mr-2 inline-block size-4" />
+                  Export
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

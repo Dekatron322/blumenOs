@@ -18,7 +18,6 @@ import {
   clearCashStatus,
   clearClearances,
   clearError,
-  fetchAgentInfo,
   fetchClearances,
   setClearancesPagination,
 } from "lib/redux/agentSlice"
@@ -235,10 +234,9 @@ interface AgentClearanceTableProps {
   appliedFilters?: AppliedFilters
 }
 
-const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
-  agentId,
-  appliedFilters = {} as AppliedFilters,
-}) => {
+const EMPTY_FILTERS: AppliedFilters = {}
+
+const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({ agentId, appliedFilters = EMPTY_FILTERS }) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const {
@@ -287,8 +285,9 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     }
   }
 
-  // Memoize appliedFilters to prevent unnecessary re-renders
-  const memoizedFilters = useMemo(() => appliedFilters, [JSON.stringify(appliedFilters)])
+  // Track fetch state to prevent duplicate calls
+  const lastFetchParamsRef = useRef<string>("")
+  const isFetchingRef = useRef(false)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -331,17 +330,32 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
     }).format(amount)
   }
 
-  // Single function to fetch clearances data
-  const fetchClearancesData = React.useCallback(() => {
+  // Single function to fetch clearances data - no useCallback to avoid dependency issues
+  const fetchClearancesData = () => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
+      return
+    }
+
     const fetchParams: ClearancesRequestParams = {
       pageNumber: currentPage,
       pageSize: pageSize,
       ...(agentId ? { id: agentId } : {}),
-      ...memoizedFilters,
+      ...appliedFilters,
     }
 
-    dispatch(fetchClearances(fetchParams))
-  }, [dispatch, agentId, currentPage, pageSize, memoizedFilters])
+    // Create a unique key for the current fetch params to prevent duplicate requests
+    const paramsKey = JSON.stringify(fetchParams)
+    if (lastFetchParamsRef.current === paramsKey) {
+      return // Skip if params haven't changed
+    }
+    lastFetchParamsRef.current = paramsKey
+    isFetchingRef.current = true
+
+    dispatch(fetchClearances(fetchParams)).finally(() => {
+      isFetchingRef.current = false
+    })
+  }
 
   const handleViewClearanceDetails = (clearance: CashClearance) => {
     if (agentId) {
@@ -385,9 +399,8 @@ const AgentClearanceTable: React.FC<AgentClearanceTableProps> = ({
   // Fetch clearances on component mount and when dependencies change
   useEffect(() => {
     fetchClearancesData()
-    // Also fetch agent info to get agentType
-    dispatch(fetchAgentInfo())
-  }, [fetchClearancesData, dispatch])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agentId, currentPage, pageSize, JSON.stringify(appliedFilters)])
 
   // Clear error and clearances when component unmounts
   useEffect(() => {
