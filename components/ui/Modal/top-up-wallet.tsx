@@ -190,7 +190,7 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
 
   const isAmountValid = () => {
     const amount = parseFloat(formData.amount)
-    return !isNaN(amount) && amount > 0 && amount <= 1000000 // Maximum 1,000,000
+    return !isNaN(amount) && amount > 0
   }
 
   const getNewBalance = () => {
@@ -274,7 +274,7 @@ const TopUpWalletModal: React.FC<TopUpWalletModalProps> = ({
                         className="w-full rounded-lg border border-gray-200 bg-white px-8 py-3 text-lg font-medium text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
                       />
                     </div>
-                    <p className="text-xs text-gray-500">Maximum: ₦1,000,000</p>
+                    <p className="text-xs text-gray-500">Enter any amount</p>
                   </div>
                 </div>
 
