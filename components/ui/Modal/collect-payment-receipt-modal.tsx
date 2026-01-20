@@ -8,9 +8,18 @@ import Image from "next/image"
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 
+interface TokenData {
+  token: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
 interface CollectPaymentReceiptModalProps {
   isOpen: boolean
   onRequestClose: () => void
+  tokenData?: TokenData | null
   paymentData: {
     reference: string
     customerName: string
@@ -39,6 +48,7 @@ interface CollectPaymentReceiptModalProps {
 const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
   isOpen,
   onRequestClose,
+  tokenData,
   paymentData,
 }) => {
   const [isCopyingAll, setIsCopyingAll] = useState(false)
@@ -276,6 +286,24 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
           <div class="amount-large">${formatCurrency(paymentData.totalAmountPaid, paymentData.currency)}</div>
         </div>
         
+        ${
+          tokenData
+            ? `
+        <div class="double-divider"></div>
+        <div class="center bold">TOKEN INFORMATION</div>
+        <div style="border: 2px solid #000; padding: 10px; margin: 10px 0; text-align: center; background: #f5f5f5;">
+          <div style="font-size: 16px; font-weight: bold; letter-spacing: 2px; font-family: monospace; word-break: break-all;">
+            ${tokenData.token}
+          </div>
+          <div style="margin-top: 8px; font-size: 11px;">
+            ${tokenData.vendedAmount} ${tokenData.unit}
+          </div>
+          <div style="font-size: 10px; margin-top: 4px;">Meter: ${tokenData.drn}</div>
+        </div>
+        `
+            : ""
+        }
+        
         <div class="double-divider"></div>
         
         <div class="center footer">
@@ -363,7 +391,7 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
   const handleCopyAll = () => {
     if (!paymentData) return
 
-    const text =
+    let text =
       `Payment Receipt\n` +
       `Reference: ${paymentData.reference}\n` +
       `Customer: ${paymentData.customerName}\n` +
@@ -377,6 +405,15 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
       (paymentData.customerAddress ? `Address: ${paymentData.customerAddress}\n` : "") +
       (paymentData.customerPhoneNumber ? `Phone: ${paymentData.customerPhoneNumber}\n` : "") +
       (paymentData.externalReference ? `External Reference: ${paymentData.externalReference}\n` : "")
+
+    if (tokenData) {
+      text +=
+        `\nToken Information:\n` +
+        `Token: ${tokenData.token}\n` +
+        `Units: ${tokenData.vendedAmount} ${tokenData.unit}\n` +
+        `Meter: ${tokenData.drn}\n` +
+        `Description: ${tokenData.description}\n`
+    }
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(text).then(() => {
@@ -526,6 +563,36 @@ const CollectPaymentReceiptModal: React.FC<CollectPaymentReceiptModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Token Information */}
+          {tokenData && (
+            <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+              <h4 className="mb-3 font-semibold text-blue-800">Token Information</h4>
+              <div className="mb-3 rounded-md bg-white p-3 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Electricity Token</p>
+                <p className="select-all font-mono text-2xl font-extrabold tracking-[0.12em] text-gray-900 sm:text-3xl">
+                  {tokenData.token}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="font-semibold uppercase tracking-wide text-gray-600">Units</span>
+                  <p className="text-lg font-bold text-gray-900">
+                    {tokenData.vendedAmount} {tokenData.unit}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold uppercase tracking-wide text-gray-600">Meter Number</span>
+                  <p className="font-mono text-lg font-bold text-gray-900">{tokenData.drn}</p>
+                </div>
+              </div>
+              {tokenData.description && (
+                <div className="mt-2 text-xs text-gray-600">
+                  <span className="font-medium">Description:</span> {tokenData.description}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Footer */}
           <div className="text-center text-xs text-gray-500">
