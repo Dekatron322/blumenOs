@@ -1179,6 +1179,7 @@ export interface CustomerLookupDetails {
   suspensionReason: string
   suspendedAt: string
   lastLoginAt: string
+  minimumPayment: number
 }
 
 export interface CustomerLookupResponse {

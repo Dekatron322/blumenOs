@@ -69,7 +69,288 @@ const CardPaymentModal: React.FC<CardPaymentModalProps> = ({
   }
 
   const handlePrint = () => {
-    window.print()
+    if (!vendData) return
+
+    // Create thermal printer optimized receipt (58mm/80mm width)
+    const thermalReceiptContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Token Receipt</title>
+        <style>
+          @page {
+            size: 80mm auto;
+            margin: 0;
+          }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            width: 80mm;
+            padding: 5mm;
+            background: white;
+            color: black;
+          }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .divider {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+          }
+          .double-divider {
+            border-top: 2px solid #000;
+            margin: 8px 0;
+          }
+          .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+          }
+          .row-label { text-align: left; }
+          .row-value { text-align: right; font-weight: bold; }
+          .header { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+          .subheader { font-size: 10px; margin-bottom: 10px; }
+          .amount-large { font-size: 18px; font-weight: bold; }
+          .footer { font-size: 10px; margin-top: 10px; }
+          .stamp { 
+            font-size: 20px; 
+            font-weight: bold; 
+            border: 2px solid #000; 
+            padding: 5px 15px; 
+            display: inline-block;
+            margin: 10px 0;
+          }
+          .logo {
+            width: 35mm;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 8px;
+          }
+          .token-box {
+            border: 2px solid #000;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            background: #f5f5f5;
+          }
+          .token-value {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-family: monospace;
+            word-break: break-all;
+          }
+          @media print {
+            body { width: 80mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="center">
+          <img src="${window.location.origin}/kadco.svg" alt="KADCO" class="logo" />
+          <div class="divider"></div>
+          <div class="bold">TOKEN RECEIPT</div>
+          <div class="stamp">PAID</div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Ref:</span>
+          <span class="row-value">${vendData.reference}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Date:</span>
+          <span class="row-value">${formatDateTime(vendData.paidAtUtc || new Date().toISOString())}</span>
+        </div>
+        
+        <div class="double-divider"></div>
+        
+        <div class="center bold">CUSTOMER DETAILS</div>
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Name:</span>
+          <span class="row-value">${vendData.customerName}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Account:</span>
+          <span class="row-value">${vendData.customerAccountNumber}</span>
+        </div>
+        ${
+          vendData.customerMeterNumber
+            ? `
+        <div class="row">
+          <span class="row-label">Meter:</span>
+          <span class="row-value">${vendData.customerMeterNumber}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          vendData.customerPhoneNumber
+            ? `
+        <div class="row">
+          <span class="row-label">Phone:</span>
+          <span class="row-value">${vendData.customerPhoneNumber}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          vendData.accountType
+            ? `
+        <div class="row">
+          <span class="row-label">Type:</span>
+          <span class="row-value">${vendData.accountType}</span>
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center bold">PAYMENT DETAILS</div>
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Channel:</span>
+          <span class="row-value">${vendData.channel || "Card"}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Status:</span>
+          <span class="row-value">${vendData.status || "Confirmed"}</span>
+        </div>
+        
+        <div class="double-divider"></div>
+        
+        <div class="center bold">ENERGY SUMMARY</div>
+        <div class="divider"></div>
+        
+        ${
+          vendData.tariffRate
+            ? `
+        <div class="row">
+          <span class="row-label">Tariff:</span>
+          <span class="row-value">${formatCurrency(vendData.tariffRate, vendData.currency)}/kWh</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          vendData.units
+            ? `
+        <div class="row">
+          <span class="row-label">Units:</span>
+          <span class="row-value">${vendData.units} kWh</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          vendData.electricityAmount
+            ? `
+        <div class="row">
+          <span class="row-label">Electricity:</span>
+          <span class="row-value">${formatCurrency(vendData.electricityAmount, vendData.currency)}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          vendData.vatAmount
+            ? `
+        <div class="row">
+          <span class="row-label">VAT:</span>
+          <span class="row-value">${formatCurrency(vendData.vatAmount, vendData.currency)}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          vendData.debtPayable
+            ? `
+        <div class="row">
+          <span class="row-label">Debt Paid:</span>
+          <span class="row-value">${formatCurrency(vendData.debtPayable, vendData.currency)}</span>
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center">
+          <div class="bold">TOTAL PAID</div>
+          <div class="amount-large">${formatCurrency(vendData.totalAmountPaid, vendData.currency)}</div>
+        </div>
+        
+        ${
+          tokens && tokens.length > 0
+            ? tokens
+                .map(
+                  (token, index) => `
+        <div class="double-divider"></div>
+        <div class="center bold">TOKEN ${tokens.length > 1 ? index + 1 : ""}</div>
+        <div class="token-box">
+          <div class="token-value">${token.token}</div>
+          <div style="margin-top: 8px; font-size: 11px;">
+            ${token.vendedAmount || token.amount} ${token.unit}
+          </div>
+          ${
+            token.drn || token.meterNumber
+              ? `<div style="font-size: 10px; margin-top: 4px;">Meter: ${token.drn || token.meterNumber}</div>`
+              : ""
+          }
+        </div>
+        `
+                )
+                .join("")
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center footer">
+          <p>Thank you for your payment!</p>
+          <p>This receipt serves as proof of payment.</p>
+          <p style="margin-top: 10px;">--------------------------------</p>
+          <p>Powered by BlumenOS</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    // Create a hidden iframe for printing without opening a new page
+    const printFrame = document.createElement("iframe")
+    printFrame.style.position = "absolute"
+    printFrame.style.top = "-9999px"
+    printFrame.style.left = "-9999px"
+    printFrame.style.width = "0"
+    printFrame.style.height = "0"
+    printFrame.style.border = "none"
+    document.body.appendChild(printFrame)
+
+    const frameDoc = printFrame.contentWindow?.document
+    if (frameDoc) {
+      frameDoc.open()
+      frameDoc.write(thermalReceiptContent)
+      frameDoc.close()
+
+      setTimeout(() => {
+        printFrame.contentWindow?.focus()
+        printFrame.contentWindow?.print()
+        setTimeout(() => {
+          document.body.removeChild(printFrame)
+        }, 500)
+      }, 250)
+    }
   }
 
   const handleDownloadPDF = async () => {
