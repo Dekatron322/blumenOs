@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { Filter } from "lucide-react"
+import { Calendar, Download, Filter, X } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -22,6 +22,8 @@ import {
 } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
+import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
+import { api } from "lib/redux/authSlice"
 import VendTokenModal from "components/ui/Modal/vend-token-modal"
 import CollectPaymentReceiptModal from "components/ui/Modal/collect-payment-receipt-modal"
 
@@ -504,48 +506,227 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     dispatch(setPaymentsPagination({ page: 1, pageSize }))
   }
 
+  const [isExporting, setIsExporting] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
+  const [exportFromDate, setExportFromDate] = useState("")
+  const [exportToDate, setExportToDate] = useState("")
+
+  const getExportDateRange = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    switch (exportDateRange) {
+      case "today":
+        const endOfToday = new Date(today)
+        endOfToday.setHours(23, 59, 59, 999)
+        return {
+          from: today.toISOString(),
+          to: endOfToday.toISOString(),
+        }
+      case "week":
+        const weekAgo = new Date(today)
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        return {
+          from: weekAgo.toISOString(),
+          to: new Date().toISOString(),
+        }
+      case "month":
+        const monthAgo = new Date(today)
+        monthAgo.setMonth(monthAgo.getMonth() - 1)
+        return {
+          from: monthAgo.toISOString(),
+          to: new Date().toISOString(),
+        }
+      case "custom":
+        return {
+          from: exportFromDate ? new Date(exportFromDate).toISOString() : undefined,
+          to: exportToDate ? new Date(exportToDate + "T23:59:59").toISOString() : undefined,
+        }
+      default:
+        return { from: undefined, to: undefined }
+    }
+  }
+
+  const exportToCSV = async () => {
+    setIsExporting(true)
+    setShowExportModal(false)
+
+    try {
+      const dateRange = getExportDateRange()
+
+      // Fetch all payments from API
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENTS), {
+        params: {
+          PageNumber: 1,
+          PageSize: 10000,
+          ...(agentId !== undefined
+            ? { AgentId: agentId }
+            : appliedFilters.agentId
+            ? { AgentId: appliedFilters.agentId }
+            : {}),
+          ...(customerId !== undefined && { CustomerId: customerId }),
+          ...(searchText && { Search: searchText }),
+          ...(appliedFilters.status && { Status: appliedFilters.status }),
+          ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
+          ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
+          ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
+          ...(dateRange.from || appliedFilters.paidFromUtc
+            ? { PaidFromUtc: dateRange.from || appliedFilters.paidFromUtc }
+            : {}),
+          ...(dateRange.to || appliedFilters.paidToUtc ? { PaidToUtc: dateRange.to || appliedFilters.paidToUtc } : {}),
+          ...(appliedFilters.sortBy && { SortBy: appliedFilters.sortBy }),
+          ...(appliedFilters.sortOrder && { SortOrder: appliedFilters.sortOrder }),
+        },
+      })
+
+      const allPayments: Payment[] = response.data?.data || []
+
+      if (allPayments.length === 0) {
+        setIsExporting(false)
+        return
+      }
+
+      const headers = [
+        "Reference",
+        "Amount",
+        "Customer Name",
+        "Customer Account",
+        "Agent Name",
+        "Agent Code",
+        "Payment Type",
+        "Channel",
+        "Status",
+        "Collector Type",
+        "Date/Time",
+        "Area Office",
+      ]
+
+      const csvRows = allPayments.map((payment) => [
+        payment.reference || `PAY-${payment.id}`,
+        payment.amount,
+        payment.customerName || "-",
+        payment.customerAccountNumber || "-",
+        payment.agentName || "-",
+        payment.agentCode || "-",
+        payment.paymentTypeName || "-",
+        payment.channel,
+        payment.status,
+        payment.collectorType,
+        payment.paidAtUtc ? formatDate(payment.paidAtUtc) : "-",
+        payment.areaOfficeName || "-",
+      ])
+
+      const escapeCSV = (value: string | number) => {
+        const stringValue = String(value)
+        if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+          return `"${stringValue.replace(/"/g, '""')}"`
+        }
+        return stringValue
+      }
+
+      const csvContent = [headers.map(escapeCSV).join(","), ...csvRows.map((row) => row.map(escapeCSV).join(","))].join(
+        "\n"
+      )
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `payments_export_${new Date().toISOString().split("T")[0]}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Failed to export payments:", error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const paginate = (pageNumber: number) => {
     dispatch(setPaymentsPagination({ page: pageNumber, pageSize }))
   }
 
   // If only showing statistics, return just the statistics cards
   if (showStatisticsOnly) {
+    const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
+    const confirmedCount = payments.filter((p) => p.status === PaymentStatus.Confirmed).length
+    const pendingCount = payments.filter((p) => p.status === PaymentStatus.Pending).length
+    const failedCount = payments.filter((p) => p.status === PaymentStatus.Failed).length
+    const totalCount = payments.length
+
     return (
-      <>
-        {payments.length > 0 && (
-          <motion.div
-            className="grid grid-cols-1 gap-4 md:grid-cols-4"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="rounded-lg border border-[#004B23]/20 bg-[#004B23]/5 p-4 shadow-sm">
-              <div className="text-xs font-medium uppercase tracking-wide text-[#004B23]/80">Total Amount</div>
-              <div className="mt-1 text-xl font-semibold text-[#004B23]">
-                {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
+      <motion.div
+        className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        {/* Total Amount Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                <span className="text-sm">₦</span>
               </div>
             </div>
-            <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
-              <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">Confirmed</div>
-              <div className="mt-1 text-xl font-semibold text-emerald-900">
-                {payments.filter((p) => p.status === PaymentStatus.Confirmed).length}
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Amount</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{formatCurrency(totalAmount)}</p>
+            <p className="mt-1 text-xs text-white/60">{totalCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Confirmed Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
+                <span className="text-sm text-emerald-300">✓</span>
               </div>
             </div>
-            <div className="rounded-lg border border-amber-100 bg-amber-50 p-4 shadow-sm">
-              <div className="text-xs font-medium uppercase tracking-wide text-amber-700">Pending</div>
-              <div className="mt-1 text-xl font-semibold text-amber-900">
-                {payments.filter((p) => p.status === PaymentStatus.Pending).length}
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Confirmed</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{confirmedCount}</p>
+            <p className="mt-1 text-xs text-emerald-300/80">
+              {totalCount > 0 ? ((confirmedCount / totalCount) * 100).toFixed(1) : 0}% success rate
+            </p>
+          </div>
+        </div>
+
+        {/* Pending Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
+                <span className="text-sm text-amber-300">⏳</span>
               </div>
             </div>
-            <div className="rounded-lg border border-red-100 bg-red-50 p-4 shadow-sm">
-              <div className="text-xs font-medium uppercase tracking-wide text-red-700">Failed</div>
-              <div className="mt-1 text-xl font-semibold text-red-900">
-                {payments.filter((p) => p.status === PaymentStatus.Failed).length}
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{pendingCount}</p>
+            <p className="mt-1 text-xs text-amber-300/80">Awaiting confirmation</p>
+          </div>
+        </div>
+
+        {/* Failed Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
+                <span className="text-sm text-red-300">✕</span>
               </div>
             </div>
-          </motion.div>
-        )}
-      </>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Failed</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{failedCount}</p>
+            <p className="mt-1 text-xs text-red-300/80">Requires attention</p>
+          </div>
+        </div>
+      </motion.div>
     )
   }
 
@@ -553,51 +734,178 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   return (
     <div className="w-full">
-      {/* Header Section with Search and Filters */}
-      <div className="mb-4 flex items-center justify-between border-b pb-4">
-        <div className="flex items-center gap-3">
-          {/* Mobile Filter Button */}
-          {setShowMobileFilters && (
-            <button
-              onClick={() => setShowMobileFilters(true)}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
-            >
-              <Filter className="size-4" />
-              Filters
-              {getActiveFilterCount && getActiveFilterCount() > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                  {getActiveFilterCount()}
-                </span>
-              )}
-            </button>
-          )}
+      {/* Header Section with Title, Search and Filters */}
+      <div className="mb-4 space-y-4">
+        {/* Title Row */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h4 className="text-xl font-semibold text-gray-900 md:text-2xl">Payments</h4>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center border-b">
+              <SearchModule
+                value={searchInput}
+                onChange={handleSearch}
+                onCancel={handleCancelSearch}
+                onSearch={handleManualSearch}
+                placeholder="Search payments..."
+                className="w-full max-w-md"
+                bgClassName="bg-gray-50"
+              />
+            </div>
+            {/* Mobile Filter Button */}
+            {setShowMobileFilters && (
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:hidden"
+              >
+                <Filter className="size-4" />
+                <span className="hidden xs:inline">Filters</span>
+                {getActiveFilterCount && getActiveFilterCount() > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+            )}
 
-          {/* Desktop Filter Toggle */}
-          {setShowDesktopFilters && (
+            {/* Desktop Filter Toggle */}
+            {setShowDesktopFilters && (
+              <button
+                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 2xl:flex"
+              >
+                {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
+                {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+                {getActiveFilterCount && getActiveFilterCount() > 0 && (
+                  <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-[#004B23] text-xs font-semibold text-white">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Export Button */}
             <button
-              onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-              className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:flex"
+              onClick={() => setShowExportModal(true)}
+              disabled={isExporting}
+              className={`flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium transition-colors ${
+                isExporting ? "cursor-not-allowed text-gray-400" : "text-gray-700 hover:bg-gray-50"
+              }`}
             >
-              <Filter className="size-4" />
-              {showDesktopFilters ? "Hide Filters" : "Show Filters"}
-              {getActiveFilterCount && getActiveFilterCount() > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                  {getActiveFilterCount()}
-                </span>
-              )}
+              <Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />
+              <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export"}</span>
             </button>
-          )}
-          <SearchModule
-            value={searchInput}
-            onChange={handleSearch}
-            onCancel={handleCancelSearch}
-            onSearch={handleManualSearch}
-            placeholder="Search payments..."
-            className="w-full max-w-[380px]"
-            bgClassName="bg-white"
-          />
+          </div>
         </div>
+
+        {/* Search Row */}
       </div>
+
+      {/* Export CSV Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Export Payments to CSV</h3>
+                <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "all", label: "All Time" },
+                    { value: "today", label: "Today" },
+                    { value: "week", label: "Last 7 Days" },
+                    { value: "month", label: "Last 30 Days" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                        exportDateRange === option.value
+                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setExportDateRange("custom")}
+                  className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    exportDateRange === "custom"
+                      ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <Calendar className="mr-2 inline-block size-4" />
+                  Custom Date Range
+                </button>
+              </div>
+
+              {exportDateRange === "custom" && (
+                <div className="mb-4 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                    <input
+                      type="date"
+                      value={exportFromDate}
+                      onChange={(e) => setExportFromDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                    <input
+                      type="date"
+                      value={exportToDate}
+                      onChange={(e) => setExportToDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={exportToCSV}
+                  disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
+                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
+                    exportDateRange === "custom" && !exportFromDate && !exportToDate
+                      ? "cursor-not-allowed bg-gray-400"
+                      : "bg-[#004B23] hover:bg-[#003a1b]"
+                  }`}
+                >
+                  <Download className="mr-2 inline-block size-4" />
+                  Export
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error Message */}
       {paymentsError && (

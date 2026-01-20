@@ -328,13 +328,37 @@ export default function AgentManagementDashboard() {
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto flex w-full flex-col px-3 2xl:container sm:px-4 lg:px-6 2xl:px-16">
-            {/* Page Header - Always Visible */}
-            <div className="flex w-full flex-col justify-between gap-4 py-4 sm:py-6 md:flex-row md:gap-6 ">
-              <div className="flex-1">
-                <h4 className="text-xl font-semibold sm:text-2xl">Collection History</h4>
-                <p className="text-sm text-gray-600 sm:text-base">Overview of collections</p>
+            {/* Hero Header Section */}
+            <motion.div
+              className="relative mb-6 mt-4 overflow-hidden rounded-xl bg-gradient-to-r from-[#004B23] to-[#006B33] p-4 shadow-lg md:p-6 lg:p-8"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/20" />
+                <div className="absolute -bottom-10 -left-10 size-32 rounded-full bg-white/10" />
+                <div className="absolute right-1/4 top-1/2 size-20 rounded-full bg-white/10" />
               </div>
-            </div>
+
+              {/* Header Content */}
+              <div className="relative z-10">
+                <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-white md:text-3xl">Collection History</h1>
+                    <p className="mt-1 text-sm text-white/80 md:text-base">Overview of all payment collections</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-white/70">
+                    <span className="flex size-2 animate-pulse rounded-full bg-emerald-400" />
+                    Live data
+                  </div>
+                </div>
+
+                {/* Statistics Cards */}
+                <AllPaymentsTable showStatisticsOnly />
+              </div>
+            </motion.div>
 
             {/* Main Content Area */}
             <div className="flex w-full flex-col gap-6 lg:flex-row">
@@ -346,17 +370,15 @@ export default function AgentManagementDashboard() {
                     <LoadingState showCategories={true} />
                   </>
                 ) : (
-                  // Loaded State - Updated Agent Management Dashboard
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="mt-6"
-                    >
-                      <AllPaymentsTable />
-                    </motion.div>
-                  </>
+                  // Loaded State
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full rounded-md border bg-white p-3 md:p-5"
+                  >
+                    <AllPaymentsTable />
+                  </motion.div>
                 )}
               </div>
             </div>

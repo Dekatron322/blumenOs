@@ -479,21 +479,36 @@ export default function PaymentsPage() {
         <div className="flex w-full flex-col">
           <DashboardNav />
           <div className="mx-auto w-full px-3 py-4 2xl:container sm:px-4 lg:px-6 2xl:px-16">
-            {/* Header and Statistics Container - At the Top */}
+            {/* Hero Header Section */}
             <motion.div
-              className="mb-6 w-full rounded-md border bg-white p-3 md:p-4 lg:p-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-r from-[#004B23] to-[#006B33] p-4 shadow-lg md:p-6 lg:p-8"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
             >
-              {/* Header Section */}
-              <div className="mb-4">
-                <h4 className="text-2xl font-semibold">Payments</h4>
-                <p className="text-sm text-gray-600">Track and manage sales rep payments</p>
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/20" />
+                <div className="absolute -bottom-10 -left-10 size-32 rounded-full bg-white/10" />
+                <div className="absolute right-1/4 top-1/2 size-20 rounded-full bg-white/10" />
               </div>
 
-              {/* Statistics Cards */}
-              <AllPaymentsTable appliedFilters={appliedFilters} showStatisticsOnly />
+              {/* Header Content */}
+              <div className="relative z-10">
+                <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-white md:text-3xl">Payments Overview</h1>
+                    <p className="mt-1 text-sm text-white/80 md:text-base">Track and manage all payment transactions</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-white/70">
+                    <span className="flex size-2 animate-pulse rounded-full bg-emerald-400" />
+                    Live data
+                  </div>
+                </div>
+
+                {/* Statistics Cards */}
+                <AllPaymentsTable appliedFilters={appliedFilters} showStatisticsOnly />
+              </div>
             </motion.div>
 
             <div className="flex-3 relative flex flex-col-reverse items-start gap-6 2xl:mt-5 2xl:flex-row">
@@ -508,38 +523,14 @@ export default function PaymentsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="mb-4 flex w-full flex-col justify-between gap-4 max-md:flex-col md:flex-row md:items-center">
-                  <div>
-                    <h4 className="text-2xl font-semibold">Payments</h4>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {/* Mobile Filter Button */}
-                    <button
-                      onClick={() => setShowMobileFilters(true)}
-                      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 2xl:hidden"
-                    >
-                      <Filter className="size-4" />
-                      Filters
-                      {getActiveFilterCount() > 0 && (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                          {getActiveFilterCount()}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Hide/Show Filters button - Desktop only (2xl and above) */}
-                    <button
-                      type="button"
-                      onClick={() => setShowDesktopFilters((prev) => !prev)}
-                      className="hidden items-center gap-1 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 sm:px-4 2xl:flex"
-                    >
-                      {showDesktopFilters ? <X className="size-4" /> : <Filter className="size-4" />}
-                      {showDesktopFilters ? "Hide filters" : "Show filters"}
-                    </button>
-                  </div>
-                </div>
-
-                <AllPaymentsTable appliedFilters={appliedFilters} />
+                <AllPaymentsTable
+                  appliedFilters={appliedFilters}
+                  showMobileFilters={showMobileFilters}
+                  setShowMobileFilters={setShowMobileFilters}
+                  showDesktopFilters={showDesktopFilters}
+                  setShowDesktopFilters={setShowDesktopFilters}
+                  getActiveFilterCount={getActiveFilterCount}
+                />
               </motion.div>
 
               {/* Desktop Filters Sidebar (2xl and above) - Separate Container */}
