@@ -379,100 +379,104 @@ const CashRemittance = () => {
   const RecordCard = ({ record, index }: { record: CashRemittanceRecord; index: number }) => (
     <motion.div
       key={record.id}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="rounded-lg border border-gray-200 bg-[#f9f9f9] p-3 transition-all hover:shadow-sm md:p-4"
+      transition={{ duration: 0.2, delay: index * 0.03 }}
+      className="group rounded-lg border border-gray-100 bg-white p-3 transition-all hover:border-gray-200 hover:shadow-sm"
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="flex-1">
-          <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:gap-3">
-            <h4 className="text-sm font-semibold text-gray-900 md:text-base">{record.collectionOfficer.fullName}</h4>
-            <span className="text-xs text-gray-500 md:text-sm">{record.collectionOfficer.email}</span>
+      <div className="flex items-center justify-between gap-3">
+        {/* Left: Main info */}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {/* Amount */}
+          <div className="shrink-0">
+            <p className="text-sm font-bold text-gray-900 md:text-base">₦{record.amount.toLocaleString()}</p>
+            <p className="text-xs text-gray-500">{new Date(record.depositedAtUtc).toLocaleDateString()}</p>
           </div>
 
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <p className="text-lg font-bold text-gray-900 md:text-xl">₦{record.amount.toLocaleString()}</p>
-            <div className="flex flex-wrap gap-1.5">
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(record.status)}`}>
-                {getStatusText(record.status)}
-              </span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getBankColor(record.bankName)}`}>
+          {/* Divider */}
+          <div className="hidden h-8 w-px bg-gray-200 sm:block" />
+
+          {/* Officer & Bank */}
+          <div className="hidden min-w-0 flex-1 sm:block">
+            <p className="truncate text-sm font-medium text-gray-900">{record.collectionOfficer.fullName}</p>
+            <div className="flex items-center gap-2">
+              <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${getBankColor(record.bankName)}`}>
                 {record.bankName}
               </span>
+              <span className="truncate text-xs text-gray-500">#{record.tellerNumber}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2 md:gap-3 lg:grid-cols-3">
-            <div className="flex items-center gap-1">
-              <p className="text-xs text-gray-500 md:text-sm">Teller Number:</p>
-              <p className="truncate text-xs font-medium text-gray-900 md:text-sm">{record.tellerNumber}</p>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <p className=" text-xs text-gray-500 md:text-sm">Department:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">{record.collectionOfficer.departmentName}</p>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <p className=" text-xs text-gray-500 md:text-sm">Area Office:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">{record.collectionOfficer.areaOfficeName}</p>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <p className="text-xs text-gray-500 md:text-sm">Start Date:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">
-                {new Date(record.startDateUtc).toLocaleDateString()}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <p className="text-xs text-gray-500 md:text-sm">End Date:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">
-                {new Date(record.endDateUtc).toLocaleDateString()}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-1 ">
-              <p className=" text-xs text-gray-500 md:text-sm">Deposited At:</p>
-              <p className="text-xs font-medium text-gray-900 md:text-sm">
-                {new Date(record.depositedAtUtc).toLocaleDateString()}
-              </p>
-            </div>
+          {/* Date Range - hidden on small screens */}
+          <div className="hidden min-w-0 lg:block">
+            <p className="text-xs text-gray-500">Period</p>
+            <p className="text-xs font-medium text-gray-700">
+              {new Date(record.startDateUtc).toLocaleDateString()} - {new Date(record.endDateUtc).toLocaleDateString()}
+            </p>
           </div>
-
-          <div className="mt-3 flex items-center gap-1">
-            <p className="text-xs text-gray-500 md:text-sm">Notes:</p>
-            <p className="text-xs text-gray-700 md:text-sm">{record.notes || "No notes provided"}</p>
-          </div>
-
-          {record.tellerUrl && (
-            <div className="mt-2">
-              <p className="mb-1 text-xs text-gray-500 md:text-sm">Teller Receipt:</p>
-              <a
-                href={record.tellerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800 md:text-sm"
-              >
-                View Receipt
-              </a>
-            </div>
-          )}
         </div>
 
-        <div className="action-dropdown flex justify-end md:block">
-          <ButtonModule
-            size="sm"
-            variant="outline"
+        {/* Right: Status & Actions */}
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(record.status)}`}>
+            {getStatusText(record.status)}
+          </span>
+          {record.tellerUrl ? (
+            <a
+              href={record.tellerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded border border-gray-200 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 sm:inline-block"
+            >
+              Receipt
+            </a>
+          ) : (
+            <ButtonModule
+              size="sm"
+              variant="outline"
+              className="hidden sm:inline-flex"
+              onClick={() => {
+                setSelectedRecordForReceipt(record)
+                setShowReceiptModal(true)
+              }}
+            >
+              Attach
+            </ButtonModule>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile: Additional info row */}
+      <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2 sm:hidden">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-gray-900">{record.collectionOfficer.fullName}</p>
+          <div className="flex items-center gap-1.5">
+            <span className={`rounded px-1 py-0.5 text-xs font-medium ${getBankColor(record.bankName)}`}>
+              {record.bankName}
+            </span>
+            <span className="text-xs text-gray-500">#{record.tellerNumber}</span>
+          </div>
+        </div>
+        {record.tellerUrl ? (
+          <a
+            href={record.tellerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-blue-600"
+          >
+            Receipt
+          </a>
+        ) : (
+          <button
             onClick={() => {
               setSelectedRecordForReceipt(record)
               setShowReceiptModal(true)
             }}
+            className="text-xs font-medium text-gray-600"
           >
-            Attach Receipt
-          </ButtonModule>
-        </div>
+            Attach
+          </button>
+        )}
       </div>
     </motion.div>
   )
@@ -612,7 +616,7 @@ const CashRemittance = () => {
 
           {/* Records List */}
           {!recordsLoading && !recordsError && (
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-2">
               {filteredRecords.length === 0 ? (
                 <div className="py-8 text-center">
                   <p className="text-sm text-gray-500">No cash mop up records found</p>
