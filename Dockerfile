@@ -24,7 +24,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN yarn build
 
-# Production runtime image (using standalone output)
+# Production runtime image
 FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -33,9 +33,12 @@ WORKDIR /app
 # Use the non-root node user provided by the base image
 USER node
 
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
+COPY --from=builder /app/env.mjs ./env.mjs
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["yarn", "start"]

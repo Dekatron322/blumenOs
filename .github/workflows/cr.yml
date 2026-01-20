@@ -6,12 +6,11 @@ on:
   pull_request:
     types:
       - opened
-      # Removed 'synchronize' to avoid running on every push
+      - reopened
+      - synchronize
 jobs:
   test:
     runs-on: ubuntu-latest
-    # Only run if PR has 'ai-review' label or is a first-time contributor
-    if: contains(github.event.pull_request.labels.*.name, 'ai-review')
     steps:
       - uses: anc95/ChatGPT-CodeReview@main
         env:
