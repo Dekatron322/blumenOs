@@ -22,6 +22,10 @@ import {
   vend,
 } from "lib/redux/agentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
+import { fetchPayments, Payment } from "lib/redux/paymentSlice"
+import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
+import { VscEye } from "react-icons/vsc"
+import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 
 const VendPage: React.FC = () => {
   const dispatch = useAppDispatch()
@@ -44,6 +48,12 @@ const VendPage: React.FC = () => {
     checkPaymentData,
   } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
+  const {
+    payments,
+    loading: paymentsLoading,
+    error: paymentsError,
+    pagination: paymentsPagination,
+  } = useAppSelector((state) => state.payments)
 
   const [meterNumber, setMeterNumber] = useState("")
   const [customerInfo, setCustomerInfo] = useState<{
@@ -69,6 +79,11 @@ const VendPage: React.FC = () => {
   const [lastFetchedAmount, setLastFetchedAmount] = useState<number | null>(null)
   const [isVirtualAccountModalOpen, setIsVirtualAccountModalOpen] = useState(false)
   const [virtualAccount, setVirtualAccount] = useState<any>(null)
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false)
+  const [paymentsPage, setPaymentsPage] = useState(1)
+  const [paymentsPageSize, setPaymentsPageSize] = useState(10)
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
 
   // Generate channel options based on available channels
   const channelOptions = [
@@ -436,7 +451,64 @@ const VendPage: React.FC = () => {
     setChannel(PaymentChannel.Cash)
     setNarrative("")
     setCustomerInfo(null)
+    setShowPaymentHistory(false)
+    setPaymentsPage(1)
     dispatch(clearCustomerLookup())
+  }
+
+  const handleShowPaymentHistory = () => {
+    if (customerInfo) {
+      setShowPaymentHistory(true)
+      dispatch(
+        fetchPayments({
+          pageNumber: 1,
+          pageSize: paymentsPageSize,
+          customerId: customerInfo.id,
+        })
+      )
+    }
+  }
+
+  const handlePaymentsPageChange = (page: number) => {
+    setPaymentsPage(page)
+    if (customerInfo) {
+      dispatch(
+        fetchPayments({
+          pageNumber: page,
+          pageSize: paymentsPageSize,
+          customerId: customerInfo.id,
+        })
+      )
+    }
+  }
+
+  const handleViewPaymentReceipt = (payment: Payment) => {
+    setSelectedPayment(payment)
+    setIsReceiptModalOpen(true)
+  }
+
+  const handleCloseReceiptModal = () => {
+    setIsReceiptModalOpen(false)
+    setSelectedPayment(null)
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
   return (
@@ -525,6 +597,18 @@ const VendPage: React.FC = () => {
                       <span className="text-base font-bold text-[#004B23]">
                         {customerInfo.isSuspended ? "Suspended" : customerInfo.status || "Active"}
                       </span>
+                    </div>
+                    <div className="mt-3 border-t border-[#004B23]/20 pt-3">
+                      <ButtonModule
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={handleShowPaymentHistory}
+                        disabled={paymentsLoading}
+                      >
+                        {paymentsLoading ? "Loading..." : "View Payment History"}
+                      </ButtonModule>
                     </div>
                   </div>
                 )}
@@ -732,6 +816,169 @@ const VendPage: React.FC = () => {
                 )}
               </motion.div>
             </div>
+
+            {/* Payment History Section */}
+            {showPaymentHistory && customerInfo && (
+              <motion.div
+                className="mt-6 rounded-md border bg-white p-5 shadow-sm"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Payment History</h2>
+                  <ButtonModule
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowPaymentHistory(false)}
+                  >
+                    Close
+                  </ButtonModule>
+                </div>
+
+                {paymentsLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, index) => (
+                      <div key={index} className="animate-pulse border-b bg-white p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="size-10 rounded-full bg-gray-200"></div>
+                            <div className="space-y-2">
+                              <div className="h-4 w-32 rounded bg-gray-200"></div>
+                              <div className="h-3 w-48 rounded bg-gray-200"></div>
+                            </div>
+                          </div>
+                          <div className="h-6 w-24 rounded bg-gray-200"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : paymentsError ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-red-100">
+                        <VscEye className="size-6 text-red-400" />
+                      </div>
+                      <h3 className="mb-2 text-base font-medium text-gray-900">Error loading payments</h3>
+                      <p className="text-sm text-red-600">{paymentsError}</p>
+                    </div>
+                  </div>
+                ) : payments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
+                        <VscEye className="size-6 text-gray-400" />
+                      </div>
+                      <h3 className="mt-4 text-base font-medium text-gray-900">No payments found</h3>
+                      <p className="mt-2 text-sm text-gray-500">No payment history available for this customer</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y rounded-md border">
+                      {payments.map((payment) => (
+                        <div key={payment.id} className="bg-white p-3 transition-all hover:bg-gray-50 md:p-4">
+                          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div className="flex items-start gap-3 md:items-center md:gap-4">
+                              <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 max-sm:hidden md:size-10">
+                                <span className="text-xs font-semibold text-blue-600 md:text-sm">
+                                  {payment.customerName
+                                    .split(" ")
+                                    .map((n: string) => n[0])
+                                    .join("")}
+                                </span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+                                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                                    {payment.customerName}
+                                  </h3>
+                                  <div className="flex flex-wrap gap-1 md:gap-2">
+                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                      Ref: {payment.reference}
+                                    </span>
+                                    <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                                      {payment.channel}
+                                    </span>
+                                    <span className="rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700">
+                                      {payment.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 md:gap-4 md:text-sm">
+                                  <span>
+                                    <strong>Amount:</strong>{" "}
+                                    {formatCurrency(payment.totalAmountPaid || payment.amount || 0)}
+                                  </span>
+                                  <span>
+                                    <strong>Account:</strong> {payment.customerAccountNumber}
+                                  </span>
+                                  <span>
+                                    <strong>Paid At:</strong> {formatDateTime(payment.paidAtUtc)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start justify-between gap-2 md:items-center md:gap-3">
+                              <div className="text-right text-xs md:text-sm">
+                                <div className="text-base font-bold text-gray-900 md:text-lg">
+                                  {formatCurrency(payment.totalAmountPaid || payment.amount || 0)}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleViewPaymentReceipt(payment)}
+                                className="button-oulined flex items-center gap-2 text-xs md:text-sm"
+                              >
+                                <span>View</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {paymentsPagination.totalPages > 1 && (
+                      <div className="mt-4 flex w-full flex-row items-center justify-between gap-3">
+                        <p className="text-sm text-gray-600 max-sm:hidden">
+                          Page {paymentsPage} of {paymentsPagination.totalPages} ({paymentsPagination.totalCount} total)
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            className={`px-2 py-1 ${
+                              paymentsPage === 1 ? "cursor-not-allowed text-gray-400" : "text-[#000000]"
+                            }`}
+                            onClick={() => handlePaymentsPageChange(paymentsPage - 1)}
+                            disabled={paymentsPage === 1}
+                          >
+                            <BiSolidLeftArrow className="size-4" />
+                          </button>
+
+                          <span className="text-sm">
+                            {paymentsPage} / {paymentsPagination.totalPages}
+                          </span>
+
+                          <button
+                            className={`px-2 py-1 ${
+                              paymentsPage === paymentsPagination.totalPages
+                                ? "cursor-not-allowed text-gray-400"
+                                : "text-[#000000]"
+                            }`}
+                            onClick={() => handlePaymentsPageChange(paymentsPage + 1)}
+                            disabled={paymentsPage === paymentsPagination.totalPages}
+                          >
+                            <BiSolidRightArrow className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
@@ -818,6 +1065,13 @@ const VendPage: React.FC = () => {
           setCustomerInfo(null)
           dispatch(clearVend())
         }}
+      />
+
+      {/* Payment Receipt Modal */}
+      <PaymentReceiptModal
+        isOpen={isReceiptModalOpen}
+        onRequestClose={handleCloseReceiptModal}
+        payment={selectedPayment}
       />
     </section>
   )

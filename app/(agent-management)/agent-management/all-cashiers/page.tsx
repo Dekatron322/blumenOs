@@ -1345,14 +1345,14 @@ const AllCashiers: React.FC = () => {
                                     >
                                       View details
                                     </ButtonModule>
-                                    <ButtonModule
+                                    {/* <ButtonModule
                                       variant="outline"
                                       type="button"
                                       size="sm"
                                       onClick={() => handleResetPassword(agent)}
                                     >
                                       Reset Password
-                                    </ButtonModule>
+                                    </ButtonModule> */}
                                   </div>
                                 </td>
                               </motion.tr>
