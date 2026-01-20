@@ -203,8 +203,10 @@ export default function Dashboard() {
     const start = new Date(now)
 
     if (timeFilter === "day") {
-      start.setUTCDate(start.getUTCDate() - 1)
-      endDateUtc = now.toISOString()
+      start.setUTCHours(0, 0, 0, 0) // Start of today (00:00:00AM)
+      const endOfDay = new Date(now)
+      endOfDay.setUTCHours(23, 59, 59, 999) // End of today (23:59:59PM)
+      endDateUtc = endOfDay.toISOString()
     } else if (timeFilter === "week") {
       start.setUTCDate(start.getUTCDate() - 7)
       endDateUtc = now.toISOString()
@@ -779,7 +781,9 @@ export default function Dashboard() {
                       >
                         <div className="mb-2 flex items-center justify-between border-b py-2">
                           <Text>{card.description}</Text>
-                          <Text className="text-xs">{card.periodLabel}</Text>
+                          <Text className="text-xs">
+                            {timeFilter === "day" ? "00:00:00 AM to 23:59:59 PM" : card.periodLabel}
+                          </Text>
                         </div>
 
                         {dashboardCardsLoading || isLoading ? (
