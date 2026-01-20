@@ -703,6 +703,7 @@ export interface Payment {
   customerId: number
   customerName: string
   customerAccountNumber: string
+  customerAddress?: string
   postpaidBillId: number
   postpaidBillPeriod: string
   billTotalDue: number
@@ -1538,6 +1539,7 @@ export interface PrepaidPayment {
   customerId: number
   customerName: string
   customerAccountNumber: string
+  customerAddress?: string
   postpaidBillId: number | null
   postpaidBillPeriod: string | null
   billTotalDue: number | null
@@ -1609,6 +1611,21 @@ export interface PrepaidPaymentsRequestParams {
 }
 
 // ========== END PREPAID PAYMENT INTERFACES ==========
+
+// ========== ASSIGN CASHIERS INTERFACES ==========
+
+export interface AssignCashiersRequest {
+  id: number
+  cashierIds: number[]
+}
+
+export interface AssignCashiersResponse {
+  isSuccess: boolean
+  message: string
+  data: any
+}
+
+// ========== END ASSIGN CASHIERS INTERFACES ==========
 
 // Agent State
 interface AgentState {
@@ -1825,6 +1842,11 @@ interface AgentState {
     hasNext: boolean
     hasPrevious: boolean
   }
+
+  // Assign Cashiers state
+  assignCashiersLoading: boolean
+  assignCashiersError: string | null
+  assignCashiersSuccess: boolean
 }
 
 // Initial state
@@ -2005,6 +2027,10 @@ const initialState: AgentState = {
     hasNext: false,
     hasPrevious: false,
   },
+  // Assign Cashiers initial state
+  assignCashiersLoading: false,
+  assignCashiersError: null,
+  assignCashiersSuccess: false,
 }
 
 // Async thunks
@@ -2903,6 +2929,36 @@ export const confirmPayment = createAsyncThunk(
   }
 )
 
+// Assign Cashiers Async Thunk
+export const assignCashiers = createAsyncThunk(
+  "agents/assignCashiers",
+  async ({ id, cashierIds }: AssignCashiersRequest, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.AGENTS.ASSIGN_CASHIERS.replace("{id}", id.toString())
+      const requestBody = {
+        cashierIds,
+      }
+
+      const response = await api.post<AssignCashiersResponse>(buildApiUrl(endpoint), requestBody)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to assign cashiers")
+      }
+
+      return {
+        id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to assign cashiers")
+      }
+      return rejectWithValue(error.message || "Network error during cashier assignment")
+    }
+  }
+)
+
 // Agent slice
 const agentSlice = createSlice({
   name: "agents",
@@ -3149,6 +3205,13 @@ const agentSlice = createSlice({
       state.prepaidPaymentsPagination = action.payload
     },
 
+    // Clear assign cashiers state
+    clearAssignCashiers: (state) => {
+      state.assignCashiersLoading = false
+      state.assignCashiersError = null
+      state.assignCashiersSuccess = false
+    },
+
     // Reset agent state
     resetAgentState: (state) => {
       state.agentInfo = null
@@ -3266,6 +3329,9 @@ const agentSlice = createSlice({
       state.billLookupLoading = false
       state.billLookupError = null
       state.billLookupSuccess = false
+      state.assignCashiersLoading = false
+      state.assignCashiersError = null
+      state.assignCashiersSuccess = false
     },
 
     // Set pagination
@@ -4632,6 +4698,23 @@ const agentSlice = createSlice({
         state.createPaymentSuccess = false
         state.createdPayment = null
       })
+
+      // Assign Cashiers cases
+      .addCase(assignCashiers.pending, (state) => {
+        state.assignCashiersLoading = true
+        state.assignCashiersError = null
+        state.assignCashiersSuccess = false
+      })
+      .addCase(assignCashiers.fulfilled, (state) => {
+        state.assignCashiersLoading = false
+        state.assignCashiersSuccess = true
+        state.assignCashiersError = null
+      })
+      .addCase(assignCashiers.rejected, (state, action) => {
+        state.assignCashiersLoading = false
+        state.assignCashiersError = (action.payload as string) || "Failed to assign cashiers"
+        state.assignCashiersSuccess = false
+      })
   },
 })
 
@@ -4689,6 +4772,7 @@ export const {
   updatePaymentChannelsWithCashInfo,
   clearPrepaidPayments,
   setPrepaidPaymentsPagination,
+  clearAssignCashiers,
 } = agentSlice.actions
 
 export default agentSlice.reducer

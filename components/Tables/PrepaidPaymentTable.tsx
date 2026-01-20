@@ -1326,7 +1326,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
                 reference: selectedPayment.reference,
                 customerName: selectedPayment.customerName || "",
                 customerAccountNumber: selectedPayment.customerAccountNumber || "",
-                customerAddress: undefined,
+                customerAddress: selectedPayment.customerAddress,
                 customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
                 customerMeterNumber: firstToken?.drn,
                 accountType: undefined,
@@ -1369,7 +1369,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
             reference: selectedPayment.reference,
             customerName: selectedPayment.customerName || "",
             customerAccountNumber: selectedPayment.customerAccountNumber || "",
-            customerAddress: undefined,
+            customerAddress: selectedPayment.customerAddress,
             customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
             customerMeterNumber:
               selectedPayment.tokens && selectedPayment.tokens.length > 0 ? selectedPayment.tokens[0]?.drn : undefined,

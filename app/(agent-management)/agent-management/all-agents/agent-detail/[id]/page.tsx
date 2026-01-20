@@ -30,6 +30,7 @@ import DashboardNav from "components/Navbar/DashboardNav"
 import AgentChangeRequestModal from "components/ui/Modal/agent-change-request-modal"
 import AgentChangePasswordModal from "components/ui/Modal/agent-change-password-modal"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
+import AssignCashierModal from "components/ui/Modal/assign-cashier-modal"
 import {
   ChangeRequestOutlineIcon,
   ExportCsvIcon,
@@ -167,6 +168,7 @@ const AgentDetailsPage = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false)
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
+  const [isAssignCashierModalOpen, setIsAssignCashierModalOpen] = useState(false)
   const [isPaymentReceiptModalOpen, setIsPaymentReceiptModalOpen] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<DetailedPayment | null>(null)
   const [activeTab, setActiveTab] = useState<AgentTabType>("basic-info")
@@ -848,9 +850,21 @@ const AgentDetailsPage = () => {
                         </ButtonModule>
                       )} */}
 
+                      {/* Assign Cashier Button - only for ClearingCashier agent type */}
+                      {canUpdate && currentAgent.agentType !== "SalesRep" && currentAgent.agentType !== "Cashier" && (
+                        <ButtonModule
+                          variant="blue"
+                          className="w-full justify-start gap-3"
+                          onClick={() => setIsAssignCashierModalOpen(true)}
+                        >
+                          <Users className="size-4" />
+                          Assign Cashiers
+                        </ButtonModule>
+                      )}
+
                       {canUpdate && (
                         <ButtonModule
-                          variant="secondary"
+                          variant="outline"
                           className="w-full justify-start gap-3"
                           onClick={handleResetPassword}
                           disabled={activeAction === "resetPassword"}
@@ -861,7 +875,7 @@ const AgentDetailsPage = () => {
                       )}
 
                       <ButtonModule
-                        variant="secondary"
+                        variant="outlinePurple"
                         className="w-full justify-start gap-3"
                         onClick={exportToPDF}
                         disabled={isExporting}
@@ -1856,6 +1870,17 @@ const AgentDetailsPage = () => {
           setSelectedPayment(null)
         }}
         payment={selectedPayment}
+      />
+
+      <AssignCashierModal
+        isOpen={isAssignCashierModalOpen}
+        onRequestClose={() => setIsAssignCashierModalOpen(false)}
+        agentId={currentAgent.id}
+        agentName={currentAgent.user.fullName}
+        onSuccess={() => {
+          // Refresh agent data after successful assignment
+          dispatch(fetchAgentById(currentAgent.id))
+        }}
       />
     </section>
   )

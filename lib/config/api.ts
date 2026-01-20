@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
     APPROVE_CLEARANCE: "/agents/cash-clearances/{clearanceId}/approve",
     CASH_AT_HAND: "/agents/cash-at-hand",
     PREPAID_PAYMENT: "/agents/payments/prepaid",
+    ASSIGN_CASHIERS: "/agents/{id}/cashiers",
   },
 
   BILLING_DISPUTE: {
