@@ -182,7 +182,284 @@ const PaymentDetailsPage = () => {
   }
 
   const handlePrint = () => {
-    window.print()
+    if (!paymentData) return
+
+    // Create thermal printer optimized receipt (58mm/80mm width)
+    const thermalReceiptContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Payment Receipt</title>
+        <style>
+          @page {
+            size: 80mm auto;
+            margin: 0;
+          }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            width: 80mm;
+            padding: 5mm;
+            background: white;
+            color: black;
+          }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .divider {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+          }
+          .double-divider {
+            border-top: 2px solid #000;
+            margin: 8px 0;
+          }
+          .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+          }
+          .row-label { text-align: left; }
+          .row-value { text-align: right; font-weight: bold; }
+          .header { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+          .subheader { font-size: 10px; margin-bottom: 10px; }
+          .amount-large { font-size: 18px; font-weight: bold; }
+          .footer { font-size: 10px; margin-top: 10px; }
+          .stamp { 
+            font-size: 20px; 
+            font-weight: bold; 
+            border: 2px solid #000; 
+            padding: 5px 15px; 
+            display: inline-block;
+            margin: 10px 0;
+          }
+          .logo {
+            width: 35mm;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 8px;
+          }
+          .token-box {
+            border: 1px solid #000;
+            padding: 8px;
+            margin: 8px 0;
+            text-align: center;
+          }
+          .token-value {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-family: monospace;
+          }
+          @media print {
+            body { width: 80mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="center">
+          <img src="${window.location.origin}/kadco.svg" alt="KADCO" class="logo" />
+          <div class="divider"></div>
+          <div class="bold">PAYMENT RECEIPT</div>
+          <div class="stamp">${paymentData.status === "Confirmed" ? "PAID" : paymentData.status?.toUpperCase()}</div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Ref:</span>
+          <span class="row-value">${paymentData.reference}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Date:</span>
+          <span class="row-value">${formatDateTime(paymentData.paidAtUtc)}</span>
+        </div>
+        
+        <div class="double-divider"></div>
+        
+        <div class="center bold">CUSTOMER DETAILS</div>
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Name:</span>
+          <span class="row-value">${paymentData.customerName}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Account:</span>
+          <span class="row-value">${paymentData.customerAccountNumber}</span>
+        </div>
+        ${
+          paymentData.customerMeterNumber
+            ? `
+        <div class="row">
+          <span class="row-label">Meter:</span>
+          <span class="row-value">${paymentData.customerMeterNumber}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          paymentData.customerPhoneNumber
+            ? `
+        <div class="row">
+          <span class="row-label">Phone:</span>
+          <span class="row-value">${paymentData.customerPhoneNumber}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          paymentData.accountType
+            ? `
+        <div class="row">
+          <span class="row-label">Type:</span>
+          <span class="row-value">${paymentData.accountType}</span>
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center bold">PAYMENT DETAILS</div>
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Type:</span>
+          <span class="row-value">${paymentData.paymentTypeName || "N/A"}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Channel:</span>
+          <span class="row-value">${paymentData.channel}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Status:</span>
+          <span class="row-value">${paymentData.status}</span>
+        </div>
+        ${
+          paymentData.externalReference
+            ? `
+        <div class="row">
+          <span class="row-label">Ext Ref:</span>
+          <span class="row-value">${paymentData.externalReference}</span>
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center bold">ENERGY SUMMARY</div>
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span class="row-label">Tariff:</span>
+          <span class="row-value">${formatCurrency(paymentData.tariffRate || 0, paymentData.currency)}/kWh</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Units:</span>
+          <span class="row-value">${paymentData.units || 0} kWh</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Electricity:</span>
+          <span class="row-value">${formatCurrency(paymentData.electricityAmount || 0, paymentData.currency)}</span>
+        </div>
+        <div class="row">
+          <span class="row-label">VAT (${((paymentData.vatRate || 0) * 100).toFixed(1)}%):</span>
+          <span class="row-value">${formatCurrency(paymentData.vatAmount || 0, paymentData.currency)}</span>
+        </div>
+        ${
+          paymentData.outstandingDebt || paymentData.outstandingAfterPayment
+            ? `
+        <div class="row">
+          <span class="row-label">O/S Debt:</span>
+          <span class="row-value">${formatCurrency(
+            paymentData.outstandingAfterPayment ?? paymentData.outstandingDebt ?? 0,
+            paymentData.currency
+          )}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
+          paymentData.debtPayable
+            ? `
+        <div class="row">
+          <span class="row-label">Debt Paid:</span>
+          <span class="row-value">${formatCurrency(paymentData.debtPayable, paymentData.currency)}</span>
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center">
+          <div class="bold">TOTAL PAID</div>
+          <div class="amount-large">${formatCurrency(
+            paymentData.totalAmountPaid || paymentData.amount,
+            paymentData.currency
+          )}</div>
+        </div>
+        
+        ${
+          paymentData.token
+            ? `
+        <div class="double-divider"></div>
+        <div class="center bold">TOKEN</div>
+        <div class="token-box">
+          <div class="token-value">${paymentData.token.token}</div>
+          <div style="margin-top: 5px; font-size: 10px;">
+            ${paymentData.token.vendedAmount} ${paymentData.token.unit}
+          </div>
+          <div style="font-size: 10px;">Meter: ${paymentData.token.drn}</div>
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="double-divider"></div>
+        
+        <div class="center footer">
+          <p>Thank you for your payment!</p>
+          <p>This receipt serves as proof of payment.</p>
+          <p style="margin-top: 10px;">--------------------------------</p>
+          <p>Powered by BlumenOS</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    // Create a hidden iframe for printing without opening a new page
+    const printFrame = document.createElement("iframe")
+    printFrame.style.position = "absolute"
+    printFrame.style.top = "-9999px"
+    printFrame.style.left = "-9999px"
+    printFrame.style.width = "0"
+    printFrame.style.height = "0"
+    printFrame.style.border = "none"
+    document.body.appendChild(printFrame)
+
+    const frameDoc = printFrame.contentWindow?.document
+    if (frameDoc) {
+      frameDoc.open()
+      frameDoc.write(thermalReceiptContent)
+      frameDoc.close()
+
+      setTimeout(() => {
+        printFrame.contentWindow?.focus()
+        printFrame.contentWindow?.print()
+        setTimeout(() => {
+          document.body.removeChild(printFrame)
+        }, 500)
+      }, 250)
+    }
   }
 
   const handleDownloadPDF = async () => {

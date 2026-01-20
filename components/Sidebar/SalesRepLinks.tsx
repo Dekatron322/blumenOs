@@ -131,8 +131,13 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   useEffect(() => {
     // Filter links based on permissions
     const filteredLinks = allLinks.filter((link) => {
-      // Hide Collect payment when agent has reached collection limit
-      if (link.href === "/sales-rep/collect-payment" && agent && agent.cashAtHand >= agent.cashCollectionLimit) {
+      // Hide Collect payment when agent has reached collection limit (only if limit is set)
+      if (
+        link.href === "/sales-rep/collect-payment" &&
+        agent &&
+        agent.cashCollectionLimit > 0 &&
+        agent.cashAtHand >= agent.cashCollectionLimit
+      ) {
         return false
       }
 
@@ -170,6 +175,16 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
 
       // Only show Vend for SalesRep and Cashier users
       if (link.href === "/sales-rep/vend" && agent && agent.agentType !== "SalesRep" && agent.agentType !== "Cashier") {
+        return false
+      }
+
+      // Only show Collect payment for SalesRep and Cashier users
+      if (
+        link.href === "/sales-rep/collect-payment" &&
+        agent &&
+        agent.agentType !== "SalesRep" &&
+        agent.agentType !== "Cashier"
+      ) {
         return false
       }
 

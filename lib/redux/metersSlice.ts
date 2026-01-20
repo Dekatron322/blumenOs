@@ -735,6 +735,10 @@ export interface VerifyTokenResponse {
 
 // Interface for Prepaid Transaction entry
 export interface PrepaidTransaction {
+  debtPayable: any
+  electricityAmount: any
+  units: any
+  tariffRate: any
   id: number
   reference: string
   latitude: number
