@@ -13,12 +13,14 @@ import {
   clearError,
   clearPayments,
   CollectorType,
+  fetchAgentSummary,
   fetchPayments,
   Payment,
   PaymentChannel,
   PaymentsRequestParams,
   PaymentStatus,
   setPaymentsPagination,
+  TimeRange,
 } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
@@ -196,6 +198,286 @@ const LoadingSkeleton = () => {
           <div className="size-8 rounded bg-gray-200"></div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Statistics Cards Component using Agent Summary endpoint
+const StatisticsCards = () => {
+  const dispatch = useAppDispatch()
+  const { agentSummary, agentSummaryLoading } = useAppSelector((state) => state.agents)
+  const [activeRange, setActiveRange] = useState<TimeRange>(TimeRange.Today)
+
+  useEffect(() => {
+    dispatch(fetchAgentSummary())
+  }, [dispatch])
+
+  const timeRangeTabs = [
+    { value: TimeRange.Today, label: "Today" },
+    { value: TimeRange.Yesterday, label: "Yesterday" },
+    { value: TimeRange.ThisWeek, label: "This Week" },
+    { value: TimeRange.ThisMonth, label: "This Month" },
+    { value: TimeRange.LastMonth, label: "Last Month" },
+    { value: TimeRange.ThisYear, label: "This Year" },
+    { value: TimeRange.AllTime, label: "All Time" },
+  ]
+
+  // Get the selected period from agent summary
+  const currentPeriod = agentSummary?.periods?.find((period) => period.range === activeRange)
+  const summary = currentPeriod ?? {
+    collectedAmount: 0,
+    collectedCount: 0,
+    prepaidCollectedAmount: 0,
+    prepaidCollectedCount: 0,
+    postpaidCollectedAmount: 0,
+    postpaidCollectedCount: 0,
+    pendingAmount: 0,
+    pendingCount: 0,
+    cashClearedAmount: 0,
+    cashClearanceCount: 0,
+    billingDisputesRaised: 0,
+    billingDisputesResolved: 0,
+    changeRequestsRaised: 0,
+    changeRequestsResolved: 0,
+    outstandingCashEstimate: 0,
+    collectionsByChannel: [],
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const getChannelIcon = (channel: string) => {
+    switch (channel) {
+      case "Cash":
+        return "💵"
+      case "BankTransfer":
+        return "🏦"
+      case "Pos":
+        return "💳"
+      case "Card":
+        return "💳"
+      case "VendorWallet":
+        return "👛"
+      case "Chaque":
+        return "📝"
+      default:
+        return "💰"
+    }
+  }
+
+  if (agentSummaryLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {[...Array(7)].map((_, i) => (
+            <div key={i} className="h-8 w-20 animate-pulse rounded-full bg-white/10" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-white/10 md:h-32" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Time Range Tabs */}
+      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
+        {timeRangeTabs.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setActiveRange(tab.value)}
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all md:px-4 md:py-2 md:text-sm ${
+              activeRange === tab.value
+                ? "bg-white text-[#004B23] shadow-md"
+                : "bg-white/10 text-white/80 hover:bg-white/20"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Statistics Cards Grid */}
+      <motion.div
+        key={activeRange}
+        className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Total Collected Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                <span className="text-sm">₦</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Collected</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.collectedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-white/60">{summary.collectedCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Prepaid Collections Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-blue-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-400/20">
+                <span className="text-sm text-blue-300">⚡</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prepaid</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.prepaidCollectedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-blue-300/80">{summary.prepaidCollectedCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Postpaid Collections Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
+                <span className="text-sm text-amber-300">📋</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Postpaid</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.postpaidCollectedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-amber-300/80">{summary.postpaidCollectedCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Pending Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-orange-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-orange-400/20">
+                <span className="text-sm text-orange-300">⏳</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.pendingAmount)}
+            </p>
+            <p className="mt-1 text-xs text-orange-300/80">{summary.pendingCount} awaiting</p>
+          </div>
+        </div>
+
+        {/* Cash Cleared Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
+                <span className="text-sm text-emerald-300">✓</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Cash Cleared</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.cashClearedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-emerald-300/80">{summary.cashClearanceCount} clearances</p>
+          </div>
+        </div>
+
+        {/* Outstanding Cash Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
+                <span className="text-sm text-red-300">💰</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Outstanding Cash</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.outstandingCashEstimate)}
+            </p>
+            <p className="mt-1 text-xs text-red-300/80">Estimate</p>
+          </div>
+        </div>
+
+        {/* Billing Disputes Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-purple-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400/20">
+                <span className="text-sm text-purple-300">⚠️</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Billing Disputes</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{summary.billingDisputesRaised}</p>
+            <p className="mt-1 text-xs text-purple-300/80">{summary.billingDisputesResolved} resolved</p>
+          </div>
+        </div>
+
+        {/* Change Requests Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-cyan-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-400/20">
+                <span className="text-sm text-cyan-300">📝</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Change Requests</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{summary.changeRequestsRaised}</p>
+            <p className="mt-1 text-xs text-cyan-300/80">{summary.changeRequestsResolved} resolved</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Collections by Channel */}
+      {summary.collectionsByChannel && summary.collectionsByChannel.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mt-4"
+        >
+          <h3 className="mb-3 text-sm font-medium text-white/80">Collections by Channel</h3>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {summary.collectionsByChannel.map((channel) => (
+              <div
+                key={channel.channel}
+                className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15"
+              >
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                      <span className="text-sm">{getChannelIcon(channel.channel)}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">{channel.channel}</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl">{formatCurrency(channel.amount)}</p>
+                  <p className="mt-1 text-xs text-white/60">{channel.count} transactions</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }
@@ -524,6 +806,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
   const [exportFromDate, setExportFromDate] = useState("")
   const [exportToDate, setExportToDate] = useState("")
+  const [exportPaymentCategory, setExportPaymentCategory] = useState<"all" | "prepaid" | "postpaid">("all")
 
   const getExportDateRange = () => {
     const today = new Date()
@@ -593,7 +876,14 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         },
       })
 
-      const allPayments: Payment[] = response.data?.data || []
+      let allPayments: Payment[] = response.data?.data || []
+
+      // Filter by payment category (prepaid/postpaid)
+      if (exportPaymentCategory === "prepaid") {
+        allPayments = allPayments.filter((payment) => payment.isPrepaid === true)
+      } else if (exportPaymentCategory === "postpaid") {
+        allPayments = allPayments.filter((payment) => payment.isPrepaid === false)
+      }
 
       if (allPayments.length === 0) {
         setIsExporting(false)
@@ -648,7 +938,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.setAttribute("href", url)
-      link.setAttribute("download", `payments_export_${new Date().toISOString().split("T")[0]}.csv`)
+      const categoryLabel = exportPaymentCategory !== "all" ? `_${exportPaymentCategory}` : ""
+      link.setAttribute("download", `payments${categoryLabel}_export_${new Date().toISOString().split("T")[0]}.csv`)
       link.style.visibility = "hidden"
       document.body.appendChild(link)
       link.click()
@@ -667,82 +958,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   // If only showing statistics, return just the statistics cards
   if (showStatisticsOnly) {
-    const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
-    const confirmedCount = payments.filter((p) => p.status === PaymentStatus.Confirmed).length
-    const pendingCount = payments.filter((p) => p.status === PaymentStatus.Pending).length
-    const failedCount = payments.filter((p) => p.status === PaymentStatus.Failed).length
-    const totalCount = payments.length
-
-    return (
-      <motion.div
-        className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        {/* Total Amount Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                <span className="text-sm">₦</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Amount</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{formatCurrency(totalAmount)}</p>
-            <p className="mt-1 text-xs text-white/60">{totalCount} transactions</p>
-          </div>
-        </div>
-
-        {/* Confirmed Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
-                <span className="text-sm text-emerald-300">✓</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Confirmed</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{confirmedCount}</p>
-            <p className="mt-1 text-xs text-emerald-300/80">
-              {totalCount > 0 ? ((confirmedCount / totalCount) * 100).toFixed(1) : 0}% success rate
-            </p>
-          </div>
-        </div>
-
-        {/* Pending Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
-                <span className="text-sm text-amber-300">⏳</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{pendingCount}</p>
-            <p className="mt-1 text-xs text-amber-300/80">Awaiting confirmation</p>
-          </div>
-        </div>
-
-        {/* Failed Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
-                <span className="text-sm text-red-300">✕</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Failed</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{failedCount}</p>
-            <p className="mt-1 text-xs text-red-300/80">Requires attention</p>
-          </div>
-        </div>
-      </motion.div>
-    )
+    return <StatisticsCards />
   }
 
   if (paymentsLoading) return <LoadingSkeleton />
@@ -896,6 +1112,30 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Payment Category Filter */}
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">Payment Category</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "all", label: "All" },
+                    { value: "prepaid", label: "Prepaid" },
+                    { value: "postpaid", label: "Postpaid" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setExportPaymentCategory(option.value as typeof exportPaymentCategory)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                        exportPaymentCategory === option.value
+                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="flex gap-3">
                 <button

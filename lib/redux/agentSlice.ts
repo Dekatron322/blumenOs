@@ -1227,13 +1227,16 @@ export interface CollectionByChannel {
   channel: PaymentChannel
   amount: number
   count: number
-  percentage: number
 }
 
 export interface AgentSummaryPeriod {
   range: TimeRange
   collectedAmount: number
   collectedCount: number
+  prepaidCollectedAmount: number
+  prepaidCollectedCount: number
+  postpaidCollectedAmount: number
+  postpaidCollectedCount: number
   pendingAmount: number
   pendingCount: number
   cashClearedAmount: number
@@ -3522,15 +3525,8 @@ const agentSlice = createSlice({
                 channel,
                 amount,
                 count: 1,
-                percentage: 0, // Will need to recalculate percentages
               })
             }
-
-            // Recalculate percentages for all channels
-            const total = period.collectionsByChannel.reduce((sum, c) => sum + c.amount, 0)
-            period.collectionsByChannel.forEach((c) => {
-              c.percentage = total > 0 ? (c.amount / total) * 100 : 0
-            })
           }
         })
       }
@@ -4641,15 +4637,8 @@ const agentSlice = createSlice({
                   channel,
                   amount,
                   count: 1,
-                  percentage: 0, // Will need to recalculate percentages
                 })
               }
-
-              // Recalculate percentages for all channels
-              const total = period.collectionsByChannel.reduce((sum, c) => sum + c.amount, 0)
-              period.collectionsByChannel.forEach((c) => {
-                c.percentage = total > 0 ? (c.amount / total) * 100 : 0
-              })
             }
           })
         }
