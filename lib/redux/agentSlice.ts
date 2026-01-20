@@ -671,6 +671,15 @@ export interface Collector {
   customerName: string | null
 }
 
+export interface PaymentToken {
+  token: string
+  tokenDec?: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
 export interface Payment {
   paymentDetails: any
   isPending: boolean
@@ -711,6 +720,11 @@ export interface Payment {
   externalReference: string
   vendorAccountId: string
   recordedByName: string
+  phoneNumber?: string | null
+  vatAmount?: number
+  customerOutstandingDebtBalance?: number
+  recoveryAmount?: number
+  tokens?: PaymentToken[]
   virtualAccount?: {
     accountNumber: string
     bankName: string
@@ -1497,12 +1511,12 @@ export interface PrepaidPaymentToken {
 }
 
 export interface PrepaidPayment {
-  externalReference: string | undefined
+  externalReference: string | null | undefined
   id: number
   reference: string
   latitude: number
   longitude: number
-  phoneNumber: string
+  phoneNumber: string | null
   channel: PrepaidPaymentChannel
   status: PrepaidPaymentStatus
   collectorType: PrepaidCollectorType
@@ -1515,20 +1529,20 @@ export interface PrepaidPayment {
   outstandingAfterPayment: number
   outstandingBeforePayment: number
   customerOutstandingDebtBalance: number
-  vendorCommissionRatePercent: number
-  vendorCommissionAmount: number
-  vendorDebitAmount: number
+  vendorCommissionRatePercent: number | null
+  vendorCommissionAmount: number | null
+  vendorDebitAmount: number | null
   currency: string
   paidAtUtc: string
   confirmedAtUtc: string
   customerId: number
   customerName: string
   customerAccountNumber: string
-  postpaidBillId: number
-  postpaidBillPeriod: string
-  billTotalDue: number
-  vendorId: number
-  vendorName: string
+  postpaidBillId: number | null
+  postpaidBillPeriod: string | null
+  billTotalDue: number | null
+  vendorId: number | null
+  vendorName: string | null
   agentId: number
   agentCode: string
   agentName: string
@@ -1540,11 +1554,11 @@ export interface PrepaidPayment {
   paymentTypeName: string
   isManualEntry: boolean
   isSystemGenerated: boolean
-  evidenceFileUrl: string
+  evidenceFileUrl: string | null
   recoveryApplied: boolean
   recoveryAmount: number
-  recoveryPolicyId: number
-  recoveryPolicyName: string
+  recoveryPolicyId: number | null
+  recoveryPolicyName: string | null
   collector: PrepaidPaymentCollector
   tokens: PrepaidPaymentToken[]
 }

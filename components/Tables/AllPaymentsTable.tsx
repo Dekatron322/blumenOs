@@ -1266,70 +1266,100 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       )}
 
       {/* Vend Token Modal */}
-      {selectedPayment && showVendTokenModal && (
-        <VendTokenModal
-          isOpen={showVendTokenModal}
-          onRequestClose={handleCloseReceiptModals}
-          tokenData={{
-            token: "N/A", // This would come from the payment data if available
-            vendedAmount: selectedPayment.amount.toString(),
-            unit: "kWh",
-            description: selectedPayment.paymentTypeName || "Energy Payment",
-            drn: "N/A",
-          }}
-          paymentData={{
-            reference: selectedPayment.reference,
-            customerName: selectedPayment.customerName || "",
-            customerAccountNumber: selectedPayment.customerAccountNumber || "",
-            customerAddress: undefined,
-            customerPhoneNumber: undefined,
-            customerMeterNumber: undefined,
-            accountType: undefined,
-            tariffRate: undefined,
-            units: undefined,
-            vatRate: undefined,
-            vatAmount: undefined,
-            electricityAmount: undefined,
-            outstandingDebt: undefined,
-            debtPayable: undefined,
-            totalAmountPaid: selectedPayment.amount,
-            currency: selectedPayment.currency || "NGN",
-            channel: selectedPayment.channel,
-            status: selectedPayment.status,
-            paymentTypeName: selectedPayment.paymentTypeName,
-            paidAtUtc: selectedPayment.paidAtUtc,
-            externalReference: selectedPayment.externalReference,
-          }}
-        />
-      )}
+      {selectedPayment &&
+        showVendTokenModal &&
+        (() => {
+          const firstToken = selectedPayment.tokens?.[0]
+          return (
+            <VendTokenModal
+              isOpen={showVendTokenModal}
+              onRequestClose={handleCloseReceiptModals}
+              tokenData={
+                firstToken
+                  ? {
+                      token: firstToken.token,
+                      vendedAmount: firstToken.vendedAmount,
+                      unit: firstToken.unit,
+                      description: firstToken.description,
+                      drn: firstToken.drn,
+                    }
+                  : {
+                      token: "N/A",
+                      vendedAmount: selectedPayment.amount.toString(),
+                      unit: "kWh",
+                      description: selectedPayment.paymentTypeName || "Energy Payment",
+                      drn: "N/A",
+                    }
+              }
+              paymentData={{
+                reference: selectedPayment.reference,
+                customerName: selectedPayment.customerName || "",
+                customerAccountNumber: selectedPayment.customerAccountNumber || "",
+                customerAddress: undefined,
+                customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
+                customerMeterNumber: firstToken?.drn,
+                accountType: undefined,
+                tariffRate: undefined,
+                units: firstToken ? parseFloat(firstToken.vendedAmount) : undefined,
+                vatRate: undefined,
+                vatAmount: selectedPayment.vatAmount || undefined,
+                electricityAmount: selectedPayment.amountApplied || undefined,
+                outstandingDebt: selectedPayment.customerOutstandingDebtBalance || undefined,
+                debtPayable: selectedPayment.recoveryAmount || undefined,
+                totalAmountPaid: selectedPayment.amount,
+                currency: selectedPayment.currency || "NGN",
+                channel: selectedPayment.channel,
+                status: selectedPayment.status,
+                paymentTypeName: selectedPayment.paymentTypeName,
+                paidAtUtc: selectedPayment.paidAtUtc,
+                externalReference: selectedPayment.externalReference ?? undefined,
+              }}
+            />
+          )
+        })()}
 
       {/* Collect Payment Receipt Modal */}
       {selectedPayment && showCollectPaymentReceiptModal && (
         <CollectPaymentReceiptModal
           isOpen={showCollectPaymentReceiptModal}
           onRequestClose={handleCloseReceiptModals}
+          tokenData={
+            selectedPayment.tokens && selectedPayment.tokens.length > 0
+              ? {
+                  token: selectedPayment.tokens[0]?.token ?? "",
+                  vendedAmount: selectedPayment.tokens[0]?.vendedAmount ?? "",
+                  unit: selectedPayment.tokens[0]?.unit ?? "",
+                  description: selectedPayment.tokens[0]?.description ?? "",
+                  drn: selectedPayment.tokens[0]?.drn ?? "",
+                }
+              : undefined
+          }
           paymentData={{
             reference: selectedPayment.reference,
             customerName: selectedPayment.customerName || "",
             customerAccountNumber: selectedPayment.customerAccountNumber || "",
             customerAddress: undefined,
-            customerPhoneNumber: undefined,
-            customerMeterNumber: undefined,
+            customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
+            customerMeterNumber:
+              selectedPayment.tokens && selectedPayment.tokens.length > 0 ? selectedPayment.tokens[0]?.drn : undefined,
             accountType: undefined,
             tariffRate: undefined,
-            units: undefined,
+            units:
+              selectedPayment.tokens && selectedPayment.tokens.length > 0
+                ? parseFloat(selectedPayment.tokens[0]?.vendedAmount ?? "0")
+                : undefined,
             vatRate: undefined,
-            vatAmount: undefined,
-            electricityAmount: undefined,
-            outstandingDebt: undefined,
-            debtPayable: undefined,
+            vatAmount: selectedPayment.vatAmount || undefined,
+            electricityAmount: selectedPayment.amountApplied || undefined,
+            outstandingDebt: selectedPayment.customerOutstandingDebtBalance || undefined,
+            debtPayable: selectedPayment.recoveryAmount || undefined,
             totalAmountPaid: selectedPayment.amount,
             currency: selectedPayment.currency || "NGN",
             channel: selectedPayment.channel,
             status: selectedPayment.status,
             paymentTypeName: selectedPayment.paymentTypeName,
             paidAtUtc: selectedPayment.paidAtUtc,
-            externalReference: selectedPayment.externalReference,
+            externalReference: selectedPayment.externalReference ?? undefined,
           }}
         />
       )}
