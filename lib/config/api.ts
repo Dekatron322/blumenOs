@@ -375,6 +375,7 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/decline",
     VENDOR_PAYMENT: "/vendors/{id}/payments",
     ROTATE_WEBHOOK_SECRET: "/vendors/{id}/webhook/secret/rotate",
+    ALL_VENDOR_PAYMENT: "/vendors/payments",
   },
 
   METERS: {

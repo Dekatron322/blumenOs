@@ -289,6 +289,12 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["R"],
       },
       {
+        name: "View Vendors Collections",
+        href: "/vendor-management/view-vendors-collection",
+        privilegeKey: "vendors",
+        requiredActions: ["R"],
+      },
+      {
         name: "Add New Vendor",
         href: "/vendor-management/add-new-vendor",
         privilegeKey: "vendors",
