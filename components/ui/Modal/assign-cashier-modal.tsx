@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import CloseIcon from "public/close-icon"
 import { ButtonModule } from "components/ui/Button/Button"
@@ -31,6 +31,7 @@ const AssignCashierModal: React.FC<AssignCashierModalProps> = ({
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCashierIds, setSelectedCashierIds] = useState<number[]>([])
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Filter agents to only show Cashiers/SalesReps that are NOT already assigned to this clearing cashier
   const availableCashiers = agents.filter(
@@ -41,28 +42,52 @@ const AssignCashierModal: React.FC<AssignCashierModalProps> = ({
       agent.managerAgentId !== agentId // Exclude already assigned agents
   )
 
-  // Filter by search term
-  const filteredCashiers = availableCashiers.filter(
-    (cashier) =>
-      cashier.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cashier.agentCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cashier.user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Use availableCashiers directly since we're now filtering via API
+  const filteredCashiers = availableCashiers
 
-  // Fetch cashiers and salesreps when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      // Fetch all agents - we'll filter by type and status on the client side
+  // Fetch cashiers function
+  const fetchCashiers = useCallback(
+    (search?: string) => {
       dispatch(
         fetchAgents({
           pageNumber: 1,
           pageSize: 200,
+          ...(search && { search }),
         })
       )
+    },
+    [dispatch]
+  )
+
+  // Fetch cashiers when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCashiers()
       setSelectedCashierIds([])
       setSearchTerm("")
     }
-  }, [isOpen, dispatch])
+  }, [isOpen, fetchCashiers])
+
+  // Debounced search - make API call when user types
+  useEffect(() => {
+    if (!isOpen) return
+
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    // Set new timer for debounced search
+    debounceTimerRef.current = setTimeout(() => {
+      fetchCashiers(searchTerm || undefined)
+    }, 400)
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [searchTerm, isOpen, fetchCashiers])
 
   // Handle success/error states
   useEffect(() => {
