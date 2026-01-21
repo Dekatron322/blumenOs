@@ -35,6 +35,7 @@ import type {
   ChangeRequestsRequestParams,
 } from "lib/redux/paymentSlice"
 import ViewPaymentChangeRequestModal from "components/ui/Modal/view-payment-change-request-modal"
+import RefundPaymentModal from "components/ui/Modal/refund-payment-modal"
 
 // LoadingSkeleton component for payment details
 const LoadingSkeleton = () => (
@@ -701,7 +702,7 @@ const PaymentDetailsPage = () => {
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
   const [activeModal, setActiveModal] = useState<
-    "edit" | "changeRequest" | "receipt" | "tracking" | "confirmBankTransfer" | null
+    "edit" | "changeRequest" | "receipt" | "tracking" | "confirmBankTransfer" | "refund" | null
   >(null)
   const [isExporting, setIsExporting] = useState(false)
 
@@ -738,7 +739,7 @@ const PaymentDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "edit" | "changeRequest" | "tracking" | "confirmBankTransfer") =>
+  const openModal = (modalType: "edit" | "changeRequest" | "tracking" | "confirmBankTransfer" | "refund") =>
     setActiveModal(modalType)
 
   const handleChangeRequestSuccess = () => {
@@ -1057,6 +1058,19 @@ const PaymentDetailsPage = () => {
                       </ButtonModule>
                     )}
 
+                    {currentPayment.status === "Confirmed" &&
+                      currentPayment.accountType?.toLowerCase() === "prepaid" && (
+                        <ButtonModule
+                          variant="black"
+                          size="sm"
+                          className="flex items-center  text-xs  md:text-sm"
+                          onClick={() => setActiveModal("refund")}
+                          icon={<Zap className="size-3 md:size-4" />}
+                        >
+                          Refund / Re-vend
+                        </ButtonModule>
+                      )}
+
                     <ButtonModule
                       variant="primary"
                       size="sm"
@@ -1127,6 +1141,18 @@ const PaymentDetailsPage = () => {
                         </div>
                       </div>
                     </div>
+                    {currentPayment.status === "Confirmed" &&
+                      currentPayment.accountType?.toLowerCase() === "prepaid" && (
+                        <ButtonModule
+                          variant="black"
+                          size="md"
+                          className="mt-4 flex w-full items-center  text-xs  md:text-sm"
+                          onClick={() => setActiveModal("refund")}
+                          icon={<Zap className="size-3 md:size-4" />}
+                        >
+                          Refund / Re-vend
+                        </ButtonModule>
+                      )}
                   </motion.div>
 
                   {/* Quick Stats */}
@@ -1444,6 +1470,12 @@ const PaymentDetailsPage = () => {
         paymentId={currentPayment.id}
         paymentReference={currentPayment.reference}
         currentAmount={currentPayment.totalAmountPaid}
+        onSuccess={handleConfirmBankTransferSuccess}
+      />
+      <RefundPaymentModal
+        isOpen={activeModal === "refund"}
+        onRequestClose={closeAllModals}
+        paymentReference={currentPayment.reference}
         onSuccess={handleConfirmBankTransferSuccess}
       />
     </section>

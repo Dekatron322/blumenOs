@@ -415,6 +415,109 @@ export interface ConfirmPaymentRequest {
   skipRecovery: boolean
 }
 
+// Interfaces for Refund Payment
+export interface RefundPaymentRequest {
+  reference: string
+  reason: string
+}
+
+export interface RefundReceiptToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+export interface RefundReceiptInner {
+  reference: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: PaymentChannel
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  tokens: RefundReceiptToken[]
+  serviceCharge: number
+  discountBonus: number
+}
+
+export interface RefundPaymentDetails {
+  reference: string
+  checkoutUrl: string
+  virtualAccount: VirtualAccount
+}
+
+export interface RefundCollector {
+  type: string
+  name: string
+  agentId: number
+  agentCode: string
+  agentType: "SalesRep" | string
+  vendorId: number
+  vendorName: string
+  staffName: string
+  customerId: number
+  customerName: string
+}
+
+export interface RefundReceipt {
+  isPending: boolean
+  externalReference: string
+  reference: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  customerId: number
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: PaymentChannel
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  paymentTypeName: string
+  receipt: RefundReceiptInner
+  paymentDetails: RefundPaymentDetails
+  collector: RefundCollector
+  token: RefundReceiptToken
+}
+
+export interface RefundPaymentData {
+  originalReference: string
+  refundReference: string
+  refundCount: number
+  refundLimit: number
+  receipt: RefundReceipt
+}
+
+export interface RefundPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: RefundPaymentData
+}
+
 // Payment State
 interface PaymentState {
   // Payments list state
@@ -532,6 +635,12 @@ interface PaymentState {
   bankListsLoading: boolean
   bankListsError: string | null
   bankListsSuccess: boolean
+
+  // Refund Payment state
+  refundPaymentLoading: boolean
+  refundPaymentError: string | null
+  refundPaymentSuccess: boolean
+  refundPaymentData: RefundPaymentData | null
 }
 
 // Initial state
@@ -641,6 +750,12 @@ const initialState: PaymentState = {
   bankListsLoading: false,
   bankListsError: null,
   bankListsSuccess: false,
+
+  // Refund Payment
+  refundPaymentLoading: false,
+  refundPaymentError: null,
+  refundPaymentSuccess: false,
+  refundPaymentData: null,
 }
 
 // Async thunk for fetching payments
@@ -1093,6 +1208,34 @@ export const fetchBankLists = createAsyncThunk("payments/fetchBankLists", async 
   }
 })
 
+// Async thunk for refunding a prepaid payment
+export const refundPayment = createAsyncThunk(
+  "payments/refundPayment",
+  async ({ refundData }: { refundData: RefundPaymentRequest }, { rejectWithValue }) => {
+    try {
+      const response = await api.post<RefundPaymentResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.REFUND), refundData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to refund payment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Refund payment data not found")
+      }
+
+      return {
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to refund payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment refund")
+    }
+  }
+)
+
 // Payment slice
 const paymentSlice = createSlice({
   name: "payments",
@@ -1143,6 +1286,7 @@ const paymentSlice = createSlice({
       state.topPerformersError = null
       state.confirmPaymentError = null
       state.bankListsError = null
+      state.refundPaymentError = null
     },
 
     // Reset payment state
@@ -1229,6 +1373,12 @@ const paymentSlice = createSlice({
       state.confirmPaymentError = null
       state.confirmPaymentSuccess = false
       state.confirmedPayment = null
+
+      // Refund Payment
+      state.refundPaymentLoading = false
+      state.refundPaymentError = null
+      state.refundPaymentSuccess = false
+      state.refundPaymentData = null
     },
 
     // Clear payment tracking state
@@ -1269,6 +1419,14 @@ const paymentSlice = createSlice({
       state.bankListsError = null
       state.bankListsSuccess = false
       state.bankLists = []
+    },
+
+    // Clear refund payment state
+    clearRefundPayment: (state) => {
+      state.refundPaymentLoading = false
+      state.refundPaymentError = null
+      state.refundPaymentSuccess = false
+      state.refundPaymentData = null
     },
 
     // Set pagination
@@ -1800,6 +1958,35 @@ const paymentSlice = createSlice({
         state.bankListsSuccess = false
         state.bankLists = []
       })
+
+      // Refund payment cases
+      .addCase(refundPayment.pending, (state) => {
+        state.refundPaymentLoading = true
+        state.refundPaymentError = null
+        state.refundPaymentSuccess = false
+        state.refundPaymentData = null
+      })
+      .addCase(
+        refundPayment.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: RefundPaymentData
+            message: string
+          }>
+        ) => {
+          state.refundPaymentLoading = false
+          state.refundPaymentSuccess = true
+          state.refundPaymentError = null
+          state.refundPaymentData = action.payload.data
+        }
+      )
+      .addCase(refundPayment.rejected, (state, action) => {
+        state.refundPaymentLoading = false
+        state.refundPaymentError = (action.payload as string) || "Failed to refund payment"
+        state.refundPaymentSuccess = false
+        state.refundPaymentData = null
+      })
   },
 })
 
@@ -1823,6 +2010,7 @@ export const {
   clearTopPerformers,
   clearConfirmPayment,
   clearBankLists,
+  clearRefundPayment,
 } = paymentSlice.actions
 
 export default paymentSlice.reducer

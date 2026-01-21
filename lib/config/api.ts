@@ -302,6 +302,7 @@ export const API_ENDPOINTS = {
     TOP_PERFORMERS: "/payments/reports/performers",
     CONFIRM: "/payments/{id}/confirm",
     BANK_LISTS: "/payments/blumenpay/banks",
+    REFUND: "/payments/refund",
   },
 
   PAYMENT_DUNNING: {
