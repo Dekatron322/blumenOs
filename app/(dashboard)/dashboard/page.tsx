@@ -116,12 +116,12 @@ const DropdownPopover = ({
 }
 
 // Time filter types
-type TimeFilter = "day" | "week" | "month" | "all"
+type TimeFilter = "lastYear" | "lastMonth" | "lastWeek" | "yesterday" | "day" | "week" | "month" | "year" | "all"
 
 export default function Dashboard() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState<number>(1)
   const [selectedCurrencySymbol, setSelectedCurrencySymbol] = useState<string>("₦")
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("day")
   const [activeView, setActiveView] = useState<"kpi" | "statistics">("kpi")
   const [isLoading, setIsLoading] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
@@ -207,9 +207,24 @@ export default function Dashboard() {
       const endOfDay = new Date(now)
       endOfDay.setUTCHours(23, 59, 59, 999) // End of today (23:59:59PM)
       endDateUtc = endOfDay.toISOString()
+    } else if (timeFilter === "yesterday") {
+      start.setUTCDate(start.getUTCDate() - 1)
+      start.setUTCHours(0, 0, 0, 0) // Start of yesterday
+      const endOfYesterday = new Date(start)
+      endOfYesterday.setUTCHours(23, 59, 59, 999) // End of yesterday
+      endDateUtc = endOfYesterday.toISOString()
     } else if (timeFilter === "week") {
       start.setUTCDate(start.getUTCDate() - 7)
       endDateUtc = now.toISOString()
+    } else if (timeFilter === "lastWeek") {
+      const dayOfWeek = start.getUTCDay()
+      const diffToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek
+      start.setUTCDate(start.getUTCDate() - diffToLastSunday - 6) // Start of last week (Monday)
+      start.setUTCHours(0, 0, 0, 0)
+      const endOfLastWeek = new Date(start)
+      endOfLastWeek.setUTCDate(start.getUTCDate() + 6) // End of last week (Sunday)
+      endOfLastWeek.setUTCHours(23, 59, 59, 999)
+      endDateUtc = endOfLastWeek.toISOString()
     } else if (timeFilter === "month") {
       start.setUTCDate(1) // Set to 1st day of current month
       start.setUTCHours(0, 0, 0, 0) // Start of day
@@ -219,6 +234,27 @@ export default function Dashboard() {
       endOfMonth.setUTCMonth(start.getUTCMonth() + 1, 0) // Last day of current month
       endOfMonth.setUTCHours(23, 59, 59, 999) // End of day
       endDateUtc = endOfMonth.toISOString()
+    } else if (timeFilter === "lastMonth") {
+      start.setUTCMonth(start.getUTCMonth() - 1, 1) // 1st day of last month
+      start.setUTCHours(0, 0, 0, 0)
+      const endOfLastMonth = new Date(start)
+      endOfLastMonth.setUTCMonth(start.getUTCMonth() + 1, 0) // Last day of last month
+      endOfLastMonth.setUTCHours(23, 59, 59, 999)
+      endDateUtc = endOfLastMonth.toISOString()
+    } else if (timeFilter === "year") {
+      start.setUTCMonth(0, 1) // January 1st of current year
+      start.setUTCHours(0, 0, 0, 0)
+      const endOfYear = new Date(start)
+      endOfYear.setUTCMonth(11, 31) // December 31st
+      endOfYear.setUTCHours(23, 59, 59, 999)
+      endDateUtc = endOfYear.toISOString()
+    } else if (timeFilter === "lastYear") {
+      start.setUTCFullYear(start.getUTCFullYear() - 1, 0, 1) // January 1st of last year
+      start.setUTCHours(0, 0, 0, 0)
+      const endOfLastYear = new Date(start)
+      endOfLastYear.setUTCMonth(11, 31) // December 31st of last year
+      endOfLastYear.setUTCHours(23, 59, 59, 999)
+      endDateUtc = endOfLastYear.toISOString()
     } else {
       start.setUTCFullYear(start.getUTCFullYear() - 10)
       endDateUtc = now.toISOString()
@@ -478,9 +514,14 @@ export default function Dashboard() {
   ]
 
   const getTimeFilterLabel = (filter: TimeFilter) => {
+    if (filter === "lastYear") return "Last Year"
+    if (filter === "lastMonth") return "Last Month"
+    if (filter === "lastWeek") return "Last Week"
+    if (filter === "yesterday") return "Yesterday"
     if (filter === "day") return "Today"
     if (filter === "week") return "This Week"
     if (filter === "month") return "This Month"
+    if (filter === "year") return "This Year"
     return "All Time"
   }
 
@@ -564,7 +605,7 @@ export default function Dashboard() {
 
             <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
               <div className="mb-6 flex w-full flex-col gap-4">
-                <div className="flex w-full items-start justify-between gap-4 max-2xl:flex-col">
+                <div className="flex w-full items-start justify-between gap-4 2xl:flex-col">
                   <div>
                     <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
                       Dashboard Overview
@@ -580,10 +621,14 @@ export default function Dashboard() {
 
                         {/* Desktop Layout */}
                         <div className="hidden items-center gap-2 sm:flex">
+                          <TimeFilterButton filter="lastYear" label="Last Year" />
+                          <TimeFilterButton filter="lastMonth" label="Last Month" />
+                          <TimeFilterButton filter="lastWeek" label="Last Week" />
+                          <TimeFilterButton filter="yesterday" label="Yesterday" />
                           <TimeFilterButton filter="day" label="Today" />
                           <TimeFilterButton filter="week" label="This Week" />
                           <TimeFilterButton filter="month" label="This Month" />
-                          <TimeFilterButton filter="all" label="All Time" />
+                          <TimeFilterButton filter="year" label="This Year" />
                         </div>
                       </div>
 
@@ -677,6 +722,50 @@ export default function Dashboard() {
                               </div>
                               <button
                                 type="button"
+                                onClick={() => handleTimeFilterChange("lastYear")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "lastYear"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Last Year
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("lastMonth")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "lastMonth"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Last Month
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("lastWeek")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "lastWeek"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Last Week
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("yesterday")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "yesterday"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Yesterday
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => handleTimeFilterChange("day")}
                                 className={`block w-full px-3 py-2 text-left ${
                                   timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
@@ -704,12 +793,12 @@ export default function Dashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleTimeFilterChange("all")}
+                                onClick={() => handleTimeFilterChange("year")}
                                 className={`block w-full px-3 py-2 text-left ${
-                                  timeFilter === "all" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                                  timeFilter === "year" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
                                 }`}
                               >
-                                All Time
+                                This Year
                               </button>
 
                               <div className="mb-2 mt-2 border-b border-gray-100"></div>

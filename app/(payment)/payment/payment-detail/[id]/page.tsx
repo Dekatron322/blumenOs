@@ -438,6 +438,7 @@ const PaymentMethodBadge = ({ method }: { method: string }) => {
       Pos: { color: "text-orange-600", bg: "bg-orange-50", label: "POS" },
       Card: { color: "text-green-600", bg: "bg-green-50", label: "CARD" },
       VendorWallet: { color: "text-red-600", bg: "bg-red-50", label: "VENDOR WALLET" },
+      Chaque: { color: "text-teal-600", bg: "bg-teal-50", label: "CHEQUE" },
     }
     return configs[method as keyof typeof configs] || configs.Cash
   }
