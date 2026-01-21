@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -1015,4 +1015,13 @@ const ReplaceMeterPage = () => {
   )
 }
 
-export default ReplaceMeterPage
+// Wrapper component with Suspense boundary
+const ReplaceMeterPageWrapper = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReplaceMeterPage />
+    </Suspense>
+  )
+}
+
+export default ReplaceMeterPageWrapper
