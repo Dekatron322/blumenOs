@@ -148,94 +148,98 @@ const RoleCard: React.FC<{ role: Role; onViewDetails: (role: Role) => void }> = 
 
   return (
     <motion.div
-      className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+      className="h-full rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)" }}
     >
-      <div className="mb-4 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex size-12 items-center justify-center rounded-lg ${
-              role.isSystem ? "bg-purple-50" : "bg-blue-50"
-            }`}
-          >
-            {role.isSystem ? (
-              <MdOutlineLock className={`size-6 ${role.isSystem ? "text-purple-600" : "text-blue-600"}`} />
-            ) : (
-              <MdOutlinePeople className="size-6 text-blue-600" />
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">{role.name}</h3>
-            <div className="mt-1 flex items-center gap-2">
+      <div className="flex h-full flex-col">
+        <div className="flex-1">
+          <div className="mb-4 flex items-start justify-between">
+            <div className="flex items-center gap-3">
               <div
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  role.isSystem ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                className={`flex size-12 items-center justify-center rounded-lg ${
+                  role.isSystem ? "bg-purple-50" : "bg-blue-50"
                 }`}
               >
-                {role.isSystem ? "System" : "Custom"}
+                {role.isSystem ? (
+                  <MdOutlineLock className={`size-6 ${role.isSystem ? "text-purple-600" : "text-blue-600"}`} />
+                ) : (
+                  <MdOutlinePeople className="size-6 text-blue-600" />
+                )}
               </div>
-              <div className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                {role.category}
+              <div>
+                <h3 className="font-semibold text-gray-900">{role.name}</h3>
+                <div className="mt-1 flex items-center gap-2">
+                  <div
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      role.isSystem ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {role.isSystem ? "System" : "Custom"}
+                  </div>
+                  <div className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                    {role.category}
+                  </div>
+                </div>
               </div>
             </div>
+            {/* <ActionDropdown role={role} onViewDetails={onViewDetails} /> */}
           </div>
-        </div>
-        {/* <ActionDropdown role={role} onViewDetails={onViewDetails} /> */}
-      </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MdOutlineKey className="size-4" />
-          <span className="font-medium">Slug:</span>
-          <code className="rounded bg-gray-50 px-2 py-1 font-mono text-xs">{role.slug}</code>
-        </div>
-
-        {role.description && (
-          <div>
-            <div className="mb-1 flex items-center gap-2 text-sm text-gray-600">
-              <MdOutlineDescription className="size-4" />
-              <span className="font-medium">Description</span>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MdOutlineKey className="size-4" />
+              <span className="font-medium">Slug:</span>
+              <code className="rounded bg-gray-50 px-2 py-1 font-mono text-xs">{role.slug}</code>
             </div>
-            <p className="line-clamp-2 text-sm text-gray-700">{role.description}</p>
-          </div>
-        )}
 
-        <div className="grid grid-cols-2 gap-3 border-t pt-3">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{getPrivilegeCount()}</div>
-            <div className="text-xs text-gray-500">Privileges</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{getActionCount()}</div>
-            <div className="text-xs text-gray-500">Total Actions</div>
+            {role.description && (
+              <div>
+                <div className="mb-1 flex items-center gap-2 text-sm text-gray-600">
+                  <MdOutlineDescription className="size-4" />
+                  <span className="font-medium">Description</span>
+                </div>
+                <p className="line-clamp-2 text-sm text-gray-700">{role.description}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 border-t pt-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{getPrivilegeCount()}</div>
+                <div className="text-xs text-gray-500">Privileges</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{getActionCount()}</div>
+                <div className="text-xs text-gray-500">Total Actions</div>
+              </div>
+            </div>
+
+            {categories.length > 0 && (
+              <div>
+                <div className="mb-2 text-xs font-medium text-gray-600">Categories</div>
+                <div className="flex flex-wrap gap-1">
+                  {categories.map((category, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
+                    >
+                      {category}
+                    </span>
+                  ))}
+                  {role.privileges && role.privileges.length > 3 && (
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                      +{role.privileges.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {categories.length > 0 && (
-          <div>
-            <div className="mb-2 text-xs font-medium text-gray-600">Categories</div>
-            <div className="flex flex-wrap gap-1">
-              {categories.map((category, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
-                >
-                  {category}
-                </span>
-              ))}
-              {role.privileges && role.privileges.length > 3 && (
-                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                  +{role.privileges.length - 3} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="border-t pt-3">
+        <div className="mt-auto pt-4">
           <ButtonModule
             variant="outline"
             size="sm"
@@ -310,9 +314,9 @@ const PrivilegeCard: React.FC<{ privilege: Privilege }> = ({ privilege }) => {
                 ))}
                 {actions.length === 0 && <span className="text-xs text-gray-400">No actions</span>}
               </div>
-              <div className="mt-1 text-xs text-gray-500">
+              {/* <div className="mt-1 text-xs text-gray-500">
                 Binary: {privilege.availableActions.toString(2).padStart(6, "0")}
-              </div>
+              </div> */}
             </div>
 
             {privilege.description && (

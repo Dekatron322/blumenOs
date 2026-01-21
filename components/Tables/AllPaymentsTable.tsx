@@ -10,6 +10,7 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  clearConfirmPayment,
   clearError,
   clearPayments,
   CollectorType,
@@ -536,6 +537,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   // }
 
   const handleConfirmPayment = (payment: Payment) => {
+    dispatch(clearConfirmPayment())
     setSelectedPayment(payment)
     setShowConfirmForm(true)
   }
@@ -633,6 +635,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     return () => {
       dispatch(clearError())
       dispatch(clearPayments())
+      dispatch(clearConfirmPayment())
     }
   }, [dispatch])
 

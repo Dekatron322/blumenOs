@@ -4,7 +4,7 @@ import React, { useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { confirmPayment } from "lib/redux/agentSlice"
+import { clearConfirmPayment, confirmPayment } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 
@@ -50,6 +50,13 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
     }
   }, [confirmPaymentError])
 
+  // Clear confirm payment state when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearConfirmPayment())
+    }
+  }, [dispatch])
+
   const handleConfirm = () => {
     dispatch(confirmPayment(paymentId))
       .unwrap()
@@ -61,6 +68,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
 
   const handleClose = () => {
     if (!confirmPaymentLoading) {
+      dispatch(clearConfirmPayment())
       onClose()
     }
   }

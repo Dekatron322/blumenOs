@@ -3094,6 +3094,13 @@ const agentSlice = createSlice({
       state.createdPayment = null
     },
 
+    // Clear confirm payment state
+    clearConfirmPayment: (state) => {
+      state.confirmPaymentLoading = false
+      state.confirmPaymentError = null
+      state.confirmPaymentSuccess = false
+    },
+
     // Clear current agent
     clearCurrentAgent: (state) => {
       state.currentAgent = null
@@ -4730,6 +4737,7 @@ export const {
   clearBillLookup,
   clearCustomerLookup,
   clearCreatePayment,
+  clearConfirmPayment,
   resetAgentState,
   setPagination,
   setChangeRequestsPagination,
