@@ -82,6 +82,7 @@ const CollectPaymentPage: React.FC = () => {
   const [createdPaymentData, setCreatedPaymentData] = useState<any>(null)
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
   const [confirmedPaymentData, setConfirmedPaymentData] = useState<any>(null)
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
 
   // Generate channel options based on available channels
   const channelOptions = [
@@ -381,7 +382,7 @@ const CollectPaymentPage: React.FC = () => {
     }
   }
 
-  const handleSubmitPayment = async (e: React.FormEvent) => {
+  const handleOpenConfirmModal = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (lookupMode === "bill") {
@@ -439,6 +440,14 @@ const CollectPaymentPage: React.FC = () => {
       return
     }
 
+    // Open confirmation modal
+    setIsConfirmModalOpen(true)
+  }
+
+  const handleConfirmPayment = async () => {
+    const rawAmount = amountInput.replace(/,/g, "").trim()
+    const amount = Number(rawAmount)
+
     // Set payment timestamp in the background using the current time
     const paidAtUtc = new Date().toISOString()
 
@@ -457,6 +466,8 @@ const CollectPaymentPage: React.FC = () => {
         : {}),
       ...(lookupMode === "customer" && customerInfo ? { customerId: customerInfo.id } : {}),
     }
+
+    setIsConfirmModalOpen(false)
 
     try {
       const result = await dispatch(createAgentPayment(payload)).unwrap()
@@ -789,7 +800,7 @@ const CollectPaymentPage: React.FC = () => {
                 )}
 
                 {lookupMode === "bill" && billLookup && (
-                  <form onSubmit={handleSubmitPayment} className="mt-4 space-y-5">
+                  <form onSubmit={handleOpenConfirmModal} className="mt-4 space-y-5">
                     <div className="rounded-md border border-dashed border-[#004B23] bg-[#004B23]/5 p-4 text-sm">
                       <div className="mb-2 flex justify-between">
                         <span className="font-medium text-[#004B23]">Customer:</span>
@@ -951,7 +962,7 @@ const CollectPaymentPage: React.FC = () => {
                 )}
 
                 {lookupMode === "customer" && customerInfo && (
-                  <form onSubmit={handleSubmitPayment} className="mt-4 space-y-5">
+                  <form onSubmit={handleOpenConfirmModal} className="mt-4 space-y-5">
                     {/* Debt Alert */}
                     {customerInfo.customerOutstandingDebtBalance > 0 && (
                       <div
@@ -1269,6 +1280,119 @@ const CollectPaymentPage: React.FC = () => {
         onRequestClose={handleReceiptModalClose}
         paymentData={confirmedPaymentData}
       />
+
+      {/* Payment Confirmation Modal */}
+      {isConfirmModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+          onClick={() => setIsConfirmModalOpen(false)}
+        >
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ type: "spring", damping: 25 }}
+            className="relative w-full max-w-xl rounded-lg bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-gray-200 bg-[#F9F9F9] px-6 py-4">
+              <h2 className="text-lg font-semibold text-gray-900">Confirm Payment</h2>
+              <p className="mt-1 text-sm text-gray-500">Please review the details before proceeding</p>
+            </div>
+
+            <div className="space-y-4 p-5">
+              <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+                <h3 className="mb-3 text-sm font-medium text-gray-700">
+                  {lookupMode === "bill" ? "Bill Details" : "Customer Details"}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Customer:</span>
+                    <span className="font-medium text-gray-900">
+                      {lookupMode === "bill" ? billLookup?.customerName : customerInfo?.fullName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Account Number:</span>
+                    <span className="font-medium text-gray-900">
+                      {lookupMode === "bill" ? billLookup?.customerAccountNumber : customerInfo?.accountNumber}
+                    </span>
+                  </div>
+                  {lookupMode === "bill" && billLookup && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Bill Period:</span>
+                      <span className="font-medium text-gray-900">{billLookup.period}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-md border-2 border-[#004B23] bg-[#004B23]/5 p-4">
+                <h3 className="mb-3 text-sm font-medium text-[#004B23]">Payment Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount to Pay:</span>
+                    <span className="text-xl font-bold text-[#004B23]">₦{amountInput}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Payment Channel:</span>
+                    <span className="font-medium text-gray-900">
+                      {channel ? channel.replace(/([A-Z])/g, " $1").trim() : "Not selected"}
+                    </span>
+                  </div>
+                  {lookupMode === "customer" && paymentTypeId && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Payment Type:</span>
+                      <span className="font-medium text-gray-900">
+                        {paymentTypes.find((pt) => pt.id === paymentTypeId)?.name || "N/A"}
+                      </span>
+                    </div>
+                  )}
+                  {narrative && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Narrative:</span>
+                      <span className="max-w-[200px] truncate font-medium text-gray-900">{narrative}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {lookupMode === "customer" && customerInfo && customerInfo.customerOutstandingDebtBalance > 0 && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-xs text-amber-700">
+                    <strong>Note:</strong> Customer has an outstanding debt of ₦
+                    {customerInfo.customerOutstandingDebtBalance.toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 border-t border-gray-200 bg-white px-6 py-4">
+              <ButtonModule
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setIsConfirmModalOpen(false)}
+                disabled={createPaymentLoading}
+              >
+                Cancel
+              </ButtonModule>
+              <ButtonModule
+                type="button"
+                variant="primary"
+                className="flex-1"
+                onClick={handleConfirmPayment}
+                disabled={createPaymentLoading}
+              >
+                {createPaymentLoading ? "Processing..." : `Confirm ₦${amountInput}`}
+              </ButtonModule>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   )
 }
