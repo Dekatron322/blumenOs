@@ -121,6 +121,33 @@ const VendorPaymentsTab: React.FC<VendorPaymentsTabProps> = ({ vendorId }) => {
     }
   }
 
+  const getPageNumbers = (): (number | string)[] => {
+    const pages: (number | string)[] = []
+    const maxVisible = 5
+
+    if (totalPages <= maxVisible + 2) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      pages.push(1)
+
+      if (currentPage <= 3) {
+        for (let i = 2; i <= 4; i++) pages.push(i)
+        pages.push("...")
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pages.push("...")
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push("...")
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+        pages.push("...")
+        pages.push(totalPages)
+      }
+    }
+
+    return pages
+  }
+
   const PaymentCard = ({ payment }: { payment: VendorPayment }) => {
     return (
       <div className="mt-3 rounded-lg border bg-[#f9f9f9] p-4 shadow-sm transition-all hover:shadow-md">
@@ -237,7 +264,7 @@ const VendorPaymentsTab: React.FC<VendorPaymentsTabProps> = ({ vendorId }) => {
       className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
     >
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Vendor Payments</h3>
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">Vendor Payment</h3>
         <button
           className="button-oulined flex items-center gap-2 border-[#2563EB] bg-[#DBEAFE] hover:border-[#2563EB] hover:bg-[#DBEAFE]"
           onClick={() => {
@@ -396,17 +423,23 @@ const VendorPaymentsTab: React.FC<VendorPaymentsTabProps> = ({ vendorId }) => {
             </button>
 
             <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
-                    currentPage === index + 1 ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
-                  }`}
-                  onClick={() => changePage(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
+              {getPageNumbers().map((page, index) =>
+                typeof page === "string" ? (
+                  <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+                    {page}
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    className={`flex h-[27px] w-[30px] items-center justify-center rounded-md ${
+                      currentPage === page ? "bg-[#000000] text-white" : "bg-gray-200 text-gray-800"
+                    }`}
+                    onClick={() => changePage(page)}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
 
             <button
