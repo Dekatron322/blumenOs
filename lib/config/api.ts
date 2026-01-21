@@ -451,6 +451,10 @@ export const API_ENDPOINTS = {
     SUPPORT_TICKETS: "/customers/support-tickets",
     TICKET_DETAIL: "/customers/support-tickets/{id}",
   },
+
+  AUDIT_LOGS: {
+    audit_logs: "/system/audit/logs",
+  },
 }
 
 // Helper function to build full URL

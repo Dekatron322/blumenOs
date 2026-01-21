@@ -1,5 +1,6 @@
 "use client"
 
+import { DateFilter, getDateRangeUtcCapitalized } from "utils/dateRange"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useCallback, useEffect, useState } from "react"
 import { motion } from "framer-motion"
@@ -236,39 +237,9 @@ export default function PerformanceAnalyticsDashboard() {
     ],
   }
 
-  // Generate date range based on time filter
-  const getDateRange = () => {
-    const now = new Date()
-    const endDateUtc = now.toISOString()
-    const start = new Date(now)
-
-    switch (timeFilter) {
-      case "day":
-        start.setUTCDate(start.getUTCDate() - 1)
-        break
-      case "week":
-        start.setUTCDate(start.getUTCDate() - 7)
-        break
-      case "month":
-        start.setUTCMonth(start.getUTCMonth() - 1)
-        break
-      case "quarter":
-        start.setUTCMonth(start.getUTCMonth() - 3)
-        break
-      case "year":
-        start.setUTCFullYear(start.getUTCFullYear() - 1)
-        break
-    }
-
-    return {
-      StartDateUtc: start.toISOString(),
-      EndDateUtc: endDateUtc,
-    }
-  }
-
   // Fetch all performance data
   const fetchPerformanceData = useCallback(() => {
-    const dateRange = getDateRange()
+    const dateRange = getDateRangeUtcCapitalized(timeFilter as DateFilter)
 
     // Clear previous errors
     dispatch(clearError())

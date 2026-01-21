@@ -1121,12 +1121,22 @@ const CustomerDetailsPage = () => {
                         )}
                         {canAddNewMeter && (
                           <ButtonModule
-                            variant="outlineDanger"
+                            variant="outlineBlue"
                             className="w-full justify-start gap-3"
-                            onClick={() => router.push("/metering/install-new-meter")}
+                            onClick={() => router.push(`/metering/install-new-meter?customerId=${currentCustomer.id}`)}
                           >
                             <MeterOutlineIcon className="size-4" />
                             Add New Meter
+                          </ButtonModule>
+                        )}
+                        {canAddNewMeter && currentCustomer.meters && currentCustomer.meters.length > 0 && (
+                          <ButtonModule
+                            variant="outlineDanger"
+                            className="w-full justify-start gap-3"
+                            onClick={() => router.push(`/metering/replace-meter?customerId=${currentCustomer.id}`)}
+                          >
+                            <MeterOutlineIcon className="size-4" />
+                            Replace Meter
                           </ButtonModule>
                         )}
                         {canUpdate && (

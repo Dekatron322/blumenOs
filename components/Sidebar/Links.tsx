@@ -414,34 +414,34 @@ export const allLinks: LinkItem[] = [
   //   privilegeKey: "assets",
   //   requiredActions: ["R"],
   // },
-  // {
-  //   name: "Complaince & Audit",
-  //   href: "/complaince",
-  //   icon: AuditIcon,
-  //   privilegeKey: "system-settings",
-  //   requiredActions: ["R"],
-  //   children: [
-  //     // { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
-  //     {
-  //       name: "Audit Trails",
-  //       href: "/complaince/audit-trails",
-  //       privilegeKey: "system-settings",
-  //       requiredActions: ["R"],
-  //     },
-  //     {
-  //       name: "Complaince Checks",
-  //       href: "/complaince/complaince-checks",
-  //       privilegeKey: "system-settings",
-  //       requiredActions: ["E"],
-  //     },
-  //     // {
-  //     //   name: "NERC Reports",
-  //     //   href: "/complaince/nerc-reports",
-  //     //   privilegeKey: "system-settings",
-  //     //   requiredActions: ["R"],
-  //     // },
-  //   ],
-  // },
+  {
+    name: "Complaince & Audit",
+    href: "/complaince",
+    icon: AuditIcon,
+    privilegeKey: "system-settings",
+    requiredActions: ["R"],
+    children: [
+      // { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
+      {
+        name: "Audit Trails",
+        href: "/complaince/audit-trails",
+        privilegeKey: "system-settings",
+        requiredActions: ["R"],
+      },
+      // {
+      //   name: "Complaince Checks",
+      //   href: "/complaince/complaince-checks",
+      //   privilegeKey: "system-settings",
+      //   requiredActions: ["E"],
+      // },
+      // {
+      //   name: "NERC Reports",
+      //   href: "/complaince/nerc-reports",
+      //   privilegeKey: "system-settings",
+      //   requiredActions: ["R"],
+      // },
+    ],
+  },
 
   {
     name: "Disputes",

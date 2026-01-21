@@ -50,6 +50,7 @@ import {
 } from "recharts"
 import Footer from "components/Footer/Footer"
 import { formatCurrencyWithAbbreviation } from "utils/helpers"
+import { DateFilter, getDateRangeUtc } from "utils/dateRange"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -127,6 +128,9 @@ export default function Dashboard() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // 8 minutes default
+  const [customStartDate, setCustomStartDate] = useState<string>("")
+  const [customEndDate, setCustomEndDate] = useState<string>("")
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
   const router = useRouter()
   const dispatch = useAppDispatch()
 
@@ -198,69 +202,21 @@ export default function Dashboard() {
   }
 
   const refreshDashboardData = useCallback(() => {
-    const now = new Date()
+    let startDateUtc: string
     let endDateUtc: string
-    const start = new Date(now)
 
-    if (timeFilter === "day") {
-      start.setUTCHours(0, 0, 0, 0) // Start of today (00:00:00AM)
-      const endOfDay = new Date(now)
-      endOfDay.setUTCHours(23, 59, 59, 999) // End of today (23:59:59PM)
-      endDateUtc = endOfDay.toISOString()
-    } else if (timeFilter === "yesterday") {
-      start.setUTCDate(start.getUTCDate() - 1)
-      start.setUTCHours(0, 0, 0, 0) // Start of yesterday
-      const endOfYesterday = new Date(start)
-      endOfYesterday.setUTCHours(23, 59, 59, 999) // End of yesterday
-      endDateUtc = endOfYesterday.toISOString()
-    } else if (timeFilter === "week") {
-      start.setUTCDate(start.getUTCDate() - 7)
-      endDateUtc = now.toISOString()
-    } else if (timeFilter === "lastWeek") {
-      const dayOfWeek = start.getUTCDay()
-      const diffToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek
-      start.setUTCDate(start.getUTCDate() - diffToLastSunday - 6) // Start of last week (Monday)
-      start.setUTCHours(0, 0, 0, 0)
-      const endOfLastWeek = new Date(start)
-      endOfLastWeek.setUTCDate(start.getUTCDate() + 6) // End of last week (Sunday)
-      endOfLastWeek.setUTCHours(23, 59, 59, 999)
-      endDateUtc = endOfLastWeek.toISOString()
-    } else if (timeFilter === "month") {
-      start.setUTCDate(1) // Set to 1st day of current month
-      start.setUTCHours(0, 0, 0, 0) // Start of day
+    // Use custom date range if provided (datetime-local format preserves time)
+    if (customStartDate && customEndDate) {
+      const start = new Date(customStartDate)
+      startDateUtc = start.toISOString()
 
-      // Set end date to last day of current month
-      const endOfMonth = new Date(start)
-      endOfMonth.setUTCMonth(start.getUTCMonth() + 1, 0) // Last day of current month
-      endOfMonth.setUTCHours(23, 59, 59, 999) // End of day
-      endDateUtc = endOfMonth.toISOString()
-    } else if (timeFilter === "lastMonth") {
-      start.setUTCMonth(start.getUTCMonth() - 1, 1) // 1st day of last month
-      start.setUTCHours(0, 0, 0, 0)
-      const endOfLastMonth = new Date(start)
-      endOfLastMonth.setUTCMonth(start.getUTCMonth() + 1, 0) // Last day of last month
-      endOfLastMonth.setUTCHours(23, 59, 59, 999)
-      endDateUtc = endOfLastMonth.toISOString()
-    } else if (timeFilter === "year") {
-      start.setUTCMonth(0, 1) // January 1st of current year
-      start.setUTCHours(0, 0, 0, 0)
-      const endOfYear = new Date(start)
-      endOfYear.setUTCMonth(11, 31) // December 31st
-      endOfYear.setUTCHours(23, 59, 59, 999)
-      endDateUtc = endOfYear.toISOString()
-    } else if (timeFilter === "lastYear") {
-      start.setUTCFullYear(start.getUTCFullYear() - 1, 0, 1) // January 1st of last year
-      start.setUTCHours(0, 0, 0, 0)
-      const endOfLastYear = new Date(start)
-      endOfLastYear.setUTCMonth(11, 31) // December 31st of last year
-      endOfLastYear.setUTCHours(23, 59, 59, 999)
-      endDateUtc = endOfLastYear.toISOString()
+      const end = new Date(customEndDate)
+      endDateUtc = end.toISOString()
     } else {
-      start.setUTCFullYear(start.getUTCFullYear() - 10)
-      endDateUtc = now.toISOString()
+      const dateRange = getDateRangeUtc(timeFilter as DateFilter)
+      startDateUtc = dateRange.startDateUtc
+      endDateUtc = dateRange.endDateUtc
     }
-
-    const startDateUtc = start.toISOString()
 
     dispatch(
       fetchDashboardCards({
@@ -356,11 +312,11 @@ export default function Dashboard() {
 
     dispatch(fetchOutstandingArrears())
     dispatch(fetchDisputes())
-  }, [dispatch, timeFilter])
+  }, [dispatch, timeFilter, customStartDate, customEndDate])
 
   useEffect(() => {
     refreshDashboardData()
-  }, [dispatch, timeFilter])
+  }, [dispatch, timeFilter, refreshDashboardData])
 
   // Short polling effect
   useEffect(() => {
@@ -514,14 +470,14 @@ export default function Dashboard() {
   ]
 
   const getTimeFilterLabel = (filter: TimeFilter) => {
-    if (filter === "lastYear") return "Last Year"
-    if (filter === "lastMonth") return "Last Month"
-    if (filter === "lastWeek") return "Last Week"
-    if (filter === "yesterday") return "Yesterday"
     if (filter === "day") return "Today"
+    if (filter === "yesterday") return "Yesterday"
     if (filter === "week") return "This Week"
+    if (filter === "lastWeek") return "Last Week"
     if (filter === "month") return "This Month"
+    if (filter === "lastMonth") return "Last Month"
     if (filter === "year") return "This Year"
+    if (filter === "lastYear") return "Last Year"
     return "All Time"
   }
 
@@ -606,13 +562,62 @@ export default function Dashboard() {
             <div className="mx-auto w-full px-3 py-8 2xl:container sm:px-4 md:px-6 2xl:px-16">
               <div className="mb-6 flex w-full flex-col gap-4">
                 <div className="flex w-full items-start justify-between gap-4 2xl:flex-col">
-                  <div>
-                    <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
-                      Dashboard Overview
-                    </h1>
-                    <p className="text-sm font-medium text-gray-500 sm:text-base">
-                      Comprehensive overview of utility operations
-                    </p>
+                  <div className="flex w-full items-center justify-between gap-4">
+                    <div>
+                      <h1 className="text-lg font-bold text-gray-900 sm:text-xl md:text-2xl lg:text-3xl">
+                        Dashboard Overview
+                      </h1>
+                      <p className="text-sm font-medium text-gray-500 sm:text-base">
+                        Comprehensive overview of utility operations
+                      </p>
+                    </div>
+                    <div className="hidden items-center gap-2 rounded-md bg-white p-2  xl:flex">
+                      <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                      <button
+                        onClick={togglePolling}
+                        className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          isPolling
+                            ? "bg-green-100 text-green-700 hover:bg-green-200"
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                        }`}
+                      >
+                        {isPolling ? (
+                          <>
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            ON
+                          </>
+                        ) : (
+                          <>
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            OFF
+                          </>
+                        )}
+                      </button>
+
+                      {isPolling && (
+                        <DropdownPopover
+                          options={pollingOptions}
+                          selectedValue={pollingInterval}
+                          onSelect={handlePollingIntervalChange}
+                        >
+                          {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
+                        </DropdownPopover>
+                      )}
+                    </div>
                   </div>
                   <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
                     <div className="flex flex-row items-center gap-4 max-sm:justify-between sm:gap-4">
@@ -621,63 +626,104 @@ export default function Dashboard() {
 
                         {/* Desktop Layout */}
                         <div className="hidden items-center gap-2 sm:flex">
-                          <TimeFilterButton filter="lastYear" label="Last Year" />
-                          <TimeFilterButton filter="lastMonth" label="Last Month" />
-                          <TimeFilterButton filter="lastWeek" label="Last Week" />
-                          <TimeFilterButton filter="yesterday" label="Yesterday" />
                           <TimeFilterButton filter="day" label="Today" />
+                          <TimeFilterButton filter="yesterday" label="Yesterday" />
                           <TimeFilterButton filter="week" label="This Week" />
+                          <TimeFilterButton filter="lastWeek" label="Last Week" />
                           <TimeFilterButton filter="month" label="This Month" />
+                          <TimeFilterButton filter="lastMonth" label="Last Month" />
                           <TimeFilterButton filter="year" label="This Year" />
+                          <TimeFilterButton filter="lastYear" label="Last Year" />
+                          <TimeFilterButton filter="all" label="All Time" />
                         </div>
                       </div>
 
-                      {/* Polling Controls */}
-                      <div className="flex items-center gap-2 border-l pl-4">
-                        <span className="text-sm font-medium text-gray-500">Auto-refresh:</span>
+                      {/* Date Range Filter */}
+                      <div className="relative flex items-center gap-2 border-l pl-4">
                         <button
-                          onClick={togglePolling}
-                          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                            isPolling
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          type="button"
+                          onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
+                          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                            customStartDate && customEndDate
+                              ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                           }`}
                         >
-                          {isPolling ? (
-                            <>
-                              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                              </svg>
-                              ON
-                            </>
-                          ) : (
-                            <>
-                              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                              OFF
-                            </>
-                          )}
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                          {customStartDate && customEndDate ? `${customStartDate} - ${customEndDate}` : "Custom Range"}
+                          <svg
+                            className={`size-4 transition-transform ${isDateRangeOpen ? "rotate-180" : ""}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
                         </button>
 
-                        {isPolling && (
-                          <DropdownPopover
-                            options={pollingOptions}
-                            selectedValue={pollingInterval}
-                            onSelect={handlePollingIntervalChange}
-                          >
-                            {pollingOptions.find((opt) => opt.value === pollingInterval)?.label}
-                          </DropdownPopover>
+                        {isDateRangeOpen && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setIsDateRangeOpen(false)} />
+                            <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
+                              <div className="mb-3 text-sm font-medium text-gray-700">Select Date & Time Range</div>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                                    Start Date & Time
+                                  </label>
+                                  <input
+                                    type="datetime-local"
+                                    value={customStartDate}
+                                    onChange={(e) => setCustomStartDate(e.target.value)}
+                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                                    End Date & Time
+                                  </label>
+                                  <input
+                                    type="datetime-local"
+                                    value={customEndDate}
+                                    onChange={(e) => setCustomEndDate(e.target.value)}
+                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-4 flex gap-2">
+                                {(customStartDate || customEndDate) && (
+                                  <button
+                                    onClick={() => {
+                                      setCustomStartDate("")
+                                      setCustomEndDate("")
+                                    }}
+                                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
+                                  >
+                                    Clear
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    if (customStartDate && customEndDate) {
+                                      refreshDashboardData()
+                                      setIsDateRangeOpen(false)
+                                    }
+                                  }}
+                                  disabled={!customStartDate || !customEndDate}
+                                  className="flex-1 rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003318] disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
@@ -722,36 +768,12 @@ export default function Dashboard() {
                               </div>
                               <button
                                 type="button"
-                                onClick={() => handleTimeFilterChange("lastYear")}
+                                onClick={() => handleTimeFilterChange("day")}
                                 className={`block w-full px-3 py-2 text-left ${
-                                  timeFilter === "lastYear"
-                                    ? "bg-[#004B23] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                  timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
                                 }`}
                               >
-                                Last Year
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleTimeFilterChange("lastMonth")}
-                                className={`block w-full px-3 py-2 text-left ${
-                                  timeFilter === "lastMonth"
-                                    ? "bg-[#004B23] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                Last Month
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleTimeFilterChange("lastWeek")}
-                                className={`block w-full px-3 py-2 text-left ${
-                                  timeFilter === "lastWeek"
-                                    ? "bg-[#004B23] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                Last Week
+                                Today
                               </button>
                               <button
                                 type="button"
@@ -766,21 +788,23 @@ export default function Dashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleTimeFilterChange("day")}
-                                className={`block w-full px-3 py-2 text-left ${
-                                  timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                Today
-                              </button>
-                              <button
-                                type="button"
                                 onClick={() => handleTimeFilterChange("week")}
                                 className={`block w-full px-3 py-2 text-left ${
                                   timeFilter === "week" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
                                 }`}
                               >
                                 This Week
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("lastWeek")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "lastWeek"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Last Week
                               </button>
                               <button
                                 type="button"
@@ -793,12 +817,43 @@ export default function Dashboard() {
                               </button>
                               <button
                                 type="button"
+                                onClick={() => handleTimeFilterChange("lastMonth")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "lastMonth"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Last Month
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => handleTimeFilterChange("year")}
                                 className={`block w-full px-3 py-2 text-left ${
                                   timeFilter === "year" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
                                 }`}
                               >
                                 This Year
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("lastYear")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "lastYear"
+                                    ? "bg-[#004B23] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                Last Year
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTimeFilterChange("all")}
+                                className={`block w-full px-3 py-2 text-left ${
+                                  timeFilter === "all" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                All Time
                               </button>
 
                               <div className="mb-2 mt-2 border-b border-gray-100"></div>
