@@ -520,7 +520,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
-  const { agent } = useAppSelector((state) => state.auth)
+  const { agent, user } = useAppSelector((state) => state.auth)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -1380,7 +1380,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         {payment.status === PaymentStatus.Pending ? (
-                          agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager") ? (
+                          (agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager")) ||
+                          user?.roles?.some((role) => role.slug === "superadmin") ? (
                             <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
                               Confirm
                             </ButtonModule>

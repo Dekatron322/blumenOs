@@ -1054,7 +1054,18 @@ const PaymentDetailsPage = () => {
                         onClick={() => setActiveModal("confirmBankTransfer")}
                         icon={<Package className="size-3 md:size-4" />}
                       >
-                        Confirm Bank Transfer
+                        Confirm{" "}
+                        {currentPayment.channel === "BankTransfer"
+                          ? "Bank Transfer"
+                          : currentPayment.channel === "Cash"
+                          ? "Cash Payment"
+                          : currentPayment.channel === "Chaque"
+                          ? "Cheque Payment"
+                          : currentPayment.channel === "Pos"
+                          ? "POS Payment"
+                          : currentPayment.channel === "Card"
+                          ? "Card Payment"
+                          : "Payment"}
                       </ButtonModule>
                     )}
 
