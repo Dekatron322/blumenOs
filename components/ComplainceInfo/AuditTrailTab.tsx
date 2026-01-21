@@ -20,7 +20,7 @@ import {
 } from "react-icons/md"
 import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchAuditLogs, AuditLog } from "lib/redux/auditLogSlice"
+import { AuditLog, fetchAuditLogs } from "lib/redux/auditLogSlice"
 import { fetchAgentById } from "lib/redux/agentSlice"
 import { fetchEmployeeById } from "lib/redux/employeeSlice"
 import { fetchVendorById } from "lib/redux/vendorSlice"
