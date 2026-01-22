@@ -31,6 +31,21 @@ import { VscEye } from "react-icons/vsc"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
 
+// Boolean options for filters
+const booleanOptions = [
+  { value: "", label: "All" },
+  { value: "true", label: "Yes" },
+  { value: "false", label: "No" },
+]
+
+// Clearance status options for filters
+const clearanceStatusOptions = [
+  { value: "", label: "All" },
+  { value: "Uncleared", label: "Uncleared" },
+  { value: "Cleared", label: "Cleared" },
+  { value: "ClearedWithCondition", label: "Cleared with Condition" },
+]
+
 // Channel mapping utilities
 const channelStringToEnum = (channelString: string): PaymentChannel => {
   switch (channelString) {
@@ -46,6 +61,12 @@ const channelStringToEnum = (channelString: string): PaymentChannel => {
       return PaymentChannel.VendorWallet
     case "Chaque":
       return PaymentChannel.Chaque
+    case "BankDeposit":
+      return PaymentChannel.Cash // Map to Cash as enum doesn't exist
+    case "Vendor":
+      return PaymentChannel.VendorWallet // Map to VendorWallet as enum doesn't exist
+    case "Migration":
+      return PaymentChannel.Cash // Map to Cash as enum doesn't exist
     default:
       return PaymentChannel.Cash
   }
@@ -365,7 +386,7 @@ const MobileFilterSidebar = ({
   isOpen: boolean
   onClose: () => void
   localFilters: any
-  handleFilterChange: (key: string, value: string | number | undefined) => void
+  handleFilterChange: (key: string, value: string | number | boolean | undefined) => void
   handleSortChange: (option: SortOption) => void
   applyFilters: () => void
   resetFilters: () => void
@@ -596,6 +617,331 @@ const MobileFilterSidebar = ({
                   />
                 </div>
 
+                {/* Text Input Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Reference</label>
+                  <input
+                    type="text"
+                    value={localFilters.reference || ""}
+                    onChange={(e) => handleFilterChange("reference", e.target.value || undefined)}
+                    placeholder="Enter reference..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Account Number</label>
+                  <input
+                    type="text"
+                    value={localFilters.accountNumber || ""}
+                    onChange={(e) => handleFilterChange("accountNumber", e.target.value || undefined)}
+                    placeholder="Enter account number..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Meter Number</label>
+                  <input
+                    type="text"
+                    value={localFilters.meterNumber || ""}
+                    onChange={(e) => handleFilterChange("meterNumber", e.target.value || undefined)}
+                    placeholder="Enter meter number..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* ID Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                    Distribution Substation
+                  </label>
+                  <input
+                    type="number"
+                    value={localFilters.distributionSubstationId || ""}
+                    onChange={(e) =>
+                      handleFilterChange(
+                        "distributionSubstationId",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                    placeholder="Enter ID..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                  <input
+                    type="number"
+                    value={localFilters.feederId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("feederId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    placeholder="Enter ID..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Service Center</label>
+                  <input
+                    type="number"
+                    value={localFilters.serviceCenterId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("serviceCenterId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    placeholder="Enter ID..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Postpaid Bill</label>
+                  <input
+                    type="number"
+                    value={localFilters.postpaidBillId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("postpaidBillId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    placeholder="Enter ID..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Province</label>
+                  <input
+                    type="number"
+                    value={localFilters.customerProvinceId || ""}
+                    onChange={(e) =>
+                      handleFilterChange("customerProvinceId", e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    placeholder="Enter ID..."
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  />
+                </div>
+
+                {/* Clearance Status Filter */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Clearance Status</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {clearanceStatusOptions
+                      .filter((opt) => opt.value !== "")
+                      .map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              "clearanceStatus",
+                              localFilters.clearanceStatus === option.value ? undefined : option.value
+                            )
+                          }
+                          className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                            localFilters.clearanceStatus === option.value
+                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Boolean Filters */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Prepaid Only</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {booleanOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "prepaidOnly",
+                            localFilters.prepaidOnly ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                              ? undefined
+                              : option.value === "true"
+                              ? "true"
+                              : option.value === "false"
+                              ? "false"
+                              : undefined
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.prepaidOnly ===
+                          (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Is Cleared</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {booleanOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "isCleared",
+                            localFilters.isCleared ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                              ? undefined
+                              : option.value === "true"
+                              ? "true"
+                              : option.value === "false"
+                              ? "false"
+                              : undefined
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.isCleared ===
+                          (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Is Remitted</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {booleanOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "isRemitted",
+                            localFilters.isRemitted ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                              ? undefined
+                              : option.value === "true"
+                              ? "true"
+                              : option.value === "false"
+                              ? "false"
+                              : undefined
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.isRemitted ===
+                          (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Is PPM</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {booleanOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "customerIsPPM",
+                            localFilters.customerIsPPM ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                              ? undefined
+                              : option.value === "true"
+                              ? "true"
+                              : option.value === "false"
+                              ? "false"
+                              : undefined
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.customerIsPPM ===
+                          (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Is MD</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {booleanOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "customerIsMD",
+                            localFilters.customerIsMD ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                              ? undefined
+                              : option.value === "true"
+                              ? "true"
+                              : option.value === "false"
+                              ? "false"
+                              : undefined
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.customerIsMD ===
+                          (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Is Urban</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {booleanOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange(
+                            "customerIsUrban",
+                            localFilters.customerIsUrban ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                              ? undefined
+                              : option.value === "true"
+                              ? "true"
+                              : option.value === "false"
+                              ? "false"
+                              : undefined
+                          )
+                        }
+                        className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                          localFilters.customerIsUrban ===
+                          (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                            ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Sort Options */}
                 <div>
                   <button
@@ -706,11 +1052,27 @@ const AllPayments: React.FC = () => {
     agentId: undefined as number | undefined,
     paymentTypeId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    serviceCenterId: undefined as number | undefined,
+    postpaidBillId: undefined as number | undefined,
+    prepaidOnly: undefined as boolean | undefined,
     channel: undefined as PaymentChannel | undefined,
     status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
     collectorType: undefined as CollectorType | undefined,
+    clearanceStatus: undefined as "Uncleared" | "Cleared" | "ClearedWithCondition" | undefined,
     paidFromUtc: undefined as string | undefined,
     paidToUtc: undefined as string | undefined,
+    reference: undefined as string | undefined,
+    accountNumber: undefined as string | undefined,
+    meterNumber: undefined as string | undefined,
+    agentIds: undefined as number[] | undefined,
+    isCleared: undefined as boolean | undefined,
+    isRemitted: undefined as boolean | undefined,
+    customerIsPPM: undefined as boolean | undefined,
+    customerIsMD: undefined as boolean | undefined,
+    customerIsUrban: undefined as boolean | undefined,
+    customerProvinceId: undefined as number | undefined,
     sortBy: "",
     sortOrder: "asc" as "asc" | "desc",
   })
@@ -722,11 +1084,27 @@ const AllPayments: React.FC = () => {
     agentId: undefined as number | undefined,
     paymentTypeId: undefined as number | undefined,
     areaOfficeId: undefined as number | undefined,
+    distributionSubstationId: undefined as number | undefined,
+    feederId: undefined as number | undefined,
+    serviceCenterId: undefined as number | undefined,
+    postpaidBillId: undefined as number | undefined,
+    prepaidOnly: undefined as boolean | undefined,
     channel: undefined as PaymentChannel | undefined,
     status: undefined as "Pending" | "Confirmed" | "Failed" | "Reversed" | undefined,
     collectorType: undefined as CollectorType | undefined,
+    clearanceStatus: undefined as "Uncleared" | "Cleared" | "ClearedWithCondition" | undefined,
     paidFromUtc: undefined as string | undefined,
     paidToUtc: undefined as string | undefined,
+    reference: undefined as string | undefined,
+    accountNumber: undefined as string | undefined,
+    meterNumber: undefined as string | undefined,
+    agentIds: undefined as number[] | undefined,
+    isCleared: undefined as boolean | undefined,
+    isRemitted: undefined as boolean | undefined,
+    customerIsPPM: undefined as boolean | undefined,
+    customerIsMD: undefined as boolean | undefined,
+    customerIsUrban: undefined as boolean | undefined,
+    customerProvinceId: undefined as number | undefined,
     sortBy: undefined as string | undefined,
     sortOrder: undefined as "asc" | "desc" | undefined,
   })
@@ -784,11 +1162,29 @@ const AllPayments: React.FC = () => {
       ...(appliedFilters.agentId && { agentId: appliedFilters.agentId }),
       ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
       ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.distributionSubstationId && {
+        distributionSubstationId: appliedFilters.distributionSubstationId,
+      }),
+      ...(appliedFilters.feederId && { feederId: appliedFilters.feederId }),
+      ...(appliedFilters.serviceCenterId && { serviceCenterId: appliedFilters.serviceCenterId }),
+      ...(appliedFilters.postpaidBillId && { postpaidBillId: appliedFilters.postpaidBillId }),
+      ...(appliedFilters.prepaidOnly !== undefined && { prepaidOnly: appliedFilters.prepaidOnly }),
       ...(appliedFilters.channel && { channel: appliedFilters.channel }),
       ...(appliedFilters.status && { status: appliedFilters.status }),
       ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.clearanceStatus && { clearanceStatus: appliedFilters.clearanceStatus }),
       ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
       ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
+      ...(appliedFilters.reference && { reference: appliedFilters.reference }),
+      ...(appliedFilters.accountNumber && { accountNumber: appliedFilters.accountNumber }),
+      ...(appliedFilters.meterNumber && { meterNumber: appliedFilters.meterNumber }),
+      ...(appliedFilters.agentIds && appliedFilters.agentIds.length > 0 && { agentIds: appliedFilters.agentIds }),
+      ...(appliedFilters.isCleared !== undefined && { isCleared: appliedFilters.isCleared }),
+      ...(appliedFilters.isRemitted !== undefined && { isRemitted: appliedFilters.isRemitted }),
+      ...(appliedFilters.customerIsPPM !== undefined && { customerIsPPM: appliedFilters.customerIsPPM }),
+      ...(appliedFilters.customerIsMD !== undefined && { customerIsMD: appliedFilters.customerIsMD }),
+      ...(appliedFilters.customerIsUrban !== undefined && { customerIsUrban: appliedFilters.customerIsUrban }),
+      ...(appliedFilters.customerProvinceId && { customerProvinceId: appliedFilters.customerProvinceId }),
       ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
       ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
     }
@@ -806,11 +1202,29 @@ const AllPayments: React.FC = () => {
       ...(appliedFilters.agentId && { agentId: appliedFilters.agentId }),
       ...(appliedFilters.paymentTypeId && { paymentTypeId: appliedFilters.paymentTypeId }),
       ...(appliedFilters.areaOfficeId && { areaOfficeId: appliedFilters.areaOfficeId }),
+      ...(appliedFilters.distributionSubstationId && {
+        distributionSubstationId: appliedFilters.distributionSubstationId,
+      }),
+      ...(appliedFilters.feederId && { feederId: appliedFilters.feederId }),
+      ...(appliedFilters.serviceCenterId && { serviceCenterId: appliedFilters.serviceCenterId }),
+      ...(appliedFilters.postpaidBillId && { postpaidBillId: appliedFilters.postpaidBillId }),
+      ...(appliedFilters.prepaidOnly !== undefined && { prepaidOnly: appliedFilters.prepaidOnly }),
       ...(appliedFilters.channel && { channel: appliedFilters.channel }),
       ...(appliedFilters.status && { status: appliedFilters.status }),
       ...(appliedFilters.collectorType && { collectorType: appliedFilters.collectorType }),
+      ...(appliedFilters.clearanceStatus && { clearanceStatus: appliedFilters.clearanceStatus }),
       ...(appliedFilters.paidFromUtc && { paidFromUtc: appliedFilters.paidFromUtc }),
       ...(appliedFilters.paidToUtc && { paidToUtc: appliedFilters.paidToUtc }),
+      ...(appliedFilters.reference && { reference: appliedFilters.reference }),
+      ...(appliedFilters.accountNumber && { accountNumber: appliedFilters.accountNumber }),
+      ...(appliedFilters.meterNumber && { meterNumber: appliedFilters.meterNumber }),
+      ...(appliedFilters.agentIds && appliedFilters.agentIds.length > 0 && { agentIds: appliedFilters.agentIds }),
+      ...(appliedFilters.isCleared !== undefined && { isCleared: appliedFilters.isCleared }),
+      ...(appliedFilters.isRemitted !== undefined && { isRemitted: appliedFilters.isRemitted }),
+      ...(appliedFilters.customerIsPPM !== undefined && { customerIsPPM: appliedFilters.customerIsPPM }),
+      ...(appliedFilters.customerIsMD !== undefined && { customerIsMD: appliedFilters.customerIsMD }),
+      ...(appliedFilters.customerIsUrban !== undefined && { customerIsUrban: appliedFilters.customerIsUrban }),
+      ...(appliedFilters.customerProvinceId && { customerProvinceId: appliedFilters.customerProvinceId }),
       ...(appliedFilters.sortBy && { sortBy: appliedFilters.sortBy }),
       ...(appliedFilters.sortOrder && { sortOrder: appliedFilters.sortOrder }),
     }
@@ -961,8 +1375,8 @@ const AllPayments: React.FC = () => {
   }
 
   // Handle individual filter changes (local state)
-  const handleFilterChange = (key: string, value: string | number | undefined) => {
-    let processedValue = value
+  const handleFilterChange = (key: string, value: string | number | boolean | undefined) => {
+    let processedValue: string | number | boolean | undefined = value
 
     // Handle channel field - convert string to enum
     if (key === "channel" && typeof value === "string" && value) {
@@ -972,6 +1386,20 @@ const AllPayments: React.FC = () => {
     // Handle collectorType field - convert string to enum
     if (key === "collectorType" && typeof value === "string" && value) {
       processedValue = value as CollectorType
+    }
+
+    // Handle boolean fields
+    if (["prepaidOnly", "isCleared", "isRemitted", "customerIsPPM", "customerIsMD", "customerIsUrban"].includes(key)) {
+      if (typeof value === "string") {
+        processedValue = value === "true" ? true : value === "false" ? false : undefined
+      } else if (typeof value === "boolean") {
+        processedValue = value
+      }
+    }
+
+    // Handle clearanceStatus field
+    if (key === "clearanceStatus" && typeof value === "string" && value) {
+      processedValue = value as "Uncleared" | "Cleared" | "ClearedWithCondition"
     }
 
     setLocalFilters((prev) => ({
@@ -997,11 +1425,27 @@ const AllPayments: React.FC = () => {
       agentId: localFilters.agentId,
       paymentTypeId: localFilters.paymentTypeId,
       areaOfficeId: localFilters.areaOfficeId,
+      distributionSubstationId: localFilters.distributionSubstationId,
+      feederId: localFilters.feederId,
+      serviceCenterId: localFilters.serviceCenterId,
+      postpaidBillId: localFilters.postpaidBillId,
+      prepaidOnly: localFilters.prepaidOnly,
       channel: localFilters.channel,
       status: localFilters.status,
       collectorType: localFilters.collectorType,
+      clearanceStatus: localFilters.clearanceStatus,
       paidFromUtc: localFilters.paidFromUtc,
       paidToUtc: localFilters.paidToUtc,
+      reference: localFilters.reference,
+      accountNumber: localFilters.accountNumber,
+      meterNumber: localFilters.meterNumber,
+      agentIds: localFilters.agentIds,
+      isCleared: localFilters.isCleared,
+      isRemitted: localFilters.isRemitted,
+      customerIsPPM: localFilters.customerIsPPM,
+      customerIsMD: localFilters.customerIsMD,
+      customerIsUrban: localFilters.customerIsUrban,
+      customerProvinceId: localFilters.customerProvinceId,
       sortBy: localFilters.sortBy || undefined,
       sortOrder: localFilters.sortOrder || undefined,
     })
@@ -1016,11 +1460,27 @@ const AllPayments: React.FC = () => {
       agentId: undefined,
       paymentTypeId: undefined,
       areaOfficeId: undefined,
+      distributionSubstationId: undefined,
+      feederId: undefined,
+      serviceCenterId: undefined,
+      postpaidBillId: undefined,
+      prepaidOnly: undefined,
       channel: undefined,
       status: undefined,
       collectorType: undefined,
+      clearanceStatus: undefined,
       paidFromUtc: undefined,
       paidToUtc: undefined,
+      reference: undefined,
+      accountNumber: undefined,
+      meterNumber: undefined,
+      agentIds: undefined,
+      isCleared: undefined,
+      isRemitted: undefined,
+      customerIsPPM: undefined,
+      customerIsMD: undefined,
+      customerIsUrban: undefined,
+      customerProvinceId: undefined,
       sortBy: "",
       sortOrder: "asc",
     })
@@ -1030,11 +1490,27 @@ const AllPayments: React.FC = () => {
       agentId: undefined,
       paymentTypeId: undefined,
       areaOfficeId: undefined,
+      distributionSubstationId: undefined,
+      feederId: undefined,
+      serviceCenterId: undefined,
+      postpaidBillId: undefined,
+      prepaidOnly: undefined,
       channel: undefined,
       status: undefined,
       collectorType: undefined,
+      clearanceStatus: undefined,
       paidFromUtc: undefined,
       paidToUtc: undefined,
+      reference: undefined,
+      accountNumber: undefined,
+      meterNumber: undefined,
+      agentIds: undefined,
+      isCleared: undefined,
+      isRemitted: undefined,
+      customerIsPPM: undefined,
+      customerIsMD: undefined,
+      customerIsUrban: undefined,
+      customerProvinceId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
     })
@@ -1049,11 +1525,27 @@ const AllPayments: React.FC = () => {
     if (appliedFilters.agentId) count++
     if (appliedFilters.paymentTypeId) count++
     if (appliedFilters.areaOfficeId) count++
+    if (appliedFilters.distributionSubstationId) count++
+    if (appliedFilters.feederId) count++
+    if (appliedFilters.serviceCenterId) count++
+    if (appliedFilters.postpaidBillId) count++
+    if (appliedFilters.prepaidOnly !== undefined) count++
     if (appliedFilters.channel) count++
     if (appliedFilters.status) count++
     if (appliedFilters.collectorType) count++
+    if (appliedFilters.clearanceStatus) count++
     if (appliedFilters.paidFromUtc) count++
     if (appliedFilters.paidToUtc) count++
+    if (appliedFilters.reference) count++
+    if (appliedFilters.accountNumber) count++
+    if (appliedFilters.meterNumber) count++
+    if (appliedFilters.agentIds && appliedFilters.agentIds.length > 0) count++
+    if (appliedFilters.isCleared !== undefined) count++
+    if (appliedFilters.isRemitted !== undefined) count++
+    if (appliedFilters.customerIsPPM !== undefined) count++
+    if (appliedFilters.customerIsMD !== undefined) count++
+    if (appliedFilters.customerIsUrban !== undefined) count++
+    if (appliedFilters.customerProvinceId) count++
     if (appliedFilters.sortBy) count++
     return count
   }
@@ -1102,10 +1594,15 @@ const AllPayments: React.FC = () => {
   // Generate channel options from payment channels endpoint
   const channelOptions = [
     { value: "", label: "All Channels" },
-    ...paymentChannels.map((channel) => ({
-      value: channelStringToEnum(channel),
-      label: channel,
-    })),
+    { value: "Cash", label: "Cash" },
+    { value: "BankTransfer", label: "Bank Transfer" },
+    { value: "Pos", label: "POS" },
+    { value: "Card", label: "Card" },
+    { value: "VendorWallet", label: "Vendor Wallet" },
+    { value: "Chaque", label: "Cheque" },
+    { value: "BankDeposit", label: "Bank Deposit" },
+    { value: "Vendor", label: "Vendor" },
+    { value: "Migration", label: "Migration" },
   ]
 
   const statusOptions = [
@@ -1122,6 +1619,14 @@ const AllPayments: React.FC = () => {
     { value: "SalesRep", label: "Agent" },
     { value: "Vendor", label: "Vendor" },
     { value: "Staff", label: "Staff" },
+    { value: "Migration", label: "Migration" },
+  ]
+
+  const clearanceStatusOptions = [
+    { value: "", label: "All Clearance Statuses" },
+    { value: "Uncleared", label: "Uncleared" },
+    { value: "Cleared", label: "Cleared" },
+    { value: "ClearedWithCondition", label: "Cleared With Condition" },
   ]
 
   // Sort options
@@ -1218,13 +1723,31 @@ const AllPayments: React.FC = () => {
           ...(appliedFilters.agentId && { AgentId: appliedFilters.agentId }),
           ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
           ...(appliedFilters.areaOfficeId && { AreaOfficeId: appliedFilters.areaOfficeId }),
+          ...(appliedFilters.distributionSubstationId && {
+            DistributionSubstationId: appliedFilters.distributionSubstationId,
+          }),
+          ...(appliedFilters.feederId && { FeederId: appliedFilters.feederId }),
+          ...(appliedFilters.serviceCenterId && { ServiceCenterId: appliedFilters.serviceCenterId }),
+          ...(appliedFilters.postpaidBillId && { PostpaidBillId: appliedFilters.postpaidBillId }),
+          ...(appliedFilters.prepaidOnly !== undefined && { PrepaidOnly: appliedFilters.prepaidOnly }),
           ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
           ...(appliedFilters.status && { Status: appliedFilters.status }),
           ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
+          ...(appliedFilters.clearanceStatus && { ClearanceStatus: appliedFilters.clearanceStatus }),
           ...(dateRange.from || appliedFilters.paidFromUtc
             ? { PaidFromUtc: dateRange.from || appliedFilters.paidFromUtc }
             : {}),
           ...(dateRange.to || appliedFilters.paidToUtc ? { PaidToUtc: dateRange.to || appliedFilters.paidToUtc } : {}),
+          ...(appliedFilters.reference && { Reference: appliedFilters.reference }),
+          ...(appliedFilters.accountNumber && { AccountNumber: appliedFilters.accountNumber }),
+          ...(appliedFilters.meterNumber && { MeterNumber: appliedFilters.meterNumber }),
+          ...(appliedFilters.agentIds && appliedFilters.agentIds.length > 0 && { AgentIds: appliedFilters.agentIds }),
+          ...(appliedFilters.isCleared !== undefined && { IsCleared: appliedFilters.isCleared }),
+          ...(appliedFilters.isRemitted !== undefined && { IsRemitted: appliedFilters.isRemitted }),
+          ...(appliedFilters.customerIsPPM !== undefined && { CustomerIsPPM: appliedFilters.customerIsPPM }),
+          ...(appliedFilters.customerIsMD !== undefined && { CustomerIsMD: appliedFilters.customerIsMD }),
+          ...(appliedFilters.customerIsUrban !== undefined && { CustomerIsUrban: appliedFilters.customerIsUrban }),
+          ...(appliedFilters.customerProvinceId && { CustomerProvinceId: appliedFilters.customerProvinceId }),
           ...(appliedFilters.sortBy && { SortBy: appliedFilters.sortBy }),
           ...(appliedFilters.sortOrder && { SortOrder: appliedFilters.sortOrder }),
         },
@@ -1708,7 +2231,7 @@ const AllPayments: React.FC = () => {
                     </button>
                   </div>
 
-                  <div className="space-y-4 overflow-y-auto">
+                  <div className="flex-1 space-y-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 400px)" }}>
                     {/* Customer Filter */}
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer</label>
@@ -1858,6 +2381,366 @@ const AllPayments: React.FC = () => {
                               {option.label}
                             </button>
                           ))}
+                      </div>
+                    </div>
+
+                    {/* Date Range Filters */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid From</label>
+                      <input
+                        type="date"
+                        value={localFilters.paidFromUtc || ""}
+                        onChange={(e) => handleFilterChange("paidFromUtc", e.target.value || undefined)}
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Paid To</label>
+                      <input
+                        type="date"
+                        value={localFilters.paidToUtc || ""}
+                        onChange={(e) => handleFilterChange("paidToUtc", e.target.value || undefined)}
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* Text Input Filters */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Reference</label>
+                      <input
+                        type="text"
+                        value={localFilters.reference || ""}
+                        onChange={(e) => handleFilterChange("reference", e.target.value || undefined)}
+                        placeholder="Enter reference..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Account Number
+                      </label>
+                      <input
+                        type="text"
+                        value={localFilters.accountNumber || ""}
+                        onChange={(e) => handleFilterChange("accountNumber", e.target.value || undefined)}
+                        placeholder="Enter account number..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Meter Number</label>
+                      <input
+                        type="text"
+                        value={localFilters.meterNumber || ""}
+                        onChange={(e) => handleFilterChange("meterNumber", e.target.value || undefined)}
+                        placeholder="Enter meter number..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* ID Filters */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Distribution Substation
+                      </label>
+                      <input
+                        type="number"
+                        value={localFilters.distributionSubstationId || ""}
+                        onChange={(e) =>
+                          handleFilterChange(
+                            "distributionSubstationId",
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
+                        placeholder="Enter ID..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
+                      <input
+                        type="number"
+                        value={localFilters.feederId || ""}
+                        onChange={(e) =>
+                          handleFilterChange("feederId", e.target.value ? Number(e.target.value) : undefined)
+                        }
+                        placeholder="Enter ID..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Service Center
+                      </label>
+                      <input
+                        type="number"
+                        value={localFilters.serviceCenterId || ""}
+                        onChange={(e) =>
+                          handleFilterChange("serviceCenterId", e.target.value ? Number(e.target.value) : undefined)
+                        }
+                        placeholder="Enter ID..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Postpaid Bill</label>
+                      <input
+                        type="number"
+                        value={localFilters.postpaidBillId || ""}
+                        onChange={(e) =>
+                          handleFilterChange("postpaidBillId", e.target.value ? Number(e.target.value) : undefined)
+                        }
+                        placeholder="Enter ID..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Customer Province
+                      </label>
+                      <input
+                        type="number"
+                        value={localFilters.customerProvinceId || ""}
+                        onChange={(e) =>
+                          handleFilterChange("customerProvinceId", e.target.value ? Number(e.target.value) : undefined)
+                        }
+                        placeholder="Enter ID..."
+                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* Clearance Status Filter */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Clearance Status
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {clearanceStatusOptions
+                          .filter((opt) => opt.value !== "")
+                          .map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() =>
+                                handleFilterChange(
+                                  "clearanceStatus",
+                                  localFilters.clearanceStatus === option.value ? undefined : option.value
+                                )
+                              }
+                              className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                                localFilters.clearanceStatus === option.value
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Boolean Filters */}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Prepaid Only</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {booleanOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "prepaidOnly",
+                                localFilters.prepaidOnly ===
+                                  (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                  ? undefined
+                                  : option.value === "true"
+                                  ? true
+                                  : option.value === "false"
+                                  ? false
+                                  : undefined
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.prepaidOnly ===
+                              (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Is Cleared</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {booleanOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "isCleared",
+                                localFilters.isCleared ===
+                                  (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                  ? undefined
+                                  : option.value === "true"
+                                  ? true
+                                  : option.value === "false"
+                                  ? false
+                                  : undefined
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.isCleared ===
+                              (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Is Remitted</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {booleanOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "isRemitted",
+                                localFilters.isRemitted ===
+                                  (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                  ? undefined
+                                  : option.value === "true"
+                                  ? true
+                                  : option.value === "false"
+                                  ? false
+                                  : undefined
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.isRemitted ===
+                              (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Customer Is PPM
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {booleanOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "customerIsPPM",
+                                localFilters.customerIsPPM ===
+                                  (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                                  ? undefined
+                                  : option.value === "true"
+                                  ? "true"
+                                  : option.value === "false"
+                                  ? "false"
+                                  : undefined
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.customerIsPPM ===
+                              (option.value === "true" ? "true" : option.value === "false" ? "false" : undefined)
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Customer Is MD
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {booleanOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "customerIsMD",
+                                localFilters.customerIsMD ===
+                                  (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                  ? undefined
+                                  : option.value === "true"
+                                  ? true
+                                  : option.value === "false"
+                                  ? false
+                                  : undefined
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.customerIsMD ===
+                              (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
+                        Customer Is Urban
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {booleanOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() =>
+                              handleFilterChange(
+                                "customerIsUrban",
+                                localFilters.customerIsUrban ===
+                                  (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                  ? undefined
+                                  : option.value === "true"
+                                  ? true
+                                  : option.value === "false"
+                                  ? false
+                                  : undefined
+                              )
+                            }
+                            className={`rounded-md px-3 py-2 text-xs transition-colors md:text-sm ${
+                              localFilters.customerIsUrban ===
+                              (option.value === "true" ? true : option.value === "false" ? false : undefined)
+                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
