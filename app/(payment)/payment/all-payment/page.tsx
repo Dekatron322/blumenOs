@@ -27,6 +27,10 @@ import {
 } from "lib/redux/paymentSlice"
 import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
+import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
+import { clearServiceStations, fetchServiceStations } from "lib/redux/serviceStationsSlice"
+import { clearBills, fetchPostpaidBills } from "lib/redux/postpaidSlice"
 import { VscEye } from "react-icons/vsc"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
@@ -379,6 +383,11 @@ const MobileFilterSidebar = ({
   channelOptions,
   statusOptions,
   collectorTypeOptions,
+  distributionSubstationOptions,
+  feederOptions,
+  serviceCenterOptions,
+  postpaidBillOptions,
+  customerProvinceOptions,
   sortOptions,
   isSortExpanded,
   setIsSortExpanded,
@@ -399,6 +408,11 @@ const MobileFilterSidebar = ({
   channelOptions: Array<{ value: string | PaymentChannel; label: string }>
   statusOptions: Array<{ value: string; label: string }>
   collectorTypeOptions: Array<{ value: string; label: string }>
+  distributionSubstationOptions: Array<{ value: string | number; label: string }>
+  feederOptions: Array<{ value: string | number; label: string }>
+  serviceCenterOptions: Array<{ value: string | number; label: string }>
+  postpaidBillOptions: Array<{ value: string | number; label: string }>
+  customerProvinceOptions: Array<{ value: string | number; label: string }>
   sortOptions: SortOption[]
   isSortExpanded: boolean
   setIsSortExpanded: (value: boolean | ((prev: boolean) => boolean)) => void
@@ -656,8 +670,8 @@ const MobileFilterSidebar = ({
                   <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
                     Distribution Substation
                   </label>
-                  <input
-                    type="number"
+                  <FormSelectModule
+                    name="distributionSubstationId"
                     value={localFilters.distributionSubstationId || ""}
                     onChange={(e) =>
                       handleFilterChange(
@@ -665,60 +679,65 @@ const MobileFilterSidebar = ({
                         e.target.value ? Number(e.target.value) : undefined
                       )
                     }
-                    placeholder="Enter ID..."
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    options={distributionSubstationOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
                   />
                 </div>
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
-                  <input
-                    type="number"
+                  <FormSelectModule
+                    name="feederId"
                     value={localFilters.feederId || ""}
                     onChange={(e) =>
                       handleFilterChange("feederId", e.target.value ? Number(e.target.value) : undefined)
                     }
-                    placeholder="Enter ID..."
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    options={feederOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
                   />
                 </div>
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Service Center</label>
-                  <input
-                    type="number"
+                  <FormSelectModule
+                    name="serviceCenterId"
                     value={localFilters.serviceCenterId || ""}
                     onChange={(e) =>
                       handleFilterChange("serviceCenterId", e.target.value ? Number(e.target.value) : undefined)
                     }
-                    placeholder="Enter ID..."
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    options={serviceCenterOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
                   />
                 </div>
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Postpaid Bill</label>
-                  <input
-                    type="number"
+                  <FormSelectModule
+                    name="postpaidBillId"
                     value={localFilters.postpaidBillId || ""}
                     onChange={(e) =>
                       handleFilterChange("postpaidBillId", e.target.value ? Number(e.target.value) : undefined)
                     }
-                    placeholder="Enter ID..."
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    options={postpaidBillOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
                   />
                 </div>
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Customer Province</label>
-                  <input
-                    type="number"
+                  <FormSelectModule
+                    name="customerProvinceId"
                     value={localFilters.customerProvinceId || ""}
                     onChange={(e) =>
                       handleFilterChange("customerProvinceId", e.target.value ? Number(e.target.value) : undefined)
                     }
-                    placeholder="Enter ID..."
-                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    options={customerProvinceOptions}
+                    className="w-full"
+                    controlClassName="h-9 text-sm"
                   />
                 </div>
 
@@ -1025,6 +1044,10 @@ const AllPayments: React.FC = () => {
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
   const { areaOffices } = useAppSelector((state) => state.areaOffices)
   const { paymentChannels, paymentChannelsLoading } = useAppSelector((state) => state.payments)
+  const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
+  const { feeders } = useAppSelector((state) => state.feeders)
+  const { serviceStations } = useAppSelector((state) => state.serviceStations)
+  const { bills: postpaidBills } = useAppSelector((state) => state.postpaidBilling)
 
   const router = useRouter()
 
@@ -1166,6 +1189,30 @@ const AllPayments: React.FC = () => {
         PageSize: 100,
       })
     )
+    dispatch(
+      fetchDistributionSubstations({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+    dispatch(
+      fetchFeeders({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+    dispatch(
+      fetchServiceStations({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
+    dispatch(
+      fetchPostpaidBills({
+        pageNumber: 1,
+        pageSize: 100,
+      })
+    )
 
     // Cleanup function to clear states when component unmounts
     return () => {
@@ -1175,6 +1222,10 @@ const AllPayments: React.FC = () => {
       dispatch(clearPaymentTypes())
       dispatch(clearAreaOffices())
       dispatch(clearPayments())
+      dispatch(clearDistributionSubstations())
+      dispatch(clearFeeders())
+      dispatch(clearServiceStations())
+      dispatch(clearBills())
     }
   }, [dispatch])
 
@@ -1616,6 +1667,50 @@ const AllPayments: React.FC = () => {
       value: office.id,
       label: `${office.nameOfNewOAreaffice} (${office.newKaedcoCode})`,
     })),
+  ]
+
+  // New filter options for dropdowns
+  const distributionSubstationOptions = [
+    { value: "", label: "All Distribution Substations" },
+    ...distributionSubstations.map((dts) => ({
+      value: dts.id,
+      label: `${dts.dssCode} (${dts.nercCode})`,
+    })),
+  ]
+
+  const feederOptions = [
+    { value: "", label: "All Feeders" },
+    ...feeders.map((feeder) => ({
+      value: feeder.id,
+      label: `${feeder.name} (${feeder.kaedcoFeederCode})`,
+    })),
+  ]
+
+  const serviceCenterOptions = [
+    { value: "", label: "All Service Centers" },
+    ...serviceStations.map((station) => ({
+      value: station.id,
+      label: `${station.name} (${station.code})`,
+    })),
+  ]
+
+  const postpaidBillOptions = [
+    { value: "", label: "All Postpaid Bills" },
+    ...postpaidBills.map((bill) => ({
+      value: bill.id,
+      label: `Bill ${bill.reference} - ${bill.customerName} (${bill.period})`,
+    })),
+  ]
+
+  const customerProvinceOptions = [
+    { value: "", label: "All Provinces" },
+    // Extract unique provinces from customers
+    ...Array.from(new Set(customers.map((customer) => customer.provinceName).filter((province) => province))).map(
+      (provinceName, index) => ({
+        value: index + 1, // Since we don't have province IDs, use index + 1
+        label: provinceName,
+      })
+    ),
   ]
 
   // Generate channel options from payment channels endpoint
@@ -2505,8 +2600,8 @@ const AllPayments: React.FC = () => {
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
                         Distribution Substation
                       </label>
-                      <input
-                        type="number"
+                      <FormSelectModule
+                        name="distributionSubstationId"
                         value={localFilters.distributionSubstationId || ""}
                         onChange={(e) =>
                           handleFilterChange(
@@ -2514,21 +2609,23 @@ const AllPayments: React.FC = () => {
                             e.target.value ? Number(e.target.value) : undefined
                           )
                         }
-                        placeholder="Enter ID..."
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        options={distributionSubstationOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Feeder</label>
-                      <input
-                        type="number"
+                      <FormSelectModule
+                        name="feederId"
                         value={localFilters.feederId || ""}
                         onChange={(e) =>
                           handleFilterChange("feederId", e.target.value ? Number(e.target.value) : undefined)
                         }
-                        placeholder="Enter ID..."
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        options={feederOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
@@ -2536,27 +2633,29 @@ const AllPayments: React.FC = () => {
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
                         Service Center
                       </label>
-                      <input
-                        type="number"
+                      <FormSelectModule
+                        name="serviceCenterId"
                         value={localFilters.serviceCenterId || ""}
                         onChange={(e) =>
                           handleFilterChange("serviceCenterId", e.target.value ? Number(e.target.value) : undefined)
                         }
-                        placeholder="Enter ID..."
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        options={serviceCenterOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Postpaid Bill</label>
-                      <input
-                        type="number"
+                      <FormSelectModule
+                        name="postpaidBillId"
                         value={localFilters.postpaidBillId || ""}
                         onChange={(e) =>
                           handleFilterChange("postpaidBillId", e.target.value ? Number(e.target.value) : undefined)
                         }
-                        placeholder="Enter ID..."
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        options={postpaidBillOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
@@ -2564,14 +2663,15 @@ const AllPayments: React.FC = () => {
                       <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">
                         Customer Province
                       </label>
-                      <input
-                        type="number"
+                      <FormSelectModule
+                        name="customerProvinceId"
                         value={localFilters.customerProvinceId || ""}
                         onChange={(e) =>
                           handleFilterChange("customerProvinceId", e.target.value ? Number(e.target.value) : undefined)
                         }
-                        placeholder="Enter ID..."
-                        className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                        options={customerProvinceOptions}
+                        className="w-full"
+                        controlClassName="h-9 text-sm"
                       />
                     </div>
 
@@ -2913,6 +3013,11 @@ const AllPayments: React.FC = () => {
         channelOptions={channelOptions}
         statusOptions={statusOptions}
         collectorTypeOptions={collectorTypeOptions}
+        distributionSubstationOptions={distributionSubstationOptions}
+        feederOptions={feederOptions}
+        serviceCenterOptions={serviceCenterOptions}
+        postpaidBillOptions={postpaidBillOptions}
+        customerProvinceOptions={customerProvinceOptions}
         sortOptions={sortOptions}
         isSortExpanded={isSortExpanded}
         setIsSortExpanded={setIsSortExpanded}
