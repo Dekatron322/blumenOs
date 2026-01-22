@@ -41,6 +41,7 @@ export interface Payment {
   channel: PaymentChannel
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
   isPending: boolean
+  isPrepaid: boolean
   totalAmountPaid: number
   currency: string
   paidAtUtc: string

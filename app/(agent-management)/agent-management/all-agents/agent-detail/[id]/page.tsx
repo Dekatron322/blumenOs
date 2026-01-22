@@ -527,6 +527,7 @@ const AgentDetailsPage = () => {
           channel: payment.channel,
           status: payment.status,
           isPending: payment.isPending,
+          isPrepaid: false,
           totalAmountPaid: payment.amount,
           currency: payment.currency,
           paidAtUtc: payment.paidAtUtc,

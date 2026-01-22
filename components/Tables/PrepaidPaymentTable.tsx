@@ -546,6 +546,33 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
   const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
   const [exportFromDate, setExportFromDate] = useState("")
   const [exportToDate, setExportToDate] = useState("")
+  const [exportPaymentCategory, setExportPaymentCategory] = useState<"all" | "prepaid" | "postpaid">("prepaid")
+
+  // Additional state for modal tabs
+  const [exportModalTab, setExportModalTab] = useState<"basic" | "advanced">("basic")
+  const [exportChannel, setExportChannel] = useState<string>("all")
+  const [exportStatus, setExportStatus] = useState<string>("all")
+  const [exportCollectorType, setExportCollectorType] = useState<string>("all")
+  const [exportClearanceStatus, setExportClearanceStatus] = useState<string>("all")
+  const [exportCustomerId, setExportCustomerId] = useState<string>("")
+  const [exportVendorId, setExportVendorId] = useState<string>("")
+  const [exportAgentId, setExportAgentId] = useState<string>("")
+  const [exportPaymentTypeId, setExportPaymentTypeId] = useState<string>("")
+  const [exportAreaOfficeId, setExportAreaOfficeId] = useState<string>("")
+  const [exportDistributionSubstationId, setExportDistributionSubstationId] = useState<string>("")
+  const [exportFeederId, setExportFeederId] = useState<string>("")
+  const [exportServiceCenterId, setExportServiceCenterId] = useState<string>("")
+  const [exportPostpaidBillId, setExportPostpaidBillId] = useState<string>("")
+  const [exportCustomerProvinceId, setExportCustomerProvinceId] = useState<string>("")
+  const [exportReference, setExportReference] = useState<string>("")
+  const [exportAccountNumber, setExportAccountNumber] = useState<string>("")
+  const [exportMeterNumber, setExportMeterNumber] = useState<string>("")
+  const [exportSearch, setExportSearch] = useState<string>("")
+  const [exportIsCleared, setExportIsCleared] = useState<string>("all")
+  const [exportIsRemitted, setExportIsRemitted] = useState<string>("all")
+  const [exportCustomerIsPPM, setExportCustomerIsPPM] = useState<string>("all")
+  const [exportCustomerIsMD, setExportCustomerIsMD] = useState<string>("all")
+  const [exportCustomerIsUrban, setExportCustomerIsUrban] = useState<string>("all")
 
   const getExportDateRange = () => {
     const today = new Date()
@@ -584,40 +611,75 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
   }
 
   const exportToCSV = async () => {
+    console.log("Export function called!")
     setIsExporting(true)
     setShowExportModal(false)
 
     try {
       const dateRange = getExportDateRange()
 
-      // Fetch all prepaid payments from API
-      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PREPAID_PAYMENT), {
-        params: {
-          PageNumber: 1,
-          PageSize: 10000,
-          ...(agentId !== undefined
-            ? { AgentId: agentId }
-            : appliedFilters.agentId
-            ? { AgentId: appliedFilters.agentId }
-            : {}),
-          ...(customerId !== undefined && { CustomerId: customerId }),
-          ...(searchText && { Search: searchText }),
-          ...(appliedFilters.status && { Status: appliedFilters.status }),
-          ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
-          ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
-          ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
-          ...(dateRange.from || appliedFilters.paidFromUtc
-            ? { PaidFromUtc: dateRange.from || appliedFilters.paidFromUtc }
-            : {}),
-          ...(dateRange.to || appliedFilters.paidToUtc ? { PaidToUtc: dateRange.to || appliedFilters.paidToUtc } : {}),
-          ...(appliedFilters.sortBy && { SortBy: appliedFilters.sortBy }),
-          ...(appliedFilters.sortOrder && { SortOrder: appliedFilters.sortOrder }),
-        },
-      })
+      // Build API parameters using the proper endpoint parameters
+      const params: any = {
+        PageNumber: 1,
+        PageSize: 1000000,
+        // Use proper date-time parameters
+        ...(dateRange.from && { PaidFromUtc: dateRange.from }),
+        ...(dateRange.to && { PaidToUtc: dateRange.to }),
+        // Add channel filter
+        ...(exportChannel !== "all" && { Channel: exportChannel }),
+        // Add status filter
+        ...(exportStatus !== "all" && { Status: exportStatus }),
+        // Add collector type filter
+        ...(exportCollectorType !== "all" && { CollectorType: exportCollectorType }),
+        // Add ID filters
+        ...(exportCustomerId && { CustomerId: parseInt(exportCustomerId) }),
+        ...(exportVendorId && { VendorId: parseInt(exportVendorId) }),
+        ...(exportAgentId && { AgentId: parseInt(exportAgentId) }),
+        ...(exportPaymentTypeId && { PaymentTypeId: parseInt(exportPaymentTypeId) }),
+        ...(exportAreaOfficeId && { AreaOfficeId: parseInt(exportAreaOfficeId) }),
+        ...(exportDistributionSubstationId && { DistributionSubstationId: parseInt(exportDistributionSubstationId) }),
+        ...(exportFeederId && { FeederId: parseInt(exportFeederId) }),
+        ...(exportServiceCenterId && { ServiceCenterId: parseInt(exportServiceCenterId) }),
+        ...(exportPostpaidBillId && { PostpaidBillId: parseInt(exportPostpaidBillId) }),
+        ...(exportCustomerProvinceId && { CustomerProvinceId: parseInt(exportCustomerProvinceId) }),
+        // Add string filters
+        ...(exportReference && { Reference: exportReference }),
+        ...(exportAccountNumber && { AccountNumber: exportAccountNumber }),
+        ...(exportMeterNumber && { MeterNumber: exportMeterNumber }),
+        ...(exportSearch && { Search: exportSearch }),
+        // Add boolean filters
+        ...(exportIsCleared !== "all" && { IsCleared: exportIsCleared === "true" }),
+        ...(exportIsRemitted !== "all" && { IsRemitted: exportIsRemitted === "true" }),
+        ...(exportCustomerIsPPM !== "all" && { CustomerIsPPM: exportCustomerIsPPM === "true" }),
+        ...(exportCustomerIsMD !== "all" && { CustomerIsMD: exportCustomerIsMD === "true" }),
+        ...(exportCustomerIsUrban !== "all" && { CustomerIsUrban: exportCustomerIsUrban === "true" }),
+        // Add clearance status filter
+        ...(exportClearanceStatus !== "all" && { ClearanceStatus: exportClearanceStatus }),
+        // Add prepaid filter for payment category
+        ...(exportPaymentCategory === "prepaid" && { PrepaidOnly: true }),
+      }
 
-      const allPayments: PrepaidPayment[] = response.data?.data || []
+      console.log("Exporting payments with params:", params)
+
+      // Fetch all prepaid payments from API
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PREPAID_PAYMENT), { params })
+
+      console.log("API Response:", response)
+
+      let allPayments: PrepaidPayment[] = response.data?.data || []
+
+      console.log("Payments found:", allPayments.length)
+
+      // If postpaid category is selected, filter out prepaid payments
+      if (exportPaymentCategory === "postpaid") {
+        allPayments = allPayments.filter((payment) => payment.isPrepaid === false)
+        console.log("After postpaid filter:", allPayments.length)
+      }
 
       if (allPayments.length === 0) {
+        console.log("No payments found for export")
+        // Show user feedback instead of silently returning
+        alert("No payments found matching your criteria. Please adjust your filters and try again.")
         setIsExporting(false)
         return
       }
@@ -654,7 +716,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
         payment.areaOfficeName || "-",
       ])
 
-      const escapeCSV = (value: string | number) => {
+      const escapeCSV = (value: string | number | boolean) => {
         const stringValue = String(value)
         if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
           return `"${stringValue.replace(/"/g, '""')}"`
@@ -666,18 +728,25 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
         "\n"
       )
 
+      console.log("CSV content generated, length:", csvContent.length)
+
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.setAttribute("href", url)
-      link.setAttribute("download", `payments_export_${new Date().toISOString().split("T")[0]}.csv`)
+      const categoryLabel = exportPaymentCategory !== "all" ? `_${exportPaymentCategory}` : ""
+      link.setAttribute("download", `payments${categoryLabel}_export_${new Date().toISOString().split("T")[0]}.csv`)
       link.style.visibility = "hidden"
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
+
+      console.log("Export completed successfully")
     } catch (error) {
       console.error("Failed to export payments:", error)
+      // Show user feedback for errors
+      alert(`Failed to export payments: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`)
     } finally {
       setIsExporting(false)
     }
@@ -857,96 +926,297 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
             onClick={() => setShowExportModal(false)}
           >
             <motion.div
-              className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+              className="w-full max-w-lg rounded-lg bg-white shadow-xl"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Export Payments to CSV</h3>
-                <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
-                  <X className="size-5 text-gray-500" />
-                </button>
+              <div className="border-b border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Export Payments to CSV</h3>
+                  <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                    <X className="size-5 text-gray-500" />
+                  </button>
+                </div>
+
+                {/* Tabs */}
+                <div className="mt-3 flex space-x-1 rounded-lg bg-gray-100 p-1">
+                  <button
+                    onClick={() => setExportModalTab("basic")}
+                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      exportModalTab === "basic"
+                        ? "bg-white text-[#004B23] shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Basic Filters
+                  </button>
+                  <button
+                    onClick={() => setExportModalTab("advanced")}
+                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      exportModalTab === "advanced"
+                        ? "bg-white text-[#004B23] shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Advanced Filters
+                  </button>
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: "all", label: "All Time" },
-                    { value: "today", label: "Today" },
-                    { value: "week", label: "Last 7 Days" },
-                    { value: "month", label: "Last 30 Days" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                        exportDateRange === option.value
-                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setExportDateRange("custom")}
-                  className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    exportDateRange === "custom"
-                      ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <Calendar className="mr-2 inline-block size-4" />
-                  Custom Date Range
-                </button>
+              <div className="max-h-96 overflow-y-auto p-4">
+                {exportModalTab === "basic" ? (
+                  <div className="space-y-4">
+                    {/* Date Range */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: "all", label: "All Time" },
+                          { value: "today", label: "Today" },
+                          { value: "week", label: "Last 7 Days" },
+                          { value: "month", label: "Last 30 Days" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                              exportDateRange === option.value
+                                ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setExportDateRange("custom")}
+                        className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                          exportDateRange === "custom"
+                            ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <Calendar className="mr-2 inline-block size-4" />
+                        Custom Date Range
+                      </button>
+                    </div>
+
+                    {exportDateRange === "custom" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                          <input
+                            type="date"
+                            value={exportFromDate}
+                            onChange={(e) => setExportFromDate(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                          <input
+                            type="date"
+                            value={exportToDate}
+                            onChange={(e) => setExportToDate(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Category */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Payment Category</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: "all", label: "All" },
+                          { value: "prepaid", label: "Prepaid" },
+                          { value: "postpaid", label: "Postpaid" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setExportPaymentCategory(option.value as typeof exportPaymentCategory)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                              exportPaymentCategory === option.value
+                                ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick Search */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Quick Search</label>
+                      <input
+                        type="text"
+                        placeholder="Search payments..."
+                        value={exportSearch}
+                        onChange={(e) => setExportSearch(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Status and Channel */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
+                        <select
+                          value={exportStatus}
+                          onChange={(e) => setExportStatus(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Status</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Failed">Failed</option>
+                          <option value="Reversed">Reversed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Channel</label>
+                        <select
+                          value={exportChannel}
+                          onChange={(e) => setExportChannel(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Channels</option>
+                          <option value="Cash">Cash</option>
+                          <option value="BankTransfer">Bank Transfer</option>
+                          <option value="Pos">POS</option>
+                          <option value="Card">Card</option>
+                          <option value="VendorWallet">Vendor Wallet</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Collector Type and Clearance Status */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Collector Type</label>
+                        <select
+                          value={exportCollectorType}
+                          onChange={(e) => setExportCollectorType(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Types</option>
+                          <option value="Customer">Customer</option>
+                          <option value="SalesRep">Sales Rep</option>
+                          <option value="Vendor">Vendor</option>
+                          <option value="Staff">Staff</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Clearance Status</label>
+                        <select
+                          value={exportClearanceStatus}
+                          onChange={(e) => setExportClearanceStatus(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Status</option>
+                          <option value="Uncleared">Uncleared</option>
+                          <option value="Cleared">Cleared</option>
+                          <option value="ClearedWithCondition">Cleared with Condition</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* ID Filters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Customer ID</label>
+                        <input
+                          type="text"
+                          placeholder="Enter ID"
+                          value={exportCustomerId}
+                          onChange={(e) => setExportCustomerId(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Reference</label>
+                        <input
+                          type="text"
+                          placeholder="Enter reference"
+                          value={exportReference}
+                          onChange={(e) => setExportReference(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Account Number */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Account Number</label>
+                      <input
+                        type="text"
+                        placeholder="Enter account number"
+                        value={exportAccountNumber}
+                        onChange={(e) => setExportAccountNumber(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                      />
+                    </div>
+
+                    {/* Boolean Filters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Cleared Status</label>
+                        <select
+                          value={exportIsCleared}
+                          onChange={(e) => setExportIsCleared(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">Any</option>
+                          <option value="true">Cleared</option>
+                          <option value="false">Not Cleared</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Remitted Status</label>
+                        <select
+                          value={exportIsRemitted}
+                          onChange={(e) => setExportIsRemitted(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">Any</option>
+                          <option value="true">Remitted</option>
+                          <option value="false">Not Remitted</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {exportDateRange === "custom" && (
-                <div className="mb-4 grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
-                    <input
-                      type="date"
-                      value={exportFromDate}
-                      onChange={(e) => setExportFromDate(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
-                    <input
-                      type="date"
-                      value={exportToDate}
-                      onChange={(e) => setExportToDate(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                    />
-                  </div>
+              <div className="border-t border-gray-200 p-4">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowExportModal(false)}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={exportToCSV}
+                    disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
+                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
+                      exportDateRange === "custom" && !exportFromDate && !exportToDate
+                        ? "cursor-not-allowed bg-gray-400"
+                        : "bg-[#004B23] hover:bg-[#003a1b]"
+                    }`}
+                  >
+                    <Download className="mr-2 inline-block size-4" />
+                    Export
+                  </button>
                 </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowExportModal(false)}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={exportToCSV}
-                  disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
-                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
-                    exportDateRange === "custom" && !exportFromDate && !exportToDate
-                      ? "cursor-not-allowed bg-gray-400"
-                      : "bg-[#004B23] hover:bg-[#003a1b]"
-                  }`}
-                >
-                  <Download className="mr-2 inline-block size-4" />
-                  Export
-                </button>
               </div>
             </motion.div>
           </motion.div>
