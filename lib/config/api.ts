@@ -303,6 +303,17 @@ export const API_ENDPOINTS = {
     CONFIRM: "/payments/{id}/confirm",
     BANK_LISTS: "/payments/blumenpay/banks",
     REFUND: "/payments/refund",
+    VEND: "/prepaid/admin/vend/issue",
+    PAYMENT_CANCEL: "/payments/{id}/cancel",
+    PAYMENT_ANOMALIES: "/payments/anomalies/summary",
+    ALL_ANOMALIES: "/payments/anomalies",
+    RESOLVE_ANOMALY: "/payments/anomalies/{id}/resolve",
+  },
+
+  REFUND: {
+    SUMMARY: "/refunds/summary",
+    REFUND_HISTORY: "/refunds",
+    MAKE_REFUND: "/refunds",
   },
 
   PAYMENT_DUNNING: {

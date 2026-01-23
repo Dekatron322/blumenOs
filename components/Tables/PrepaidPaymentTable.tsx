@@ -420,7 +420,7 @@ const AllPrepaidPaymentsTable: React.FC<AllPrepaidPaymentsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case "Chaque":
+      case "Cheque":
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",

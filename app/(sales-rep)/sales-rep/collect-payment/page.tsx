@@ -101,7 +101,7 @@ const CollectPaymentPage: React.FC = () => {
     { value: PaymentChannel.Pos, label: "POS" },
     { value: PaymentChannel.Card, label: "Card" },
     { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
-    { value: PaymentChannel.Chaque, label: "Cheque" },
+    { value: PaymentChannel.Cheque, label: "Cheque" },
   ]
 
   useEffect(() => {
@@ -185,7 +185,7 @@ const CollectPaymentPage: React.FC = () => {
             PaymentChannel.Pos,
             PaymentChannel.Card,
             PaymentChannel.VendorWallet,
-            PaymentChannel.Chaque,
+            PaymentChannel.Cheque,
           ])
         } finally {
           setIsFetchingChannels(false)
@@ -228,7 +228,7 @@ const CollectPaymentPage: React.FC = () => {
         PaymentChannel.Pos,
         PaymentChannel.Card,
         PaymentChannel.VendorWallet,
-        PaymentChannel.Chaque,
+        PaymentChannel.Cheque,
       ])
     }
   }, [paymentChannelsError])

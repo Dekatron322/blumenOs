@@ -641,7 +641,10 @@ export enum PaymentChannel {
   Pos = "Pos",
   Card = "Card",
   VendorWallet = "VendorWallet",
-  Chaque = "Chaque",
+  Cheque = "Cheque",
+  BankDeposit = "BankDeposit",
+  Vendor = "Vendor",
+  Migration = "Migration",
 }
 
 export enum PaymentStatus {
@@ -1479,7 +1482,7 @@ export type PrepaidPaymentChannel =
   | "Pos"
   | "Card"
   | "VendorWallet"
-  | "Chaque"
+  | "Cheque"
   | "BankDeposit"
   | "Vendor"
   | "Migration"

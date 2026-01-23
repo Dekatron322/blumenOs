@@ -7,31 +7,26 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormTextAreaModule } from "components/ui/Input/FormTextAreaModule"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
-import VendTokenModal from "components/ui/Modal/vend-token-modal"
-import VendBankTransferModal from "components/ui/Modal/vend-bank-transfer-modal"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   checkPayment,
   clearCheckPayment,
   clearCustomerLookup,
-  clearVend,
   fetchPaymentChannels,
   lookupCustomer,
   PaymentChannel,
-  vend,
 } from "lib/redux/agentSlice"
+import { adminVend, clearVend } from "lib/redux/paymentSlice"
 import { fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
+import SuperAdminBankTransfer from "components/ui/Modal/super-admin-bank-transfer"
+import SuperAdminVendTokenModal from "components/ui/Modal/super-admin-vend-token-modal"
 
 const VendPage: React.FC = () => {
   const dispatch = useAppDispatch()
 
   const {
-    vendData,
-    vendLoading,
-    vendError,
-    vendSuccess,
     customerLookupLoading,
     customerLookup,
     customerLookupError,
@@ -44,6 +39,7 @@ const VendPage: React.FC = () => {
     checkPaymentSuccess,
     checkPaymentData,
   } = useAppSelector((state) => state.agents)
+  const { vendData, vendLoading, vendError, vendSuccess } = useAppSelector((state) => state.payments)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
 
   const [meterNumber, setMeterNumber] = useState("")
@@ -363,10 +359,10 @@ const VendPage: React.FC = () => {
     const payload = {
       meterNumber: meterNumber.trim(),
       amount,
-      paymentTypeId: 1,
       channel: channel as string,
       latitude,
       longitude,
+      phoneNumber: customerInfo?.phoneNumber || "",
       externalReference: `VEND-${Date.now()}`,
       narrative: narrative.trim() || "",
     }
@@ -374,7 +370,7 @@ const VendPage: React.FC = () => {
     setIsConfirmModalOpen(false)
 
     try {
-      await dispatch(vend(payload)).unwrap()
+      await dispatch(adminVend(payload)).unwrap()
     } catch (error: any) {
       notify("error", error || "Failed to complete vend")
     }
@@ -762,7 +758,7 @@ const VendPage: React.FC = () => {
       </div>
 
       {/* Token Modal */}
-      <VendTokenModal
+      <SuperAdminVendTokenModal
         isOpen={isTokenModalOpen}
         onRequestClose={handleTokenModalClose}
         tokenData={vendData?.token || null}
@@ -796,7 +792,7 @@ const VendPage: React.FC = () => {
       />
 
       {/* Bank Transfer Modal */}
-      <VendBankTransferModal
+      <SuperAdminBankTransfer
         isOpen={isVirtualAccountModalOpen}
         onRequestClose={handleVirtualAccountModalClose}
         virtualAccount={virtualAccount}

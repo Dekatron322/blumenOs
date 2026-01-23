@@ -4,6 +4,14 @@ import { api } from "./authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { CollectorType, PaymentChannel } from "./agentSlice"
 
+// Enum for Payment Anomaly Resolution Actions
+export enum PaymentAnomalyResolutionAction {
+  None = 0,
+  Cancel = 1,
+  Refund = 2,
+  Ignore = 3,
+}
+
 // Interfaces for Payment
 export interface VirtualAccount {
   accountNumber: string
@@ -39,7 +47,7 @@ export interface Payment {
   reference: string
   externalReference: string
   channel: PaymentChannel
-  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed" | "Cancelled"
   isPending: boolean
   isPrepaid: boolean
   totalAmountPaid: number
@@ -145,7 +153,7 @@ export interface PaymentsRequestParams {
   postpaidBillId?: number
   paymentTypeId?: number
   channel?: PaymentChannel
-  status?: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  status?: "Pending" | "Confirmed" | "Failed" | "Reversed" | "Cancelled"
   collectorType?: CollectorType
   paidFromUtc?: string
   paidToUtc?: string
@@ -364,6 +372,132 @@ export interface BankListsRequestParams {
   provider?: string
 }
 
+// Interfaces for Payment Anomalies
+export interface PaymentAnomalyItem {
+  bucketDate: string
+  ruleKey: string
+  status: "Open" | "Resolved"
+  resolutionAction: PaymentAnomalyResolutionAction
+  paymentTypeId: number
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque" | "BankDeposit" | "Vendor" | "Migration"
+  collectorType: "Customer" | "SalesRep" | "Vendor" | "Staff" | "Migration"
+  totalAmount: number
+  totalCount: number
+}
+
+export interface PaymentAnomaliesResponse {
+  isSuccess: boolean
+  message: string
+  data: PaymentAnomalyItem[]
+}
+
+export interface PaymentAnomaliesRequestParams {
+  StartDateUtc?: string
+  EndDateUtc?: string
+  RuleKey?: string
+  Status?: "Open" | "Resolved"
+  ResolutionAction?: PaymentAnomalyResolutionAction
+  PaymentTypeId?: number
+  Channel?:
+    | "Cash"
+    | "BankTransfer"
+    | "Pos"
+    | "Card"
+    | "VendorWallet"
+    | "Cheque"
+    | "BankDeposit"
+    | "Vendor"
+    | "Migration"
+  CollectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff" | "Migration"
+  agentId?: number
+  customerId?: number
+  vendorId?: number
+}
+
+// Interfaces for All Anomalies
+export interface AllAnomalyItem {
+  id: number
+  paymentId: number
+  reference: string
+  customerId: number
+  customerName: string
+  vendorId: number
+  agentId: number
+  paymentTypeId: number
+  paymentTypeName: string
+  amount: number
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque" | "BankDeposit" | "Vendor" | "Migration"
+  paymentStatus: "Pending" | "Confirmed" | "Failed" | "Reversed" | "Cancelled"
+  paidAtUtc: string
+  ruleKey: string
+  groupKey: string
+  score: number
+  status: "Open" | "Resolved"
+  resolutionAction: PaymentAnomalyResolutionAction
+  detectedAtUtc: string
+  resolvedAtUtc: string
+  resolutionNote: string
+  issue: string
+}
+
+export interface AllAnomaliesResponse {
+  isSuccess: boolean
+  message: string
+  data: AllAnomalyItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface AllAnomaliesRequestParams {
+  pageNumber: number
+  pageSize: number
+  paymentId?: number
+  customerId?: number
+  vendorId?: number
+  agentId?: number
+  paymentTypeId?: number
+  channel?:
+    | "Cash"
+    | "BankTransfer"
+    | "Pos"
+    | "Card"
+    | "VendorWallet"
+    | "Cheque"
+    | "BankDeposit"
+    | "Vendor"
+    | "Migration"
+  minAmount?: number
+  maxAmount?: number
+  status?: "Open" | "Resolved"
+  resolutionAction?: PaymentAnomalyResolutionAction
+  detectedFromUtc?: string
+  detectedToUtc?: string
+  paidFromUtc?: string
+  paidToUtc?: string
+  ruleKey?: string
+  search?: string
+}
+
+// Interface for Resolve Anomaly Request
+export interface ResolveAnomalyRequest {
+  action: PaymentAnomalyResolutionAction
+  note: string
+}
+
+// Interface for Resolve Anomaly Response
+export interface ResolveAnomalyResponse {
+  isSuccess: boolean
+  message: string
+  data: {
+    action: PaymentAnomalyResolutionAction
+    note: string
+  }
+}
+
 // Interfaces for Top Performers
 export interface TopPerformerAgent {
   id: number
@@ -519,6 +653,216 @@ export interface RefundPaymentResponse {
   data: RefundPaymentData
 }
 
+// Interfaces for VEND Request
+export interface VendRequest {
+  meterNumber: string
+  amount: number
+  channel: string
+  latitude: number
+  longitude: number
+  phoneNumber: string
+  externalReference: string
+  narrative: string
+}
+
+// Interfaces for VEND Response
+export interface VendToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+// Interfaces for Cancel Payment
+export interface CancelPaymentRequest {
+  reason: string
+}
+
+export interface CancelPaymentToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+export interface CancelPaymentReceipt {
+  reference: string
+  bankReceiptNo: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: string
+  status: string
+  tokens: CancelPaymentToken[]
+  serviceCharge: number
+  discountBonus: number
+}
+
+export interface CancelPaymentPaymentDetails {
+  reference: string
+  checkoutUrl: string
+  virtualAccount: {
+    accountNumber: string
+    bankName: string
+    reference: string
+    expiresAtUtc: string
+  }
+}
+
+export interface CancelPaymentCollector {
+  type: string
+  name: string
+  agentId: number
+  agentCode: string
+  agentType: string
+  vendorId: number
+  vendorName: string
+  staffName: string
+  customerId: number
+  customerName: string
+}
+
+export interface CancelPaymentData {
+  isPending: boolean
+  externalReference: string
+  bankReceiptNo: string
+  reference: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  customerId: number
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: string
+  status: string
+  paymentTypeName: string
+  receipt: CancelPaymentReceipt
+  paymentDetails: CancelPaymentPaymentDetails
+  collector: CancelPaymentCollector
+  token: CancelPaymentToken
+}
+
+export interface CancelPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: CancelPaymentData
+}
+
+export interface VendReceipt {
+  reference: string
+  bankReceiptNo: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: string
+  status: string
+  tokens: VendToken[]
+  serviceCharge: number
+  discountBonus: number
+}
+
+export interface VendPaymentDetails {
+  reference: string
+  checkoutUrl: string
+  virtualAccount: {
+    accountNumber: string
+    bankName: string
+    reference: string
+    expiresAtUtc: string
+  }
+}
+
+export interface VendCollector {
+  type: string
+  name: string
+  agentId: number
+  agentCode: string
+  agentType: string
+  vendorId: number
+  vendorName: string
+  staffName: string
+  customerId: number
+  customerName: string
+}
+
+export interface VendData {
+  isPending: boolean
+  externalReference: string
+  bankReceiptNo: string
+  reference: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  customerId: number
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: string
+  status: string
+  paymentTypeName: string
+  receipt: VendReceipt
+  paymentDetails: VendPaymentDetails
+  collector: VendCollector
+  token: VendToken
+}
+
+export interface VendResponse {
+  isSuccess: boolean
+  message: string
+  data: VendData
+}
+
 // Payment State
 interface PaymentState {
   // Payments list state
@@ -642,6 +986,43 @@ interface PaymentState {
   refundPaymentError: string | null
   refundPaymentSuccess: boolean
   refundPaymentData: RefundPaymentData | null
+
+  // VEND state
+  vendLoading: boolean
+  vendError: string | null
+  vendSuccess: boolean
+  vendData: VendData | null
+
+  // Cancel Payment state
+  cancelPaymentLoading: boolean
+  cancelPaymentError: string | null
+  cancelPaymentSuccess: boolean
+  cancelPaymentData: CancelPaymentData | null
+
+  // Payment Anomalies state
+  paymentAnomalies: PaymentAnomalyItem[]
+  paymentAnomaliesLoading: boolean
+  paymentAnomaliesError: string | null
+  paymentAnomaliesSuccess: boolean
+
+  // All Anomalies state
+  allAnomalies: AllAnomalyItem[]
+  allAnomaliesLoading: boolean
+  allAnomaliesError: string | null
+  allAnomaliesSuccess: boolean
+  allAnomaliesPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Resolve Anomaly state
+  resolveAnomalyLoading: boolean
+  resolveAnomalyError: string | null
+  resolveAnomalySuccess: boolean
 }
 
 // Initial state
@@ -757,6 +1138,43 @@ const initialState: PaymentState = {
   refundPaymentError: null,
   refundPaymentSuccess: false,
   refundPaymentData: null,
+
+  // VEND
+  vendLoading: false,
+  vendError: null,
+  vendSuccess: false,
+  vendData: null,
+
+  // Cancel Payment
+  cancelPaymentLoading: false,
+  cancelPaymentError: null,
+  cancelPaymentSuccess: false,
+  cancelPaymentData: null,
+
+  // Payment Anomalies
+  paymentAnomalies: [],
+  paymentAnomaliesLoading: false,
+  paymentAnomaliesError: null,
+  paymentAnomaliesSuccess: false,
+
+  // All Anomalies
+  allAnomalies: [],
+  allAnomaliesLoading: false,
+  allAnomaliesError: null,
+  allAnomaliesSuccess: false,
+  allAnomaliesPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+
+  // Resolve Anomaly
+  resolveAnomalyLoading: false,
+  resolveAnomalyError: null,
+  resolveAnomalySuccess: false,
 }
 
 // Async thunk for fetching payments
@@ -1237,6 +1655,185 @@ export const refundPayment = createAsyncThunk(
   }
 )
 
+// Async thunk for admin vend
+export const adminVend = createAsyncThunk("payments/adminVend", async (vendData: VendRequest, { rejectWithValue }) => {
+  try {
+    const response = await api.post<VendResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.VEND), vendData)
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to vend")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Vend data not found")
+    }
+
+    return {
+      data: response.data.data,
+      message: response.data.message,
+    }
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to vend")
+    }
+    return rejectWithValue(error.message || "Network error during vend")
+  }
+})
+
+// Async thunk for canceling payment
+export const cancelPayment = createAsyncThunk(
+  "payments/cancelPayment",
+  async ({ id, cancelData }: { id: number; cancelData: CancelPaymentRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.PAYMENTS.PAYMENT_CANCEL.replace("{id}", id.toString())
+      const response = await api.post<CancelPaymentResponse>(buildApiUrl(endpoint), cancelData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to cancel payment")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Cancel payment data not found")
+      }
+
+      return {
+        paymentId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to cancel payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment cancellation")
+    }
+  }
+)
+
+// Async thunk for fetching payment anomalies
+export const fetchPaymentAnomalies = createAsyncThunk(
+  "payments/fetchPaymentAnomalies",
+  async (params: PaymentAnomaliesRequestParams, { rejectWithValue }) => {
+    try {
+      const { StartDateUtc, EndDateUtc, RuleKey, Status, ResolutionAction, PaymentTypeId, Channel, CollectorType } =
+        params
+
+      const response = await api.get<PaymentAnomaliesResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.PAYMENT_ANOMALIES), {
+        params: {
+          ...(StartDateUtc && { StartDateUtc }),
+          ...(EndDateUtc && { EndDateUtc }),
+          ...(RuleKey && { RuleKey }),
+          ...(Status && { Status }),
+          ...(ResolutionAction && { ResolutionAction }),
+          ...(PaymentTypeId !== undefined && { PaymentTypeId }),
+          ...(Channel && { Channel }),
+          ...(CollectorType && { CollectorType }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch payment anomalies")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch payment anomalies")
+      }
+      return rejectWithValue(error.message || "Network error during payment anomalies fetch")
+    }
+  }
+)
+
+// Async thunk for fetching all anomalies
+export const fetchAllAnomalies = createAsyncThunk(
+  "payments/fetchAllAnomalies",
+  async (params: AllAnomaliesRequestParams, { rejectWithValue }) => {
+    try {
+      const {
+        pageNumber,
+        pageSize,
+        paymentId,
+        customerId,
+        vendorId,
+        agentId,
+        paymentTypeId,
+        channel,
+        minAmount,
+        maxAmount,
+        status,
+        resolutionAction,
+        detectedFromUtc,
+        detectedToUtc,
+        paidFromUtc,
+        paidToUtc,
+        ruleKey,
+        search,
+      } = params
+
+      const response = await api.get<AllAnomaliesResponse>(buildApiUrl(API_ENDPOINTS.PAYMENTS.ALL_ANOMALIES), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(paymentId !== undefined && { PaymentId: paymentId }),
+          ...(customerId !== undefined && { CustomerId: customerId }),
+          ...(vendorId !== undefined && { VendorId: vendorId }),
+          ...(agentId !== undefined && { AgentId: agentId }),
+          ...(paymentTypeId !== undefined && { PaymentTypeId: paymentTypeId }),
+          ...(channel && { Channel: channel }),
+          ...(minAmount !== undefined && { MinAmount: minAmount }),
+          ...(maxAmount !== undefined && { MaxAmount: maxAmount }),
+          ...(status && { Status: status }),
+          ...(resolutionAction && { ResolutionAction: resolutionAction }),
+          ...(detectedFromUtc && { DetectedFromUtc: detectedFromUtc }),
+          ...(detectedToUtc && { DetectedToUtc: detectedToUtc }),
+          ...(paidFromUtc && { PaidFromUtc: paidFromUtc }),
+          ...(paidToUtc && { PaidToUtc: paidToUtc }),
+          ...(ruleKey && { RuleKey: ruleKey }),
+          ...(search && { Search: search }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch all anomalies")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch all anomalies")
+      }
+      return rejectWithValue(error.message || "Network error during all anomalies fetch")
+    }
+  }
+)
+
+// Async thunk for resolving anomaly
+export const resolveAnomaly = createAsyncThunk(
+  "payments/resolveAnomaly",
+  async ({ id, resolveData }: { id: number; resolveData: ResolveAnomalyRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.PAYMENTS.RESOLVE_ANOMALY.replace("{id}", id.toString())
+      const response = await api.post<ResolveAnomalyResponse>(buildApiUrl(endpoint), resolveData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to resolve anomaly")
+      }
+
+      return {
+        anomalyId: id,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to resolve anomaly")
+      }
+      return rejectWithValue(error.message || "Network error during anomaly resolution")
+    }
+  }
+)
+
 // Payment slice
 const paymentSlice = createSlice({
   name: "payments",
@@ -1288,6 +1885,10 @@ const paymentSlice = createSlice({
       state.confirmPaymentError = null
       state.bankListsError = null
       state.refundPaymentError = null
+      state.vendError = null
+      state.cancelPaymentError = null
+      state.paymentAnomaliesError = null
+      state.resolveAnomalyError = null
     },
 
     // Reset payment state
@@ -1380,6 +1981,29 @@ const paymentSlice = createSlice({
       state.refundPaymentError = null
       state.refundPaymentSuccess = false
       state.refundPaymentData = null
+
+      // VEND
+      state.vendLoading = false
+      state.vendError = null
+      state.vendSuccess = false
+      state.vendData = null
+
+      // Cancel Payment
+      state.cancelPaymentLoading = false
+      state.cancelPaymentError = null
+      state.cancelPaymentSuccess = false
+      state.cancelPaymentData = null
+
+      // Payment Anomalies
+      state.paymentAnomaliesLoading = false
+      state.paymentAnomaliesError = null
+      state.paymentAnomaliesSuccess = false
+      state.paymentAnomalies = []
+
+      // Resolve Anomaly
+      state.resolveAnomalyLoading = false
+      state.resolveAnomalyError = null
+      state.resolveAnomalySuccess = false
     },
 
     // Clear payment tracking state
@@ -1428,6 +2052,37 @@ const paymentSlice = createSlice({
       state.refundPaymentError = null
       state.refundPaymentSuccess = false
       state.refundPaymentData = null
+    },
+
+    // Clear vend state
+    clearVend: (state) => {
+      state.vendLoading = false
+      state.vendError = null
+      state.vendSuccess = false
+      state.vendData = null
+    },
+
+    // Clear cancel payment state
+    clearCancelPayment: (state) => {
+      state.cancelPaymentLoading = false
+      state.cancelPaymentError = null
+      state.cancelPaymentSuccess = false
+      state.cancelPaymentData = null
+    },
+
+    // Clear payment anomalies state
+    clearPaymentAnomalies: (state) => {
+      state.paymentAnomaliesLoading = false
+      state.paymentAnomaliesError = null
+      state.paymentAnomaliesSuccess = false
+      state.paymentAnomalies = []
+    },
+
+    // Clear resolve anomaly state
+    clearResolveAnomaly: (state) => {
+      state.resolveAnomalyLoading = false
+      state.resolveAnomalyError = null
+      state.resolveAnomalySuccess = false
     },
 
     // Set pagination
@@ -1988,6 +2643,162 @@ const paymentSlice = createSlice({
         state.refundPaymentSuccess = false
         state.refundPaymentData = null
       })
+
+      // Admin vend cases
+      .addCase(adminVend.pending, (state) => {
+        state.vendLoading = true
+        state.vendError = null
+        state.vendSuccess = false
+        state.vendData = null
+      })
+      .addCase(
+        adminVend.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            data: VendData
+            message: string
+          }>
+        ) => {
+          state.vendLoading = false
+          state.vendSuccess = true
+          state.vendError = null
+          state.vendData = action.payload.data
+        }
+      )
+      .addCase(adminVend.rejected, (state, action) => {
+        state.vendLoading = false
+        state.vendError = (action.payload as string) || "Failed to vend"
+        state.vendSuccess = false
+        state.vendData = null
+      })
+
+      // Cancel payment cases
+      .addCase(cancelPayment.pending, (state) => {
+        state.cancelPaymentLoading = true
+        state.cancelPaymentError = null
+        state.cancelPaymentSuccess = false
+        state.cancelPaymentData = null
+      })
+      .addCase(
+        cancelPayment.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            paymentId: number
+            data: CancelPaymentData
+            message: string
+          }>
+        ) => {
+          state.cancelPaymentLoading = false
+          state.cancelPaymentSuccess = true
+          state.cancelPaymentError = null
+          state.cancelPaymentData = action.payload.data
+
+          // Update the payment in the payments list if it exists
+          const index = state.payments.findIndex((p) => p.id === action.payload.paymentId)
+          if (index !== -1 && state.payments[index]) {
+            // Update the payment status to reflect cancellation
+            state.payments[index]!.status = "Cancelled" as const
+          }
+
+          // Update the current payment if it's the same one
+          if (state.currentPayment && state.currentPayment.id === action.payload.paymentId) {
+            state.currentPayment.status = "Cancelled" as const
+          }
+        }
+      )
+      .addCase(cancelPayment.rejected, (state, action) => {
+        state.cancelPaymentLoading = false
+        state.cancelPaymentError = (action.payload as string) || "Failed to cancel payment"
+        state.cancelPaymentSuccess = false
+        state.cancelPaymentData = null
+      })
+
+      // Fetch payment anomalies cases
+      .addCase(fetchPaymentAnomalies.pending, (state) => {
+        state.paymentAnomaliesLoading = true
+        state.paymentAnomaliesError = null
+        state.paymentAnomaliesSuccess = false
+      })
+      .addCase(fetchPaymentAnomalies.fulfilled, (state, action: PayloadAction<PaymentAnomalyItem[]>) => {
+        state.paymentAnomaliesLoading = false
+        state.paymentAnomaliesSuccess = true
+        state.paymentAnomaliesError = null
+        state.paymentAnomalies = action.payload
+      })
+      .addCase(fetchPaymentAnomalies.rejected, (state, action) => {
+        state.paymentAnomaliesLoading = false
+        state.paymentAnomaliesError = (action.payload as string) || "Failed to fetch payment anomalies"
+        state.paymentAnomaliesSuccess = false
+        state.paymentAnomalies = []
+      })
+
+      // Fetch all anomalies cases
+      .addCase(fetchAllAnomalies.pending, (state) => {
+        state.allAnomaliesLoading = true
+        state.allAnomaliesError = null
+        state.allAnomaliesSuccess = false
+      })
+      .addCase(fetchAllAnomalies.fulfilled, (state, action: PayloadAction<AllAnomaliesResponse>) => {
+        state.allAnomaliesLoading = false
+        state.allAnomaliesSuccess = true
+        state.allAnomaliesError = null
+        state.allAnomalies = action.payload.data
+        state.allAnomaliesPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+      })
+      .addCase(fetchAllAnomalies.rejected, (state, action) => {
+        state.allAnomaliesLoading = false
+        state.allAnomaliesError = (action.payload as string) || "Failed to fetch all anomalies"
+        state.allAnomaliesSuccess = false
+        state.allAnomalies = []
+      })
+
+      // Resolve anomaly cases
+      .addCase(resolveAnomaly.pending, (state) => {
+        state.resolveAnomalyLoading = true
+        state.resolveAnomalyError = null
+        state.resolveAnomalySuccess = false
+      })
+      .addCase(
+        resolveAnomaly.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            anomalyId: number
+            data: {
+              action: PaymentAnomalyResolutionAction
+              note: string
+            }
+            message: string
+          }>
+        ) => {
+          state.resolveAnomalyLoading = false
+          state.resolveAnomalySuccess = true
+          state.resolveAnomalyError = null
+
+          // Update the anomaly in the allAnomalies list if it exists
+          const index = state.allAnomalies.findIndex((anomaly) => anomaly.id === action.payload.anomalyId)
+          if (index !== -1) {
+            state.allAnomalies[index]!.status = "Resolved" as const
+            state.allAnomalies[index]!.resolutionAction = action.payload.data.action
+            state.allAnomalies[index]!.resolutionNote = action.payload.data.note
+            state.allAnomalies[index]!.resolvedAtUtc = new Date().toISOString()
+          }
+        }
+      )
+      .addCase(resolveAnomaly.rejected, (state, action) => {
+        state.resolveAnomalyLoading = false
+        state.resolveAnomalyError = (action.payload as string) || "Failed to resolve anomaly"
+        state.resolveAnomalySuccess = false
+      })
   },
 })
 
@@ -2012,6 +2823,10 @@ export const {
   clearConfirmPayment,
   clearBankLists,
   clearRefundPayment,
+  clearVend,
+  clearCancelPayment,
+  clearPaymentAnomalies,
+  clearResolveAnomaly,
 } = paymentSlice.actions
 
 export default paymentSlice.reducer

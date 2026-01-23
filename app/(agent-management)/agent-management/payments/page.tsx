@@ -377,7 +377,7 @@ export default function PaymentsPage() {
     { value: PaymentChannel.Pos, label: "POS" },
     { value: PaymentChannel.Card, label: "Card" },
     { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
-    { value: PaymentChannel.Chaque, label: "Cheque" },
+    { value: PaymentChannel.Cheque, label: "Cheque" },
   ]
 
   const collectorTypeOptions = [

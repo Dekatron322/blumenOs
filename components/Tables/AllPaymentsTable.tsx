@@ -265,7 +265,7 @@ const StatisticsCards = () => {
         return "💳"
       case "VendorWallet":
         return "👛"
-      case "Chaque":
+      case "Cheque":
         return "📝"
       default:
         return "💰"
@@ -701,7 +701,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Chaque:
+      case PaymentChannel.Cheque:
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",

@@ -77,7 +77,10 @@ const channelMap = {
   3: PaymentChannel.Pos,
   4: PaymentChannel.Card,
   5: PaymentChannel.VendorWallet,
-  6: PaymentChannel.Chaque,
+  6: PaymentChannel.Cheque,
+  7: PaymentChannel.BankDeposit,
+  8: PaymentChannel.Vendor,
+  9: PaymentChannel.Migration,
 }
 
 const reverseChannelMap = {
@@ -86,7 +89,10 @@ const reverseChannelMap = {
   [PaymentChannel.Pos]: 3,
   [PaymentChannel.Card]: 4,
   [PaymentChannel.VendorWallet]: 5,
-  [PaymentChannel.Chaque]: 6,
+  [PaymentChannel.Cheque]: 6,
+  [PaymentChannel.BankDeposit]: 7,
+  [PaymentChannel.Vendor]: 8,
+  [PaymentChannel.Migration]: 9,
 }
 
 const AddPaymentPage = () => {

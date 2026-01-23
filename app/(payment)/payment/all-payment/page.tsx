@@ -2,7 +2,20 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Download, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Filter,
+  RefreshCw,
+  SortAsc,
+  SortDesc,
+  X,
+} from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
 import { RxDotsVertical } from "react-icons/rx"
 
@@ -15,6 +28,7 @@ import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearAgents, fetchAgents } from "lib/redux/agentSlice"
+import { UserPermission, hasPermission, isUserPermission } from "components/Sidebar/Links"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
@@ -24,6 +38,7 @@ import {
   fetchPayments,
   Payment,
   PaymentsRequestParams,
+  cancelPayment,
 } from "lib/redux/paymentSlice"
 import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"
@@ -31,9 +46,10 @@ import { clearDistributionSubstations, fetchDistributionSubstations } from "lib/
 import { clearFeeders, fetchFeeders } from "lib/redux/feedersSlice"
 import { clearServiceStations, fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { clearBills, fetchPostpaidBills } from "lib/redux/postpaidSlice"
-import { VscEye } from "react-icons/vsc"
+import { VscEye, VscTrash } from "react-icons/vsc"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
 import { api } from "lib/redux/authSlice"
+import { notify } from "components/ui/Notification/Notification"
 
 // Boolean options for filters
 const booleanOptions = [
@@ -63,8 +79,8 @@ const channelStringToEnum = (channelString: string): PaymentChannel => {
       return PaymentChannel.Card
     case "VendorWallet":
       return PaymentChannel.VendorWallet
-    case "Chaque":
-      return PaymentChannel.Chaque
+    case "Cheque":
+      return PaymentChannel.Cheque
     case "BankDeposit":
       return PaymentChannel.Cash // Map to Cash as enum doesn't exist
     case "Vendor":
@@ -1037,7 +1053,16 @@ const MobileFilterSidebar = ({
 
 const AllPayments: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { payments, loading, error, success, pagination } = useAppSelector((state) => state.payments)
+  const {
+    payments,
+    loading,
+    error,
+    success,
+    pagination,
+    cancelPaymentLoading,
+    cancelPaymentError,
+    cancelPaymentSuccess,
+  } = useAppSelector((state) => state.payments)
   const { customers } = useAppSelector((state) => state.customers)
   const { vendors } = useAppSelector((state) => state.vendors)
   const { agents } = useAppSelector((state) => state.agents)
@@ -1075,6 +1100,9 @@ const AllPayments: React.FC = () => {
   const [exportStatus, setExportStatus] = useState<string>("all")
   const [exportCollectorType, setExportCollectorType] = useState<string>("all")
   const [exportClearanceStatus, setExportClearanceStatus] = useState<string>("all")
+
+  // User permissions state
+  const [userPermissions, setUserPermissions] = useState<UserPermission | null>(null)
   const [exportCustomerId, setExportCustomerId] = useState<string>("")
   const [exportVendorId, setExportVendorId] = useState<string>("")
   const [exportAgentId, setExportAgentId] = useState<string>("")
@@ -1085,6 +1113,11 @@ const AllPayments: React.FC = () => {
   const [exportServiceCenterId, setExportServiceCenterId] = useState<string>("")
   const [exportPostpaidBillId, setExportPostpaidBillId] = useState<string>("")
   const [exportCustomerProvinceId, setExportCustomerProvinceId] = useState<string>("")
+
+  // Cancel payment state
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+  const [paymentToCancel, setPaymentToCancel] = useState<Payment | null>(null)
+  const [cancelReason, setCancelReason] = useState("")
   const [exportReference, setExportReference] = useState<string>("")
   const [exportAccountNumber, setExportAccountNumber] = useState<string>("")
   const [exportMeterNumber, setExportMeterNumber] = useState<string>("")
@@ -1228,6 +1261,26 @@ const AllPayments: React.FC = () => {
       dispatch(clearBills())
     }
   }, [dispatch])
+
+  // Load user permissions from localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const storedPermissions = localStorage.getItem("userPermissions")
+    if (storedPermissions) {
+      try {
+        const parsed = JSON.parse(storedPermissions)
+        if (isUserPermission(parsed)) {
+          setUserPermissions(parsed)
+        } else {
+          setUserPermissions(null)
+        }
+      } catch {
+        setUserPermissions(null)
+      }
+    }
+  }, [])
 
   // Fetch payments when component mounts or filters change
   useEffect(() => {
@@ -1439,6 +1492,66 @@ const AllPayments: React.FC = () => {
       currency: currency,
       minimumFractionDigits: 2,
     }).format(amount)
+  }
+
+  // Cancel payment handlers
+  const handleCancelPayment = (payment: Payment) => {
+    setPaymentToCancel(payment)
+    setIsCancelModalOpen(true)
+  }
+
+  const confirmCancelPayment = async () => {
+    console.log("confirmCancelPayment called", { paymentToCancel, cancelReason })
+
+    if (!paymentToCancel || !cancelReason.trim()) {
+      notify("warning", "Please provide a reason for cancellation")
+      return
+    }
+
+    try {
+      console.log("Dispatching cancelPayment with:", {
+        id: paymentToCancel.id,
+        cancelData: { reason: cancelReason },
+      })
+
+      const result = await dispatch(
+        cancelPayment({
+          id: paymentToCancel.id,
+          cancelData: { reason: cancelReason },
+        })
+      ).unwrap()
+
+      console.log("Cancel payment successful:", result)
+
+      setIsCancelModalOpen(false)
+      setPaymentToCancel(null)
+      setCancelReason("")
+
+      // Show success notification
+      notify("success", "Payment cancelled successfully!")
+    } catch (error) {
+      console.error("Failed to cancel payment:", error)
+      notify("error", `Failed to cancel payment: ${error}`)
+    }
+  }
+
+  const canCancelPayment = (payment: Payment) => {
+    // Check payment status first
+    const validStatus = payment.status === "Pending" || payment.status === "Confirmed"
+    if (!validStatus) return false
+
+    // Check if user has execute payment privilege
+    if (!userPermissions) return false
+
+    // Use the same hasPermission function as the sidebar
+    const paymentLinkItem = {
+      name: "Cancel Payment",
+      privilegeKey: "payments",
+      requiredActions: ["E"],
+      icon: ({ isActive }: { isActive: boolean }) => <div />, // Dummy icon since this is only for permission checking
+    }
+
+    return hasPermission(paymentLinkItem, userPermissions)
   }
 
   const formatDate = (dateString: string) => {
@@ -1721,7 +1834,7 @@ const AllPayments: React.FC = () => {
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
     { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Chaque", label: "Cheque" },
+    { value: "Cheque", label: "Cheque" },
     { value: "BankDeposit", label: "Bank Deposit" },
     { value: "Vendor", label: "Vendor" },
     { value: "Migration", label: "Migration" },
@@ -2169,7 +2282,7 @@ const AllPayments: React.FC = () => {
                               {/* <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Location</div>
                               </th> */}
-                              <th className="sticky right-0 z-10 whitespace-nowrap border-y bg-white  p-4 text-sm font-semibold text-gray-900">
+                              <th className="whitespace-nowrap border-y p-4 text-sm font-semibold text-gray-900">
                                 <div className="flex items-center gap-2">Actions</div>
                               </th>
                             </tr>
@@ -2255,15 +2368,27 @@ const AllPayments: React.FC = () => {
                                     {payment.areaOfficeName}
                                   </div>
                                 </td> */}
-                                <td className="shadow-[ -2px_0_5px_-2px_rgba(0,0,0,0.1) ] sticky right-0 z-10 whitespace-nowrap border-b bg-white px-4 py-3 text-sm shadow-md">
-                                  <ButtonModule
-                                    size="sm"
-                                    variant="outline"
-                                    icon={<VscEye />}
-                                    onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
-                                  >
-                                    View
-                                  </ButtonModule>
+                                <td className="whitespace-nowrap border-b px-4 py-3 text-sm">
+                                  <div className="flex gap-1 ">
+                                    <ButtonModule
+                                      size="sm"
+                                      variant="outline"
+                                      icon={<VscEye />}
+                                      onClick={() => router.push(`/payment/payment-detail/${payment.id}`)}
+                                    >
+                                      View
+                                    </ButtonModule>
+                                    {canCancelPayment(payment) && (
+                                      <ButtonModule
+                                        size="sm"
+                                        variant="outlineDanger"
+                                        icon={<VscTrash />}
+                                        onClick={() => handleCancelPayment(payment)}
+                                      >
+                                        Cancel
+                                      </ButtonModule>
+                                    )}
+                                  </div>
                                 </td>
                               </motion.tr>
                             ))}
@@ -3325,6 +3450,134 @@ const AllPayments: React.FC = () => {
                     Export
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancel Payment Confirmation Modal */}
+      <AnimatePresence>
+        {isCancelModalOpen && paymentToCancel && (
+          <motion.div
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => {
+              setIsCancelModalOpen(false)
+              setPaymentToCancel(null)
+              setCancelReason("")
+            }}
+          >
+            <motion.div
+              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.2, type: "spring", damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
+                    <AlertCircle className="size-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Cancel Payment</h2>
+                    <p className="text-sm text-gray-500">Cancel payment #{paymentToCancel.reference}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsCancelModalOpen(false)
+                    setPaymentToCancel(null)
+                    setCancelReason("")
+                  }}
+                  disabled={cancelPaymentLoading}
+                  className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="space-y-6 p-4 sm:p-6">
+                {cancelPaymentError && (
+                  <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                    <AlertCircle className="size-5 shrink-0 text-red-600" />
+                    <p className="text-sm text-red-700">{cancelPaymentError}</p>
+                  </div>
+                )}
+
+                {cancelPaymentSuccess && (
+                  <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+                    <CheckCircle className="size-5 shrink-0 text-green-600" />
+                    <p className="text-sm text-green-700">Payment cancelled successfully!</p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
+                      <div className="text-sm text-amber-800">
+                        <p className="font-medium">Important Notice</p>
+                        <p className="mt-1">
+                          Are you sure you want to cancel payment{" "}
+                          <span className="font-semibold text-gray-900">#{paymentToCancel.reference}</span>? This action
+                          cannot be undone.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="cancelReason" className="mb-2 block text-sm font-medium text-gray-700">
+                      Reason for cancellation <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="cancelReason"
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      rows={4}
+                      className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm transition-colors focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                      placeholder="Please provide a reason for cancellation..."
+                      disabled={cancelPaymentLoading}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+                <ButtonModule
+                  variant="outline"
+                  onClick={() => {
+                    setIsCancelModalOpen(false)
+                    setPaymentToCancel(null)
+                    setCancelReason("")
+                  }}
+                  disabled={cancelPaymentLoading}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </ButtonModule>
+                <ButtonModule
+                  variant="danger"
+                  onClick={confirmCancelPayment}
+                  disabled={cancelPaymentLoading || !cancelReason.trim()}
+                  loading={cancelPaymentLoading}
+                  className="w-full sm:w-auto"
+                >
+                  {cancelPaymentLoading ? (
+                    <span className="flex items-center gap-2">Cancelling...</span>
+                  ) : (
+                    "Confirm Cancel"
+                  )}
+                </ButtonModule>
               </div>
             </motion.div>
           </motion.div>

@@ -35,8 +35,8 @@ const channelStringToEnum = (channelString: string): PaymentChannel => {
       return PaymentChannel.Card
     case "VendorWallet":
       return PaymentChannel.VendorWallet
-    case "Chaque":
-      return PaymentChannel.Chaque
+    case "Cheque":
+      return PaymentChannel.Cheque
     default:
       return PaymentChannel.Cash
   }
