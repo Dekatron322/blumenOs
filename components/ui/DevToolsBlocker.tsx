@@ -9,30 +9,16 @@ interface DevToolsBlockerProps {
 
 export default function DevToolsBlocker({ children, enabled = true }: DevToolsBlockerProps) {
   const blockerRef = useRef<HTMLDivElement>(null)
-  const [isDevMode, setIsDevMode] = useState(false)
+  // Dev mode is permanently enabled - no need to check localStorage
+  const isDevMode = true
 
   useEffect(() => {
-    // Check if dev mode is enabled in localStorage
-    const devModeEnabled = localStorage.getItem("devModeEnabled") === "true"
-    setIsDevMode(devModeEnabled)
+    // Dev mode is permanently enabled - don't apply any restrictions
+    // Early return to prevent all blocking functionality
+    return
 
-    // Listen for storage changes (for cross-tab updates)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "devModeEnabled") {
-        setIsDevMode(e.newValue === "true")
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-    }
-  }, [])
-
-  useEffect(() => {
-    // Only disable if dev mode is explicitly enabled via the dev-mode page
-    if (!enabled || isDevMode) return
+    // The following code will never execute due to the early return above
+    // This ensures all developer features are permanently enabled
 
     // Prevent right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
@@ -100,33 +86,34 @@ export default function DevToolsBlocker({ children, enabled = true }: DevToolsBl
       }
     }
 
-    // Prevent copy/paste operations
-    const handleCopy = (e: ClipboardEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    }
+    // Allow copy/paste operations - no longer blocking these
+    // const handleCopy = (e: ClipboardEvent) => {
+    //   e.preventDefault()
+    //   e.stopPropagation()
+    //   return false
+    // }
 
-    const handlePaste = (e: ClipboardEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    }
+    // const handlePaste = (e: ClipboardEvent) => {
+    //   e.preventDefault()
+    //   e.stopPropagation()
+    //   return false
+    // }
 
-    const handleCut = (e: ClipboardEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    }
+    // const handleCut = (e: ClipboardEvent) => {
+    //   e.preventDefault()
+    //   e.stopPropagation()
+    //   return false
+    // }
 
     // Add event listeners with capture phase
     document.addEventListener("contextmenu", handleContextMenu, true)
     document.addEventListener("selectstart", handleSelectStart, true)
     document.addEventListener("dragstart", handleDragStart, true)
     document.addEventListener("keydown", handleKeyDown, true)
-    document.addEventListener("copy", handleCopy, true)
-    document.addEventListener("paste", handlePaste, true)
-    document.addEventListener("cut", handleCut, true)
+    // Copy/paste events no longer blocked
+    // document.addEventListener("copy", handleCopy, true)
+    // document.addEventListener("paste", handlePaste, true)
+    // document.addEventListener("cut", handleCut, true)
 
     // Check for dev tools periodically
     const devToolsInterval = setInterval(detectDevTools, 1000)
@@ -134,13 +121,14 @@ export default function DevToolsBlocker({ children, enabled = true }: DevToolsBl
     // Add CSS styles to prevent selection and inspection
     const style = document.createElement("style")
     style.textContent = `
+      /* Allow text selection and user interactions */
       * {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-        -webkit-tap-highlight-color: transparent !important;
+        -webkit-user-select: auto !important;
+        -moz-user-select: auto !important;
+        -ms-user-select: auto !important;
+        user-select: auto !important;
+        -webkit-touch-callout: auto !important;
+        -webkit-tap-highlight-color: auto !important;
       }
       
       body {
@@ -181,9 +169,10 @@ export default function DevToolsBlocker({ children, enabled = true }: DevToolsBl
       document.removeEventListener("selectstart", handleSelectStart, true)
       document.removeEventListener("dragstart", handleDragStart, true)
       document.removeEventListener("keydown", handleKeyDown, true)
-      document.removeEventListener("copy", handleCopy, true)
-      document.removeEventListener("paste", handlePaste, true)
-      document.removeEventListener("cut", handleCut, true)
+      // Copy/paste events no longer blocked, so no need to remove them
+      // document.removeEventListener("copy", handleCopy, true)
+      // document.removeEventListener("paste", handlePaste, true)
+      // document.removeEventListener("cut", handleCut, true)
       clearInterval(devToolsInterval)
       if (style.parentNode) {
         style.parentNode.removeChild(style)
