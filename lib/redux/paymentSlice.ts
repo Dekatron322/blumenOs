@@ -1685,8 +1685,16 @@ export const cancelPayment = createAsyncThunk(
   "payments/cancelPayment",
   async ({ id, cancelData }: { id: number; cancelData: CancelPaymentRequest }, { rejectWithValue }) => {
     try {
+      if (!id) {
+        return rejectWithValue("Payment ID is required")
+      }
+
       const endpoint = API_ENDPOINTS.PAYMENTS.PAYMENT_CANCEL.replace("{id}", id.toString())
+      console.log("Cancelling payment with endpoint:", endpoint)
+      console.log("Cancel data:", cancelData)
+
       const response = await api.post<CancelPaymentResponse>(buildApiUrl(endpoint), cancelData)
+      console.log("Cancel payment response:", response.data)
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to cancel payment")
@@ -1702,6 +1710,8 @@ export const cancelPayment = createAsyncThunk(
         message: response.data.message,
       }
     } catch (error: any) {
+      console.error("Cancel payment error:", error)
+      console.error("Error response:", error.response?.data)
       if (error.response?.data) {
         return rejectWithValue(error.response.data.message || "Failed to cancel payment")
       }

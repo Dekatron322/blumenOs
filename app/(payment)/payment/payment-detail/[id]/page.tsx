@@ -8,27 +8,29 @@ import {
   ArrowRight,
   Building,
   Calendar,
+  CheckCircle,
   CreditCard,
   Edit3,
   ExternalLink,
   Package,
   Receipt,
   User,
+  X,
   Zap,
 } from "lucide-react"
 import { ButtonModule } from "components/ui/Button/Button"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ExportOutlineIcon } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearCurrentPayment, fetchPaymentById } from "lib/redux/paymentSlice"
+import { cancelPayment, clearCurrentPayment, fetchPaymentById } from "lib/redux/paymentSlice"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import ChangeRequestModal from "components/ui/Modal/change-payment-request-modal"
 import PaymentReceiptModal from "components/ui/Modal/payment-receipt-modal"
 import PaymentTrackingModal from "components/ui/Modal/payment-tracking-modal"
-import ConfirmBankTransferModal from "components/ui/Modal/confirm-bank-transfer-modal"
+import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
-import { VscEye } from "react-icons/vsc"
+import { VscEye, VscTrash } from "react-icons/vsc"
 import { clearChangeRequestsByPayment, fetchChangeRequestsByPaymentId } from "lib/redux/paymentSlice"
 import type {
   ChangeRequestListItem as ChangeRequestListItemType,
@@ -36,6 +38,7 @@ import type {
 } from "lib/redux/paymentSlice"
 import ViewPaymentChangeRequestModal from "components/ui/Modal/view-payment-change-request-modal"
 import RefundPaymentModal from "components/ui/Modal/refund-payment-modal"
+import { notify } from "components/ui/Notification/Notification"
 
 // LoadingSkeleton component for payment details
 const LoadingSkeleton = () => (
@@ -697,15 +700,26 @@ const PaymentDetailsPage = () => {
   const paymentId = params.id as string
 
   // Get payment details from Redux store
-  const { currentPayment, currentPaymentLoading, currentPaymentError } = useAppSelector((state) => state.payments)
+  const {
+    currentPayment,
+    currentPaymentLoading,
+    currentPaymentError,
+    cancelPaymentLoading,
+    cancelPaymentError,
+    cancelPaymentSuccess,
+  } = useAppSelector((state) => state.payments)
 
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
+  const canExecute = !!user?.privileges?.some((p) => p.actions?.includes("E"))
 
   const [activeModal, setActiveModal] = useState<
-    "edit" | "changeRequest" | "receipt" | "tracking" | "confirmBankTransfer" | "refund" | null
+    "edit" | "changeRequest" | "receipt" | "tracking" | "confirmPayment" | "refund" | "cancel" | null
   >(null)
   const [isExporting, setIsExporting] = useState(false)
+
+  // Cancel payment state
+  const [cancelReason, setCancelReason] = useState("")
 
   useEffect(() => {
     if (paymentId) {
@@ -740,7 +754,7 @@ const PaymentDetailsPage = () => {
   }
 
   const closeAllModals = () => setActiveModal(null)
-  const openModal = (modalType: "edit" | "changeRequest" | "tracking" | "confirmBankTransfer" | "refund") =>
+  const openModal = (modalType: "edit" | "changeRequest" | "tracking" | "confirmPayment" | "refund") =>
     setActiveModal(modalType)
 
   const handleChangeRequestSuccess = () => {
@@ -754,8 +768,8 @@ const PaymentDetailsPage = () => {
     closeAllModals()
   }
 
-  const handleConfirmBankTransferSuccess = () => {
-    // Refresh payment details after successful bank transfer confirmation
+  const handleConfirmPaymentSuccess = () => {
+    // Refresh payment details after successful payment confirmation
     if (paymentId) {
       const id = parseInt(paymentId)
       if (!isNaN(id)) {
@@ -763,6 +777,71 @@ const PaymentDetailsPage = () => {
       }
     }
     closeAllModals()
+  }
+
+  const confirmCancelPayment = async () => {
+    console.log("Current payment data:", currentPayment)
+
+    if (!currentPayment || !cancelReason.trim()) {
+      console.log("Cannot cancel payment - missing payment or reason")
+      console.log("currentPayment:", currentPayment)
+      console.log("cancelReason:", cancelReason)
+
+      if (!cancelReason.trim()) {
+        notify("warning", "Please provide a reason for cancellation")
+      }
+      return
+    }
+
+    // Use payment ID from currentPayment, fallback to URL parameter
+    let paymentIdToCancel = currentPayment.id
+    if (!paymentIdToCancel && paymentId) {
+      paymentIdToCancel = parseInt(paymentId)
+      console.log("Using URL parameter as payment ID:", paymentIdToCancel)
+    }
+
+    if (!paymentIdToCancel || isNaN(paymentIdToCancel)) {
+      console.log("Cannot cancel payment - payment ID is undefined or invalid")
+      console.log("currentPayment.id:", currentPayment.id)
+      console.log("URL paymentId:", paymentId)
+      notify("error", "Unable to cancel payment - invalid payment ID")
+      return
+    }
+
+    console.log("Attempting to cancel payment:", paymentIdToCancel, currentPayment.reference)
+    console.log("Cancel reason:", cancelReason.trim())
+
+    try {
+      const result = await dispatch(
+        cancelPayment({
+          id: paymentIdToCancel,
+          cancelData: {
+            reason: cancelReason.trim(),
+          },
+        })
+      ).unwrap()
+
+      console.log("Cancel payment successful:", result)
+
+      // Reset form and close modal
+      setCancelReason("")
+      setActiveModal(null)
+
+      // Show success notification using API message
+      notify("success", result.message || `Payment #${currentPayment.reference} has been cancelled successfully`)
+
+      // Refresh payment details
+      if (paymentId) {
+        const id = parseInt(paymentId)
+        if (!isNaN(id)) {
+          dispatch(fetchPaymentById(id))
+        }
+      }
+    } catch (error: any) {
+      console.error("Cancel payment error in component:", error)
+      // Use the error message from the API response
+      notify("error", error || "Failed to cancel payment. Please try again.")
+    }
   }
 
   const exportToPDF = async () => {
@@ -1052,7 +1131,7 @@ const PaymentDetailsPage = () => {
                         variant="outline"
                         size="sm"
                         className="flex items-center text-xs md:text-sm"
-                        onClick={() => setActiveModal("confirmBankTransfer")}
+                        onClick={() => setActiveModal("confirmPayment")}
                         icon={<Package className="size-3 md:size-4" />}
                       >
                         Confirm{" "}
@@ -1104,6 +1183,18 @@ const PaymentDetailsPage = () => {
                       >
                         <Edit3 className="size-3 md:size-4" />
                         Change Request
+                      </ButtonModule>
+                    )}
+
+                    {canExecute && (
+                      <ButtonModule
+                        variant="outlineDanger"
+                        size="sm"
+                        className="flex items-center text-xs md:text-sm"
+                        onClick={() => setActiveModal("cancel")}
+                        icon={<VscTrash />}
+                      >
+                        Cancel
                       </ButtonModule>
                     )}
                   </div>
@@ -1476,20 +1567,144 @@ const PaymentDetailsPage = () => {
         onRequestClose={closeAllModals}
         paymentId={parseInt(paymentId)}
       />
-      <ConfirmBankTransferModal
-        isOpen={activeModal === "confirmBankTransfer"}
-        onRequestClose={closeAllModals}
-        paymentId={currentPayment.id}
-        paymentReference={currentPayment.reference}
-        currentAmount={currentPayment.totalAmountPaid}
-        onSuccess={handleConfirmBankTransferSuccess}
+      <ConfirmPaymentForm
+        isOpen={activeModal === "confirmPayment"}
+        onClose={closeAllModals}
+        paymentId={parseInt(paymentId)}
+        paymentRef={currentPayment.reference}
+        customerName={currentPayment.customerName}
+        amount={currentPayment.totalAmountPaid}
+        onSuccess={handleConfirmPaymentSuccess}
       />
       <RefundPaymentModal
         isOpen={activeModal === "refund"}
         onRequestClose={closeAllModals}
         paymentReference={currentPayment.reference}
-        onSuccess={handleConfirmBankTransferSuccess}
+        onSuccess={handleConfirmPaymentSuccess}
       />
+
+      {/* Cancel Payment Confirmation Modal */}
+      {activeModal === "cancel" && (
+        <motion.div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => {
+            setActiveModal(null)
+            setCancelReason("")
+          }}
+        >
+          <motion.div
+            className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.2, type: "spring", damping: 25 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
+                  <AlertCircle className="size-5 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Cancel Payment</h2>
+                  <p className="text-sm text-gray-500">Cancel payment #{currentPayment.reference}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setActiveModal(null)
+                  setCancelReason("")
+                }}
+                disabled={cancelPaymentLoading}
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="space-y-6 p-4 sm:p-6">
+              {cancelPaymentError && (
+                <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                  <AlertCircle className="size-5 shrink-0 text-red-600" />
+                  <p className="text-sm text-red-700">{cancelPaymentError}</p>
+                </div>
+              )}
+
+              {cancelPaymentSuccess && (
+                <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+                  <CheckCircle className="size-5 shrink-0 text-green-600" />
+                  <p className="text-sm text-green-700">Payment cancelled successfully!</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
+                    <div className="text-sm text-amber-800">
+                      <p className="font-medium">Important Notice</p>
+                      <p className="mt-1">
+                        Are you sure you want to cancel payment{" "}
+                        <span className="font-semibold text-gray-900">#{currentPayment.reference}</span>? This action
+                        cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="cancelReason" className="mb-2 block text-sm font-medium text-gray-700">
+                    Reason for cancellation <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="cancelReason"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    rows={4}
+                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm transition-colors focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                    placeholder="Please provide a reason for cancellation..."
+                    disabled={cancelPaymentLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+              <ButtonModule
+                variant="outline"
+                onClick={() => {
+                  setActiveModal(null)
+                  setCancelReason("")
+                }}
+                disabled={cancelPaymentLoading}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </ButtonModule>
+              <ButtonModule
+                variant="danger"
+                onClick={confirmCancelPayment}
+                disabled={cancelPaymentLoading || !cancelReason.trim()}
+                loading={cancelPaymentLoading}
+                className="w-full sm:w-auto"
+              >
+                {cancelPaymentLoading ? (
+                  <span className="flex items-center gap-2">Cancelling...</span>
+                ) : (
+                  "Confirm Cancel"
+                )}
+              </ButtonModule>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   )
 }

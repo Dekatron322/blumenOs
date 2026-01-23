@@ -2914,6 +2914,10 @@ export const confirmPayment = createAsyncThunk(
   "agents/confirmPayment",
   async (paymentId: number, { rejectWithValue }) => {
     try {
+      if (!paymentId) {
+        return rejectWithValue("Payment ID is required")
+      }
+
       const requestBody: ConfirmPaymentRequest = {} // Empty request body for now
 
       const response = await api.post(

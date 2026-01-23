@@ -156,16 +156,6 @@ const DropdownPopover = ({
   )
 }
 
-const CyclesIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM10 18C5.58 18 2 14.42 2 10C2 5.58 5.58 2 10 2C14.42 2 18 5.58 18 10C18 14.42 14.42 18 10 18Z"
-      fill="currentColor"
-    />
-    <path d="M10.5 5H9V11L14.2 14.2L15 13L10.5 10.25V5Z" fill="currentColor" />
-  </svg>
-)
-
 interface SortOption {
   label: string
   value: string
@@ -2378,16 +2368,6 @@ const AllPayments: React.FC = () => {
                                     >
                                       View
                                     </ButtonModule>
-                                    {canCancelPayment(payment) && (
-                                      <ButtonModule
-                                        size="sm"
-                                        variant="outlineDanger"
-                                        icon={<VscTrash />}
-                                        onClick={() => handleCancelPayment(payment)}
-                                      >
-                                        Cancel
-                                      </ButtonModule>
-                                    )}
                                   </div>
                                 </td>
                               </motion.tr>
@@ -3450,134 +3430,6 @@ const AllPayments: React.FC = () => {
                     Export
                   </button>
                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cancel Payment Confirmation Modal */}
-      <AnimatePresence>
-        {isCancelModalOpen && paymentToCancel && (
-          <motion.div
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => {
-              setIsCancelModalOpen(false)
-              setPaymentToCancel(null)
-              setCancelReason("")
-            }}
-          >
-            <motion.div
-              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl"
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.2, type: "spring", damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
-                    <AlertCircle className="size-5 text-red-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">Cancel Payment</h2>
-                    <p className="text-sm text-gray-500">Cancel payment #{paymentToCancel.reference}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCancelModalOpen(false)
-                    setPaymentToCancel(null)
-                    setCancelReason("")
-                  }}
-                  disabled={cancelPaymentLoading}
-                  className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="space-y-6 p-4 sm:p-6">
-                {cancelPaymentError && (
-                  <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
-                    <AlertCircle className="size-5 shrink-0 text-red-600" />
-                    <p className="text-sm text-red-700">{cancelPaymentError}</p>
-                  </div>
-                )}
-
-                {cancelPaymentSuccess && (
-                  <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
-                    <CheckCircle className="size-5 shrink-0 text-green-600" />
-                    <p className="text-sm text-green-700">Payment cancelled successfully!</p>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
-                      <div className="text-sm text-amber-800">
-                        <p className="font-medium">Important Notice</p>
-                        <p className="mt-1">
-                          Are you sure you want to cancel payment{" "}
-                          <span className="font-semibold text-gray-900">#{paymentToCancel.reference}</span>? This action
-                          cannot be undone.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="cancelReason" className="mb-2 block text-sm font-medium text-gray-700">
-                      Reason for cancellation <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      id="cancelReason"
-                      value={cancelReason}
-                      onChange={(e) => setCancelReason(e.target.value)}
-                      rows={4}
-                      className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm transition-colors focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
-                      placeholder="Please provide a reason for cancellation..."
-                      disabled={cancelPaymentLoading}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="sticky bottom-0 flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
-                <ButtonModule
-                  variant="outline"
-                  onClick={() => {
-                    setIsCancelModalOpen(false)
-                    setPaymentToCancel(null)
-                    setCancelReason("")
-                  }}
-                  disabled={cancelPaymentLoading}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </ButtonModule>
-                <ButtonModule
-                  variant="danger"
-                  onClick={confirmCancelPayment}
-                  disabled={cancelPaymentLoading || !cancelReason.trim()}
-                  loading={cancelPaymentLoading}
-                  className="w-full sm:w-auto"
-                >
-                  {cancelPaymentLoading ? (
-                    <span className="flex items-center gap-2">Cancelling...</span>
-                  ) : (
-                    "Confirm Cancel"
-                  )}
-                </ButtonModule>
               </div>
             </motion.div>
           </motion.div>
