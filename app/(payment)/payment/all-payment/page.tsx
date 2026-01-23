@@ -28,17 +28,17 @@ import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearAgents, fetchAgents } from "lib/redux/agentSlice"
-import { UserPermission, hasPermission, isUserPermission } from "components/Sidebar/Links"
+import { hasPermission, isUserPermission, UserPermission } from "components/Sidebar/Links"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import {
+  cancelPayment,
   clearPayments,
   fetchPaymentChannels,
   fetchPayments,
   Payment,
   PaymentsRequestParams,
-  cancelPayment,
 } from "lib/redux/paymentSlice"
 import { CollectorType, PaymentChannel } from "lib/redux/agentSlice"
 import { clearVendors, fetchVendors } from "lib/redux/vendorSlice"

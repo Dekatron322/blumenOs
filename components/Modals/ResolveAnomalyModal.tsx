@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { MdClose, MdCheckCircle, MdInfo, MdWarning } from "react-icons/md"
+import { MdCheckCircle, MdClose, MdInfo, MdWarning } from "react-icons/md"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"

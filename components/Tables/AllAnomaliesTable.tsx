@@ -11,8 +11,8 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
-  AllAnomalyItem,
   AllAnomaliesRequestParams,
+  AllAnomalyItem,
   fetchAllAnomalies,
   PaymentAnomalyResolutionAction,
 } from "lib/redux/paymentSlice"

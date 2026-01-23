@@ -25,8 +25,8 @@ import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice
 import {
   clearPaymentAnomalies,
   fetchPaymentAnomalies,
-  PaymentAnomalyResolutionAction,
   PaymentAnomaliesRequestParams,
+  PaymentAnomalyResolutionAction,
 } from "lib/redux/paymentSlice"
 import AllRefundsTable from "components/Tables/AllRefundTable"
 import AllAnomaliesTable from "components/Tables/AllAnomaliesTable"
