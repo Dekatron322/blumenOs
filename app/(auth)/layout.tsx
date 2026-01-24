@@ -1,4 +1,3 @@
-import { NotificationProvider } from "components/ui/Notification/Notification"
 import { Metadata } from "next"
 import "styles/tailwind.css"
 
@@ -31,10 +30,5 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-      <NotificationProvider position="top-center" />
-    </html>
-  )
+  return <>{children}</>
 }
