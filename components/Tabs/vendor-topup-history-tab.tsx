@@ -2,14 +2,10 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, RefreshCw, TrendingUp, Wallet } from "lucide-react"
+import { AlertCircle, RefreshCw, Wallet } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import {
-  fetchVendorTopUpHistory,
-  clearVendorTopUpHistory,
-  setVendorTopUpHistoryPagination,
-} from "lib/redux/vendorSlice"
+import { clearVendorTopUpHistory, fetchVendorTopUpHistory } from "lib/redux/vendorSlice"
 
 interface VendorTopUpHistoryTabProps {
   vendorId: number
@@ -351,7 +347,7 @@ const VendorTopUpHistoryTab: React.FC<VendorTopUpHistoryTabProps> = ({ vendorId 
           <div>
             <h5 className="font-medium text-blue-900">Top-up History Information</h5>
             <p className="mt-1 text-sm text-blue-800">
-              This section displays the vendor's wallet top-up transaction history. Use the pagination controls to
+              This section displays the vendor&apos;s wallet top-up transaction history. Use the pagination controls to
               navigate through multiple pages of transactions.
             </p>
           </div>
