@@ -1194,7 +1194,7 @@ const PaymentDetailsPage = () => {
                         onClick={() => setActiveModal("cancel")}
                         icon={<VscTrash />}
                       >
-                        Cancel
+                        Cancel Payment
                       </ButtonModule>
                     )}
                   </div>
