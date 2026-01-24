@@ -361,6 +361,45 @@ export interface VendorUpdateResponse {
   data: Vendor
 }
 
+// Vendor Top-up History Interfaces
+export interface VendorTopUpHistoryItem {
+  id: number
+  vendorId: number
+  vendorName: string
+  reference: string
+  externalReference: string
+  amount: number
+  settledAmount: number
+  status: "Pending" | "Confirmed" | "Failed"
+  currency: string
+  createdAtUtc: string
+  confirmedAtUtc: string
+  topUpBy: "Vendor" | "Admin"
+  narrative: string
+}
+
+export interface VendorTopUpHistoryResponse {
+  isSuccess: boolean
+  message: string
+  data: VendorTopUpHistoryItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface VendorTopUpHistoryRequestParams {
+  pageNumber: number
+  pageSize: number
+  vendorId?: number
+  fromUtc?: string
+  toUtc?: string
+  status?: "Pending" | "Confirmed" | "Failed"
+  topUpBy?: "Vendor" | "Admin"
+}
+
 // Vendor Payment Interfaces
 export interface VendorPayment {
   id: number
@@ -689,6 +728,19 @@ interface VendorState {
     hasNext: boolean
     hasPrevious: boolean
   }
+
+  // Vendor Top-up History state
+  vendorTopUpHistory: VendorTopUpHistoryItem[]
+  vendorTopUpHistoryLoading: boolean
+  vendorTopUpHistoryError: string | null
+  vendorTopUpHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 }
 
 // Initial state
@@ -793,6 +845,17 @@ const initialState: VendorState = {
   allVendorPaymentsError: null,
   allVendorPaymentsSuccess: false,
   allVendorPaymentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  vendorTopUpHistory: [],
+  vendorTopUpHistoryLoading: false,
+  vendorTopUpHistoryError: null,
+  vendorTopUpHistoryPagination: {
     totalCount: 0,
     totalPages: 0,
     currentPage: 1,
@@ -1381,6 +1444,39 @@ export const fetchAllVendorPayments = createAsyncThunk(
   }
 )
 
+// Fetch Vendor Top-up History Async Thunk
+export const fetchVendorTopUpHistory = createAsyncThunk(
+  "vendors/fetchVendorTopUpHistory",
+  async (params: VendorTopUpHistoryRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, vendorId, fromUtc, toUtc, status, topUpBy } = params
+
+      const response = await api.get<VendorTopUpHistoryResponse>(buildApiUrl(API_ENDPOINTS.VENDORS.TOP_UP_HISTORY), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(vendorId !== undefined && { VendorId: vendorId }),
+          ...(fromUtc && { FromUtc: fromUtc }),
+          ...(toUtc && { ToUtc: toUtc }),
+          ...(status && { Status: status }),
+          ...(topUpBy && { TopUpBy: topUpBy }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch vendor top-up history")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch vendor top-up history")
+      }
+      return rejectWithValue(error.message || "Network error during vendor top-up history fetch")
+    }
+  }
+)
+
 // Vendor slice
 const vendorSlice = createSlice({
   name: "vendors",
@@ -1421,6 +1517,7 @@ const vendorSlice = createSlice({
       state.vendorUpdateError = null
       state.webhookSecretRotationError = null
       state.allVendorPaymentsError = null
+      state.vendorTopUpHistoryError = null
     },
 
     // Clear current vendor
@@ -1582,6 +1679,27 @@ const vendorSlice = createSlice({
       }
     },
 
+    // Clear vendor top-up history state
+    clearVendorTopUpHistory: (state) => {
+      state.vendorTopUpHistory = []
+      state.vendorTopUpHistoryError = null
+      state.vendorTopUpHistoryLoading = false
+      state.vendorTopUpHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Set vendor top-up history pagination
+    setVendorTopUpHistoryPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.vendorTopUpHistoryPagination.currentPage = action.payload.page
+      state.vendorTopUpHistoryPagination.pageSize = action.payload.pageSize
+    },
+
     // Reset vendor state
     resetVendorState: (state) => {
       state.vendors = []
@@ -1684,6 +1802,17 @@ const vendorSlice = createSlice({
       state.allVendorPaymentsError = null
       state.allVendorPaymentsSuccess = false
       state.allVendorPaymentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.vendorTopUpHistory = []
+      state.vendorTopUpHistoryLoading = false
+      state.vendorTopUpHistoryError = null
+      state.vendorTopUpHistoryPagination = {
         totalCount: 0,
         totalPages: 0,
         currentPage: 1,
@@ -2341,6 +2470,29 @@ const vendorSlice = createSlice({
           hasPrevious: false,
         }
       })
+      // Fetch vendor top-up history cases
+      .addCase(fetchVendorTopUpHistory.pending, (state) => {
+        state.vendorTopUpHistoryLoading = true
+        state.vendorTopUpHistoryError = null
+      })
+      .addCase(fetchVendorTopUpHistory.fulfilled, (state, action: PayloadAction<VendorTopUpHistoryResponse>) => {
+        state.vendorTopUpHistoryLoading = false
+        state.vendorTopUpHistory = action.payload.data
+        state.vendorTopUpHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+        state.vendorTopUpHistoryError = null
+      })
+      .addCase(fetchVendorTopUpHistory.rejected, (state, action) => {
+        state.vendorTopUpHistoryLoading = false
+        state.vendorTopUpHistoryError = (action.payload as string) || "Failed to fetch vendor top-up history"
+        state.vendorTopUpHistory = []
+      })
   },
 })
 
@@ -2364,12 +2516,14 @@ export const {
   clearVendorUpdate,
   clearWebhookSecretRotation,
   clearAllVendorPayments,
+  clearVendorTopUpHistory,
   resetVendorState,
   setPagination,
   setChangeRequestsPagination,
   setChangeRequestsByVendorPagination,
   setVendorPaymentsPagination,
   setAllVendorPaymentsPagination,
+  setVendorTopUpHistoryPagination,
   updateCurrentVendor,
   updateVendorWallet,
   updateWalletBalanceAfterTopUp,

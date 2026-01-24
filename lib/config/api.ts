@@ -388,7 +388,7 @@ export const API_ENDPOINTS = {
     VENDOR_PAYMENT: "/vendors/{id}/payments",
     ROTATE_WEBHOOK_SECRET: "/vendors/{id}/webhook/secret/rotate",
     ALL_VENDOR_PAYMENT: "/vendors/payments",
-    TOP_UP_HISTORY: "/vendors/{id}/wallet/top-up",
+    TOP_UP_HISTORY: "/vendors/wallet/top-ups",
   },
 
   METERS: {

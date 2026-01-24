@@ -324,6 +324,12 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["R"],
       },
       {
+        name: "Vendors Topup History",
+        href: "/vendor-management/vendors-topup-history",
+        privilegeKey: "vendors",
+        requiredActions: ["R"],
+      },
+      {
         name: "Add New Vendor",
         href: "/vendor-management/add-new-vendor",
         privilegeKey: "vendors",
