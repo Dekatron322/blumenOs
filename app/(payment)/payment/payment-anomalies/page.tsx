@@ -938,6 +938,7 @@ export default function PaymentAnomaliesPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [showFilterModal, setShowFilterModal] = useState(false)
+  const [anomaliesAccordionOpen, setAnomaliesAccordionOpen] = useState(false)
 
   // Tab state for refund breakdown sections
   const [activeTab, setActiveTab] = useState("channel")
@@ -1243,96 +1244,126 @@ export default function PaymentAnomaliesPage() {
                   </div>
                 </div>
 
-                {/* Payment Anomalies Table */}
+                {/* Payment Anomalies Accordion */}
                 <div className="mt-6">
-                  <div className="rounded-lg border bg-white/10 p-4 backdrop-blur-sm">
-                    <h3 className="mb-4 text-lg font-semibold text-white">Payment Anomalies Summary</h3>
+                  <div className="rounded-lg border bg-white/10 backdrop-blur-sm">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-4 p-4 text-left"
+                      onClick={() => setAnomaliesAccordionOpen(!anomaliesAccordionOpen)}
+                    >
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Payment Anomalies Summary</h3>
+                        {paymentAnomalies && paymentAnomalies.length > 0 && (
+                          <p className="mt-1 text-sm text-white/70">{paymentAnomalies.length} anomaly records found</p>
+                        )}
+                      </div>
+                      <ChevronDown
+                        className={`h-5 w-5 text-white/70 transition-transform ${
+                          anomaliesAccordionOpen ? "rotate-180" : "rotate-0"
+                        }`}
+                      />
+                    </button>
 
-                    {paymentAnomaliesLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
-                      </div>
-                    ) : paymentAnomaliesError ? (
-                      <div className="py-8 text-center">
-                        <p className="text-red-300">{paymentAnomaliesError}</p>
-                      </div>
-                    ) : !paymentAnomalies || paymentAnomalies.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <p className="text-white/70">No payment anomalies found</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-white/20">
-                              <th className="px-4 py-3 text-left font-medium text-white/80">Date</th>
-                              <th className="px-4 py-3 text-left font-medium text-white/80">Rule Key</th>
-                              <th className="px-4 py-3 text-left font-medium text-white/80">Status</th>
-                              <th className="px-4 py-3 text-left font-medium text-white/80">Resolution</th>
-                              <th className="px-4 py-3 text-left font-medium text-white/80">Channel</th>
-                              <th className="px-4 py-3 text-left font-medium text-white/80">Collector</th>
-                              <th className="px-4 py-3 text-right font-medium text-white/80">Count</th>
-                              <th className="px-4 py-3 text-right font-medium text-white/80">Amount</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {paymentAnomalies.map((anomaly, index) => (
-                              <tr key={index} className="border-b border-white/10 hover:bg-white/5">
-                                <td className="px-4 py-3 text-white">
-                                  {new Date(anomaly.bucketDate).toLocaleDateString()}
-                                </td>
-                                <td className="px-4 py-3 font-mono text-xs text-white">{anomaly.ruleKey}</td>
-                                <td className="px-4 py-3">
-                                  <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                      anomaly.status === "Open"
-                                        ? "bg-amber-500/20 text-amber-300"
-                                        : "bg-green-500/20 text-green-300"
-                                    }`}
-                                  >
-                                    {anomaly.status}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-white">
-                                  <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                      anomaly.resolutionAction === PaymentAnomalyResolutionAction.None
-                                        ? "bg-gray-500/20 text-gray-300"
-                                        : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Cancel
-                                        ? "bg-red-500/20 text-red-300"
-                                        : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Refund
-                                        ? "bg-blue-500/20 text-blue-300"
-                                        : "bg-purple-500/20 text-purple-300"
-                                    }`}
-                                  >
-                                    {anomaly.resolutionAction === PaymentAnomalyResolutionAction.None
-                                      ? "None"
-                                      : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Cancel
-                                      ? "Cancel"
-                                      : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Refund
-                                      ? "Refund"
-                                      : "Ignore"}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-white">{anomaly.channel}</td>
-                                <td className="px-4 py-3 text-white">{anomaly.collectorType}</td>
-                                <td className="px-4 py-3 text-right text-white">
-                                  {anomaly.totalCount.toLocaleString()}
-                                </td>
-                                <td className="px-4 py-3 text-right text-white">
-                                  {new Intl.NumberFormat("en-NG", {
-                                    style: "currency",
-                                    currency: "NGN",
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0,
-                                  }).format(anomaly.totalAmount)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {anomaliesAccordionOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="border-t border-white/20">
+                            {paymentAnomaliesLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
+                              </div>
+                            ) : paymentAnomaliesError ? (
+                              <div className="py-8 text-center">
+                                <p className="text-red-300">{paymentAnomaliesError}</p>
+                              </div>
+                            ) : !paymentAnomalies || paymentAnomalies.length === 0 ? (
+                              <div className="py-8 text-center">
+                                <p className="text-white/70">No payment anomalies found</p>
+                              </div>
+                            ) : (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b border-white/20">
+                                      <th className="px-4 py-3 text-left font-medium text-white/80">Date</th>
+                                      <th className="px-4 py-3 text-left font-medium text-white/80">Rule Key</th>
+                                      <th className="px-4 py-3 text-left font-medium text-white/80">Status</th>
+                                      <th className="px-4 py-3 text-left font-medium text-white/80">Resolution</th>
+                                      <th className="px-4 py-3 text-left font-medium text-white/80">Channel</th>
+                                      <th className="px-4 py-3 text-left font-medium text-white/80">Collector</th>
+                                      <th className="px-4 py-3 text-right font-medium text-white/80">Count</th>
+                                      <th className="px-4 py-3 text-right font-medium text-white/80">Amount</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {paymentAnomalies.map((anomaly, index) => (
+                                      <tr key={index} className="border-b border-white/10 hover:bg-white/5">
+                                        <td className="px-4 py-3 text-white">
+                                          {new Date(anomaly.bucketDate).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-4 py-3 font-mono text-xs text-white">{anomaly.ruleKey}</td>
+                                        <td className="px-4 py-3">
+                                          <span
+                                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                              anomaly.status === "Open"
+                                                ? "bg-amber-500/20 text-amber-300"
+                                                : "bg-green-500/20 text-green-300"
+                                            }`}
+                                          >
+                                            {anomaly.status}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-white">
+                                          <span
+                                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                              anomaly.resolutionAction === PaymentAnomalyResolutionAction.None
+                                                ? "bg-gray-500/20 text-gray-300"
+                                                : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Cancel
+                                                ? "bg-red-500/20 text-red-300"
+                                                : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Refund
+                                                ? "bg-blue-500/20 text-blue-300"
+                                                : "bg-purple-500/20 text-purple-300"
+                                            }`}
+                                          >
+                                            {anomaly.resolutionAction === PaymentAnomalyResolutionAction.None
+                                              ? "None"
+                                              : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Cancel
+                                              ? "Cancel"
+                                              : anomaly.resolutionAction === PaymentAnomalyResolutionAction.Refund
+                                              ? "Refund"
+                                              : "Ignore"}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-white">{anomaly.channel}</td>
+                                        <td className="px-4 py-3 text-white">{anomaly.collectorType}</td>
+                                        <td className="px-4 py-3 text-right text-white">
+                                          {anomaly.totalCount.toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-white">
+                                          {new Intl.NumberFormat("en-NG", {
+                                            style: "currency",
+                                            currency: "NGN",
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0,
+                                          }).format(anomaly.totalAmount)}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>

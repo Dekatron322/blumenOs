@@ -192,6 +192,9 @@ export const API_ENDPOINTS = {
     APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
     CUSTOMER_LOOKUP: "/customers/lookup",
+    DATA_QUALITY_SUMMARY: "/customers/data-quality/summary",
+    DATA_QUALITY: "/customers/data-quality",
+    RESOLVE_DATA_QUALITY: "/customers/data-quality/{id}/resolve",
   },
 
   CREATE_CUSTOMER: {

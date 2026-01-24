@@ -48,6 +48,7 @@ export const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
+      { name: "Data Quality", href: "/customers/data-quality", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
       { name: "Change Request", href: "/customers/change-request", privilegeKey: "customers", requiredActions: ["E"] },
       // {
