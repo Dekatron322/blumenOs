@@ -30,15 +30,13 @@ ENV NODE_ENV=production
 ENV PORT=3000
 WORKDIR /app
 
+# Copy standalone build (includes bundled dependencies, no node_modules needed)
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+
 # Use the non-root node user provided by the base image
 USER node
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/next.config.mjs ./next.config.mjs
-COPY --from=builder /app/env.mjs ./env.mjs
-
 EXPOSE 3000
-CMD ["yarn", "start"]
+CMD ["node", "server.js"]

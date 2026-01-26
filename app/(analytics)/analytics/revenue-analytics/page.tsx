@@ -1,5 +1,6 @@
 "use client"
 
+import { DateFilter, getDateRangeUtcCapitalized } from "utils/dateRange"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useCallback, useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -405,51 +406,23 @@ export default function MeteringDashboard() {
   }
 
   const refreshRevenueData = useCallback(() => {
-    const now = new Date()
-    const endDateUtc = now.toISOString()
-    const start = new Date(now)
-
-    if (timeFilter === "day") {
-      start.setUTCDate(start.getUTCDate() - 1)
-    } else if (timeFilter === "week") {
-      start.setUTCDate(start.getUTCDate() - 7)
-    } else if (timeFilter === "month") {
-      start.setUTCMonth(start.getUTCMonth() - 1)
-    } else if (timeFilter === "year") {
-      start.setUTCFullYear(start.getUTCFullYear() - 1)
-    } else {
-      start.setUTCFullYear(start.getUTCFullYear() - 10)
-    }
-
-    const startDateUtc = start.toISOString()
+    const dateRange = getDateRangeUtcCapitalized(timeFilter as DateFilter)
 
     // Fetch all revenue analytics data
-    dispatch(
-      fetchRevenueAnalytics({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchRevenueAnalytics(dateRange))
 
     dispatch(
       fetchRevenueBreakdown({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
+        ...dateRange,
         dimension: breakdownDimension,
       })
     )
 
-    dispatch(
-      fetchRevenuePaymentTypes({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchRevenuePaymentTypes(dateRange))
 
     dispatch(
       fetchRevenueTopCollectors({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
+        ...dateRange,
         top: 10,
       })
     )

@@ -8,6 +8,7 @@ import {
   CheckCircle,
   ChevronDown,
   Edit3,
+  ExternalLink,
   Mail,
   MapPin,
   Phone,
@@ -1340,9 +1341,18 @@ const EmployeeDetailsPage = () => {
                       </h3>
                       <div className="space-y-3">
                         {employeeDetails.roles.map((role, index) => (
-                          <div key={role.roleId} className="rounded-lg bg-[#f9f9f9] p-3">
-                            <div className="text-sm font-medium text-gray-900 sm:text-base">{role.name}</div>
-                            <div className="text-xs text-gray-600 sm:text-sm">{role.category}</div>
+                          <div
+                            key={role.roleId}
+                            className="group cursor-pointer rounded-lg bg-[#f9f9f9] p-3 transition-all hover:bg-gray-100 hover:shadow-sm"
+                            onClick={() => router.push(`/roles/details/${role.roleId}`)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-gray-900 sm:text-base">{role.name}</div>
+                                <div className="text-xs text-gray-600 sm:text-sm">{role.category}</div>
+                              </div>
+                              <ExternalLink className="size-4 text-blue-500 transition-all" />
+                            </div>
                           </div>
                         ))}
                       </div>

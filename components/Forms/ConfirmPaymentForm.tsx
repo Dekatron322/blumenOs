@@ -4,7 +4,7 @@ import React, { useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { confirmPayment } from "lib/redux/agentSlice"
+import { clearConfirmPayment, confirmPayment } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import { notify } from "components/ui/Notification/Notification"
 
@@ -27,6 +27,8 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
   amount,
   onSuccess,
 }) => {
+  console.log("ConfirmPaymentForm props:", { isOpen, paymentId, paymentRef, customerName, amount })
+
   const dispatch = useAppDispatch()
   const { confirmPaymentLoading, confirmPaymentError, confirmPaymentSuccess } = useAppSelector((state) => state.agents)
 
@@ -50,7 +52,21 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
     }
   }, [confirmPaymentError])
 
+  // Clear confirm payment state when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearConfirmPayment())
+    }
+  }, [dispatch])
+
   const handleConfirm = () => {
+    console.log("ConfirmPaymentForm handleConfirm called", { paymentId, paymentRef })
+
+    if (!paymentId) {
+      console.error("Payment ID is missing, cannot confirm payment")
+      return
+    }
+
     dispatch(confirmPayment(paymentId))
       .unwrap()
       .catch((error) => {
@@ -61,6 +77,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
 
   const handleClose = () => {
     if (!confirmPaymentLoading) {
+      dispatch(clearConfirmPayment())
       onClose()
     }
   }
@@ -145,7 +162,7 @@ const ConfirmPaymentForm: React.FC<ConfirmPaymentFormProps> = ({
               <ButtonModule
                 variant="primary"
                 onClick={handleConfirm}
-                disabled={confirmPaymentLoading}
+                disabled={confirmPaymentLoading || !paymentId}
                 loading={confirmPaymentLoading}
               >
                 Confirm Payment

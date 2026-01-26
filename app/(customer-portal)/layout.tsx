@@ -5,12 +5,8 @@ import CustomerAuthProvider from "lib/providers/customerAuthProvider"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <ThemeProviders>
-          <CustomerAuthProvider>{children}</CustomerAuthProvider>
-        </ThemeProviders>
-      </body>
-    </html>
+    <ThemeProviders>
+      <CustomerAuthProvider>{children}</CustomerAuthProvider>
+    </ThemeProviders>
   )
 }

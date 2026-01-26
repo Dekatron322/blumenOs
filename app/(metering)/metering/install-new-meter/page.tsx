@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { ButtonModule } from "components/ui/Button/Button"
 import { FormInputModule } from "components/ui/Input/Input"
@@ -18,7 +18,7 @@ import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
 import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCountries } from "lib/redux/countriesSlice"
-import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchCustomerById, fetchCustomers } from "lib/redux/customerSlice"
 import { fetchMeterBrands } from "lib/redux/meterBrandsSlice"
 import { fetchMeterCategories } from "lib/redux/meterCategorySlice"
 import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
@@ -64,6 +64,8 @@ interface MeterFormData {
 const InstallNewMeterPage = () => {
   const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const preselectedCustomerId = searchParams.get("customerId")
   const [currentStep, setCurrentStep] = useState(1)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
@@ -122,6 +124,8 @@ const InstallNewMeterPage = () => {
     customers,
     loading: customersLoading,
     error: customersError,
+    currentCustomer,
+    currentCustomerLoading,
   } = useSelector((state: RootState) => state.customers)
 
   const {
@@ -195,6 +199,37 @@ const InstallNewMeterPage = () => {
     dispatch(fetchMeterCategories({ pageNumber: 1, pageSize: 100 }))
     dispatch(fetchTariffGroups({ PageNumber: 1, PageSize: 100, HasNonZeroTariffIndex: true }))
   }, [dispatch])
+
+  // Fetch customer details when coming from customer details page with customerId in URL
+  useEffect(() => {
+    if (preselectedCustomerId) {
+      const customerId = Number(preselectedCustomerId)
+      dispatch(fetchCustomerById(customerId))
+    }
+  }, [preselectedCustomerId, dispatch])
+
+  // Prefill customer data when customer details are loaded
+  useEffect(() => {
+    if (currentCustomer && !currentCustomerLoading) {
+      setFormData((prev) => ({
+        ...prev,
+        customerId: currentCustomer.id,
+        // Location fields
+        address: currentCustomer.address || prev.address,
+        addressTwo: currentCustomer.addressTwo || prev.addressTwo,
+        city: currentCustomer.city || prev.city,
+        state: currentCustomer.provinceId || prev.state,
+        latitude: currentCustomer.latitude || prev.latitude,
+        longitude: currentCustomer.longitude || prev.longitude,
+        // Infrastructure fields
+        distributionSubstationId: currentCustomer.distributionSubstationId || prev.distributionSubstationId,
+        feederId: currentCustomer.feederId || prev.feederId,
+        areaOfficeId: currentCustomer.serviceCenter?.areaOfficeId || prev.areaOfficeId,
+        // Billing fields
+        tariffId: currentCustomer.tariffId || prev.tariffId,
+      }))
+    }
+  }, [currentCustomer, currentCustomerLoading])
 
   // Debounced search handlers
   const debouncedSearchRef = React.useRef<Record<string, NodeJS.Timeout>>({})
@@ -488,6 +523,17 @@ const InstallNewMeterPage = () => {
     })),
   ]
 
+  // Auto-fill form fields when a customer is selected
+  const handleCustomerSelect = useCallback(
+    (customerId: number) => {
+      // Fetch full customer details to get area office and other nested data
+      if (customerId && customerId !== 0) {
+        dispatch(fetchCustomerById(customerId))
+      }
+    },
+    [dispatch]
+  )
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }
   ) => {
@@ -518,6 +564,12 @@ const InstallNewMeterPage = () => {
     // Handle boolean fields
     if (["isSmart", "isMeterActive"].includes(name)) {
       processedValue = value === "true" || value === true
+    }
+
+    // If customer is being selected, auto-fill related fields
+    if (name === "customerId" && processedValue !== 0) {
+      handleCustomerSelect(processedValue as number)
+      return
     }
 
     setFormData((prev) => ({
@@ -1582,4 +1634,13 @@ const InstallNewMeterPage = () => {
   )
 }
 
-export default InstallNewMeterPage
+// Wrapper component with Suspense boundary
+const InstallNewMeterPageWrapper = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InstallNewMeterPage />
+    </Suspense>
+  )
+}
+
+export default InstallNewMeterPageWrapper

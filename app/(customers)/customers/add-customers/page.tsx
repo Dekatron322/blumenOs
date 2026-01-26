@@ -14,9 +14,7 @@ import { AppDispatch, RootState } from "lib/redux/store"
 import { clearCreateState, createCustomer } from "lib/redux/createCustomerSlice"
 import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
 import { fetchServiceStations } from "lib/redux/serviceStationsSlice"
-import { fetchEmployees } from "lib/redux/employeeSlice"
 import { fetchCustomerCategories, fetchSubCategoriesByCategoryId } from "lib/redux/customersCategoriesSlice"
-import { fetchFeeders } from "lib/redux/feedersSlice"
 import { fetchTariffGroups } from "lib/redux/tariffGroupSlice"
 import { fetchCountries, fetchLGAsByProvinceId } from "lib/redux/countriesSlice"
 
@@ -82,8 +80,6 @@ const AddCustomerPage = () => {
     error: serviceStationsError,
   } = useSelector((state: RootState) => state.serviceStations)
 
-  const { employees, employeesLoading, employeesError } = useSelector((state: RootState) => state.employee)
-
   const {
     categories: customerCategories,
     loading: customerCategoriesLoading,
@@ -99,8 +95,6 @@ const AddCustomerPage = () => {
   } = useSelector((state: RootState) => state.countries)
 
   const { lgas, loading: lgasLoading } = useSelector((state: RootState) => state.countries)
-
-  const { feeders, loading: feedersLoading, error: feedersError } = useSelector((state: RootState) => state.feeders)
 
   const { tariffGroups, tariffGroupsLoading, tariffGroupsError } = useSelector((state: RootState) => state.tariffGroups)
 
@@ -176,25 +170,10 @@ const AddCustomerPage = () => {
       })
     )
 
-    dispatch(
-      fetchEmployees({
-        pageNumber: 1,
-        pageSize: 100,
-      })
-    )
-
     dispatch(fetchCustomerCategories())
 
     // Load countries so we can populate provinces (states) for Nigeria
     dispatch(fetchCountries())
-
-    // Load feeders for selection
-    dispatch(
-      fetchFeeders({
-        pageNumber: 1,
-        pageSize: 100,
-      })
-    )
 
     // Load tariff groups for selection
     dispatch(
@@ -266,47 +245,6 @@ const AddCustomerPage = () => {
     [dispatch]
   )
 
-  const handleFeederSearch = React.useCallback(
-    (searchTerm: string) => {
-      setSearchTerms((prev) => ({ ...prev, feeder: searchTerm }))
-
-      // Clear existing timeout
-      if (debouncedSearchRef.current.feeder) {
-        clearTimeout(debouncedSearchRef.current.feeder)
-      }
-
-      // Set new timeout for debounced API call
-      debouncedSearchRef.current.feeder = setTimeout(() => {
-        if (searchTerm.trim()) {
-          setSearchLoading((prev) => ({ ...prev, feeder: true }))
-
-          // Check if search term is a pure number (ID search)
-          const isNumericSearch = /^\d+$/.test(searchTerm.trim())
-          const searchValue = isNumericSearch ? searchTerm.trim() : searchTerm.trim()
-
-          dispatch(
-            fetchFeeders({
-              pageNumber: 1,
-              pageSize: 50,
-              search: searchValue,
-            })
-          ).finally(() => {
-            setSearchLoading((prev) => ({ ...prev, feeder: false }))
-          })
-        } else {
-          // Load default data when search is cleared
-          dispatch(
-            fetchFeeders({
-              pageNumber: 1,
-              pageSize: 100,
-            })
-          )
-        }
-      }, 500) // 500ms debounce delay
-    },
-    [dispatch]
-  )
-
   // Handle success and error states
   React.useEffect(() => {
     if (createSuccess) {
@@ -349,15 +287,6 @@ const AddCustomerPage = () => {
     ...distributionSubstations.map((substation) => ({
       value: substation.id,
       label: `ID: ${substation.id} - ${substation.dssCode} (${substation.nercCode})`,
-    })),
-  ]
-
-  // Feeder options from fetched data
-  const feederOptions = [
-    { value: undefined, label: "Select feeder" },
-    ...feeders.map((feeder) => ({
-      value: feeder.id,
-      label: `${feeder.name} (${feeder.nercCode})`,
     })),
   ]
 
@@ -417,15 +346,6 @@ const AddCustomerPage = () => {
     ...serviceStations.map((serviceStation) => ({
       value: serviceStation.id,
       label: `${serviceStation.name} (${serviceStation.code})`,
-    })),
-  ]
-
-  // Employee options for sales rep and technical engineer
-  const employeeOptions = [
-    { value: 0, label: "Select employee" },
-    ...employees.map((employee) => ({
-      value: employee.id,
-      label: `${employee.fullName} (${employee.email})`,
     })),
   ]
 
@@ -521,7 +441,7 @@ const AddCustomerPage = () => {
 
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 6))
+      setCurrentStep((prev) => Math.min(prev + 1, 3))
       setIsMobileSidebarOpen(false)
     } else {
       notify("error", "Please fix the form errors before continuing", {
@@ -862,7 +782,7 @@ const AddCustomerPage = () => {
         </div>
 
         <div className="flex gap-2">
-          {currentStep < 6 ? (
+          {currentStep < 3 ? (
             <button
               type="button"
               onClick={nextStep}
@@ -1205,18 +1125,6 @@ const AddCustomerPage = () => {
                             disabled={serviceStationsLoading}
                           />
 
-                          {/* <FormSelectModule
-                            label="Feeder"
-                            name="feederId"
-                            value={formData.feederId}
-                            onChange={handleInputChange}
-                            options={feederOptions}
-                            disabled={feedersLoading || searchLoading.feeder}
-                            searchable
-                            onSearchChange={handleFeederSearch}
-                            searchTerm={searchTerms.feeder}
-                          /> */}
-
                           <FormInputModule
                             label="Map Name"
                             name="mapName"
@@ -1252,208 +1160,6 @@ const AddCustomerPage = () => {
                             options={customerSubCategoryOptions}
                             disabled={subCategoriesLoading || !formData.customerCategoryId}
                           />
-
-                          {/* <FormSelectModule
-                            label="Sales Representative"
-                            name="salesRepUserId"
-                            value={formData.salesRepUserId}
-                            onChange={handleInputChange}
-                            options={employeeOptions}
-                            disabled={employeesLoading}
-                          /> */}
-
-                          {/* <FormSelectModule
-                            label="Technical Engineer"
-                            name="technicalEngineerUserId"
-                            value={formData.technicalEngineerUserId}
-                            onChange={handleInputChange}
-                            options={employeeOptions}
-                            disabled={employeesLoading}
-                          /> */}
-                        </div>
-
-                        {distributionSubstationsLoading && (
-                          <p className="text-sm text-gray-500">Loading distribution substations...</p>
-                        )}
-                        {distributionSubstationsError && (
-                          <p className="text-sm text-red-500">
-                            Error loading distribution substations: {distributionSubstationsError}
-                          </p>
-                        )}
-                        {serviceStationsLoading && <p className="text-sm text-gray-500">Loading service centers...</p>}
-                        {serviceStationsError && (
-                          <p className="text-sm text-red-500">Error loading service centers: {serviceStationsError}</p>
-                        )}
-                        {feedersLoading && <p className="text-sm text-gray-500">Loading feeders...</p>}
-                        {feedersError && <p className="text-sm text-red-500">Error loading feeders: {feedersError}</p>}
-                        {tariffGroupsLoading && <p className="text-sm text-gray-500">Loading tariffs...</p>}
-                        {tariffGroupsError && (
-                          <p className="text-sm text-red-500">Error loading tariffs: {tariffGroupsError}</p>
-                        )}
-                        {customerCategoriesLoading && (
-                          <p className="text-sm text-gray-500">Loading customer categories...</p>
-                        )}
-                        {customerCategoriesError && (
-                          <p className="text-sm text-red-500">
-                            Error loading customer categories: {customerCategoriesError}
-                          </p>
-                        )}
-                        {employeesLoading && <p className="text-sm text-gray-500">Loading employees...</p>}
-                        {employeesError && (
-                          <p className="text-sm text-red-500">Error loading employees: {employeesError}</p>
-                        )}
-                      </motion.div>
-                    )}
-
-                    {/* Step 5: Meter and Service Options */}
-                    {currentStep === 5 && (
-                      <motion.div
-                        key="step-5"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Meter and Service Options</h4>
-                          <p className="text-sm text-gray-600">Configure meter and service settings for the customer</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                          <ToggleSwitch
-                            label="PPM"
-                            name="isPPM"
-                            checked={formData.isPPM}
-                            onChange={(checked) => handleToggleChange("isPPM", checked)}
-                          />
-
-                          <ToggleSwitch
-                            label="MD"
-                            name="isMD"
-                            checked={formData.isMD}
-                            onChange={(checked) => handleToggleChange("isMD", checked)}
-                          />
-
-                          <ToggleSwitch
-                            label="Urban"
-                            name="isUrban"
-                            checked={formData.isUrban}
-                            onChange={(checked) => handleToggleChange("isUrban", checked)}
-                          />
-
-                          <ToggleSwitch
-                            label="HRB"
-                            name="isHRB"
-                            checked={formData.isHRB}
-                            onChange={(checked) => handleToggleChange("isHRB", checked)}
-                          />
-
-                          <ToggleSwitch
-                            label="Government Account"
-                            name="isCustomerAccGovt"
-                            checked={formData.isCustomerAccGovt}
-                            onChange={(checked) => handleToggleChange("isCustomerAccGovt", checked)}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 6: Financial Information */}
-                    {currentStep === 6 && (
-                      <motion.div
-                        key="step-6"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Financial Information</h4>
-                          <p className="text-sm text-gray-600">
-                            Enter the customer&apos;s financial and billing details
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                          <FormInputModule
-                            label="Stored Average"
-                            name="storedAverage"
-                            type="number"
-                            placeholder="Enter stored average"
-                            value={formData.storedAverage === 0 ? "" : formData.storedAverage}
-                            onChange={handleInputChange}
-                            step="0.01"
-                          />
-
-                          <FormSelectModule
-                            label="Customer Category"
-                            name="customerCategoryId"
-                            value={formData.customerCategoryId}
-                            onChange={handleInputChange}
-                            options={customerCategoryOptions}
-                            disabled={customerCategoriesLoading}
-                          />
-
-                          <FormSelectModule
-                            label="Customer Sub-Category"
-                            name="customerSubCategoryId"
-                            value={formData.customerSubCategoryId}
-                            onChange={handleInputChange}
-                            options={customerSubCategoryOptions}
-                            disabled={subCategoriesLoading || !formData.customerCategoryId}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 7: Additional Information */}
-                    {currentStep === 7 && (
-                      <motion.div
-                        key="step-7"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4 rounded-lg bg-[#F9f9f9] p-4 sm:space-y-6 sm:p-6"
-                      >
-                        <div className="border-b pb-3">
-                          <h4 className="text-lg font-medium text-gray-900">Additional Information</h4>
-                          <p className="text-sm text-gray-600">Enter additional customer details and comments</p>
-                        </div>
-
-                        <div className="space-y-4">
-                          <FormInputModule
-                            label="Comment"
-                            name="comment"
-                            type="text"
-                            placeholder="Enter any comments or notes"
-                            value={formData.comment}
-                            onChange={handleInputChange}
-                          />
-
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                            <FormSelectModule
-                              label="Sales Representative"
-                              name="salesRepUserId"
-                              value={formData.salesRepUserId}
-                              onChange={handleInputChange}
-                              options={employeeOptions}
-                              disabled={employeesLoading}
-                            />
-
-                            <FormSelectModule
-                              label="Technical Engineer"
-                              name="technicalEngineerUserId"
-                              value={formData.technicalEngineerUserId}
-                              onChange={handleInputChange}
-                              options={employeeOptions}
-                              disabled={employeesLoading}
-                            />
-                          </div>
-
-                          {employeesLoading && <p className="text-sm text-gray-500">Loading employees...</p>}
-                          {employeesError && (
-                            <p className="text-sm text-red-500">Error loading employees: {employeesError}</p>
-                          )}
                         </div>
                       </motion.div>
                     )}
@@ -1515,7 +1221,7 @@ const AddCustomerPage = () => {
                         Reset
                       </ButtonModule>
 
-                      {currentStep < 6 ? (
+                      {currentStep < 3 ? (
                         <ButtonModule
                           variant="primary"
                           size="md"

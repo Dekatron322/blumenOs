@@ -48,6 +48,7 @@ export const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/customers/overview", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
+      { name: "Data Quality", href: "/customers/data-quality", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
       { name: "Change Request", href: "/customers/change-request", privilegeKey: "customers", requiredActions: ["E"] },
       // {
@@ -169,12 +170,35 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "payments",
         requiredActions: ["R"],
       },
+      {
+        name: "Vend",
+        href: "/tokens/vend",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
       // {
       //   name: "Verify Meter Tokens",
       //   href: "/tokens/verify-meter-tokens",
       //   privilegeKey: "payments",
       //   requiredActions: ["R"],
       // },
+    ],
+  },
+  {
+    name: "Refund Management",
+    href: "/refund",
+    icon: PaymentIcon,
+    privilegeKey: "refund.view",
+    requiredActions: ["R"],
+    children: [
+      { name: "Overview", href: "/refund/overview", privilegeKey: "refund.report", requiredActions: ["R"] },
+      { name: "Make Refund", href: "/refund/make-refund", privilegeKey: "refund.create", requiredActions: ["W"] },
+      {
+        name: "Refund History",
+        href: "/refund/refund-history",
+        privilegeKey: "refund.view",
+        requiredActions: ["R"],
+      },
     ],
   },
   {
@@ -186,6 +210,12 @@ export const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Collections", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
+      {
+        name: "Payment Anomalies",
+        href: "/payment/payment-anomalies",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
       { name: "Record Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Cash Management", href: "/payment/cash-management", privilegeKey: "payments", requiredActions: ["R"] },
       {
@@ -285,6 +315,18 @@ export const allLinks: LinkItem[] = [
       {
         name: "View All Vendors",
         href: "/vendor-management/all-vendors",
+        privilegeKey: "vendors",
+        requiredActions: ["R"],
+      },
+      {
+        name: "View Vendors Collections",
+        href: "/vendor-management/view-vendors-collection",
+        privilegeKey: "vendors",
+        requiredActions: ["R"],
+      },
+      {
+        name: "Vendors Topup History",
+        href: "/vendor-management/vendors-topup-history",
         privilegeKey: "vendors",
         requiredActions: ["R"],
       },
@@ -408,34 +450,34 @@ export const allLinks: LinkItem[] = [
   //   privilegeKey: "assets",
   //   requiredActions: ["R"],
   // },
-  // {
-  //   name: "Complaince & Audit",
-  //   href: "/complaince",
-  //   icon: AuditIcon,
-  //   privilegeKey: "system-settings",
-  //   requiredActions: ["R"],
-  //   children: [
-  //     // { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
-  //     {
-  //       name: "Audit Trails",
-  //       href: "/complaince/audit-trails",
-  //       privilegeKey: "system-settings",
-  //       requiredActions: ["R"],
-  //     },
-  //     {
-  //       name: "Complaince Checks",
-  //       href: "/complaince/complaince-checks",
-  //       privilegeKey: "system-settings",
-  //       requiredActions: ["E"],
-  //     },
-  //     // {
-  //     //   name: "NERC Reports",
-  //     //   href: "/complaince/nerc-reports",
-  //     //   privilegeKey: "system-settings",
-  //     //   requiredActions: ["R"],
-  //     // },
-  //   ],
-  // },
+  {
+    name: "Complaince & Audit",
+    href: "/complaince",
+    icon: AuditIcon,
+    privilegeKey: "system-settings",
+    requiredActions: ["R"],
+    children: [
+      // { name: "Overview", href: "/complaince/overview", privilegeKey: "system-settings", requiredActions: ["W"] },
+      {
+        name: "Audit Trails",
+        href: "/complaince/audit-trails",
+        privilegeKey: "system-settings",
+        requiredActions: ["R"],
+      },
+      // {
+      //   name: "Complaince Checks",
+      //   href: "/complaince/complaince-checks",
+      //   privilegeKey: "system-settings",
+      //   requiredActions: ["E"],
+      // },
+      // {
+      //   name: "NERC Reports",
+      //   href: "/complaince/nerc-reports",
+      //   privilegeKey: "system-settings",
+      //   requiredActions: ["R"],
+      // },
+    ],
+  },
 
   {
     name: "Disputes",

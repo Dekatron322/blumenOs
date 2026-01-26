@@ -1005,9 +1005,9 @@ const RoleDetailsPage = () => {
                                             </span>
                                           ))}
                                       </div>
-                                      <div className="mt-1 text-xs text-gray-500">
+                                      {/* <div className="mt-1 text-xs text-gray-500">
                                         Binary: {privilege.actions.toString(2).padStart(6, "0")}
-                                      </div>
+                                      </div> */}
                                     </div>
                                     <div>
                                       <div className="text-xs font-medium text-gray-500">Available Actions</div>
@@ -1023,9 +1023,9 @@ const RoleDetailsPage = () => {
                                             </span>
                                           ))}
                                       </div>
-                                      <div className="mt-1 text-xs text-gray-500">
+                                      {/* <div className="mt-1 text-xs text-gray-500">
                                         Binary: {privilege.availableActions.toString(2).padStart(6, "0")}
-                                      </div>
+                                      </div> */}
                                     </div>
                                   </div>
                                 </div>

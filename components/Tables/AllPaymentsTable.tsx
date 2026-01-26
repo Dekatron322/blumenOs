@@ -10,15 +10,18 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  clearConfirmPayment,
   clearError,
   clearPayments,
   CollectorType,
+  fetchAgentSummary,
   fetchPayments,
   Payment,
   PaymentChannel,
   PaymentsRequestParams,
   PaymentStatus,
   setPaymentsPagination,
+  TimeRange,
 } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
@@ -200,6 +203,286 @@ const LoadingSkeleton = () => {
   )
 }
 
+// Statistics Cards Component using Agent Summary endpoint
+const StatisticsCards = () => {
+  const dispatch = useAppDispatch()
+  const { agentSummary, agentSummaryLoading } = useAppSelector((state) => state.agents)
+  const [activeRange, setActiveRange] = useState<TimeRange>(TimeRange.Today)
+
+  useEffect(() => {
+    dispatch(fetchAgentSummary())
+  }, [dispatch])
+
+  const timeRangeTabs = [
+    { value: TimeRange.Today, label: "Today" },
+    { value: TimeRange.Yesterday, label: "Yesterday" },
+    { value: TimeRange.ThisWeek, label: "This Week" },
+    { value: TimeRange.ThisMonth, label: "This Month" },
+    { value: TimeRange.LastMonth, label: "Last Month" },
+    { value: TimeRange.ThisYear, label: "This Year" },
+    { value: TimeRange.AllTime, label: "All Time" },
+  ]
+
+  // Get the selected period from agent summary
+  const currentPeriod = agentSummary?.periods?.find((period) => period.range === activeRange)
+  const summary = currentPeriod ?? {
+    collectedAmount: 0,
+    collectedCount: 0,
+    prepaidCollectedAmount: 0,
+    prepaidCollectedCount: 0,
+    postpaidCollectedAmount: 0,
+    postpaidCollectedCount: 0,
+    pendingAmount: 0,
+    pendingCount: 0,
+    cashClearedAmount: 0,
+    cashClearanceCount: 0,
+    billingDisputesRaised: 0,
+    billingDisputesResolved: 0,
+    changeRequestsRaised: 0,
+    changeRequestsResolved: 0,
+    outstandingCashEstimate: 0,
+    collectionsByChannel: [],
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const getChannelIcon = (channel: string) => {
+    switch (channel) {
+      case "Cash":
+        return "💵"
+      case "BankTransfer":
+        return "🏦"
+      case "Pos":
+        return "💳"
+      case "Card":
+        return "💳"
+      case "VendorWallet":
+        return "👛"
+      case "Cheque":
+        return "📝"
+      default:
+        return "💰"
+    }
+  }
+
+  if (agentSummaryLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {[...Array(7)].map((_, i) => (
+            <div key={i} className="h-8 w-20 animate-pulse rounded-full bg-white/10" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-white/10 md:h-32" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Time Range Tabs */}
+      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
+        {timeRangeTabs.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setActiveRange(tab.value)}
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all md:px-4 md:py-2 md:text-sm ${
+              activeRange === tab.value
+                ? "bg-white text-[#004B23] shadow-md"
+                : "bg-white/10 text-white/80 hover:bg-white/20"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Statistics Cards Grid */}
+      <motion.div
+        key={activeRange}
+        className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Total Collected Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                <span className="text-sm">₦</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Collected</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.collectedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-white/60">{summary.collectedCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Prepaid Collections Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-blue-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-400/20">
+                <span className="text-sm text-blue-300">⚡</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prepaid</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.prepaidCollectedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-blue-300/80">{summary.prepaidCollectedCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Postpaid Collections Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
+                <span className="text-sm text-amber-300">📋</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Postpaid</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.postpaidCollectedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-amber-300/80">{summary.postpaidCollectedCount} transactions</p>
+          </div>
+        </div>
+
+        {/* Pending Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-orange-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-orange-400/20">
+                <span className="text-sm text-orange-300">⏳</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.pendingAmount)}
+            </p>
+            <p className="mt-1 text-xs text-orange-300/80">{summary.pendingCount} awaiting</p>
+          </div>
+        </div>
+
+        {/* Cash Cleared Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
+                <span className="text-sm text-emerald-300">✓</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Cash Cleared</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.cashClearedAmount)}
+            </p>
+            <p className="mt-1 text-xs text-emerald-300/80">{summary.cashClearanceCount} clearances</p>
+          </div>
+        </div>
+
+        {/* Outstanding Cash Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
+                <span className="text-sm text-red-300">💰</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Outstanding Cash</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+              {formatCurrency(summary.outstandingCashEstimate)}
+            </p>
+            <p className="mt-1 text-xs text-red-300/80">Estimate</p>
+          </div>
+        </div>
+
+        {/* Billing Disputes Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-purple-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400/20">
+                <span className="text-sm text-purple-300">⚠️</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Billing Disputes</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{summary.billingDisputesRaised}</p>
+            <p className="mt-1 text-xs text-purple-300/80">{summary.billingDisputesResolved} resolved</p>
+          </div>
+        </div>
+
+        {/* Change Requests Card */}
+        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-cyan-400/10 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-400/20">
+                <span className="text-sm text-cyan-300">📝</span>
+              </div>
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Change Requests</p>
+            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{summary.changeRequestsRaised}</p>
+            <p className="mt-1 text-xs text-cyan-300/80">{summary.changeRequestsResolved} resolved</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Collections by Channel */}
+      {summary.collectionsByChannel && summary.collectionsByChannel.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mt-4"
+        >
+          <h3 className="mb-3 text-sm font-medium text-white/80">Collections by Channel</h3>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {summary.collectionsByChannel.map((channel) => (
+              <div
+                key={channel.channel}
+                className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15"
+              >
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                      <span className="text-sm">{getChannelIcon(channel.channel)}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">{channel.channel}</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl">{formatCurrency(channel.amount)}</p>
+                  <p className="mt-1 text-xs text-white/60">{channel.count} transactions</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 interface AppliedFilters {
   agentId?: number
   status?: PaymentStatus
@@ -238,7 +521,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { payments, paymentsLoading, paymentsError, paymentsPagination } = useAppSelector((state) => state.agents)
-  const { agent } = useAppSelector((state) => state.auth)
+  const { agent, user } = useAppSelector((state) => state.auth)
 
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null)
@@ -254,6 +537,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   // }
 
   const handleConfirmPayment = (payment: Payment) => {
+    dispatch(clearConfirmPayment())
     setSelectedPayment(payment)
     setShowConfirmForm(true)
   }
@@ -351,6 +635,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     return () => {
       dispatch(clearError())
       dispatch(clearPayments())
+      dispatch(clearConfirmPayment())
     }
   }, [dispatch])
 
@@ -416,7 +701,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Chaque:
+      case PaymentChannel.Cheque:
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",
@@ -524,6 +809,33 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   const [exportDateRange, setExportDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all")
   const [exportFromDate, setExportFromDate] = useState("")
   const [exportToDate, setExportToDate] = useState("")
+  const [exportPaymentCategory, setExportPaymentCategory] = useState<"all" | "prepaid" | "postpaid">("all")
+
+  // Additional state for modal tabs
+  const [exportModalTab, setExportModalTab] = useState<"basic" | "advanced">("basic")
+  const [exportChannel, setExportChannel] = useState<string>("all")
+  const [exportStatus, setExportStatus] = useState<string>("all")
+  const [exportCollectorType, setExportCollectorType] = useState<string>("all")
+  const [exportClearanceStatus, setExportClearanceStatus] = useState<string>("all")
+  const [exportCustomerId, setExportCustomerId] = useState<string>("")
+  const [exportVendorId, setExportVendorId] = useState<string>("")
+  const [exportAgentId, setExportAgentId] = useState<string>("")
+  const [exportReference, setExportReference] = useState<string>("")
+  const [exportAccountNumber, setExportAccountNumber] = useState<string>("")
+  const [exportMeterNumber, setExportMeterNumber] = useState<string>("")
+  const [exportPaymentTypeId, setExportPaymentTypeId] = useState<string>("")
+  const [exportAreaOfficeId, setExportAreaOfficeId] = useState<string>("")
+  const [exportDistributionSubstationId, setExportDistributionSubstationId] = useState<string>("")
+  const [exportFeederId, setExportFeederId] = useState<string>("")
+  const [exportServiceCenterId, setExportServiceCenterId] = useState<string>("")
+  const [exportPostpaidBillId, setExportPostpaidBillId] = useState<string>("")
+  const [exportSearch, setExportSearch] = useState<string>("")
+  const [exportIsCleared, setIsExportCleared] = useState<string>("all")
+  const [exportIsRemitted, setIsExportRemitted] = useState<string>("all")
+  const [exportCustomerIsPPM, setExportCustomerIsPPM] = useState<string>("all")
+  const [exportCustomerIsMD, setExportCustomerIsMD] = useState<string>("all")
+  const [exportCustomerIsUrban, setExportCustomerIsUrban] = useState<string>("all")
+  const [exportCustomerProvinceId, setExportCustomerProvinceId] = useState<string>("")
 
   const getExportDateRange = () => {
     const today = new Date()
@@ -540,21 +852,31 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
       case "week":
         const weekAgo = new Date(today)
         weekAgo.setDate(weekAgo.getDate() - 7)
+        const endOfWeek = new Date()
+        endOfWeek.setHours(23, 59, 59, 999)
         return {
           from: weekAgo.toISOString(),
-          to: new Date().toISOString(),
+          to: endOfWeek.toISOString(),
         }
       case "month":
         const monthAgo = new Date(today)
         monthAgo.setMonth(monthAgo.getMonth() - 1)
+        const endOfMonth = new Date()
+        endOfMonth.setHours(23, 59, 59, 999)
         return {
           from: monthAgo.toISOString(),
-          to: new Date().toISOString(),
+          to: endOfMonth.toISOString(),
         }
       case "custom":
+        const fromDate = exportFromDate ? new Date(exportFromDate) : null
+        const toDate = exportToDate ? new Date(exportToDate) : null
+
+        if (fromDate) fromDate.setHours(0, 0, 0, 0)
+        if (toDate) toDate.setHours(23, 59, 59, 999)
+
         return {
-          from: exportFromDate ? new Date(exportFromDate).toISOString() : undefined,
-          to: exportToDate ? new Date(exportToDate + "T23:59:59").toISOString() : undefined,
+          from: fromDate ? fromDate.toISOString() : undefined,
+          to: toDate ? toDate.toISOString() : undefined,
         }
       default:
         return { from: undefined, to: undefined }
@@ -562,40 +884,75 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   }
 
   const exportToCSV = async () => {
+    console.log("Export function called!")
     setIsExporting(true)
     setShowExportModal(false)
 
     try {
       const dateRange = getExportDateRange()
 
-      // Fetch all payments from API
-      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENTS), {
-        params: {
-          PageNumber: 1,
-          PageSize: 10000,
-          ...(agentId !== undefined
-            ? { AgentId: agentId }
-            : appliedFilters.agentId
-            ? { AgentId: appliedFilters.agentId }
-            : {}),
-          ...(customerId !== undefined && { CustomerId: customerId }),
-          ...(searchText && { Search: searchText }),
-          ...(appliedFilters.status && { Status: appliedFilters.status }),
-          ...(appliedFilters.channel && { Channel: appliedFilters.channel }),
-          ...(appliedFilters.collectorType && { CollectorType: appliedFilters.collectorType }),
-          ...(appliedFilters.paymentTypeId && { PaymentTypeId: appliedFilters.paymentTypeId }),
-          ...(dateRange.from || appliedFilters.paidFromUtc
-            ? { PaidFromUtc: dateRange.from || appliedFilters.paidFromUtc }
-            : {}),
-          ...(dateRange.to || appliedFilters.paidToUtc ? { PaidToUtc: dateRange.to || appliedFilters.paidToUtc } : {}),
-          ...(appliedFilters.sortBy && { SortBy: appliedFilters.sortBy }),
-          ...(appliedFilters.sortOrder && { SortOrder: appliedFilters.sortOrder }),
-        },
-      })
+      // Build API parameters using the proper endpoint parameters
+      const params: any = {
+        PageNumber: 1,
+        PageSize: 1000000,
+        // Use proper date-time parameters
+        ...(dateRange.from && { PaidFromUtc: dateRange.from }),
+        ...(dateRange.to && { PaidToUtc: dateRange.to }),
+        // Add channel filter
+        ...(exportChannel !== "all" && { Channel: exportChannel }),
+        // Add status filter
+        ...(exportStatus !== "all" && { Status: exportStatus }),
+        // Add collector type filter
+        ...(exportCollectorType !== "all" && { CollectorType: exportCollectorType }),
+        // Add ID filters
+        ...(exportCustomerId && { CustomerId: parseInt(exportCustomerId) }),
+        ...(exportVendorId && { VendorId: parseInt(exportVendorId) }),
+        ...(exportAgentId && { AgentId: parseInt(exportAgentId) }),
+        ...(exportPaymentTypeId && { PaymentTypeId: parseInt(exportPaymentTypeId) }),
+        ...(exportAreaOfficeId && { AreaOfficeId: parseInt(exportAreaOfficeId) }),
+        ...(exportDistributionSubstationId && { DistributionSubstationId: parseInt(exportDistributionSubstationId) }),
+        ...(exportFeederId && { FeederId: parseInt(exportFeederId) }),
+        ...(exportServiceCenterId && { ServiceCenterId: parseInt(exportServiceCenterId) }),
+        ...(exportPostpaidBillId && { PostpaidBillId: parseInt(exportPostpaidBillId) }),
+        ...(exportCustomerProvinceId && { CustomerProvinceId: parseInt(exportCustomerProvinceId) }),
+        // Add string filters
+        ...(exportReference && { Reference: exportReference }),
+        ...(exportAccountNumber && { AccountNumber: exportAccountNumber }),
+        ...(exportMeterNumber && { MeterNumber: exportMeterNumber }),
+        ...(exportSearch && { Search: exportSearch }),
+        // Add boolean filters
+        ...(exportIsCleared !== "all" && { IsCleared: exportIsCleared === "true" }),
+        ...(exportIsRemitted !== "all" && { IsRemitted: exportIsRemitted === "true" }),
+        ...(exportCustomerIsPPM !== "all" && { CustomerIsPPM: exportCustomerIsPPM === "true" }),
+        ...(exportCustomerIsMD !== "all" && { CustomerIsMD: exportCustomerIsMD === "true" }),
+        ...(exportCustomerIsUrban !== "all" && { CustomerIsUrban: exportCustomerIsUrban === "true" }),
+        // Add clearance status filter
+        ...(exportClearanceStatus !== "all" && { ClearanceStatus: exportClearanceStatus }),
+        // Add prepaid filter for payment category
+        ...(exportPaymentCategory === "prepaid" && { PrepaidOnly: true }),
+      }
 
-      const allPayments: Payment[] = response.data?.data || []
+      console.log("Exporting payments with params:", params)
+
+      // Fetch all payments from API
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.AGENTS.PAYMENTS), { params })
+
+      console.log("API Response:", response)
+
+      let allPayments: Payment[] = response.data?.data || []
+
+      console.log("Payments found:", allPayments.length)
+
+      // If postpaid category is selected, filter out prepaid payments
+      if (exportPaymentCategory === "postpaid") {
+        allPayments = allPayments.filter((payment) => payment.isPrepaid === false)
+        console.log("After postpaid filter:", allPayments.length)
+      }
 
       if (allPayments.length === 0) {
+        console.log("No payments found for export")
+        // Show user feedback instead of silently returning
+        alert("No payments found matching your criteria. Please adjust your filters and try again.")
         setIsExporting(false)
         return
       }
@@ -632,7 +989,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         payment.areaOfficeName || "-",
       ])
 
-      const escapeCSV = (value: string | number) => {
+      const escapeCSV = (value: string | number | boolean) => {
         const stringValue = String(value)
         if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
           return `"${stringValue.replace(/"/g, '""')}"`
@@ -644,18 +1001,25 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
         "\n"
       )
 
+      console.log("CSV content generated, length:", csvContent.length)
+
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.setAttribute("href", url)
-      link.setAttribute("download", `payments_export_${new Date().toISOString().split("T")[0]}.csv`)
+      const categoryLabel = exportPaymentCategory !== "all" ? `_${exportPaymentCategory}` : ""
+      link.setAttribute("download", `payments${categoryLabel}_export_${new Date().toISOString().split("T")[0]}.csv`)
       link.style.visibility = "hidden"
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
+
+      console.log("Export completed successfully")
     } catch (error) {
       console.error("Failed to export payments:", error)
+      // Show user feedback for errors
+      alert(`Failed to export payments: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`)
     } finally {
       setIsExporting(false)
     }
@@ -667,82 +1031,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
 
   // If only showing statistics, return just the statistics cards
   if (showStatisticsOnly) {
-    const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
-    const confirmedCount = payments.filter((p) => p.status === PaymentStatus.Confirmed).length
-    const pendingCount = payments.filter((p) => p.status === PaymentStatus.Pending).length
-    const failedCount = payments.filter((p) => p.status === PaymentStatus.Failed).length
-    const totalCount = payments.length
-
-    return (
-      <motion.div
-        className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        {/* Total Amount Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                <span className="text-sm">₦</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Amount</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{formatCurrency(totalAmount)}</p>
-            <p className="mt-1 text-xs text-white/60">{totalCount} transactions</p>
-          </div>
-        </div>
-
-        {/* Confirmed Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
-                <span className="text-sm text-emerald-300">✓</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Confirmed</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{confirmedCount}</p>
-            <p className="mt-1 text-xs text-emerald-300/80">
-              {totalCount > 0 ? ((confirmedCount / totalCount) * 100).toFixed(1) : 0}% success rate
-            </p>
-          </div>
-        </div>
-
-        {/* Pending Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
-                <span className="text-sm text-amber-300">⏳</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{pendingCount}</p>
-            <p className="mt-1 text-xs text-amber-300/80">Awaiting confirmation</p>
-          </div>
-        </div>
-
-        {/* Failed Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
-                <span className="text-sm text-red-300">✕</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Failed</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{failedCount}</p>
-            <p className="mt-1 text-xs text-red-300/80">Requires attention</p>
-          </div>
-        </div>
-      </motion.div>
-    )
+    return <StatisticsCards />
   }
 
   if (paymentsLoading) return <LoadingSkeleton />
@@ -826,96 +1115,297 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             onClick={() => setShowExportModal(false)}
           >
             <motion.div
-              className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+              className="w-full max-w-lg rounded-lg bg-white shadow-xl"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Export Payments to CSV</h3>
-                <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
-                  <X className="size-5 text-gray-500" />
-                </button>
+              <div className="border-b border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Export Payments to CSV</h3>
+                  <button onClick={() => setShowExportModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                    <X className="size-5 text-gray-500" />
+                  </button>
+                </div>
+
+                {/* Tabs */}
+                <div className="mt-3 flex space-x-1 rounded-lg bg-gray-100 p-1">
+                  <button
+                    onClick={() => setExportModalTab("basic")}
+                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      exportModalTab === "basic"
+                        ? "bg-white text-[#004B23] shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Basic Filters
+                  </button>
+                  <button
+                    onClick={() => setExportModalTab("advanced")}
+                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      exportModalTab === "advanced"
+                        ? "bg-white text-[#004B23] shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Advanced Filters
+                  </button>
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: "all", label: "All Time" },
-                    { value: "today", label: "Today" },
-                    { value: "week", label: "Last 7 Days" },
-                    { value: "month", label: "Last 30 Days" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                        exportDateRange === option.value
-                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setExportDateRange("custom")}
-                  className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    exportDateRange === "custom"
-                      ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <Calendar className="mr-2 inline-block size-4" />
-                  Custom Date Range
-                </button>
+              <div className="max-h-96 overflow-y-auto p-4">
+                {exportModalTab === "basic" ? (
+                  <div className="space-y-4">
+                    {/* Date Range */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Date Range</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: "all", label: "All Time" },
+                          { value: "today", label: "Today" },
+                          { value: "week", label: "Last 7 Days" },
+                          { value: "month", label: "Last 30 Days" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setExportDateRange(option.value as typeof exportDateRange)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                              exportDateRange === option.value
+                                ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setExportDateRange("custom")}
+                        className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                          exportDateRange === "custom"
+                            ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <Calendar className="mr-2 inline-block size-4" />
+                        Custom Date Range
+                      </button>
+                    </div>
+
+                    {exportDateRange === "custom" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
+                          <input
+                            type="date"
+                            value={exportFromDate}
+                            onChange={(e) => setExportFromDate(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
+                          <input
+                            type="date"
+                            value={exportToDate}
+                            onChange={(e) => setExportToDate(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Category */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Payment Category</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: "all", label: "All" },
+                          { value: "prepaid", label: "Prepaid" },
+                          { value: "postpaid", label: "Postpaid" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setExportPaymentCategory(option.value as typeof exportPaymentCategory)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                              exportPaymentCategory === option.value
+                                ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick Search */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Quick Search</label>
+                      <input
+                        type="text"
+                        placeholder="Search payments..."
+                        value={exportSearch}
+                        onChange={(e) => setExportSearch(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Status and Channel */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
+                        <select
+                          value={exportStatus}
+                          onChange={(e) => setExportStatus(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Status</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Failed">Failed</option>
+                          <option value="Reversed">Reversed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Channel</label>
+                        <select
+                          value={exportChannel}
+                          onChange={(e) => setExportChannel(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Channels</option>
+                          <option value="Cash">Cash</option>
+                          <option value="BankTransfer">Bank Transfer</option>
+                          <option value="Pos">POS</option>
+                          <option value="Card">Card</option>
+                          <option value="VendorWallet">Vendor Wallet</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Collector Type and Clearance Status */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Collector Type</label>
+                        <select
+                          value={exportCollectorType}
+                          onChange={(e) => setExportCollectorType(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Types</option>
+                          <option value="Customer">Customer</option>
+                          <option value="SalesRep">Sales Rep</option>
+                          <option value="Vendor">Vendor</option>
+                          <option value="Staff">Staff</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Clearance Status</label>
+                        <select
+                          value={exportClearanceStatus}
+                          onChange={(e) => setExportClearanceStatus(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">All Status</option>
+                          <option value="Uncleared">Uncleared</option>
+                          <option value="Cleared">Cleared</option>
+                          <option value="ClearedWithCondition">Cleared with Condition</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* ID Filters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Customer ID</label>
+                        <input
+                          type="text"
+                          placeholder="Enter ID"
+                          value={exportCustomerId}
+                          onChange={(e) => setExportCustomerId(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Reference</label>
+                        <input
+                          type="text"
+                          placeholder="Enter reference"
+                          value={exportReference}
+                          onChange={(e) => setExportReference(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Account Number */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Account Number</label>
+                      <input
+                        type="text"
+                        placeholder="Enter account number"
+                        value={exportAccountNumber}
+                        onChange={(e) => setExportAccountNumber(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                      />
+                    </div>
+
+                    {/* Boolean Filters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Cleared Status</label>
+                        <select
+                          value={exportIsCleared}
+                          onChange={(e) => setIsExportCleared(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">Any</option>
+                          <option value="true">Cleared</option>
+                          <option value="false">Not Cleared</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">Remitted Status</label>
+                        <select
+                          value={exportIsRemitted}
+                          onChange={(e) => setIsExportRemitted(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                        >
+                          <option value="all">Any</option>
+                          <option value="true">Remitted</option>
+                          <option value="false">Not Remitted</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {exportDateRange === "custom" && (
-                <div className="mb-4 grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">From</label>
-                    <input
-                      type="date"
-                      value={exportFromDate}
-                      onChange={(e) => setExportFromDate(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">To</label>
-                    <input
-                      type="date"
-                      value={exportToDate}
-                      onChange={(e) => setExportToDate(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                    />
-                  </div>
+              <div className="border-t border-gray-200 p-4">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowExportModal(false)}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={exportToCSV}
+                    disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
+                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
+                      exportDateRange === "custom" && !exportFromDate && !exportToDate
+                        ? "cursor-not-allowed bg-gray-400"
+                        : "bg-[#004B23] hover:bg-[#003a1b]"
+                    }`}
+                  >
+                    <Download className="mr-2 inline-block size-4" />
+                    Export
+                  </button>
                 </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowExportModal(false)}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={exportToCSV}
-                  disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
-                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
-                    exportDateRange === "custom" && !exportFromDate && !exportToDate
-                      ? "cursor-not-allowed bg-gray-400"
-                      : "bg-[#004B23] hover:bg-[#003a1b]"
-                  }`}
-                >
-                  <Download className="mr-2 inline-block size-4" />
-                  Export
-                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -1140,7 +1630,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                       <td className="whitespace-nowrap border-b px-4 py-2 text-sm">{payment.areaOfficeName || "-"}</td>
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         {payment.status === PaymentStatus.Pending ? (
-                          agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager") ? (
+                          (agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager")) ||
+                          user?.roles?.some((role) => role.slug === "superadmin") ? (
                             <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
                               Confirm
                             </ButtonModule>
@@ -1295,7 +1786,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                 reference: selectedPayment.reference,
                 customerName: selectedPayment.customerName || "",
                 customerAccountNumber: selectedPayment.customerAccountNumber || "",
-                customerAddress: undefined,
+                customerAddress: selectedPayment.customerAddress,
                 customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
                 customerMeterNumber: firstToken?.drn,
                 accountType: undefined,
@@ -1338,7 +1829,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
             reference: selectedPayment.reference,
             customerName: selectedPayment.customerName || "",
             customerAccountNumber: selectedPayment.customerAccountNumber || "",
-            customerAddress: undefined,
+            customerAddress: selectedPayment.customerAddress,
             customerPhoneNumber: selectedPayment.phoneNumber ?? undefined,
             customerMeterNumber:
               selectedPayment.tokens && selectedPayment.tokens.length > 0 ? selectedPayment.tokens[0]?.drn : undefined,

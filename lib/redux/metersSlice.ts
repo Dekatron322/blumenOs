@@ -447,6 +447,40 @@ export interface AddMeterResponse {
   data: Meter
 }
 
+// Interface for Replace Meter Request
+export interface ReplaceMeterRequest {
+  customerId: number
+  oldMeterId: number
+  serialNumber: string
+  drn: string
+  sgc?: number
+  krn: string
+  ti?: number
+  ea?: number
+  tct?: number
+  ken?: number
+  mfrCode?: number
+  installationDate: string
+  meterType: number
+  isSmart: boolean
+  meterBrand: string
+  meterCategory: string
+  isMeterActive: boolean
+  status: number
+  meterState: number
+  sealNumber: string
+  poleNumber: string
+  tariffId: number
+  distributionSubstationId: number
+  state: number
+  address: string
+  addressTwo: string
+  city: string
+  apartmentNumber: string
+  latitude: number
+  longitude: number
+}
+
 // Interface for Meter History entry
 export interface MeterHistoryEntry {
   id: number
@@ -743,7 +777,7 @@ export interface PrepaidTransaction {
   reference: string
   latitude: number
   longitude: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
   collectorType: "Customer" | "SalesRep" | "Vendor" | "Staff"
   clearanceStatus: "Uncleared" | "Cleared" | "ClearedWithCondition"
@@ -815,7 +849,7 @@ export interface PrepaidTransactionParams {
   postpaidBillId?: number
   paymentTypeId?: number
   prepaidOnly?: boolean
-  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
   status?: "Pending" | "Confirmed" | "Failed" | "Reversed"
   collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
   clearanceStatus?: "Uncleared" | "Cleared" | "ClearedWithCondition"
@@ -1008,6 +1042,27 @@ export const addMeter = createAsyncThunk("meters/addMeter", async (data: AddMete
     return rejectWithValue(error.message || "Network error during meter addition")
   }
 })
+
+// Async Thunk for replacing a meter
+export const replaceMeter = createAsyncThunk(
+  "meters/replaceMeter",
+  async (data: ReplaceMeterRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<AddMeterResponse>(buildApiUrl(API_ENDPOINTS.METERS.ADD_METER), data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to replace meter")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to replace meter")
+      }
+      return rejectWithValue(error.message || "Network error during meter replacement")
+    }
+  }
+)
 
 // Async Thunk for fetching meters summary
 export const fetchMetersSummary = createAsyncThunk("meters/fetchMetersSummary", async (_, { rejectWithValue }) => {
@@ -1631,6 +1686,23 @@ const metersSlice = createSlice({
         state.meters.unshift(action.payload.data)
       })
       .addCase(addMeter.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+        state.success = false
+      })
+      // Replace meter
+      .addCase(replaceMeter.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.success = false
+      })
+      .addCase(replaceMeter.fulfilled, (state, action) => {
+        state.loading = false
+        state.success = true
+        // Add the new meter to the meters array
+        state.meters.unshift(action.payload.data)
+      })
+      .addCase(replaceMeter.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
         state.success = false

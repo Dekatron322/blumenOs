@@ -706,6 +706,10 @@ export default function AgentManagementDashboard() {
   const summary = kpiSource ?? {
     collectedAmount: 0,
     collectedCount: 0,
+    prepaidCollectedAmount: 0,
+    prepaidCollectedCount: 0,
+    postpaidCollectedAmount: 0,
+    postpaidCollectedCount: 0,
     pendingAmount: 0,
     pendingCount: 0,
     cashClearedAmount: 0,

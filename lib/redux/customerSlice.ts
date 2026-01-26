@@ -820,6 +820,95 @@ export interface ChangeAccountNumberResponse {
   data: Customer
 }
 
+// Data Quality Summary Interfaces
+export interface DataQualitySummaryItem {
+  ruleKey: string
+  issue: string
+  severity: "Warning" | "Error"
+  status: "Open" | "Resolved" | "Ignored"
+  totalCount: number
+}
+
+export interface DataQualitySummaryParams {
+  ProvinceId?: number
+  ServiceCenterId?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+  RuleKey?: string
+  Status?: "Open" | "Resolved" | "Ignored"
+  Severity?: "Warning" | "Error"
+  FromUtc?: string
+  ToUtc?: string
+}
+
+export interface DataQualitySummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: DataQualitySummaryItem[]
+}
+
+// Data Quality Detail Interfaces
+export interface DataQualityItem {
+  id: number
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  isPPM: boolean
+  ruleKey: string
+  issue: string
+  severity: "Warning" | "Error"
+  status: "Open" | "Resolved" | "Ignored"
+  detectedAtUtc: string
+  resolvedAtUtc: string
+  resolutionNote: string
+  provinceId: number
+  serviceCenterId: number
+  distributionSubstationId: number
+  feederId: number
+  tariffId: number
+  phoneNumber: string
+  email: string
+  address: string
+}
+
+export interface DataQualityParams {
+  PageNumber: number
+  PageSize: number
+  CustomerId?: number
+  ProvinceId?: number
+  ServiceCenterId?: number
+  DistributionSubstationId?: number
+  FeederId?: number
+  RuleKey?: string
+  Status?: "Open" | "Resolved" | "Ignored"
+  Severity?: "Warning" | "Error"
+  FromUtc?: string
+  ToUtc?: string
+}
+
+export interface DataQualityResponse {
+  isSuccess: boolean
+  message: string
+  data: DataQualityItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+// Resolve Data Quality Interfaces
+export interface ResolveDataQualityRequest {
+  status: "Open" | "Resolved" | "Ignored"
+  note: string
+}
+
+export interface ResolveDataQualityResponse {
+  isSuccess: boolean
+  message: string
+}
+
 // Customer State
 interface CustomerState {
   // Customers list state
@@ -955,6 +1044,32 @@ interface CustomerState {
   changeAccountNumberSuccess: boolean
   changeAccountNumberResponse: Customer | null
 
+  // Data Quality Summary state
+  dataQualitySummary: DataQualitySummaryItem[]
+  dataQualitySummaryLoading: boolean
+  dataQualitySummaryError: string | null
+  dataQualitySummarySuccess: boolean
+
+  // Data Quality Detail state
+  dataQuality: DataQualityItem[]
+  dataQualityLoading: boolean
+  dataQualityError: string | null
+  dataQualitySuccess: boolean
+  dataQualityPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Resolve Data Quality state
+  resolveDataQualityLoading: boolean
+  resolveDataQualityError: string | null
+  resolveDataQualitySuccess: boolean
+  resolveDataQualityResponse: ResolveDataQualityResponse | null
+
   // Search and filter state
   filters: {
     search: string
@@ -1070,6 +1185,26 @@ const initialState: CustomerState = {
   changeAccountNumberError: null,
   changeAccountNumberSuccess: false,
   changeAccountNumberResponse: null,
+  dataQualitySummary: [],
+  dataQualitySummaryLoading: false,
+  dataQualitySummaryError: null,
+  dataQualitySummarySuccess: false,
+  dataQuality: [],
+  dataQualityLoading: false,
+  dataQualityError: null,
+  dataQualitySuccess: false,
+  dataQualityPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  resolveDataQualityLoading: false,
+  resolveDataQualityError: null,
+  resolveDataQualitySuccess: false,
+  resolveDataQualityResponse: null,
   filters: {
     search: "",
     status: "",
@@ -1591,6 +1726,110 @@ export const declineChangeRequest = createAsyncThunk(
   }
 )
 
+// Data Quality Summary Async Thunk
+export const fetchDataQualitySummary = createAsyncThunk(
+  "customers/fetchDataQualitySummary",
+  async (params: DataQualitySummaryParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<DataQualitySummaryResponse>(
+        buildApiUrl(API_ENDPOINTS.CUSTOMER.DATA_QUALITY_SUMMARY),
+        {
+          params: {
+            ...(params.ProvinceId && { ProvinceId: params.ProvinceId }),
+            ...(params.ServiceCenterId && { ServiceCenterId: params.ServiceCenterId }),
+            ...(params.DistributionSubstationId && { DistributionSubstationId: params.DistributionSubstationId }),
+            ...(params.FeederId && { FeederId: params.FeederId }),
+            ...(params.RuleKey && { RuleKey: params.RuleKey }),
+            ...(params.Status && { Status: params.Status }),
+            ...(params.Severity && { Severity: params.Severity }),
+            ...(params.FromUtc && { FromUtc: params.FromUtc }),
+            ...(params.ToUtc && { ToUtc: params.ToUtc }),
+          },
+        }
+      )
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch data quality summary")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch data quality summary")
+      }
+      return rejectWithValue(error.message || "Network error during data quality summary fetch")
+    }
+  }
+)
+
+// Data Quality Detail Async Thunk
+export const fetchDataQuality = createAsyncThunk(
+  "customers/fetchDataQuality",
+  async (params: DataQualityParams, { rejectWithValue }) => {
+    try {
+      const response = await api.get<DataQualityResponse>(buildApiUrl(API_ENDPOINTS.CUSTOMER.DATA_QUALITY), {
+        params: {
+          PageNumber: params.PageNumber,
+          PageSize: params.PageSize,
+          ...(params.CustomerId && { CustomerId: params.CustomerId }),
+          ...(params.ProvinceId && { ProvinceId: params.ProvinceId }),
+          ...(params.ServiceCenterId && { ServiceCenterId: params.ServiceCenterId }),
+          ...(params.DistributionSubstationId && { DistributionSubstationId: params.DistributionSubstationId }),
+          ...(params.FeederId && { FeederId: params.FeederId }),
+          ...(params.RuleKey && { RuleKey: params.RuleKey }),
+          ...(params.Status && { Status: params.Status }),
+          ...(params.Severity && { Severity: params.Severity }),
+          ...(params.FromUtc && { FromUtc: params.FromUtc }),
+          ...(params.ToUtc && { ToUtc: params.ToUtc }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch data quality")
+      }
+
+      return {
+        data: response.data.data,
+        pagination: {
+          totalCount: response.data.totalCount,
+          totalPages: response.data.totalPages,
+          currentPage: response.data.currentPage,
+          pageSize: response.data.pageSize,
+          hasNext: response.data.hasNext,
+          hasPrevious: response.data.hasPrevious,
+        },
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch data quality")
+      }
+      return rejectWithValue(error.message || "Network error during data quality fetch")
+    }
+  }
+)
+
+// Resolve Data Quality Async Thunk
+export const resolveDataQuality = createAsyncThunk(
+  "customers/resolveDataQuality",
+  async ({ id, requestData }: { id: number; requestData: ResolveDataQualityRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = buildEndpointWithParams(API_ENDPOINTS.CUSTOMER.RESOLVE_DATA_QUALITY, { id })
+      const response = await api.post<ResolveDataQualityResponse>(buildApiUrl(endpoint), requestData)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to resolve data quality")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to resolve data quality")
+      }
+      return rejectWithValue(error.message || "Network error during data quality resolution")
+    }
+  }
+)
+
 // Customer slice
 const customerSlice = createSlice({
   name: "customers",
@@ -1620,13 +1859,16 @@ const customerSlice = createSlice({
       state.updateError = null
       state.suspendError = null
       state.activateError = null
-      state.paymentDisputesError = null
+      state.changeAccountNumberError = null
       state.changeRequestError = null
       state.changeRequestsError = null
       state.changeRequestsByCustomerError = null
       state.changeRequestDetailsError = null
       state.approveChangeRequestError = null
       state.declineChangeRequestError = null
+      state.dataQualitySummaryError = null
+      state.dataQualityError = null
+      state.resolveDataQualityError = null
     },
 
     // Clear current customer
@@ -2055,6 +2297,38 @@ const customerSlice = createSlice({
       state.declineChangeRequestSuccess = false
       state.declineChangeRequestLoading = false
       state.declineChangeRequestResponse = null
+    },
+
+    // Clear data quality summary state
+    clearDataQualitySummaryState: (state) => {
+      state.dataQualitySummary = []
+      state.dataQualitySummaryLoading = false
+      state.dataQualitySummaryError = null
+      state.dataQualitySummarySuccess = false
+    },
+
+    // Clear data quality detail state
+    clearDataQualityState: (state) => {
+      state.dataQuality = []
+      state.dataQualityLoading = false
+      state.dataQualityError = null
+      state.dataQualitySuccess = false
+      state.dataQualityPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear resolve data quality state
+    clearResolveDataQualityState: (state) => {
+      state.resolveDataQualityLoading = false
+      state.resolveDataQualityError = null
+      state.resolveDataQualitySuccess = false
+      state.resolveDataQualityResponse = null
     },
   },
   extraReducers: (builder) => {
@@ -2579,6 +2853,62 @@ const customerSlice = createSlice({
         state.declineChangeRequestSuccess = false
         state.declineChangeRequestResponse = null
       })
+      // Fetch data quality summary cases
+      .addCase(fetchDataQualitySummary.pending, (state) => {
+        state.dataQualitySummaryLoading = true
+        state.dataQualitySummaryError = null
+        state.dataQualitySummarySuccess = false
+      })
+      .addCase(fetchDataQualitySummary.fulfilled, (state, action: PayloadAction<DataQualitySummaryItem[]>) => {
+        state.dataQualitySummaryLoading = false
+        state.dataQualitySummarySuccess = true
+        state.dataQualitySummary = action.payload || []
+        state.dataQualitySummaryError = null
+      })
+      .addCase(fetchDataQualitySummary.rejected, (state, action) => {
+        state.dataQualitySummaryLoading = false
+        state.dataQualitySummaryError = (action.payload as string) || "Failed to fetch data quality summary"
+        state.dataQualitySummarySuccess = false
+        state.dataQualitySummary = []
+      })
+      // Fetch data quality detail cases
+      .addCase(fetchDataQuality.pending, (state) => {
+        state.dataQualityLoading = true
+        state.dataQualityError = null
+        state.dataQualitySuccess = false
+      })
+      .addCase(fetchDataQuality.fulfilled, (state, action) => {
+        state.dataQualityLoading = false
+        state.dataQualitySuccess = true
+        state.dataQuality = action.payload.data || []
+        state.dataQualityPagination = action.payload.pagination
+        state.dataQualityError = null
+      })
+      .addCase(fetchDataQuality.rejected, (state, action) => {
+        state.dataQualityLoading = false
+        state.dataQualityError = (action.payload as string) || "Failed to fetch data quality"
+        state.dataQualitySuccess = false
+        state.dataQuality = []
+      })
+      // Resolve data quality cases
+      .addCase(resolveDataQuality.pending, (state) => {
+        state.resolveDataQualityLoading = true
+        state.resolveDataQualityError = null
+        state.resolveDataQualitySuccess = false
+        state.resolveDataQualityResponse = null
+      })
+      .addCase(resolveDataQuality.fulfilled, (state, action: PayloadAction<ResolveDataQualityResponse>) => {
+        state.resolveDataQualityLoading = false
+        state.resolveDataQualitySuccess = true
+        state.resolveDataQualityResponse = action.payload
+        state.resolveDataQualityError = null
+      })
+      .addCase(resolveDataQuality.rejected, (state, action) => {
+        state.resolveDataQualityLoading = false
+        state.resolveDataQualityError = (action.payload as string) || "Failed to resolve data quality"
+        state.resolveDataQualitySuccess = false
+        state.resolveDataQualityResponse = null
+      })
   },
 })
 
@@ -2619,6 +2949,9 @@ export const {
   clearChangeRequestDetails,
   clearApproveChangeRequestStatus,
   clearDeclineChangeRequestStatus,
+  clearDataQualitySummaryState,
+  clearDataQualityState,
+  clearResolveDataQualityState,
 } = customerSlice.actions
 
 export default customerSlice.reducer
