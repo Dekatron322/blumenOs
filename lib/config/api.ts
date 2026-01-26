@@ -212,6 +212,12 @@ export const API_ENDPOINTS = {
     EDIT_CATEGORY: "/customers/categories/{id}",
   },
 
+  FILE_MANAGEMENT: {
+    INTENT: "/files/intents",
+    FINALIZE: "/files/{id}/finalize",
+    BULK_UPLOAD: "/payments/bulk/record",
+  },
+
   STATUS_MAP: {
     GET: "/customers/map/customers",
     ASSETS: "/customers/map/assets",

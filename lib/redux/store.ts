@@ -44,6 +44,7 @@ import customerAuthReducer from "./customerAuthSlice"
 import customersDashboardReducer from "./customersDashboardSlice"
 import auditLogReducer from "./auditLogSlice"
 import refundReducer from "./refundSlice"
+import fileManagementReducer from "./fileManagementSlice"
 
 export const store = configureStore({
   reducer: {
@@ -91,6 +92,7 @@ export const store = configureStore({
     customersDashboard: customersDashboardReducer,
     auditLogs: auditLogReducer,
     refunds: refundReducer,
+    fileManagement: fileManagementReducer,
     [adminApi.reducerPath]: adminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
