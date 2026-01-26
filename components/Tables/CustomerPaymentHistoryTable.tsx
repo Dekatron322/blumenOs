@@ -30,7 +30,7 @@ enum PaymentChannel {
   Pos = "Pos",
   Card = "Card",
   VendorWallet = "VendorWallet",
-  Cheque = "Cheque",
+  Chaque = "Chaque",
 }
 
 // Collector type enum matching API
@@ -333,7 +333,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     { value: PaymentChannel.Pos, label: "POS" },
     { value: PaymentChannel.Card, label: "Card" },
     { value: PaymentChannel.VendorWallet, label: "Vendor Wallet" },
-    { value: PaymentChannel.Cheque, label: "Cheque" },
+    { value: PaymentChannel.Chaque, label: "Chaque" },
   ]
 
   const collectorOptions = [
@@ -484,7 +484,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Cheque:
+      case PaymentChannel.Chaque:
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",
@@ -817,8 +817,8 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   ? "Card"
                   : filters.channel === PaymentChannel.VendorWallet
                   ? "Vendor Wallet"
-                  : filters.channel === PaymentChannel.Cheque
-                  ? "Cheque"
+                  : filters.channel === PaymentChannel.Chaque
+                  ? "Chaque"
                   : "All Channels"}
               </span>
               <ChevronDown
@@ -881,11 +881,11 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
                   </button>
                   <button
                     className={`flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition-colors duration-200 hover:bg-gray-50 md:px-4 md:text-sm ${
-                      filters.channel === PaymentChannel.Cheque ? "bg-gray-50" : ""
+                      filters.channel === PaymentChannel.Chaque ? "bg-gray-50" : ""
                     }`}
-                    onClick={() => handleChannelFilterChange(PaymentChannel.Cheque)}
+                    onClick={() => handleChannelFilterChange(PaymentChannel.Chaque)}
                   >
-                    Cheque
+                    Chaque
                   </button>
                 </div>
               </div>

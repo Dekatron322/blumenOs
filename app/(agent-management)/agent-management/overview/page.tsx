@@ -1,23 +1,16 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import ArrowIcon from "public/arrow-icon"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import {
-  CustomeraIcon,
-  MetersProgrammedIcon,
-  PlayIcon,
-  PlusIcon,
-  TamperIcon,
-  TokenGeneratedIcon,
-  VendingIcon,
-} from "components/Icons/Icons"
+import { CustomeraIcon, MetersProgrammedIcon, PlusIcon, TamperIcon, VendingIcon } from "components/Icons/Icons"
 import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
-import { useAppSelector } from "lib/hooks/useRedux"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { fetchAgentSummary } from "lib/redux/agentSlice"
+import { DateFilter, getDateRangeUtc } from "utils/dateRange"
 
 // Dropdown Popover Component
 const DropdownPopover = ({
@@ -338,19 +331,38 @@ const LoadingState = ({ showCategories = true }) => {
   )
 }
 
-// Generate agent data (returns zeros when no data available)
-const generateAgentData = () => {
-  return {
-    activeAgents: 0,
-    collectionsToday: 0, // ₦0 in kobo
-    targetAchievement: 0,
-    lowFloatAlerts: 0,
-  }
+// Format currency
+const formatCurrency = (amount: number) => {
+  return (
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    }).format(amount / 1000000) + "M"
+  ) // Convert from kobo to millions
 }
 
+const formatNumber = (num: number) => {
+  return num.toLocaleString()
+}
+
+// Time filter types
+type TimeFilter = "lastYear" | "lastMonth" | "lastWeek" | "yesterday" | "day" | "week" | "month" | "year" | "all"
+
 export default function AgentManagementDashboard() {
+  const [selectedPeriodId, setSelectedPeriodId] = useState<number>(1)
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("day")
+  const [customStartDate, setCustomStartDate] = useState<string>("")
+  const [customEndDate, setCustomEndDate] = useState<string>("")
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
+
+  // Get sales rep summary data from Redux
+  const { salesRepSummary, salesRepSummaryLoading, salesRepSummaryError } = useAppSelector((state) => state.agents)
 
   // Check if user has Write permission for agent management
   const canAddAgent = !!user?.privileges?.some(
@@ -364,39 +376,101 @@ export default function AgentManagementDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isPolling, setIsPolling] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(480000) // Default 8 minutes (480,000 ms)
-  const [agentData, setAgentData] = useState(generateAgentData())
 
-  // Use mock data
-  const { activeAgents, collectionsToday, targetAchievement, lowFloatAlerts } = agentData
+  // Extract data from sales rep summary
+  const activeAgents = salesRepSummary?.overview.activeAgents || 0
+  const totalAgents = salesRepSummary?.overview.totalAgents || 0
+  const collectionsInPeriod = salesRepSummary?.transactions.totalAmount || 0
+  const transactionsInPeriod = salesRepSummary?.transactions.totalCount || 0
+  const confirmedCollections = salesRepSummary?.transactions.confirmedAmount || 0
+  const pendingCollections = salesRepSummary?.transactions.pendingAmount || 0
+  const cashClearedInPeriod = salesRepSummary?.cashClearance.clearedAmount || 0
+  const currentCashAtHand = salesRepSummary?.cashClearance.currentCashAtHand || 0
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return (
-      new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
-      }).format(amount / 1000000) + "M"
-    ) // Convert from kobo to millions
+  // Calculate target achievement based on collections (you can adjust this logic)
+  const targetAchievement =
+    collectionsInPeriod > 0 ? Math.min(Math.round((confirmedCollections / collectionsInPeriod) * 100), 100) : 0
+
+  // Low float alerts (you can adjust this logic based on your business rules)
+  const lowFloatAlerts = currentCashAtHand < 10000 ? 1 : 0
+
+  // Fetch sales rep summary data
+  const refreshAgentData = useCallback(() => {
+    let startDateUtc: string
+    let endDateUtc: string
+
+    // Use custom date range if provided (datetime-local format preserves time)
+    if (customStartDate && customEndDate) {
+      const start = new Date(customStartDate)
+      startDateUtc = start.toISOString()
+
+      const end = new Date(customEndDate)
+      endDateUtc = end.toISOString()
+    } else {
+      const dateRange = getDateRangeUtc(timeFilter as DateFilter)
+      startDateUtc = dateRange.startDateUtc
+      endDateUtc = dateRange.endDateUtc
+    }
+
+    const requestParams = {
+      startDateUtc,
+      endDateUtc,
+      topCount: 0,
+      areaOfficeId: 0,
+    }
+
+    dispatch(fetchAgentSummary(requestParams))
+  }, [dispatch, timeFilter, customStartDate, customEndDate])
+
+  // Update loading state based on Redux loading state
+  useEffect(() => {
+    setIsLoading(salesRepSummaryLoading)
+  }, [salesRepSummaryLoading])
+
+  useEffect(() => {
+    refreshAgentData()
+  }, [dispatch, timeFilter, refreshAgentData])
+
+  const getTimeFilterLabel = (filter: TimeFilter) => {
+    if (filter === "day") return "Today"
+    if (filter === "yesterday") return "Yesterday"
+    if (filter === "week") return "This Week"
+    if (filter === "lastWeek") return "Last Week"
+    if (filter === "month") return "This Month"
+    if (filter === "lastMonth") return "Last Month"
+    if (filter === "year") return "This Year"
+    if (filter === "lastYear") return "Last Year"
+    return "All Time"
   }
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
+  const handleTimeFilterChange = (filter: TimeFilter) => {
+    setTimeFilter(filter)
+    setIsMobileFilterOpen(false)
   }
+
+  const TimeFilterButton = ({ filter, label }: { filter: TimeFilter; label: string }) => (
+    <button
+      onClick={() => handleTimeFilterChange(filter)}
+      className={`shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+        timeFilter === filter ? "bg-[#004B23] text-[#FFFFFF]" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+      }`}
+    >
+      {label}
+    </button>
+  )
 
   const handleAddAgentSuccess = async () => {
     setIsAddAgentModalOpen(false)
     // Refresh data after adding agent
-    setAgentData(generateAgentData())
+    refreshAgentData()
   }
 
   const handleRefreshData = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setAgentData(generateAgentData())
-      setIsLoading(false)
-    }, 1000)
+    refreshAgentData()
+  }
+
+  const retryFetch = () => {
+    refreshAgentData()
   }
 
   const togglePolling = () => {
@@ -425,7 +499,7 @@ export default function AgentManagementDashboard() {
     }, pollingInterval)
 
     return () => clearInterval(interval)
-  }, [isPolling, pollingInterval])
+  }, [isPolling, pollingInterval, dispatch])
 
   return (
     <section className="min-h-screen w-full bg-gradient-to-br from-gray-100 to-gray-200 pb-20">
@@ -514,6 +588,238 @@ export default function AgentManagementDashboard() {
               </motion.div>
             </div>
 
+            {/* Date Range Filter Section */}
+            <div className="mb-6 flex justify-start">
+              <div className="hidden rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm xl:flex">
+                <div className="flex flex-row items-center gap-4">
+                  <div className="flex flex-row items-center gap-2">
+                    <span className="text-sm  font-medium text-gray-500">Time Range:</span>
+
+                    {/* Desktop Layout */}
+                    <div className="hidden items-center gap-2 sm:flex">
+                      <TimeFilterButton filter="day" label="Today" />
+                      <TimeFilterButton filter="yesterday" label="Yesterday" />
+                      <TimeFilterButton filter="week" label="This Week" />
+                      <TimeFilterButton filter="lastWeek" label="Last Week" />
+                      <TimeFilterButton filter="month" label="This Month" />
+                      <TimeFilterButton filter="lastMonth" label="Last Month" />
+                      <TimeFilterButton filter="year" label="This Year" />
+                      <TimeFilterButton filter="lastYear" label="Last Year" />
+                      <TimeFilterButton filter="all" label="All Time" />
+                    </div>
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div className="relative flex items-center gap-2 border-l pl-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
+                      className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        customStartDate && customEndDate
+                          ? "border-[#004B23] bg-[#004B23]/10 text-[#004B23]"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {customStartDate && customEndDate ? `${customStartDate} - ${customEndDate}` : "Custom Range"}
+                      <svg
+                        className={`size-4 transition-transform ${isDateRangeOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isDateRangeOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setIsDateRangeOpen(false)} />
+                        <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
+                          <div className="mb-3 text-sm font-medium text-gray-700">Select Date & Time Range</div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-gray-600">Start Date & Time</label>
+                              <input
+                                type="datetime-local"
+                                value={customStartDate}
+                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-gray-600">End Date & Time</label>
+                              <input
+                                type="datetime-local"
+                                value={customEndDate}
+                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
+                              />
+                            </div>
+                          </div>
+                          <div className="mt-4 flex gap-2">
+                            {(customStartDate || customEndDate) && (
+                              <button
+                                onClick={() => {
+                                  setCustomStartDate("")
+                                  setCustomEndDate("")
+                                }}
+                                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
+                              >
+                                Clear
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                if (customStartDate && customEndDate) {
+                                  refreshAgentData()
+                                  setIsDateRangeOpen(false)
+                                }
+                              }}
+                              disabled={!customStartDate || !customEndDate}
+                              className="flex-1 rounded-md bg-[#004B23] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003318] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Time Filter */}
+              <div className="xl:hidden">
+                <div className="rounded-lg p-3 sm:bg-white sm:p-2 sm:shadow-sm">
+                  <div className="flex flex-row items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">Time Range:</span>
+
+                    {/* Mobile Dropdown Layout */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsMobileFilterOpen((prev) => !prev)}
+                        className="inline-flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                      >
+                        <span>{getTimeFilterLabel(timeFilter)}</span>
+                        <svg
+                          className="size-4 text-gray-500"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+
+                      {isMobileFilterOpen && (
+                        <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-sm shadow-lg">
+                          <div className="border-b border-gray-100 px-3 py-2">
+                            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                              Time Range
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("day")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "day" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Today
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("yesterday")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "yesterday" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Yesterday
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("week")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "week" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            This Week
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("lastWeek")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "lastWeek" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Last Week
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("month")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "month" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            This Month
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("lastMonth")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "lastMonth" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Last Month
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("year")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "year" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            This Year
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("lastYear")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "lastYear" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Last Year
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTimeFilterChange("all")}
+                            className={`block w-full px-3 py-2 text-left ${
+                              timeFilter === "all" ? "bg-[#004B23] text-white" : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            All Time
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Main Content Area */}
             <div className="flex w-full flex-col gap-6 lg:flex-row">
               <div className="w-full">
@@ -523,6 +829,27 @@ export default function AgentManagementDashboard() {
                     <SkeletonLoader />
                     <LoadingState showCategories={true} />
                   </>
+                ) : salesRepSummaryError ? (
+                  // Error State
+                  <div className="flex w-full flex-col items-center justify-center rounded-md border border-red-200 bg-red-50 p-8">
+                    <div className="text-center">
+                      <div className="mb-4 text-red-600">
+                        <svg className="mx-auto size-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="mb-2 text-lg font-medium text-red-800">Unable to load data</h3>
+                      <p className="mb-4 text-sm text-red-600">{salesRepSummaryError}</p>
+                      <ButtonModule variant="primary" size="sm" onClick={handleRefreshData}>
+                        Try Again
+                      </ButtonModule>
+                    </div>
+                  </div>
                 ) : (
                   // Loaded State - Updated Agent Management Dashboard
                   <>
@@ -553,44 +880,15 @@ export default function AgentManagementDashboard() {
                                 </p>
                               </div>
                               <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Status:</p>
-                                <div className="flex items-center gap-1">
-                                  <div className="size-2 rounded-full bg-green-500"></div>
-                                  <p className="text-secondary text-sm font-medium sm:text-base">All Active</p>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-
-                          {/* Collections Today Card */}
-                          <motion.div
-                            className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
-                            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                          >
-                            <div className="flex items-center gap-2 border-b pb-4">
-                              <div className="text-green-600">
-                                <MetersProgrammedIcon />
-                              </div>
-                              <span className="text-sm font-medium sm:text-base">Collections Today</span>
-                            </div>
-                            <div className="flex flex-col gap-3 pt-4">
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Amount:</p>
-                                <p className="text-secondary text-lg font-bold sm:text-xl">
-                                  {formatCurrency(collectionsToday)}
-                                </p>
-                              </div>
-                              <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Trend:</p>
+                                <p className="text-sm text-gray-600 sm:text-base">Total Agents:</p>
                                 <p className="text-secondary text-sm font-medium sm:text-base">
-                                  <span className="text-green-500">↑ 8%</span>{" "}
-                                  <span className="hidden sm:inline">from yesterday</span>
+                                  {formatNumber(totalAgents)}
                                 </p>
                               </div>
                             </div>
                           </motion.div>
 
-                          {/* Target Achievement Card */}
+                          {/* Transactions Card */}
                           <motion.div
                             className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
                             whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
@@ -599,38 +897,58 @@ export default function AgentManagementDashboard() {
                               <div className="text-green-600">
                                 <VendingIcon />
                               </div>
-                              <span className="text-sm font-medium sm:text-base">Target Achievement</span>
+                              <span className="text-sm font-medium sm:text-base">
+                                Transactions {timeFilter === "day" ? "Today" : getTimeFilterLabel(timeFilter)}
+                              </span>
                             </div>
                             <div className="flex flex-col gap-3 pt-4">
                               <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Achievement Rate:</p>
-                                <p className="text-secondary text-lg font-bold sm:text-xl">{targetAchievement}%</p>
+                                <p className="text-sm text-gray-600 sm:text-base">Count:</p>
+                                <p className="text-secondary text-lg font-bold sm:text-xl">
+                                  {formatNumber(transactionsInPeriod)}
+                                </p>
                               </div>
                               <div className="flex w-full justify-between">
                                 <p className="text-sm text-gray-600 sm:text-base">Status:</p>
                                 <div className="flex items-center gap-1">
-                                  <div
-                                    className={`size-2 rounded-full ${
-                                      targetAchievement >= 90
-                                        ? "bg-green-500"
-                                        : targetAchievement >= 80
-                                        ? "bg-yellow-500"
-                                        : "bg-red-500"
-                                    }`}
-                                  ></div>
-                                  <p className="text-secondary text-sm font-medium sm:text-base">
-                                    {targetAchievement >= 90
-                                      ? "Excellent"
-                                      : targetAchievement >= 80
-                                      ? "Good"
-                                      : "Needs Attention"}
-                                  </p>
+                                  <div className="size-2 rounded-full bg-green-500"></div>
+                                  <p className="text-secondary text-sm font-medium sm:text-base">Active</p>
                                 </div>
                               </div>
                             </div>
                           </motion.div>
 
-                          {/* Low Float Alerts Card */}
+                          {/* Cash Cleared Card */}
+                          <motion.div
+                            className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
+                            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                          >
+                            <div className="flex items-center gap-2 border-b pb-4">
+                              <div className="text-green-600">
+                                <MetersProgrammedIcon />
+                              </div>
+                              <span className="text-sm font-medium sm:text-base">
+                                Cash Cleared {timeFilter === "day" ? "Today" : getTimeFilterLabel(timeFilter)}
+                              </span>
+                            </div>
+                            <div className="flex flex-col gap-3 pt-4">
+                              <div className="flex w-full justify-between">
+                                <p className="text-sm text-gray-600 sm:text-base">Amount:</p>
+                                <p className="text-secondary text-lg font-bold sm:text-xl">
+                                  {formatCurrency(cashClearedInPeriod)}
+                                </p>
+                              </div>
+                              <div className="flex w-full justify-between">
+                                <p className="text-sm text-gray-600 sm:text-base">Status:</p>
+                                <div className="flex items-center gap-1">
+                                  <div className="size-2 rounded-full bg-green-500"></div>
+                                  <p className="text-secondary text-sm font-medium sm:text-base">Cleared</p>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+
+                          {/* Outstanding Cash Card */}
                           <motion.div
                             className="small-card rounded-md bg-white p-4 shadow-sm transition duration-500 md:border"
                             whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
@@ -639,23 +957,19 @@ export default function AgentManagementDashboard() {
                               <div className="text-red-600">
                                 <TamperIcon />
                               </div>
-                              <span className="text-sm font-medium sm:text-base">Low Float Alerts</span>
+                              <span className="text-sm font-medium sm:text-base">Outstanding Cash</span>
                             </div>
                             <div className="flex flex-col gap-3 pt-4">
                               <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Active Alerts:</p>
-                                <div className="flex items-center gap-1">
-                                  <p className="text-secondary text-lg font-bold sm:text-xl">
-                                    {formatNumber(lowFloatAlerts)}
-                                  </p>
-                                  <ArrowIcon className="size-4" />
-                                </div>
+                                <p className="text-sm text-gray-600 sm:text-base">At Hand:</p>
+                                <p className="text-secondary text-lg font-bold sm:text-xl">
+                                  {formatCurrency(currentCashAtHand)}
+                                </p>
                               </div>
                               <div className="flex w-full justify-between">
-                                <p className="text-sm text-gray-600 sm:text-base">Priority:</p>
+                                <p className="text-sm text-gray-600 sm:text-base">Pending:</p>
                                 <p className="text-secondary text-sm font-medium sm:text-base">
-                                  <span className="text-red-500">High</span>{" "}
-                                  <span className="hidden sm:inline">- Requires Action</span>
+                                  {formatCurrency(pendingCollections)}
                                 </p>
                               </div>
                             </div>

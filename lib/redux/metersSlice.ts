@@ -777,7 +777,7 @@ export interface PrepaidTransaction {
   reference: string
   latitude: number
   longitude: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
   collectorType: "Customer" | "SalesRep" | "Vendor" | "Staff"
   clearanceStatus: "Uncleared" | "Cleared" | "ClearedWithCondition"
@@ -849,7 +849,7 @@ export interface PrepaidTransactionParams {
   postpaidBillId?: number
   paymentTypeId?: number
   prepaidOnly?: boolean
-  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
+  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
   status?: "Pending" | "Confirmed" | "Failed" | "Reversed"
   collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
   clearanceStatus?: "Uncleared" | "Cleared" | "ClearedWithCondition"

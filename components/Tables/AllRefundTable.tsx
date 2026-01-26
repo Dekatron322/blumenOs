@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Download, Filter, SortAsc, SortDesc, X } from "lucide-react"
@@ -16,8 +16,8 @@ import {
   RefundHistoryParams,
   setRefundHistoryParams,
 } from "lib/redux/refundSlice"
-import {  fetchCustomers } from "lib/redux/customerSlice"
-import {  fetchVendors } from "lib/redux/vendorSlice"
+import { fetchCustomers } from "lib/redux/customerSlice"
+import { fetchVendors } from "lib/redux/vendorSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
 import { api } from "lib/redux/authSlice"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
@@ -212,7 +212,7 @@ interface AppliedFilters {
     | "Pos"
     | "Card"
     | "VendorWallet"
-    | "Cheque"
+    | "Chaque"
     | "BankDeposit"
     | "Vendor"
     | "Migration"
@@ -571,7 +571,7 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -596,7 +596,7 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -732,7 +732,7 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -763,7 +763,7 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case "Cheque":
+      case "Chaque":
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",
@@ -1003,7 +1003,7 @@ const AllRefundsTable: React.FC<AllRefundsTableProps> = ({
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
     { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Cheque", label: "Cheque" },
+    { value: "Chaque", label: "Chaque" },
     { value: "BankDeposit", label: "Bank Deposit" },
     { value: "Vendor", label: "Vendor" },
     { value: "Migration", label: "Migration" },

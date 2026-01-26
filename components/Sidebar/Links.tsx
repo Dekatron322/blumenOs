@@ -216,6 +216,12 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "payments",
         requiredActions: ["R"],
       },
+      {
+        name: "Payment Cancellation",
+        href: "/payment/payment-cancellation",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
       { name: "Record Payment", href: "/payment/record-payment", privilegeKey: "payments", requiredActions: ["W"] },
       { name: "Cash Management", href: "/payment/cash-management", privilegeKey: "payments", requiredActions: ["R"] },
       {

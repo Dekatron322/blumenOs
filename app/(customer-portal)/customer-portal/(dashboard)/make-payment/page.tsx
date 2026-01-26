@@ -39,7 +39,7 @@ enum PaymentChannel {
   Pos = "POS",
   Card = "Card",
   VendorWallet = "VENDOR_WALLET",
-  Cheque = "CHEQUE",
+  Chaque = "Chaque",
 }
 
 // Payment type interface
