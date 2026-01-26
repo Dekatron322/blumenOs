@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
     APPROVE_CLEARANCE: "/agents/cash-clearances/{clearanceId}/approve",
     CASH_AT_HAND: "/agents/cash-at-hand",
     PREPAID_PAYMENT: "/agents/payments/prepaid",
+    ASSIGN_CASHIERS: "/agents/{id}/cashiers",
   },
 
   BILLING_DISPUTE: {
@@ -191,6 +192,9 @@ export const API_ENDPOINTS = {
     APPROVE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/approve",
     DECLINE_CHANGE_REQUEST: "/customers/change-requests/{publicId}/decline",
     CUSTOMER_LOOKUP: "/customers/lookup",
+    DATA_QUALITY_SUMMARY: "/customers/data-quality/summary",
+    DATA_QUALITY: "/customers/data-quality",
+    RESOLVE_DATA_QUALITY: "/customers/data-quality/{id}/resolve",
   },
 
   CREATE_CUSTOMER: {
@@ -301,6 +305,18 @@ export const API_ENDPOINTS = {
     TOP_PERFORMERS: "/payments/reports/performers",
     CONFIRM: "/payments/{id}/confirm",
     BANK_LISTS: "/payments/blumenpay/banks",
+    REFUND: "/payments/refund",
+    VEND: "/prepaid/admin/vend/issue",
+    PAYMENT_CANCEL: "/payments/{id}/cancel",
+    PAYMENT_ANOMALIES: "/payments/anomalies/summary",
+    ALL_ANOMALIES: "/payments/anomalies",
+    RESOLVE_ANOMALY: "/payments/anomalies/{id}/resolve",
+  },
+
+  REFUND: {
+    SUMMARY: "/refunds/summary",
+    REFUND_HISTORY: "/refunds",
+    MAKE_REFUND: "/refunds",
   },
 
   PAYMENT_DUNNING: {
@@ -362,7 +378,7 @@ export const API_ENDPOINTS = {
     ADD: "/vendors/bulk",
     UPDATE: "/vendors/{id}",
     GET_VENDOR_WALLET: "/vendors/{id}/wallet",
-    TOP_UP: "/vendors/{id}/wallet/top-up",
+    TOP_UP: "/vendors/{id}/wallet/top-up/admin",
     UPDATE_COMMISSION: "/vendors/{id}/commission",
     SUSPEND: "/vendors/{id}/suspend",
     GENERATE_API_KEY: "/vendors/{id}/api-keys/rotate",
@@ -374,6 +390,8 @@ export const API_ENDPOINTS = {
     DECLINE_CHANGE_REQUEST: "/vendors/change-requests/{publicId}/decline",
     VENDOR_PAYMENT: "/vendors/{id}/payments",
     ROTATE_WEBHOOK_SECRET: "/vendors/{id}/webhook/secret/rotate",
+    ALL_VENDOR_PAYMENT: "/vendors/payments",
+    TOP_UP_HISTORY: "/vendors/wallet/top-ups",
   },
 
   METERS: {
@@ -447,6 +465,10 @@ export const API_ENDPOINTS = {
     RAISE_TICKET: "/customers/support-tickets",
     SUPPORT_TICKETS: "/customers/support-tickets",
     TICKET_DETAIL: "/customers/support-tickets/{id}",
+  },
+
+  AUDIT_LOGS: {
+    audit_logs: "/system/audit/logs",
   },
 }
 

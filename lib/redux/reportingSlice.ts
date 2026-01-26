@@ -28,7 +28,7 @@ export interface DashboardCardsRequestParams {
   startDateUtc?: string // ISO string format
   endDateUtc?: string // ISO string format
   areaOfficeId?: number
-  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
   collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
 }
 
@@ -260,7 +260,7 @@ export interface CollectionEfficiencyRequestParams {
   startDateUtc?: string
   endDateUtc?: string
   areaOfficeId?: number
-  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
   collectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
 }
 

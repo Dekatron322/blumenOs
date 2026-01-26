@@ -1,5 +1,6 @@
 "use client"
 
+import { DateFilter, getDateRangeUtcCapitalized } from "utils/dateRange"
 import DashboardNav from "components/Navbar/DashboardNav"
 import { useCallback, useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -434,66 +435,20 @@ export default function MeteringDashboard() {
   }
 
   const refreshConsumptionData = useCallback(() => {
-    const now = new Date()
-    const endDateUtc = now.toISOString()
-    const start = new Date(now)
-
-    if (timeFilter === "day") {
-      start.setUTCDate(start.getUTCDate() - 1)
-    } else if (timeFilter === "week") {
-      start.setUTCDate(start.getUTCDate() - 7)
-    } else if (timeFilter === "month") {
-      start.setUTCMonth(start.getUTCMonth() - 1)
-    } else if (timeFilter === "year") {
-      start.setUTCFullYear(start.getUTCFullYear() - 1)
-    } else {
-      start.setUTCFullYear(start.getUTCFullYear() - 10)
-    }
-
-    const startDateUtc = start.toISOString()
+    const dateRange = getDateRangeUtcCapitalized(timeFilter as DateFilter)
 
     // Fetch all consumption analytics data
-    dispatch(
-      fetchConsumptionAnalytics({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchConsumptionAnalytics(dateRange))
 
-    dispatch(
-      fetchPostpaidTrend({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchPostpaidTrend(dateRange))
 
-    dispatch(
-      fetchPrepaidVends({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchPrepaidVends(dateRange))
 
-    dispatch(
-      fetchPrepaidTokens({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchPrepaidTokens(dateRange))
 
-    dispatch(
-      fetchNewConnections({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchNewConnections(dateRange))
 
-    dispatch(
-      fetchMetersProgrammed({
-        StartDateUtc: startDateUtc,
-        EndDateUtc: endDateUtc,
-      })
-    )
+    dispatch(fetchMetersProgrammed(dateRange))
   }, [dispatch, timeFilter])
 
   useEffect(() => {

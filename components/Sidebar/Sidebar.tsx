@@ -148,6 +148,18 @@ const SideBar = () => {
                     <img src="/Icons/message-notif.svg" alt="Notification Settings" className="size-4" />
                     <span>Notification Settings</span>
                   </button>
+                  <Link
+                    href="/developer-mode"
+                    className={clsx(
+                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                      {
+                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/settings/developer-mode"),
+                      }
+                    )}
+                  >
+                    <img src="/Icons/Analytics.svg" alt="Developer Mode" className="size-4" />
+                    <span>Developer Mode</span>
+                  </Link>
                 </div>
               </motion.div>
             )}

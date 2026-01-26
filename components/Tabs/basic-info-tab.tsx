@@ -1,8 +1,8 @@
 "use client"
 import React from "react"
 import { motion } from "framer-motion"
-import { AlertCircle, Building, Calendar, History, Mail, MapPin, Phone, User, Zap } from "lucide-react"
-import { MeteringOutlineIcon, MeterOutlineIcon } from "components/Icons/Icons"
+import { Building, Calendar, ChevronDown, History, Mail, MapPin, Phone, User, Zap } from "lucide-react"
+import { MeteringOutlineIcon } from "components/Icons/Icons"
 
 interface Asset {
   serialNo: number
@@ -75,6 +75,21 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     }
   }
 
+  const getMeterStatusStyle = (status: number) => {
+    switch (status) {
+      case 1: // Active
+        return "bg-emerald-50 text-emerald-700"
+      case 2: // Deactivated
+        return "bg-amber-50 text-amber-700"
+      case 3: // Suspended
+        return "bg-red-50 text-red-700"
+      case 4: // Retired
+        return "bg-red-50 text-red-600"
+      default:
+        return "bg-gray-100 text-gray-700"
+    }
+  }
+
   const getMeterStateLabel = (state: number) => {
     switch (state) {
       case 1:
@@ -94,6 +109,117 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
       default:
         return "Unknown"
     }
+  }
+
+  const meters = currentCustomer?.meters ?? []
+  const [expandedMeterId, setExpandedMeterId] = React.useState<number | null>(meters[0]?.id ?? null)
+
+  React.useEffect(() => {
+    setExpandedMeterId(meters[0]?.id ?? null)
+  }, [meters])
+
+  const meterStats = React.useMemo(() => {
+    if (!meters.length) {
+      return [
+        { label: "Total Meters", value: 0 },
+        { label: "Active", value: 0 },
+        { label: "Smart", value: 0 },
+        { label: "Prepaid", value: 0 },
+      ]
+    }
+
+    const activeCount = meters.filter((meter: any) => meter.status === 1).length
+    const smartCount = meters.filter((meter: any) => meter.isSmart).length
+    const prepaidCount = meters.filter((meter: any) => meter.meterType === 1).length
+
+    return [
+      { label: "Total Meters", value: meters.length },
+      { label: "Active", value: activeCount },
+      { label: "Smart", value: smartCount },
+      { label: "Prepaid", value: prepaidCount },
+    ]
+  }, [meters])
+
+  const handleAccordionToggle = (meterId: number) => {
+    setExpandedMeterId((prev) => (prev === meterId ? null : meterId))
+  }
+
+  const renderMeterDetails = (meter: any) => {
+    const statusChips = [
+      meter.meterCategory && { label: meter.meterCategory, className: "bg-blue-50 text-blue-700" },
+      {
+        label: getMeterStatusLabel(meter.status),
+        className: getMeterStatusStyle(meter.status),
+      },
+      {
+        label: getMeterStateLabel(meter.meterState),
+        className: "bg-purple-50 text-purple-700",
+      },
+      meter.isSmart && { label: "Smart", className: "bg-indigo-50 text-indigo-700" },
+    ].filter(Boolean) as { label: string; className: string }[]
+
+    const infoGroups = [
+      {
+        title: "Identity & Lifecycle",
+        items: [
+          { label: "Serial", value: meter.serialNumber || "N/A" },
+          { label: "Meter Number", value: meter.drn || "N/A" },
+          { label: "Seal", value: meter.sealNumber || "N/A" },
+          { label: "Pole", value: meter.poleNumber || "N/A" },
+          {
+            label: "Installed",
+            value: meter.installationDate ? formatDate(meter.installationDate) : "N/A",
+          },
+          { label: "First Reading", value: meter.firstReading ?? "N/A" },
+          {
+            label: "Last Vending",
+            value: meter.lastVendingDate ? formatDate(meter.lastVendingDate) : "N/A",
+          },
+        ],
+      },
+      {
+        title: "Technical",
+        items: [
+          { label: "SGC", value: meter.sgc || "N/A" },
+          { label: "KRN", value: meter.krn || "N/A" },
+          { label: "TI", value: meter.ti || "N/A" },
+          { label: "EA", value: meter.ea || "N/A" },
+          { label: "TCT", value: meter.tct || "N/A" },
+          { label: "KEN", value: meter.ken || "N/A" },
+          { label: "MFR", value: meter.mfrCode || "N/A" },
+        ],
+      },
+    ]
+
+    return (
+      <div className="border-t border-gray-100 bg-gray-50 px-4 py-5 sm:px-6">
+        <div className="flex flex-wrap gap-2">
+          {statusChips.map((chip) => (
+            <span
+              key={`${meter.id}-${chip.label}`}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${chip.className}`}
+            >
+              {chip.label}
+            </span>
+          ))}
+        </div>
+        <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-2">
+          {infoGroups.map((group) => (
+            <div key={`${meter.id}-${group.title}`} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-50">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{group.title}</p>
+              <dl className="mt-3 space-y-3">
+                {group.items.map((item) => (
+                  <div key={`${group.title}-${item.label}`} className="flex items-center justify-between gap-3">
+                    <dt className="text-xs font-medium text-gray-500">{item.label}</dt>
+                    <dd className="text-right text-sm font-semibold text-gray-900">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -478,174 +604,87 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <Building className="size-5" />
           Meter & Billing Information
         </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Meter Serial Number</label>
-            <p className="text-sm font-semibold text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].serialNumber
-                : "N/A"}
-            </p>
+
+        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {meterStats.map((stat) => (
+            <div key={stat.label} className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{stat.label}</p>
+              <p className="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {meters.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-200 bg-[#F9F9F9] p-6 text-center">
+            <p className="text-sm text-gray-600">This customer has no registered meters yet.</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Meter DRN</label>
-            <p className="text-sm font-semibold text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0 ? currentCustomer.meters[0].drn : "N/A"}
-            </p>
+        ) : (
+          <div className="space-y-4">
+            {meters.map((meter: any) => {
+              const isExpanded = expandedMeterId === meter.id
+              return (
+                <div key={meter.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-4 p-5 text-left"
+                    onClick={() => handleAccordionToggle(meter.id)}
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">
+                        Meter #{meter.serialNumber || meter.drn || meter.id}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
+                          Meter Number: {meter.drn || "N/A"}
+                        </span>
+                        <span className={`rounded-full px-3 py-1 ${getMeterStatusStyle(meter.status)}`}>
+                          {getMeterStatusLabel(meter.status)}
+                        </span>
+                        <span className="rounded-full bg-purple-50 px-3 py-1 text-purple-700">
+                          {getMeterStateLabel(meter.meterState)}
+                        </span>
+                        {meter.isSmart && (
+                          <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700">Smart Meter</span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`size-5 text-gray-500 transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}
+                    />
+                  </button>
+                  {isExpanded && renderMeterDetails(meter)}
+                </div>
+              )
+            })}
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Seal Number</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].sealNumber || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Meter Type</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].meterCategory || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Smart Meter</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].isSmart
-                  ? "Yes"
-                  : "No"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Installation Date</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? formatDate(currentCustomer.meters[0].installationDate)
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Meter Status</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? getMeterStatusLabel(currentCustomer.meters[0].status)
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">Meter State</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? getMeterStateLabel(currentCustomer.meters[0].meterState)
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">SGC</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].sgc || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">KRN</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].krn || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">TI</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].ti || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">EA</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].ea || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">TCT</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].tct || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">KEN</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].ken || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">MFR Code</label>
-            <p className="text-sm text-gray-900">
-              {currentCustomer.meters && currentCustomer.meters.length > 0
-                ? currentCustomer.meters[0].mfrCode || "N/A"
-                : "N/A"}
-            </p>
-          </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+        )}
+
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
             <label className="text-sm font-medium text-gray-500">Tariff Rate</label>
             <p className="text-sm text-gray-900">{formatCurrency(currentCustomer.tariffRate)}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
             <label className="text-sm font-medium text-gray-500">Tariff ID</label>
             <p className="text-sm text-gray-900">{currentCustomer.tariffId || "N/A"}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
             <label className="text-sm font-medium text-gray-500">Tariff Class</label>
             <p className="text-sm text-gray-900">{currentCustomer.category?.name || "N/A"}</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
             <label className="text-sm font-medium text-gray-500">Tariff Band</label>
             <p className="text-sm text-gray-900">{currentCustomer.subCategory?.name || "N/A"}</p>
           </div>
-          {/* <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
-            <label className="text-sm font-medium text-gray-500">New Rate</label>
-            <p className="text-sm text-gray-900">{formatCurrency(currentCustomer.newRate)}</p>
-          </div> */}
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
             <label className="text-sm font-medium text-gray-500">VAT</label>
             <p className="text-sm text-gray-900">N/A</p>
           </div>
-          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4">
+          <div className="space-y-2 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-5">
             <label className="text-sm font-medium text-gray-500">VAT Waived</label>
             <p className="text-sm text-gray-900">No</p>
           </div>
         </div>
-        {/* <div className="mt-4 grid grid-cols-1 gap-4 rounded-md border border-dashed border-gray-200 bg-[#F9F9F9] p-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="flex items-center gap-2">
-            <div className={`size-3 rounded-full ${currentCustomer.isPPM ? "bg-blue-500" : "bg-gray-300"}`}></div>
-            <span className="text-sm text-gray-700">Prepaid Meter</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`size-3 rounded-full ${currentCustomer.isMD ? "bg-orange-500" : "bg-gray-300"}`}></div>
-            <span className="text-sm text-gray-700">MD Customer</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`size-3 rounded-full ${currentCustomer.isUrban ? "bg-green-500" : "bg-gray-300"}`}></div>
-            <span className="text-sm text-gray-700">Urban Area</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`size-3 rounded-full ${currentCustomer.isHRB ? "bg-purple-500" : "bg-gray-300"}`}></div>
-            <span className="text-sm text-gray-700">HRB Customer</span>
-          </div>
-        </div> */}
       </motion.div>
 
       {/* Financial Information */}
@@ -889,6 +928,8 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                           ? "bg-emerald-50 text-emerald-600"
                           : asset.status === "MAINTENANCE"
                           ? "bg-amber-50 text-amber-600"
+                          : asset.status === "RETIRED"
+                          ? "bg-red-50 text-red-600"
                           : "bg-blue-50 text-blue-600"
                       }`}
                     >

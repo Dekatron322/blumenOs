@@ -2824,3 +2824,42 @@ export const SettingIconOutline: React.FC<{ color?: string; className?: string; 
     />
   </svg>
 )
+
+export const WalletOutlineIcon: React.FC<{ color?: string; className?: string; size?: number }> = ({
+  color = "currentColor",
+  className = "",
+  size = 24,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M22 16.75V18.25C22 19.9 20.9 21.25 19.25 21.25H4.75C3.1 21.25 2 19.9 2 18.25V16.75C2 15.1 3.1 13.75 4.75 13.75H19.25C20.9 13.75 22 15.1 22 16.75Z"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M22 10.25V11.75C22 13.4 20.9 14.75 19.25 14.75H4.75C3.1 14.75 2 13.4 2 11.75V10.25C2 8.6 3.1 7.25 4.75 7.25H19.25C20.9 7.25 22 8.6 22 10.25Z"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2 10.25V8.5C2 6.9 3.1 5.5 4.75 5.5H19.25C20.9 5.5 22 6.9 22 8.5V10.25"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M15.75 11.5H17.25" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6.75 11.5H8.25" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)

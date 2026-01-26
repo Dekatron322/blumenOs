@@ -731,7 +731,7 @@ const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageS
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
     { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Chaque", label: "Cheque" },
+    { value: "Cheque", label: "Cheque" },
   ]
 
   // Collector type options
@@ -950,7 +950,7 @@ const PrepaidTransactionTable: React.FC<PrepaidTransactionTableProps> = ({ pageS
         color: "#065F46",
         borderColor: "#34D399",
       },
-      Chaque: {
+      Cheque: {
         backgroundColor: "#F3F4F6",
         color: "#374151",
         borderColor: "#D1D5DB",

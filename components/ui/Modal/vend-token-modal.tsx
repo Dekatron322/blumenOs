@@ -186,6 +186,16 @@ const VendTokenModal: React.FC<VendTokenModalProps> = ({ isOpen, onRequestClose,
           <span class="row-value">${paymentData.customerAccountNumber}</span>
         </div>
         ${
+          paymentData.customerAddress
+            ? `
+        <div class="row">
+          <span class="row-label">Address:</span>
+          <span class="row-value" style="max-width: 60%; text-align: right;">${paymentData.customerAddress}</span>
+        </div>
+        `
+            : ""
+        }
+        ${
           tokenData.drn
             ? `
         <div class="row">

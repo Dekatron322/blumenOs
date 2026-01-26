@@ -34,6 +34,7 @@ import RotateWebhookModal from "components/ui/Modal/rotate-webhook-modal"
 import VendorChangeRequestModal from "components/ui/Modal/vendor-change-request-modal"
 import VendorChangeRequestsTab from "components/Tabs/vendor-change-requests-tab"
 import VendorPaymentsTab from "components/Tabs/vendor-payments-tab"
+import VendorTopUpHistoryTab from "components/Tabs/vendor-topup-history-tab"
 import DashboardNav from "components/Navbar/DashboardNav"
 import {
   BasicInfoOutlineIcon,
@@ -52,6 +53,7 @@ import {
   SettingOutlineIcon,
   UserRoleIcon,
   VerifyOutlineIcon,
+  WalletOutlineIcon,
 } from "components/Icons/Icons"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { clearCurrentVendor, clearVendorWallet, fetchVendorById, fetchVendorWallet } from "lib/redux/vendorSlice"
@@ -78,7 +80,7 @@ const VendorDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth)
   const canUpdate = !!user?.privileges?.some((p) => p.actions?.includes("U"))
 
-  type TabType = "details" | "payments" | "change-requests"
+  type TabType = "details" | "payments" | "change-requests" | "topup-history"
 
   const [activeModal, setActiveModal] = useState<
     | "suspend"
@@ -817,10 +819,12 @@ const VendorDetailsPage = () => {
                             {activeTab === "details" && <BasicInfoOutlineIcon className="size-5" />}
                             {activeTab === "payments" && <PaymentDisputeOutlineIcon className="size-5" />}
                             {activeTab === "change-requests" && <ChangeRequestOutlineIcon className="size-5" />}
+                            {activeTab === "topup-history" && <WalletOutlineIcon className="size-5" />}
                             <span>
                               {activeTab === "details" && "Vendor Details"}
                               {activeTab === "payments" && "Payments"}
                               {activeTab === "change-requests" && "Change Requests"}
+                              {activeTab === "topup-history" && "Top-up History"}
                             </span>
                           </span>
                           <span
@@ -874,6 +878,20 @@ const VendorDetailsPage = () => {
                               <ChangeRequestOutlineIcon className="size-5" />
                               <span>Change Requests</span>
                             </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab("topup-history")
+                                setIsMobileTabMenuOpen(false)
+                              }}
+                              className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md p-2 text-left text-sm font-medium transition-all duration-150 ${
+                                activeTab === "topup-history"
+                                  ? "bg-[#004B23] text-white"
+                                  : "text-gray-600 hover:bg-[#F6F6F9]"
+                              }`}
+                            >
+                              <WalletOutlineIcon className="size-5" />
+                              <span>Top-up History</span>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -912,6 +930,17 @@ const VendorDetailsPage = () => {
                         >
                           <ChangeRequestOutlineIcon className="size-5" />
                           <span>Change Requests</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("topup-history")}
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-md p-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+                            activeTab === "topup-history"
+                              ? "bg-[#004B23] text-white"
+                              : "border-transparent text-gray-500 hover:border-gray-300 hover:bg-[#F6F6F9] hover:text-gray-700"
+                          }`}
+                        >
+                          <WalletOutlineIcon className="size-5" />
+                          <span>Top-up History</span>
                         </button>
                       </nav>
                     </div>
@@ -1200,8 +1229,10 @@ const VendorDetailsPage = () => {
                     </>
                   ) : activeTab === "payments" ? (
                     <VendorPaymentsTab vendorId={currentVendor.id} />
-                  ) : (
+                  ) : activeTab === "change-requests" ? (
                     <VendorChangeRequestsTab vendorId={currentVendor.id} />
+                  ) : (
+                    <VendorTopUpHistoryTab vendorId={currentVendor.id} />
                   )}
                 </div>
               </div>

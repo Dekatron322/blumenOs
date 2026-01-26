@@ -58,6 +58,8 @@ export interface VendorWalletResponse {
 // Vendor Wallet Top-up Interfaces
 export interface VendorTopUpRequest {
   amount: number
+  reason: string
+  effectiveAtUtc: string
 }
 
 export interface VendorTopUpResponseData {
@@ -359,6 +361,45 @@ export interface VendorUpdateResponse {
   data: Vendor
 }
 
+// Vendor Top-up History Interfaces
+export interface VendorTopUpHistoryItem {
+  id: number
+  vendorId: number
+  vendorName: string
+  reference: string
+  externalReference: string
+  amount: number
+  settledAmount: number
+  status: "Pending" | "Confirmed" | "Failed"
+  currency: string
+  createdAtUtc: string
+  confirmedAtUtc: string
+  topUpBy: "Vendor" | "Admin"
+  narrative: string
+}
+
+export interface VendorTopUpHistoryResponse {
+  isSuccess: boolean
+  message: string
+  data: VendorTopUpHistoryItem[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface VendorTopUpHistoryRequestParams {
+  pageNumber: number
+  pageSize: number
+  vendorId?: number
+  fromUtc?: string
+  toUtc?: string
+  status?: "Pending" | "Confirmed" | "Failed"
+  topUpBy?: "Vendor" | "Admin"
+}
+
 // Vendor Payment Interfaces
 export interface VendorPayment {
   id: number
@@ -420,6 +461,125 @@ export interface VendorPaymentsRequestParams {
   paidFromUtc?: string
   paidToUtc?: string
   search?: string
+}
+
+// All Vendor Payments Interfaces (for /vendors/payments endpoint)
+export interface AllVendorPaymentToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+export interface AllVendorPaymentCollector {
+  type: string
+  name: string
+  agentId: number | null
+  agentCode: string | null
+  agentType: string | null
+  vendorId: number | null
+  vendorName: string | null
+  staffName: string | null
+  customerId: number | null
+  customerName: string | null
+}
+
+export interface AllVendorPayment {
+  id: number
+  reference: string
+  latitude: number | null
+  longitude: number | null
+  phoneNumber: string
+  channel: string
+  status: string
+  collectorType: string
+  isPrepaid: boolean
+  agentType: string | null
+  amount: number
+  amountApplied: number
+  vatAmount: number
+  overPaymentAmount: number
+  outstandingAfterPayment: number
+  outstandingBeforePayment: number
+  customerOutstandingDebtBalance: number
+  vendorCommissionRatePercent: number
+  vendorCommissionAmount: number
+  vendorDebitAmount: number
+  currency: string
+  paidAtUtc: string
+  confirmedAtUtc: string | null
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  postpaidBillId: number | null
+  postpaidBillPeriod: string | null
+  billTotalDue: number | null
+  vendorId: number
+  vendorName: string
+  agentId: number | null
+  agentCode: string | null
+  agentName: string | null
+  recordedByName: string | null
+  areaOfficeName: string
+  distributionSubstationCode: string
+  feederName: string
+  paymentTypeId: number
+  paymentTypeName: string
+  isManualEntry: boolean
+  isSystemGenerated: boolean
+  evidenceFileUrl: string | null
+  recoveryApplied: boolean
+  recoveryAmount: number
+  recoveryPolicyId: number | null
+  recoveryPolicyName: string | null
+  collector: AllVendorPaymentCollector
+  tokens: AllVendorPaymentToken[]
+}
+
+export interface AllVendorPaymentsResponse {
+  isSuccess: boolean
+  message: string
+  data: AllVendorPayment[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface AllVendorPaymentsRequestParams {
+  pageNumber: number
+  pageSize: number
+  customerId?: number
+  vendorId?: number
+  agentId?: number
+  reference?: string
+  accountNumber?: string
+  meterNumber?: string
+  agentIds?: number[]
+  areaOfficeId?: number
+  distributionSubstationId?: number
+  feederId?: number
+  serviceCenterId?: number
+  postpaidBillId?: number
+  paymentTypeId?: number
+  prepaidOnly?: boolean
+  channel?: string
+  status?: string
+  collectorType?: string
+  clearanceStatus?: string
+  paidFromUtc?: string
+  paidToUtc?: string
+  search?: string
+  isCleared?: boolean
+  isRemitted?: boolean
+  customerIsPPM?: boolean
+  customerIsMD?: boolean
+  customerIsUrban?: boolean
+  customerProvinceId?: number
 }
 
 // Vendor State
@@ -554,6 +714,33 @@ interface VendorState {
   webhookSecretRotationError: string | null
   webhookSecretRotationSuccess: boolean
   rotatedWebhookSecret: WebhookSecretData | null
+
+  // All Vendor Payments state
+  allVendorPayments: AllVendorPayment[]
+  allVendorPaymentsLoading: boolean
+  allVendorPaymentsError: string | null
+  allVendorPaymentsSuccess: boolean
+  allVendorPaymentsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
+  // Vendor Top-up History state
+  vendorTopUpHistory: VendorTopUpHistoryItem[]
+  vendorTopUpHistoryLoading: boolean
+  vendorTopUpHistoryError: string | null
+  vendorTopUpHistoryPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 }
 
 // Initial state
@@ -653,6 +840,29 @@ const initialState: VendorState = {
   webhookSecretRotationError: null,
   webhookSecretRotationSuccess: false,
   rotatedWebhookSecret: null,
+  allVendorPayments: [],
+  allVendorPaymentsLoading: false,
+  allVendorPaymentsError: null,
+  allVendorPaymentsSuccess: false,
+  allVendorPaymentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  vendorTopUpHistory: [],
+  vendorTopUpHistoryLoading: false,
+  vendorTopUpHistoryError: null,
+  vendorTopUpHistoryPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
 }
 
 // Async thunks
@@ -745,10 +955,13 @@ export const fetchVendorWallet = createAsyncThunk(
 
 export const topUpVendorWallet = createAsyncThunk(
   "vendors/topUpVendorWallet",
-  async ({ id, amount }: { id: number; amount: number }, { rejectWithValue }) => {
+  async (
+    { id, amount, reason, effectiveAtUtc }: { id: number; amount: number; reason: string; effectiveAtUtc: string },
+    { rejectWithValue }
+  ) => {
     try {
       const endpoint = API_ENDPOINTS.VENDORS.TOP_UP.replace("{id}", id.toString())
-      const requestData: VendorTopUpRequest = { amount }
+      const requestData: VendorTopUpRequest = { amount, reason, effectiveAtUtc }
 
       const response = await api.post<VendorTopUpResponse>(buildApiUrl(endpoint), requestData)
 
@@ -1146,6 +1359,124 @@ export const fetchVendorPayments = createAsyncThunk(
   }
 )
 
+// Fetch All Vendor Payments Async Thunk
+export const fetchAllVendorPayments = createAsyncThunk(
+  "vendors/fetchAllVendorPayments",
+  async (params: AllVendorPaymentsRequestParams, { rejectWithValue }) => {
+    try {
+      const {
+        pageNumber,
+        pageSize,
+        customerId,
+        vendorId,
+        agentId,
+        reference,
+        accountNumber,
+        meterNumber,
+        agentIds,
+        areaOfficeId,
+        distributionSubstationId,
+        feederId,
+        serviceCenterId,
+        postpaidBillId,
+        paymentTypeId,
+        prepaidOnly,
+        channel,
+        status,
+        collectorType,
+        clearanceStatus,
+        paidFromUtc,
+        paidToUtc,
+        search,
+        isCleared,
+        isRemitted,
+        customerIsPPM,
+        customerIsMD,
+        customerIsUrban,
+        customerProvinceId,
+      } = params
+
+      const response = await api.get<AllVendorPaymentsResponse>(buildApiUrl(API_ENDPOINTS.VENDORS.ALL_VENDOR_PAYMENT), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(customerId !== undefined && { CustomerId: customerId }),
+          ...(vendorId !== undefined && { VendorId: vendorId }),
+          ...(agentId !== undefined && { AgentId: agentId }),
+          ...(reference && { Reference: reference }),
+          ...(accountNumber && { AccountNumber: accountNumber }),
+          ...(meterNumber && { MeterNumber: meterNumber }),
+          ...(agentIds && agentIds.length > 0 && { AgentIds: agentIds }),
+          ...(areaOfficeId !== undefined && { AreaOfficeId: areaOfficeId }),
+          ...(distributionSubstationId !== undefined && { DistributionSubstationId: distributionSubstationId }),
+          ...(feederId !== undefined && { FeederId: feederId }),
+          ...(serviceCenterId !== undefined && { ServiceCenterId: serviceCenterId }),
+          ...(postpaidBillId !== undefined && { PostpaidBillId: postpaidBillId }),
+          ...(paymentTypeId !== undefined && { PaymentTypeId: paymentTypeId }),
+          ...(prepaidOnly !== undefined && { PrepaidOnly: prepaidOnly }),
+          ...(channel && { Channel: channel }),
+          ...(status && { Status: status }),
+          ...(collectorType && { CollectorType: collectorType }),
+          ...(clearanceStatus && { ClearanceStatus: clearanceStatus }),
+          ...(paidFromUtc && { PaidFromUtc: paidFromUtc }),
+          ...(paidToUtc && { PaidToUtc: paidToUtc }),
+          ...(search && { Search: search }),
+          ...(isCleared !== undefined && { IsCleared: isCleared }),
+          ...(isRemitted !== undefined && { IsRemitted: isRemitted }),
+          ...(customerIsPPM !== undefined && { CustomerIsPPM: customerIsPPM }),
+          ...(customerIsMD !== undefined && { CustomerIsMD: customerIsMD }),
+          ...(customerIsUrban !== undefined && { CustomerIsUrban: customerIsUrban }),
+          ...(customerProvinceId !== undefined && { CustomerProvinceId: customerProvinceId }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch all vendor payments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch all vendor payments")
+      }
+      return rejectWithValue(error.message || "Network error during all vendor payments fetch")
+    }
+  }
+)
+
+// Fetch Vendor Top-up History Async Thunk
+export const fetchVendorTopUpHistory = createAsyncThunk(
+  "vendors/fetchVendorTopUpHistory",
+  async (params: VendorTopUpHistoryRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, vendorId, fromUtc, toUtc, status, topUpBy } = params
+
+      const response = await api.get<VendorTopUpHistoryResponse>(buildApiUrl(API_ENDPOINTS.VENDORS.TOP_UP_HISTORY), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(vendorId !== undefined && { VendorId: vendorId }),
+          ...(fromUtc && { FromUtc: fromUtc }),
+          ...(toUtc && { ToUtc: toUtc }),
+          ...(status && { Status: status }),
+          ...(topUpBy && { TopUpBy: topUpBy }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch vendor top-up history")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch vendor top-up history")
+      }
+      return rejectWithValue(error.message || "Network error during vendor top-up history fetch")
+    }
+  }
+)
+
 // Vendor slice
 const vendorSlice = createSlice({
   name: "vendors",
@@ -1185,6 +1516,8 @@ const vendorSlice = createSlice({
       state.vendorPaymentsError = null
       state.vendorUpdateError = null
       state.webhookSecretRotationError = null
+      state.allVendorPaymentsError = null
+      state.vendorTopUpHistoryError = null
     },
 
     // Clear current vendor
@@ -1330,6 +1663,43 @@ const vendorSlice = createSlice({
       state.rotatedWebhookSecret = null
     },
 
+    // Clear all vendor payments state
+    clearAllVendorPayments: (state) => {
+      state.allVendorPayments = []
+      state.allVendorPaymentsError = null
+      state.allVendorPaymentsSuccess = false
+      state.allVendorPaymentsLoading = false
+      state.allVendorPaymentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Clear vendor top-up history state
+    clearVendorTopUpHistory: (state) => {
+      state.vendorTopUpHistory = []
+      state.vendorTopUpHistoryError = null
+      state.vendorTopUpHistoryLoading = false
+      state.vendorTopUpHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
+    // Set vendor top-up history pagination
+    setVendorTopUpHistoryPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.vendorTopUpHistoryPagination.currentPage = action.payload.page
+      state.vendorTopUpHistoryPagination.pageSize = action.payload.pageSize
+    },
+
     // Reset vendor state
     resetVendorState: (state) => {
       state.vendors = []
@@ -1427,6 +1797,29 @@ const vendorSlice = createSlice({
       state.webhookSecretRotationError = null
       state.webhookSecretRotationSuccess = false
       state.rotatedWebhookSecret = null
+      state.allVendorPayments = []
+      state.allVendorPaymentsLoading = false
+      state.allVendorPaymentsError = null
+      state.allVendorPaymentsSuccess = false
+      state.allVendorPaymentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+      state.vendorTopUpHistory = []
+      state.vendorTopUpHistoryLoading = false
+      state.vendorTopUpHistoryError = null
+      state.vendorTopUpHistoryPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
     },
 
     // Set pagination
@@ -1451,6 +1844,12 @@ const vendorSlice = createSlice({
     setVendorPaymentsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.vendorPaymentsPagination.currentPage = action.payload.page
       state.vendorPaymentsPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set all vendor payments pagination
+    setAllVendorPaymentsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.allVendorPaymentsPagination.currentPage = action.payload.page
+      state.allVendorPaymentsPagination.pageSize = action.payload.pageSize
     },
 
     // Update current vendor (for optimistic updates)
@@ -2037,6 +2436,63 @@ const vendorSlice = createSlice({
         state.webhookSecretRotationSuccess = false
         state.rotatedWebhookSecret = null
       })
+      // Fetch all vendor payments cases
+      .addCase(fetchAllVendorPayments.pending, (state) => {
+        state.allVendorPaymentsLoading = true
+        state.allVendorPaymentsError = null
+        state.allVendorPaymentsSuccess = false
+      })
+      .addCase(fetchAllVendorPayments.fulfilled, (state, action: PayloadAction<AllVendorPaymentsResponse>) => {
+        state.allVendorPaymentsLoading = false
+        state.allVendorPaymentsSuccess = true
+        state.allVendorPayments = action.payload.data
+        state.allVendorPaymentsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+        state.allVendorPaymentsError = null
+      })
+      .addCase(fetchAllVendorPayments.rejected, (state, action) => {
+        state.allVendorPaymentsLoading = false
+        state.allVendorPaymentsError = (action.payload as string) || "Failed to fetch all vendor payments"
+        state.allVendorPaymentsSuccess = false
+        state.allVendorPayments = []
+        state.allVendorPaymentsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
+      // Fetch vendor top-up history cases
+      .addCase(fetchVendorTopUpHistory.pending, (state) => {
+        state.vendorTopUpHistoryLoading = true
+        state.vendorTopUpHistoryError = null
+      })
+      .addCase(fetchVendorTopUpHistory.fulfilled, (state, action: PayloadAction<VendorTopUpHistoryResponse>) => {
+        state.vendorTopUpHistoryLoading = false
+        state.vendorTopUpHistory = action.payload.data
+        state.vendorTopUpHistoryPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+        state.vendorTopUpHistoryError = null
+      })
+      .addCase(fetchVendorTopUpHistory.rejected, (state, action) => {
+        state.vendorTopUpHistoryLoading = false
+        state.vendorTopUpHistoryError = (action.payload as string) || "Failed to fetch vendor top-up history"
+        state.vendorTopUpHistory = []
+      })
   },
 })
 
@@ -2059,11 +2515,15 @@ export const {
   clearVendorPayments,
   clearVendorUpdate,
   clearWebhookSecretRotation,
+  clearAllVendorPayments,
+  clearVendorTopUpHistory,
   resetVendorState,
   setPagination,
   setChangeRequestsPagination,
   setChangeRequestsByVendorPagination,
   setVendorPaymentsPagination,
+  setAllVendorPaymentsPagination,
+  setVendorTopUpHistoryPagination,
   updateCurrentVendor,
   updateVendorWallet,
   updateWalletBalanceAfterTopUp,

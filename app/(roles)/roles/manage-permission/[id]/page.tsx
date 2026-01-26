@@ -24,20 +24,22 @@ import {
   clearCurrentRole,
   fetchPrivileges,
   fetchRoleById,
+  fetchRoles,
   getAvailableActions,
   managePermissions,
   PrivilegeAssignment,
   resetManagePermissionsState,
+  RolesRequestParams,
 } from "lib/redux/roleSlice"
 import { FormInputModule } from "components/ui/Input/Input"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 // Define action options (Approve and View All removed)
 const actionOptions = [
-  { value: "1", label: "Create (C)", bit: 1 },
-  { value: "2", label: "Read (R)", bit: 2 },
+  { value: "1", label: "Read (R)", bit: 1 },
+  { value: "2", label: "Write (W)", bit: 2 },
   { value: "4", label: "Update (U)", bit: 4 },
-  { value: "8", label: "Delete (D)", bit: 8 },
+  { value: "8", label: "Execute (E)", bit: 8 },
 ]
 
 // Loading Skeleton Component
@@ -127,6 +129,9 @@ const UpdatePermissionsPage = () => {
     managePermissionsLoading,
     managePermissionsSuccess,
     managePermissionsError,
+    roles,
+    loading,
+    error,
   } = useAppSelector((state) => state.roles)
 
   const { user } = useAppSelector((state) => state.auth)
@@ -205,6 +210,13 @@ const UpdatePermissionsPage = () => {
       dispatch(fetchRoleById(roleId))
     }
     dispatch(fetchPrivileges())
+
+    // Fetch roles list
+    const rolesParams: RolesRequestParams = {
+      pageNumber: 1,
+      pageSize: 1000, // Get all roles
+    }
+    dispatch(fetchRoles(rolesParams))
 
     // Cleanup
     return () => {
@@ -1003,6 +1015,56 @@ const UpdatePermissionsPage = () => {
                         <span className="text-sm text-gray-600">Editable:</span>
                         <span className="font-semibold text-green-600">{currentRole.isSystem ? "No" : "Yes"}</span>
                       </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Roles List Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18 }}
+                    className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                  >
+                    <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+                      <Shield className="size-4" />
+                      All Roles
+                    </h3>
+                    <div className="max-h-64 space-y-2 overflow-y-auto">
+                      {loading && !roles.length ? (
+                        <div className="space-y-2">
+                          {[...Array(3)].map((_, i) => (
+                            <div key={i} className="h-8 animate-pulse rounded bg-gray-200"></div>
+                          ))}
+                        </div>
+                      ) : roles && roles.length > 0 ? (
+                        roles.map((role) => (
+                          <div
+                            key={role.id}
+                            className={`group cursor-pointer rounded-lg border p-2 transition-all hover:border-gray-300 hover:bg-gray-50 ${
+                              role.id === currentRole?.id ? "border-blue-200 bg-blue-50" : "border-gray-200"
+                            }`}
+                            onClick={() => router.push(`/roles/manage-permission/${role.id}`)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-gray-900">{role.name}</p>
+                                <p className="truncate text-xs text-gray-500">{role.category}</p>
+                              </div>
+                              {role.id === currentRole?.id && <div className="size-2 rounded-full bg-blue-500"></div>}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-4 text-center">
+                          <Shield className="mx-auto size-8 text-gray-400" />
+                          <p className="mt-2 text-sm text-gray-500">No roles found</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-3 border-t border-gray-200 pt-3">
+                      <ButtonModule variant="outline" className="w-full text-xs" onClick={() => router.push("/roles")}>
+                        View All Roles
+                      </ButtonModule>
                     </div>
                   </motion.div>
 

@@ -299,10 +299,10 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex w-full items-center justify-between border-b bg-white p-6">
-          <h2 className="text-xl font-bold text-gray-900">Invoice Details</h2>
+          <h2 className="text-xl font-bold text-gray-900 print:hidden">Invoice Details</h2>
           <button
             onClick={onRequestClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 print:hidden"
           >
             <CloseIcon />
           </button>
@@ -343,7 +343,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   {/* Header */}
                   <div className="flex items-center justify-between">
                     <div className="mb-8 text-center">
-                      <img src="/kad.svg" alt="KAD-ELEC Logo" />
+                      <img src="/kad.svg" alt="KAD-ELEC Logo" className="print:hidden" />
                     </div>
                     <div className="mb-8 flex flex-1 justify-center">
                       <canvas ref={barcodeRef} className="h-14 w-52" />
@@ -359,12 +359,12 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   {/* Customer Information Grid */}
 
                   {/* Billing Details */}
-                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff]">
+                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff] print:text-white">
                     <p>BILLING INFORMATION</p>
                   </div>
                   <div className=" grid grid-cols-2  border bg-[#FFFFFF]">
                     <div className="space-y-3">
-                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
+                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
                         <p>AREA OFFICE</p>
                         <p>{bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}</p>
                       </div>
@@ -432,7 +432,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                     </div>
 
                     <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
-                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
+                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
                         <p>SERVICE CENTER:</p>
                         <p>{bill.customer?.serviceCenterName || "-"}</p>
                       </div>
@@ -511,12 +511,12 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff]">
+                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff] print:text-white">
                     <p>BILLING CHARGES</p>
                   </div>
                   <div className="grid grid-cols-2  border bg-[#FFFFFF]">
                     <div className="space-y-3">
-                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
+                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
                         <p>CHARGES</p>
                         <p>TOTAL</p>
                       </div>
@@ -586,7 +586,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                     </div>
 
                     <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
-                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
+                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
                         <p>CHARGES</p>
                         <p>TOTAL</p>
                       </div>
@@ -674,14 +674,14 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   </div>
                   <div className="grid grid-cols-2  border ">
                     <div className="space-y-3">
-                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100">
+                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
                         <p>-</p>
                         <p>-</p>
                       </div>
                     </div>
 
                     <div className="space-y-3 border-l border-gray-200 bg-[#E1E1E1] ">
-                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100">
+                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
                         <p>TOTAL DUE:</p>
                         <p>{formatCurrency(bill.totalDue)}</p>
                       </div>
@@ -737,7 +737,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                   )}
 
                   {/* Contact Information */}
-                  <div className="mt-8   py-3 pt-4 text-center text-sm text-gray-600">
+                  <div className="mt-8   py-3 pt-4 text-center text-sm text-gray-600 print:hidden">
                     <div className="mb-2">
                       <p>
                         PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
@@ -747,7 +747,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-[#008002] p-4 text-center text-sm font-semibold text-white">
+                  <div className="mt-4 bg-[#008002] p-4 text-center text-sm font-semibold text-white print:hidden">
                     POWERED BY BLUMENTECHNOLOGIES LTD
                   </div>
                 </div>
@@ -763,7 +763,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-4 border-t bg-white p-6">
+        <div className="flex gap-4 border-t bg-white p-6 print:hidden">
           <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
             Close
           </ButtonModule>
