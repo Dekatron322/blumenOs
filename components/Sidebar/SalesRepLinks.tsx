@@ -216,7 +216,14 @@ export function SalesRepLinks({ isCollapsed }: SalesRepLinksProps) {
   useEffect(() => {
     // Only fetch summary if we haven't loaded it yet
     if (!agentSummary) {
-      dispatch(fetchAgentSummary())
+      dispatch(
+        fetchAgentSummary({
+          startDateUtc: new Date().toISOString(),
+          endDateUtc: new Date().toISOString(),
+          topCount: 0,
+          areaOfficeId: 0,
+        })
+      )
     }
   }, [dispatch, agentSummary])
 

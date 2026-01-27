@@ -641,7 +641,7 @@ export enum PaymentChannel {
   Pos = "Pos",
   Card = "Card",
   VendorWallet = "VendorWallet",
-  Cheque = "Cheque",
+  Chaque = "Chaque",
   BankDeposit = "BankDeposit",
   Vendor = "Vendor",
   Migration = "Migration",
@@ -1265,6 +1265,65 @@ export interface AgentSummaryResponse {
 
 // ========== END AGENT SUMMARY INTERFACES ==========
 
+// ========== SALES REP SUMMARY INTERFACES ==========
+
+export interface SalesRepSummaryRequest {
+  startDateUtc: string
+  endDateUtc: string
+  topCount: number
+  areaOfficeId: number
+}
+
+export interface TopAgent {
+  id: number
+  name: string
+  amount: number
+  count: number
+}
+
+export interface SalesRepOverview {
+  totalAgents: number
+  activeAgents: number
+  inactiveAgents: number
+  totalCashAtHand: number
+}
+
+export interface SalesRepTransactions {
+  totalAmount: number
+  totalCount: number
+  confirmedAmount: number
+  confirmedCount: number
+  pendingAmount: number
+  pendingCount: number
+}
+
+export interface SalesRepPerformance {
+  topAgents: TopAgent[]
+}
+
+export interface SalesRepCashClearance {
+  currentCashAtHand: number
+  clearedAmount: number
+  clearanceCount: number
+  rangeStartUtc: string
+  rangeEndUtc: string
+}
+
+export interface SalesRepSummaryData {
+  overview: SalesRepOverview
+  transactions: SalesRepTransactions
+  performance: SalesRepPerformance
+  cashClearance: SalesRepCashClearance
+}
+
+export interface SalesRepSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: SalesRepSummaryData
+}
+
+// ========== END SALES REP SUMMARY INTERFACES ==========
+
 // ========== AGENT PERFORMANCE DAILY INTERFACES ==========
 
 export interface AgentDailyPerformance {
@@ -1482,7 +1541,7 @@ export type PrepaidPaymentChannel =
   | "Pos"
   | "Card"
   | "VendorWallet"
-  | "Cheque"
+  | "Chaque"
   | "BankDeposit"
   | "Vendor"
   | "Migration"
@@ -1652,6 +1711,12 @@ interface AgentState {
   agentSummaryLoading: boolean
   agentSummaryError: string | null
   agentSummarySuccess: boolean
+
+  // Sales rep summary state
+  salesRepSummary: SalesRepSummaryData | null
+  salesRepSummaryLoading: boolean
+  salesRepSummaryError: string | null
+  salesRepSummarySuccess: boolean
 
   // Agent daily performance state
   agentPerformanceDaily: AgentDailyPerformance[]
@@ -1875,6 +1940,12 @@ const initialState: AgentState = {
   agentSummaryError: null,
   agentSummarySuccess: false,
 
+  // Sales Rep Summary initial state
+  salesRepSummary: null,
+  salesRepSummaryLoading: false,
+  salesRepSummaryError: null,
+  salesRepSummarySuccess: false,
+
   // Agent Daily Performance initial state
   agentPerformanceDaily: [],
   agentPerformanceDailyLoading: false,
@@ -2086,26 +2157,40 @@ export const fetchCashAtHand = createAsyncThunk("agents/fetchCashAtHand", async 
 })
 
 // ========== AGENT SUMMARY ASYNC THUNK ==========
-export const fetchAgentSummary = createAsyncThunk("agents/fetchAgentSummary", async (_, { rejectWithValue }) => {
-  try {
-    const response = await api.get<AgentSummaryResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.AGENT_SUMMARY))
+export const fetchAgentSummary = createAsyncThunk(
+  "agents/fetchAgentSummary",
+  async (
+    requestParams: SalesRepSummaryRequest = {
+      startDateUtc: new Date().toISOString(),
+      endDateUtc: new Date().toISOString(),
+      topCount: 0,
+      areaOfficeId: 0,
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.post<SalesRepSummaryResponse>(
+        buildApiUrl(API_ENDPOINTS.ANALYTICS.SALES_REP),
+        requestParams
+      )
 
-    if (!response.data.isSuccess) {
-      return rejectWithValue(response.data.message || "Failed to fetch agent summary")
-    }
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch agent summary")
+      }
 
-    if (!response.data.data) {
-      return rejectWithValue("Agent summary not found")
-    }
+      if (!response.data.data) {
+        return rejectWithValue("Agent summary not found")
+      }
 
-    return response.data.data
-  } catch (error: any) {
-    if (error.response?.data) {
-      return rejectWithValue(error.response.data.message || "Failed to fetch agent summary")
+      return response.data.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch agent summary")
+      }
+      return rejectWithValue(error.message || "Network error during agent summary fetch")
     }
-    return rejectWithValue(error.message || "Network error during agent summary fetch")
   }
-})
+)
 
 // ========== AGENT PERFORMANCE DAILY ASYNC THUNK ==========
 export const fetchAgentPerformanceDaily = createAsyncThunk(
@@ -2990,6 +3075,14 @@ const agentSlice = createSlice({
       state.agentSummaryLoading = false
     },
 
+    // Clear sales rep summary state
+    clearSalesRepSummary: (state) => {
+      state.salesRepSummary = null
+      state.salesRepSummaryError = null
+      state.salesRepSummarySuccess = false
+      state.salesRepSummaryLoading = false
+    },
+
     // Clear agent performance daily state
     clearAgentPerformanceDaily: (state) => {
       state.agentPerformanceDaily = []
@@ -3038,6 +3131,14 @@ const agentSlice = createSlice({
       state.agentSummaryLoading = false
     },
 
+    // Set sales rep summary (for when we get sales rep summary from other sources)
+    setSalesRepSummary: (state, action: PayloadAction<SalesRepSummaryData>) => {
+      state.salesRepSummary = action.payload
+      state.salesRepSummarySuccess = true
+      state.salesRepSummaryError = null
+      state.salesRepSummaryLoading = false
+    },
+
     // Set agent performance daily (for when we get agent performance daily from other sources)
     setAgentPerformanceDaily: (state, action: PayloadAction<AgentDailyPerformance[]>) => {
       state.agentPerformanceDaily = action.payload
@@ -3073,6 +3174,7 @@ const agentSlice = createSlice({
     clearError: (state) => {
       state.agentInfoError = null
       state.agentSummaryError = null
+      state.salesRepSummaryError = null
       state.agentPerformanceDailyError = null
       state.paymentChannelsError = null
       state.error = null
@@ -3239,6 +3341,10 @@ const agentSlice = createSlice({
       state.agentSummaryLoading = false
       state.agentSummaryError = null
       state.agentSummarySuccess = false
+      state.salesRepSummary = null
+      state.salesRepSummaryLoading = false
+      state.salesRepSummaryError = null
+      state.salesRepSummarySuccess = false
       state.agentPerformanceDaily = []
       state.agentPerformanceDailyLoading = false
       state.agentPerformanceDailyError = null
@@ -3751,24 +3857,24 @@ const agentSlice = createSlice({
         state.cashAtHand = null
       })
 
-      // Agent Summary cases
+      // Agent Summary cases (now using Sales Rep Summary)
       .addCase(fetchAgentSummary.pending, (state) => {
-        state.agentSummaryLoading = true
-        state.agentSummaryError = null
-        state.agentSummarySuccess = false
-        state.agentSummary = null
+        state.salesRepSummaryLoading = true
+        state.salesRepSummaryError = null
+        state.salesRepSummarySuccess = false
+        state.salesRepSummary = null
       })
-      .addCase(fetchAgentSummary.fulfilled, (state, action: PayloadAction<AgentSummaryData>) => {
-        state.agentSummaryLoading = false
-        state.agentSummarySuccess = true
-        state.agentSummary = action.payload
-        state.agentSummaryError = null
+      .addCase(fetchAgentSummary.fulfilled, (state, action: PayloadAction<SalesRepSummaryData>) => {
+        state.salesRepSummaryLoading = false
+        state.salesRepSummarySuccess = true
+        state.salesRepSummary = action.payload
+        state.salesRepSummaryError = null
       })
       .addCase(fetchAgentSummary.rejected, (state, action) => {
-        state.agentSummaryLoading = false
-        state.agentSummaryError = (action.payload as string) || "Failed to fetch agent summary"
-        state.agentSummarySuccess = false
-        state.agentSummary = null
+        state.salesRepSummaryLoading = false
+        state.salesRepSummaryError = (action.payload as string) || "Failed to fetch agent summary"
+        state.salesRepSummarySuccess = false
+        state.salesRepSummary = null
       })
 
       // Agent Performance Daily cases
@@ -4724,12 +4830,14 @@ const agentSlice = createSlice({
 export const {
   clearAgentInfo,
   clearAgentSummary,
+  clearSalesRepSummary,
   clearAgentPerformanceDaily,
   clearPaymentChannels,
   clearVend,
   clearCheckPayment,
   setAgentInfo,
   setAgentSummary,
+  setSalesRepSummary,
   setAgentPerformanceDaily,
   setPaymentChannels,
   clearAgents,

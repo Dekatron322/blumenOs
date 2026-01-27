@@ -216,6 +216,8 @@ export const API_ENDPOINTS = {
     INTENT: "/files/intents",
     FINALIZE: "/files/{id}/finalize",
     BULK_UPLOAD: "/payments/bulk/record",
+    CSV_JOBS: "/system/csv-jobs",
+    CSV_UPLOAD_FAILURES: "/system/csv-jobs/{id}/failures",
   },
 
   STATUS_MAP: {
@@ -317,6 +319,8 @@ export const API_ENDPOINTS = {
     PAYMENT_ANOMALIES: "/payments/anomalies/summary",
     ALL_ANOMALIES: "/payments/anomalies",
     RESOLVE_ANOMALY: "/payments/anomalies/{id}/resolve",
+    EXPORT: "/payments/export",
+    CANCEL_BY_REFERENCE: "/payments/reference/{reference}/cancel",
   },
 
   REFUND: {

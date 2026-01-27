@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useCallback, useState, useRef } from "react"
+import React, { useCallback, useRef, useState } from "react"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { createFileIntent, finalizeFile, processBulkUpload } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
-import { CloudUpload, FileText, X, CheckCircle, AlertCircle, Download } from "lucide-react"
+import { AlertCircle, CheckCircle, CloudUpload, Download, FileText, X } from "lucide-react"
 
 interface UploadProgress {
   loaded: number

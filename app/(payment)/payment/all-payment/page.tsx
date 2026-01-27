@@ -34,7 +34,10 @@ import { clearCustomers, fetchCustomers } from "lib/redux/customerSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import {
   cancelPayment,
+  clearExportPayments,
   clearPayments,
+  exportPayments,
+  ExportPaymentsRequest,
   fetchPaymentChannels,
   fetchPayments,
   Payment,
@@ -79,8 +82,8 @@ const channelStringToEnum = (channelString: string): PaymentChannel => {
       return PaymentChannel.Card
     case "VendorWallet":
       return PaymentChannel.VendorWallet
-    case "Cheque":
-      return PaymentChannel.Cheque
+    case "Chaque":
+      return PaymentChannel.Chaque
     case "BankDeposit":
       return PaymentChannel.Cash // Map to Cash as enum doesn't exist
     case "Vendor":
@@ -1052,13 +1055,20 @@ const AllPayments: React.FC = () => {
     cancelPaymentLoading,
     cancelPaymentError,
     cancelPaymentSuccess,
+    exportPaymentsLoading,
+    exportPaymentsError,
+    exportPaymentsSuccess,
+    exportPaymentsData,
   } = useAppSelector((state) => state.payments)
   const { customers } = useAppSelector((state) => state.customers)
   const { vendors } = useAppSelector((state) => state.vendors)
   const { agents } = useAppSelector((state) => state.agents)
   const { paymentTypes } = useAppSelector((state) => state.paymentTypes)
-  const { areaOffices } = useAppSelector((state) => state.areaOffices)
+  const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
   const { paymentChannels, paymentChannelsLoading } = useAppSelector((state) => state.payments)
+
+  // Debug area offices
+  console.log("Area offices data:", areaOffices, "Loading:", areaOfficesLoading)
   const { distributionSubstations } = useAppSelector((state) => state.distributionSubstations)
   const { feeders } = useAppSelector((state) => state.feeders)
   const { serviceStations } = useAppSelector((state) => state.serviceStations)
@@ -1824,7 +1834,7 @@ const AllPayments: React.FC = () => {
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
     { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Cheque", label: "Cheque" },
+    { value: "Chaque", label: "Chaque" },
     { value: "BankDeposit", label: "Bank Deposit" },
     { value: "Vendor", label: "Vendor" },
     { value: "Migration", label: "Migration" },
@@ -1943,136 +1953,72 @@ const AllPayments: React.FC = () => {
     try {
       const dateRange = getExportDateRange()
 
-      // Build API parameters using the proper endpoint parameters
-      const params: any = {
-        PageNumber: 1,
-        PageSize: 1000000,
-        // Use proper date-time parameters
-        ...(dateRange.from && { PaidFromUtc: dateRange.from }),
-        ...(dateRange.to && { PaidToUtc: dateRange.to }),
-        // Add channel filter
-        ...(exportChannel !== "all" && { Channel: exportChannel }),
-        // Add status filter
-        ...(exportStatus !== "all" && { Status: exportStatus }),
-        // Add collector type filter
-        ...(exportCollectorType !== "all" && { CollectorType: exportCollectorType }),
-        // Add ID filters
-        ...(exportCustomerId && { CustomerId: parseInt(exportCustomerId) }),
-        ...(exportVendorId && { VendorId: parseInt(exportVendorId) }),
-        ...(exportAgentId && { AgentId: parseInt(exportAgentId) }),
-        ...(exportPaymentTypeId && { PaymentTypeId: parseInt(exportPaymentTypeId) }),
-        ...(exportAreaOfficeId && { AreaOfficeId: parseInt(exportAreaOfficeId) }),
-        ...(exportDistributionSubstationId && { DistributionSubstationId: parseInt(exportDistributionSubstationId) }),
-        ...(exportFeederId && { FeederId: parseInt(exportFeederId) }),
-        ...(exportServiceCenterId && { ServiceCenterId: parseInt(exportServiceCenterId) }),
-        ...(exportPostpaidBillId && { PostpaidBillId: parseInt(exportPostpaidBillId) }),
-        ...(exportCustomerProvinceId && { CustomerProvinceId: parseInt(exportCustomerProvinceId) }),
-        // Add string filters
-        ...(exportReference && { Reference: exportReference }),
-        ...(exportAccountNumber && { AccountNumber: exportAccountNumber }),
-        ...(exportMeterNumber && { MeterNumber: exportMeterNumber }),
-        ...(exportSearch && { Search: exportSearch }),
-        // Add boolean filters
-        ...(exportIsCleared !== "all" && { IsCleared: exportIsCleared === "true" }),
-        ...(exportIsRemitted !== "all" && { IsRemitted: exportIsRemitted === "true" }),
-        ...(exportCustomerIsPPM !== "all" && { CustomerIsPPM: exportCustomerIsPPM === "true" }),
-        ...(exportCustomerIsMD !== "all" && { CustomerIsMD: exportCustomerIsMD === "true" }),
-        ...(exportCustomerIsUrban !== "all" && { CustomerIsUrban: exportCustomerIsUrban === "true" }),
-        // Add clearance status filter
-        ...(exportClearanceStatus !== "all" && { ClearanceStatus: exportClearanceStatus }),
-        // Add prepaid filter for payment category
-        ...(exportPaymentCategory === "prepaid" && { PrepaidOnly: true }),
+      // Build export request using the new API parameters
+      const exportRequest: ExportPaymentsRequest = {
+        fromUtc: dateRange.from || new Date(0).toISOString(),
+        toUtc: dateRange.to || new Date().toISOString(),
+        ...(exportAreaOfficeId && { areaOfficeId: parseInt(exportAreaOfficeId) }),
+        ...(exportPaymentCategory !== "all" && { prepaidOrPostpaid: exportPaymentCategory }),
       }
 
-      console.log("Exporting payments with params:", params)
+      console.log("Exporting payments with request:", exportRequest)
 
-      const response = await api.get(buildApiUrl(API_ENDPOINTS.PAYMENTS.GET), { params })
+      // Dispatch the export action
+      const result = await dispatch(exportPayments(exportRequest))
 
-      console.log("API Response:", response)
-
-      let allPayments: Payment[] = response.data?.data || []
-
-      console.log("Payments found:", allPayments.length)
-
-      // If postpaid category is selected, filter out prepaid payments
-      if (exportPaymentCategory === "postpaid") {
-        allPayments = allPayments.filter((payment) => payment.isPrepaid === false)
-        console.log("After postpaid filter:", allPayments.length)
+      if (exportPayments.fulfilled.match(result)) {
+        // Create download link from blob
+        const { data: blob, fileName } = result.payload
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.setAttribute("download", fileName)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        // notify({
+        //   type: "success",
+        //   message: `Payments exported successfully as ${fileName}`,
+        // })
+      } else {
+        throw new Error((result.payload as string) || "Export failed")
       }
-
-      if (allPayments.length === 0) {
-        console.log("No payments found for export")
-        // Show user feedback instead of silently returning
-        alert("No payments found matching your criteria. Please adjust your filters and try again.")
-        setIsExporting(false)
-        return
-      }
-
-      const headers = [
-        "Reference",
-        "Amount",
-        "Currency",
-        "Customer Name",
-        "Customer Account",
-        "Payment Type",
-        "Category",
-        "Channel",
-        "Status",
-        "Collector Type",
-        "Date/Time",
-        "Area Office",
-      ]
-
-      const csvRows = allPayments.map((payment) => [
-        payment.reference || `PAY-${payment.id}`,
-        payment.amount,
-        payment.currency || "NGN",
-        payment.customerName || "-",
-        payment.customerAccountNumber || "-",
-        payment.paymentTypeName || "-",
-        payment.isPrepaid ? "Prepaid" : "Postpaid",
-        payment.channel,
-        payment.status,
-        payment.collectorType,
-        payment.paidAtUtc ? formatDate(payment.paidAtUtc) : "-",
-        payment.areaOfficeName || "-",
-      ])
-
-      const escapeCSV = (value: string | number | undefined) => {
-        const stringValue = String(value)
-        if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
-          return `"${stringValue.replace(/"/g, '""')}"`
-        }
-        return stringValue
-      }
-
-      const csvContent = [headers.map(escapeCSV).join(","), ...csvRows.map((row) => row.map(escapeCSV).join(","))].join(
-        "\n"
-      )
-
-      console.log("CSV content generated, length:", csvContent.length)
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.setAttribute("href", url)
-      const categoryLabel = exportPaymentCategory !== "all" ? `_${exportPaymentCategory}` : ""
-      link.setAttribute("download", `payments${categoryLabel}_export_${new Date().toISOString().split("T")[0]}.csv`)
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-
-      console.log("Export completed successfully")
     } catch (error) {
       console.error("Failed to export payments:", error)
-      // Show user feedback for errors
-      alert(`Failed to export payments: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`)
+      // notify({
+      //   type: "error",
+      //   message: `Failed to export payments: ${error instanceof Error ? error.message : "Unknown error"}`,
+      // })
     } finally {
       setIsExporting(false)
     }
   }
+
+  // Handle export state changes
+  useEffect(() => {
+    if (exportPaymentsSuccess && exportPaymentsData) {
+      setIsExporting(false)
+      const { fileName } = exportPaymentsData
+      // notify({
+      //   type: "success",
+      //   message: `Payments exported successfully as ${fileName}`,
+      // })
+      dispatch(clearExportPayments())
+    }
+  }, [exportPaymentsSuccess, exportPaymentsData, dispatch])
+
+  // Handle export errors
+  useEffect(() => {
+    if (exportPaymentsError) {
+      setIsExporting(false)
+      // notify({
+      //   type: "error",
+      //   message: exportPaymentsError,
+      // })
+      dispatch(clearExportPayments())
+    }
+  }, [exportPaymentsError, dispatch])
 
   if (loading) return <LoadingSkeleton />
   if (error) return <div className="p-4 text-red-600">Error loading payments: {error}</div>
@@ -2208,13 +2154,15 @@ const AllPayments: React.FC = () => {
                     {/* Export CSV Button */}
                     <button
                       onClick={() => setShowExportModal(true)}
-                      disabled={isExporting}
+                      disabled={isExporting || exportPaymentsLoading}
                       className={`flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium transition-colors ${
-                        isExporting ? "cursor-not-allowed text-gray-400" : "text-gray-700 hover:bg-gray-50"
+                        isExporting || exportPaymentsLoading
+                          ? "cursor-not-allowed text-gray-400"
+                          : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <Download className={`size-4 ${isExporting ? "animate-pulse" : ""}`} />
-                      {isExporting ? "Exporting..." : "Export"}
+                      <Download className={`size-4 ${isExporting || exportPaymentsLoading ? "animate-pulse" : ""}`} />
+                      {isExporting || exportPaymentsLoading ? "Exporting..." : "Export"}
                     </button>
                   </div>
                 </div>
@@ -3153,8 +3101,7 @@ const AllPayments: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Tabs */}
-                <div className="mt-3 flex space-x-1 rounded-lg bg-gray-100 p-1">
+                {/* <div className="mt-3 flex space-x-1 rounded-lg bg-gray-100 p-1">
                   <button
                     onClick={() => setExportModalTab("basic")}
                     className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
@@ -3175,10 +3122,10 @@ const AllPayments: React.FC = () => {
                   >
                     Advanced Filters
                   </button>
-                </div>
+                </div> */}
               </div>
 
-              <div className="max-h-96 overflow-y-auto p-4">
+              <div className="max-h-96 p-4">
                 {exportModalTab === "basic" ? (
                   <div className="space-y-4">
                     {/* Date Range */}
@@ -3264,16 +3211,29 @@ const AllPayments: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick Search */}
+                    {/* Area Office */}
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">Quick Search</label>
-                      <input
-                        type="text"
-                        placeholder="Search payments..."
-                        value={exportSearch}
-                        onChange={(e) => setExportSearch(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#004B23] focus:outline-none focus:ring-1 focus:ring-[#004B23]"
-                      />
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
+                      {areaOfficesLoading ? (
+                        <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                          Loading area offices...
+                        </div>
+                      ) : (
+                        <FormSelectModule
+                          name="exportAreaOfficeId"
+                          value={exportAreaOfficeId}
+                          onChange={(e) => setExportAreaOfficeId(e.target.value)}
+                          options={[
+                            { value: "", label: "All Area Offices" },
+                            ...areaOffices.map((office) => ({
+                              value: office.id.toString(),
+                              label: office.nameOfNewOAreaffice || `Office ${office.id}`,
+                            })),
+                          ]}
+                          className="w-full"
+                          controlClassName="h-9 text-sm"
+                        />
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -3419,15 +3379,25 @@ const AllPayments: React.FC = () => {
                   </button>
                   <button
                     onClick={exportToCSV}
-                    disabled={exportDateRange === "custom" && !exportFromDate && !exportToDate}
+                    disabled={
+                      (exportDateRange === "custom" && !exportFromDate && !exportToDate) ||
+                      isExporting ||
+                      exportPaymentsLoading
+                    }
                     className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
-                      exportDateRange === "custom" && !exportFromDate && !exportToDate
+                      (exportDateRange === "custom" && !exportFromDate && !exportToDate) ||
+                      isExporting ||
+                      exportPaymentsLoading
                         ? "cursor-not-allowed bg-gray-400"
                         : "bg-[#004B23] hover:bg-[#003a1b]"
                     }`}
                   >
-                    <Download className="mr-2 inline-block size-4" />
-                    Export
+                    <Download
+                      className={`mr-2 inline-block size-4 ${
+                        isExporting || exportPaymentsLoading ? "animate-pulse" : ""
+                      }`}
+                    />
+                    {isExporting || exportPaymentsLoading ? "Exporting..." : "Export"}
                   </button>
                 </div>
               </div>

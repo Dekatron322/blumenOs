@@ -210,7 +210,14 @@ const StatisticsCards = () => {
   const [activeRange, setActiveRange] = useState<TimeRange>(TimeRange.Today)
 
   useEffect(() => {
-    dispatch(fetchAgentSummary())
+    dispatch(
+      fetchAgentSummary({
+        startDateUtc: new Date().toISOString(),
+        endDateUtc: new Date().toISOString(),
+        topCount: 0,
+        areaOfficeId: 0,
+      })
+    )
   }, [dispatch])
 
   const timeRangeTabs = [
@@ -265,7 +272,7 @@ const StatisticsCards = () => {
         return "💳"
       case "VendorWallet":
         return "👛"
-      case "Cheque":
+      case "Chaque":
         return "📝"
       default:
         return "💰"
@@ -701,7 +708,7 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Cheque:
+      case PaymentChannel.Chaque:
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",

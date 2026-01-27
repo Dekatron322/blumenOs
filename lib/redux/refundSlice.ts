@@ -55,7 +55,7 @@ export interface RefundSummaryParams {
     | "Pos"
     | "Card"
     | "VendorWallet"
-    | "Cheque"
+    | "Chaque"
     | "BankDeposit"
     | "Vendor"
     | "Migration"
@@ -78,7 +78,7 @@ export interface RefundHistoryItem {
   reason: string
   amount: number
   currency: string
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque" | "BankDeposit" | "Vendor" | "Migration"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque" | "BankDeposit" | "Vendor" | "Migration"
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
   refundedAtUtc: string
   customerId: number
@@ -105,7 +105,7 @@ export interface RefundHistoryParams {
     | "Pos"
     | "Card"
     | "VendorWallet"
-    | "Cheque"
+    | "Chaque"
     | "BankDeposit"
     | "Vendor"
     | "Migration"
@@ -191,7 +191,7 @@ export interface Receipt {
   debtPayable: number
   totalAmountPaid: number
   currency: string
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque" | "BankDeposit" | "Vendor" | "Migration"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque" | "BankDeposit" | "Vendor" | "Migration"
   status: "Pending" | "Confirmed" | "Failed" | "Reversed"
   paymentTypeName: string
   receipt: {
@@ -219,7 +219,7 @@ export interface Receipt {
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"

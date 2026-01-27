@@ -441,7 +441,7 @@ const PaymentMethodBadge = ({ method }: { method: string }) => {
       Pos: { color: "text-orange-600", bg: "bg-orange-50", label: "POS" },
       Card: { color: "text-green-600", bg: "bg-green-50", label: "CARD" },
       VendorWallet: { color: "text-red-600", bg: "bg-red-50", label: "VENDOR WALLET" },
-      Cheque: { color: "text-teal-600", bg: "bg-teal-50", label: "CHEQUE" },
+      Chaque: { color: "text-teal-600", bg: "bg-teal-50", label: "Chaque" },
     }
     return configs[method as keyof typeof configs] || configs.Cash
   }
@@ -1139,8 +1139,8 @@ const PaymentDetailsPage = () => {
                           ? "Bank Transfer"
                           : currentPayment.channel === "Cash"
                           ? "Cash Payment"
-                          : currentPayment.channel === "Cheque"
-                          ? "Cheque Payment"
+                          : currentPayment.channel === "Chaque"
+                          ? "Chaque Payment"
                           : currentPayment.channel === "Pos"
                           ? "POS Payment"
                           : currentPayment.channel === "Card"

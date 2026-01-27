@@ -389,7 +389,7 @@ const AllPendingCollectionsTable: React.FC<AllPendingCollectionsTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Cheque:
+      case PaymentChannel.Chaque:
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",

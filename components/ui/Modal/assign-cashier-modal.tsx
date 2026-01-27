@@ -7,7 +7,8 @@ import { ButtonModule } from "components/ui/Button/Button"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import { assignCashiers, clearAssignCashiers, fetchAgents } from "lib/redux/agentSlice"
 import { notify } from "components/ui/Notification/Notification"
-import { Check, Loader2, Search, Users } from "lucide-react"
+import { Check, Loader2, Users } from "lucide-react"
+import { SearchModule } from "components/ui/Search/search-module"
 
 interface AssignCashierModalProps {
   isOpen: boolean
@@ -167,16 +168,14 @@ const AssignCashierModal: React.FC<AssignCashierModalProps> = ({
 
         {/* Search */}
         <div className="border-b border-gray-200 p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search cashiers by name, code, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+          <SearchModule
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search cashiers by name, code, or email..."
+            onCancel={() => setSearchTerm("")}
+            onSearch={() => fetchCashiers(searchTerm || undefined)}
+            className="w-full md:w-full"
+          />
         </div>
 
         {/* Cashiers List */}
