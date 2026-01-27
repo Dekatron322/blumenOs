@@ -1,17 +1,15 @@
 name: Build and Push (DOCR)
 
 on:
-  push:
-    branches: [main, dev]
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, blumen-runner]
     permissions:
       contents: read
       packages: write
