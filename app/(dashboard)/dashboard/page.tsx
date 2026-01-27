@@ -1211,29 +1211,29 @@ export default function Dashboard() {
                               <table className="w-full text-sm">
                                 <thead>
                                   <tr className="border-b border-gray-200 bg-gray-50">
-                                    <th className="px-2 py-2 text-left font-medium text-gray-700">Band</th>
-                                    <th className="px-2 py-2 text-right font-medium text-gray-700">Collection</th>
-                                    <th className="px-2 py-2 text-right font-medium text-gray-700">%</th>
+                                    <th className="p-2text-left font-medium text-gray-700">Band</th>
+                                    <th className="p-2text-right font-medium text-gray-700">Collection</th>
+                                    <th className="p-2text-right font-medium text-gray-700">%</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {collectionByBandSlices.map((item) => (
                                     <tr key={item.label} className="border-b border-gray-100 hover:bg-gray-50">
-                                      <td className="px-2 py-2 text-gray-800">{item.label}</td>
-                                      <td className="px-2 py-2 text-right text-gray-800">
+                                      <td className="p-2text-gray-800">{item.label}</td>
+                                      <td className="p-2text-right text-gray-800">
                                         {selectedCurrencySymbol}
                                         {item.amount.toLocaleString()}
                                       </td>
-                                      <td className="px-2 py-2 text-right text-gray-800">{item.percentage}%</td>
+                                      <td className="p-2text-right text-gray-800">{item.percentage}%</td>
                                     </tr>
                                   ))}
                                   <tr className="border-t-2 border-gray-200 bg-gray-50 font-semibold">
-                                    <td className="px-2 py-2 text-gray-900">Total</td>
-                                    <td className="px-2 py-2 text-right text-gray-900">
+                                    <td className="p-2text-gray-900">Total</td>
+                                    <td className="p-2text-right text-gray-900">
                                       {selectedCurrencySymbol}
                                       {collectionByBandTotal.amount.toLocaleString()}
                                     </td>
-                                    <td className="px-2 py-2 text-right text-gray-900">100%</td>
+                                    <td className="p-2text-right text-gray-900">100%</td>
                                   </tr>
                                 </tbody>
                               </table>

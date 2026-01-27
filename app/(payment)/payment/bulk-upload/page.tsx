@@ -11,7 +11,7 @@ import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { SearchModule } from "components/ui/Search/search-module"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchCsvJobs, CsvJobsParams } from "lib/redux/fileManagementSlice"
+import { CsvJobsParams, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
