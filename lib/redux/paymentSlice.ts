@@ -379,7 +379,7 @@ export interface PaymentAnomalyItem {
   status: "Open" | "Resolved"
   resolutionAction: PaymentAnomalyResolutionAction
   paymentTypeId: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque" | "BankDeposit" | "Vendor" | "Migration"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque" | "BankDeposit" | "Vendor" | "Migration"
   collectorType: "Customer" | "SalesRep" | "Vendor" | "Staff" | "Migration"
   totalAmount: number
   totalCount: number
@@ -404,7 +404,7 @@ export interface PaymentAnomaliesRequestParams {
     | "Pos"
     | "Card"
     | "VendorWallet"
-    | "Cheque"
+    | "Chaque"
     | "BankDeposit"
     | "Vendor"
     | "Migration"
@@ -426,7 +426,7 @@ export interface AllAnomalyItem {
   paymentTypeId: number
   paymentTypeName: string
   amount: number
-  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque" | "BankDeposit" | "Vendor" | "Migration"
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque" | "BankDeposit" | "Vendor" | "Migration"
   paymentStatus: "Pending" | "Confirmed" | "Failed" | "Reversed" | "Cancelled"
   paidAtUtc: string
   ruleKey: string
@@ -466,7 +466,7 @@ export interface AllAnomaliesRequestParams {
     | "Pos"
     | "Card"
     | "VendorWallet"
-    | "Cheque"
+    | "Chaque"
     | "BankDeposit"
     | "Vendor"
     | "Migration"
@@ -496,6 +496,21 @@ export interface ResolveAnomalyResponse {
     action: PaymentAnomalyResolutionAction
     note: string
   }
+}
+
+// Interface for Export Payments Request
+export interface ExportPaymentsRequest {
+  fromUtc: string
+  toUtc: string
+  areaOfficeId?: number
+  prepaidOrPostpaid?: string
+}
+
+// Interface for Export Payments Response
+export interface ExportPaymentsResponse {
+  isSuccess: boolean
+  message: string
+  data: Blob // Direct file response as Blob
 }
 
 // Interfaces for Top Performers
@@ -863,6 +878,17 @@ export interface VendResponse {
   data: VendData
 }
 
+// Interfaces for Cancel Payment by Reference
+export interface CancelPaymentByReferenceRequest {
+  reason: string
+}
+
+export interface CancelPaymentByReferenceResponse {
+  isSuccess: boolean
+  message: string
+  data: CancelPaymentData
+}
+
 // Payment State
 interface PaymentState {
   // Payments list state
@@ -999,6 +1025,18 @@ interface PaymentState {
   cancelPaymentSuccess: boolean
   cancelPaymentData: CancelPaymentData | null
 
+  // Cancel Payment by Reference state
+  cancelPaymentByReferenceLoading: boolean
+  cancelPaymentByReferenceError: string | null
+  cancelPaymentByReferenceSuccess: boolean
+  cancelPaymentByReferenceData: CancelPaymentData | null
+
+  // Check Payment by Reference state
+  checkPaymentLoading: boolean
+  checkPaymentError: string | null
+  checkPaymentSuccess: boolean
+  checkPaymentData: Payment | null
+
   // Payment Anomalies state
   paymentAnomalies: PaymentAnomalyItem[]
   paymentAnomaliesLoading: boolean
@@ -1023,6 +1061,12 @@ interface PaymentState {
   resolveAnomalyLoading: boolean
   resolveAnomalyError: string | null
   resolveAnomalySuccess: boolean
+
+  // Export Payments state
+  exportPaymentsLoading: boolean
+  exportPaymentsError: string | null
+  exportPaymentsSuccess: boolean
+  exportPaymentsData: { data: Blob; fileName: string } | null
 }
 
 // Initial state
@@ -1151,6 +1195,18 @@ const initialState: PaymentState = {
   cancelPaymentSuccess: false,
   cancelPaymentData: null,
 
+  // Cancel Payment by Reference
+  cancelPaymentByReferenceLoading: false,
+  cancelPaymentByReferenceError: null,
+  cancelPaymentByReferenceSuccess: false,
+  cancelPaymentByReferenceData: null,
+
+  // Check Payment by Reference
+  checkPaymentLoading: false,
+  checkPaymentError: null,
+  checkPaymentSuccess: false,
+  checkPaymentData: null,
+
   // Payment Anomalies
   paymentAnomalies: [],
   paymentAnomaliesLoading: false,
@@ -1175,6 +1231,12 @@ const initialState: PaymentState = {
   resolveAnomalyLoading: false,
   resolveAnomalyError: null,
   resolveAnomalySuccess: false,
+
+  // Export Payments
+  exportPaymentsLoading: false,
+  exportPaymentsError: null,
+  exportPaymentsSuccess: false,
+  exportPaymentsData: null,
 }
 
 // Async thunk for fetching payments
@@ -1720,6 +1782,84 @@ export const cancelPayment = createAsyncThunk(
   }
 )
 
+// Async thunk for canceling payment by reference
+export const cancelPaymentByReference = createAsyncThunk(
+  "payments/cancelPaymentByReference",
+  async (
+    { reference, cancelData }: { reference: string; cancelData: CancelPaymentByReferenceRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      if (!reference) {
+        return rejectWithValue("Payment reference is required")
+      }
+
+      const endpoint = API_ENDPOINTS.PAYMENTS.CANCEL_BY_REFERENCE.replace("{reference}", reference)
+      console.log("Cancelling payment by reference with endpoint:", endpoint)
+      console.log("Cancel data:", cancelData)
+
+      const response = await api.post<CancelPaymentByReferenceResponse>(buildApiUrl(endpoint), cancelData)
+      console.log("Cancel payment by reference response:", response.data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to cancel payment by reference")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Cancel payment by reference data not found")
+      }
+
+      return {
+        reference: reference,
+        data: response.data.data,
+        message: response.data.message,
+      }
+    } catch (error: any) {
+      console.error("Cancel payment by reference error:", error)
+      console.error("Error response:", error.response?.data)
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to cancel payment by reference")
+      }
+      return rejectWithValue(error.message || "Network error during payment cancellation by reference")
+    }
+  }
+)
+
+// Async thunk for checking payment by reference
+export const checkPayment = createAsyncThunk(
+  "payments/checkPayment",
+  async (reference: string, { rejectWithValue }) => {
+    try {
+      if (!reference) {
+        return rejectWithValue("Payment reference is required")
+      }
+
+      const endpoint = API_ENDPOINTS.AGENTS.CHECK_PAYMENT.replace("{reference}", reference)
+      console.log("Checking payment with endpoint:", endpoint)
+
+      const response = await api.get<PaymentResponse>(buildApiUrl(endpoint))
+      console.log("Check payment response:", response.data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Payment not found")
+      }
+
+      if (!response.data.data) {
+        return rejectWithValue("Payment data not found")
+      }
+
+      return response.data.data
+    } catch (error: any) {
+      console.error("Check payment error:", error)
+      console.error("Error response:", error.response?.data)
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Payment not found")
+      }
+      return rejectWithValue(error.message || "Network error during payment lookup")
+    }
+  }
+)
+
 // Async thunk for fetching payment anomalies
 export const fetchPaymentAnomalies = createAsyncThunk(
   "payments/fetchPaymentAnomalies",
@@ -1840,6 +1980,45 @@ export const resolveAnomaly = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to resolve anomaly")
       }
       return rejectWithValue(error.message || "Network error during anomaly resolution")
+    }
+  }
+)
+
+// Async thunk for exporting payments
+export const exportPayments = createAsyncThunk(
+  "payments/exportPayments",
+  async (exportData: ExportPaymentsRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.get(buildApiUrl(API_ENDPOINTS.PAYMENTS.EXPORT), {
+        params: {
+          FromUtc: exportData.fromUtc,
+          ToUtc: exportData.toUtc,
+          ...(exportData.areaOfficeId && { AreaOfficeId: exportData.areaOfficeId }),
+          ...(exportData.prepaidOrPostpaid && { prepaidOrPostpaid: exportData.prepaidOrPostpaid }),
+        },
+        responseType: "blob", // Important for file downloads
+      })
+
+      // Extract filename from content-disposition header
+      const contentDisposition = response.headers["content-disposition"]
+      let fileName = "payments-export.csv"
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+        if (filenameMatch && filenameMatch[1]) {
+          fileName = filenameMatch[1].replace(/['"]/g, "")
+        }
+      }
+
+      // Return both blob and filename
+      return {
+        data: response.data,
+        fileName: fileName,
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to export payments")
+      }
+      return rejectWithValue(error.message || "Network error during payments export")
     }
   }
 )
@@ -2080,6 +2259,22 @@ const paymentSlice = createSlice({
       state.cancelPaymentData = null
     },
 
+    // Clear cancel payment by reference state
+    clearCancelPaymentByReference: (state) => {
+      state.cancelPaymentByReferenceLoading = false
+      state.cancelPaymentByReferenceError = null
+      state.cancelPaymentByReferenceSuccess = false
+      state.cancelPaymentByReferenceData = null
+    },
+
+    // Clear check payment state
+    clearCheckPayment: (state) => {
+      state.checkPaymentLoading = false
+      state.checkPaymentError = null
+      state.checkPaymentSuccess = false
+      state.checkPaymentData = null
+    },
+
     // Clear payment anomalies state
     clearPaymentAnomalies: (state) => {
       state.paymentAnomaliesLoading = false
@@ -2093,6 +2288,14 @@ const paymentSlice = createSlice({
       state.resolveAnomalyLoading = false
       state.resolveAnomalyError = null
       state.resolveAnomalySuccess = false
+    },
+
+    // Clear export payments state
+    clearExportPayments: (state) => {
+      state.exportPaymentsLoading = false
+      state.exportPaymentsError = null
+      state.exportPaymentsSuccess = false
+      state.exportPaymentsData = null
     },
 
     // Set pagination
@@ -2725,6 +2928,68 @@ const paymentSlice = createSlice({
         state.cancelPaymentData = null
       })
 
+      // Cancel payment by reference cases
+      .addCase(cancelPaymentByReference.pending, (state) => {
+        state.cancelPaymentByReferenceLoading = true
+        state.cancelPaymentByReferenceError = null
+        state.cancelPaymentByReferenceSuccess = false
+        state.cancelPaymentByReferenceData = null
+      })
+      .addCase(
+        cancelPaymentByReference.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            reference: string
+            data: CancelPaymentData
+            message: string
+          }>
+        ) => {
+          state.cancelPaymentByReferenceLoading = false
+          state.cancelPaymentByReferenceSuccess = true
+          state.cancelPaymentByReferenceError = null
+          state.cancelPaymentByReferenceData = action.payload.data
+
+          // Update the payment in the payments list if it exists
+          const index = state.payments.findIndex((p) => p.reference === action.payload.reference)
+          if (index !== -1 && state.payments[index]) {
+            // Update the payment status to reflect cancellation
+            state.payments[index]!.status = "Cancelled" as const
+          }
+
+          // Update the current payment if it's the same one
+          if (state.currentPayment && state.currentPayment.reference === action.payload.reference) {
+            state.currentPayment.status = "Cancelled" as const
+          }
+        }
+      )
+      .addCase(cancelPaymentByReference.rejected, (state, action) => {
+        state.cancelPaymentByReferenceLoading = false
+        state.cancelPaymentByReferenceError = (action.payload as string) || "Failed to cancel payment by reference"
+        state.cancelPaymentByReferenceSuccess = false
+        state.cancelPaymentByReferenceData = null
+      })
+
+      // Check payment cases
+      .addCase(checkPayment.pending, (state) => {
+        state.checkPaymentLoading = true
+        state.checkPaymentError = null
+        state.checkPaymentSuccess = false
+        state.checkPaymentData = null
+      })
+      .addCase(checkPayment.fulfilled, (state, action: PayloadAction<Payment>) => {
+        state.checkPaymentLoading = false
+        state.checkPaymentSuccess = true
+        state.checkPaymentError = null
+        state.checkPaymentData = action.payload
+      })
+      .addCase(checkPayment.rejected, (state, action) => {
+        state.checkPaymentLoading = false
+        state.checkPaymentError = (action.payload as string) || "Payment not found"
+        state.checkPaymentSuccess = false
+        state.checkPaymentData = null
+      })
+
       // Fetch payment anomalies cases
       .addCase(fetchPaymentAnomalies.pending, (state) => {
         state.paymentAnomaliesLoading = true
@@ -2809,6 +3074,23 @@ const paymentSlice = createSlice({
         state.resolveAnomalyError = (action.payload as string) || "Failed to resolve anomaly"
         state.resolveAnomalySuccess = false
       })
+      // Export payments cases
+      .addCase(exportPayments.pending, (state) => {
+        state.exportPaymentsLoading = true
+        state.exportPaymentsError = null
+        state.exportPaymentsSuccess = false
+      })
+      .addCase(exportPayments.fulfilled, (state, action) => {
+        state.exportPaymentsLoading = false
+        state.exportPaymentsSuccess = true
+        state.exportPaymentsError = null
+        state.exportPaymentsData = action.payload.data
+      })
+      .addCase(exportPayments.rejected, (state, action) => {
+        state.exportPaymentsLoading = false
+        state.exportPaymentsError = (action.payload as string) || "Failed to export payments"
+        state.exportPaymentsSuccess = false
+      })
   },
 })
 
@@ -2835,8 +3117,11 @@ export const {
   clearRefundPayment,
   clearVend,
   clearCancelPayment,
+  clearCancelPaymentByReference,
+  clearCheckPayment,
   clearPaymentAnomalies,
   clearResolveAnomaly,
+  clearExportPayments,
 } = paymentSlice.actions
 
 export default paymentSlice.reducer

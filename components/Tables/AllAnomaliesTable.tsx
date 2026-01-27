@@ -232,7 +232,7 @@ interface AppliedFilters {
     | "Pos"
     | "Card"
     | "VendorWallet"
-    | "Cheque"
+    | "Chaque"
     | "BankDeposit"
     | "Vendor"
     | "Migration"
@@ -689,7 +689,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -720,7 +720,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -864,7 +864,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -895,7 +895,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case "Cheque":
+      case "Chaque":
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",
@@ -1147,7 +1147,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
     { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Cheque", label: "Cheque" },
+    { value: "Chaque", label: "Chaque" },
     { value: "BankDeposit", label: "Bank Deposit" },
     { value: "Vendor", label: "Vendor" },
     { value: "Migration", label: "Migration" },
@@ -2129,7 +2129,7 @@ const AllAnomaliesTable: React.FC<AllAnomaliesTableProps> = ({
                         <option value="Pos">POS</option>
                         <option value="Card">Card</option>
                         <option value="VendorWallet">Vendor Wallet</option>
-                        <option value="Cheque">Cheque</option>
+                        <option value="Chaque">Chaque</option>
                         <option value="BankDeposit">Bank Deposit</option>
                         <option value="Vendor">Vendor</option>
                         <option value="Migration">Migration</option>

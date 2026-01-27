@@ -8,7 +8,7 @@ export interface RevenueAnalyticsParams {
   StartDateUtc: string
   EndDateUtc: string
   AreaOfficeId?: number
-  Channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Cheque"
+  Channel?: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
   CollectorType?: "Customer" | "SalesRep" | "Vendor" | "Staff"
 }
 

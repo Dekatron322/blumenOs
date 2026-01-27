@@ -606,7 +606,7 @@ const FeederChangeRequest = () => {
                 <p className="text-base font-medium sm:text-lg md:text-2xl">Feeder Change Requests</p>
               </div>
               <button
-                className="button-oulined flex items-center justify-center gap-1.5 self-start border-[#2563EB] bg-[#DBEAFE] px-2 py-2 hover:border-[#2563EB] hover:bg-[#DBEAFE] sm:gap-2 sm:px-3"
+                className="button-oulined p-2hover:border-[#2563EB] flex items-center justify-center gap-1.5 self-start border-[#2563EB] bg-[#DBEAFE] hover:bg-[#DBEAFE] sm:gap-2 sm:px-3"
                 onClick={() => {
                   /* TODO: Implement CSV export */
                 }}
@@ -631,7 +631,7 @@ const FeederChangeRequest = () => {
               {/* View Mode Toggle */}
               <div className="flex gap-1.5 sm:gap-2">
                 <button
-                  className={`button-oulined flex items-center justify-center gap-1 px-2 py-2 sm:gap-2 sm:px-3 ${
+                  className={`button-oulined p-2sm:gap-2 flex items-center justify-center gap-1 sm:px-3 ${
                     viewMode === "grid" ? "bg-[#f9f9f9]" : ""
                   }`}
                   onClick={() => setViewMode("grid")}
@@ -641,7 +641,7 @@ const FeederChangeRequest = () => {
                   <p className="hidden text-xs sm:block sm:text-sm">Grid</p>
                 </button>
                 <button
-                  className={`button-oulined flex items-center justify-center gap-1 px-2 py-2 sm:gap-2 sm:px-3 ${
+                  className={`button-oulined p-2sm:gap-2 flex items-center justify-center gap-1 sm:px-3 ${
                     viewMode === "list" ? "bg-[#f9f9f9]" : ""
                   }`}
                   onClick={() => setViewMode("list")}

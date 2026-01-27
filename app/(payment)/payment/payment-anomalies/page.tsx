@@ -962,7 +962,7 @@ export default function PaymentAnomaliesPage() {
       | "Pos"
       | "Card"
       | "VendorWallet"
-      | "Cheque"
+      | "Chaque"
       | "BankDeposit"
       | "Vendor"
       | "Migration"
@@ -1014,7 +1014,7 @@ export default function PaymentAnomaliesPage() {
     { value: "Pos", label: "POS" },
     { value: "Card", label: "Card" },
     { value: "VendorWallet", label: "Vendor Wallet" },
-    { value: "Cheque", label: "Cheque" },
+    { value: "Chaque", label: "Chaque" },
     { value: "BankDeposit", label: "Bank Deposit" },
     { value: "Vendor", label: "Vendor" },
     { value: "Migration", label: "Migration" },
