@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   build-and-push:
-    runs-on: [self-hosted, Linux, X64, blumen-runner]
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write
