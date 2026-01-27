@@ -210,6 +210,7 @@ export const allLinks: LinkItem[] = [
     children: [
       { name: "Overview", href: "/payment/overview", privilegeKey: "payments", requiredActions: ["R"] },
       { name: "All Collections", href: "/payment/all-payment", privilegeKey: "payments", requiredActions: ["R"] },
+      { name: "Bulk Uploads", href: "/payment/bulk-upload", privilegeKey: "payments", requiredActions: ["R"] },
       {
         name: "Payment Anomalies",
         href: "/payment/payment-anomalies",

@@ -216,6 +216,8 @@ export const API_ENDPOINTS = {
     INTENT: "/files/intents",
     FINALIZE: "/files/{id}/finalize",
     BULK_UPLOAD: "/payments/bulk/record",
+    CSV_JOBS: "/system/csv-jobs",
+    CSV_UPLOAD_FAILURES: "/system/csv-jobs/{id}/failures",
   },
 
   STATUS_MAP: {
