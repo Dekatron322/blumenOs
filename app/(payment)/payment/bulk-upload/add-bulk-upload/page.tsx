@@ -213,6 +213,11 @@ const FileManagementPage = () => {
       console.log("Extracted columns length:", extractedColumns.length)
 
       if (extractedColumns.length === 0) {
+        // Show error notification
+        notify("error", "File Processing Failed", {
+          description: "No columns found in the file. Please ensure your file has headers.",
+          duration: 5000,
+        })
         throw new Error("No columns found in the file. Please ensure your file has headers.")
       }
 
@@ -250,11 +255,21 @@ const FileManagementPage = () => {
           console.log("Response data:", error.response.data)
           console.log("Response status:", error.response.status)
         }
+        // Show error notification
+        notify("error", "Upload Failed", {
+          description: error.message || "Failed to create file intent",
+          duration: 5000,
+        })
         throw error
       }
 
       if (!intentResult.isSuccess) {
         console.log("API Response Error:", intentResult)
+        // Show error notification
+        notify("error", "Upload Failed", {
+          description: intentResult.message || "File intent creation failed",
+          duration: 5000,
+        })
         throw new Error(intentResult.message)
       }
 
@@ -315,22 +330,43 @@ const FileManagementPage = () => {
                 })
               } catch (bulkError) {
                 console.error("Bulk upload failed:", bulkError)
+                // Show error notification
+                notify("error", "Bulk Upload Failed", {
+                  description: bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload",
+                  duration: 5000,
+                })
                 setUploadError(bulkError instanceof Error ? bulkError.message : "Failed to process bulk upload")
               }
 
               resolve()
             } catch (finalizeError) {
+              console.error("Finalize error:", finalizeError)
+              // Show error notification
+              notify("error", "Finalization Failed", {
+                description: finalizeError instanceof Error ? finalizeError.message : "Failed to finalize upload",
+                duration: 5000,
+              })
               setUploadError(finalizeError instanceof Error ? finalizeError.message : "Failed to finalize upload")
               reject(finalizeError)
             }
           } else {
             const error = new Error(`Upload failed with status ${xhr.status}`)
+            // Show error notification
+            notify("error", "Upload Failed", {
+              description: `Upload failed with status ${xhr.status}`,
+              duration: 5000,
+            })
             reject(error)
           }
         })
 
         xhr.addEventListener("error", () => {
           const error = new Error("Network error during upload")
+          // Show error notification
+          notify("error", "Network Error", {
+            description: "Network error during upload",
+            duration: 5000,
+          })
           reject(error)
         })
 
@@ -340,6 +376,12 @@ const FileManagementPage = () => {
         xhr.send(selectedFile)
       })
     } catch (error) {
+      console.error("Upload process error:", error)
+      // Show error notification
+      notify("error", "Upload Failed", {
+        description: error instanceof Error ? error.message : "Upload failed",
+        duration: 5000,
+      })
       setUploadError(error instanceof Error ? error.message : "Upload failed")
     } finally {
       setIsUploading(false)
@@ -366,12 +408,12 @@ const FileManagementPage = () => {
   // Generate and download sample CSV file
   const downloadSampleFile = useCallback(() => {
     const sampleData = [
-      "CustomerAccountNo,BankReceiptNo,ModeofPayment,TypesofPayment,PaymentDate,AmountPaid",
-      "NERC123456789,BR001,CASH,POSTPAID,2026-01-15,5000.00",
-      "NERC123456790,BR002,TRANSFER,PREPAID,2026-01-16,3500.50",
-      "NERC123456791,BR003,POS,POSTPAID,2026-01-17,7200.75",
-      "NERC123456792,BR004,CASH,PREPAID,2026-01-18,12000.00",
-      "NERC123456793,BR005,TRANSFER,POSTPAID,2026-01-19,8900.25",
+      "CustomerAccountNo,BankReceiptNo,ModeofPayment,TypesofPayment,PaymentDate,AmountPaid,Channel",
+      "NERC123456789,BR001,CASH,POSTPAID,2026-01-15,5000.00,WEB",
+      "NERC123456790,BR002,TRANSFER,PREPAID,2026-01-16,3500.50,MOBILE",
+      "NERC123456791,BR003,POS,POSTPAID,2026-01-17,7200.75,POS",
+      "NERC123456792,BR004,CASH,PREPAID,2026-01-18,12000.00,BRANCH",
+      "NERC123456793,BR005,TRANSFER,POSTPAID,2026-01-19,8900.25,WEB",
     ].join("\n")
 
     const blob = new Blob([sampleData], { type: "text/csv;charset=utf-8;" })
@@ -434,7 +476,15 @@ const FileManagementPage = () => {
                 </div>
 
                 <div className="hidden items-center gap-3 sm:flex">
-                  <ButtonModule variant="outline" size="sm" onClick={handleReset} disabled={isUploading}>
+                  <ButtonModule variant="outline" size="sm" onClick={() => router.push("/payment/bulk-upload")}>
+                    Go to Bulk Upload Page
+                  </ButtonModule>
+                  <ButtonModule
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    disabled={isUploading || uploadSuccess}
+                  >
                     Reset Form
                   </ButtonModule>
                   <ButtonModule
@@ -443,7 +493,7 @@ const FileManagementPage = () => {
                     onClick={() => {
                       void handleUpload()
                     }}
-                    disabled={!selectedFile || isUploading || fileIntentLoading || finalizeFileLoading}
+                    disabled={!selectedFile || isUploading || uploadSuccess || fileIntentLoading || finalizeFileLoading}
                     icon={<VscAdd />}
                     iconPosition="start"
                   >
@@ -467,8 +517,9 @@ const FileManagementPage = () => {
                     <div>
                       <h3 className="text-sm font-medium text-blue-800">Need a template?</h3>
                       <p className="text-sm text-blue-600">
-                        Download our payment CSV template with the required columns: CustomerAccountNo, BankReceiptNo,
-                        ModeofPayment, TypesofPayment, PaymentDate, AmountPaid
+                        Download our payment CSV template with the required columns:
+                        <br /> CustomerAccountNo, BankReceiptNo, ModeofPayment, TypesofPayment, PaymentDate, AmountPaid,
+                        Channel
                       </p>
                     </div>
                     <ButtonModule variant="primary" size="sm" onClick={downloadSampleFile}>
@@ -531,7 +582,19 @@ const FileManagementPage = () => {
                         {formatFileSize(selectedFile.size)} • {selectedFile.type || "Unknown type"}
                       </p>
                       <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
-                        <ButtonModule variant="secondary" onClick={removeSelectedFile} disabled={isUploading}>
+                        <ButtonModule
+                          variant="secondary"
+                          onClick={removeSelectedFile}
+                          disabled={
+                            isUploading ||
+                            (!!uploadProgress &&
+                              uploadProgress.percentage !== 100 &&
+                              !uploadError &&
+                              !fileIntentError &&
+                              !finalizeFileError &&
+                              !bulkUploadError)
+                          }
+                        >
                           Choose Different File
                         </ButtonModule>
                         <ButtonModule
@@ -539,7 +602,9 @@ const FileManagementPage = () => {
                           onClick={() => {
                             void handleUpload()
                           }}
-                          disabled={isUploading || fileIntentLoading || finalizeFileLoading}
+                          disabled={
+                            isUploading || uploadSuccess || !!uploadProgress || fileIntentLoading || finalizeFileLoading
+                          }
                         >
                           {isUploading ? "Uploading..." : "Upload File"}
                         </ButtonModule>
@@ -550,26 +615,81 @@ const FileManagementPage = () => {
 
                 {/* Upload Progress */}
                 {uploadProgress && (
-                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <div
+                    className={`mb-6 rounded-lg border p-4 ${
+                      uploadProgress.percentage === 100 ? "border-green-200 bg-green-50" : "border-blue-200 bg-blue-50"
+                    }`}
+                  >
                     <div className="mb-3 flex items-center">
-                      <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                        <CloudUpload className="h-4 w-4 animate-pulse text-blue-600" />
+                      <div
+                        className={`mr-3 flex h-8 w-8 items-center justify-center rounded-full ${
+                          uploadProgress.percentage === 100 ? "bg-green-100" : "bg-blue-100"
+                        }`}
+                      >
+                        <CloudUpload
+                          className={`h-4 w-4 ${
+                            uploadProgress.percentage === 100 ? "text-green-600" : "animate-pulse text-blue-600"
+                          }`}
+                        />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-900">Uploading file...</p>
-                        <p className="text-xs text-blue-700">{uploadProgress.percentage}% complete</p>
+                        <p
+                          className={`text-sm font-medium ${
+                            uploadProgress.percentage === 100 ? "text-green-900" : "text-blue-900"
+                          }`}
+                        >
+                          {uploadProgress.percentage === 100 ? "Upload complete!" : "Uploading file..."}
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
+                          }`}
+                        >
+                          {uploadProgress.percentage}% complete
+                        </p>
                       </div>
-                      <span className="text-sm font-semibold text-blue-800">{uploadProgress.percentage}%</span>
+                      <span
+                        className={`text-sm font-semibold ${
+                          uploadProgress.percentage === 100 ? "text-green-800" : "text-blue-800"
+                        }`}
+                      >
+                        {uploadProgress.percentage}%
+                      </span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-blue-200">
+                    <div
+                      className={`h-2 w-full rounded-full ${
+                        uploadProgress.percentage === 100 ? "bg-green-200" : "bg-blue-200"
+                      }`}
+                    >
                       <div
-                        className="h-2 rounded-full bg-blue-600 transition-all duration-300 ease-out"
+                        className={`h-2 rounded-full transition-all duration-300 ease-out ${
+                          uploadProgress.percentage === 100 ? "bg-green-600" : "bg-blue-600"
+                        }`}
                         style={{ width: `${uploadProgress.percentage}%` }}
                       />
                     </div>
-                    <p className="mt-2 text-xs text-blue-700">
+                    <p
+                      className={`mt-2 text-xs ${
+                        uploadProgress.percentage === 100 ? "text-green-700" : "text-blue-700"
+                      }`}
+                    >
                       {formatFileSize(uploadProgress.loaded)} of {formatFileSize(uploadProgress.total)} uploaded
                     </p>
+                  </div>
+                )}
+
+                {/* Go to Bulk Upload Page - shown after upload progress */}
+                {uploadProgress && uploadProgress.percentage === 100 && (
+                  <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-900">Upload completed successfully!</p>
+                        <p className="text-xs text-green-700">View your upload history and manage bulk uploads</p>
+                      </div>
+                      <ButtonModule variant="primary" size="sm" onClick={() => router.push("/payment/bulk-upload")}>
+                        Go to Bulk Upload Page
+                      </ButtonModule>
+                    </div>
                   </div>
                 )}
 
@@ -721,8 +841,15 @@ const FileManagementPage = () => {
           <div className="flex gap-2">
             <button
               type="button"
+              onClick={() => router.push("/payment/bulk-upload")}
+              className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
+            >
+              Go to Bulk Upload Page
+            </button>
+            <button
+              type="button"
               onClick={handleReset}
-              disabled={isUploading}
+              disabled={isUploading || uploadSuccess}
               className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Reset
@@ -735,7 +862,7 @@ const FileManagementPage = () => {
               onClick={() => {
                 void handleUpload()
               }}
-              disabled={!selectedFile || isUploading || fileIntentLoading || finalizeFileLoading}
+              disabled={!selectedFile || isUploading || uploadSuccess || fileIntentLoading || finalizeFileLoading}
               className="flex items-center gap-1 rounded-lg bg-[#004B23] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003618] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isUploading ? "Uploading..." : "Upload File"}
