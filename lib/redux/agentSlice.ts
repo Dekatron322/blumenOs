@@ -1227,13 +1227,19 @@ export enum TimeRange {
 }
 
 export interface CollectionByChannel {
-  channel: PaymentChannel
+  channel: string
+  amount: number
+  count: number
+}
+
+export interface PaymentTypeBreakdown {
+  type: string
   amount: number
   count: number
 }
 
 export interface AgentSummaryPeriod {
-  range: TimeRange
+  range: string
   collectedAmount: number
   collectedCount: number
   prepaidCollectedAmount: number
@@ -1250,6 +1256,7 @@ export interface AgentSummaryPeriod {
   changeRequestsResolved: number
   outstandingCashEstimate: number
   collectionsByChannel: CollectionByChannel[]
+  paymentTypeBreakdown: PaymentTypeBreakdown[]
 }
 
 export interface AgentSummaryData {
@@ -2157,8 +2164,30 @@ export const fetchCashAtHand = createAsyncThunk("agents/fetchCashAtHand", async 
 })
 
 // ========== AGENT SUMMARY ASYNC THUNK ==========
-export const fetchAgentSummary = createAsyncThunk(
-  "agents/fetchAgentSummary",
+export const fetchAgentSummary = createAsyncThunk("agents/fetchAgentSummary", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<AgentSummaryResponse>(buildApiUrl(API_ENDPOINTS.AGENTS.AGENT_SUMMARY))
+
+    if (!response.data.isSuccess) {
+      return rejectWithValue(response.data.message || "Failed to fetch agent summary")
+    }
+
+    if (!response.data.data) {
+      return rejectWithValue("Agent summary not found")
+    }
+
+    return response.data.data
+  } catch (error: any) {
+    if (error.response?.data) {
+      return rejectWithValue(error.response.data.message || "Failed to fetch agent summary")
+    }
+    return rejectWithValue(error.message || "Network error during agent summary fetch")
+  }
+})
+
+// ========== SALES REP SUMMARY ASYNC THUNK ==========
+export const fetchSalesRepSummary = createAsyncThunk(
+  "agents/fetchSalesRepSummary",
   async (
     requestParams: SalesRepSummaryRequest = {
       startDateUtc: new Date().toISOString(),
@@ -2175,19 +2204,19 @@ export const fetchAgentSummary = createAsyncThunk(
       )
 
       if (!response.data.isSuccess) {
-        return rejectWithValue(response.data.message || "Failed to fetch agent summary")
+        return rejectWithValue(response.data.message || "Failed to fetch sales rep summary")
       }
 
       if (!response.data.data) {
-        return rejectWithValue("Agent summary not found")
+        return rejectWithValue("Sales rep summary not found")
       }
 
       return response.data.data
     } catch (error: any) {
       if (error.response?.data) {
-        return rejectWithValue(error.response.data.message || "Failed to fetch agent summary")
+        return rejectWithValue(error.response.data.message || "Failed to fetch sales rep summary")
       }
-      return rejectWithValue(error.message || "Network error during agent summary fetch")
+      return rejectWithValue(error.message || "Network error during sales rep summary fetch")
     }
   }
 )
@@ -3859,20 +3888,40 @@ const agentSlice = createSlice({
 
       // Agent Summary cases (now using Sales Rep Summary)
       .addCase(fetchAgentSummary.pending, (state) => {
+        state.agentSummaryLoading = true
+        state.agentSummaryError = null
+        state.agentSummarySuccess = false
+        state.agentSummary = null
+      })
+      .addCase(fetchAgentSummary.fulfilled, (state, action: PayloadAction<AgentSummaryData>) => {
+        state.agentSummaryLoading = false
+        state.agentSummarySuccess = true
+        state.agentSummary = action.payload
+        state.agentSummaryError = null
+      })
+      .addCase(fetchAgentSummary.rejected, (state, action) => {
+        state.agentSummaryLoading = false
+        state.agentSummaryError = (action.payload as string) || "Failed to fetch agent summary"
+        state.agentSummarySuccess = false
+        state.agentSummary = null
+      })
+
+      // Sales Rep Summary cases
+      .addCase(fetchSalesRepSummary.pending, (state) => {
         state.salesRepSummaryLoading = true
         state.salesRepSummaryError = null
         state.salesRepSummarySuccess = false
         state.salesRepSummary = null
       })
-      .addCase(fetchAgentSummary.fulfilled, (state, action: PayloadAction<SalesRepSummaryData>) => {
+      .addCase(fetchSalesRepSummary.fulfilled, (state, action: PayloadAction<SalesRepSummaryData>) => {
         state.salesRepSummaryLoading = false
         state.salesRepSummarySuccess = true
         state.salesRepSummary = action.payload
         state.salesRepSummaryError = null
       })
-      .addCase(fetchAgentSummary.rejected, (state, action) => {
+      .addCase(fetchSalesRepSummary.rejected, (state, action) => {
         state.salesRepSummaryLoading = false
-        state.salesRepSummaryError = (action.payload as string) || "Failed to fetch agent summary"
+        state.salesRepSummaryError = (action.payload as string) || "Failed to fetch sales rep summary"
         state.salesRepSummarySuccess = false
         state.salesRepSummary = null
       })

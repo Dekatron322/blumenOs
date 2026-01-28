@@ -9,7 +9,7 @@ import AddAgentModal from "components/ui/Modal/add-agent-modal"
 import { ButtonModule } from "components/ui/Button/Button"
 import AgentManagementInfo from "components/AgentManagementInfo/AgentManagementInfo"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { fetchAgentSummary } from "lib/redux/agentSlice"
+import { fetchSalesRepSummary } from "lib/redux/agentSlice"
 import { DateFilter, getDateRangeUtc } from "utils/dateRange"
 
 // Dropdown Popover Component
@@ -419,7 +419,7 @@ export default function AgentManagementDashboard() {
       areaOfficeId: 0,
     }
 
-    dispatch(fetchAgentSummary(requestParams))
+    dispatch(fetchSalesRepSummary(requestParams))
   }, [dispatch, timeFilter, customStartDate, customEndDate])
 
   // Update loading state based on Redux loading state

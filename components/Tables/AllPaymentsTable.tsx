@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { RxCaretSort, RxDotsVertical } from "react-icons/rx"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos, MdOutlineCheckBoxOutlineBlank } from "react-icons/md"
-import { Calendar, Download, Filter, X } from "lucide-react"
+import { Calendar, ChevronDown, Download, Filter, X } from "lucide-react"
 import { SearchModule } from "components/ui/Search/search-module"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
@@ -21,7 +21,6 @@ import {
   PaymentsRequestParams,
   PaymentStatus,
   setPaymentsPagination,
-  TimeRange,
 } from "lib/redux/agentSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
@@ -207,27 +206,21 @@ const LoadingSkeleton = () => {
 const StatisticsCards = () => {
   const dispatch = useAppDispatch()
   const { agentSummary, agentSummaryLoading } = useAppSelector((state) => state.agents)
-  const [activeRange, setActiveRange] = useState<TimeRange>(TimeRange.Today)
+  const [activeRange, setActiveRange] = useState<string>("today")
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false)
 
   useEffect(() => {
-    dispatch(
-      fetchAgentSummary({
-        startDateUtc: new Date().toISOString(),
-        endDateUtc: new Date().toISOString(),
-        topCount: 0,
-        areaOfficeId: 0,
-      })
-    )
+    dispatch(fetchAgentSummary())
   }, [dispatch])
 
   const timeRangeTabs = [
-    { value: TimeRange.Today, label: "Today" },
-    { value: TimeRange.Yesterday, label: "Yesterday" },
-    { value: TimeRange.ThisWeek, label: "This Week" },
-    { value: TimeRange.ThisMonth, label: "This Month" },
-    { value: TimeRange.LastMonth, label: "Last Month" },
-    { value: TimeRange.ThisYear, label: "This Year" },
-    { value: TimeRange.AllTime, label: "All Time" },
+    { value: "today", label: "Today" },
+    { value: "yesterday", label: "Yesterday" },
+    { value: "thisWeek", label: "This Week" },
+    { value: "thisMonth", label: "This Month" },
+    { value: "lastMonth", label: "Last Month" },
+    { value: "thisYear", label: "This Year" },
+    { value: "allTime", label: "All Time" },
   ]
 
   // Get the selected period from agent summary
@@ -249,6 +242,7 @@ const StatisticsCards = () => {
     changeRequestsResolved: 0,
     outstandingCashEstimate: 0,
     collectionsByChannel: [],
+    paymentTypeBreakdown: [],
   }
 
   const formatCurrency = (amount: number) => {
@@ -279,6 +273,79 @@ const StatisticsCards = () => {
     }
   }
 
+  const getPaymentTypeIcon = (paymentType: string) => {
+    switch (paymentType) {
+      case "Prepaid":
+        return "⚡"
+      case "Postpaid":
+        return "📋"
+      case "Loss of Revenue":
+        return "📉"
+      case "Debt Clearance":
+        return "💳"
+      case "PPM Bypass":
+        return "🔓"
+      case "Others":
+        return "📦"
+      default:
+        return "💰"
+    }
+  }
+
+  const getPaymentTypeStyle = (paymentType: string) => {
+    switch (paymentType) {
+      case "Prepaid":
+        return {
+          bgGradient: "from-blue-500/20 to-cyan-500/20",
+          iconBg: "bg-blue-500/20",
+          iconColor: "text-blue-300",
+          borderColor: "border-blue-500/30",
+        }
+      case "Postpaid":
+        return {
+          bgGradient: "from-amber-500/20 to-orange-500/20",
+          iconBg: "bg-amber-500/20",
+          iconColor: "text-amber-300",
+          borderColor: "border-amber-500/30",
+        }
+      case "Loss of Revenue":
+        return {
+          bgGradient: "from-red-500/20 to-pink-500/20",
+          iconBg: "bg-red-500/20",
+          iconColor: "text-red-300",
+          borderColor: "border-red-500/30",
+        }
+      case "Debt Clearance":
+        return {
+          bgGradient: "from-emerald-500/20 to-green-500/20",
+          iconBg: "bg-emerald-500/20",
+          iconColor: "text-emerald-300",
+          borderColor: "border-emerald-500/30",
+        }
+      case "PPM Bypass":
+        return {
+          bgGradient: "from-purple-500/20 to-violet-500/20",
+          iconBg: "bg-purple-500/20",
+          iconColor: "text-purple-300",
+          borderColor: "border-purple-500/30",
+        }
+      case "Others":
+        return {
+          bgGradient: "from-gray-500/20 to-slate-500/20",
+          iconBg: "bg-gray-500/20",
+          iconColor: "text-gray-300",
+          borderColor: "border-gray-500/30",
+        }
+      default:
+        return {
+          bgGradient: "from-white/10 to-white/5",
+          iconBg: "bg-white/20",
+          iconColor: "text-white",
+          borderColor: "border-white/20",
+        }
+    }
+  }
+
   if (agentSummaryLoading) {
     return (
       <div className="space-y-4">
@@ -298,194 +365,282 @@ const StatisticsCards = () => {
 
   return (
     <div className="space-y-4">
-      {/* Time Range Tabs */}
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
-        {timeRangeTabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveRange(tab.value)}
-            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all md:px-4 md:py-2 md:text-sm ${
-              activeRange === tab.value
-                ? "bg-white text-[#004B23] shadow-md"
-                : "bg-white/10 text-white/80 hover:bg-white/20"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Accordion Header */}
+      <div className="flex items-center justify-between rounded-xl bg-white/10 p-4 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+            <span className="text-sm">📊</span>
+          </div>
+          <h2 className="text-sm font-semibold text-white">Summary Statistics</h2>
+          {agentSummary?.generatedAtUtc && (
+            <p className="text-xs text-white/60">
+              Last updated: {new Date(agentSummary.generatedAtUtc).toLocaleString()}
+            </p>
+          )}
+        </div>
+        <motion.button
+          onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+          className="flex size-8 items-center justify-center rounded-lg bg-white/10 transition-all hover:bg-white/20"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <motion.div animate={{ rotate: isSummaryExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="size-4 text-white/80" />
+          </motion.div>
+        </motion.button>
       </div>
 
-      {/* Statistics Cards Grid */}
-      <motion.div
-        key={activeRange}
-        className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Total Collected Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                <span className="text-sm">₦</span>
-              </div>
+      {/* Collapsible Content */}
+      <AnimatePresence>
+        {isSummaryExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            {/* Time Range Tabs */}
+            <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
+              {timeRangeTabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveRange(tab.value)}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all md:px-4 md:py-2 md:text-sm ${
+                    activeRange === tab.value
+                      ? "bg-white text-[#004B23] shadow-md"
+                      : "bg-white/10 text-white/80 hover:bg-white/20"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Collected</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-              {formatCurrency(summary.collectedAmount)}
-            </p>
-            <p className="mt-1 text-xs text-white/60">{summary.collectedCount} transactions</p>
-          </div>
-        </div>
 
-        {/* Prepaid Collections Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-blue-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-400/20">
-                <span className="text-sm text-blue-300">⚡</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prepaid</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-              {formatCurrency(summary.prepaidCollectedAmount)}
-            </p>
-            <p className="mt-1 text-xs text-blue-300/80">{summary.prepaidCollectedCount} transactions</p>
-          </div>
-        </div>
-
-        {/* Postpaid Collections Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
-                <span className="text-sm text-amber-300">📋</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Postpaid</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-              {formatCurrency(summary.postpaidCollectedAmount)}
-            </p>
-            <p className="mt-1 text-xs text-amber-300/80">{summary.postpaidCollectedCount} transactions</p>
-          </div>
-        </div>
-
-        {/* Pending Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-orange-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-orange-400/20">
-                <span className="text-sm text-orange-300">⏳</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-              {formatCurrency(summary.pendingAmount)}
-            </p>
-            <p className="mt-1 text-xs text-orange-300/80">{summary.pendingCount} awaiting</p>
-          </div>
-        </div>
-
-        {/* Cash Cleared Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
-                <span className="text-sm text-emerald-300">✓</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Cash Cleared</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-              {formatCurrency(summary.cashClearedAmount)}
-            </p>
-            <p className="mt-1 text-xs text-emerald-300/80">{summary.cashClearanceCount} clearances</p>
-          </div>
-        </div>
-
-        {/* Outstanding Cash Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
-                <span className="text-sm text-red-300">💰</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Outstanding Cash</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-              {formatCurrency(summary.outstandingCashEstimate)}
-            </p>
-            <p className="mt-1 text-xs text-red-300/80">Estimate</p>
-          </div>
-        </div>
-
-        {/* Billing Disputes Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-purple-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400/20">
-                <span className="text-sm text-purple-300">⚠️</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Billing Disputes</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{summary.billingDisputesRaised}</p>
-            <p className="mt-1 text-xs text-purple-300/80">{summary.billingDisputesResolved} resolved</p>
-          </div>
-        </div>
-
-        {/* Change Requests Card */}
-        <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-          <div className="absolute -right-4 -top-4 size-16 rounded-full bg-cyan-400/10 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-400/20">
-                <span className="text-sm text-cyan-300">📝</span>
-              </div>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/70">Change Requests</p>
-            <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">{summary.changeRequestsRaised}</p>
-            <p className="mt-1 text-xs text-cyan-300/80">{summary.changeRequestsResolved} resolved</p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Collections by Channel */}
-      {summary.collectionsByChannel && summary.collectionsByChannel.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="mt-4"
-        >
-          <h3 className="mb-3 text-sm font-medium text-white/80">Collections by Channel</h3>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {summary.collectionsByChannel.map((channel) => (
-              <div
-                key={channel.channel}
-                className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15"
-              >
+            {/* Statistics Cards Grid */}
+            <motion.div
+              key={activeRange}
+              className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Total Collected Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-110" />
                 <div className="relative">
                   <div className="mb-1 flex items-center gap-2">
                     <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                      <span className="text-sm">{getChannelIcon(channel.channel)}</span>
+                      <span className="text-sm">₦</span>
                     </div>
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">{channel.channel}</p>
-                  <p className="mt-1 text-lg font-bold text-white md:text-xl">{formatCurrency(channel.amount)}</p>
-                  <p className="mt-1 text-xs text-white/60">{channel.count} transactions</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Collected</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {formatCurrency(summary.collectedAmount)}
+                  </p>
+                  <p className="mt-1 text-xs text-white/60">{summary.collectedCount} transactions</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+
+              {/* Prepaid Collections Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-blue-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-blue-400/20">
+                      <span className="text-sm text-blue-300">⚡</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prepaid</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {formatCurrency(summary.prepaidCollectedAmount)}
+                  </p>
+                  <p className="mt-1 text-xs text-blue-300/80">{summary.prepaidCollectedCount} transactions</p>
+                </div>
+              </div>
+
+              {/* Postpaid Collections Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/20">
+                      <span className="text-sm text-amber-300">📋</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Postpaid</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {formatCurrency(summary.postpaidCollectedAmount)}
+                  </p>
+                  <p className="mt-1 text-xs text-amber-300/80">{summary.postpaidCollectedCount} transactions</p>
+                </div>
+              </div>
+
+              {/* Pending Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-orange-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-orange-400/20">
+                      <span className="text-sm text-orange-300">⏳</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {formatCurrency(summary.pendingAmount)}
+                  </p>
+                  <p className="mt-1 text-xs text-orange-300/80">{summary.pendingCount} awaiting</p>
+                </div>
+              </div>
+
+              {/* Cash Cleared Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/20">
+                      <span className="text-sm text-emerald-300">✓</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Cash Cleared</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {formatCurrency(summary.cashClearedAmount)}
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-300/80">{summary.cashClearanceCount} clearances</p>
+                </div>
+              </div>
+
+              {/* Outstanding Cash Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
+                      <span className="text-sm text-red-300">💰</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Outstanding Cash</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {formatCurrency(summary.outstandingCashEstimate)}
+                  </p>
+                  <p className="mt-1 text-xs text-red-300/80">Estimate</p>
+                </div>
+              </div>
+
+              {/* Billing Disputes Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-purple-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400/20">
+                      <span className="text-sm text-purple-300">⚠️</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Billing Disputes</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {summary.billingDisputesRaised}
+                  </p>
+                  <p className="mt-1 text-xs text-purple-300/80">{summary.billingDisputesResolved} resolved</p>
+                </div>
+              </div>
+
+              {/* Change Requests Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-cyan-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-400/20">
+                      <span className="text-sm text-cyan-300">📝</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Change Requests</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {summary.changeRequestsRaised}
+                  </p>
+                  <p className="mt-1 text-xs text-cyan-300/80">{summary.changeRequestsResolved} resolved</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Collections by Channel */}
+            {summary.collectionsByChannel && summary.collectionsByChannel.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="mt-4"
+              >
+                <h3 className="mb-3 text-sm font-medium text-white/80">Collections by Channel</h3>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                  {summary.collectionsByChannel.map((channel) => (
+                    <div
+                      key={channel.channel}
+                      className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15"
+                    >
+                      <div className="relative">
+                        <div className="mb-1 flex items-center gap-2">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
+                            <span className="text-sm">{getChannelIcon(channel.channel)}</span>
+                          </div>
+                        </div>
+                        <p className="text-xs font-medium uppercase tracking-wider text-white/70">{channel.channel}</p>
+                        <p className="mt-1 text-lg font-bold text-white md:text-xl">{formatCurrency(channel.amount)}</p>
+                        <p className="mt-1 text-xs text-white/60">{channel.count} transactions</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Payment Type Breakdown */}
+            {summary.paymentTypeBreakdown && summary.paymentTypeBreakdown.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
+                className="mt-4"
+              >
+                <h3 className="mb-3 text-sm font-medium text-white/80">Payment Type Breakdown</h3>
+                <div className="grid grid-cols-3 gap-3 md:gap-4">
+                  {summary.paymentTypeBreakdown.map((paymentType) => {
+                    const styles = getPaymentTypeStyle(paymentType.type)
+                    return (
+                      <motion.div
+                        key={paymentType.type}
+                        className={`group relative overflow-hidden rounded-xl border ${styles.borderColor} bg-gradient-to-br ${styles.bgGradient} p-4 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+                        whileHover={{ y: -2 }}
+                      >
+                        <div className="relative">
+                          <div className="mb-3 flex items-center gap-3">
+                            <div
+                              className={`flex size-10 items-center justify-center rounded-lg ${styles.iconBg} transition-transform group-hover:scale-110`}
+                            >
+                              <span className={`text-lg ${styles.iconColor}`}>
+                                {getPaymentTypeIcon(paymentType.type)}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold uppercase tracking-wider text-white/90">
+                                {paymentType.type}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xl font-bold text-white">{formatCurrency(paymentType.amount)}</p>
+                            <p className="text-xs text-white/70">{paymentType.count} transactions</p>
+                          </div>
+                          <div className="absolute -right-2 -top-2 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-150" />
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -681,34 +836,34 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
     }
   }
 
-  const getChannelStyle = (channel: PaymentChannel) => {
+  const getChannelStyle = (channel: string) => {
     switch (channel) {
-      case PaymentChannel.Cash:
+      case "Cash":
         return {
           backgroundColor: "#F3E8FF",
           color: "#7C3AED",
         }
-      case PaymentChannel.BankTransfer:
+      case "BankTransfer":
         return {
           backgroundColor: "#E0F2FE",
           color: "#0284C7",
         }
-      case PaymentChannel.Pos:
+      case "Pos":
         return {
           backgroundColor: "#FEF3C7",
           color: "#D97706",
         }
-      case PaymentChannel.Card:
+      case "Card":
         return {
           backgroundColor: "#FCE7F3",
           color: "#DB2777",
         }
-      case PaymentChannel.VendorWallet:
+      case "VendorWallet":
         return {
           backgroundColor: "#DCFCE7",
           color: "#16A34A",
         }
-      case PaymentChannel.Chaque:
+      case "Chaque":
         return {
           backgroundColor: "#FFEDD5",
           color: "#EA580C",
