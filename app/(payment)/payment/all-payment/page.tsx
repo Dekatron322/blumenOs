@@ -1948,7 +1948,6 @@ const AllPayments: React.FC = () => {
   const exportToCSV = async () => {
     console.log("Export function called!")
     setIsExporting(true)
-    setShowExportModal(false)
 
     try {
       const dateRange = getExportDateRange()
@@ -1999,6 +1998,7 @@ const AllPayments: React.FC = () => {
   useEffect(() => {
     if (exportPaymentsSuccess && exportPaymentsData) {
       setIsExporting(false)
+      setShowExportModal(false)
       const { fileName } = exportPaymentsData
       // notify({
       //   type: "success",
@@ -2012,6 +2012,7 @@ const AllPayments: React.FC = () => {
   useEffect(() => {
     if (exportPaymentsError) {
       setIsExporting(false)
+      setShowExportModal(false)
       // notify({
       //   type: "error",
       //   message: exportPaymentsError,
@@ -3125,7 +3126,7 @@ const AllPayments: React.FC = () => {
                 </div> */}
               </div>
 
-              <div className="max-h-96 p-4">
+              <div className=" p-4">
                 {exportModalTab === "basic" ? (
                   <div className="space-y-4">
                     {/* Date Range */}
