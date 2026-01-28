@@ -689,14 +689,7 @@ export default function AgentManagementDashboard() {
 
   useEffect(() => {
     dispatch(fetchAgentInfo())
-    dispatch(
-      fetchAgentSummary({
-        startDateUtc: new Date().toISOString(),
-        endDateUtc: new Date().toISOString(),
-        topCount: 0,
-        areaOfficeId: 0,
-      })
-    )
+    dispatch(fetchAgentSummary())
 
     // Fetch performance data for the current year
     const { startUtc, endUtc } = getStartAndEndOfYear()
@@ -768,14 +761,7 @@ export default function AgentManagementDashboard() {
     setIsLoading(true)
     Promise.all([
       dispatch(fetchAgentInfo()),
-      dispatch(
-        fetchAgentSummary({
-          startDateUtc: new Date().toISOString(),
-          endDateUtc: new Date().toISOString(),
-          topCount: 0,
-          areaOfficeId: 0,
-        })
-      ),
+      dispatch(fetchAgentSummary()),
       // Refresh performance data too
       (() => {
         const { startUtc, endUtc } = getStartAndEndOfYear()

@@ -926,7 +926,11 @@ export default function Dashboard() {
                         <div className="mb-2 flex items-center justify-between border-b py-2">
                           <Text>{card.description}</Text>
                           <Text className="text-xs">
-                            {timeFilter === "day" ? "00:00:00 AM to 23:59:59 PM" : card.periodLabel}
+                            {timeFilter === "day"
+                              ? "00:00:00 AM to 23:59:59 PM"
+                              : timeFilter === "year"
+                              ? "Jan to Dec"
+                              : card.periodLabel}
                           </Text>
                         </div>
 
