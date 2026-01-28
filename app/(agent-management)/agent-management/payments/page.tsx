@@ -10,6 +10,7 @@ import { AgentsRequestParams, CollectorType, fetchAgents, PaymentChannel, Paymen
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { clearPaymentTypes, fetchPaymentTypes } from "lib/redux/paymentTypeSlice"
 import AllPaymentsTable from "components/Tables/AllPaymentsTable"
+import AdminPaymentTable from "components/Tables/AdminPaymentTable"
 
 interface SortOption {
   label: string
@@ -507,7 +508,7 @@ export default function PaymentsPage() {
                 </div>
 
                 {/* Statistics Cards */}
-                <AllPaymentsTable appliedFilters={appliedFilters} showStatisticsOnly />
+                <AdminPaymentTable appliedFilters={appliedFilters} showStatisticsOnly />
               </div>
             </motion.div>
 

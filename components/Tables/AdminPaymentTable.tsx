@@ -22,6 +22,7 @@ import {
   PaymentStatus,
   setPaymentsPagination,
 } from "lib/redux/agentSlice"
+import { fetchPaymentSummaryAnalytics, PaymentSummaryParams } from "lib/redux/analyticsSlice"
 import { ButtonModule } from "components/ui/Button/Button"
 import ConfirmPaymentForm from "components/Forms/ConfirmPaymentForm"
 import { API_ENDPOINTS, buildApiUrl } from "lib/config/api"
@@ -202,16 +203,26 @@ const LoadingSkeleton = () => {
   )
 }
 
-// Statistics Cards Component using Agent Summary endpoint
+// Statistics Cards Component using Payment Summary endpoint
 const StatisticsCards = () => {
   const dispatch = useAppDispatch()
-  const { agentSummary, agentSummaryLoading } = useAppSelector((state) => state.agents)
+  const { paymentSummaryData, paymentSummaryLoading } = useAppSelector((state) => state.analytics)
   const [activeRange, setActiveRange] = useState<string>("today")
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false)
 
   useEffect(() => {
-    dispatch(fetchAgentSummary())
-  }, [dispatch])
+    // Fetch payment summary data for different time ranges
+    const params: PaymentSummaryParams = {
+      today: activeRange === "today",
+      yesterday: activeRange === "yesterday",
+      thisWeek: activeRange === "thisWeek",
+      thisMonth: activeRange === "thisMonth",
+      lastMonth: activeRange === "lastMonth",
+      thisYear: activeRange === "thisYear",
+      allTime: activeRange === "allTime",
+    }
+    dispatch(fetchPaymentSummaryAnalytics(params))
+  }, [dispatch, activeRange])
 
   const timeRangeTabs = [
     { value: "today", label: "Today" },
@@ -223,26 +234,27 @@ const StatisticsCards = () => {
     { value: "allTime", label: "All Time" },
   ]
 
-  // Get the selected period from agent summary
-  const currentPeriod = agentSummary?.periods?.find((period) => period.range === activeRange)
-  const summary = currentPeriod ?? {
-    collectedAmount: 0,
-    collectedCount: 0,
-    prepaidCollectedAmount: 0,
-    prepaidCollectedCount: 0,
-    postpaidCollectedAmount: 0,
-    postpaidCollectedCount: 0,
-    pendingAmount: 0,
-    pendingCount: 0,
-    cashClearedAmount: 0,
-    cashClearanceCount: 0,
-    billingDisputesRaised: 0,
-    billingDisputesResolved: 0,
-    changeRequestsRaised: 0,
-    changeRequestsResolved: 0,
-    outstandingCashEstimate: 0,
-    collectionsByChannel: [],
-    paymentTypeBreakdown: [],
+  // Get the selected window from payment summary data
+  const currentWindow = paymentSummaryData?.windows?.find((window) => {
+    // Map our activeRange to API window format
+    const windowMapping: Record<string, string> = {
+      today: "today",
+      yesterday: "yesterday",
+      thisWeek: "this_week",
+      thisMonth: "this_month",
+      lastMonth: "last_month",
+      thisYear: "this_year",
+      allTime: "all_time",
+    }
+    return window.window === windowMapping[activeRange] || window.window === activeRange
+  })
+  const summary = currentWindow ?? {
+    count: 0,
+    amount: 0,
+    byChannel: [],
+    byCollector: [],
+    byStatus: [],
+    byPaymentType: [],
   }
 
   const formatCurrency = (amount: number) => {
@@ -253,6 +265,22 @@ const StatisticsCards = () => {
       maximumFractionDigits: 0,
     }).format(amount)
   }
+
+  // Helper functions to extract data from payment summary
+  const getPaymentTypeData = (paymentType: string) => {
+    const data = summary.byPaymentType.find((item) => item.key === paymentType)
+    return data || { count: 0, amount: 0 }
+  }
+
+  const getStatusData = (status: string) => {
+    const data = summary.byStatus.find((item) => item.key === status)
+    return data || { count: 0, amount: 0 }
+  }
+
+  const prepaidData = getPaymentTypeData("Energy Bill")
+  const postpaidData = getPaymentTypeData("Debt Clearance")
+  const pendingData = getStatusData("Pending")
+  const confirmedData = getStatusData("Confirmed")
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
@@ -275,16 +303,16 @@ const StatisticsCards = () => {
 
   const getPaymentTypeIcon = (paymentType: string) => {
     switch (paymentType) {
-      case "Prepaid":
+      case "Energy Bill":
         return "⚡"
-      case "Postpaid":
-        return "📋"
+      case "Debt Clearance":
+        return "�"
       case "Loss of Revenue":
         return "📉"
-      case "Debt Clearance":
-        return "💳"
-      case "PPM Bypass":
-        return "🔓"
+      case "PPM By-Pass":
+        return "�"
+      case "KE Reconnection Fee":
+        return "�"
       case "Others":
         return "📦"
       default:
@@ -294,26 +322,12 @@ const StatisticsCards = () => {
 
   const getPaymentTypeStyle = (paymentType: string) => {
     switch (paymentType) {
-      case "Prepaid":
+      case "Energy Bill":
         return {
           bgGradient: "from-blue-500/20 to-cyan-500/20",
           iconBg: "bg-blue-500/20",
           iconColor: "text-blue-300",
           borderColor: "border-blue-500/30",
-        }
-      case "Postpaid":
-        return {
-          bgGradient: "from-amber-500/20 to-orange-500/20",
-          iconBg: "bg-amber-500/20",
-          iconColor: "text-amber-300",
-          borderColor: "border-amber-500/30",
-        }
-      case "Loss of Revenue":
-        return {
-          bgGradient: "from-red-500/20 to-pink-500/20",
-          iconBg: "bg-red-500/20",
-          iconColor: "text-red-300",
-          borderColor: "border-red-500/30",
         }
       case "Debt Clearance":
         return {
@@ -322,12 +336,26 @@ const StatisticsCards = () => {
           iconColor: "text-emerald-300",
           borderColor: "border-emerald-500/30",
         }
-      case "PPM Bypass":
+      case "Loss of Revenue":
+        return {
+          bgGradient: "from-red-500/20 to-pink-500/20",
+          iconBg: "bg-red-500/20",
+          iconColor: "text-red-300",
+          borderColor: "border-red-500/30",
+        }
+      case "PPM By-Pass":
         return {
           bgGradient: "from-purple-500/20 to-violet-500/20",
           iconBg: "bg-purple-500/20",
           iconColor: "text-purple-300",
           borderColor: "border-purple-500/30",
+        }
+      case "KE Reconnection Fee":
+        return {
+          bgGradient: "from-yellow-500/20 to-orange-500/20",
+          iconBg: "bg-yellow-500/20",
+          iconColor: "text-yellow-300",
+          borderColor: "border-yellow-500/30",
         }
       case "Others":
         return {
@@ -346,7 +374,7 @@ const StatisticsCards = () => {
     }
   }
 
-  if (agentSummaryLoading) {
+  if (paymentSummaryLoading) {
     return (
       <div className="space-y-4">
         <div className="flex gap-2 overflow-x-auto pb-2">
@@ -372,11 +400,7 @@ const StatisticsCards = () => {
             <span className="text-sm">📊</span>
           </div>
           <h2 className="text-sm font-semibold text-white">Summary Statistics</h2>
-          {agentSummary?.generatedAtUtc && (
-            <p className="text-xs text-white/60">
-              Last updated: {new Date(agentSummary.generatedAtUtc).toLocaleString()}
-            </p>
-          )}
+          {paymentSummaryData && <p className="text-xs text-white/60">Last updated: {new Date().toLocaleString()}</p>}
         </div>
         <motion.button
           onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
@@ -436,9 +460,9 @@ const StatisticsCards = () => {
                   </div>
                   <p className="text-xs font-medium uppercase tracking-wider text-white/70">Total Collected</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {formatCurrency(summary.collectedAmount)}
+                    {formatCurrency(summary.amount)}
                   </p>
-                  <p className="mt-1 text-xs text-white/60">{summary.collectedCount} transactions</p>
+                  <p className="mt-1 text-xs text-white/60">{summary.count} transactions</p>
                 </div>
               </div>
 
@@ -451,11 +475,11 @@ const StatisticsCards = () => {
                       <span className="text-sm text-blue-300">⚡</span>
                     </div>
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prepaid</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Energy Bill</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {formatCurrency(summary.prepaidCollectedAmount)}
+                    {formatCurrency(prepaidData.amount)}
                   </p>
-                  <p className="mt-1 text-xs text-blue-300/80">{summary.prepaidCollectedCount} transactions</p>
+                  <p className="mt-1 text-xs text-blue-300/80">{prepaidData.count} transactions</p>
                 </div>
               </div>
 
@@ -468,11 +492,11 @@ const StatisticsCards = () => {
                       <span className="text-sm text-amber-300">📋</span>
                     </div>
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Postpaid</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Debt Clearance</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {formatCurrency(summary.postpaidCollectedAmount)}
+                    {formatCurrency(postpaidData.amount)}
                   </p>
-                  <p className="mt-1 text-xs text-amber-300/80">{summary.postpaidCollectedCount} transactions</p>
+                  <p className="mt-1 text-xs text-amber-300/80">{postpaidData.count} transactions</p>
                 </div>
               </div>
 
@@ -487,9 +511,9 @@ const StatisticsCards = () => {
                   </div>
                   <p className="text-xs font-medium uppercase tracking-wider text-white/70">Pending</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {formatCurrency(summary.pendingAmount)}
+                    {formatCurrency(pendingData.amount)}
                   </p>
-                  <p className="mt-1 text-xs text-orange-300/80">{summary.pendingCount} awaiting</p>
+                  <p className="mt-1 text-xs text-orange-300/80">{pendingData.count} awaiting</p>
                 </div>
               </div>
 
@@ -504,66 +528,70 @@ const StatisticsCards = () => {
                   </div>
                   <p className="text-xs font-medium uppercase tracking-wider text-white/70">Cash Cleared</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {formatCurrency(summary.cashClearedAmount)}
+                    {formatCurrency(confirmedData.amount)}
                   </p>
-                  <p className="mt-1 text-xs text-emerald-300/80">{summary.cashClearanceCount} clearances</p>
+                  <p className="mt-1 text-xs text-emerald-300/80">{confirmedData.count} clearances</p>
                 </div>
               </div>
 
-              {/* Outstanding Cash Card */}
+              {/* Top Channel Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
+                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-green-400/10 transition-transform group-hover:scale-110" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-green-400/20">
+                      <span className="text-sm text-green-300">🏆</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Top Channel</p>
+                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
+                    {summary.byChannel[0]?.key || "N/A"}
+                  </p>
+                  <p className="mt-1 text-xs text-green-300/80">
+                    {summary.byChannel[0] ? formatCurrency(summary.byChannel[0].amount) : "₦0"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Failed Transactions Card */}
               <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
                 <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-400/10 transition-transform group-hover:scale-110" />
                 <div className="relative">
                   <div className="mb-1 flex items-center gap-2">
                     <div className="flex size-8 items-center justify-center rounded-lg bg-red-400/20">
-                      <span className="text-sm text-red-300">💰</span>
+                      <span className="text-sm text-red-300">❌</span>
                     </div>
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Outstanding Cash</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Failed</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {formatCurrency(summary.outstandingCashEstimate)}
+                    {formatCurrency(getStatusData("Failed").amount)}
                   </p>
-                  <p className="mt-1 text-xs text-red-300/80">Estimate</p>
+                  <p className="mt-1 text-xs text-red-300/80">{getStatusData("Failed").count} transactions</p>
                 </div>
               </div>
 
-              {/* Billing Disputes Card */}
-              <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
-                <div className="absolute -right-4 -top-4 size-16 rounded-full bg-purple-400/10 transition-transform group-hover:scale-110" />
-                <div className="relative">
-                  <div className="mb-1 flex items-center gap-2">
-                    <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400/20">
-                      <span className="text-sm text-purple-300">⚠️</span>
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Billing Disputes</p>
-                  <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {summary.billingDisputesRaised}
-                  </p>
-                  <p className="mt-1 text-xs text-purple-300/80">{summary.billingDisputesResolved} resolved</p>
-                </div>
-              </div>
-
-              {/* Change Requests Card */}
+              {/* Top Collector Card */}
               <div className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15 md:p-5">
                 <div className="absolute -right-4 -top-4 size-16 rounded-full bg-cyan-400/10 transition-transform group-hover:scale-110" />
                 <div className="relative">
                   <div className="mb-1 flex items-center gap-2">
                     <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-400/20">
-                      <span className="text-sm text-cyan-300">📝</span>
+                      <span className="text-sm text-cyan-300">�</span>
                     </div>
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Change Requests</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/70">Top Collector</p>
                   <p className="mt-1 text-lg font-bold text-white md:text-xl lg:text-2xl">
-                    {summary.changeRequestsRaised}
+                    {summary.byCollector[0]?.key || "N/A"}
                   </p>
-                  <p className="mt-1 text-xs text-cyan-300/80">{summary.changeRequestsResolved} resolved</p>
+                  <p className="mt-1 text-xs text-cyan-300/80">
+                    {summary.byCollector[0] ? formatCurrency(summary.byCollector[0].amount) : "₦0"}
+                  </p>
                 </div>
               </div>
             </motion.div>
 
             {/* Collections by Channel */}
-            {summary.collectionsByChannel && summary.collectionsByChannel.length > 0 && (
+            {summary.byChannel && summary.byChannel.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -572,18 +600,18 @@ const StatisticsCards = () => {
               >
                 <h3 className="mb-3 text-sm font-medium text-white/80">Collections by Channel</h3>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                  {summary.collectionsByChannel.map((channel) => (
+                  {summary.byChannel.map((channel) => (
                     <div
-                      key={channel.channel}
+                      key={channel.key}
                       className="group relative overflow-hidden rounded-xl bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/15"
                     >
                       <div className="relative">
                         <div className="mb-1 flex items-center gap-2">
                           <div className="flex size-8 items-center justify-center rounded-lg bg-white/20">
-                            <span className="text-sm">{getChannelIcon(channel.channel)}</span>
+                            <span className="text-sm">{getChannelIcon(channel.key)}</span>
                           </div>
                         </div>
-                        <p className="text-xs font-medium uppercase tracking-wider text-white/70">{channel.channel}</p>
+                        <p className="text-xs font-medium uppercase tracking-wider text-white/70">{channel.key}</p>
                         <p className="mt-1 text-lg font-bold text-white md:text-xl">{formatCurrency(channel.amount)}</p>
                         <p className="mt-1 text-xs text-white/60">{channel.count} transactions</p>
                       </div>
@@ -594,7 +622,7 @@ const StatisticsCards = () => {
             )}
 
             {/* Payment Type Breakdown */}
-            {summary.paymentTypeBreakdown && summary.paymentTypeBreakdown.length > 0 && (
+            {summary.byPaymentType && summary.byPaymentType.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -603,34 +631,29 @@ const StatisticsCards = () => {
               >
                 <h3 className="mb-3 text-sm font-medium text-white/80">Payment Type Breakdown</h3>
                 <div className="grid grid-cols-3 gap-3 md:gap-4">
-                  {summary.paymentTypeBreakdown.map((paymentType) => {
-                    const styles = getPaymentTypeStyle(paymentType.type)
+                  {summary.byPaymentType.map((paymentType) => {
+                    const styles = getPaymentTypeStyle(paymentType.key)
                     return (
                       <motion.div
-                        key={paymentType.type}
+                        key={paymentType.key}
                         className={`group relative overflow-hidden rounded-xl border ${styles.borderColor} bg-gradient-to-br ${styles.bgGradient} p-4 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg`}
                         whileHover={{ y: -2 }}
                       >
                         <div className="relative">
-                          <div className="mb-3 flex items-center gap-3">
-                            <div
-                              className={`flex size-10 items-center justify-center rounded-lg ${styles.iconBg} transition-transform group-hover:scale-110`}
-                            >
-                              <span className={`text-lg ${styles.iconColor}`}>
-                                {getPaymentTypeIcon(paymentType.type)}
+                          <div className="mb-1 flex items-center gap-2">
+                            <div className={`flex size-8 items-center justify-center rounded-lg ${styles.iconBg}`}>
+                              <span className={`text-sm ${styles.iconColor}`}>
+                                {getPaymentTypeIcon(paymentType.key)}
                               </span>
                             </div>
-                            <div className="flex-1">
-                              <p className="text-xs font-semibold uppercase tracking-wider text-white/90">
-                                {paymentType.type}
-                              </p>
-                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <p className="text-xl font-bold text-white">{formatCurrency(paymentType.amount)}</p>
-                            <p className="text-xs text-white/70">{paymentType.count} transactions</p>
-                          </div>
-                          <div className="absolute -right-2 -top-2 size-16 rounded-full bg-white/5 transition-transform group-hover:scale-150" />
+                          <p className="text-xs font-medium uppercase tracking-wider text-white/80">
+                            {paymentType.key}
+                          </p>
+                          <p className="mt-1 text-lg font-bold text-white md:text-xl">
+                            {formatCurrency(paymentType.amount)}
+                          </p>
+                          <p className="mt-1 text-xs text-white/60">{paymentType.count} transactions</p>
                         </div>
                       </motion.div>
                     )
@@ -657,7 +680,7 @@ interface AppliedFilters {
   sortOrder?: "asc" | "desc"
 }
 
-interface AllPaymentsTableProps {
+interface AdminPaymentTableProps {
   agentId?: number
   customerId?: number
   appliedFilters?: AppliedFilters
@@ -669,7 +692,7 @@ interface AllPaymentsTableProps {
   getActiveFilterCount?: () => number
 }
 
-const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
+const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
   agentId,
   customerId,
   appliedFilters = {} as AppliedFilters,
@@ -2020,4 +2043,4 @@ const AllPaymentsTable: React.FC<AllPaymentsTableProps> = ({
   )
 }
 
-export default AllPaymentsTable
+export default AdminPaymentTable
