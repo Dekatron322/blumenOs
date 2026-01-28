@@ -798,7 +798,7 @@ export function Links({ isCollapsed }: LinksProps) {
               <div
                 className={clsx(" overflow-hidden transition-all duration-500 ease-in-out", {
                   "max-h-0 opacity-0": !isExpanded,
-                  "max-h-96 opacity-100": isExpanded,
+                  "opacity-100": isExpanded,
                 })}
               >
                 <div className="ml-6 border-l-2 border-gray-200 py-2 pl-3">
