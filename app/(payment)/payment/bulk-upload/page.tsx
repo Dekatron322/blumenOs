@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { AlertCircle, FileIcon, Filter } from "lucide-react"
+import { AlertCircle, FileIcon, Filter, RefreshCw } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 
 import { ButtonModule } from "components/ui/Button/Button"
@@ -146,6 +146,7 @@ const BulkUploads: React.FC = () => {
   const [searchText, setSearchText] = useState("")
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [isFailuresModalOpen, setIsFailuresModalOpen] = useState(false)
+  const [hasInitialLoad, setHasInitialLoad] = useState(false)
 
   // Local state for filters
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
@@ -161,7 +162,10 @@ const BulkUploads: React.FC = () => {
     Search: undefined,
   })
 
-  // Fetch CSV jobs when component mounts or filters change (but not search text)
+  // Separate state for table-only refresh
+  const [tableRefreshKey, setTableRefreshKey] = useState(0)
+
+  // Initial load and filter changes
   useEffect(() => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
@@ -173,11 +177,20 @@ const BulkUploads: React.FC = () => {
       ...(localFilters.RequestedToUtc && { RequestedToUtc: localFilters.RequestedToUtc }),
       ...(localFilters.FileName && { FileName: localFilters.FileName }),
       ...(localFilters.HasFailures !== undefined && { HasFailures: localFilters.HasFailures }),
+      ...(searchText && { Search: searchText }),
     }
 
     void dispatch(fetchCsvJobs(fetchParams))
-  }, [dispatch, currentPage, localFilters])
+    setHasInitialLoad(true)
+  }, [dispatch, currentPage, localFilters, searchText, tableRefreshKey])
 
+  // Separate handler for table-only refresh
+  const handleRefreshTableData = useCallback(() => {
+    // This only triggers a table refresh by incrementing the refresh key
+    setTableRefreshKey((prev) => prev + 1)
+  }, [])
+
+  // Keep the existing refresh handler for other purposes if needed
   const handleRefreshData = useCallback(() => {
     const fetchParams: CsvJobsParams = {
       PageNumber: currentPage,
@@ -220,6 +233,7 @@ const BulkUploads: React.FC = () => {
 
   const applyFilters = () => {
     setCurrentPage(1)
+    // Trigger a fresh fetch with updated filters
     handleRefreshData()
   }
 
@@ -293,7 +307,7 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  if (csvJobsLoading && !csvJobsSuccess) {
+  if (csvJobsLoading && !hasInitialLoad) {
     return <LoadingSkeleton />
   }
 
@@ -463,6 +477,10 @@ const BulkUploads: React.FC = () => {
                       </p>
                     )}
                   </div>
+                  <ButtonModule variant="outline" onClick={handleRefreshTableData} disabled={csvJobsLoading} size="sm">
+                    <RefreshCw className={`size-4 ${csvJobsLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </ButtonModule>
                   {csvJobsError && (
                     <div className="flex items-center gap-2 text-red-600">
                       <AlertCircle className="size-4" />
@@ -528,33 +546,43 @@ const BulkUploads: React.FC = () => {
                                   <div
                                     className="h-2 rounded-full bg-blue-600"
                                     style={{
-                                      width: `${job.totalRows > 0 ? (job.processedRows / job.totalRows) * 100 : 0}%`,
+                                      width: `${
+                                        job.totalRows !== null && job.totalRows > 0
+                                          ? (job.processedRows / job.totalRows) * 100
+                                          : 0
+                                      }%`,
                                     }}
                                   ></div>
                                 </div>
                                 <span className="text-xs text-gray-600">
-                                  {job.totalRows > 0 ? Math.round((job.processedRows / job.totalRows) * 100) : 0}%
+                                  {job.totalRows !== null && job.totalRows > 0
+                                    ? Math.round((job.processedRows / job.totalRows) * 100)
+                                    : "Processing"}
                                 </span>
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="font-medium text-blue-600">
-                                {job.totalRows > 0 ? job.processedRows : "N/A"}
+                                {job.processedRows !== null && job.processedRows !== undefined
+                                  ? job.processedRows
+                                  : "N/A"}
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="font-medium text-green-600">
-                                {job.totalRows > 0 ? job.succeededRows : "N/A"}
+                                {job.succeededRows !== null && job.succeededRows !== undefined
+                                  ? job.succeededRows
+                                  : "N/A"}
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="font-medium text-red-600">
-                                {job.totalRows > 0 ? job.failedRows : "N/A"}
+                                {job.failedRows !== null && job.failedRows !== undefined ? job.failedRows : "N/A"}
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
                               <div className="font-medium text-gray-600">
-                                {job.totalRows > 0 ? job.totalRows : "N/A"}
+                                {job.totalRows !== null && job.totalRows !== undefined ? job.totalRows : "N/A"}
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">

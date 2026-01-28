@@ -1999,9 +1999,18 @@ export const exportPayments = createAsyncThunk(
         responseType: "blob", // Important for file downloads
       })
 
-      // Extract filename from content-disposition header
+      // Generate filename with date range in the format kadElectric-collection-{startDate}-{endDate}
+      const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+        return date.toISOString().split("T")[0] // Format as YYYY-MM-DD
+      }
+
+      const startDate = formatDate(exportData.fromUtc)
+      const endDate = formatDate(exportData.toUtc)
+      let fileName = `kadElectric-collection-${startDate}-${endDate}.csv`
+
+      // Extract filename from content-disposition header as fallback
       const contentDisposition = response.headers["content-disposition"]
-      let fileName = "payments-export.csv"
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
         if (filenameMatch && filenameMatch[1]) {
