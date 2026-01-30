@@ -15,8 +15,8 @@ import { CsvJobsParams, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
-// Job Type options for filters - Only Payment Import (4) for this page
-const jobTypeOptions = [{ value: "4", label: "Payment Import" }]
+// Job Type options for filters - Assets related job types only
+const jobTypeOptions = [{ value: "13", label: "Distribution Substation Import" }]
 
 // Status options for filters
 const statusOptions = [
@@ -55,8 +55,8 @@ const LoadingSkeleton = () => {
           <div className="mx-auto w-full px-4 py-8 2xl:container max-sm:px-2 xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
-                <h4 className="text-2xl font-semibold">Bulk Upload Management</h4>
-                <p className="text-gray-600">Track and manage CSV bulk upload jobs</p>
+                <h4 className="text-2xl font-semibold">Assets Bulk Upload Management</h4>
+                <p className="text-gray-600">Track and manage Distribution Substation bulk upload jobs</p>
               </div>
             </div>
             <motion.div
@@ -149,7 +149,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 4,
+    JobType: 13, // Default to Distribution Substation Import only
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -238,7 +238,7 @@ const BulkUploads: React.FC = () => {
     setLocalFilters({
       PageNumber: 1,
       PageSize: 10,
-      JobType: undefined,
+      JobType: 13, // Keep Distribution Substation Import filter
       Status: undefined,
       RequestedByUserId: undefined,
       RequestedFromUtc: undefined,
@@ -304,6 +304,10 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
+  // Filter jobs to only show Distribution Substation Import job type
+  const assetsJobTypes = [13] // Distribution Substation Import job type
+  const filteredCsvJobs = csvJobs.filter((job) => assetsJobTypes.includes(job.jobType))
+
   if (csvJobsLoading && !hasInitialLoad) {
     return <LoadingSkeleton />
   }
@@ -316,17 +320,17 @@ const BulkUploads: React.FC = () => {
           <div className="mx-auto w-full  px-3 py-8 2xl:container max-sm:px-2 md:px-4 lg:px-6 2xl:px-16">
             <div className="mb-6 flex w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div className="flex-1">
-                <h4 className="text-2xl font-semibold">Bulk Upload Management</h4>
-                <p className="text-gray-600">Track and manage CSV bulk upload jobs</p>
+                <h4 className="text-2xl font-semibold">Assets Bulk Upload Management</h4>
+                <p className="text-gray-600">Track and manage Distribution Substation bulk upload jobs</p>
               </div>
               <div className="flex items-center gap-3">
                 <ButtonModule
-                  onClick={() => router.push("/payment/bulk-upload/add-bulk-upload")}
+                  onClick={() => router.push("/assets-management/bulk-upload/add-bulk-upload")}
                   className="button-outlined flex items-center gap-2"
                   disabled={csvJobsLoading}
                   icon={<VscCloudUpload />}
                 >
-                  Add Bulk Payment
+                  Add Bulk Assets Upload
                 </ButtonModule>
               </div>
             </div>
@@ -470,7 +474,7 @@ const BulkUploads: React.FC = () => {
                     <h3 className="text-lg font-semibold">CSV Jobs</h3>
                     {csvJobsPagination && (
                       <p className="text-sm text-gray-600">
-                        Showing {csvJobs.length} of {csvJobsPagination.totalCount} jobs
+                        Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
                       </p>
                     )}
                   </div>
@@ -506,7 +510,7 @@ const BulkUploads: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {csvJobs.length === 0 ? (
+                      {filteredCsvJobs.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="border-b p-8 text-center">
                             <div className="text-gray-500">
@@ -517,7 +521,7 @@ const BulkUploads: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        csvJobs.map((job) => (
+                        filteredCsvJobs.map((job) => (
                           <tr key={job.id} className="border-b hover:bg-gray-50">
                             <td className="border-b p-3 text-sm">
                               <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>

@@ -15,8 +15,13 @@ import { CsvJobsParams, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
-// Job Type options for filters - Only Payment Import (4) for this page
-const jobTypeOptions = [{ value: "4", label: "Payment Import" }]
+// Job Type options for filters - Meter related job types only
+const jobTypeOptions = [
+  { value: "12", label: "Meter Upload Import" },
+  { value: "2", label: "Meter Reading Import" },
+  { value: "15", label: "Meter Reading Account Import" },
+  { value: "16", label: "Meter Reading Stored Average Import" },
+]
 
 // Status options for filters
 const statusOptions = [
@@ -149,7 +154,7 @@ const BulkUploads: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Partial<CsvJobsParams>>({
     PageNumber: 1,
     PageSize: 10,
-    JobType: 4,
+    JobType: undefined,
     Status: undefined,
     RequestedByUserId: undefined,
     RequestedFromUtc: undefined,
@@ -304,6 +309,10 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
+  // Filter jobs to only show meter-related job types
+  const meterJobTypes = [12, 2, 15, 16] // Meter job type values
+  const filteredCsvJobs = csvJobs.filter((job) => meterJobTypes.includes(job.jobType))
+
   if (csvJobsLoading && !hasInitialLoad) {
     return <LoadingSkeleton />
   }
@@ -321,12 +330,12 @@ const BulkUploads: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <ButtonModule
-                  onClick={() => router.push("/payment/bulk-upload/add-bulk-upload")}
+                  onClick={() => router.push("/metering/bulk-upload/add-bulk-upload")}
                   className="button-outlined flex items-center gap-2"
                   disabled={csvJobsLoading}
                   icon={<VscCloudUpload />}
                 >
-                  Add Bulk Payment
+                  Add Bulk Meter Upload
                 </ButtonModule>
               </div>
             </div>
@@ -368,7 +377,7 @@ const BulkUploads: React.FC = () => {
                   </div>
 
                   {/* Job Type Filter */}
-                  {/* <div>
+                  <div>
                     <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Job Type</label>
                     <FormSelectModule
                       name="jobType"
@@ -380,7 +389,7 @@ const BulkUploads: React.FC = () => {
                       className="w-full"
                       controlClassName="h-9 text-sm"
                     />
-                  </div> */}
+                  </div>
 
                   {/* Status Filter */}
                   <div>
@@ -470,7 +479,7 @@ const BulkUploads: React.FC = () => {
                     <h3 className="text-lg font-semibold">CSV Jobs</h3>
                     {csvJobsPagination && (
                       <p className="text-sm text-gray-600">
-                        Showing {csvJobs.length} of {csvJobsPagination.totalCount} jobs
+                        Showing {filteredCsvJobs.length} of {csvJobsPagination.totalCount} jobs
                       </p>
                     )}
                   </div>
@@ -506,7 +515,7 @@ const BulkUploads: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {csvJobs.length === 0 ? (
+                      {filteredCsvJobs.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="border-b p-8 text-center">
                             <div className="text-gray-500">
@@ -517,7 +526,7 @@ const BulkUploads: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        csvJobs.map((job) => (
+                        filteredCsvJobs.map((job) => (
                           <tr key={job.id} className="border-b hover:bg-gray-50">
                             <td className="border-b p-3 text-sm">
                               <div className="max-w-xs truncate whitespace-nowrap" title={job.fileName}>

@@ -50,7 +50,9 @@ export const allLinks: LinkItem[] = [
       { name: "View Customers", href: "/customers/view-customers", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Data Quality", href: "/customers/data-quality", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Add Customers", href: "/customers/add-customers", privilegeKey: "customers", requiredActions: ["W"] },
+      { name: "Bulk Uploads", href: "/customers/bulk-upload", privilegeKey: "customers", requiredActions: ["R"] },
       { name: "Change Request", href: "/customers/change-request", privilegeKey: "customers", requiredActions: ["E"] },
+
       // {
       //   name: "Field Enumeration",
       //   href: "/customers/field-enumeration",
@@ -119,6 +121,7 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "billing-postpaid",
         requiredActions: ["W"],
       },
+      { name: "Bulk Uploads", href: "/billing/bulk-upload", privilegeKey: "billing-postpaid", requiredActions: ["R"] },
       {
         name: "Change Request",
         href: "/billing/change-requests",
@@ -148,6 +151,7 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "assets",
         requiredActions: ["W"],
       },
+      { name: "Bulk Uploads", href: "/metering/bulk-upload", privilegeKey: "assets", requiredActions: ["R"] },
       // {
       //   name: "Change Request",
       //   href: "/metering/change-requests",
@@ -380,6 +384,7 @@ export const allLinks: LinkItem[] = [
         privilegeKey: "assets",
         requiredActions: ["R"],
       },
+      { name: "Bulk Uploads", href: "/assets-management/bulk-upload", privilegeKey: "assets", requiredActions: ["R"] },
       {
         name: "Change Request",
         href: "/assets-management/change-request",
