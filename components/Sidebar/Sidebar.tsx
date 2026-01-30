@@ -9,8 +9,43 @@ import { usePopover } from "components/Navbar/use-popover"
 import { AnimatePresence, motion } from "framer-motion"
 import { usePathname } from "next/navigation"
 
+export interface UserPermission {
+  roles: Array<{
+    roleId: number
+    name: string
+    slug: string
+    category: string
+  }>
+  privileges: Array<{
+    key: string
+    name: string
+    category: string
+    actions: string[]
+  }>
+}
+
+const isUserPermission = (value: unknown): value is UserPermission => {
+  if (!value || typeof value !== "object") return false
+  const v = value as any
+  return Array.isArray(v?.roles) && Array.isArray(v?.privileges)
+}
+
+const hasSystemSettingsPermission = (permissions: UserPermission): boolean => {
+  // Check if user has super admin role
+  const isSuperAdmin = permissions.roles.some((role) => role.slug === "superadmin")
+  if (isSuperAdmin) return true
+
+  // Check for system-settings privilege
+  const systemSettingsPrivilege = permissions.privileges.find((p) => p.key === "system-settings")
+  if (!systemSettingsPrivilege) return false
+
+  // Check if user has any of the required actions
+  return systemSettingsPrivilege.actions.some((action) => ["R", "W", "E", "U"].includes(action))
+}
+
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [userPermissions, setUserPermissions] = useState<UserPermission | null>(null)
 
   const pathname = usePathname()
 
@@ -20,6 +55,26 @@ const SideBar = () => {
     handleToggle: toggleSystemSettings,
     handleClose: closeSystemSettings,
   } = usePopover()
+
+  useEffect(() => {
+    // Load user permissions from localStorage
+    if (typeof window === "undefined") {
+      return
+    }
+    const storedPermissions = localStorage.getItem("userPermissions")
+    if (storedPermissions) {
+      try {
+        const parsed = JSON.parse(storedPermissions)
+        if (isUserPermission(parsed)) {
+          setUserPermissions(parsed)
+        } else {
+          setUserPermissions(null)
+        }
+      } catch {
+        setUserPermissions(null)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -61,111 +116,114 @@ const SideBar = () => {
           <Links isCollapsed={isCollapsed} />
         </div>
       </div>
-      <div className="my-4 mt-auto flex h-auto items-center justify-between border-t px-6">
-        <div ref={systemSettingsRef} className="relative flex w-full items-center justify-between pt-5">
-          <button
-            type="button"
-            onClick={toggleSystemSettings}
-            className="flex w-full items-center justify-between gap-2 rounded-md p-2 text-left  hover:bg-gray-100 "
-          >
-            <div className="flex items-center gap-2">
-              <img src="/Icons/setting-2.svg" />
-              <p className="bottom-bar  lg:block">System Settings</p>
-            </div>
-          </button>
+      {/* System Settings - Only show if user has system-settings privilege */}
+      {userPermissions && hasSystemSettingsPermission(userPermissions) && (
+        <div className="my-4 mt-auto flex h-auto items-center justify-between border-t px-6">
+          <div ref={systemSettingsRef} className="relative flex w-full items-center justify-between pt-5">
+            <button
+              type="button"
+              onClick={toggleSystemSettings}
+              className="flex w-full items-center justify-between gap-2 rounded-md p-2 text-left  hover:bg-gray-100 "
+            >
+              <div className="flex items-center gap-2">
+                <img src="/Icons/setting-2.svg" />
+                <p className="bottom-bar  lg:block">System Settings</p>
+              </div>
+            </button>
 
-          <AnimatePresence>
-            {isSystemSettingsOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute bottom-full left-[-1rem] z-50 mb-1 w-[240px] overflow-hidden rounded-md bg-white text-xs shadow-2xl ring-1 ring-black ring-opacity-5 lg:text-sm"
-              >
-                <div className="flex flex-col py-1">
-                  <Link
-                    href="/roles"
-                    className={clsx(
-                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
-                      {
-                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/roles"),
-                      }
-                    )}
-                  >
-                    <img src="/Icons/ic_employee.svg" alt="Roles" className="size-4" />
-                    <span>Roles</span>
-                  </Link>
-                  <Link
-                    href="/payment-types"
-                    className={clsx(
-                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
-                      {
-                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/payment-types"),
-                      }
-                    )}
-                  >
-                    <img src="/Icons/payment.svg" alt="Payment Types" className="size-4" />
-                    <span>Payment Types Mngt</span>
-                  </Link>
-                  <Link
-                    href="/departments"
-                    className={clsx(
-                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
-                      {
-                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/departments"),
-                      }
-                    )}
-                  >
-                    <img src="/Icons/building.svg" alt="Departments" className="size-4" />
-                    <span>Departments</span>
-                  </Link>
-                  <Link
-                    href="/customer-categories"
-                    className={clsx(
-                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
-                      {
-                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/customer-categories"),
-                      }
-                    )}
-                  >
-                    <img src="/Icons/ic_employee.svg" alt="Roles" className="size-4" />
-                    <span>Customer Category Mngt</span>
-                  </Link>
-                  <Link
-                    href="/background-jobs"
-                    className={clsx(
-                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
-                      {
-                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/background-jobs"),
-                      }
-                    )}
-                  >
-                    <img src="/Icons/cpu.svg" alt="Background Jobs" className="size-4" />
-                    <span>Background Jobs</span>
-                  </Link>
-                  <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
-                    <img src="/Icons/message-notif.svg" alt="Notification Settings" className="size-4" />
-                    <span>Notification Settings</span>
-                  </button>
-                  <Link
-                    href="/developer-mode"
-                    className={clsx(
-                      "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
-                      {
-                        "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/settings/developer-mode"),
-                      }
-                    )}
-                  >
-                    <img src="/Icons/Analytics.svg" alt="Developer Mode" className="size-4" />
-                    <span>Developer Mode</span>
-                  </Link>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {isSystemSettingsOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="absolute bottom-full left-[-1rem] z-50 mb-1 w-[240px] overflow-hidden rounded-md bg-white text-xs shadow-2xl ring-1 ring-black ring-opacity-5 lg:text-sm"
+                >
+                  <div className="flex flex-col py-1">
+                    <Link
+                      href="/roles"
+                      className={clsx(
+                        "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                        {
+                          "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/roles"),
+                        }
+                      )}
+                    >
+                      <img src="/Icons/ic_employee.svg" alt="Roles" className="size-4" />
+                      <span>Roles</span>
+                    </Link>
+                    <Link
+                      href="/payment-types"
+                      className={clsx(
+                        "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                        {
+                          "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/payment-types"),
+                        }
+                      )}
+                    >
+                      <img src="/Icons/payment.svg" alt="Payment Types" className="size-4" />
+                      <span>Payment Types Mngt</span>
+                    </Link>
+                    <Link
+                      href="/departments"
+                      className={clsx(
+                        "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                        {
+                          "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/departments"),
+                        }
+                      )}
+                    >
+                      <img src="/Icons/building.svg" alt="Departments" className="size-4" />
+                      <span>Departments</span>
+                    </Link>
+                    <Link
+                      href="/customer-categories"
+                      className={clsx(
+                        "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                        {
+                          "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/customer-categories"),
+                        }
+                      )}
+                    >
+                      <img src="/Icons/ic_employee.svg" alt="Roles" className="size-4" />
+                      <span>Customer Category Mngt</span>
+                    </Link>
+                    <Link
+                      href="/background-jobs"
+                      className={clsx(
+                        "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                        {
+                          "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/background-jobs"),
+                        }
+                      )}
+                    >
+                      <img src="/Icons/cpu.svg" alt="Background Jobs" className="size-4" />
+                      <span>Background Jobs</span>
+                    </Link>
+                    <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100">
+                      <img src="/Icons/message-notif.svg" alt="Notification Settings" className="size-4" />
+                      <span>Notification Settings</span>
+                    </button>
+                    <Link
+                      href="/developer-mode"
+                      className={clsx(
+                        "flex w-full items-center gap-2 px-4 py-2 text-left text-gray-700 transition-colors hover:bg-gray-100",
+                        {
+                          "bg-gray-100 font-semibold text-blue-600": pathname.startsWith("/settings/developer-mode"),
+                        }
+                      )}
+                    >
+                      <img src="/Icons/Analytics.svg" alt="Developer Mode" className="size-4" />
+                      <span>Developer Mode</span>
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

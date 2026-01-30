@@ -23,6 +23,7 @@ const SignIn: React.FC = () => {
   const {
     isAuthenticated,
     user,
+    agent,
     loading: authLoading,
     error: authError,
     mustChangePassword,
@@ -52,12 +53,10 @@ const SignIn: React.FC = () => {
         return
       }
 
-      // If user has Sales Representative role, redirect to channel
-      const hasSalesRepRole = user?.roles?.some(
-        (role) => role.roleId === 6 || role.slug === "sales-representative" || role.name === "Sales Representative"
-      )
-
-      if (hasSalesRepRole) {
+      // If user is not agent-only but has an agent object, redirect to channel
+      console.log("Debug - isAgentOnly:", isAgentOnly, "agent:", agent)
+      if (!isAgentOnly && agent) {
+        console.log("Redirecting to channel - user has agent object")
         setTimeout(() => router.push("/channel"), 1000)
         return
       }
