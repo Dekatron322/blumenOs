@@ -241,6 +241,12 @@ export const API_ENDPOINTS = {
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
   },
 
+  METER_CAPTURE: {
+    GET: "/vendors/enumerations",
+    RETRY_SINGLE_FAILED: "/vendors/enumerations/{id}/retry",
+    RETRY_ALL_FAILED: "/vendors/enumerations/retry-failed",
+  },
+
   STATUS_MAP: {
     GET: "/customers/map/customers",
     ASSETS: "/customers/map/assets",

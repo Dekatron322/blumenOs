@@ -152,6 +152,7 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["W"],
       },
       { name: "Bulk Uploads", href: "/metering/bulk-upload", privilegeKey: "assets", requiredActions: ["R"] },
+      { name: "Meter Capture", href: "/metering/meter-capture", privilegeKey: "assets", requiredActions: ["R"] },
       // {
       //   name: "Change Request",
       //   href: "/metering/change-requests",
