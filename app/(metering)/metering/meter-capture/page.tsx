@@ -102,7 +102,7 @@ const LoadingSkeleton = () => {
                 <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                   <thead>
                     <tr>
-                      {[...Array(8)].map((_, i) => (
+                      {[...Array(13)].map((_, i) => (
                         <th key={i} className="whitespace-nowrap border-b p-4">
                           <div className="h-4 w-24 rounded bg-gray-200"></div>
                         </th>
@@ -112,7 +112,7 @@ const LoadingSkeleton = () => {
                   <tbody>
                     {[...Array(5)].map((_, rowIndex) => (
                       <tr key={rowIndex}>
-                        {[...Array(8)].map((_, cellIndex) => (
+                        {[...Array(13)].map((_, cellIndex) => (
                           <td key={cellIndex} className="whitespace-nowrap border-b px-4 py-3">
                             <div className="h-4 w-full rounded bg-gray-200"></div>
                           </td>
@@ -176,6 +176,8 @@ const MeterCapture: React.FC = () => {
     status: undefined,
     referenceId: undefined,
     source: undefined,
+    accountNumber: undefined,
+    meterNumber: undefined,
     fromUtc: undefined,
     toUtc: undefined,
   })
@@ -219,6 +221,8 @@ const MeterCapture: React.FC = () => {
       ...(localFilters.status && { status: localFilters.status }),
       ...(localFilters.referenceId && { referenceId: localFilters.referenceId }),
       ...(localFilters.source && { source: localFilters.source }),
+      ...(localFilters.accountNumber && { accountNumber: localFilters.accountNumber }),
+      ...(localFilters.meterNumber && { meterNumber: localFilters.meterNumber }),
       ...(localFilters.fromUtc && { fromUtc: localFilters.fromUtc }),
       ...(localFilters.toUtc && { toUtc: localFilters.toUtc }),
     }
@@ -242,6 +246,8 @@ const MeterCapture: React.FC = () => {
       ...(localFilters.status && { status: localFilters.status }),
       ...(localFilters.referenceId && { referenceId: localFilters.referenceId }),
       ...(localFilters.source && { source: localFilters.source }),
+      ...(localFilters.accountNumber && { accountNumber: localFilters.accountNumber }),
+      ...(localFilters.meterNumber && { meterNumber: localFilters.meterNumber }),
       ...(localFilters.fromUtc && { fromUtc: localFilters.fromUtc }),
       ...(localFilters.toUtc && { toUtc: localFilters.toUtc }),
     }
@@ -256,6 +262,8 @@ const MeterCapture: React.FC = () => {
       ...(localFilters.status && { status: localFilters.status }),
       ...(localFilters.referenceId && { referenceId: localFilters.referenceId }),
       ...(localFilters.source && { source: localFilters.source }),
+      ...(localFilters.accountNumber && { accountNumber: localFilters.accountNumber }),
+      ...(localFilters.meterNumber && { meterNumber: localFilters.meterNumber }),
       ...(localFilters.fromUtc && { fromUtc: localFilters.fromUtc }),
       ...(localFilters.toUtc && { toUtc: localFilters.toUtc }),
     }
@@ -284,6 +292,8 @@ const MeterCapture: React.FC = () => {
       status: undefined,
       referenceId: undefined,
       source: undefined,
+      accountNumber: undefined,
+      meterNumber: undefined,
       fromUtc: undefined,
       toUtc: undefined,
     })
@@ -310,11 +320,11 @@ const MeterCapture: React.FC = () => {
   const getStatusColor = (status: number) => {
     switch (status) {
       case VendorEnumerationStatus.Captured:
-        return "text-yellow-600 bg-yellow-50"
+        return "text-amber-700 bg-amber-100"
       case VendorEnumerationStatus.Processed:
-        return "text-blue-600 bg-blue-50"
+        return "text-blue-700 bg-blue-100"
       case VendorEnumerationStatus.Failed:
-        return "text-red-600 bg-red-50"
+        return "text-red-700 bg-red-100"
       default:
         return "text-gray-600 bg-gray-50"
     }
@@ -495,6 +505,30 @@ const MeterCapture: React.FC = () => {
                     />
                   </div>
 
+                  {/* Account Number Filter */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Account Number</label>
+                    <input
+                      type="text"
+                      value={localFilters.accountNumber || ""}
+                      onChange={(e) => handleFilterChange("accountNumber", e.target.value)}
+                      placeholder="Account Number..."
+                      className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    />
+                  </div>
+
+                  {/* Meter Number Filter */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 md:text-sm">Meter Number</label>
+                    <input
+                      type="text"
+                      value={localFilters.meterNumber || ""}
+                      onChange={(e) => handleFilterChange("meterNumber", e.target.value)}
+                      placeholder="Meter Number..."
+                      className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                    />
+                  </div>
+
                   {/* Action Buttons */}
                   <div className="flex items-end gap-2">
                     <button onClick={applyFilters} className="button-filled flex-1 rounded-md px-3 py-2 text-sm">
@@ -536,14 +570,19 @@ const MeterCapture: React.FC = () => {
 
               {/* Table */}
               <div className="max-h-[70vh] w-full overflow-x-auto overflow-y-hidden ">
-                <div className="min-w-[1200px]">
+                <div className="min-w-[1600px]">
                   <table className="w-full border-separate border-spacing-0">
                     <thead>
                       <tr className="border-b bg-gray-50">
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Vendor Name</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Reference ID</th>
+                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Purpose</th>
+                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Account Number</th>
+                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Installer Name</th>
+                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">New Meter Number</th>
+                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Old Meter Number</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Status</th>
-                        <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Source</th>
+                        {/* <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Source</th> */}
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Created</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Processed</th>
                         <th className="border-b p-3 text-left text-sm font-medium text-gray-700">Error</th>
@@ -553,7 +592,7 @@ const MeterCapture: React.FC = () => {
                     <tbody>
                       {meterCaptures.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="border-b p-8 text-center">
+                          <td colSpan={13} className="border-b p-8 text-center">
                             <div className="text-gray-500">
                               <FileIcon className="mx-auto mb-2 size-12 text-gray-300" />
                               <p>No meter captures found</p>
@@ -573,6 +612,31 @@ const MeterCapture: React.FC = () => {
                               </div>
                             </td>
                             <td className="border-b p-3 text-sm">
+                              <div className="max-w-xs truncate whitespace-nowrap" title={capture.purpose}>
+                                {capture.purpose || "N/A"}
+                              </div>
+                            </td>
+                            <td className="border-b p-3 text-sm">
+                              <div className="max-w-xs truncate whitespace-nowrap" title={capture.accountNumber}>
+                                {capture.accountNumber || "N/A"}
+                              </div>
+                            </td>
+                            <td className="border-b p-3 text-sm">
+                              <div className="max-w-xs truncate whitespace-nowrap" title={capture.installerName}>
+                                {capture.installerName || "N/A"}
+                              </div>
+                            </td>
+                            <td className="border-b p-3 text-sm">
+                              <div className="max-w-xs truncate whitespace-nowrap" title={capture.newMeterNumber}>
+                                {capture.newMeterNumber || "N/A"}
+                              </div>
+                            </td>
+                            <td className="border-b p-3 text-sm">
+                              <div className="max-w-xs truncate whitespace-nowrap" title={capture.oldMeterNumber}>
+                                {capture.oldMeterNumber || "N/A"}
+                              </div>
+                            </td>
+                            <td className="border-b p-3 text-sm">
                               <span
                                 className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(
                                   capture.status
@@ -581,11 +645,11 @@ const MeterCapture: React.FC = () => {
                                 {getStatusLabel(capture.status)}
                               </span>
                             </td>
-                            <td className="border-b p-3 text-sm">
+                            {/* <td className="border-b p-3 text-sm">
                               <span className="whitespace-nowrap rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
                                 {getSourceLabel(capture.source)}
                               </span>
-                            </td>
+                            </td> */}
                             <td className="border-b p-3 text-sm">{new Date(capture.createdAtUtc).toLocaleString()}</td>
                             <td className="border-b p-3 text-sm">
                               {capture.processedAtUtc ? new Date(capture.processedAtUtc).toLocaleString() : "N/A"}

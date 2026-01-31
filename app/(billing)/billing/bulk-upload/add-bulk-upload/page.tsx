@@ -529,6 +529,10 @@ const FileManagementPage = () => {
       // Customer Bills Reading template
       headers = "CustomerAccountNo,PresentReading,PreviousReading,MonthYear"
       sampleRows = []
+    } else if (selectedUploadType === 3) {
+      // Feeder Energy Cap template
+      headers = "EnergyReceived,EnergyAdviced,FeederName"
+      sampleRows = []
     } else {
       // Default template for other upload types
       headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
@@ -554,6 +558,8 @@ const FileManagementPage = () => {
         ? "sample-bill-crucial-ops.csv"
         : selectedUploadType === 2
         ? "sample-customer-bills-reading.csv"
+        : selectedUploadType === 3
+        ? "sample-feeder-energy-cap.csv"
         : "sample_billing_bulk.csv"
     )
     link.style.visibility = "hidden"
