@@ -340,15 +340,8 @@ const Adjustments: React.FC = () => {
                 <p className="text-gray-600">View and manage bill adjustment records</p>
               </div>
               <div className="flex items-center gap-3">
-                <ButtonModule variant="outline" disabled={adjustmentsLoading}>
+                <ButtonModule variant="primary" disabled={adjustmentsLoading}>
                   Approve Bulk Adjust
-                </ButtonModule>
-                <ButtonModule
-                  onClick={() => router.push("/billing/adjustments/add-bulk-upload")}
-                  className="button-outlined flex items-center gap-2"
-                  icon={<VscCloudUpload />}
-                >
-                  Add Bulk Adjustments Upload
                 </ButtonModule>
               </div>
             </div>
