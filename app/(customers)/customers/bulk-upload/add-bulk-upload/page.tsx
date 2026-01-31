@@ -76,6 +76,32 @@ const FileManagementPage = () => {
     }
   }
 
+  // Helper function to get purpose based on upload type
+  const getPurpose = (uploadType: number | null): string => {
+    switch (uploadType) {
+      case 1:
+        return "customers-bulk-import"
+      case 11:
+        return "customers-setup-bulk"
+      case 5:
+        return "customers-info-update-bulk"
+      case 6:
+        return "customers-feeder-update-bulk"
+      case 7:
+        return "customers-tariff-change-bulk"
+      case 8:
+        return "customers-status-change-bulk"
+      case 9:
+        return "customers-stored-average-bulk"
+      case 10:
+        return "customers-srdt-update-bulk"
+      case 16:
+        return "meter-reading-stored-average-bulk"
+      default:
+        return "customers-bulk-import"
+    }
+  }
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedUploadType, setSelectedUploadType] = useState<number | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
@@ -300,22 +326,7 @@ const FileManagementPage = () => {
         fileName: selectedFile.name,
         contentType: selectedFile.type,
         sizeBytes: selectedFile.size,
-        purpose:
-          selectedUploadType === 11
-            ? "customers-setup-bulk"
-            : selectedUploadType === 5
-            ? "customers-info-update-bulk"
-            : selectedUploadType === 6
-            ? "customers-feeder-update-bulk"
-            : selectedUploadType === 7
-            ? "customers-tariff-change-bulk"
-            : selectedUploadType === 8
-            ? "customers-status-change-bulk"
-            : selectedUploadType === 9
-            ? "customers-stored-average-update-bulk"
-            : selectedUploadType === 10
-            ? "customers-srdt-update-bulk"
-            : "customers-bulk-import",
+        purpose: getPurpose(selectedUploadType),
         checksum,
         bulkInsertType: getBulkInsertType(selectedUploadType),
         jobType: selectedUploadType,

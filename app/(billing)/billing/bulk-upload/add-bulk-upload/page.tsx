@@ -76,6 +76,28 @@ const FileManagementPage = () => {
     }
   }
 
+  // Helper function to get purpose based on upload type
+  const getPurpose = (uploadType: number | null): string => {
+    switch (uploadType) {
+      case 17:
+        return "postpaid-missing-bills-bulk"
+      case 18:
+        return "postpaid-past-bills-bulk"
+      case 19:
+        return "postpaid-bill-adjustments-bulk"
+      case 20:
+        return "postpaid-bill-finalize-bulk"
+      case 21:
+        return "postpaid-bill-crucial-bulk"
+      case 3:
+        return "feeder-energy-caps-bulk"
+      case 2:
+        return "postpaid-meter-readings-bulk"
+      default:
+        return "billing-bulk-import" // fallback
+    }
+  }
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedUploadType, setSelectedUploadType] = useState<number | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
@@ -300,7 +322,7 @@ const FileManagementPage = () => {
         fileName: selectedFile.name,
         contentType: selectedFile.type,
         sizeBytes: selectedFile.size,
-        purpose: "billing-bulk-import",
+        purpose: getPurpose(selectedUploadType),
         checksum,
         bulkInsertType: getBulkInsertType(selectedUploadType),
         jobType: selectedUploadType,
@@ -529,6 +551,10 @@ const FileManagementPage = () => {
       // Customer Bills Reading template
       headers = "CustomerAccountNo,PresentReading,PreviousReading,MonthYear"
       sampleRows = []
+    } else if (selectedUploadType === 3) {
+      // Feeder Energy Cap template
+      headers = "EnergyReceived,EnergyAdviced,FeederName"
+      sampleRows = []
     } else {
       // Default template for other upload types
       headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
@@ -554,6 +580,8 @@ const FileManagementPage = () => {
         ? "sample-bill-crucial-ops.csv"
         : selectedUploadType === 2
         ? "sample-customer-bills-reading.csv"
+        : selectedUploadType === 3
+        ? "sample-feeder-energy-cap.csv"
         : "sample_billing_bulk.csv"
     )
     link.style.visibility = "hidden"

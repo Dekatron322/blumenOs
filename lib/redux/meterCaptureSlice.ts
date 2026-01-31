@@ -12,6 +12,11 @@ export interface MeterCaptureData {
   referenceId: string
   source: string
   error: string
+  purpose: string
+  accountNumber: string
+  installerName: string
+  newMeterNumber: string
+  oldMeterNumber: string
   createdAtUtc: string
   processedAtUtc: string
 }
@@ -43,6 +48,8 @@ export interface MeterCaptureRequestParams {
   status?: 1 | 2 | 3
   referenceId?: string
   source?: string
+  accountNumber?: string
+  meterNumber?: string
   fromUtc?: string
   toUtc?: string
 }
@@ -96,7 +103,18 @@ export const fetchMeterCaptures = createAsyncThunk(
   "meterCapture/fetchMeterCaptures",
   async (params: MeterCaptureRequestParams, { rejectWithValue }) => {
     try {
-      const { pageNumber, pageSize, vendorId, status, referenceId, source, fromUtc, toUtc } = params
+      const {
+        pageNumber,
+        pageSize,
+        vendorId,
+        status,
+        referenceId,
+        source,
+        accountNumber,
+        meterNumber,
+        fromUtc,
+        toUtc,
+      } = params
 
       const requestParams: any = {
         PageNumber: pageNumber,
@@ -108,6 +126,8 @@ export const fetchMeterCaptures = createAsyncThunk(
       if (status !== undefined) requestParams.Status = status
       if (referenceId !== undefined) requestParams.ReferenceId = referenceId
       if (source !== undefined) requestParams.Source = source
+      if (accountNumber !== undefined) requestParams.AccountNumber = accountNumber
+      if (meterNumber !== undefined) requestParams.MeterNumber = meterNumber
       if (fromUtc !== undefined) requestParams.FromUtc = fromUtc
       if (toUtc !== undefined) requestParams.ToUtc = toUtc
 
