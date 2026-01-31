@@ -478,6 +478,49 @@ export interface FinalizeSingleBillResponse {
   data: PostpaidBill
 }
 
+// Adjustments Interfaces
+export interface Adjustment {
+  id: number
+  postpaidBillId: number
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  billingPeriodId: number
+  period: string
+  amount: number
+  status: number
+  csvBulkInsertionJobId: number
+  uploadedByUserId: number
+  uploadedByName: string
+  approvedByUserId: number
+  approvedByName: string
+  approvedAtUtc: string
+  createdAt: string
+}
+
+export interface AdjustmentsResponse {
+  isSuccess: boolean
+  message: string
+  data: Adjustment[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface AdjustmentsRequestParams {
+  pageNumber: number
+  pageSize: number
+  billingPeriodId?: number
+  period?: string
+  customerId?: number
+  areaOfficeId?: number
+  csvBulkInsertionJobId?: number
+  status?: number
+}
+
 // Postpaid Billing State
 interface PostpaidBillingState {
   // Postpaid bills list state
@@ -618,6 +661,20 @@ interface PostpaidBillingState {
   finalizeSingleBillMessage: string | null
   finalizedSingleBill: PostpaidBill | null
 
+  // Adjustments state
+  adjustments: Adjustment[]
+  adjustmentsLoading: boolean
+  adjustmentsError: string | null
+  adjustmentsSuccess: boolean
+  adjustmentsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+
   // Search/filter state
   filters: {
     period?: string
@@ -746,6 +803,18 @@ const initialState: PostpaidBillingState = {
   finalizeSingleBillSuccess: false,
   finalizeSingleBillMessage: null,
   finalizedSingleBill: null,
+  adjustments: [],
+  adjustmentsLoading: false,
+  adjustmentsError: null,
+  adjustmentsSuccess: false,
+  adjustmentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+    hasNext: false,
+    hasPrevious: false,
+  },
   filters: {},
   billingJobsFilters: {},
 }
@@ -1278,6 +1347,41 @@ export const finalizeSingleBill = createAsyncThunk(
   }
 )
 
+// Fetch Adjustments Async Thunk
+export const fetchAdjustments = createAsyncThunk(
+  "postpaidBilling/fetchAdjustments",
+  async (params: AdjustmentsRequestParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, billingPeriodId, period, customerId, areaOfficeId, csvBulkInsertionJobId, status } =
+        params
+
+      const response = await api.get<AdjustmentsResponse>(buildApiUrl(API_ENDPOINTS.POSTPAID_BILLING.ADJUSTMENTS), {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(billingPeriodId && { BillingPeriodId: billingPeriodId }),
+          ...(period && { Period: period }),
+          ...(customerId && { CustomerId: customerId }),
+          ...(areaOfficeId && { AreaOfficeId: areaOfficeId }),
+          ...(csvBulkInsertionJobId && { CsvBulkInsertionJobId: csvBulkInsertionJobId }),
+          ...(status !== undefined && { Status: status }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch adjustments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch adjustments")
+      }
+      return rejectWithValue(error.message || "Network error during adjustments fetch")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -1468,6 +1572,22 @@ const postpaidSlice = createSlice({
       state.finalizedSingleBill = null
     },
 
+    // Clear adjustments status
+    clearAdjustmentsStatus: (state) => {
+      state.adjustmentsLoading = false
+      state.adjustmentsError = null
+      state.adjustmentsSuccess = false
+      state.adjustments = []
+      state.adjustmentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
+    },
+
     // Reset billing state
     resetBillingState: (state) => {
       state.bills = []
@@ -1567,6 +1687,23 @@ const postpaidSlice = createSlice({
       state.createMeterReadingSuccess = false
       state.createMeterReadingMessage = null
       state.createdMeterReading = null
+      state.finalizeSingleBillLoading = false
+      state.finalizeSingleBillError = null
+      state.finalizeSingleBillSuccess = false
+      state.finalizeSingleBillMessage = null
+      state.finalizedSingleBill = null
+      state.adjustmentsLoading = false
+      state.adjustmentsError = null
+      state.adjustmentsSuccess = false
+      state.adjustments = []
+      state.adjustmentsPagination = {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 10,
+        hasNext: false,
+        hasPrevious: false,
+      }
       state.filters = {}
       state.billingJobsFilters = {}
     },
@@ -1593,6 +1730,12 @@ const postpaidSlice = createSlice({
     setChangeRequestsByBillingJobPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.changeRequestsByBillingJobPagination.currentPage = action.payload.page
       state.changeRequestsByBillingJobPagination.pageSize = action.payload.pageSize
+    },
+
+    // Set adjustments pagination
+    setAdjustmentsPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+      state.adjustmentsPagination.currentPage = action.payload.page
+      state.adjustmentsPagination.pageSize = action.payload.pageSize
     },
 
     // Set filters
@@ -2117,6 +2260,40 @@ const postpaidSlice = createSlice({
         state.finalizeSingleBillMessage = null
         state.finalizedSingleBill = null
       })
+      // Fetch adjustments cases
+      .addCase(fetchAdjustments.pending, (state) => {
+        state.adjustmentsLoading = true
+        state.adjustmentsError = null
+        state.adjustmentsSuccess = false
+      })
+      .addCase(fetchAdjustments.fulfilled, (state, action: PayloadAction<AdjustmentsResponse>) => {
+        state.adjustmentsLoading = false
+        state.adjustmentsSuccess = true
+        state.adjustments = action.payload.data
+        state.adjustmentsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+        state.adjustmentsError = null
+      })
+      .addCase(fetchAdjustments.rejected, (state, action) => {
+        state.adjustmentsLoading = false
+        state.adjustmentsError = (action.payload as string) || "Failed to fetch adjustments"
+        state.adjustmentsSuccess = false
+        state.adjustments = []
+        state.adjustmentsPagination = {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1,
+          pageSize: 10,
+          hasNext: false,
+          hasPrevious: false,
+        }
+      })
   },
 })
 
@@ -2139,11 +2316,13 @@ export const {
   clearCreateManualBillStatus,
   clearCreateMeterReadingStatus,
   clearFinalizeSingleBillStatus,
+  clearAdjustmentsStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
   setChangeRequestsPagination,
   setChangeRequestsByBillingJobPagination,
+  setAdjustmentsPagination,
   setFilters,
   setBillingJobsFilters,
   clearFilters,

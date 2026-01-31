@@ -12,6 +12,7 @@ import {
   processBillingBulkUpload,
   processFeederEnergyCapBulkUpload,
   processFinalizeBillingBulkUpload,
+  processMeterReadingGeneralBulkUpload,
   processMissingPostpaidBillingBulkUpload,
   processPastPostpaidBillingBulkUpload,
 } from "lib/redux/fileManagementSlice"
@@ -44,12 +45,13 @@ const FileManagementPage = () => {
 
   // Upload type options
   const uploadTypeOptions = [
-    { name: "Bill Generate Missing", value: 17 },
-    { name: "Bill Generate Past", value: 18 },
+    { name: "Generate Missing Bills", value: 17 },
+    // { name: "Bill Generate Past", value: 18 },
     { name: "Bill Adjustment", value: 19 },
-    { name: "Bill Finalize", value: 20 },
+    { name: "Mark Bills for Printing", value: 20 },
     { name: "Bill Crucial Ops", value: 21 },
-    { name: "Feeder Energy Cap Import", value: 3 },
+    { name: "Feeder Energy Cap", value: 3 },
+    { name: "Customer Bills Reading", value: 2 },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -67,6 +69,8 @@ const FileManagementPage = () => {
         return "bill-crucial-ops"
       case 3:
         return "feeder-energy-cap"
+      case 2:
+        return "meter-reading"
       default:
         return "bill-generate-missing" // fallback
     }
@@ -367,8 +371,8 @@ const FileManagementPage = () => {
               setUploadSuccess(true)
 
               // Show success notification
-              notify("success", "Upload Successful!", {
-                description: `File ${selectedFile.name} has been processed successfully`,
+              notify("success", "Upload Successfully Queued!", {
+                description: `File ${selectedFile.name} has been queued for processing`,
                 duration: 5000,
               })
 
@@ -396,6 +400,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 3) {
                   // Feeder Energy Cap Import - use feeder energy cap endpoint with confirm
                   bulkResult = await dispatch(processFeederEnergyCapBulkUpload({ fileId, confirm: true })).unwrap()
+                } else if (selectedUploadType === 2) {
+                  // Meter Reading Import - use meter reading bulk upload endpoint
+                  bulkResult = await dispatch(processMeterReadingGeneralBulkUpload({ fileId, confirm: true })).unwrap()
                 } else {
                   // Other billing bulk upload types - fallback to general billing endpoint
                   bulkResult = await dispatch(processBillingBulkUpload({ fileId })).unwrap()
@@ -412,8 +419,8 @@ const FileManagementPage = () => {
                 // Show bulk upload success notification
                 const succeededRows =
                   (bulkResult.data as any)?.succeededRows || (bulkResult.data as any)?.job?.succeededRows || 0
-                notify("success", "Bulk Upload Processed!", {
-                  description: `${succeededRows} valid rows processed successfully`,
+                notify("success", "Processing Started!", {
+                  description: `${succeededRows} billing records queued for processing`,
                   duration: 6000,
                 })
               } catch (bulkError) {
@@ -498,27 +505,63 @@ const FileManagementPage = () => {
 
   // Generate and download sample CSV file
   const downloadSampleFile = useCallback(() => {
-    const sampleData = [
-      "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status",
-      "NERC123456789,John Doe,123 Main St,Kaduna,08012345678,john.doe@email.com,RESIDENTIAL,FEDERATION,ACTIVE",
-      "NERC123456790,Jane Smith,456 Oak Ave,Abuja,07098765432,jane.smith@email.com,COMMERCIAL,NATIONAL,ACTIVE",
-      "NERC123456791,Bob Johnson,789 Pine Rd,Lagos,09011223344,bob.johnson@email.com,INDUSTRIAL,REGIONAL,INACTIVE",
-      "NERC123456792,Alice Brown,321 Elm St,Port Harcourt,08055667788,alice.brown@email.com,RESIDENTIAL,LOCAL,ACTIVE",
-      "NERC123456793,Charlie Wilson,654 Maple Dr,Kano,07033445566,charlie.wilson@email.com,COMMERCIAL,STATE,ACTIVE",
-    ].join("\n")
+    let headers: string
+    let sampleRows: string[]
+
+    // Generate different templates based on upload type
+    if (selectedUploadType === 17) {
+      // Generate Missing Bills template
+      headers = "CustomerAccountNo"
+      sampleRows = []
+    } else if (selectedUploadType === 19) {
+      // Bill Adjustment template
+      headers = "CustomerAccountNo,MonthYear,Amount"
+      sampleRows = []
+    } else if (selectedUploadType === 20) {
+      // Mark Bills for Printing template
+      headers = "CustomerAccountNo,MonthYear"
+      sampleRows = []
+    } else if (selectedUploadType === 21) {
+      // Bill Crucial Ops template
+      headers = "CustomerAccountNo,MonthYear"
+      sampleRows = []
+    } else if (selectedUploadType === 2) {
+      // Customer Bills Reading template
+      headers = "CustomerAccountNo,PresentReading,PreviousReading,MonthYear"
+      sampleRows = []
+    } else {
+      // Default template for other upload types
+      headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
+      sampleRows = []
+    }
+
+    const sampleData = [headers, ...sampleRows].join("\n")
 
     const blob = new Blob([sampleData], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
 
     link.setAttribute("href", url)
-    link.setAttribute("download", "sample_customers_bulk.csv")
+    link.setAttribute(
+      "download",
+      selectedUploadType === 17
+        ? "sample-generate-missing-bills.csv"
+        : selectedUploadType === 19
+        ? "sample-bill-adjustment.csv"
+        : selectedUploadType === 20
+        ? "sample-mark-bills-for-printing.csv"
+        : selectedUploadType === 21
+        ? "sample-bill-crucial-ops.csv"
+        : selectedUploadType === 2
+        ? "sample-customer-bills-reading.csv"
+        : "sample_billing_bulk.csv"
+    )
     link.style.visibility = "hidden"
 
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }, [])
+  }, [selectedUploadType])
 
   // Format file size
   const formatFileSize = (bytes: number): string => {

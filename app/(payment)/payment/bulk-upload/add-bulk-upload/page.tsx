@@ -305,8 +305,8 @@ const FileManagementPage = () => {
               setUploadSuccess(true)
 
               // Show success notification
-              notify("success", "Upload Successful!", {
-                description: `File ${selectedFile.name} has been processed successfully`,
+              notify("success", "Upload Successfully Queued!", {
+                description: `File ${selectedFile.name} has been queued for processing`,
                 duration: 5000,
               })
 
@@ -324,8 +324,8 @@ const FileManagementPage = () => {
                 console.log("Bulk upload data:", bulkResult.data)
 
                 // Show bulk upload success notification
-                notify("success", "Bulk Upload Processed!", {
-                  description: `${bulkResult.data?.preview?.validRows || 0} valid rows processed successfully`,
+                notify("success", "Processing Started!", {
+                  description: `${bulkResult.data?.preview?.validRows || 0} payment records queued for processing`,
                   duration: 6000,
                 })
               } catch (bulkError) {

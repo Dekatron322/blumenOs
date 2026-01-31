@@ -22,13 +22,23 @@ import {
 import { VscEye } from "react-icons/vsc"
 import MeterCaptureDetailsModal from "components/ui/Modal/MeterCaptureDetailsModal"
 import { notify } from "components/ui/Notification/Notification"
+import { getVendorEnumerationStatusText, VendorEnumerationStatus } from "lib/types/vendorEnumeration"
 
 // Status options for meter captures
 const statusOptions = [
   { value: "", label: "All Statuses" },
-  { value: "1", label: "Pending" },
-  { value: "2", label: "Processing" },
-  { value: "3", label: "Completed" },
+  {
+    value: VendorEnumerationStatus.Captured.toString(),
+    label: getVendorEnumerationStatusText(VendorEnumerationStatus.Captured),
+  },
+  {
+    value: VendorEnumerationStatus.Processed.toString(),
+    label: getVendorEnumerationStatusText(VendorEnumerationStatus.Processed),
+  },
+  {
+    value: VendorEnumerationStatus.Failed.toString(),
+    label: getVendorEnumerationStatusText(VendorEnumerationStatus.Failed),
+  },
 ]
 
 // Source options for meter captures
@@ -294,22 +304,17 @@ const MeterCapture: React.FC = () => {
   }
 
   const getStatusLabel = (status: number) => {
-    const option = statusOptions.find((opt) => opt.value === status.toString())
-    return option?.label || `Status ${status}`
+    return getVendorEnumerationStatusText(status as VendorEnumerationStatus)
   }
 
   const getStatusColor = (status: number) => {
     switch (status) {
-      case 1:
+      case VendorEnumerationStatus.Captured:
         return "text-yellow-600 bg-yellow-50"
-      case 2:
+      case VendorEnumerationStatus.Processed:
         return "text-blue-600 bg-blue-50"
-      case 3:
-        return "text-green-600 bg-green-50"
-      case 4:
+      case VendorEnumerationStatus.Failed:
         return "text-red-600 bg-red-50"
-      case 5:
-        return "text-gray-600 bg-gray-50"
       default:
         return "text-gray-600 bg-gray-50"
     }
