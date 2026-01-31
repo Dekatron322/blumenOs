@@ -94,7 +94,7 @@ const FileManagementPage = () => {
       case 9:
         return "customers-stored-average-bulk"
       case 10:
-        return "customers-srdt-update-bulk"
+        return "customers-srdt-bulk"
       case 16:
         return "meter-reading-stored-average-bulk"
       default:
