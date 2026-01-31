@@ -34,10 +34,10 @@ const FileManagementPage = () => {
 
   // Upload type options
   const uploadTypeOptions = [
-    { name: "Meter Upload Import", value: 12 },
-    { name: "Meter Reading Import", value: 2 },
-    { name: "Meter Reading Account Import", value: 15 },
-    { name: "Meter Reading Stored Average Import", value: 16 },
+    { name: "New Meters", value: 12 },
+    // { name: "Meter Reading Import", value: 2 },
+    // { name: "Meter Reading Account Import", value: 15 },
+    // { name: "Meter Reading Stored Average Import", value: 16 },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -356,8 +356,8 @@ const FileManagementPage = () => {
               setUploadSuccess(true)
 
               // Show success notification
-              notify("success", "Upload Successful!", {
-                description: `File ${selectedFile.name} has been processed successfully`,
+              notify("success", "Upload Successfully Queued!", {
+                description: `File ${selectedFile.name} has been queued for processing`,
                 duration: 5000,
               })
 
@@ -394,8 +394,8 @@ const FileManagementPage = () => {
                 // Show bulk upload success notification
                 const succeededRows =
                   (bulkResult.data as any)?.succeededRows || (bulkResult.data as any)?.job?.succeededRows || 0
-                notify("success", "Bulk Upload Processed!", {
-                  description: `${succeededRows} valid rows processed successfully`,
+                notify("success", "Processing Started!", {
+                  description: `${succeededRows} meter records queued for processing`,
                   duration: 6000,
                 })
               } catch (bulkError) {
@@ -479,27 +479,35 @@ const FileManagementPage = () => {
 
   // Generate and download sample CSV file
   const downloadSampleFile = useCallback(() => {
-    const sampleData = [
-      "MeterNumber,MeterType,Location,InstallationDate,Status,Reading",
-      "MTR001,Residential,Block A Flat 1,2023-01-15,Active,1250.5",
-      "MTR002,Commercial,Block B Shop 2,2023-02-20,Active,3450.8",
-      "MTR003,Industrial,Block C Unit 5,2023-03-10,Active,8900.2",
-      "MTR004,Residential,Block A Flat 3,2023-01-25,Active,1180.3",
-      "MTR005,Commercial,Block B Shop 4,2023-02-15,Active,2670.9",
-    ].join("\n")
+    let headers: string
+    let sampleRows: string[]
+
+    // Generate different templates based on upload type
+    if (selectedUploadType === 12) {
+      // New Meters template
+      headers =
+        "MeterBrand,MeterNumber,MeterLocation,IsMapEnable,MapCode,TariffIndex,IsSmartMeter,Notes,CustomerAccountNo,InstallationDate,IsPPM,IsReadyInstallation,IsMeterInstalled,IsMeterActive,FactoryLoadedUnit,MeterType,SGC,KRN,InitialDeposit,PayBackPeriod,DeductionRate,IsMapDebtor,PercentageFirstVending,MeterCost,SealNumber,PoleNumber"
+      sampleRows = []
+    } else {
+      // Default template for other upload types
+      headers = "MeterNumber,MeterType,Location,InstallationDate,Status,Reading"
+      sampleRows = []
+    }
+
+    const sampleData = [headers, ...sampleRows].join("\n")
 
     const blob = new Blob([sampleData], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
 
     link.setAttribute("href", url)
-    link.setAttribute("download", "sample_meters_bulk.csv")
+    link.setAttribute("download", selectedUploadType === 12 ? "sample-new-meters.csv" : "sample_meters_bulk.csv")
     link.style.visibility = "hidden"
 
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }, [])
+  }, [selectedUploadType])
 
   // Format file size
   const formatFileSize = (bytes: number): string => {

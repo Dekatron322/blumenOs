@@ -241,6 +241,12 @@ export const API_ENDPOINTS = {
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
   },
 
+  METER_CAPTURE: {
+    GET: "/vendors/enumerations",
+    RETRY_SINGLE_FAILED: "/vendors/enumerations/{id}/retry",
+    RETRY_ALL_FAILED: "/vendors/enumerations/retry-failed",
+  },
+
   STATUS_MAP: {
     GET: "/customers/map/customers",
     ASSETS: "/customers/map/assets",
@@ -271,6 +277,7 @@ export const API_ENDPOINTS = {
     MANUAL_BILLS: "/billing/postpaid/manual-bills",
     METER_READINGS: "/billing/postpaid/meter-readings",
     FINALIZE_SINGLE_BILL: "/billing/postpaid/{id}/finalize",
+    ADJUSTMENTS: "/billing/postpaid/bills/adjustments",
   },
 
   BILLING_PERIODS: {

@@ -15,6 +15,7 @@ import {
   processCustomerStatusChangeBulkUpload,
   processCustomerStoredAverageUpdateBulkUpload,
   processCustomerTariffChangeBulkUpload,
+  processMeterReadingStoredAverageUpdateBulkUpload,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -38,14 +39,15 @@ const FileManagementPage = () => {
 
   // Upload type options
   const uploadTypeOptions = [
-    { name: "Customer Import", value: 1 },
-    { name: "Customer Setup Import", value: 11 },
+    { name: "New Customers", value: 1 },
+    { name: "Import Existing Customers", value: 11 },
     { name: "Customer Info Update", value: 5 },
-    { name: "Customer Feeder Update", value: 6 },
+    // { name: "Customer Feeder Update", value: 6 },
     { name: "Customer Tariff Change", value: 7 },
-    { name: "Customer Status Change", value: 8 },
+    { name: "Customer Status Code Change", value: 8 },
     { name: "Customer Stored Average Update", value: 9 },
     { name: "Customer SR DT Update", value: 10 },
+    { name: "Customer Bill Energy", value: 16 },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -67,6 +69,8 @@ const FileManagementPage = () => {
         return "customer-stored-average"
       case 10:
         return "customer-srdt"
+      case 16:
+        return "meter-reading-stored-average"
       default:
         return "customers" // fallback
     }
@@ -382,8 +386,8 @@ const FileManagementPage = () => {
               setUploadSuccess(true)
 
               // Show success notification
-              notify("success", "Upload Successful!", {
-                description: `File ${selectedFile.name} has been processed successfully`,
+              notify("success", "Upload Successfully Queued!", {
+                description: `File ${selectedFile.name} has been queued for processing`,
                 duration: 5000,
               })
 
@@ -414,6 +418,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 10) {
                   // Customer SRDT Update
                   bulkResult = await dispatch(processCustomerSrdtUpdateBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 16) {
+                  // Customer Bill Energy
+                  bulkResult = await dispatch(processMeterReadingStoredAverageUpdateBulkUpload({ fileId })).unwrap()
                 } else {
                   // Regular Customer Import and other types
                   bulkResult = await dispatch(processCustomerBulkUpload({ fileId })).unwrap()
@@ -428,8 +435,8 @@ const FileManagementPage = () => {
                 console.log("Bulk upload data:", bulkResult.data)
 
                 // Show bulk upload success notification
-                notify("success", "Bulk Upload Processed!", {
-                  description: `${bulkResult.data?.succeededRows || 0} valid rows processed successfully`,
+                notify("success", "Processing Started!", {
+                  description: `${bulkResult.data?.succeededRows || 0} customer records queued for processing`,
                   duration: 6000,
                 })
               } catch (bulkError) {
@@ -513,27 +520,70 @@ const FileManagementPage = () => {
 
   // Generate and download sample CSV file
   const downloadSampleFile = useCallback(() => {
-    const sampleData = [
-      "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status",
-      "NERC123456789,John Doe,123 Main St,Kaduna,08012345678,john.doe@email.com,RESIDENTIAL,FEDERATION,ACTIVE",
-      "NERC123456790,Jane Smith,456 Oak Ave,Abuja,07098765432,jane.smith@email.com,COMMERCIAL,NATIONAL,ACTIVE",
-      "NERC123456791,Bob Johnson,789 Pine Rd,Lagos,09011223344,bob.johnson@email.com,INDUSTRIAL,REGIONAL,INACTIVE",
-      "NERC123456792,Alice Brown,321 Elm St,Port Harcourt,08055667788,alice.brown@email.com,RESIDENTIAL,LOCAL,ACTIVE",
-      "NERC123456793,Charlie Wilson,654 Maple Dr,Kano,07033445566,charlie.wilson@email.com,COMMERCIAL,STATE,ACTIVE",
-    ].join("\n")
+    let headers: string
+    let sampleRows: string[]
+
+    // Generate different templates based on upload type
+    if (selectedUploadType === 11) {
+      // Import Existing Customers template
+      headers =
+        "CustomerName,TariffCode,StatusCode,PhoneNumber,EmailAdddress,CustomerAccountNo,CustomerAddress1,CustomerAddress2,FeederName,TransformerDescription,DTNumber,EmployeeNo,CustomerCity,CustomerState,BusinessUnit,StoredAverage,IsPPM,Longitude,Latitude,IsSeparation,MotherAccountNumber"
+      sampleRows = []
+    } else if (selectedUploadType === 7) {
+      // Customer Tariff Change template
+      headers = "CustomerAccountNo,TariffCode"
+      sampleRows = []
+    } else if (selectedUploadType === 8) {
+      // Customer Status Code Change template
+      headers = "CustomerAccountNo,StatusCodeChange"
+      sampleRows = []
+    } else if (selectedUploadType === 9) {
+      // Customer Stored Average Update template
+      headers = "CustomerAccountNo,TariffCode"
+      sampleRows = []
+    } else if (selectedUploadType === 10) {
+      // Customer SR DT Update template
+      headers = "DssCode,EmployeeNo,CustomerAccountNo"
+      sampleRows = []
+    } else if (selectedUploadType === 16) {
+      // Customer Bill Energy template
+      headers = "CustomerAccountNo,CustomerStoredAverage,MonthYear"
+      sampleRows = []
+    } else {
+      // Default template for other upload types
+      headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
+      sampleRows = []
+    }
+
+    const sampleData = [headers, ...sampleRows].join("\n")
 
     const blob = new Blob([sampleData], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
 
     link.setAttribute("href", url)
-    link.setAttribute("download", "sample_customers_bulk.csv")
+    link.setAttribute(
+      "download",
+      selectedUploadType === 11
+        ? "sample-import-existing-customers.csv"
+        : selectedUploadType === 7
+        ? "sample-customer-tariff-change.csv"
+        : selectedUploadType === 8
+        ? "sample-customer-status-code-change.csv"
+        : selectedUploadType === 9
+        ? "sample-customer-stored-average-update.csv"
+        : selectedUploadType === 10
+        ? "sample-customer-sr-dt-update.csv"
+        : selectedUploadType === 16
+        ? "sample-customer-bill-energy.csv"
+        : "sample_customers_bulk.csv"
+    )
     link.style.visibility = "hidden"
 
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }, [])
+  }, [selectedUploadType])
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
