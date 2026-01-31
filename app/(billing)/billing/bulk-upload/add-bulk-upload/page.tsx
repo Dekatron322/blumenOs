@@ -76,6 +76,28 @@ const FileManagementPage = () => {
     }
   }
 
+  // Helper function to get purpose based on upload type
+  const getPurpose = (uploadType: number | null): string => {
+    switch (uploadType) {
+      case 17:
+        return "postpaid-missing-bills-bulk"
+      case 18:
+        return "postpaid-past-bills-bulk"
+      case 19:
+        return "postpaid-bill-adjustments-bulk"
+      case 20:
+        return "postpaid-bill-finalize-bulk"
+      case 21:
+        return "postpaid-bill-crucial-bulk"
+      case 3:
+        return "feeder-energy-caps-bulk"
+      case 2:
+        return "postpaid-meter-readings-bulk"
+      default:
+        return "billing-bulk-import" // fallback
+    }
+  }
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedUploadType, setSelectedUploadType] = useState<number | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
@@ -300,7 +322,7 @@ const FileManagementPage = () => {
         fileName: selectedFile.name,
         contentType: selectedFile.type,
         sizeBytes: selectedFile.size,
-        purpose: "billing-bulk-import",
+        purpose: getPurpose(selectedUploadType),
         checksum,
         bulkInsertType: getBulkInsertType(selectedUploadType),
         jobType: selectedUploadType,
