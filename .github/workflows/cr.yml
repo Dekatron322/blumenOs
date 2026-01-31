@@ -1,13 +1,18 @@
 name: Code Review
+
 permissions:
   contents: read
   pull-requests: write
+
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
+  workflow_dispatch: {}
+  # Optional: keep PR triggers too
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - reopened
+  #     - synchronize
+
 jobs:
   test:
     runs-on: ubuntu-latest
