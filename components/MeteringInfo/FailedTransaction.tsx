@@ -8,9 +8,9 @@ import { SearchModule } from "components/ui/Search/search-module"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
   clearRetryFailedPayment,
-  fetchFailedPayments,
   FailedPayment,
   FailedPaymentParams,
+  fetchFailedPayments,
   retryFailedPayment,
 } from "lib/redux/metersSlice"
 import { ButtonModule } from "components/ui/Button/Button"
