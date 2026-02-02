@@ -9,6 +9,7 @@ import { Download, Printer } from "lucide-react"
 import { PostpaidBill } from "lib/redux/postpaidSlice"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
+import { Adjustment } from "../../../lib/redux/postpaidSlice"
 
 interface PostpaidBillDetailsModalProps {
   isOpen: boolean
@@ -283,515 +284,737 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
   const invoiceValues = calculateInvoiceValues()
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      onClick={onRequestClose}
-    >
+    <>
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: A5;
+            margin: 0;
+          }
+
+          body {
+            margin: 0;
+            padding: 0;
+            width: 420pt;
+            height: 595pt;
+            background: white;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-hide {
+            display: none !important;
+          }
+
+          .a5-container {
+            width: 420pt !important;
+            height: 595pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            background: white !important;
+          }
+
+          .a5-content {
+            padding: 10pt !important;
+            font-size: 8pt !important;
+          }
+
+          .a5-small-text {
+            font-size: 7pt !important;
+          }
+
+          .a5-header {
+            height: 30pt !important;
+          }
+
+          .a5-section {
+            margin-bottom: 8pt !important;
+          }
+
+          .a5-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 4pt !important;
+          }
+
+          .a5-col {
+            padding: 4pt !important;
+          }
+
+          .force-black-white {
+            color: black !important;
+            background-color: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-bg-green {
+            background-color: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-bg-light-green {
+            background-color: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-white-text {
+            color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-hide-label {
+            display: none !important;
+          }
+
+          .print-show-value {
+            display: block !important;
+            text-align: right !important;
+            font-weight: normal !important;
+            justify-content: flex-end !important;
+            margin-left: auto !important;
+            width: 100% !important;
+          }
+
+          .print-show-value > * {
+            text-align: right !important;
+            justify-content: flex-end !important;
+          }
+
+          .bg-white .print-show-value {
+            text-align: right !important;
+            justify-content: flex-end !important;
+            margin-left: auto !important;
+            width: 100% !important;
+          }
+
+          [style*="background-color"] {
+            background-color: white !important;
+          }
+
+          .print-no-border {
+            border: none !important;
+          }
+
+          .print-no-border-r {
+            border-right: none !important;
+          }
+
+          .print-no-border-t {
+            border-top: none !important;
+          }
+
+          .print-no-border-b {
+            border-bottom: none !important;
+          }
+
+          .print-no-border-l {
+            border-left: none !important;
+          }
+        }
+      `}</style>
+
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 20, opacity: 0 }}
-        transition={{ type: "spring", damping: 25 }}
-        className="relative flex h-[95vh] w-[90vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm print:bg-white print:backdrop-blur-0"
+        onClick={onRequestClose}
       >
-        <div className="flex w-full items-center justify-between border-b bg-white p-6">
-          <h2 className="text-xl font-bold text-gray-900 print:hidden">Invoice Details</h2>
-          <button
-            onClick={onRequestClose}
-            className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 print:hidden"
-          >
-            <CloseIcon />
-          </button>
-        </div>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 20, opacity: 0 }}
+          transition={{ type: "spring", damping: 25 }}
+          className="a5-container relative flex h-[95vh] w-[90vw] max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl print:h-[595px] print:w-[420px] print:max-w-none print:rounded-none print:shadow-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex w-full items-center justify-between border-b bg-white p-6 print:hidden">
+            <h2 className="text-xl font-bold text-gray-900">Invoice Details</h2>
+            <button
+              onClick={onRequestClose}
+              className="flex size-8 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600"
+            >
+              <CloseIcon />
+            </button>
+          </div>
 
-        <div className="relative flex-1 overflow-y-auto">
-          <div className="relative z-10 p-8">
-            {loading ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="flex flex-col items-center gap-3">
-                  <svg
-                    className="size-8 animate-spin text-blue-600"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <p className="text-gray-600">Loading bill details...</p>
+          <div className="relative flex-1 overflow-y-auto print:overflow-visible">
+            <div className="a5-content relative z-10 p-8 print:p-4">
+              {loading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="flex flex-col items-center gap-3">
+                    <svg
+                      className="size-8 animate-spin text-blue-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <p className="text-gray-600">Loading bill details...</p>
+                  </div>
                 </div>
-              </div>
-            ) : bill ? (
-              <>
-                {/* Visible invoice content (also used for PDF capture) */}
-                <div ref={invoiceRef} className="">
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="mb-8 text-center">
-                      <img src="/kad.svg" alt="KAD-ELEC Logo" className="print:hidden" />
-                    </div>
-                    <div className="mb-8 flex flex-1 justify-center">
-                      <canvas ref={barcodeRef} className="h-14 w-52" />
-                    </div>
-                    <div className="mb-8 text-center">
-                      <h1 className="mb-2 font-bold text-gray-900">KAD-ELEC.</h1>
-                      <div className="bg-[#6EAD2A] p-1 text-sm font-semibold text-white">
-                        #{bill.customerAccountNumber}
+              ) : bill ? (
+                <>
+                  <div ref={invoiceRef} className="w-full print:p-0">
+                    {/* Header - A5 Optimized */}
+                    <div className="a5-header mb-6 flex items-center justify-between print:mb-2">
+                      <div className="w-24 text-center print:w-20">
+                        <img src="/kad.svg" alt="KAD-ELEC Logo" className="h-10 print:hidden" />
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Customer Information Grid */}
-
-                  {/* Billing Details */}
-                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff] print:text-white">
-                    <p>BILLING INFORMATION</p>
-                  </div>
-                  <div className=" grid grid-cols-2  border bg-[#FFFFFF]">
-                    <div className="space-y-3">
-                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
-                        <p>AREA OFFICE</p>
-                        <p>{bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}</p>
+                      <div className="flex flex-1 justify-center">
+                        <canvas ref={barcodeRef} className="h-12 w-40 print:h-10 print:w-36" />
                       </div>
-                      <div className="flex flex-col bg-[#FFFFFFF]">
-                        <div className="flex w-full justify-between px-4 ">
-                          <span className="text-sm font-semibold text-gray-600"># Bill:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.customerAccountNumber}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Bill Month:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.name}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Customer Account:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.customerAccountNumber}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Account Name:</span>
-                          <span className="ml-2 text-sm text-gray-900">
-                            {bill.customer?.fullName || bill.customerName}
-                          </span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Address:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.customer?.address || "-"}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Phone number:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.customer?.phoneNumber || "-"}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">City:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.customer?.city || "-"}</span>
-                        </div>
-                        {/* <div className="flex w-full justify-between px-4">
-                          <span className="text-sm font-semibold text-gray-600">11 KV Feeder:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.feederName}</span>
-                        </div>
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">33 KV Injection:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.distributionSubstationCode}</span>
-                        </div>
 
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
+                      <div className="w-24 text-center print:w-20">
+                        <h1 className="mb-1 text-[9pt] font-bold text-gray-900 print:hidden">KAD-ELEC.</h1>
+                        <div className="bg-[#6EAD2A] p-1 text-xs font-semibold text-white print:bg-white print:py-0.5 print:text-[7pt] print:text-black">
+                          #{bill.customerAccountNumber}
                         </div>
-                        <div className="flex w-full justify-between px-4">
-                          <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
-                        </div>
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">Consumption:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4">
-                          <span className="text-sm font-semibold text-gray-600">Tariff Rate:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">Payment Status:</span>
-                          <span className="ml-2 text-sm text-gray-900">{statusConfig.label}</span>
-                        </div> */}
                       </div>
                     </div>
 
-                    <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
-                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
-                        <p>SERVICE CENTER:</p>
-                        <p>{bill.customer?.serviceCenterName || "-"}</p>
+                    {/* Billing Information */}
+                    <div className="a5-section">
+                      <div className="print-bg-green print-white-text flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white print:bg-white print:text-black">
+                        <p className="print:invisible">BILLING INFORMATION</p>
                       </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">State:</span>
-                        <span className="text-sm text-gray-900">{bill.customer?.state || "-"}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">11KV Feeder:</span>
-                        <span className="text-sm text-gray-900">{bill.feederName}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">33kv Feeder:</span>
-                        <span className="text-sm text-gray-900">
-                          {bill.distributionSubstationCode || bill.customer?.distributionSubstationCode || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">DT Name:</span>
-                        <span className="text-sm text-gray-900">DT Name</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Sales Rep:</span>
-                        <span className="text-sm text-gray-900">{bill.customer?.salesRepUser?.fullName || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Meter:</span>
-                        <span className="text-sm text-gray-900">No Meter</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Multiplier:</span>
-                        <span className="text-sm text-gray-900">1.00</span>
-                      </div>
-                      {/* <div className="flex items-center justify-between px-4 pt-3">
-                        <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.openingBalance)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Adjustment:</span>
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(bill.adjustedOpeningBalance - bill.openingBalance)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Total Payment Amount:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Net Arrears:</span>
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Energy Charged:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.chargeBeforeVat)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Fixed Charged:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(0)}</span>
-                      </div>
-                      <div className="mt-2 flex items-center justify-between border-t border-gray-200 px-4 pt-2">
-                        <span className="text-sm font-semibold text-gray-600">SUBTOTAL:</span>
-                        <span className="text-sm font-semibold text-gray-900">
-                          {formatCurrency(invoiceValues.subtotal)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">TAX VAT {bill.vatRate}%:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.vatAmount)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Current Bill Amount:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.currentBillAmount)}</span>
-                      </div> */}
-                    </div>
-                  </div>
 
-                  <div className="text-semibold flex w-full items-center justify-center bg-[#004B23] p-2 text-[#ffffff] print:text-white">
-                    <p>BILLING CHARGES</p>
-                  </div>
-                  <div className="grid grid-cols-2  border bg-[#FFFFFF]">
-                    <div className="space-y-3">
-                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
-                        <p>CHARGES</p>
-                        <p>TOTAL</p>
-                      </div>
-                      <div className="flex flex-col bg-[#FFFFFF]">
-                        <div className="flex w-full justify-between px-4 ">
-                          <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.paymentsPrevMonth}</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">ADC:</span>
-                          <span className="ml-2 text-sm text-gray-900">9.14 kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Present Reading:</span>
-                          <span className="ml-2 text-sm text-gray-900">0</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Previous Reading:</span>
-                          <span className="ml-2 text-sm text-gray-900">0</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Consumption:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Tarrif Rate:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4 pt-3">
-                          <span className="text-sm font-semibold text-gray-600">Tarrif Class:</span>
-                          <span className="ml-2 text-sm text-gray-900">A1</span>
-                        </div>
-                        {/* <div className="flex w-full justify-between px-4">
-                          <span className="text-sm font-semibold text-gray-600">11 KV Feeder:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.feederName}</span>
-                        </div>
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">33 KV Injection:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.distributionSubstationCode}</span>
+                      <div className="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
+                        <div className="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
+                          <div className="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                            <p className="print-hide-label">AREA OFFICE</p>
+                            <div className="flex items-center justify-center bg-white px-4 text-center print:flex-grow print:justify-end">
+                              <p className="print-show-value text-black">
+                                {bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 px-2 ">
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Bill #:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.billingId}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Bill Month:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.name}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Customer Account:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.customerAccountNumber}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Account Name:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customer?.fullName || bill.customerName}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Address:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customer?.address || "-"}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Phone Number:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customer?.phoneNumber || "-"}
+                              </span>
+                            </div>
+                            <div className=" flex justify-between">
+                              <span className="print-hide-label font-semibold">City:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.customer?.city || "-"}</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">Last Payment Amount:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
+                        <div className="w-2/5 space-y-0.5">
+                          <div
+                            className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
+                            style={{ backgroundColor: "#008001" }}
+                          >
+                            <p className="print:invisible">SERVICE CENTER:</p>
+                            <div className="flex items-center justify-center bg-white px-4 print:flex-grow print:justify-end">
+                              <p className="print-show-value text-[7pt] text-black">
+                                {bill.customer?.serviceCenterName || "-"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 px-2">
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">State:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.customer?.state || "-"}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">11KV Feeder:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.feederName}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">33KV Feeder:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.distributionSubstationCode || bill.customer?.distributionSubstationCode || "-"}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">DT Name:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.distributionSubstationCode || bill.customer?.distributionSubstationCode || "-"}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Sales Rep:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customer?.salesRepUser?.fullName || "-"}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Meter:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customer?.salesRepUser?.fullName || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Multiplier:</span>
+                              <span className="print-show-value px-2 font-semibold">1.0</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex w-full justify-between px-4">
-                          <span className="text-sm font-semibold text-gray-600">Last Payment Date:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatShortDate(bill.lastUpdated)}</span>
-                        </div>
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">Consumption:</span>
-                          <span className="ml-2 text-sm text-gray-900">{bill.consumptionKwh}kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between px-4">
-                          <span className="text-sm font-semibold text-gray-600">Tariff Rate:</span>
-                          <span className="ml-2 text-sm text-gray-900">{formatCurrency(bill.tariffPerKwh)}/kwh</span>
-                        </div>
-                        <div className="flex w-full justify-between  px-4 py-3">
-                          <span className="text-sm font-semibold text-gray-600">Payment Status:</span>
-                          <span className="ml-2 text-sm text-gray-900">{statusConfig.label}</span>
-                        </div> */}
                       </div>
                     </div>
 
-                    <div className="space-y-3 border-l border-gray-200 bg-[#FFFFFF] pb-4">
-                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
-                        <p>CHARGES</p>
-                        <p>TOTAL</p>
+                    {/* Billing Charges */}
+                    <div className="a5-section">
+                      <div className="print-bg-green print-white-text flex w-full items-center justify-center bg-[#004B23] p-1.5 text-xs font-semibold text-white print:bg-white print:text-black">
+                        <p className="print:invisible">BILLING CHARGES</p>
                       </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Status Code:</span>
-                        <span className="text-sm text-gray-900">
-                          {getCustomerStatusLabel(bill.customer?.statusCode)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.openingBalance)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Adjustment:</span>
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(bill.adjustedOpeningBalance - bill.openingBalance)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Total Payment Amt:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Net Arrears:</span>
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Energy Charged:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.chargeBeforeVat)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">Fixed Charge:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(0)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4 ">
-                        <span className="text-sm font-semibold text-gray-600">VAT:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.vatAmount)}</span>
-                      </div>
-                      {/* <div className="flex items-center justify-between px-4 pt-3">
-                        <span className="text-sm font-semibold text-gray-600">Opening Balance:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.openingBalance)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Adjustment:</span>
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(bill.adjustedOpeningBalance - bill.openingBalance)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Total Payment Amount:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.paymentsPrevMonth)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Net Arrears:</span>
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Energy Charged:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.chargeBeforeVat)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Fixed Charged:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(0)}</span>
-                      </div>
-                      <div className="mt-2 flex items-center justify-between border-t border-gray-200 px-4 pt-2">
-                        <span className="text-sm font-semibold text-gray-600">SUBTOTAL:</span>
-                        <span className="text-sm font-semibold text-gray-900">
-                          {formatCurrency(invoiceValues.subtotal)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">TAX VAT {bill.vatRate}%:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.vatAmount)}</span>
-                      </div>
-                      <div className="flex items-center justify-between px-4">
-                        <span className="text-sm font-semibold text-gray-600">Current Bill Amount:</span>
-                        <span className="text-sm text-gray-900">{formatCurrency(bill.currentBillAmount)}</span>
-                      </div> */}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2  border ">
-                    <div className="space-y-3">
-                      <div className="flex w-full justify-between bg-[#6CAD2B] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
-                        <p>-</p>
-                        <p>-</p>
+
+                      <div className="print-no-border flex w-full border border-gray-300 bg-white text-[8pt] print:text-[7pt]">
+                        <div className="print-no-border-r w-3/5 space-y-0.5 border-r border-gray-300">
+                          <div className="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                            <p className="print-hide-label">CHARGES</p>
+                            <p className="print-hide-label">TOTAL</p>
+                          </div>
+
+                          <div className="space-y-2 px-2 ">
+                            <div className="mt-2 flex justify-between">
+                              <span className="print-hide-label font-semibold">Last Payment Date:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatShortDate(bill.lastUpdated)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Last Payment Amount:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.paymentsPrevMonth)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">ADC:</span>
+                              <span className="print-show-value px-2 font-semibold">9.14 kwh</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Present Reading:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.presentReadingKwh}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Previous Reading:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.previousReadingKwh}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Consumption:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.consumptionKwh}kwh</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Tariff Rate:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.tariffPerKwh}</span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Tariff Class:</span>
+                              <span className="print-show-value px-2 font-semibold">{bill.tariffPerKwh}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="w-2/5 space-y-0.5">
+                          <div
+                            className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
+                            style={{ backgroundColor: "#008001" }}
+                          >
+                            <p className="print-hide-label">CHARGES</p>
+                            <p className="print-hide-label">TOTAL</p>
+                          </div>
+
+                          <div className="space-y-2 px-2 ">
+                            <div className="mt-2 flex justify-between">
+                              <span className="print-hide-label font-semibold">Status Code:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {getCustomerStatusLabel(bill.customer?.statusCode)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Opening Balance:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.openingBalance)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Adjustment:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.adjustedOpeningBalance)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Total Payment Amt:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.currentBillAmount)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Net Arrears:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Energy Charged:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.chargeBeforeVat)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">Fixed Charge:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.actualBillAmount)}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="print-hide-label font-semibold">VAT:</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {formatCurrency(bill.vatAmount)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-3 border-l border-gray-200 bg-[#E1E1E1] ">
-                      <div className="flex w-full justify-between bg-[#008001] px-4 py-3 text-sm font-semibold text-gray-100 print:text-white">
-                        <p>TOTAL DUE:</p>
-                        <p>{formatCurrency(bill.totalDue)}</p>
+                    {/* Total Due */}
+                    <div className="print-no-border flex w-full border border-gray-300">
+                      <div className="print-bg-light-green w-3/5 bg-[#6CAD2B]">
+                        <div className="px-2 py-1.5">&nbsp;</div>
+                      </div>
+
+                      <div className="w-2/5 bg-[#E1E1E1]">
+                        <div
+                          className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1.5 font-semibold print:bg-white print:text-black"
+                          style={{ backgroundColor: "#008001" }}
+                        >
+                          <p className="text-[8pt] print:invisible">TOTAL DUE:</p>
+                          <div className="flex items-center justify-center bg-white px-4 py-0.5 print:-mt-5 print:flex-grow print:justify-end">
+                            <p className="print-show-value text-[8pt] font-bold text-black">
+                              {formatCurrency(bill.totalDue)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Thank You Message */}
-                  {/* <div className="flex w-full items-stretch overflow-hidden rounded-2xl">
-                    <div className="flex h-20 w-1/2 items-center bg-[#6BAE2A] p-4">
-                      <div className="text-lg font-semibold text-[#ffffff]">THANK YOU FOR YOUR BUSINESS</div>
-                    </div>
-                    <div className="flex h-20 w-1/2 flex-col items-end justify-center bg-[#008001] px-4 text-end">
-                      <div className="mb-1 text-sm font-semibold text-[#ffffff]">GRAND TOTAL</div>
-                      <div className="text-2xl font-bold text-[#ffffff]">{formatCurrency(bill.totalDue)}</div>
-                    </div>
-                  </div> */}
-
-                  {/* Additional Information */}
-                  {bill.isEstimated && (
-                    <div className="mt-4 rounded-lg bg-amber-50 p-4">
-                      <div className="flex items-center">
-                        <svg className="mr-2 size-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span className="font-semibold text-amber-800">Estimated Bill</span>
+                    {/* Payment Notice */}
+                    <div className="flex">
+                      <div className="a5-small-text print-no-border mb-4 w-[60%] border border-gray-300 p-2 text-[6pt]  print:text-[5pt]">
+                        <p className="mt-1  font-semibold print:text-[6pt]">IMPORTANT PAYMENT INFORMATION</p>
+                        <p className="font-semibold print:text-[6pt]">
+                          PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
+                          OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS |{" "}
+                          <b>ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
+                        </p>
                       </div>
-                      <p className="mt-1 text-sm text-amber-700">
-                        This bill is estimated based on forecasted consumption of {bill.forecastConsumptionKwh}kwh.
-                      </p>
+                      <div className="w-[40%]"></div>
                     </div>
-                  )}
 
-                  {/* Active Dispute Warning */}
-                  {bill.activeDispute && (
-                    <div className="mt-4 rounded-lg bg-red-50 p-4">
-                      <div className="flex items-center">
-                        <svg className="mr-2 size-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span className="font-semibold text-red-800">Active Dispute</span>
+                    {/* Summary Section */}
+                    <div className="a5-small-text print-no-border flex w-full border border-gray-300 bg-white text-[7pt]">
+                      <div className="print-no-border-r w-2/3 border-r border-gray-300">
+                        <div className="print-bg-light-green print-white-text flex w-full items-center justify-between bg-[#6CAD2B] px-2 py-1 font-semibold">
+                          <p className="print:invisible">Area OFFICE:</p>
+                          <div className="flex items-center justify-center bg-white px-4 py-0.5 print:flex-grow print:justify-end">
+                            <p className="print-show-value text-black">
+                              {bill.customer?.areaOfficeName || bill.areaOfficeName || "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 px-2">
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Bill #:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {bill.billingId}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Bill Month:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">{bill.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Customer Account:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {bill.customerAccountNumber}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Account Name:</span>
+                              <span className="print-show-value px-2 text-right font-semibold print:text-[5pt]">
+                                {bill.customer?.fullName || bill.customerName}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Address:</span>
+                              <span className="print-show-value px-2 text-right font-semibold print:text-[5pt]">
+                                {bill.customer?.address || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Consumption:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {bill.consumptionKwh}kwh
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Opening Balance:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.openingBalance)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 pl-2">
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Adjustment:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.adjustedOpeningBalance)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Total Payments:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.currentBillAmount)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Net Arrears:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Meter:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.tariffPerKwh)}/kwh
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Tariff:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.tariffPerKwh)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">Rate:</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.tariffPerKwh)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="print-hide-label font-semibold">ADC</span>
+                              <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                                {formatCurrency(bill.vatAmount)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="mt-1 text-sm text-red-700">Reason: {bill.activeDispute.reason}</p>
-                      <p className="text-sm text-red-700">Raised: {formatDate(bill.activeDispute.raisedAtUtc)}</p>
-                    </div>
-                  )}
 
-                  {/* Contact Information */}
-                  <div className="mt-8   py-3 pt-4 text-center text-sm text-gray-600 print:hidden">
-                    <div className="mb-2">
+                      <div className="w-1/3">
+                        <div
+                          className="print-white-text flex w-full items-center justify-between bg-[#008001] px-2 py-1 font-semibold print:bg-white print:text-black"
+                          style={{ backgroundColor: "#008001" }}
+                        >
+                          <p className="print-hide-label">SERVICE CENTER:</p>
+                          <div className="flex items-center justify-center bg-white px-4 py-0.5 print:flex-grow print:justify-end">
+                            <p className="print-show-value text-black">{bill.customer?.serviceCenterName || "-"}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 px-2 ">
+                          <div className="flex justify-between">
+                            <span className="print-hide-label font-semibold">Present Reading:</span>
+                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                              {bill.presentReadingKwh}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="print-hide-label font-semibold">Previous Reading:</span>
+                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                              {bill.previousReadingKwh}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="print-hide-label font-semibold">Fixed Charge:</span>
+                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                              {formatCurrency(bill.actualBillAmount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="print-hide-label font-semibold">Current Bill:</span>
+                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                              {formatCurrency(bill.currentBillAmount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="print-hide-label font-semibold">VAT:</span>
+                            <span className="print-show-value px-2 font-semibold print:text-[5pt]">
+                              {bill.vatAmount}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Total */}
+                    <div className="print-no-border flex w-full border border-gray-300 ">
+                      <div className="print-bg-light-green w-2/3 bg-[#6CAD2B]">
+                        <div className="px-2 py-1">&nbsp;</div>
+                      </div>
+
+                      <div className="w-1/3 bg-[#E1E1E1]">
+                        <div
+                          className="print-white-text flex w-full items-center justify-between bg-[#008001]  px-6 py-1 font-semibold print:-m-3 print:bg-white print:text-black"
+                          style={{ backgroundColor: "#008001" }}
+                        >
+                          <p className="text-[8pt] print:invisible">FINAL AMOUNT:</p>
+                          <div className="flex items-center justify-center bg-white  print:flex-grow print:justify-end">
+                            <p className="print-show-value text-[8pt] font-bold text-black">
+                              {formatCurrency(bill.totalDue)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Notice */}
+                    <div className="print-no-border-t mt-3 border-t border-gray-300 pt-1 text-center text-[6pt] text-gray-600">
                       <p>
-                        PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
-                        OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYTMENT CHANNELS |
-                        <b> ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
+                        KADUNA ELECTRICITY DISTRIBUTION COMPANY | Customer Service: 0700 225 5332 |
+                        www.kadunaelectric.com
+                      </p>
+                      <p>
+                        This is a computer generated invoice | Invoice Date: {formatShortDate(new Date().toISOString())}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-[#008002] p-4 text-center text-sm font-semibold text-white print:hidden">
-                    POWERED BY BLUMENTECHNOLOGIES LTD
+                  {/* Additional Information - Only show in non-print mode */}
+                  {!loading && (
+                    <div className="print-hide">
+                      {bill.isEstimated && (
+                        <div className="mt-4 rounded-lg bg-amber-50 p-4">
+                          <div className="flex items-center">
+                            <svg className="mr-2 size-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span className="font-semibold text-amber-800">Estimated Bill</span>
+                          </div>
+                          <p className="mt-1 text-sm text-amber-700">
+                            This bill is estimated based on forecasted consumption of {bill.forecastConsumptionKwh}kwh.
+                          </p>
+                        </div>
+                      )}
+
+                      {bill.activeDispute && (
+                        <div className="mt-4 rounded-lg bg-red-50 p-4">
+                          <div className="flex items-center">
+                            <svg className="mr-2 size-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span className="font-semibold text-red-800">Active Dispute</span>
+                          </div>
+                          <p className="mt-1 text-sm text-red-700">Reason: {bill.activeDispute.reason}</p>
+                          <p className="text-sm text-red-700">Raised: {formatDate(bill.activeDispute.raisedAtUtc)}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <div className="mb-2 text-lg text-red-500">No bill data available</div>
+                    <p className="text-gray-600">Please try again later</p>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-4 border-t bg-white p-6 print:hidden">
+            <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
+              Close
+            </ButtonModule>
+            {bill && (
+              <>
+                <ButtonModule variant="outline" className="flex items-center gap-2" size="lg" onClick={handlePrint}>
+                  <Printer className="size-4" />
+                  Print Invoice (A5)
+                </ButtonModule>
+                <ButtonModule variant="outline" className="flex items-center gap-2" size="lg" onClick={handleShare}>
+                  <Printer className="size-4" />
+                  Share Invoice
+                </ButtonModule>
+                <ButtonModule
+                  variant="primary"
+                  className="flex items-center gap-2"
+                  size="lg"
+                  onClick={handleDownload}
+                  data-download-button
+                >
+                  <Download className="size-4" />
+                  Download PDF (A5)
+                </ButtonModule>
               </>
-            ) : (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <div className="mb-2 text-lg text-red-500">No bill data available</div>
-                  <p className="text-gray-600">Please try again later</p>
-                </div>
-              </div>
             )}
           </div>
-        </div>
-
-        <div className="flex gap-4 border-t bg-white p-6 print:hidden">
-          <ButtonModule variant="secondary" className="flex-1" size="lg" onClick={onRequestClose}>
-            Close
-          </ButtonModule>
-          {bill && (
-            <>
-              <ButtonModule variant="outline" className="flex items-center gap-2" size="lg" onClick={handlePrint}>
-                <Printer className="size-4" />
-                Print Invoice
-              </ButtonModule>
-              <ButtonModule variant="outline" className="flex items-center gap-2" size="lg" onClick={handleShare}>
-                <Printer className="size-4" />
-                Share Invoice
-              </ButtonModule>
-              <ButtonModule
-                variant="primary"
-                className="flex items-center gap-2"
-                size="lg"
-                onClick={handleDownload}
-                data-download-button
-              >
-                <Download className="size-4" />
-                Download PDF
-              </ButtonModule>
-            </>
-          )}
-        </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   )
 }
 

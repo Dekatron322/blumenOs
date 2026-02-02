@@ -22,6 +22,9 @@ export interface ActiveDispute {
 }
 
 export interface PostpaidBill {
+  billingId: number
+  previousReadingKwh: number
+  presentReadingKwh: number
   totalPaid: number
   outstandingAmount: number
   reference: any

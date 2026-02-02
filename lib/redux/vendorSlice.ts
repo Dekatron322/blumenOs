@@ -378,6 +378,31 @@ export interface VendorTopUpHistoryItem {
   narrative: string
 }
 
+// Vendor Top-up Summary Interfaces
+export interface VendorTopUpSummaryRequestParams {
+  startDateUtc?: string
+  endDateUtc?: string
+  status?: "Pending" | "Confirmed" | "Failed"
+  topUpBy?: "Vendor" | "Admin"
+}
+
+export interface VendorTopUpSummaryData {
+  vendorId: number
+  vendorName: string
+  totalCount: number
+  confirmedCount: number
+  failedCount: number
+  pendingCount: number
+  totalAmount: number
+  totalSettledAmount: number
+}
+
+export interface VendorTopUpSummaryResponse {
+  isSuccess: boolean
+  message: string
+  data: VendorTopUpSummaryData[]
+}
+
 export interface VendorTopUpHistoryResponse {
   isSuccess: boolean
   message: string
@@ -741,6 +766,11 @@ interface VendorState {
     hasNext: boolean
     hasPrevious: boolean
   }
+
+  // Vendor Top-up Summary state
+  vendorTopUpSummary: VendorTopUpSummaryData[]
+  vendorTopUpSummaryLoading: boolean
+  vendorTopUpSummaryError: string | null
 }
 
 // Initial state
@@ -863,6 +893,9 @@ const initialState: VendorState = {
     hasNext: false,
     hasPrevious: false,
   },
+  vendorTopUpSummary: [],
+  vendorTopUpSummaryLoading: false,
+  vendorTopUpSummaryError: null,
 }
 
 // Async thunks
@@ -1477,6 +1510,36 @@ export const fetchVendorTopUpHistory = createAsyncThunk(
   }
 )
 
+// Fetch Vendor Top-up Summary Async Thunk
+export const fetchVendorTopUpSummary = createAsyncThunk(
+  "vendors/fetchVendorTopUpSummary",
+  async (params: VendorTopUpSummaryRequestParams, { rejectWithValue }) => {
+    try {
+      const { startDateUtc, endDateUtc, status, topUpBy } = params
+
+      const response = await api.get<VendorTopUpSummaryResponse>(buildApiUrl(API_ENDPOINTS.VENDORS.TOP_UP_SUMMARY), {
+        params: {
+          ...(startDateUtc && { StartDateUtc: startDateUtc }),
+          ...(endDateUtc && { EndDateUtc: endDateUtc }),
+          ...(status && { Status: status }),
+          ...(topUpBy && { TopUpBy: topUpBy }),
+        },
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch vendor top-up summary")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch vendor top-up summary")
+      }
+      return rejectWithValue(error.message || "Network error during vendor top-up summary fetch")
+    }
+  }
+)
+
 // Vendor slice
 const vendorSlice = createSlice({
   name: "vendors",
@@ -1518,6 +1581,7 @@ const vendorSlice = createSlice({
       state.webhookSecretRotationError = null
       state.allVendorPaymentsError = null
       state.vendorTopUpHistoryError = null
+      state.vendorTopUpSummaryError = null
     },
 
     // Clear current vendor
@@ -1694,6 +1758,13 @@ const vendorSlice = createSlice({
       }
     },
 
+    // Clear vendor top-up summary state
+    clearVendorTopUpSummary: (state) => {
+      state.vendorTopUpSummary = []
+      state.vendorTopUpSummaryError = null
+      state.vendorTopUpSummaryLoading = false
+    },
+
     // Set vendor top-up history pagination
     setVendorTopUpHistoryPagination: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
       state.vendorTopUpHistoryPagination.currentPage = action.payload.page
@@ -1820,6 +1891,9 @@ const vendorSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+      state.vendorTopUpSummary = []
+      state.vendorTopUpSummaryLoading = false
+      state.vendorTopUpSummaryError = null
     },
 
     // Set pagination
@@ -2493,6 +2567,21 @@ const vendorSlice = createSlice({
         state.vendorTopUpHistoryError = (action.payload as string) || "Failed to fetch vendor top-up history"
         state.vendorTopUpHistory = []
       })
+      // Fetch vendor top-up summary cases
+      .addCase(fetchVendorTopUpSummary.pending, (state) => {
+        state.vendorTopUpSummaryLoading = true
+        state.vendorTopUpSummaryError = null
+      })
+      .addCase(fetchVendorTopUpSummary.fulfilled, (state, action: PayloadAction<VendorTopUpSummaryResponse>) => {
+        state.vendorTopUpSummaryLoading = false
+        state.vendorTopUpSummary = action.payload.data
+        state.vendorTopUpSummaryError = null
+      })
+      .addCase(fetchVendorTopUpSummary.rejected, (state, action) => {
+        state.vendorTopUpSummaryLoading = false
+        state.vendorTopUpSummaryError = (action.payload as string) || "Failed to fetch vendor top-up summary"
+        state.vendorTopUpSummary = []
+      })
   },
 })
 
@@ -2517,6 +2606,7 @@ export const {
   clearWebhookSecretRotation,
   clearAllVendorPayments,
   clearVendorTopUpHistory,
+  clearVendorTopUpSummary,
   resetVendorState,
   setPagination,
   setChangeRequestsPagination,
