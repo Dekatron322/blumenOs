@@ -431,6 +431,7 @@ export const API_ENDPOINTS = {
     ROTATE_WEBHOOK_SECRET: "/vendors/{id}/webhook/secret/rotate",
     ALL_VENDOR_PAYMENT: "/vendors/payments",
     TOP_UP_HISTORY: "/vendors/wallet/top-ups",
+    TOP_UP_SUMMARY: "/vendors/reports/topups/summary",
   },
 
   METERS: {

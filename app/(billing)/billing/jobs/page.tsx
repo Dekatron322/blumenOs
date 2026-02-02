@@ -18,7 +18,7 @@ import {
   setBillingJobsPagination,
 } from "lib/redux/postpaidSlice"
 import CreateBillingJobModal from "components/ui/Modal/create-billing-job-modal"
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Filter, RefreshCw, SortAsc, SortDesc, X } from "lucide-react"
 import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 import { clearAreaOffices, fetchAreaOffices } from "lib/redux/areaOfficeSlice"
 import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
@@ -643,6 +643,9 @@ const BillingJobs: React.FC = () => {
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
 
+  // Separate state for table-only refresh
+  const [tableRefreshKey, setTableRefreshKey] = useState(0)
+
   // Local state for filters (UI state - what user is selecting)
   const [localFilters, setLocalFilters] = useState({
     billingPeriodId: undefined as number | undefined,
@@ -702,7 +705,7 @@ const BillingJobs: React.FC = () => {
     }
 
     dispatch(fetchBillingJobs(params))
-  }, [dispatch, currentPage, pageSize, appliedFilters, searchTrigger])
+  }, [dispatch, currentPage, pageSize, appliedFilters, searchTrigger, tableRefreshKey])
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -913,6 +916,11 @@ const BillingJobs: React.FC = () => {
     )
   }
 
+  const handleRefresh = () => {
+    // This only triggers a table refresh by incrementing the refresh key
+    setTableRefreshKey((prev) => prev + 1)
+  }
+
   const handleRowsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = Number(event.target.value)
     dispatch(
@@ -1008,11 +1016,20 @@ const BillingJobs: React.FC = () => {
               </div>
 
               <motion.div
-                className="flex items-center justify-end"
+                className="flex items-center justify-end gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  icon={<RefreshCw className="size-4" />}
+                  onClick={handleRefresh}
+                  disabled={billingJobsLoading}
+                >
+                  Refresh
+                </ButtonModule>
                 <ButtonModule
                   variant="primary"
                   size="md"
