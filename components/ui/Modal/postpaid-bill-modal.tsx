@@ -578,7 +578,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">DT Name:</span>
                               <span className="print-show-value px-2 font-semibold">
-                                {bill.distributionSubstationCode || bill.customer?.distributionSubstationCode || "-"}
+                                {bill.distributionSubstationName || "-"}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
@@ -590,7 +590,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">Meter:</span>
                               <span className="print-show-value px-2 font-semibold">
-                                {bill.customer?.salesRepUser?.fullName || "-"}
+                                {bill.customer?.meterNumber || "-"}
                               </span>
                             </div>
                             <div className="flex justify-between">
@@ -619,7 +619,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="mt-2 flex justify-between">
                               <span className="print-hide-label font-semibold">Last Payment Date:</span>
                               <span className="print-show-value px-2 font-semibold">
-                                {formatShortDate(bill.lastUpdated)}
+                                {formatShortDate(bill.lastUpdated || new Date().toISOString())}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
@@ -630,7 +630,9 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             </div>
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">ADC:</span>
-                              <span className="print-show-value px-2 font-semibold">9.14 kwh</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customer?.storedAverage || "-"}
+                              </span>
                             </div>
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">Present Reading:</span>
@@ -650,7 +652,9 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             </div>
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">Tariff Class:</span>
-                              <span className="print-show-value px-2 font-semibold">{bill.tariffPerKwh}</span>
+                              <span className="print-show-value px-2 font-semibold">
+                                {bill.customerTariffCode || "-"}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -692,7 +696,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="mt-1 flex justify-between">
                               <span className="print-hide-label font-semibold">Net Arrears:</span>
                               <span className="print-show-value px-2 font-semibold">
-                                {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
+                                {formatCurrency(bill.netArrears)}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
@@ -741,9 +745,9 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
 
                     {/* Payment Notice */}
                     <div className="flex">
-                      <div className="a5-small-text print-no-border mb-4 w-[60%] border border-gray-300 p-2 text-[6pt]  print:text-[5pt]">
-                        <p className="mt-1  font-semibold print:text-[6pt]">IMPORTANT PAYMENT INFORMATION</p>
-                        <p className="font-semibold print:text-[6pt]">
+                      <div className="a5-small-text print-no-border mb-4 mt-1 w-[60%] border border-gray-300 p-2 text-[6pt]  print:text-[5pt]">
+                        <p className="mt-1  font-semibold print:text-[5pt]">IMPORTANT PAYMENT INFORMATION</p>
+                        <p className="font-semibold print:text-[5pt]">
                           PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO
                           OUR SALES REPS USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS |{" "}
                           <b>ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
@@ -824,19 +828,19 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="flex justify-between">
                               <span className="print-hide-label font-semibold">Net Arrears:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
-                                {formatCurrency(bill.openingBalance - bill.paymentsPrevMonth)}
+                                {formatCurrency(bill.netArrears)}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="print-hide-label font-semibold">Meter:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
-                                {formatCurrency(bill.tariffPerKwh)}/kwh
+                                {bill.customerMeterNumber || "-"}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="print-hide-label font-semibold">Tariff:</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
-                                {formatCurrency(bill.tariffPerKwh)}
+                                {bill.customerTariffCode}
                               </span>
                             </div>
                             <div className="flex justify-between">
@@ -848,7 +852,7 @@ const PostpaidBillDetailsModal: React.FC<PostpaidBillDetailsModalProps> = ({
                             <div className="flex justify-between">
                               <span className="print-hide-label font-semibold">ADC</span>
                               <span className="print-show-value px-2 font-semibold print:text-[5pt]">
-                                {formatCurrency(bill.vatAmount)}
+                                {bill.customerAverageDailyConsumption || "-"}
                               </span>
                             </div>
                           </div>

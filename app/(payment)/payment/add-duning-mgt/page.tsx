@@ -18,7 +18,12 @@ import {
   type CreatePaymentDunningCaseRequest,
 } from "lib/redux/paymentDunningSlice"
 import { clearCustomerLookup, lookupCustomer } from "lib/redux/customerSlice"
-import { clearCurrentBillByReference, fetchPostpaidBillByReference, fetchPostpaidBills } from "lib/redux/postpaidSlice"
+import {
+  clearCurrentBillByReference,
+  fetchPostpaidBillByReference,
+  fetchPostpaidBills,
+  type PostpaidBill,
+} from "lib/redux/postpaidSlice"
 import { fetchAgents } from "lib/redux/agentSlice"
 import { VscAdd } from "react-icons/vsc"
 
@@ -42,19 +47,6 @@ interface CustomerInfo {
   isMD: boolean
   band: string
   customerOutstandingDebtBalance: number
-}
-
-interface PostpaidBill {
-  id: number
-  reference: string
-  period: string
-  totalDue: number
-  totalPaid: number
-  outstandingAmount: number
-  status: number
-  dueDate: string
-  customerName: string
-  customerAccountNumber: string
 }
 
 interface BillInfo {
@@ -140,10 +132,10 @@ const AddDunningCasePage = () => {
 
   // Bill options for the selected customer
   const billOptions = bills
-    .filter((bill) => bill.outstandingAmount > 0)
+    .filter((bill) => bill.totalDue > 0)
     .map((bill) => ({
       value: bill.id,
-      label: `${bill.period} - ₦${bill.outstandingAmount.toLocaleString()} (${bill.reference})`,
+      label: `${bill.period} - ₦${bill.totalDue.toLocaleString()} (${bill.billingId})`,
     }))
 
   // Validate payment reference
@@ -169,7 +161,7 @@ const AddDunningCasePage = () => {
           period: result.period,
           totalDue: result.totalDue,
           status: result.status,
-          outstandingAmount: result.outstandingAmount || result.totalDue - result.totalPaid,
+          outstandingAmount: result.totalDue, // Using totalDue as outstanding amount
         })
 
         // Auto-populate the bill ID, customer ID, and amount
@@ -177,7 +169,7 @@ const AddDunningCasePage = () => {
           ...prev,
           postpaidBillId: result.id,
           customerId: result.customerId,
-          outstandingAmount: result.outstandingAmount || result.totalDue - result.totalPaid,
+          outstandingAmount: result.totalDue, // Using totalDue as outstanding amount
         }))
 
         notify("success", "Bill validated successfully", {
@@ -230,7 +222,7 @@ const AddDunningCasePage = () => {
           fullName: result.fullName,
           phoneNumber: result.phoneNumber,
           email: result.email,
-          status: result.status,
+          status: result.statusCode,
           isSuspended: result.isSuspended,
           distributionSubstationCode: result.distributionSubstationCode,
           feederName: result.feederName,
@@ -239,11 +231,11 @@ const AddDunningCasePage = () => {
           city: result.city,
           state: result.provinceName,
           serviceCenterName: result.serviceCenterName,
-          meterNumber: result.meterNumber,
-          isPPM: result.isPPM,
-          isMD: result.isMD,
-          band: result.band,
-          customerOutstandingDebtBalance: result.customerOutstandingDebtBalance,
+          meterNumber: "", // Not available in Customer interface
+          isPPM: false, // Not available in Customer interface
+          isMD: false, // Not available in Customer interface
+          band: "", // Not available in Customer interface
+          customerOutstandingDebtBalance: 0, // Not available in Customer interface
         })
 
         // Auto-populate the customer ID
@@ -323,7 +315,7 @@ const AddDunningCasePage = () => {
       setFormData((prev) => ({
         ...prev,
         postpaidBillId: bill.id,
-        outstandingAmount: bill.outstandingAmount,
+        outstandingAmount: bill.totalDue, // Using totalDue as outstanding amount
       }))
     } else {
       setFormData((prev) => ({
@@ -890,7 +882,7 @@ const AddDunningCasePage = () => {
                               <h5 className="font-medium text-green-800">Selected Bill Details</h5>
                               <div className="mt-2 space-y-1 text-sm text-green-700">
                                 <p>
-                                  <strong>Reference:</strong> {selectedBill.reference}
+                                  <strong>Reference:</strong> {selectedBill.billingId}
                                 </p>
                                 <p>
                                   <strong>Billing Period:</strong> {selectedBill.period}
@@ -907,10 +899,7 @@ const AddDunningCasePage = () => {
                                   <strong>Total Due:</strong> ₦{selectedBill.totalDue.toLocaleString()}
                                 </p>
                                 <p>
-                                  <strong>Total Paid:</strong> ₦{selectedBill.totalPaid.toLocaleString()}
-                                </p>
-                                <p>
-                                  <strong>Outstanding:</strong> ₦{selectedBill.outstandingAmount.toLocaleString()}
+                                  <strong>Total Due:</strong> ₦{selectedBill.totalDue.toLocaleString()}
                                 </p>
                                 <p>
                                   <strong>Status:</strong> {getStatusText(selectedBill.status)}

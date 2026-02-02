@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KAD-ELEC Invoice - A5 Format</title>
+    <style>
+      @page {
+        size: A5;
+        margin: 0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        width: 420pt;
+        height: 595pt;
+        background: white;
+        font-family: Arial, sans-serif;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .a5-container {
+        width: 420pt !important;
+        height: 595pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        background: white !important;
+      }
+
+      .a5-content {
+        padding: 16pt !important;
+        font-size: 8pt !important;
+      }
+
+      .a5-small-text {
+        font-size: 7pt !important;
+      }
+
+      .a5-header {
+        height: 30pt !important;
+      }
+
+      .a5-section {
+        margin-bottom: 8pt !important;
+      }
+
+      .a5-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 4pt !important;
+      }
+
+      .a5-col {
+        padding: 4pt !important;
+      }
+
+      .print-hide {
+        display: none !important;
+      }
+
+      .print-bg-green {
+        background-color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .print-bg-light-green {
+        background-color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .print-white-text {
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .print-hide-label {
+        display: none !important;
+      }
+
+      .print-show-value {
+        display: block !important;
+        text-align: right !important;
+        font-weight: normal !important;
+        justify-content: flex-end !important;
+        margin-left: auto !important;
+        width: 100% !important;
+      }
+
+      .print-show-value > * {
+        text-align: right !important;
+        justify-content: flex-end !important;
+      }
+
+      .bg-white .print-show-value {
+        text-align: right !important;
+        justify-content: flex-end !important;
+        margin-left: auto !important;
+        width: 100% !important;
+      }
+
+      [style*="background-color"] {
+        background-color: white !important;
+      }
+
+      .print-no-border {
+        border: none !important;
+      }
+
+      .print-no-border-r {
+        border-right: none !important;
+      }
+
+      .print-no-border-t {
+        border-top: none !important;
+      }
+
+      .print-no-border-b {
+        border-bottom: none !important;
+      }
+
+      .print-no-border-l {
+        border-left: none !important;
+      }
+
+      /* Regular (non-print) styles for screen viewing */
+      @media not print {
+        body {
+          width: 100%;
+          height: 100vh;
+          padding: 20px;
+          background: #f5f5f5;
+        }
+
+        .a5-container {
+          width: 420pt !important;
+          height: 595pt !important;
+          margin: 0 auto !important;
+          padding: 0 !important;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+          background: white !important;
+          overflow: hidden;
+        }
+
+        .print-hide {
+          display: block !important;
+        }
+
+        .print-hide-label {
+          display: inline !important;
+        }
+
+        .print-show-value {
+          display: inline !important;
+          text-align: right !important;
+        }
+
+        .print-bg-green {
+          background-color: transparent !important;
+        }
+
+        .print-bg-light-green {
+          background-color: transparent !important;
+        }
+
+        .print-white-text {
+          color: black !important;
+        }
+
+        /* .print-no-border {
+          border: 1px solid #d1d5db !important;
+        } */
+
+        /* .print-no-border-r {
+          border-right: 1px solid #d1d5db !important;
+        } */
+
+        [style*="background-color"] {
+          background-color: inherit !important;
+        }
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6pt;
+      }
+
+      .logo-section {
+        width: 24pt;
+        text-align: center;
+      }
+
+      .logo {
+        height: 10pt;
+      }
+
+      .barcode-section {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+      }
+
+      .barcode {
+        height: 10pt;
+        width: 36pt;
+        border: 1px solid #ddd;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 5pt;
+      }
+
+      .account-section {
+        width: 24pt;
+        text-align: center;
+      }
+
+      .company-name {
+        font-size: 7pt;
+        font-weight: bold;
+        height: 8px;
+        margin-bottom: 1pt;
+        color: #333;
+      }
+
+      .account-number {
+        background: #6ead2a;
+        color: white;
+        padding: 0.5pt 1pt;
+        font-weight: bold;
+        font-size: 5pt;
+        border-radius: 1pt;
+      }
+
+      .section-header {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        padding: 8pt;
+        font-size: 6pt;
+        font-weight: bold;
+        color: white;
+        height: 20px;
+      }
+
+      .billing-info {
+        display: flex;
+        width: 100%;
+        border: 1px solid #d1d5db;
+        background: white;
+        font-size: 7pt;
+      }
+
+      .billing-info-left {
+        width: 60%;
+        border-right: 1px solid #d1d5db;
+      }
+
+      .billing-info-right {
+        width: 40%;
+      }
+
+      .sub-header {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+        padding: 1pt 2pt;
+        font-weight: bold;
+        height: 20px;
+        font-size: 6pt;
+      }
+
+      .sub-header p {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 50%;
+      }
+
+      .sub-header-right {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1pt 2pt;
+        font-weight: bold;
+        height: 20px;
+        font-size: 6pt;
+      }
+
+      .sub-header-right p {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 50%;
+      }
+
+      .info-content {
+        padding: 2pt;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1pt;
+        padding-top: 12px;
+      }
+
+      .info-label {
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+
+      .info-value {
+        font-weight: bold;
+      }
+
+      .white-bg {
+        background: white;
+        padding: 0 4pt;
+        text-align: right;
+        flex-grow: 1;
+        justify-content: flex-end;
+      }
+
+      .charges-grid {
+        display: flex;
+        width: 100%;
+        border: 1px solid #d1d5db;
+        background: white;
+        font-size: 7pt;
+      }
+
+      .charges-left {
+        width: 60%;
+        border-right: 1px solid #d1d5db;
+      }
+
+      .charges-right {
+        width: 40%;
+      }
+
+      .total-due-section {
+        display: flex;
+        width: 100%;
+        border: 1px solid #d1d5db;
+      }
+
+      .total-due-left {
+        width: 60%;
+        background: #6cad2b;
+        padding: 1.5pt;
+      }
+
+      .total-due-right {
+        width: 40%;
+      }
+
+      .total-due-amount {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        background: #008001;
+        padding: 1.5pt 6pt;
+        font-weight: bold;
+        font-size: 6pt;
+      }
+
+      .total-amount {
+        font-size: 7pt;
+        font-weight: bold;
+        color: black;
+      }
+
+      .payment-notice {
+        display: flex;
+        margin-bottom: 30px;
+      }
+
+      .payment-notice-content {
+        width: 60%;
+        border: 1px solid #d1d5db;
+        padding: 2pt;
+        font-size: 5pt;
+        padding-top: 14px;
+      }
+
+      .payment-notice-title {
+        font-weight: bold;
+        margin-bottom: 1pt;
+        font-size: 5pt;
+      }
+
+      .payment-notice-text {
+        font-weight: bold;
+        line-height: 1.2;
+        white-space: normal;
+        overflow: visible;
+        word-wrap: break-word;
+        font-size: 5pt;
+      }
+
+      .summary-section {
+        display: flex;
+        width: 100%;
+        border: 1px solid #d1d5db;
+        background: white;
+        font-size: 5pt;
+        margin-bottom: 4pt;
+      }
+
+      .summary-left {
+        width: 66.67%;
+        border-right: 1px solid #d1d5db;
+      }
+
+      .summary-right {
+        width: 33.33%;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2pt;
+        padding: 2pt;
+      }
+
+      .final-amount-section {
+        display: flex;
+        width: 100%;
+        border: 1px solid #d1d5db;
+        margin-bottom: 4pt;
+      }
+
+      .final-amount-left {
+        width: 66.67%;
+        background: #6cad2b;
+        padding: 1pt;
+      }
+
+      .final-amount-right {
+        width: 33.33%;
+      }
+
+      .final-amount {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        background: #008001;
+        padding: 1pt 6pt;
+        font-weight: bold;
+        font-size: 5pt;
+      }
+
+      .footer {
+        border-top: 1px solid #d1d5db;
+        padding-top: 2pt;
+        text-align: center;
+        font-size: 4pt;
+        color: #666;
+        margin-top: 3pt;
+      }
+
+      .footer-line {
+        margin-bottom: 1pt;
+      }
+
+      /* Utility classes */
+      .space-y-2 > * + * {
+        margin-top: 0.5rem;
+      }
+
+      .space-y-1 > * + * {
+        margin-top: 0.25rem;
+      }
+
+      .space-y-3 > * + * {
+        margin-top: 0.75rem;
+      }
+
+      /* Print-compatible spacing classes */
+      .space-y-2-pt > * + * {
+        margin-top: 2pt;
+      }
+
+      .space-y-1-pt > * + * {
+        margin-top: 1pt;
+      }
+
+      .space-y-3-pt > * + * {
+        margin-top: 3pt;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="a5-container">
+      <div class="a5-content">
+        <!-- Header - A5 Optimized -->
+        <div class="header">
+          <div class="logo-section">
+            <img src="/kad.svg" alt="KAD-ELEC Logo" class="logo print-hide" />
+          </div>
+
+          <div class="barcode-section">
+            <div class="barcode" id="barcode">
+              <!-- Barcode will be generated here -->
+            </div>
+          </div>
+
+          <div class="account-section">
+            <h1 class="company-name print-hide"></h1>
+            <div class="account-number" id="accountNumber">#1234567890</div>
+          </div>
+        </div>
+
+        <div class="a5-section">
+          <div class="section-header print-bg-green print-white-text">
+            <p class="print-hide"></p>
+          </div>
+
+          <div class="billing-info print-no-border">
+            <div class="billing-info-left print-no-border-r">
+              <div class="sub-header print-bg-light-green print-white-text">
+                <p class="print-hide-label"></p>
+                <div class="white-bg">
+                  <p class="print-show-value" id="areaOffice">Area Office</p>
+                </div>
+              </div>
+
+              <div class="info-content">
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="billId">INV-2024-001</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="billMonth">November 2024</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="customerAccount">1234567890</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="accountName">John Doe</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="address">123 Main Street, Kaduna</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="phoneNumber">08012345678</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="city">Kaduna</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="billing-info-right">
+              <div class="sub-header-right print-white-text">
+                <p class="print-hide-label"></p>
+                <div class="white-bg">
+                  <p class="print-show-value" id="serviceCenter">Service Center</p>
+                </div>
+              </div>
+
+              <div class="info-content">
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="state">Kaduna State</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="feeder11kv">FEEDER-A</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="feeder33kv">SUBSTATION-1</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="dtName">DT-001</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="salesRep">Ahmed Mohammed</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="meter">MTR123456</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value">1.0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="a5-section">
+          <div class="section-header print-bg-green print-white-text">
+            <p class="print-hide"></p>
+          </div>
+
+          <div class="charges-grid print-no-border">
+            <div class="charges-left print-no-border-r">
+              <div class="info-content">
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="lastPaymentDate">Oct 15, 2024</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="lastPaymentAmount">₦5,000.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="adc">150</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="presentReading">1,250</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="previousReading">1,000</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="consumption">250kwh</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="tariffRate">₦25.50</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="tariffClass">R2</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="charges-right">
+              <div class="info-content">
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="statusCode">Active</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="openingBalance">₦2,000.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="adjustment">₦0.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="totalPayment">₦6,375.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="netArrears">₦0.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="energyCharged">₦6,375.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="fixedCharge">₦500.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="vat">₦956.25</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="total-due-section print-no-border">
+          <div class="total-due-left print-bg-light-green"></div>
+          <div class="total-due-right">
+            <div class="total-due-amount print-white-text" style="background-color: #008001">
+              <p class="print-hide"></p>
+              <div class="white-bg" style="padding: 0.5pt; margin-top: -2pt">
+                <p class="print-show-value total-amount" id="totalDue">₦7,331.25</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-notice">
+          <div class="payment-notice-content print-no-border a5-small-text">
+            <p class="payment-notice-title">IMPORTANT PAYMENT INFORMATION</p>
+            <p class="payment-notice-text">
+              PAY ON OR BEFORE DUE DATE 11/15/2025 TO AVOID DISCONNECTION | PAY AT ANY OF OUR OFFICES OR TO OUR SALES
+              REPS USING OUR POSes OR ALTERNATIVE PAYMENT CHANNELS |
+              <b>ALWAYS DEMAND FOR RECEIPT AFTER PAYMENT IS MADE</b>
+            </p>
+          </div>
+          <div style="width: 40%"></div>
+        </div>
+
+        <div class="summary-section print-no-border a5-small-text">
+          <div class="summary-left print-no-border-r">
+            <div class="sub-header print-bg-light-green print-white-text">
+              <p class="print-hide-label"></p>
+              <div class="white-bg">
+                <p class="print-show-value" id="summaryAreaOffice">TUDUN WADA</p>
+              </div>
+            </div>
+
+            <div class="summary-grid">
+              <div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryBillId" style="font-size: 5pt"
+                    >INV-2024-001</span
+                  >
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryBillMonth" style="font-size: 5pt"
+                    >November 2024</span
+                  >
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryCustomerAccount" style="font-size: 5pt"
+                    >1234567890</span
+                  >
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryAccountName" style="font-size: 5pt"
+                    >John Doe</span
+                  >
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryAddress" style="font-size: 5pt"
+                    >123 Main Street</span
+                  >
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryConsumption" style="font-size: 5pt">250kwh</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryOpeningBalance" style="font-size: 5pt"
+                    >₦2,000.00</span
+                  >
+                </div>
+              </div>
+
+              <div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryAdjustment" style="font-size: 5pt">₦0.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryTotalPayments" style="font-size: 5pt"
+                    >₦6,375.00</span
+                  >
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryNetArrears" style="font-size: 5pt">₦0.00</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryMeter" style="font-size: 5pt">MTR123456</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryTariff" style="font-size: 5pt">R2</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryRate" style="font-size: 5pt">₦25.50</span>
+                </div>
+                <div class="info-row">
+                  <span class="print-hide-label info-label"></span>
+                  <span class="print-show-value info-value" id="summaryAdc" style="font-size: 5pt">150</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-right">
+            <div class="sub-header-right print-white-text" style="background-color: #008001">
+              <p class="print-hide-label"></p>
+              <div class="white-bg">
+                <p class="print-show-value" id="summaryServiceCenter">TUDUN WADA</p>
+              </div>
+            </div>
+
+            <div class="info-content">
+              <div class="info-row">
+                <span class="print-hide-label info-label"></span>
+                <span class="print-show-value info-value" id="summaryPresentReading" style="font-size: 5pt">1,250</span>
+              </div>
+              <div class="info-row">
+                <span class="print-hide-label info-label"></span>
+                <span class="print-show-value info-value" id="summaryPreviousReading" style="font-size: 5pt"
+                  >1,000</span
+                >
+              </div>
+              <div class="info-row">
+                <span class="print-hide-label info-label"></span>
+                <span class="print-show-value info-value" id="summaryFixedCharge" style="font-size: 5pt">₦500.00</span>
+              </div>
+              <div class="info-row">
+                <span class="print-hide-label info-label"></span>
+                <span class="print-show-value info-value" id="summaryCurrentBill" style="font-size: 5pt"
+                  >₦6,375.00</span
+                >
+              </div>
+              <div class="info-row">
+                <span class="print-hide-label info-label"></span>
+                <span class="print-show-value info-value" id="summaryVat" style="font-size: 5pt">₦956.25</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="final-amount-section print-no-border">
+          <div class="final-amount-left print-bg-light-green"></div>
+          <div class="final-amount-right">
+            <div class="final-amount print-white-text" style="background-color: #008001; margin: -3pt">
+              <p class="print-hide"></p>
+              <div class="white-bg">
+                <p class="print-show-value total-amount" id="finalAmount">₦7,331.25</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="footer print-no-border-t">
+          <div class="footer-line">
+            KADUNA ELECTRICITY DISTRIBUTION COMPANY | Customer Service: 0700 225 5332 | www.kadunaelectric.com
+          </div>
+          <div class="footer-line">
+            This is a computer generated invoice | Invoice Date: <span id="invoiceDate">Nov 1, 2024</span>
+          </div>
+        </div> -->
+      </div>
+    </div>
+
+    <script>
+      // Generate simple barcode
+      function generateBarcode() {
+        const accountNumber = document.getElementById("accountNumber").textContent.replace("#", "")
+        const barcodeElement = document.getElementById("barcode")
+
+        // Create a simple barcode pattern
+        let hash = 0
+        for (let i = 0; i < accountNumber.length; i++) {
+          hash = (hash * 31 + accountNumber.charCodeAt(i)) >>> 0
+        }
+
+        const barWidth = 1
+        const totalBars = 20
+        let barcodeHTML = ""
+
+        for (let i = 0; i < totalBars; i++) {
+          const bit = (hash >> i % 32) & 1
+          if (bit === 1) {
+            barcodeHTML += `<span style="display: inline-block; width: ${barWidth}px; height: 15px; background: black; margin: 0 0.5px;"></span>`
+          } else {
+            barcodeHTML += `<span style="display: inline-block; width: ${barWidth}px; height: 15px; background: white; margin: 0 0.5px;"></span>`
+          }
+        }
+
+        barcodeHTML += `<div style="text-align: center; font-size: 4px; margin-top: 1px;">${accountNumber}</div>`
+        barcodeElement.innerHTML = barcodeHTML
+      }
+
+      // Format currency
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("en-NG", {
+          style: "currency",
+          currency: "NGN",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(amount)
+      }
+
+      // Format date
+      function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      }
+
+      // Update invoice with data (you can modify this function to accept real data)
+      function updateInvoice(data) {
+        // Update all fields with provided data
+        if (data.accountNumber) {
+          document.getElementById("accountNumber").textContent = "#" + data.accountNumber
+          document.getElementById("customerAccount").textContent = data.accountNumber
+          document.getElementById("summaryCustomerAccount").textContent = data.accountNumber
+        }
+
+        if (data.accountName) {
+          document.getElementById("accountName").textContent = data.accountName
+          document.getElementById("summaryAccountName").textContent = data.accountName
+        }
+
+        if (data.totalDue) {
+          const formattedAmount = formatCurrency(data.totalDue)
+          document.getElementById("totalDue").textContent = formattedAmount
+          document.getElementById("finalAmount").textContent = formattedAmount
+        }
+
+        // Update other fields as needed
+        // Add more field updates based on your data structure
+
+        // Regenerate barcode with new account number
+        generateBarcode()
+      }
+
+      // Initialize barcode on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        generateBarcode()
+
+        // Set current date
+        const today = new Date()
+        document.getElementById("invoiceDate").textContent = formatDate(today.toISOString())
+      })
+
+      // Example usage:
+      // updateInvoice({
+      //     accountNumber: '1234567890',
+      //     accountName: 'John Doe',
+      //     totalDue: 7331.25
+      // });
+    </script>
+  </body>
+</html>

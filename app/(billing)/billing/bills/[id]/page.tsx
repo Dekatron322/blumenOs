@@ -45,7 +45,8 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const formatDateTime = (dateString: string) => {
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return "-"
   return new Date(dateString).toLocaleString("en-US", {
     year: "numeric",
     month: "short",

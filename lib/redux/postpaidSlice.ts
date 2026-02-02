@@ -22,31 +22,38 @@ export interface ActiveDispute {
 }
 
 export interface PostpaidBill {
-  billingId: number
-  previousReadingKwh: number
-  presentReadingKwh: number
-  totalPaid: number
+  totalPaid: any
   outstandingAmount: number
   reference: any
-  dueDate: any
-  name: string
   id: number
+  name: string
   period: string
+  billingPeriodId: number
+  billingPeriod: any
   category: number
   status: number
   adjustmentStatus: number
   customerId: number
   customerName: string
   customerAccountNumber: string
-  publicReference: string
+  customerStatusCode: any
+  customerAverageDailyConsumption: any
+  customerTariffCode: string
+  customerMeterNumber: string | null
+  netArrears: number
+  billingId: string
+  publicReference: any
   distributionSubstationId: number
   distributionSubstationCode: string
+  distributionSubstationName: string
   feederId: number
   feederName: string
   areaOfficeId: number
   areaOfficeName: string
-  meterReadingId: number
-  feederEnergyCapId: number
+  meterReadingId: any
+  feederEnergyCapId: any
+  previousReadingKwh: number
+  presentReadingKwh: number
   tariffPerKwh: number
   vatRate: number
   openingBalance: number
@@ -57,25 +64,25 @@ export interface PostpaidBill {
   currentBillAmount: number
   adjustedOpeningBalance: number
   totalDue: number
-  forecastConsumptionKwh: number
-  forecastChargeBeforeVat: number
-  forecastVatAmount: number
-  forecastBillAmount: number
-  forecastTotalDue: number
+  closingBalance: any
+  isMigrated: boolean
+  forecastConsumptionKwh: any
+  forecastChargeBeforeVat: any
+  forecastVatAmount: any
+  forecastBillAmount: any
+  forecastTotalDue: any
   isEstimated: boolean
-  estimatedConsumptionKwh: number
-  estimatedBillAmount: number
-  actualConsumptionKwh: number
-  actualBillAmount: number
-  consumptionVarianceKwh: number
-  billingVarianceAmount: number
+  estimatedConsumptionKwh: any
+  estimatedBillAmount: any
+  actualConsumptionKwh: any
+  actualBillAmount: any
+  consumptionVarianceKwh: any
+  billingVarianceAmount: any
   isMeterReadingFlagged: boolean
-  meterReadingValidationStatus: number
+  meterReadingValidationStatus: any
   openDisputeCount: number
   activeDispute: ActiveDispute | null
-  createdAt: string
-  lastUpdated: string
-  ledgerEntries: LedgerEntry[]
+  dueDate: string
   customer?: {
     lastLoginAt: string | null
     suspensionReason: string | null
@@ -138,7 +145,10 @@ export interface PostpaidBill {
     category: string | null
     subCategory: string | null
     salesRepUser: any
-  } | null
+  }
+  createdAt: string
+  lastUpdated: string | null
+  ledgerEntries: LedgerEntry[]
 }
 
 export interface PostpaidBillsResponse {
