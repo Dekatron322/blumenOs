@@ -178,6 +178,12 @@ export const allLinks: LinkItem[] = [
         requiredActions: ["R"],
       },
       {
+        name: "Failed Vends",
+        href: "/tokens/failed-vend",
+        privilegeKey: "payments",
+        requiredActions: ["R"],
+      },
+      {
         name: "Vend",
         href: "/tokens/vend",
         privilegeKey: "payments",

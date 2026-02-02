@@ -257,6 +257,21 @@ export interface MetersState {
     hasNext: boolean
     hasPrevious: boolean
   }
+  failedPayments: FailedPayment[]
+  failedPaymentsLoading: boolean
+  failedPaymentsError: string | null
+  failedPaymentsPagination: {
+    totalCount: number
+    totalPages: number
+    currentPage: number
+    pageSize: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
+  retryFailedPaymentLoading: boolean
+  retryFailedPaymentError: string | null
+  retryFailedPaymentSuccess: boolean
+  retryFailedPaymentData: RetryFailedPaymentData | null
   summary: MetersSummaryData | null
   summaryLoading: boolean
   summaryError: string | null
@@ -377,6 +392,21 @@ const initialState: MetersState = {
     hasNext: false,
     hasPrevious: false,
   },
+  failedPayments: [],
+  failedPaymentsLoading: false,
+  failedPaymentsError: null,
+  failedPaymentsPagination: {
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 0,
+    pageSize: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
+  retryFailedPaymentLoading: false,
+  retryFailedPaymentError: null,
+  retryFailedPaymentSuccess: false,
+  retryFailedPaymentData: null,
   summary: null,
   summaryLoading: false,
   summaryError: null,
@@ -786,6 +816,168 @@ export interface VerifyTokenResponse {
       success: boolean
     }
   }
+}
+
+// Interface for Failed Payment entry
+export interface FailedPayment {
+  requestId: string
+  operation: number
+  attemptCount: number
+  maxAttempts: number
+  lastAttemptAtUtc: string
+  completedAtUtc: string
+  drn: string
+  paymentId: number
+  paymentReference: string
+  paymentChannel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  paymentStatus: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  amount: number
+  paidAtUtc: string
+  customerId: number
+  customerName: string
+  customerAccountNumber: string
+  vendorId: number
+  agentId: number
+  errorCode: string
+  errorMessage: string
+  createdAt: string
+  lastUpdated: string
+}
+
+// Interface for Failed Payment Request Parameters
+export interface FailedPaymentParams {
+  pageNumber: number
+  pageSize: number
+  paymentReference?: string
+  meterNumber?: string
+}
+
+// Interface for Failed Payment Response
+export interface FailedPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: FailedPayment[]
+  totalCount: number
+  totalPages: number
+  currentPage: number
+  pageSize: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+// Interface for Token entry in retry response
+export interface RetryToken {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+// Interface for Receipt in retry response
+export interface RetryReceipt {
+  reference: string
+  bankReceiptNo: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  tokens: RetryToken[]
+  serviceCharge: number
+  discountBonus: number
+}
+
+// Interface for Virtual Account in retry response
+export interface RetryVirtualAccount {
+  accountNumber: string
+  bankName: string
+  reference: string
+  expiresAtUtc: string
+}
+
+// Interface for Payment Details in retry response
+export interface RetryPaymentDetails {
+  reference: string
+  checkoutUrl: string
+  virtualAccount: RetryVirtualAccount
+}
+
+// Interface for Collector in retry response
+export interface RetryCollector {
+  type: string
+  name: string
+  agentId: number
+  agentCode: string
+  agentType: "SalesRep" | "Agent" | "Vendor" | "Staff"
+  vendorId: number
+  vendorName: string
+  staffName: string
+  customerId: number
+  customerName: string
+}
+
+// Interface for Token in retry response
+export interface RetryTokenData {
+  token: string
+  tokenDec: string
+  vendedAmount: string
+  unit: string
+  description: string
+  drn: string
+}
+
+// Interface for Retry Failed Payment Response Data
+export interface RetryFailedPaymentData {
+  isPending: boolean
+  externalReference: string
+  bankReceiptNo: string
+  reference: string
+  paidAtUtc: string
+  customerName: string
+  customerAccountNumber: string
+  customerAddress: string
+  customerPhoneNumber: string
+  customerMeterNumber: string
+  customerId: number
+  accountType: string
+  tariffRate: number
+  units: number
+  vatRate: number
+  vatAmount: number
+  electricityAmount: number
+  outstandingDebt: number
+  debtPayable: number
+  totalAmountPaid: number
+  currency: string
+  channel: "Cash" | "BankTransfer" | "Pos" | "Card" | "VendorWallet" | "Chaque"
+  status: "Pending" | "Confirmed" | "Failed" | "Reversed"
+  paymentTypeName: string
+  receipt: RetryReceipt
+  paymentDetails: RetryPaymentDetails
+  collector: RetryCollector
+  token: RetryTokenData
+}
+
+// Interface for Retry Failed Payment Response
+export interface RetryFailedPaymentResponse {
+  isSuccess: boolean
+  message: string
+  data: RetryFailedPaymentData
 }
 
 // Interface for Prepaid Transaction entry
@@ -1446,6 +1638,40 @@ export const fetchPrepaidTransactions = createAsyncThunk(
   }
 )
 
+// Async Thunk for fetching failed payments
+export const fetchFailedPayments = createAsyncThunk(
+  "meters/fetchFailedPayments",
+  async (params: FailedPaymentParams, { rejectWithValue }) => {
+    try {
+      const { pageNumber, pageSize, paymentReference, meterNumber } = params
+
+      const requestParams: any = {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      }
+
+      // Add optional parameters only if they are provided
+      if (paymentReference !== undefined) requestParams.PaymentReference = paymentReference
+      if (meterNumber !== undefined) requestParams.MeterNumber = meterNumber
+
+      const response = await api.get<FailedPaymentResponse>(buildApiUrl(API_ENDPOINTS.METER_READINGS.FAILED_PAYMENTS), {
+        params: requestParams,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch failed payments")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch failed payments")
+      }
+      return rejectWithValue(error.message || "Network error during failed payments fetch")
+    }
+  }
+)
+
 // Async Thunk for fetching verify token history
 export const fetchVerifyTokenHistory = createAsyncThunk(
   "meters/fetchVerifyTokenHistory",
@@ -1469,6 +1695,28 @@ export const fetchVerifyTokenHistory = createAsyncThunk(
         return rejectWithValue(error.response.data.message || "Failed to fetch verify token history")
       }
       return rejectWithValue(error.message || "Network error during verify token history fetch")
+    }
+  }
+)
+
+// Async Thunk for retrying failed payment
+export const retryFailedPayment = createAsyncThunk(
+  "meters/retryFailedPayment",
+  async (paymentId: number, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METER_READINGS.RETRY_FAILED_PAYMENTS.replace("{paymentId}", paymentId.toString())
+      const response = await api.post<RetryFailedPaymentResponse>(buildApiUrl(endpoint))
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to retry payment")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to retry payment")
+      }
+      return rejectWithValue(error.message || "Network error during payment retry")
     }
   }
 )
@@ -1621,6 +1869,20 @@ const metersSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+    },
+    // Clear failed payments
+    clearFailedPayments: (state) => {
+      state.failedPayments = []
+      state.failedPaymentsError = null
+      state.failedPaymentsLoading = false
+      state.failedPaymentsPagination = initialState.failedPaymentsPagination
+    },
+    // Clear retry failed payment state
+    clearRetryFailedPayment: (state) => {
+      state.retryFailedPaymentLoading = false
+      state.retryFailedPaymentError = null
+      state.retryFailedPaymentSuccess = false
+      state.retryFailedPaymentData = null
     },
   },
   extraReducers: (builder) => {
@@ -2017,6 +2279,43 @@ const metersSlice = createSlice({
         state.prepaidTransactionsLoading = false
         state.prepaidTransactionsError = action.payload as string
       })
+      // Fetch failed payments
+      .addCase(fetchFailedPayments.pending, (state) => {
+        state.failedPaymentsLoading = true
+        state.failedPaymentsError = null
+      })
+      .addCase(fetchFailedPayments.fulfilled, (state, action: PayloadAction<FailedPaymentResponse>) => {
+        state.failedPaymentsLoading = false
+        state.failedPayments = action.payload.data
+        state.failedPaymentsPagination = {
+          totalCount: action.payload.totalCount,
+          totalPages: action.payload.totalPages,
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          hasNext: action.payload.hasNext,
+          hasPrevious: action.payload.hasPrevious,
+        }
+      })
+      .addCase(fetchFailedPayments.rejected, (state, action) => {
+        state.failedPaymentsLoading = false
+        state.failedPaymentsError = action.payload as string
+      })
+      // Retry failed payment
+      .addCase(retryFailedPayment.pending, (state) => {
+        state.retryFailedPaymentLoading = true
+        state.retryFailedPaymentError = null
+        state.retryFailedPaymentSuccess = false
+      })
+      .addCase(retryFailedPayment.fulfilled, (state, action: PayloadAction<RetryFailedPaymentResponse>) => {
+        state.retryFailedPaymentLoading = false
+        state.retryFailedPaymentSuccess = true
+        state.retryFailedPaymentData = action.payload.data
+      })
+      .addCase(retryFailedPayment.rejected, (state, action) => {
+        state.retryFailedPaymentLoading = false
+        state.retryFailedPaymentError = action.payload as string
+        state.retryFailedPaymentSuccess = false
+      })
   },
 })
 
@@ -2035,5 +2334,7 @@ export const {
   clearVerifyTokenHistory,
   clearUpdatePhase,
   clearPrepaidTransactions,
+  clearFailedPayments,
+  clearRetryFailedPayment,
 } = metersSlice.actions
 export default metersSlice.reducer

@@ -290,6 +290,8 @@ export const API_ENDPOINTS = {
     GET_BY_ID: "/billing/postpaid/meter-readings/{id}",
     ADD: "/billing/postpaid/meter-readings",
     PREPAID_TRANSACTION: "/prepaid/transactions",
+    FAILED_PAYMENTS: "/prepaid/queue/failed-payments",
+    RETRY_FAILED_PAYMENTS: "/prepaid/queue/failed-payments/{paymentId}/retry",
   },
 
   FEEDER_ENERGY_CAP: {
