@@ -452,6 +452,7 @@ export const API_ENDPOINTS = {
     SET_CONTROL: "/meters/{id}/prepaid/set-control",
     VERIFY_TOKEN: "/meters/{id}/prepaid/verify-token",
     VERIFY_TOKEN_HISTORY: "/meters/{id}/prepaid/histories/verify-token",
+    UPDATE_METER_PHASE: "/meters/{id}/phase",
   },
 
   METER_BRANDS: {

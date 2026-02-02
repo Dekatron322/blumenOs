@@ -50,10 +50,12 @@ export interface Meter {
   longitude: number
   tenantFullName: string
   tenantPhoneNumber: string
+  phaseType?: string
 }
 
 // Interface for Meter Detail Response Data
 export interface MeterDetailData {
+  phaseType: string | undefined
   id: number
   customerId: number
   customerAccountNumber: string
@@ -241,6 +243,9 @@ export interface MetersState {
     hasNext: boolean
     hasPrevious: boolean
   }
+  updatePhaseData: MeterDetailData | null
+  updatePhaseLoading: boolean
+  updatePhaseError: string | null
   prepaidTransactions: PrepaidTransaction[]
   prepaidTransactionsLoading: boolean
   prepaidTransactionsError: string | null
@@ -358,6 +363,9 @@ const initialState: MetersState = {
     hasNext: false,
     hasPrevious: false,
   },
+  updatePhaseData: null,
+  updatePhaseLoading: false,
+  updatePhaseError: null,
   prepaidTransactions: [],
   prepaidTransactionsLoading: false,
   prepaidTransactionsError: null,
@@ -405,6 +413,19 @@ export interface EditMeterRequest {
   latitude: number
   longitude: number
   changeReason: string
+}
+
+// Interface for Update Meter Phase Request
+export interface UpdateMeterPhaseRequest {
+  phaseType: string
+  changeReason: string
+}
+
+// Interface for Update Meter Phase Response
+export interface UpdateMeterPhaseResponse {
+  isSuccess: boolean
+  message: string
+  data: MeterDetailData
 }
 
 // Interface for Add Meter Request
@@ -1319,6 +1340,28 @@ export const verifyToken = createAsyncThunk(
   }
 )
 
+// Async Thunk for updating meter phase
+export const updateMeterPhase = createAsyncThunk(
+  "meters/updateMeterPhase",
+  async ({ id, data }: { id: number; data: UpdateMeterPhaseRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.UPDATE_METER_PHASE.replace("{id}", id.toString())
+      const response = await api.post<UpdateMeterPhaseResponse>(buildApiUrl(endpoint), data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to update meter phase")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to update meter phase")
+      }
+      return rejectWithValue(error.message || "Network error during meter phase update")
+    }
+  }
+)
+
 // Async Thunk for fetching prepaid transactions
 export const fetchPrepaidTransactions = createAsyncThunk(
   "meters/fetchPrepaidTransactions",
@@ -1558,6 +1601,12 @@ const metersSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+    },
+    // Clear update phase data
+    clearUpdatePhase: (state) => {
+      state.updatePhaseData = null
+      state.updatePhaseError = null
+      state.updatePhaseLoading = false
     },
     // Clear prepaid transactions
     clearPrepaidTransactions: (state) => {
@@ -1909,6 +1958,44 @@ const metersSlice = createSlice({
         state.verifyTokenHistoryLoading = false
         state.verifyTokenHistoryError = action.payload as string
       })
+      // Update meter phase
+      .addCase(updateMeterPhase.pending, (state) => {
+        state.updatePhaseLoading = true
+        state.updatePhaseError = null
+      })
+      .addCase(
+        updateMeterPhase.fulfilled,
+        (
+          state,
+          action: PayloadAction<
+            UpdateMeterPhaseResponse,
+            string,
+            { arg: { id: number; data: UpdateMeterPhaseRequest } }
+          >
+        ) => {
+          state.updatePhaseLoading = false
+          state.updatePhaseData = action.payload.data
+          // Update the current meter if it's the same meter
+          if (state.currentMeter && state.currentMeter.id === action.meta.arg.id) {
+            state.currentMeter = {
+              ...state.currentMeter,
+              phaseType: action.payload.data.phaseType,
+            }
+          }
+          // Update the meter in the meters array if it exists
+          const index = state.meters.findIndex((meter) => meter.id === action.meta.arg.id)
+          if (index !== -1) {
+            state.meters[index] = {
+              ...state.meters[index],
+              phaseType: action.payload.data.phaseType,
+            } as Meter
+          }
+        }
+      )
+      .addCase(updateMeterPhase.rejected, (state, action) => {
+        state.updatePhaseLoading = false
+        state.updatePhaseError = action.payload as string
+      })
       // Fetch prepaid transactions
       .addCase(fetchPrepaidTransactions.pending, (state) => {
         state.prepaidTransactionsLoading = true
@@ -1946,6 +2033,7 @@ export const {
   clearTamperData,
   clearVerifyToken,
   clearVerifyTokenHistory,
+  clearUpdatePhase,
   clearPrepaidTransactions,
 } = metersSlice.actions
 export default metersSlice.reducer

@@ -39,6 +39,8 @@ import {
   type MeterDetailData,
   setControl,
   type SetControlRequest,
+  updateMeterPhase,
+  type UpdateMeterPhaseRequest,
 } from "lib/redux/metersSlice"
 import { fetchCountries, selectAllProvinces, selectCountriesLoading } from "lib/redux/countriesSlice"
 import { fetchInjectionSubstationById } from "lib/redux/injectionSubstationSlice"
@@ -57,6 +59,7 @@ import ClearTamperModal from "components/ui/Modal/clear-tamper-modal"
 import AddKeyChangeModal from "components/ui/Modal/add-key-change-modal"
 import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
 import SetControlModal from "components/ui/Modal/set-control-modal"
+import ChangePhaseModal from "components/ui/Modal/change-phase-modal"
 import {
   CalendarOutlineIcon,
   ExportOutlineIcon,
@@ -562,7 +565,15 @@ const MeterBasicInfoTab = ({
   meter: MeterDetailData
   canUpdate: boolean
   openModal: (
-    modalType: "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl"
+    modalType:
+      | "edit"
+      | "history"
+      | "change-request"
+      | "clearTamper"
+      | "addKeyChange"
+      | "clearCredit"
+      | "setControl"
+      | "changePhase"
   ) => void
   router: ReturnType<typeof useRouter>
 }) => {
@@ -858,6 +869,15 @@ const MeterBasicInfoTab = ({
                 >
                   <Settings className="size-4" />
                   Set Control
+                </ButtonModule>
+                <ButtonModule
+                  variant="outlinePink"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("changePhase")}
+                >
+                  <RefreshCw className="size-4" />
+                  Change Phase
                 </ButtonModule>
               </div>
             </motion.div>
@@ -1297,6 +1317,9 @@ const MeterDetailsPage = () => {
     setControlLoading,
     setControlError,
     setControlData,
+    updatePhaseLoading,
+    updatePhaseError,
+    updatePhaseData,
   } = useAppSelector((state) => state.meters)
 
   // Get current user to check privileges
@@ -1318,7 +1341,15 @@ const MeterDetailsPage = () => {
     | "meter-history"
   const [activeTab, setActiveTab] = useState<TabType>("basic-info")
   const [activeModal, setActiveModal] = useState<
-    "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl" | null
+    | "edit"
+    | "history"
+    | "change-request"
+    | "clearTamper"
+    | "addKeyChange"
+    | "clearCredit"
+    | "setControl"
+    | "changePhase"
+    | null
   >(null)
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -1367,7 +1398,15 @@ const MeterDetailsPage = () => {
 
   const closeAllModals = () => setActiveModal(null)
   const openModal = (
-    modalType: "edit" | "history" | "change-request" | "clearTamper" | "addKeyChange" | "clearCredit" | "setControl"
+    modalType:
+      | "edit"
+      | "history"
+      | "change-request"
+      | "clearTamper"
+      | "addKeyChange"
+      | "clearCredit"
+      | "setControl"
+      | "changePhase"
   ) => setActiveModal(modalType)
 
   const handleUpdateSuccess = () => {
@@ -1410,6 +1449,20 @@ const MeterDetailsPage = () => {
     if (meter) {
       await dispatch(setControl({ id: meter.id, controlData })).unwrap()
       closeAllModals()
+    }
+  }
+
+  const handleChangePhase = async (phaseData: UpdateMeterPhaseRequest) => {
+    if (meter) {
+      await dispatch(updateMeterPhase({ id: meter.id, data: phaseData })).unwrap()
+      closeAllModals()
+      // Refresh meter details after successful phase update
+      if (meterId) {
+        const id = parseInt(meterId)
+        if (!isNaN(id)) {
+          dispatch(fetchMeterDetail(id))
+        }
+      }
     }
   }
 
@@ -2064,6 +2117,17 @@ const MeterDetailsPage = () => {
         meterId={meter.id}
         errorMessage={setControlError || undefined}
         successMessage={setControlData ? "Control set successfully!" : undefined}
+      />
+
+      <ChangePhaseModal
+        isOpen={activeModal === "changePhase"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleChangePhase}
+        loading={updatePhaseLoading}
+        meterId={meter.id}
+        currentPhase={meter.phaseType}
+        errorMessage={updatePhaseError || undefined}
+        successMessage={updatePhaseData ? "Phase changed successfully!" : undefined}
       />
     </section>
   )
