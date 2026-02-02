@@ -82,9 +82,15 @@ const allLinks: NavLink[] = [
     href: "/sales-rep/view-prepaid-payments",
     icon: PaymentIcon,
   },
+
   {
     name: "View Collection History",
     href: "/sales-rep/view-payment-history",
+    icon: PaymentIcon,
+  },
+  {
+    name: "Failed Vends",
+    href: "/sales-rep/failed-vends",
     icon: PaymentIcon,
   },
 ]
