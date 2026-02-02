@@ -481,7 +481,7 @@ const FilterModal = ({
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">Status Parameter</p>
-                                <p className="text-sm text-gray-500">status: "{statusFilter}"</p>
+                                <p className="text-sm text-gray-500">status: &quot;{statusFilter}&quot;</p>
                               </div>
                             </div>
                             <button
@@ -501,7 +501,7 @@ const FilterModal = ({
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">Top-up By Parameter</p>
-                                <p className="text-sm text-gray-500">topUpBy: "{topUpByFilter}"</p>
+                                <p className="text-sm text-gray-500">topUpBy: &quot;{topUpByFilter}&quot;</p>
                               </div>
                             </div>
                             <button
