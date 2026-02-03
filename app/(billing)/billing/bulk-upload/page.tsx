@@ -15,7 +15,6 @@ import { CsvJobsParams, fetchCsvJobs } from "lib/redux/fileManagementSlice"
 import { VscCloudUpload, VscEye } from "react-icons/vsc"
 import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
-// Job Type options for filters - Billing related job types only
 const jobTypeOptions = [
   { value: "15", label: "Meter Reading Account Import" },
   { value: "17", label: "Bill Generate Missing" },
@@ -27,7 +26,6 @@ const jobTypeOptions = [
   { value: "2", label: "Customer Meter Reading" },
 ]
 
-// Status options for filters
 const statusOptions = [
   { value: "", label: "All Statuses" },
   { value: "1", label: "Queued" },
@@ -37,7 +35,6 @@ const statusOptions = [
   { value: "5", label: "Partially Completed" },
 ]
 
-// Boolean options for filters
 const booleanOptions = [
   { value: "", label: "All" },
   { value: "true", label: "Yes" },
@@ -80,7 +77,6 @@ const LoadingSkeleton = () => {
                 },
               }}
             >
-              {/* Header Section Skeleton */}
               <div className="items-center justify-between border-b py-2 md:flex md:py-4">
                 <div className="mb-3 md:mb-0">
                   <div className="mb-2 h-8 w-48 rounded bg-gray-200"></div>
@@ -92,7 +88,6 @@ const LoadingSkeleton = () => {
                 </div>
               </div>
 
-              {/* Table Skeleton */}
               <div className="w-full overflow-x-auto border-x bg-[#f9f9f9]">
                 <table className="w-full min-w-[800px] border-separate border-spacing-0 text-left">
                   <thead>
@@ -118,7 +113,6 @@ const LoadingSkeleton = () => {
                 </table>
               </div>
 
-              {/* Pagination Section Skeleton */}
               <div className="flex items-center justify-between border-t py-3">
                 <div className="h-6 w-48 rounded bg-gray-200"></div>
                 <div className="flex items-center gap-2">
@@ -313,8 +307,7 @@ const BulkUploads: React.FC = () => {
     setCurrentPage(newPage)
   }
 
-  // Filter jobs to only show billing-related job types
-  const billingJobTypes = [15, 17, 18, 19, 20, 21, 3, 2] // Billing job type values
+  const billingJobTypes = [15, 17, 18, 19, 20, 21, 3, 2]
   const filteredCsvJobs = csvJobs.filter((job) => billingJobTypes.includes(job.jobType))
 
   if (csvJobsLoading && !hasInitialLoad) {
