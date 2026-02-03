@@ -491,6 +491,27 @@ export interface FinalizeSingleBillResponse {
   data: PostpaidBill
 }
 
+// Vendor Summary Report Interfaces
+export interface VendorSummaryReportRequestParams {
+  vendorId: number
+  startDateUtc: string
+  endDateUtc: string
+  source?: string
+}
+
+export interface VendorSummaryReportData {
+  totalCount: number
+  capturedCount: number
+  processedCount: number
+  failedCount: number
+}
+
+export interface VendorSummaryReportResponse {
+  isSuccess: boolean
+  message: string
+  data: VendorSummaryReportData
+}
+
 // Adjustments Interfaces
 export interface Adjustment {
   id: number
@@ -688,6 +709,12 @@ interface PostpaidBillingState {
     hasPrevious: boolean
   }
 
+  // Vendor Summary Report state
+  vendorSummaryReport: VendorSummaryReportData | null
+  vendorSummaryReportLoading: boolean
+  vendorSummaryReportError: string | null
+  vendorSummaryReportSuccess: boolean
+
   // Search/filter state
   filters: {
     period?: string
@@ -828,6 +855,10 @@ const initialState: PostpaidBillingState = {
     hasNext: false,
     hasPrevious: false,
   },
+  vendorSummaryReport: null,
+  vendorSummaryReportLoading: false,
+  vendorSummaryReportError: null,
+  vendorSummaryReportSuccess: false,
   filters: {},
   billingJobsFilters: {},
 }
@@ -1395,6 +1426,38 @@ export const fetchAdjustments = createAsyncThunk(
   }
 )
 
+// Fetch Vendor Summary Report Async Thunk
+export const fetchVendorSummaryReport = createAsyncThunk(
+  "postpaidBilling/fetchVendorSummaryReport",
+  async (params: VendorSummaryReportRequestParams, { rejectWithValue }) => {
+    try {
+      const { vendorId, startDateUtc, endDateUtc, source } = params
+
+      // Build query parameters only if they exist
+      const queryParams: any = {}
+      if (vendorId !== undefined) queryParams.VendorId = vendorId
+      if (startDateUtc) queryParams.StartDateUtc = startDateUtc
+      if (endDateUtc) queryParams.EndDateUtc = endDateUtc
+      if (source) queryParams.Source = source
+
+      const response = await api.get<VendorSummaryReportResponse>(buildApiUrl(API_ENDPOINTS.VENDOR_SUMMARY_REPORT), {
+        params: Object.keys(queryParams).length > 0 ? queryParams : undefined,
+      })
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to fetch vendor summary report")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to fetch vendor summary report")
+      }
+      return rejectWithValue(error.message || "Network error during vendor summary report fetch")
+    }
+  }
+)
+
 // Postpaid billing slice
 const postpaidSlice = createSlice({
   name: "postpaidBilling",
@@ -1464,6 +1527,7 @@ const postpaidSlice = createSlice({
       state.declineChangeRequestError = null
       state.createManualBillError = null
       state.createMeterReadingError = null
+      state.vendorSummaryReportError = null
     },
 
     // Clear current bill
@@ -1601,6 +1665,14 @@ const postpaidSlice = createSlice({
       }
     },
 
+    // Clear vendor summary report status
+    clearVendorSummaryReportStatus: (state) => {
+      state.vendorSummaryReportLoading = false
+      state.vendorSummaryReportError = null
+      state.vendorSummaryReportSuccess = false
+      state.vendorSummaryReport = null
+    },
+
     // Reset billing state
     resetBillingState: (state) => {
       state.bills = []
@@ -1717,6 +1789,10 @@ const postpaidSlice = createSlice({
         hasNext: false,
         hasPrevious: false,
       }
+      state.vendorSummaryReport = null
+      state.vendorSummaryReportLoading = false
+      state.vendorSummaryReportError = null
+      state.vendorSummaryReportSuccess = false
       state.filters = {}
       state.billingJobsFilters = {}
     },
@@ -2307,6 +2383,24 @@ const postpaidSlice = createSlice({
           hasPrevious: false,
         }
       })
+      // Fetch vendor summary report cases
+      .addCase(fetchVendorSummaryReport.pending, (state) => {
+        state.vendorSummaryReportLoading = true
+        state.vendorSummaryReportError = null
+        state.vendorSummaryReportSuccess = false
+      })
+      .addCase(fetchVendorSummaryReport.fulfilled, (state, action: PayloadAction<VendorSummaryReportResponse>) => {
+        state.vendorSummaryReportLoading = false
+        state.vendorSummaryReportSuccess = true
+        state.vendorSummaryReport = action.payload.data
+        state.vendorSummaryReportError = null
+      })
+      .addCase(fetchVendorSummaryReport.rejected, (state, action) => {
+        state.vendorSummaryReportLoading = false
+        state.vendorSummaryReportError = (action.payload as string) || "Failed to fetch vendor summary report"
+        state.vendorSummaryReportSuccess = false
+        state.vendorSummaryReport = null
+      })
   },
 })
 
@@ -2330,6 +2424,7 @@ export const {
   clearCreateMeterReadingStatus,
   clearFinalizeSingleBillStatus,
   clearAdjustmentsStatus,
+  clearVendorSummaryReportStatus,
   resetBillingState,
   setPagination,
   setBillingJobsPagination,
