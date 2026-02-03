@@ -12,6 +12,7 @@ import {
   processBillingBulkUpload,
   processFeederEnergyCapBulkUpload,
   processFinalizeBillingBulkUpload,
+  processMeterReadingBulkUpload,
   processMeterReadingGeneralBulkUpload,
   processMissingPostpaidBillingBulkUpload,
   processPastPostpaidBillingBulkUpload,
@@ -51,11 +52,12 @@ const FileManagementPage = () => {
     { name: "Mark Bills for Printing", value: 20 },
     { name: "Bill Crucial Ops", value: 21 },
     { name: "Feeder Energy Cap", value: 3 },
-    { name: "Customer Bills Reading", value: 2 },
+    { name: "Customer Meter Reading", value: 2 },
+    { name: "Meter Reading Account Import", value: "2" },
   ]
 
   // Helper function to get bulkInsertType based on upload type
-  const getBulkInsertType = (uploadType: number | null): string => {
+  const getBulkInsertType = (uploadType: number | string | null): string => {
     switch (uploadType) {
       case 17:
         return "bill-generate-missing"
@@ -70,14 +72,16 @@ const FileManagementPage = () => {
       case 3:
         return "feeder-energy-cap"
       case 2:
-        return "meter-reading"
+        return "meter-readings-account"
+      case "2":
+        return "meter-readings-account"
       default:
         return "bill-generate-missing" // fallback
     }
   }
 
   // Helper function to get purpose based on upload type
-  const getPurpose = (uploadType: number | null): string => {
+  const getPurpose = (uploadType: number | string | null): string => {
     switch (uploadType) {
       case 17:
         return "postpaid-missing-bills-bulk"
@@ -92,14 +96,16 @@ const FileManagementPage = () => {
       case 3:
         return "feeder-energy-caps-bulk"
       case 2:
-        return "postpaid-meter-readings-bulk"
+        return "postpaid-meter-readings-account-bulk"
+      case "2":
+        return "postpaid-meter-readings-account-bulk"
       default:
         return "billing-bulk-import" // fallback
     }
   }
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedUploadType, setSelectedUploadType] = useState<number | null>(null)
+  const [selectedUploadType, setSelectedUploadType] = useState<number | string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -422,9 +428,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 3) {
                   // Feeder Energy Cap Import - use feeder energy cap endpoint with confirm
                   bulkResult = await dispatch(processFeederEnergyCapBulkUpload({ fileId, confirm: true })).unwrap()
-                } else if (selectedUploadType === 2) {
-                  // Meter Reading Import - use meter reading bulk upload endpoint
-                  bulkResult = await dispatch(processMeterReadingGeneralBulkUpload({ fileId, confirm: true })).unwrap()
+                } else if (selectedUploadType === 2 || selectedUploadType === "2") {
+                  // Meter Reading Import - use meter reading account bulk upload endpoint
+                  bulkResult = await dispatch(processMeterReadingBulkUpload({ fileId })).unwrap()
                 } else {
                   // Other billing bulk upload types - fallback to general billing endpoint
                   bulkResult = await dispatch(processBillingBulkUpload({ fileId })).unwrap()

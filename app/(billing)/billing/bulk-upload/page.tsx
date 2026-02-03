@@ -17,12 +17,14 @@ import CsvUploadFailuresModal from "components/ui/Modal/CsvUploadFailuresModal"
 
 // Job Type options for filters - Billing related job types only
 const jobTypeOptions = [
+  { value: "15", label: "Meter Reading Account Import" },
   { value: "17", label: "Bill Generate Missing" },
   { value: "18", label: "Bill Generate Past" },
   { value: "19", label: "Bill Adjustment" },
   { value: "20", label: "Bill Finalize" },
   { value: "21", label: "Bill Crucial Ops" },
   { value: "3", label: "Feeder Energy Cap Import" },
+  { value: "2", label: "Customer Meter Reading" },
 ]
 
 // Status options for filters
@@ -312,7 +314,7 @@ const BulkUploads: React.FC = () => {
   }
 
   // Filter jobs to only show billing-related job types
-  const billingJobTypes = [17, 18, 19, 20, 21, 3] // Billing job type values
+  const billingJobTypes = [15, 17, 18, 19, 20, 21, 3, 2] // Billing job type values
   const filteredCsvJobs = csvJobs.filter((job) => billingJobTypes.includes(job.jobType))
 
   if (csvJobsLoading && !hasInitialLoad) {
