@@ -1816,7 +1816,7 @@ const AdminPaymentTable: React.FC<AdminPaymentTableProps> = ({
                       <td className="whitespace-nowrap border-b px-4 py-1 text-sm">
                         {payment.status === PaymentStatus.Pending ? (
                           (agent && (agent.agentType === "Supervisor" || agent.agentType === "FinanceManager")) ||
-                          user?.roles?.some((role) => role.slug === "superadmin") ? (
+                          user?.roles?.some((role: { slug: string }) => role.slug === "superadmin") ? (
                             <ButtonModule variant="outline" size="sm" onClick={() => handleConfirmPayment(payment)}>
                               Confirm
                             </ButtonModule>
