@@ -248,6 +248,8 @@ export const API_ENDPOINTS = {
     RETRY_ALL_FAILED: "/vendors/enumerations/retry-failed",
   },
 
+  VENDOR_SUMMARY_REPORT: "/vendors/reports/enumerations/summary",
+
   STATUS_MAP: {
     GET: "/customers/map/customers",
     ASSETS: "/customers/map/assets",
@@ -455,6 +457,7 @@ export const API_ENDPOINTS = {
     VERIFY_TOKEN: "/meters/{id}/prepaid/verify-token",
     VERIFY_TOKEN_HISTORY: "/meters/{id}/prepaid/histories/verify-token",
     UPDATE_METER_PHASE: "/meters/{id}/phase",
+    CHANGE_TECHNICAL_CONFIG: "/meters/{id}/technical-config",
   },
 
   METER_BRANDS: {

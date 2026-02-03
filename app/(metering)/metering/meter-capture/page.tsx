@@ -1,8 +1,8 @@
 "use client"
 import React, { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { AlertCircle, FileIcon, Filter, RefreshCw, RotateCcw } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import { AlertCircle, AlertTriangle, Clock, FileIcon, Filter, RefreshCw, RotateCcw, TrendingUp, X } from "lucide-react"
 import { MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos } from "react-icons/md"
 
 import { ButtonModule } from "components/ui/Button/Button"
@@ -19,10 +19,13 @@ import {
   retryAllFailed,
   retryMeterCapture,
 } from "lib/redux/meterCaptureSlice"
+import { fetchVendorSummaryReport, VendorSummaryReportRequestParams } from "lib/redux/postpaidSlice"
+import { fetchVendors } from "lib/redux/vendorSlice"
 import { VscEye } from "react-icons/vsc"
 import MeterCaptureDetailsModal from "components/ui/Modal/MeterCaptureDetailsModal"
 import { notify } from "components/ui/Notification/Notification"
 import { getVendorEnumerationStatusText, VendorEnumerationStatus } from "lib/types/vendorEnumeration"
+import { DateFilter, getDateRangeUtc } from "utils/dateRange"
 
 // Status options for meter captures
 const statusOptions = [
@@ -48,6 +51,386 @@ const sourceOptions = [
   { value: "CSV", label: "CSV Upload" },
   { value: "MANUAL", label: "Manual Entry" },
 ]
+
+// Filter Modal Component
+const FilterModal = ({
+  isOpen,
+  onRequestClose,
+  timeFilter,
+  summaryVendorIdFilter,
+  summarySourceFilter,
+  customStartDate,
+  customEndDate,
+  vendors,
+  vendorsLoading,
+  vendorsError,
+  handleTimeFilterChange,
+  handleSummaryVendorIdFilterChange,
+  handleSummarySourceFilterChange,
+  handleCustomDateChange,
+  clearSummaryFilters,
+  refreshVendorSummaryData,
+}: {
+  isOpen: boolean
+  onRequestClose: () => void
+  timeFilter: DateFilter
+  summaryVendorIdFilter: string
+  summarySourceFilter: string
+  customStartDate: string
+  customEndDate: string
+  vendors: any[]
+  vendorsLoading: boolean
+  vendorsError: string | null
+  handleTimeFilterChange: (filter: DateFilter) => void
+  handleSummaryVendorIdFilterChange: (vendorId: string) => void
+  handleSummarySourceFilterChange: (source: string) => void
+  handleCustomDateChange: (field: "start" | "end", value: string) => void
+  clearSummaryFilters: () => void
+  refreshVendorSummaryData: () => void
+}) => {
+  const [modalTab, setModalTab] = useState<"filters" | "active">("filters")
+
+  const handleSubmit = () => {
+    refreshVendorSummaryData()
+    onRequestClose()
+  }
+
+  const handleClearAll = () => {
+    clearSummaryFilters()
+    onRequestClose()
+  }
+
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (customStartDate && customEndDate) count++
+    if (summaryVendorIdFilter) count++
+    if (summarySourceFilter) count++
+    return count
+  }
+
+  const getTimeFilterLabel = (filter: DateFilter) => {
+    if (filter === "day") return "Today"
+    if (filter === "yesterday") return "Yesterday"
+    if (filter === "week") return "This Week"
+    if (filter === "lastWeek") return "Last Week"
+    if (filter === "month") return "This Month"
+    if (filter === "lastMonth") return "Last Month"
+    if (filter === "year") return "This Year"
+    if (filter === "lastYear") return "Last Year"
+    return "All Time"
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onRequestClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      />
+      <motion.div
+        className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
+        initial={{ scale: 0.9, y: 20, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.9, y: 20, opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      >
+        {/* Modal Header */}
+        <div className="border-b border-gray-100 bg-gradient-to-r from-green-600 to-green-800 px-6 py-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-white/20 p-2">
+                  <Filter className="text-lg text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Filter Vendor Summary Report</h3>
+                  <p className="mt-1 text-sm text-white/80">Refine your summary data with specific criteria</p>
+                </div>
+              </div>
+              {getActiveFilterCount() > 0 && (
+                <motion.div
+                  className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-sm font-medium text-white"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <span className="size-2 rounded-full bg-white" />
+                  {getActiveFilterCount()} filter{getActiveFilterCount() === 1 ? "" : "s"} applied
+                </motion.div>
+              )}
+            </div>
+            <motion.button
+              onClick={onRequestClose}
+              className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <X className="text-xl" />
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <AnimatePresence mode="wait">
+            {modalTab === "filters" && (
+              <motion.div
+                key="filters"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6"
+              >
+                {/* Quick Actions Bar */}
+                <div className="flex items-center justify-between rounded-lg bg-blue-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-blue-100 p-1">
+                      <TrendingUp className="size-4 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-medium text-blue-900">Quick API Actions</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const today = new Date()
+                        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
+                        handleCustomDateChange("start", startOfDay.toISOString().slice(0, 16))
+                        handleCustomDateChange("end", endOfDay.toISOString().slice(0, 16))
+                        handleSummaryVendorIdFilterChange("")
+                        handleSummarySourceFilterChange("")
+                      }}
+                      className="rounded-md bg-white px-3 py-1.5 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50"
+                    >
+                      Today (startDateUtc/endDateUtc)
+                    </button>
+                    <button
+                      onClick={() => {
+                        const today = new Date()
+                        const weekStart = new Date(today.setDate(today.getDate() - today.getDay()))
+                        const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 6))
+                        handleCustomDateChange("start", weekStart.toISOString().slice(0, 16))
+                        handleCustomDateChange("end", weekEnd.toISOString().slice(0, 16))
+                        handleSummaryVendorIdFilterChange("")
+                        handleSummarySourceFilterChange("")
+                      }}
+                      className="rounded-md bg-white px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm hover:bg-green-50"
+                    >
+                      This Week All Vendors
+                    </button>
+                    <button
+                      onClick={() => {
+                        const today = new Date()
+                        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+                        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
+                        handleCustomDateChange("start", monthStart.toISOString().slice(0, 16))
+                        handleCustomDateChange("end", monthEnd.toISOString().slice(0, 16))
+                        handleSummaryVendorIdFilterChange("")
+                        handleSummarySourceFilterChange("API")
+                      }}
+                      className="rounded-md bg-white px-3 py-1.5 text-xs font-medium text-purple-700 shadow-sm hover:bg-purple-50"
+                    >
+                      This Month API Only
+                    </button>
+                  </div>
+                </div>
+
+                {/* Date Range Filter */}
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-blue-100 p-2">
+                        <Clock className="text-lg text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Date Range</h4>
+                        <p className="text-sm text-gray-500">Filter by startDateUtc and endDateUtc parameters</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Start Date (UTC)</label>
+                      <input
+                        type="datetime-local"
+                        value={customStartDate}
+                        onChange={(e) => handleCustomDateChange("start", e.target.value)}
+                        className="h-11 w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">End Date (UTC)</label>
+                      <input
+                        type="datetime-local"
+                        value={customEndDate}
+                        onChange={(e) => handleCustomDateChange("end", e.target.value)}
+                        className="h-11 w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vendor ID Filter */}
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-green-100 p-2">
+                        <AlertTriangle className="text-lg text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Vendor</h4>
+                        <p className="text-sm text-gray-500">Filter by vendor</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {/* Vendor Tabs */}
+                    <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+                      <button
+                        onClick={() => handleSummaryVendorIdFilterChange("")}
+                        className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                          summaryVendorIdFilter === ""
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        All Vendors
+                      </button>
+                      {!vendorsLoading &&
+                        !vendorsError &&
+                        vendors.slice(0, 20).map((vendor) => (
+                          <button
+                            key={vendor.id}
+                            onClick={() => handleSummaryVendorIdFilterChange(vendor.id.toString())}
+                            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                              summaryVendorIdFilter === vendor.id.toString()
+                                ? "bg-green-500 text-white"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            }`}
+                          >
+                            {vendor.name}
+                          </button>
+                        ))}
+                    </div>
+
+                    {/* Loading/Error States */}
+                    {vendorsLoading && (
+                      <div className="flex items-center justify-center py-2">
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-green-500"></div>
+                        <p className="text-xs text-gray-500">Loading vendors...</p>
+                      </div>
+                    )}
+                    {vendorsError && <p className="text-xs text-red-500">Error loading vendors: {vendorsError}</p>}
+
+                    {/* Show more vendors indicator */}
+                    {!vendorsLoading && !vendorsError && vendors.length > 20 && (
+                      <p className="text-xs italic text-gray-500">
+                        Showing first 20 of {vendors.length} vendors. Scroll to see more.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Source Filter */}
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-purple-100 p-2">
+                        <FileIcon className="text-lg text-purple-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Source</h4>
+                        <p className="text-sm text-gray-500">Filter by source parameter (API | CSV | MANUAL)</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleSummarySourceFilterChange("")}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        summarySourceFilter === ""
+                          ? "bg-purple-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      All Sources
+                    </button>
+                    <button
+                      onClick={() => handleSummarySourceFilterChange("API")}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        summarySourceFilter === "API"
+                          ? "bg-purple-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      API
+                    </button>
+                    <button
+                      onClick={() => handleSummarySourceFilterChange("CSV")}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        summarySourceFilter === "CSV"
+                          ? "bg-purple-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      CSV Upload
+                    </button>
+                    <button
+                      onClick={() => handleSummarySourceFilterChange("MANUAL")}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        summarySourceFilter === "MANUAL"
+                          ? "bg-purple-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      Manual Entry
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="border-t border-gray-100 bg-gray-50 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              {getActiveFilterCount() > 0 && (
+                <span>
+                  {getActiveFilterCount()} filter{getActiveFilterCount() === 1 ? "" : "s"} applied
+                </span>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleClearAll}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="rounded-lg bg-gradient-to-r from-green-600 to-green-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:from-blue-700 hover:to-indigo-700"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
 
 interface SortOption {
   label: string
@@ -157,16 +540,29 @@ const MeterCapture: React.FC = () => {
     retryAllSuccess,
   } = useAppSelector((state) => state.meterCapture)
 
+  const { vendorSummaryReport, vendorSummaryReportLoading, vendorSummaryReportError } = useAppSelector(
+    (state) => state.postpaidBilling
+  )
+
+  const { vendors, loading: vendorsLoading, error: vendorsError } = useAppSelector((state) => state.vendors)
+
   const router = useRouter()
 
   const [currentPage, setCurrentPage] = useState(1)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false)
   const [isSortExpanded, setIsSortExpanded] = useState(false)
   const [searchText, setSearchText] = useState("")
   const [selectedCapture, setSelectedCapture] = useState<any>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [hasInitialLoad, setHasInitialLoad] = useState(false)
+  const [timeFilter, setTimeFilter] = useState<DateFilter>("month")
+  const [customStartDate, setCustomStartDate] = useState("")
+  const [customEndDate, setCustomEndDate] = useState("")
+  const [showSummaryFilters, setShowSummaryFilters] = useState(false)
+  const [summaryVendorIdFilter, setSummaryVendorIdFilter] = useState("")
+  const [summarySourceFilter, setSummarySourceFilter] = useState("")
+  const [showFilterModal, setShowFilterModal] = useState(false)
 
   // Local state for filters
   const [localFilters, setLocalFilters] = useState<Partial<MeterCaptureRequestParams>>({
@@ -301,6 +697,41 @@ const MeterCapture: React.FC = () => {
     setCurrentPage(1)
   }
 
+  // Fetch vendor summary report data
+  const refreshVendorSummaryData = () => {
+    const requestParams: VendorSummaryReportRequestParams = {
+      vendorId: summaryVendorIdFilter ? parseInt(summaryVendorIdFilter) : 0,
+      startDateUtc: customStartDate || "",
+      endDateUtc: customEndDate || "",
+    }
+
+    // Update parameters if they are explicitly provided
+    if (customStartDate && customEndDate) {
+      requestParams.startDateUtc = customStartDate
+      requestParams.endDateUtc = customEndDate
+    }
+
+    if (summaryVendorIdFilter) {
+      requestParams.vendorId = parseInt(summaryVendorIdFilter)
+    }
+
+    if (summarySourceFilter) {
+      requestParams.source = summarySourceFilter
+    }
+
+    dispatch(fetchVendorSummaryReport(requestParams))
+  }
+
+  // Fetch vendor summary report on component mount and when filters change
+  useEffect(() => {
+    refreshVendorSummaryData()
+  }, [customStartDate, customEndDate, summaryVendorIdFilter, summarySourceFilter])
+
+  // Fetch vendors list on component mount
+  useEffect(() => {
+    dispatch(fetchVendors({ pageNumber: 1, pageSize: 1000 })) // Fetch all vendors
+  }, [dispatch])
+
   const getActiveFilterCount = () => {
     return Object.entries(localFilters).filter(([key, value]) => {
       if (key === "pageNumber" || key === "pageSize") return false
@@ -311,6 +742,42 @@ const MeterCapture: React.FC = () => {
   const getSourceLabel = (source: string) => {
     const option = sourceOptions.find((opt) => opt.value === source)
     return option?.label || source
+  }
+
+  // Vendor summary report filter handlers
+  const handleSummaryVendorIdFilterChange = (vendorId: string) => {
+    setSummaryVendorIdFilter(vendorId)
+  }
+
+  const handleSummarySourceFilterChange = (source: string) => {
+    setSummarySourceFilter(source)
+  }
+
+  const handleTimeFilterChange = (filter: DateFilter) => {
+    setTimeFilter(filter)
+  }
+
+  const handleCustomDateChange = (field: "start" | "end", value: string) => {
+    if (field === "start") {
+      setCustomStartDate(value)
+    } else {
+      setCustomEndDate(value)
+    }
+  }
+
+  const clearSummaryFilters = () => {
+    setCustomStartDate("")
+    setCustomEndDate("")
+    setSummaryVendorIdFilter("")
+    setSummarySourceFilter("")
+  }
+
+  const getSummaryActiveFilterCount = () => {
+    let count = 0
+    if (customStartDate && customEndDate) count++
+    if (summaryVendorIdFilter) count++
+    if (summarySourceFilter) count++
+    return count
   }
 
   const getStatusLabel = (status: number) => {
@@ -392,6 +859,168 @@ const MeterCapture: React.FC = () => {
               >
                 {retryAllLoading ? "Retrying..." : "Retry Failed Captures"}
               </ButtonModule>
+            </div>
+
+            {/* Vendor Summary Report Cards */}
+            <div className="mb-6 rounded-lg border bg-white p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold">Vendor Summary Report</h3>
+                  {getSummaryActiveFilterCount() > 0 && (
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {getSummaryActiveFilterCount()} active
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShowFilterModal(true)} className="rounded-lg p-2 hover:bg-gray-100">
+                    <Filter className="size-4" />
+                  </button>
+                  <button
+                    onClick={refreshVendorSummaryData}
+                    disabled={vendorSummaryReportLoading}
+                    className="rounded-lg p-2 hover:bg-gray-100"
+                  >
+                    <RefreshCw className={`size-4 ${vendorSummaryReportLoading ? "animate-spin" : ""}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                {/* Total Count Card */}
+                <div className="group relative overflow-hidden rounded-xl bg-blue-50 p-4 transition-all hover:bg-blue-100 md:p-5">
+                  <div className="absolute -right-4 -top-4 size-16 rounded-full bg-blue-100/50 transition-transform group-hover:scale-110" />
+                  <div className="relative">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="flex size-8 items-center justify-center rounded-lg bg-blue-200">
+                        <FileIcon className="size-4 text-blue-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-blue-700">Total Count</p>
+                    <p className="mt-1 text-lg font-bold text-blue-900 md:text-xl lg:text-2xl">
+                      {vendorSummaryReportLoading ? (
+                        <span className="animate-pulse">...</span>
+                      ) : vendorSummaryReportError ? (
+                        <span className="text-red-500">Error</span>
+                      ) : (
+                        vendorSummaryReport?.totalCount?.toLocaleString() || "0"
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs text-blue-600">All enumerations</p>
+                  </div>
+                </div>
+
+                {/* Captured Count Card */}
+                <div className="group relative overflow-hidden rounded-xl bg-emerald-50 p-4 transition-all hover:bg-emerald-100 md:p-5">
+                  <div className="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-100/50 transition-transform group-hover:scale-110" />
+                  <div className="relative">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-200">
+                        <TrendingUp className="size-4 text-emerald-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-emerald-700">Captured</p>
+                    <p className="mt-1 text-lg font-bold text-emerald-900 md:text-xl lg:text-2xl">
+                      {vendorSummaryReportLoading ? (
+                        <span className="animate-pulse">...</span>
+                      ) : vendorSummaryReportError ? (
+                        <span className="text-red-500">Error</span>
+                      ) : (
+                        vendorSummaryReport?.capturedCount?.toLocaleString() || "0"
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs text-emerald-600">
+                      {vendorSummaryReport?.totalCount
+                        ? Math.round((vendorSummaryReport.capturedCount / vendorSummaryReport.totalCount) * 100)
+                        : 0}
+                      % captured
+                    </p>
+                  </div>
+                </div>
+
+                {/* Processed Count Card */}
+                <div className="group relative overflow-hidden rounded-xl bg-amber-50 p-4 transition-all hover:bg-amber-100 md:p-5">
+                  <div className="absolute -right-4 -top-4 size-16 rounded-full bg-amber-100/50 transition-transform group-hover:scale-110" />
+                  <div className="relative">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="flex size-8 items-center justify-center rounded-lg bg-amber-200">
+                        <Clock className="size-4 text-amber-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-amber-700">Processed</p>
+                    <p className="mt-1 text-lg font-bold text-amber-900 md:text-xl lg:text-2xl">
+                      {vendorSummaryReportLoading ? (
+                        <span className="animate-pulse">...</span>
+                      ) : vendorSummaryReportError ? (
+                        <span className="text-red-500">Error</span>
+                      ) : (
+                        vendorSummaryReport?.processedCount?.toLocaleString() || "0"
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-600">
+                      {vendorSummaryReport?.totalCount
+                        ? Math.round((vendorSummaryReport.processedCount / vendorSummaryReport.totalCount) * 100)
+                        : 0}
+                      % processed
+                    </p>
+                  </div>
+                </div>
+
+                {/* Failed Count Card */}
+                <div className="group relative overflow-hidden rounded-xl bg-red-50 p-4 transition-all hover:bg-red-100 md:p-5">
+                  <div className="absolute -right-4 -top-4 size-16 rounded-full bg-red-100/50 transition-transform group-hover:scale-110" />
+                  <div className="relative">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="flex size-8 items-center justify-center rounded-lg bg-red-200">
+                        <AlertTriangle className="size-4 text-red-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-red-700">Failed</p>
+                    <p className="mt-1 text-lg font-bold text-red-900 md:text-xl lg:text-2xl">
+                      {vendorSummaryReportLoading ? (
+                        <span className="animate-pulse">...</span>
+                      ) : vendorSummaryReportError ? (
+                        <span className="text-red-500">Error</span>
+                      ) : (
+                        vendorSummaryReport?.failedCount?.toLocaleString() || "0"
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs text-red-600">
+                      {vendorSummaryReport?.totalCount
+                        ? Math.round((vendorSummaryReport.failedCount / vendorSummaryReport.totalCount) * 100)
+                        : 0}
+                      % failure rate
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error State */}
+              {vendorSummaryReportError && (
+                <div className="mt-4 rounded-lg bg-red-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <svg className="size-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-red-800">Error loading summary data</h4>
+                      <p className="text-xs text-red-700">{vendorSummaryReportError}</p>
+                    </div>
+                    <button
+                      onClick={refreshVendorSummaryData}
+                      className="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-800 hover:bg-red-200"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Filters Section */}
@@ -555,10 +1184,20 @@ const MeterCapture: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <ButtonModule variant="outline" onClick={handleRefreshTableData} disabled={loading} size="sm">
-                    <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-                    Refresh
-                  </ButtonModule>
+                  <div className="flex items-center gap-2">
+                    <ButtonModule
+                      variant="outline"
+                      onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                      size="sm"
+                    >
+                      <Filter className="size-4" />
+                      {showDesktopFilters ? "Hide Filters" : "Show Filters"}
+                    </ButtonModule>
+                    <ButtonModule variant="outline" onClick={handleRefreshTableData} disabled={loading} size="sm">
+                      <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+                      Refresh
+                    </ButtonModule>
+                  </div>
                   {error && (
                     <div className="flex items-center gap-2 text-red-600">
                       <AlertCircle className="size-4" />
@@ -739,6 +1378,26 @@ const MeterCapture: React.FC = () => {
         onClose={handleCloseDetailsModal}
         meterCapture={selectedCapture}
         retryLoading={retryLoading}
+      />
+
+      {/* Vendor Summary Filter Modal */}
+      <FilterModal
+        isOpen={showFilterModal}
+        onRequestClose={() => setShowFilterModal(false)}
+        timeFilter={timeFilter}
+        summaryVendorIdFilter={summaryVendorIdFilter}
+        summarySourceFilter={summarySourceFilter}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        vendors={vendors}
+        vendorsLoading={vendorsLoading}
+        vendorsError={vendorsError}
+        handleTimeFilterChange={handleTimeFilterChange}
+        handleSummaryVendorIdFilterChange={handleSummaryVendorIdFilterChange}
+        handleSummarySourceFilterChange={handleSummarySourceFilterChange}
+        handleCustomDateChange={handleCustomDateChange}
+        clearSummaryFilters={clearSummaryFilters}
+        refreshVendorSummaryData={refreshVendorSummaryData}
       />
     </section>
   )

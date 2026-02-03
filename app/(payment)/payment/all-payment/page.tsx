@@ -1811,7 +1811,7 @@ const AllPayments: React.FC = () => {
     { value: "", label: "All Postpaid Bills" },
     ...postpaidBills.map((bill) => ({
       value: bill.id,
-      label: `Bill ${bill.reference} - ${bill.customerName} (${bill.period})`,
+      label: `Bill ${bill.billingId} - ${bill.customerName} (${bill.period})`,
     })),
   ]
 

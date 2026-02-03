@@ -246,6 +246,9 @@ export interface MetersState {
   updatePhaseData: MeterDetailData | null
   updatePhaseLoading: boolean
   updatePhaseError: string | null
+  changeTechnicalConfigData: MeterDetailData | null
+  changeTechnicalConfigLoading: boolean
+  changeTechnicalConfigError: string | null
   prepaidTransactions: PrepaidTransaction[]
   prepaidTransactionsLoading: boolean
   prepaidTransactionsError: string | null
@@ -381,6 +384,9 @@ const initialState: MetersState = {
   updatePhaseData: null,
   updatePhaseLoading: false,
   updatePhaseError: null,
+  changeTechnicalConfigData: null,
+  changeTechnicalConfigLoading: false,
+  changeTechnicalConfigError: null,
   prepaidTransactions: [],
   prepaidTransactionsLoading: false,
   prepaidTransactionsError: null,
@@ -453,6 +459,24 @@ export interface UpdateMeterPhaseRequest {
 
 // Interface for Update Meter Phase Response
 export interface UpdateMeterPhaseResponse {
+  isSuccess: boolean
+  message: string
+  data: MeterDetailData
+}
+
+// Interface for Change Technical Config Request
+export interface ChangeTechnicalConfigRequest {
+  sgc: number
+  krn: string
+  tct: number
+  ken: number
+  mfrCode: number
+  ea: number
+  changeReason: string
+}
+
+// Interface for Change Technical Config Response
+export interface ChangeTechnicalConfigResponse {
   isSuccess: boolean
   message: string
   data: MeterDetailData
@@ -1554,6 +1578,28 @@ export const updateMeterPhase = createAsyncThunk(
   }
 )
 
+// Async Thunk for changing technical config
+export const changeTechnicalConfig = createAsyncThunk(
+  "meters/changeTechnicalConfig",
+  async ({ id, data }: { id: number; data: ChangeTechnicalConfigRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.CHANGE_TECHNICAL_CONFIG.replace("{id}", id.toString())
+      const response = await api.post<ChangeTechnicalConfigResponse>(buildApiUrl(endpoint), data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to change technical config")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to change technical config")
+      }
+      return rejectWithValue(error.message || "Network error during technical config change")
+    }
+  }
+)
+
 // Async Thunk for fetching prepaid transactions
 export const fetchPrepaidTransactions = createAsyncThunk(
   "meters/fetchPrepaidTransactions",
@@ -1855,6 +1901,12 @@ const metersSlice = createSlice({
       state.updatePhaseData = null
       state.updatePhaseError = null
       state.updatePhaseLoading = false
+    },
+    // Clear change technical config data
+    clearChangeTechnicalConfig: (state) => {
+      state.changeTechnicalConfigData = null
+      state.changeTechnicalConfigError = null
+      state.changeTechnicalConfigLoading = false
     },
     // Clear prepaid transactions
     clearPrepaidTransactions: (state) => {
@@ -2258,6 +2310,54 @@ const metersSlice = createSlice({
         state.updatePhaseLoading = false
         state.updatePhaseError = action.payload as string
       })
+      // Change technical config
+      .addCase(changeTechnicalConfig.pending, (state) => {
+        state.changeTechnicalConfigLoading = true
+        state.changeTechnicalConfigError = null
+      })
+      .addCase(
+        changeTechnicalConfig.fulfilled,
+        (
+          state,
+          action: PayloadAction<
+            ChangeTechnicalConfigResponse,
+            string,
+            { arg: { id: number; data: ChangeTechnicalConfigRequest } }
+          >
+        ) => {
+          state.changeTechnicalConfigLoading = false
+          state.changeTechnicalConfigData = action.payload.data
+          // Update the current meter if it's the same meter
+          if (state.currentMeter && state.currentMeter.id === action.meta.arg.id) {
+            state.currentMeter = {
+              ...state.currentMeter,
+              sgc: action.payload.data.sgc,
+              krn: action.payload.data.krn,
+              tct: action.payload.data.tct,
+              ken: action.payload.data.ken,
+              mfrCode: action.payload.data.mfrCode,
+              ea: action.payload.data.ea,
+            }
+          }
+          // Update the meter in the meters array if it exists
+          const index = state.meters.findIndex((meter) => meter.id === action.meta.arg.id)
+          if (index !== -1) {
+            state.meters[index] = {
+              ...state.meters[index],
+              sgc: action.payload.data.sgc,
+              krn: action.payload.data.krn,
+              tct: action.payload.data.tct,
+              ken: action.payload.data.ken,
+              mfrCode: action.payload.data.mfrCode,
+              ea: action.payload.data.ea,
+            } as Meter
+          }
+        }
+      )
+      .addCase(changeTechnicalConfig.rejected, (state, action) => {
+        state.changeTechnicalConfigLoading = false
+        state.changeTechnicalConfigError = action.payload as string
+      })
       // Fetch prepaid transactions
       .addCase(fetchPrepaidTransactions.pending, (state) => {
         state.prepaidTransactionsLoading = true
@@ -2333,6 +2433,7 @@ export const {
   clearVerifyToken,
   clearVerifyTokenHistory,
   clearUpdatePhase,
+  clearChangeTechnicalConfig,
   clearPrepaidTransactions,
   clearFailedPayments,
   clearRetryFailedPayment,

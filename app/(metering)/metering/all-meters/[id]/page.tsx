@@ -31,6 +31,8 @@ import DashboardNav from "components/Navbar/DashboardNav"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  changeTechnicalConfig,
+  type ChangeTechnicalConfigRequest,
   clearCredit,
   clearCurrentMeter,
   clearTamper,
@@ -60,6 +62,7 @@ import AddKeyChangeModal from "components/ui/Modal/add-key-change-modal"
 import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
 import SetControlModal from "components/ui/Modal/set-control-modal"
 import ChangePhaseModal from "components/ui/Modal/change-phase-modal"
+import ChangeTechnicalConfigModal from "components/ui/Modal/change-technical-config-modal"
 import {
   CalendarOutlineIcon,
   ExportOutlineIcon,
@@ -574,6 +577,7 @@ const MeterBasicInfoTab = ({
       | "clearCredit"
       | "setControl"
       | "changePhase"
+      | "changeTechnicalConfig"
   ) => void
   router: ReturnType<typeof useRouter>
 }) => {
@@ -878,6 +882,15 @@ const MeterBasicInfoTab = ({
                 >
                   <RefreshCw className="size-4" />
                   Change Phase
+                </ButtonModule>
+                <ButtonModule
+                  variant="outlineDanger"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("changeTechnicalConfig")}
+                >
+                  <RefreshCw className="size-4" />
+                  Change Technical Config
                 </ButtonModule>
               </div>
             </motion.div>
@@ -1320,6 +1333,9 @@ const MeterDetailsPage = () => {
     updatePhaseLoading,
     updatePhaseError,
     updatePhaseData,
+    changeTechnicalConfigLoading,
+    changeTechnicalConfigError,
+    changeTechnicalConfigData,
   } = useAppSelector((state) => state.meters)
 
   // Get current user to check privileges
@@ -1349,6 +1365,7 @@ const MeterDetailsPage = () => {
     | "clearCredit"
     | "setControl"
     | "changePhase"
+    | "changeTechnicalConfig"
     | null
   >(null)
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
@@ -1407,6 +1424,7 @@ const MeterDetailsPage = () => {
       | "clearCredit"
       | "setControl"
       | "changePhase"
+      | "changeTechnicalConfig"
   ) => setActiveModal(modalType)
 
   const handleUpdateSuccess = () => {
@@ -1456,13 +1474,13 @@ const MeterDetailsPage = () => {
     if (meter) {
       await dispatch(updateMeterPhase({ id: meter.id, data: phaseData })).unwrap()
       closeAllModals()
-      // Refresh meter details after successful phase update
-      if (meterId) {
-        const id = parseInt(meterId)
-        if (!isNaN(id)) {
-          dispatch(fetchMeterDetail(id))
-        }
-      }
+    }
+  }
+
+  const handleChangeTechnicalConfig = async (configData: ChangeTechnicalConfigRequest) => {
+    if (meter) {
+      await dispatch(changeTechnicalConfig({ id: meter.id, data: configData })).unwrap()
+      closeAllModals()
     }
   }
 
@@ -2128,6 +2146,24 @@ const MeterDetailsPage = () => {
         currentPhase={meter.phaseType}
         errorMessage={updatePhaseError || undefined}
         successMessage={updatePhaseData ? "Phase changed successfully!" : undefined}
+      />
+
+      <ChangeTechnicalConfigModal
+        isOpen={activeModal === "changeTechnicalConfig"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleChangeTechnicalConfig}
+        loading={changeTechnicalConfigLoading}
+        meterId={meter.id}
+        currentConfig={{
+          sgc: meter.sgc,
+          krn: meter.krn,
+          tct: meter.tct,
+          ken: meter.ken,
+          mfrCode: meter.mfrCode,
+          ea: meter.ea,
+        }}
+        errorMessage={changeTechnicalConfigError || undefined}
+        successMessage={changeTechnicalConfigData ? "Technical config changed successfully!" : undefined}
       />
     </section>
   )
