@@ -513,9 +513,50 @@
       .space-y-3-pt > * + * {
         margin-top: 3pt;
       }
+
+      /* Download button styles */
+      .download-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #6ead2a;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+      }
+
+      .download-btn:hover {
+        background: #5a9b24;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .download-btn:active {
+        transform: translateY(0);
+      }
+
+      .download-btn.print-hide {
+        display: block !important;
+      }
+
+      @media print {
+        .download-btn {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <!-- Download PDF Button -->
+    <button class="download-btn" onclick="downloadPDF()">📄 Download PDF</button>
+
     <div class="a5-container">
       <div class="a5-content">
         <!-- Header - A5 Optimized -->
@@ -960,6 +1001,40 @@
         // Set current date
         const today = new Date()
         document.getElementById("invoiceDate").textContent = formatDate(today.toISOString())
+      })
+
+      // Download PDF function
+      function downloadPDF() {
+        // Get account number for filename
+        const accountNumber = document.getElementById("accountNumber").textContent.replace("#", "").trim()
+        const billId = document.getElementById("billId").textContent.trim()
+        const filename = `Invoice_${billId}_${accountNumber}.pdf`
+
+        // Show loading state
+        const button = document.querySelector(".download-btn")
+        const originalText = button.innerHTML
+        button.innerHTML = "⏳ Generating PDF..."
+        button.disabled = true
+
+        // Use window.print() to trigger print dialog
+        // The user can then choose "Save as PDF"
+        setTimeout(() => {
+          window.print()
+
+          // Reset button after print dialog closes
+          setTimeout(() => {
+            button.innerHTML = originalText
+            button.disabled = false
+          }, 1000)
+        }, 500)
+      }
+
+      // Add keyboard shortcut for PDF download (Ctrl+P or Cmd+P)
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+          e.preventDefault()
+          downloadPDF()
+        }
       })
 
       // Example usage:
