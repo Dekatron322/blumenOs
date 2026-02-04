@@ -8,7 +8,12 @@ import { VscEye } from "react-icons/vsc"
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi"
 import { MdFormatListBulleted, MdGridView } from "react-icons/md"
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
-import { clearClearTamperHistory, clearTamper, fetchClearTamperHistory } from "lib/redux/metersSlice"
+import {
+  clearClearTamperHistory,
+  clearTamper,
+  clearTamperData as clearTamperDataAction,
+  fetchClearTamperHistory,
+} from "lib/redux/metersSlice"
 import type { ClearTamperHistoryEntry } from "lib/redux/metersSlice"
 import ClearTamperModal from "components/ui/Modal/clear-tamper-modal"
 import ClearTamperDetailsModal from "components/ui/Modal/clear-tamper-details-modal"
@@ -79,7 +84,7 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
       await dispatch(clearTamper(meterId)).unwrap()
       // Refresh history after successful clear
       dispatch(fetchClearTamperHistory({ id: meterId, pageNumber: currentPage, pageSize }))
-      setShowClearTamperModal(false)
+      // DON'T close modal automatically - let user see the token and close manually
     } catch (error) {
       // Error is handled by Redux state
     }
@@ -589,12 +594,17 @@ const ClearTamperHistoryTab: React.FC<ClearTamperHistoryTabProps> = ({ meterId }
       {/* Clear Tamper Modal */}
       <ClearTamperModal
         isOpen={showClearTamperModal}
-        onRequestClose={() => setShowClearTamperModal(false)}
+        onRequestClose={() => {
+          setShowClearTamperModal(false)
+          // Clear modal state for fresh render next time
+          dispatch(clearTamperDataAction())
+        }}
         onConfirm={handleClearTamper}
         loading={clearTamperLoading}
         meterId={meterId}
         errorMessage={clearTamperError || undefined}
         successMessage={clearTamperData ? "Tamper cleared successfully!" : undefined}
+        tokenData={clearTamperData ? JSON.stringify(clearTamperData) : null}
       />
     </div>
   )

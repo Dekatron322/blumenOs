@@ -21,6 +21,16 @@ const ClearTamperDetailsModal: React.FC<ClearTamperDetailsModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false)
 
+  // Type guard for parsed response
+  const isValidTokenResponse = (
+    parsed: unknown
+  ): parsed is { result?: Array<{ tokenDec?: string }>; tokens?: Array<{ tokenDec?: string }> } => {
+    if (typeof parsed !== "object" || parsed === null) return false
+
+    const obj = parsed as any
+    return Array.isArray(obj.result) || Array.isArray(obj.tokens)
+  }
+
   const handleCopyToken = async (token: string) => {
     try {
       await navigator.clipboard.writeText(token)
@@ -95,17 +105,29 @@ const ClearTamperDetailsModal: React.FC<ClearTamperDetailsModalProps> = ({
                     <div className="font-mono text-lg font-bold tracking-wider text-gray-800">
                       {(() => {
                         try {
-                          const parsed = JSON.parse(selectedEvent.responsePayload) as {
-                            tokens?: Array<{ tokenDec?: string }>
+                          const parsed = JSON.parse(selectedEvent.responsePayload)
+                          if (!isValidTokenResponse(parsed)) return "Invalid token format"
+
+                          // Check if the response has a result array with tokenDec
+                          if (parsed.result && Array.isArray(parsed.result) && parsed.result.length > 0) {
+                            const tokenDec = parsed.result[0]?.tokenDec
+                            if (tokenDec && tokenDec.length >= 16) {
+                              // Format as 4 groups of 4 characters: 0000-0000-0000-0000
+                              return tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
+                            }
+                            return tokenDec || "No token available"
                           }
-                          const tokenDec = parsed.tokens?.[0]?.tokenDec
-                          if (tokenDec && tokenDec.length >= 16) {
-                            // Format as 4 groups of 4 characters: 0000-0000-0000-0000
-                            return tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
+                          // Fallback to tokens array if result doesn't exist
+                          if (parsed.tokens && Array.isArray(parsed.tokens) && parsed.tokens.length > 0) {
+                            const tokenDec = parsed.tokens[0]?.tokenDec
+                            if (tokenDec && tokenDec.length >= 16) {
+                              return tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
+                            }
+                            return tokenDec || "No token available"
                           }
-                          return tokenDec || selectedEvent.responsePayload
+                          return "No token available"
                         } catch {
-                          return selectedEvent.responsePayload
+                          return "Invalid token format"
                         }
                       })()}
                     </div>
@@ -114,17 +136,38 @@ const ClearTamperDetailsModal: React.FC<ClearTamperDetailsModalProps> = ({
                       size="sm"
                       onClick={() => {
                         try {
-                          const parsed = JSON.parse(selectedEvent.responsePayload) as {
-                            tokens?: Array<{ tokenDec?: string }>
+                          const parsed = JSON.parse(selectedEvent.responsePayload)
+                          if (!isValidTokenResponse(parsed)) {
+                            handleCopyToken("Invalid token format")
+                            return
                           }
-                          const tokenDec = parsed.tokens?.[0]?.tokenDec
-                          const tokenToCopy =
-                            tokenDec && tokenDec.length >= 16
-                              ? tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
-                              : tokenDec || selectedEvent.responsePayload
+
+                          let tokenToCopy = ""
+
+                          // Try to get token from result array first
+                          if (parsed.result && Array.isArray(parsed.result) && parsed.result.length > 0) {
+                            const tokenDec = parsed.result[0]?.tokenDec
+                            if (tokenDec && tokenDec.length >= 16) {
+                              tokenToCopy = tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
+                            } else {
+                              tokenToCopy = tokenDec || "No token available"
+                            }
+                          }
+                          // Fallback to tokens array
+                          else if (parsed.tokens && Array.isArray(parsed.tokens) && parsed.tokens.length > 0) {
+                            const tokenDec = parsed.tokens[0]?.tokenDec
+                            if (tokenDec && tokenDec.length >= 16) {
+                              tokenToCopy = tokenDec.match(/.{1,4}/g)?.join("-") || tokenDec
+                            } else {
+                              tokenToCopy = tokenDec || "No token available"
+                            }
+                          } else {
+                            tokenToCopy = "No token available"
+                          }
+
                           handleCopyToken(tokenToCopy)
                         } catch {
-                          handleCopyToken(selectedEvent.responsePayload)
+                          handleCopyToken("Invalid token format")
                         }
                       }}
                       className="flex items-center gap-1"
