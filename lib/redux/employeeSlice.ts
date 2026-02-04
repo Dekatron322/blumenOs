@@ -641,18 +641,19 @@ export const fetchEmployeeById = createAsyncThunk<Employee, number, { rejectValu
   "employee/fetchEmployeeById",
   async (employeeId: number, { rejectWithValue }) => {
     try {
-      const response = await api.get<EmployeesResponse>(`${buildApiUrl(API_ENDPOINTS.EMPLOYEE.EMPLOYEE)}/${employeeId}`)
+      const response = await api.get<{ isSuccess: boolean; message: string; data: Employee }>(
+        `${buildApiUrl(API_ENDPOINTS.EMPLOYEE.EMPLOYEE)}/${employeeId}`
+      )
 
       if (!response.data.isSuccess) {
         return rejectWithValue(response.data.message || "Failed to fetch employee")
       }
 
-      // Fixed: Proper null check for data array
-      const employees = response.data.data || []
-      const employee = employees[0]
+      const employee = response.data.data
       if (!employee) {
         return rejectWithValue("Employee not found")
       }
+
       return employee
     } catch (error: any) {
       if (error.response?.data) {
