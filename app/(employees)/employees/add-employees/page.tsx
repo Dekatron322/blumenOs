@@ -77,7 +77,7 @@ const AddEmployeePage = () => {
     position: "",
     emergencyContact: "",
     address: "",
-    supervisorId: 0, // Start with 0 (no selection)
+    supervisorId: 0, // Start with 0 for no selection
     employmentType: "",
     isActive: true,
   })
@@ -426,7 +426,6 @@ const AddEmployeePage = () => {
           "position",
           "emergencycontact",
           "address",
-          "supervisorid",
           "employmenttype",
           "isactive",
         ]
@@ -570,11 +569,6 @@ const AddEmployeePage = () => {
       errors.push(`Row ${rowNumber}: Department ID must be a valid number`)
     }
 
-    // Validate supervisor ID (optional)
-    if (row.supervisorid?.trim() && isNaN(parseInt(row.supervisorid))) {
-      errors.push(`Row ${rowNumber}: Supervisor ID must be a valid number`)
-    }
-
     return errors
   }
 
@@ -596,8 +590,12 @@ const AddEmployeePage = () => {
     }
 
     try {
+      // Transform CSVEmployee to InviteUserRequest by adding missing supervisorId
       const inviteData = {
-        users: csvData,
+        users: csvData.map((employee) => ({
+          ...employee,
+          supervisorId: 0, // Add default supervisorId - you may want to make this configurable
+        })),
       }
 
       const result = await dispatch(inviteEmployees(inviteData)).unwrap()
@@ -650,8 +648,6 @@ const AddEmployeePage = () => {
     const exampleAreaOfficeId = areaOffices[0]?.id?.toString() ?? "1"
     // Use actual department IDs from the API for the template
     const exampleDepartmentId = departments[0]?.id?.toString() ?? "1"
-    // Use actual employee IDs from the API for supervisors
-    const exampleSupervisorId = employees[0]?.id?.toString() ?? "0"
 
     const exampleData = [
       {
@@ -665,7 +661,7 @@ const AddEmployeePage = () => {
         position: "Software Engineer",
         emergencyContact: "08087654321",
         address: "123 Main Street, Lagos",
-        supervisorId: exampleSupervisorId,
+        supervisorId: "0",
         employmentType: "FULL_TIME",
         isActive: "true",
       },
@@ -680,7 +676,7 @@ const AddEmployeePage = () => {
         position: "HR Specialist",
         emergencyContact: "08012345678",
         address: "456 Broad Avenue, Abuja",
-        supervisorId: exampleSupervisorId,
+        supervisorId: "0",
         employmentType: "FULL_TIME",
         isActive: "true",
       },
@@ -1262,8 +1258,8 @@ const AddEmployeePage = () => {
                               onChange={handleInputChange}
                               options={[
                                 {
-                                  value: "",
-                                  label: areaOfficesLoading ? "Loading area offices..." : "Select area office",
+                                  value: 0,
+                                  label: "Select area office",
                                 },
                                 ...areaOfficeOptions.filter((option) => option.value !== 0),
                               ]}
@@ -1272,38 +1268,26 @@ const AddEmployeePage = () => {
                               disabled={areaOfficesLoading}
                             />
 
-                            <FormSelectModule
+                            {/* <FormSelectModule
                               label="Supervisor"
                               name="supervisorId"
                               value={formData.supervisorId}
                               onChange={handleInputChange}
-                              options={[
-                                {
-                                  value: 0,
-                                  label: employeesLoading ? "Loading supervisors..." : "Select supervisor",
-                                },
-                                ...supervisorOptions.filter((option) => option.value !== 0),
-                              ]}
-                              error={formErrors.supervisorId}
-                              required
+                              options={supervisorOptions}
                               disabled={employeesLoading}
-                            />
+                            /> */}
 
-                            <div className="sm:col-span-2">
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <FormSelectModule
-                                  label="Status"
-                                  name="isActive"
-                                  value={formData.isActive.toString()}
-                                  onChange={handleInputChange}
-                                  options={[
-                                    { value: "true", label: "Active" },
-                                    { value: "false", label: "Inactive" },
-                                  ]}
-                                  required
-                                />
-                              </div>
-                            </div>
+                            <FormSelectModule
+                              label="Status"
+                              name="isActive"
+                              value={formData.isActive.toString()}
+                              onChange={handleInputChange}
+                              options={[
+                                { value: "true", label: "Active" },
+                                { value: "false", label: "Inactive" },
+                              ]}
+                              required
+                            />
                           </div>
                         </motion.div>
                       )}

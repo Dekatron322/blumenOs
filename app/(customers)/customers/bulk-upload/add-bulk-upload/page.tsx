@@ -16,6 +16,7 @@ import {
   processCustomerStoredAverageUpdateBulkUpload,
   processCustomerTariffChangeBulkUpload,
   processMeterReadingStoredAverageUpdateBulkUpload,
+  processPostpaidEstimatedConsumptionBulkUpload,
 } from "lib/redux/fileManagementSlice"
 import * as XLSX from "xlsx"
 import DashboardNav from "components/Navbar/DashboardNav"
@@ -48,6 +49,7 @@ const FileManagementPage = () => {
     { name: "Customer Stored Average Update", value: 9 },
     { name: "Customer SR DT Update", value: 10 },
     { name: "Customer Bill Energy", value: 16 },
+    { name: "Customer Estimated Consumption", value: 24 },
   ]
 
   // Helper function to get bulkInsertType based on upload type
@@ -71,6 +73,8 @@ const FileManagementPage = () => {
         return "customer-srdt"
       case 16:
         return "meter-reading-stored-average"
+      case 17:
+        return "postpaid-estimated-consumption"
       default:
         return "customers" // fallback
     }
@@ -97,6 +101,8 @@ const FileManagementPage = () => {
         return "customers-srdt-bulk"
       case 16:
         return "meter-reading-stored-average-bulk"
+      case 17:
+        return "postpaid-estimated-consumption-bulk"
       default:
         return "customers-bulk-import"
     }
@@ -432,6 +438,9 @@ const FileManagementPage = () => {
                 } else if (selectedUploadType === 16) {
                   // Customer Bill Energy
                   bulkResult = await dispatch(processMeterReadingStoredAverageUpdateBulkUpload({ fileId })).unwrap()
+                } else if (selectedUploadType === 24) {
+                  // Postpaid Estimated Consumption
+                  bulkResult = await dispatch(processPostpaidEstimatedConsumptionBulkUpload({ fileId })).unwrap()
                 } else {
                   // Regular Customer Import and other types
                   bulkResult = await dispatch(processCustomerBulkUpload({ fileId })).unwrap()
@@ -560,6 +569,10 @@ const FileManagementPage = () => {
       // Customer Bill Energy template
       headers = "CustomerAccountNo,CustomerStoredAverage,MonthYear"
       sampleRows = []
+    } else if (selectedUploadType === 24) {
+      // Postpaid Estimated Consumption template
+      headers = "CustomerAccountNo,EstimatedConsumptionKwh,MonthYear"
+      sampleRows = []
     } else {
       // Default template for other upload types
       headers = "CustomerAccountNo,CustomerName,Address,Phone,Email,TariffCode,FeederCode,Status"
@@ -587,6 +600,8 @@ const FileManagementPage = () => {
         ? "sample-customer-sr-dt-update.csv"
         : selectedUploadType === 16
         ? "sample-customer-bill-energy.csv"
+        : selectedUploadType === 24
+        ? "sample-postpaid-estimated-consumption.csv"
         : "sample_customers_bulk.csv"
     )
     link.style.visibility = "hidden"

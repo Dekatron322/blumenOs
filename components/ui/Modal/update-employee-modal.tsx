@@ -61,6 +61,7 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [hasInitiatedUpdate, setHasInitiatedUpdate] = useState(false)
 
   // Initialize form with employee data when modal opens or employee changes
   useEffect(() => {
@@ -117,10 +118,13 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
   // Handle success and error states
   useEffect(() => {
     if (updateSuccess) {
-      notify("success", "Employee updated successfully", {
-        description: `${employee?.fullName}'s profile has been updated successfully`,
-        duration: 5000,
-      })
+      if (hasInitiatedUpdate) {
+        notify("success", "Employee updated successfully", {
+          description: `${employee?.fullName}'s profile has been updated successfully`,
+          duration: 5000,
+        })
+        setHasInitiatedUpdate(false)
+      }
 
       if (onSuccess) onSuccess()
       handleClose()
@@ -132,7 +136,7 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
         duration: 6000,
       })
     }
-  }, [updateSuccess, updateError, employee?.fullName, onSuccess])
+  }, [updateSuccess, updateError, employee?.fullName, onSuccess, hasInitiatedUpdate])
 
   const handleClose = () => {
     setFormErrors({})
@@ -269,6 +273,8 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
       return
     }
 
+    setHasInitiatedUpdate(true)
+
     try {
       await dispatch(
         updateEmployee({
@@ -278,6 +284,7 @@ const UpdateEmployeeModal: React.FC<UpdateEmployeeModalProps> = ({ isOpen, onReq
       ).unwrap()
     } catch (error: any) {
       console.error("Failed to update employee:", error)
+      setHasInitiatedUpdate(false)
     }
   }
 

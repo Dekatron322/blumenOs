@@ -263,6 +263,17 @@ export interface DistributionSubstationBulkUploadResponse {
   data: BulkUploadJob
 }
 
+// Postpaid Estimated Consumption Bulk Upload interfaces
+export interface PostpaidEstimatedConsumptionBulkUploadRequest {
+  fileId: number
+}
+
+export interface PostpaidEstimatedConsumptionBulkUploadResponse {
+  isSuccess: boolean
+  message: string
+  data: BulkUploadJob
+}
+
 export interface BulkUploadPreview {
   fileId: number
   fileName: string
@@ -572,6 +583,12 @@ interface FileManagementState {
   distributionSubstationBulkUploadSuccess: boolean
   distributionSubstationBulkUploadResponse: DistributionSubstationBulkUploadResponse | null
 
+  // Postpaid Estimated Consumption Bulk Upload state
+  postpaidEstimatedConsumptionBulkUploadLoading: boolean
+  postpaidEstimatedConsumptionBulkUploadError: string | null
+  postpaidEstimatedConsumptionBulkUploadSuccess: boolean
+  postpaidEstimatedConsumptionBulkUploadResponse: PostpaidEstimatedConsumptionBulkUploadResponse | null
+
   // CSV Jobs state
   csvJobsLoading: boolean
   csvJobsError: string | null
@@ -743,6 +760,12 @@ const initialState: FileManagementState = {
   distributionSubstationBulkUploadError: null,
   distributionSubstationBulkUploadSuccess: false,
   distributionSubstationBulkUploadResponse: null,
+
+  // Postpaid Estimated Consumption Bulk Upload state
+  postpaidEstimatedConsumptionBulkUploadLoading: false,
+  postpaidEstimatedConsumptionBulkUploadError: null,
+  postpaidEstimatedConsumptionBulkUploadSuccess: false,
+  postpaidEstimatedConsumptionBulkUploadResponse: null,
 
   // CSV Jobs state
   csvJobsLoading: false,
@@ -1103,6 +1126,23 @@ export const processDistributionSubstationBulkUpload = createAsyncThunk(
   }
 )
 
+export const processPostpaidEstimatedConsumptionBulkUpload = createAsyncThunk(
+  "fileManagement/processPostpaidEstimatedConsumptionBulkUpload",
+  async (request: PostpaidEstimatedConsumptionBulkUploadRequest, { rejectWithValue }) => {
+    try {
+      const response = await api.post<PostpaidEstimatedConsumptionBulkUploadResponse>(
+        buildApiUrl(API_ENDPOINTS.FILE_MANAGEMENT.POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD),
+        request
+      )
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to process postpaid estimated consumption bulk upload"
+      )
+    }
+  }
+)
+
 // CSV Jobs async thunk
 export const fetchCsvJobs = createAsyncThunk(
   "fileManagement/fetchCsvJobs",
@@ -1313,6 +1353,12 @@ const fileManagementSlice = createSlice({
       state.distributionSubstationBulkUploadSuccess = false
       state.distributionSubstationBulkUploadResponse = null
     },
+    resetPostpaidEstimatedConsumptionBulkUploadState: (state) => {
+      state.postpaidEstimatedConsumptionBulkUploadLoading = false
+      state.postpaidEstimatedConsumptionBulkUploadError = null
+      state.postpaidEstimatedConsumptionBulkUploadSuccess = false
+      state.postpaidEstimatedConsumptionBulkUploadResponse = null
+    },
     // Reset CSV Jobs state
     resetCsvJobsState: (state) => {
       state.csvJobsLoading = false
@@ -1426,6 +1472,10 @@ const fileManagementSlice = createSlice({
       state.distributionSubstationBulkUploadError = null
       state.distributionSubstationBulkUploadSuccess = false
       state.distributionSubstationBulkUploadResponse = null
+      state.postpaidEstimatedConsumptionBulkUploadLoading = false
+      state.postpaidEstimatedConsumptionBulkUploadError = null
+      state.postpaidEstimatedConsumptionBulkUploadSuccess = false
+      state.postpaidEstimatedConsumptionBulkUploadResponse = null
       state.csvJobsLoading = false
       state.csvJobsError = null
       state.csvJobsSuccess = false
@@ -1828,6 +1878,23 @@ const fileManagementSlice = createSlice({
         state.distributionSubstationBulkUploadSuccess = false
       })
 
+      // Postpaid Estimated Consumption Bulk Upload reducers
+      .addCase(processPostpaidEstimatedConsumptionBulkUpload.pending, (state) => {
+        state.postpaidEstimatedConsumptionBulkUploadLoading = true
+        state.postpaidEstimatedConsumptionBulkUploadError = null
+        state.postpaidEstimatedConsumptionBulkUploadSuccess = false
+      })
+      .addCase(processPostpaidEstimatedConsumptionBulkUpload.fulfilled, (state, action) => {
+        state.postpaidEstimatedConsumptionBulkUploadLoading = false
+        state.postpaidEstimatedConsumptionBulkUploadSuccess = true
+        state.postpaidEstimatedConsumptionBulkUploadResponse = action.payload
+      })
+      .addCase(processPostpaidEstimatedConsumptionBulkUpload.rejected, (state, action) => {
+        state.postpaidEstimatedConsumptionBulkUploadLoading = false
+        state.postpaidEstimatedConsumptionBulkUploadError = action.payload as string
+        state.postpaidEstimatedConsumptionBulkUploadSuccess = false
+      })
+
       // CSV Jobs reducers
       .addCase(fetchCsvJobs.pending, (state) => {
         state.csvJobsLoading = true
@@ -1906,6 +1973,8 @@ export const {
   resetFinalizeBillingBulkUploadState,
   resetBillCrucialOpsBulkUploadState,
   resetFeederEnergyCapBulkUploadState,
+  resetDistributionSubstationBulkUploadState,
+  resetPostpaidEstimatedConsumptionBulkUploadState,
   resetCsvJobsState,
   resetCsvUploadFailuresState,
 } = fileManagementSlice.actions

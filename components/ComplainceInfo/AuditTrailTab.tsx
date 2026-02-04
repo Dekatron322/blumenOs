@@ -261,8 +261,11 @@ const AuditTrailTab: React.FC = () => {
         uncachedUserIds.slice(0, 10).map(async (userId) => {
           try {
             const result = await dispatch(fetchEmployeeById(userId)).unwrap()
-            newUsers[userId] = result.fullName || ""
-          } catch {
+            const fullName = result.fullName || ""
+            newUsers[userId] = fullName
+            console.log(`Fetched user ${userId}:`, fullName, "Full result:", result)
+          } catch (error) {
+            console.error(`Failed to fetch user ${userId}:`, error)
             newUsers[userId] = ""
           }
         })
@@ -292,11 +295,15 @@ const AuditTrailTab: React.FC = () => {
         })
       )
 
-      setActorNamesCache((prev) => ({
-        users: { ...prev.users, ...newUsers },
-        agents: { ...prev.agents, ...newAgents },
-        vendors: { ...prev.vendors, ...newVendors },
-      }))
+      setActorNamesCache((prev) => {
+        const updatedCache = {
+          users: { ...prev.users, ...newUsers },
+          agents: { ...prev.agents, ...newAgents },
+          vendors: { ...prev.vendors, ...newVendors },
+        }
+        console.log("Updated actor names cache:", updatedCache)
+        return updatedCache
+      })
       setLoadingListActors(false)
     }
 
@@ -372,10 +379,21 @@ const AuditTrailTab: React.FC = () => {
   // Helper to get actor name from cache
   const getActorName = (type: "user" | "agent" | "vendor", id: number | undefined): string | null => {
     if (!id) return null
-    if (type === "user") return actorNamesCache.users[id] || null
+    if (type === "user") {
+      const userName = actorNamesCache.users[id] || null
+      console.log(`Getting user name for ID ${id}:`, userName, "Cache:", actorNamesCache.users)
+      return userName
+    }
     if (type === "agent") return actorNamesCache.agents[id] || null
     if (type === "vendor") return actorNamesCache.vendors[id] || null
     return null
+  }
+
+  // Helper to check if action is user invite related
+  const isUserInviteAction = (action: string): boolean => {
+    if (!action) return false
+    const lowerAction = action.toLowerCase()
+    return lowerAction.includes("invite") && lowerAction.includes("user")
   }
 
   const toggleSection = (section: string) => {
@@ -815,13 +833,17 @@ const AuditTrailTab: React.FC = () => {
                             )}
                           </div>
                         )}
-                        {getActorName("user", entry.userId) && (
+                        {(entry.userId || isUserInviteAction(entry.action)) && (
                           <div className="flex items-center gap-1.5">
                             <div className="flex size-5 items-center justify-center rounded-full bg-blue-500 text-white">
                               <MdPerson className="text-xs" />
                             </div>
                             <span className="text-xs font-medium text-gray-700">
-                              {getActorName("user", entry.userId)}
+                              {getActorName("user", entry.userId) || (
+                                <span className="text-gray-400">
+                                  {loadingListActors ? "Loading..." : `User ID: ${entry.userId}`}
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -1099,7 +1121,7 @@ const AuditTrailTab: React.FC = () => {
                           {loadingActors && <span className="ml-2 text-xs font-normal text-gray-400">Loading...</span>}
                         </h4>
                         <div className="grid gap-4 sm:grid-cols-2">
-                          {selectedEntry.userId && (actorNames.userId || loadingActors) && (
+                          {(selectedEntry.userId || isUserInviteAction(selectedEntry.action)) && (
                             <motion.div
                               className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-4"
                               whileHover={{ scale: 1.02 }}
@@ -1115,8 +1137,10 @@ const AuditTrailTab: React.FC = () => {
                                   <p className="font-semibold text-gray-900">
                                     {loadingActors ? (
                                       <span className="inline-block h-4 w-24 animate-pulse rounded bg-gray-200" />
-                                    ) : (
+                                    ) : actorNames.userId ? (
                                       actorNames.userId
+                                    ) : (
+                                      <span className="text-gray-400">User ID: {selectedEntry.userId}</span>
                                     )}
                                   </p>
                                 </div>

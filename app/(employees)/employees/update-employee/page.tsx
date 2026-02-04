@@ -27,8 +27,8 @@ interface EmployeeFormData {
   position: string
   emergencyContact: string
   address: string
-  supervisorId: number
   employmentType: string
+  supervisorId: number
 }
 
 const UpdateEmployeePage = () => {
@@ -39,6 +39,7 @@ const UpdateEmployeePage = () => {
 
   const [loading, setLoading] = useState(true)
   const [employee, setEmployee] = useState<EmployeeDetails | null>(null)
+  const [hasInitiatedUpdate, setHasInitiatedUpdate] = useState(false)
 
   const [formData, setFormData] = useState<EmployeeFormData>({
     fullName: "",
@@ -51,8 +52,8 @@ const UpdateEmployeePage = () => {
     position: "",
     emergencyContact: "",
     address: "",
-    supervisorId: 0,
     employmentType: "FULL_TIME",
+    supervisorId: 0,
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -99,8 +100,8 @@ const UpdateEmployeePage = () => {
           position: employeeDetails.position || "",
           emergencyContact: employeeDetails.emergencyContact || "",
           address: employeeDetails.address || "",
-          supervisorId: employeeDetails.supervisorId || 0,
           employmentType: employeeDetails.employmentType || "FULL_TIME",
+          supervisorId: employeeDetails.supervisorId || 0,
         })
 
         // Fetch roles, area offices, and departments
@@ -147,10 +148,13 @@ const UpdateEmployeePage = () => {
   // Handle success and error states
   useEffect(() => {
     if (updateSuccess) {
-      notify("success", "Employee updated successfully", {
-        description: `${employee?.fullName}'s profile has been updated successfully`,
-        duration: 5000,
-      })
+      if (hasInitiatedUpdate) {
+        notify("success", "Employee updated successfully", {
+          description: `${employee?.fullName}'s profile has been updated successfully`,
+          duration: 5000,
+        })
+        setHasInitiatedUpdate(false)
+      }
       router.push(`/employees/${employeeId}`)
     }
 
@@ -160,7 +164,7 @@ const UpdateEmployeePage = () => {
         duration: 6000,
       })
     }
-  }, [updateSuccess, updateError, employee?.fullName, router])
+  }, [updateSuccess, updateError, employee?.fullName, router, hasInitiatedUpdate])
 
   // Generate options from API response
   const roleOptions = roles.map((role) => ({
@@ -184,16 +188,6 @@ const UpdateEmployeePage = () => {
     })),
   ]
 
-  const supervisorOptions = [
-    { value: 0, label: "Select supervisor" },
-    ...employees
-      .filter((emp) => emp.isActive && emp.id !== employee?.id)
-      .map((emp) => ({
-        value: emp.id,
-        label: `${emp.fullName} (${emp.email})`,
-      })),
-  ]
-
   const employmentTypeOptions = [
     { value: "FULL_TIME", label: "Full Time" },
     { value: "PART_TIME", label: "Part Time" },
@@ -206,7 +200,7 @@ const UpdateEmployeePage = () => {
     const { name, value } = "target" in e ? e.target : e
 
     let processedValue = value
-    if (["areaOfficeId", "departmentId", "supervisorId"].includes(name)) {
+    if (["areaOfficeId", "departmentId"].includes(name)) {
       processedValue = Number(value)
     } else if (name === "roleIds") {
       processedValue = [Number(value)]
@@ -272,10 +266,6 @@ const UpdateEmployeePage = () => {
       errors.departmentId = "Department is required"
     }
 
-    if (formData.supervisorId === 0) {
-      errors.supervisorId = "Please select a supervisor or choose 'No supervisor'"
-    }
-
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -291,6 +281,8 @@ const UpdateEmployeePage = () => {
       return
     }
 
+    setHasInitiatedUpdate(true)
+
     try {
       await dispatch(
         updateEmployee({
@@ -300,6 +292,7 @@ const UpdateEmployeePage = () => {
       ).unwrap()
     } catch (error: any) {
       console.error("Failed to update employee:", error)
+      setHasInitiatedUpdate(false)
     }
   }
 
@@ -496,36 +489,16 @@ const UpdateEmployeePage = () => {
                       />
 
                       <FormSelectModule
-                        label="Supervisor"
-                        name="supervisorId"
-                        value={formData.supervisorId}
+                        label="Status"
+                        name="isActive"
+                        value={formData.isActive.toString()}
                         onChange={handleInputChange}
                         options={[
-                          {
-                            value: 0,
-                            label: "Loading supervisors...",
-                          },
-                          ...supervisorOptions.filter((option) => option.value !== 0),
+                          { value: "true", label: "Active" },
+                          { value: "false", label: "Inactive" },
                         ]}
-                        error={formErrors.supervisorId}
                         required
                       />
-
-                      <div className="sm:col-span-2">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <FormSelectModule
-                            label="Status"
-                            name="isActive"
-                            value={formData.isActive.toString()}
-                            onChange={handleInputChange}
-                            options={[
-                              { value: "true", label: "Active" },
-                              { value: "false", label: "Inactive" },
-                            ]}
-                            required
-                          />
-                        </div>
-                      </div>
                     </div>
                   </div>
 
