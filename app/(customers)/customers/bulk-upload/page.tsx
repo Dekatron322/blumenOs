@@ -25,6 +25,7 @@ const jobTypeOptions = [
   { value: "8", label: "Customer Status Change" },
   { value: "9", label: "Customer Stored Average Update" },
   { value: "10", label: "Customer Sr Dt Update" },
+  { value: "24", label: "Customer Estimated Consumption" },
 ]
 
 // Status options for filters
@@ -314,7 +315,7 @@ const BulkUploads: React.FC = () => {
   }
 
   // Filter jobs to only show customer-related job types
-  const customerJobTypes = [1, 5, 6, 7, 8, 9, 10, 11] // Customer job type values
+  const customerJobTypes = [1, 5, 6, 7, 8, 9, 10, 11, 24] // Customer job type values
   const filteredCsvJobs = csvJobs.filter((job) => customerJobTypes.includes(job.jobType))
 
   if (csvJobsLoading && !hasInitialLoad) {

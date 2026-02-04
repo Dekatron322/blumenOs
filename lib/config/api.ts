@@ -240,6 +240,7 @@ export const API_ENDPOINTS = {
     FEEDER_ENERGY_CAP_BULK_UPLOAD: "/billing/postpaid/feeder-energy-caps/bulk/import",
     DISTRIBUTION_SUBSTATION_BULK_UPLOAD: "/assets/distribution-substations/bulk/import",
     ADJUSTMENT_BULK_UPLOAD: "/billing/postpaid/bills/bulk/adjustments",
+    POSTPAID_ESTIMATED_CONSUMPTION_BULK_UPLOAD: "/billing/postpaid/estimated-consumptions/bulk/import",
   },
 
   METER_CAPTURE: {
