@@ -73,7 +73,7 @@ const FileManagementPage = () => {
         return "customer-srdt"
       case 16:
         return "meter-reading-stored-average"
-      case 17:
+      case 24:
         return "postpaid-estimated-consumption"
       default:
         return "customers" // fallback
@@ -101,7 +101,7 @@ const FileManagementPage = () => {
         return "customers-srdt-bulk"
       case 16:
         return "meter-reading-stored-average-bulk"
-      case 17:
+      case 24:
         return "postpaid-estimated-consumption-bulk"
       default:
         return "customers-bulk-import"
