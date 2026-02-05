@@ -286,6 +286,8 @@ export const API_ENDPOINTS = {
 
   BILLING_PERIODS: {
     GET: "/billing/periods",
+    CREATE_CURRENT_BILLING_PERIOD: "/billing/periods",
+    CREATE_PAST_BILLING_PERIOD: "/billing/periods/past",
   },
 
   METER_READINGS: {
