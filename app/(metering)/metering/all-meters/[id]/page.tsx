@@ -31,6 +31,8 @@ import DashboardNav from "components/Navbar/DashboardNav"
 
 import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
 import {
+  changeTariff,
+  type ChangeTariffRequest,
   changeTechnicalConfig,
   type ChangeTechnicalConfigRequest,
   clearCredit,
@@ -63,6 +65,7 @@ import ClearCreditModal from "components/ui/Modal/clear-credit-modal"
 import SetControlModal from "components/ui/Modal/set-control-modal"
 import ChangePhaseModal from "components/ui/Modal/change-phase-modal"
 import ChangeTechnicalConfigModal from "components/ui/Modal/change-technical-config-modal"
+import ChangeTIModal from "components/ui/Modal/change-ti-modal"
 import {
   CalendarOutlineIcon,
   ExportOutlineIcon,
@@ -578,6 +581,7 @@ const MeterBasicInfoTab = ({
       | "setControl"
       | "changePhase"
       | "changeTechnicalConfig"
+      | "changeTI"
   ) => void
   router: ReturnType<typeof useRouter>
 }) => {
@@ -891,6 +895,15 @@ const MeterBasicInfoTab = ({
                 >
                   <RefreshCw className="size-4" />
                   Change Technical Config
+                </ButtonModule>
+                <ButtonModule
+                  variant="outlineGray"
+                  size="md"
+                  className="w-full justify-start gap-3 text-sm"
+                  onClick={() => openModal("changeTI")}
+                >
+                  <RefreshCw className="size-4" />
+                  Change TI
                 </ButtonModule>
               </div>
             </motion.div>
@@ -1336,6 +1349,9 @@ const MeterDetailsPage = () => {
     changeTechnicalConfigLoading,
     changeTechnicalConfigError,
     changeTechnicalConfigData,
+    changeTariffLoading,
+    changeTariffError,
+    changeTariffData,
   } = useAppSelector((state) => state.meters)
 
   // Get current user to check privileges
@@ -1366,6 +1382,7 @@ const MeterDetailsPage = () => {
     | "setControl"
     | "changePhase"
     | "changeTechnicalConfig"
+    | "changeTI"
     | null
   >(null)
   const [isMobileTabMenuOpen, setIsMobileTabMenuOpen] = useState(false)
@@ -1425,6 +1442,7 @@ const MeterDetailsPage = () => {
       | "setControl"
       | "changePhase"
       | "changeTechnicalConfig"
+      | "changeTI"
   ) => setActiveModal(modalType)
 
   const handleUpdateSuccess = () => {
@@ -1480,6 +1498,13 @@ const MeterDetailsPage = () => {
   const handleChangeTechnicalConfig = async (configData: ChangeTechnicalConfigRequest) => {
     if (meter) {
       await dispatch(changeTechnicalConfig({ id: meter.id, data: configData })).unwrap()
+      closeAllModals()
+    }
+  }
+
+  const handleChangeTI = async (tiData: ChangeTariffRequest) => {
+    if (meter) {
+      await dispatch(changeTariff({ id: meter.id, data: tiData })).unwrap()
       closeAllModals()
     }
   }
@@ -2164,6 +2189,17 @@ const MeterDetailsPage = () => {
         }}
         errorMessage={changeTechnicalConfigError || undefined}
         successMessage={changeTechnicalConfigData ? "Technical config changed successfully!" : undefined}
+      />
+
+      <ChangeTIModal
+        isOpen={activeModal === "changeTI"}
+        onRequestClose={closeAllModals}
+        onConfirm={handleChangeTI}
+        loading={changeTariffLoading}
+        meterId={meter.id}
+        currentTI={meter.ti}
+        errorMessage={changeTariffError || undefined}
+        successMessage={changeTariffData ? "TI changed successfully!" : undefined}
       />
     </section>
   )

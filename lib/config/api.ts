@@ -282,6 +282,7 @@ export const API_ENDPOINTS = {
     METER_READINGS: "/billing/postpaid/meter-readings",
     FINALIZE_SINGLE_BILL: "/billing/postpaid/{id}/finalize",
     ADJUSTMENTS: "/billing/postpaid/bills/adjustments",
+    DOWNLOAD_AR: "/billing/postpaid/ar/csv",
   },
 
   BILLING_PERIODS: {
@@ -461,6 +462,7 @@ export const API_ENDPOINTS = {
     VERIFY_TOKEN_HISTORY: "/meters/{id}/prepaid/histories/verify-token",
     UPDATE_METER_PHASE: "/meters/{id}/phase",
     CHANGE_TECHNICAL_CONFIG: "/meters/{id}/technical-config",
+    CHANGE_TARIFF: "/meters/{id}/ti",
   },
 
   METER_BRANDS: {

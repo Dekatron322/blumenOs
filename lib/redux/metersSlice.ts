@@ -249,6 +249,9 @@ export interface MetersState {
   changeTechnicalConfigData: MeterDetailData | null
   changeTechnicalConfigLoading: boolean
   changeTechnicalConfigError: string | null
+  changeTariffData: MeterDetailData | null
+  changeTariffLoading: boolean
+  changeTariffError: string | null
   prepaidTransactions: PrepaidTransaction[]
   prepaidTransactionsLoading: boolean
   prepaidTransactionsError: string | null
@@ -387,6 +390,9 @@ const initialState: MetersState = {
   changeTechnicalConfigData: null,
   changeTechnicalConfigLoading: false,
   changeTechnicalConfigError: null,
+  changeTariffData: null,
+  changeTariffLoading: false,
+  changeTariffError: null,
   prepaidTransactions: [],
   prepaidTransactionsLoading: false,
   prepaidTransactionsError: null,
@@ -477,6 +483,19 @@ export interface ChangeTechnicalConfigRequest {
 
 // Interface for Change Technical Config Response
 export interface ChangeTechnicalConfigResponse {
+  isSuccess: boolean
+  message: string
+  data: MeterDetailData
+}
+
+// Interface for Change Tariff Request
+export interface ChangeTariffRequest {
+  ti: number
+  changeReason: string
+}
+
+// Interface for Change Tariff Response
+export interface ChangeTariffResponse {
   isSuccess: boolean
   message: string
   data: MeterDetailData
@@ -1600,6 +1619,28 @@ export const changeTechnicalConfig = createAsyncThunk(
   }
 )
 
+// Async Thunk for changing tariff
+export const changeTariff = createAsyncThunk(
+  "meters/changeTariff",
+  async ({ id, data }: { id: number; data: ChangeTariffRequest }, { rejectWithValue }) => {
+    try {
+      const endpoint = API_ENDPOINTS.METERS.CHANGE_TARIFF.replace("{id}", id.toString())
+      const response = await api.post<ChangeTariffResponse>(buildApiUrl(endpoint), data)
+
+      if (!response.data.isSuccess) {
+        return rejectWithValue(response.data.message || "Failed to change tariff")
+      }
+
+      return response.data
+    } catch (error: any) {
+      if (error.response?.data) {
+        return rejectWithValue(error.response.data.message || "Failed to change tariff")
+      }
+      return rejectWithValue(error.message || "Network error during tariff change")
+    }
+  }
+)
+
 // Async Thunk for fetching prepaid transactions
 export const fetchPrepaidTransactions = createAsyncThunk(
   "meters/fetchPrepaidTransactions",
@@ -1907,6 +1948,12 @@ const metersSlice = createSlice({
       state.changeTechnicalConfigData = null
       state.changeTechnicalConfigError = null
       state.changeTechnicalConfigLoading = false
+    },
+    // Clear change tariff data
+    clearChangeTariff: (state) => {
+      state.changeTariffData = null
+      state.changeTariffError = null
+      state.changeTariffLoading = false
     },
     // Clear prepaid transactions
     clearPrepaidTransactions: (state) => {
@@ -2358,6 +2405,44 @@ const metersSlice = createSlice({
         state.changeTechnicalConfigLoading = false
         state.changeTechnicalConfigError = action.payload as string
       })
+      // Change tariff
+      .addCase(changeTariff.pending, (state) => {
+        state.changeTariffLoading = true
+        state.changeTariffError = null
+      })
+      .addCase(
+        changeTariff.fulfilled,
+        (
+          state,
+          action: PayloadAction<ChangeTariffResponse, string, { arg: { id: number; data: ChangeTariffRequest } }>
+        ) => {
+          state.changeTariffLoading = false
+          state.changeTariffData = action.payload.data
+          // Update the current meter if it's the same meter
+          if (state.currentMeter && state.currentMeter.id === action.meta.arg.id) {
+            state.currentMeter = {
+              ...state.currentMeter,
+              ti: action.payload.data.ti,
+              tariffRate: action.payload.data.tariffRate,
+              tariffId: action.payload.data.tariffId,
+              tariff: action.payload.data.tariff,
+            }
+          }
+          // Update the meter in the meters array if it exists
+          const index = state.meters.findIndex((meter) => meter.id === action.meta.arg.id)
+          if (index !== -1) {
+            state.meters[index] = {
+              ...state.meters[index],
+              ti: action.payload.data.ti,
+              tariffRate: action.payload.data.tariffRate,
+            } as Meter
+          }
+        }
+      )
+      .addCase(changeTariff.rejected, (state, action) => {
+        state.changeTariffLoading = false
+        state.changeTariffError = action.payload as string
+      })
       // Fetch prepaid transactions
       .addCase(fetchPrepaidTransactions.pending, (state) => {
         state.prepaidTransactionsLoading = true
@@ -2434,6 +2519,7 @@ export const {
   clearVerifyTokenHistory,
   clearUpdatePhase,
   clearChangeTechnicalConfig,
+  clearChangeTariff,
   clearPrepaidTransactions,
   clearFailedPayments,
   clearRetryFailedPayment,

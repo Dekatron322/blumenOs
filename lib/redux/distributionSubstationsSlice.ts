@@ -44,6 +44,7 @@ export interface Feeder {
 }
 
 export interface DistributionSubstation {
+  name: any
   id: number
   dssCode: string
   nercCode: string

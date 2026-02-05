@@ -1,11 +1,20 @@
 "use client"
 
 import DashboardNav from "components/Navbar/DashboardNav"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import InstallMeterModal from "components/ui/Modal/install-meter-modal"
 import AllBills from "components/BillingInfo/AllBills"
 import StartBillingRun from "components/ui/Modal/start-billing-run"
+import { ButtonModule } from "components/ui/Button/Button"
+import { Download, PlayIcon, X } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "lib/hooks/useRedux"
+import { clearDownloadARStatus, downloadAR } from "lib/redux/postpaidSlice"
+import { fetchBillingPeriods } from "lib/redux/billingPeriodsSlice"
+import { fetchAreaOffices } from "lib/redux/areaOfficeSlice"
+import { fetchFeeders } from "lib/redux/feedersSlice"
+import { fetchDistributionSubstations } from "lib/redux/distributionSubstationsSlice"
+import { FormSelectModule } from "components/ui/Input/FormSelectModule"
 
 // Enhanced Skeleton Loader Component for Cards
 const SkeletonLoader = () => {
@@ -276,8 +285,27 @@ const generateMeterData = () => {
 export default function MeteringDashboard() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
   const [isStartBillingRunModalOpen, setIsStartBillingRunModalOpen] = useState(false) // Add this state
+  const [isDownloadARModalOpen, setIsDownloadARModalOpen] = useState(false)
+  const [selectedBillingPeriod, setSelectedBillingPeriod] = useState("")
+  const [selectedAreaOffice, setSelectedAreaOffice] = useState("")
+  const [selectedFeeder, setSelectedFeeder] = useState("")
+  const [selectedDistributionSubstation, setSelectedDistributionSubstation] = useState("")
+  const [isMd, setIsMd] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [meterData, setMeterData] = useState(generateMeterData())
+
+  const dispatch = useAppDispatch()
+  const { downloadARLoading, downloadARError, downloadARSuccess, downloadARMessage } = useAppSelector(
+    (state) => state.postpaidBilling
+  )
+
+  // Get data from other slices
+  const { billingPeriods, loading: billingPeriodsLoading } = useAppSelector((state) => state.billingPeriods)
+  const { areaOffices, loading: areaOfficesLoading } = useAppSelector((state) => state.areaOffices)
+  const { feeders, loading: feedersLoading } = useAppSelector((state) => state.feeders)
+  const { distributionSubstations, loading: distributionSubstationsLoading } = useAppSelector(
+    (state) => state.distributionSubstations
+  )
 
   // Use mock data
   const { smartMeters, conventionalMeters, readSuccessRate, alerts, totalMeters } = meterData
@@ -286,6 +314,23 @@ export default function MeteringDashboard() {
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
+
+  // Fetch dropdown data when modal opens
+  useEffect(() => {
+    if (isDownloadARModalOpen) {
+      // Fetch billing periods
+      dispatch(fetchBillingPeriods({ pageNumber: 1, pageSize: 100 }))
+
+      // Fetch area offices
+      dispatch(fetchAreaOffices({ PageNumber: 1, PageSize: 100 }))
+
+      // Fetch feeders
+      dispatch(fetchFeeders({ pageNumber: 1, pageSize: 100 }))
+
+      // Fetch distribution substations
+      dispatch(fetchDistributionSubstations({ pageNumber: 1, pageSize: 100 }))
+    }
+  }, [isDownloadARModalOpen, dispatch])
 
   const handleAddCustomerSuccess = async () => {
     setIsAddCustomerModalOpen(false)
@@ -301,6 +346,55 @@ export default function MeteringDashboard() {
       setMeterData(generateMeterData())
       setIsLoading(false)
     }, 1000)
+  }
+
+  const handleDownloadAR = async () => {
+    if (!selectedBillingPeriod) {
+      alert("Please select a billing period")
+      return
+    }
+
+    const params = {
+      billingPeriodId: parseInt(selectedBillingPeriod),
+      ...(selectedAreaOffice && { areaOfficeId: parseInt(selectedAreaOffice) }),
+      ...(selectedFeeder && { feederId: parseInt(selectedFeeder) }),
+      ...(selectedDistributionSubstation && { distributionSubstationId: parseInt(selectedDistributionSubstation) }),
+      isMd,
+    }
+
+    try {
+      const result = await dispatch(downloadAR(params)).unwrap()
+
+      // If the response contains CSV data, create and download the file
+      if (result.data) {
+        const blob = new Blob([result.data], { type: "text/csv" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `ar_report_${new Date().toISOString().split("T")[0]}.csv`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        // Close modal and show success message
+        setIsDownloadARModalOpen(false)
+        alert(result.message || "AR report downloaded successfully")
+      }
+    } catch (error: any) {
+      alert(error || "Failed to download AR report")
+    }
+  }
+
+  const handleCloseDownloadARModal = () => {
+    setIsDownloadARModalOpen(false)
+    dispatch(clearDownloadARStatus())
+    // Reset form
+    setSelectedBillingPeriod("")
+    setSelectedAreaOffice("")
+    setSelectedFeeder("")
+    setSelectedDistributionSubstation("")
+    setIsMd(false)
   }
 
   const handleRefreshData = () => {
@@ -324,7 +418,7 @@ export default function MeteringDashboard() {
                 <p>Tariff management, bill generation, and billing cycles</p>
               </div>
 
-              {/* <motion.div
+              <motion.div
                 className="flex items-center justify-end gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -335,11 +429,11 @@ export default function MeteringDashboard() {
                   size="md"
                   className="mt-2"
                   icon={<PlayIcon />}
-                  onClick={() => setIsStartBillingRunModalOpen(true)}
+                  onClick={() => setIsDownloadARModalOpen(true)}
                 >
-                  Start Billing Run
+                  Download AR
                 </ButtonModule>
-              </motion.div> */}
+              </motion.div>
             </div>
 
             {/* Main Content Area */}
@@ -378,6 +472,170 @@ export default function MeteringDashboard() {
         onRequestClose={() => setIsStartBillingRunModalOpen(false)}
         onSuccess={handleBillingRunSuccess}
       />
+
+      {/* Download AR Modal */}
+      {isDownloadARModalOpen && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleCloseDownloadARModal}
+        >
+          <motion.div
+            className="w-full max-w-lg rounded-lg bg-white shadow-xl"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Download AR Report</h3>
+                <button onClick={handleCloseDownloadARModal} className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="space-y-4">
+                {/* Billing Period - Required */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Billing Period <span className="text-red-500">*</span>
+                  </label>
+                  {isLoading ? (
+                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                      Loading billing periods...
+                    </div>
+                  ) : (
+                    <FormSelectModule
+                      name="billingPeriod"
+                      value={selectedBillingPeriod}
+                      onChange={(e) => setSelectedBillingPeriod(e.target.value)}
+                      options={
+                        billingPeriods?.map((period) => ({
+                          value: period.id.toString(),
+                          label: period.displayName || period.periodKey,
+                        })) || []
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Area Office - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Area Office</label>
+                  {areaOfficesLoading ? (
+                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                      Loading area offices...
+                    </div>
+                  ) : (
+                    <FormSelectModule
+                      name="areaOffice"
+                      value={selectedAreaOffice}
+                      onChange={(e) => setSelectedAreaOffice(e.target.value)}
+                      options={
+                        areaOffices?.map((office) => ({
+                          value: office.id.toString(),
+                          label: office.nameOfNewOAreaffice,
+                        })) || []
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Feeder - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Feeder</label>
+                  {feedersLoading ? (
+                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                      Loading feeders...
+                    </div>
+                  ) : (
+                    <FormSelectModule
+                      name="feeder"
+                      value={selectedFeeder}
+                      onChange={(e) => setSelectedFeeder(e.target.value)}
+                      options={
+                        feeders?.map((feeder) => ({
+                          value: feeder.id.toString(),
+                          label: feeder.name,
+                        })) || []
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Distribution Substation - Optional */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Distribution Substation</label>
+                  {distributionSubstationsLoading ? (
+                    <div className="h-9 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                      Loading distribution substations...
+                    </div>
+                  ) : (
+                    <FormSelectModule
+                      name="distributionSubstation"
+                      value={selectedDistributionSubstation}
+                      onChange={(e) => setSelectedDistributionSubstation(e.target.value)}
+                      options={
+                        distributionSubstations?.map((substation) => ({
+                          value: substation.id.toString(),
+                          label: substation.name,
+                        })) || []
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Is MD - Optional */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isMd"
+                    checked={isMd}
+                    onChange={(e) => setIsMd(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-[#004B23] focus:ring-[#004B23]"
+                  />
+                  <label htmlFor="isMd" className="ml-2 block text-sm text-gray-700">
+                    MD Customers Only
+                  </label>
+                </div>
+
+                {/* Error Message */}
+                {downloadARError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{downloadARError}</div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <ButtonModule
+                  variant="outline"
+                  size="md"
+                  onClick={handleCloseDownloadARModal}
+                  disabled={downloadARLoading}
+                  className="flex-1"
+                >
+                  Cancel
+                </ButtonModule>
+                <ButtonModule
+                  variant="primary"
+                  size="md"
+                  onClick={handleDownloadAR}
+                  disabled={downloadARLoading || !selectedBillingPeriod}
+                  className="flex-1"
+                  icon={<Download />}
+                >
+                  {downloadARLoading ? "Downloading..." : "Download AR"}
+                </ButtonModule>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   )
 }
